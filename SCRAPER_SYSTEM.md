@@ -1,0 +1,131 @@
+# Production Scraper System - pythh.ai Style
+
+## Architecture
+
+This is a **production-grade automated scraper system** similar to pythh.ai's investor/startup discovery pipeline.
+
+### Components
+
+1. **Celery Beat Scheduler** (`worker/celery_beat_schedule.py`)
+   - Automated scraping jobs running 24/7
+   - News scrapers: Every 2 hours
+   - Job boards: Every 6 hours  
+   - Manufacturing signals: Twice daily
+   - SERP/RSS: Every 4 hours
+   - Company re-scoring: Daily
+
+2. **Scraper Orchestrator** (`app/scrapers/orchestrator.py`)
+   - Coordinates full data pipeline
+   - Parallel source scraping
+   - Company enrichment
+   - Automated scoring & classification
+   - Quality checks
+
+3. **Task Workers** (`worker/tasks.py`)
+   - 12+ automated scraper tasks
+   - Retry logic & error handling
+   - Health monitoring
+   - Background processing
+
+4. **Monitoring Dashboard** (`scripts/monitor_scrapers.py`)
+   - Real-time stats
+   - Signal/company counts
+   - Recent activity tracking
+   - Industry/source breakdowns
+
+## Data Sources
+
+- **News:** Google News RSS (includes Robot Job close-out queries: robot live at workplace)
+- **Job Boards:** operational titles as Robot Jobs (function, compensation, specs when stated)
+- **Hotel Directories:** 19 sources
+- **Logistics Directories:** 7 sources
+- **RFP Marketplaces:** 10 sources (high-value buyer intent) — SIGNAL leftover
+- **SERP:** Google searches for expansion signals
+- **Manufacturing-Specific:** Quality, safety, capacity, throughput signals
+
+Robot Job extract + close-out: [`docs/robot_job_scraper.md`](docs/robot_job_scraper.md)
+
+## Manufacturing Signal Detection
+
+Automated queries for operational signals:
+- Quality control problems / defect rates
+- Production bottlenecks / capacity issues
+- Workplace safety incidents
+- Warehouse throughput challenges
+- Packaging automation needs
+- Repetitive manufacturing tasks
+- Material handling automation
+
+## Running the System
+
+### Local Development
+
+```bash
+# Start Redis
+redis-server
+
+# Start Celery worker
+celery -A worker.celery_worker worker --loglevel=info -Q scrapers
+
+# Start Celery beat scheduler
+celery -A worker.celery_worker beat --loglevel=info
+
+# Monitor scrapers
+python3 scripts/monitor_scrapers.py
+```
+
+### Manual Pipeline Run
+
+```bash
+# Run full pipeline once
+python3 app/scrapers/orchestrator.py
+```
+
+### Production (Fly.io)
+
+Fly runs **`SKIP_CELERY=1`**. Celery Beat is **not consumed**. The worker process (`scripts/start_worker.sh`) starts in-app threads:
+
+| Thread | What it does |
+|--------|----------------|
+| `intelligence-scraper` | News/lead discovery every `RUN_SCRAPER_EVERY_HOURS` (default 6h) |
+| `job-board-scraper` | Robot Job extract onto `robot_jobs` every `JOB_BOARD_EVERY_HOURS` (default 6h), 12 min after boot |
+
+Do not assume Beat is running. Kill switch: `ENABLE_SCHEDULED_JOB_BOARD=0` (does not stop intelligence).
+
+Manual trigger on Fly: `POST /api/scraper/run/job_boards` (in-process when `SKIP_CELERY=1`).
+
+Live yield: `GET /api/pipeline-stats` → `robot_jobs` (`total`, `last_24h`, `last_7d`).
+
+## Schedule Overview
+
+| Scraper | Frequency | Time (UTC) |
+|---------|-----------|------------|
+| News (General) | Every 2h | 6am, 8am, 10am, 12pm, 2pm, 4pm |
+| Manufacturing News | 2x daily | 7:30am, 3:30pm |
+| Job Boards | Every 6h (Fly in-app worker thread) | Hospitality, Logistics, Healthcare, Food Service |
+| RSS Feeds | Every 4h | :30 minutes |
+| Hotel Directory | Daily | 3am |
+| Logistics Directory | Daily | 4am |
+| SERP Expansion | Every 8h | 12am, 8am, 4pm |
+| RFP Marketplace | Daily | 5am |
+| Company Re-scoring | Daily | 6am |
+| Health Check | Hourly | :00 minutes |
+
+## Monitoring
+
+Real-time dashboard shows:
+- Total companies/signals/leads
+- Recent activity (last hour, last 24h)
+- Top signal types
+- Top industries
+- Data source breakdown
+
+Run: `python3 scripts/monitor_scrapers.py`
+
+## Future Enhancements
+
+- LinkedIn Sales Navigator API integration
+- Clearbit/ZoomInfo enrichment
+- Webhooks for instant signal alerts
+- ML-based signal quality scoring
+- Geographic expansion signals

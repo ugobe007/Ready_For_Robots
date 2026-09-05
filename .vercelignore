@@ -1,0 +1,45 @@
+# Keep Vercel upload under 100MB — source only; deps install on build
+**/.git/**
+**/.git
+**/node_modules/**
+**/.venv/**
+**/.venv_new/**
+**/venv/**
+# Catch every virtualenv variant (.venv-harness has a 206MB bundled binary > Vercel 100MB limit)
+**/.venv*/**
+**/.venv*
+.venv-harness/
+.venv.broken/
+**/__pycache__/**
+**/*.pyc
+.cursor/
+.agents/
+dist/
+reports/
+missions/
+docs/
+frontend/
+readyforrobots-redesign/
+worker/
+migrations/
+scripts/
+tests/
+assets/
+*.py
+requirements.txt
+alembic.ini
+Dockerfile
+fly.toml
+readyforrobots-new/server/
+readyforrobots-new/dist/
+readyforrobots-new/node_modules/
+readyforrobots-new/.vercel/
+node_modules/
+
+# Python backend (keep app/data for any shared imports)
+app/**
+!app/data/**
+
+# Markdown noise (optional keep for subfolder docs)
+*.md
+!readyforrobots-new/client/**

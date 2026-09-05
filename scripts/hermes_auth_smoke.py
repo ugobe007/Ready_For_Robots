@@ -1,0 +1,390 @@
+#!/usr/bin/env python3
+"""RETIRED Hermes qualify smoke. Refuses unless HERMES_RETIRED_OVERRIDE=1.
+
+Hermes is retired — Jobs uses POST /api/robot-job-match.
+Do not --apply infer-qualify onto Fly as product.
+Leftover --provider ai-gateway (HTTP 402) is dead; this script never used it.
+
+Historical: loaded RFR_ADMIN_KEY / ADMIN_KEY, then ~/.hermes/.env, then repo .env.
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+import time
+import urllib.error
+import urllib.request
+from pathlib import Path
+
+FLY = os.environ.get("RFR_API_BASE", "https://ready-2-robot.fly.dev").rstrip("/")
+CAL = f"{FLY}/api/v1/market-graph/cal-status"
+INFER = f"{FLY}/api/v1/market-graph/infer-qualify"
+PIPELINE = f"{FLY}/api/leads/pipeline"
+CACHE = f"{FLY}/api/admin/leads/refresh-pipeline-cache"
+BUYING = f"{FLY}/api/v1/market-graph/buying-window-overlay"
+VIDEO = f"{FLY}/api/v1/market-graph/video-evidence/ingest"
+VENDOR_VIDEO = f"{FLY}/api/v1/market-graph/vendor-video-evidence/ingest"
+SEEDS = f"{FLY}/api/v1/market-graph/video-evidence/seed-targets"
+KEY_NAMES = ("RFR_ADMIN_KEY", "ADMIN_KEY")
+
+
+def _load_dotenv(path: Path) -> dict[str, str]:
+    out: dict[str, str] = {}
+    if not path.is_file():
+        return out
+    for raw in path.read_text(errors="replace").splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, _, val = line.partition("=")
+        key = key.strip()
+        val = val.strip().strip("'").strip('"')
+        if key:
+            out[key] = val
+    return out
+
+
+def load_admin_key() -> tuple[str, str]:
+    for name in KEY_NAMES:
+        val = (os.environ.get(name) or "").strip()
+        if val:
+            return val, f"env:{name}"
+    home = Path.home() / ".hermes" / ".env"
+    repo = Path(__file__).resolve().parents[1] / ".env"
+    for path, names in (
+        (home, KEY_NAMES),
+        (repo, ("ADMIN_KEY", "RFR_ADMIN_KEY")),
+    ):
+        data = _load_dotenv(path)
+        for name in names:
+            val = (data.get(name) or "").strip()
+            if val:
+                return val, f"{path}:{name}"
+    return "", ""
+
+
+def _request(url: str, key: str | None, payload: dict | None) -> tuple[int, dict | str]:
+    headers = {
+        "Accept": "application/json",
+        "User-Agent": "rfr-hermes-auth-smoke",
+    }
+    if key:
+        headers["X-Admin-Key"] = key
+    data = None
+    method = "GET"
+    if payload is not None:
+        headers["Content-Type"] = "application/json"
+        data = json.dumps(payload).encode()
+        method = "POST"
+    req = urllib.request.Request(url, data=data, headers=headers, method=method)
+    last_err = "request_failed"
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(req, timeout=90) as resp:
+                body = resp.read().decode()
+                try:
+                    parsed: dict | str = json.loads(body)
+                except json.JSONDecodeError:
+                    parsed = body[:400]
+                return resp.status, parsed
+        except urllib.error.HTTPError as exc:
+            body = exc.read().decode()
+            try:
+                parsed = json.loads(body)
+            except json.JSONDecodeError:
+                parsed = body[:400]
+            return exc.code, parsed
+        except (TimeoutError, urllib.error.URLError, OSError) as exc:
+            last_err = f"{type(exc).__name__}: {exc}"[:240]
+            if attempt < 2:
+                time.sleep(8)
+                continue
+    return 598, {"error": "timeout", "detail": last_err}
+
+
+def _safe_summary(body: dict | str) -> dict:
+    if not isinstance(body, dict):
+        return {"raw": str(body)[:240]}
+    keep = (
+        "auth",
+        "ok",
+        "detail",
+        "accepted",
+        "failed",
+        "skipped",
+        "paid_llm",
+        "engine",
+        "error",
+        "doc",
+        "hermes_run_id",
+        "dry_run",
+        "status",
+        "message",
+        "count",
+    )
+    out = {k: body[k] for k in keep if k in body}
+    results = body.get("results")
+    if isinstance(results, list):
+        out["result_count"] = len(results)
+        ids: list[int] = []
+        names: list[str] = []
+        for row in results:
+            if not isinstance(row, dict):
+                continue
+            cid = row.get("company_id")
+            if cid is not None:
+                ids.append(int(cid))
+            name = row.get("company_name")
+            if name:
+                names.append(str(name)[:80])
+        if ids:
+            out["company_ids"] = ids
+        if names:
+            out["company_names"] = names[:12]
+    cal = body.get("cal")
+    if isinstance(cal, dict):
+        out["cal_keys"] = sorted(cal.keys())[:12]
+    return out
+
+
+def _pipeline_snapshot() -> dict:
+    code, body = _request(PIPELINE, None, None)
+    if code != 200 or not isinstance(body, dict):
+        return {"http": code, "leads": 0, "company_ids": [], "any_overlay": 0, "hermes_qualify": 0}
+    leads = list(body.get("leads") or [])
+    ids: list[int] = []
+    filled = 0
+    qualify = 0
+    names: list[str] = []
+    for row in leads:
+        cid = row.get("id") or row.get("company_id")
+        if cid is not None:
+            ids.append(int(cid))
+        nm = row.get("company_name") or row.get("name")
+        if nm:
+            names.append(str(nm)[:80])
+        hq = row.get("hermes_qualify")
+        if hq:
+            qualify += 1
+            filled += 1
+        elif row.get("hermes_job_titles") or row.get("hermes_decision_makers"):
+            filled += 1
+    return {
+        "http": 200,
+        "leads": len(leads),
+        "company_ids": ids,
+        "company_names": names,
+        "any_overlay": filled,
+        "hermes_qualify": qualify,
+        "built_at": body.get("built_at"),
+    }
+
+
+def tracks_8_10_dry_payloads(company_id: int) -> dict[str, dict]:
+    """Synthetic dry_run bodies. Never persist — GHA/Mac smoke only."""
+    return {
+        "buying_window": {
+            "dry_run": True,
+            "hermes_run_id": "hermes-tracks-8-10-dry",
+            "overlays": [
+                {
+                    "company_id": company_id,
+                    "urgency_0_100": 40,
+                    "window_label": "smoke dry_run (not a real window)",
+                    "factors": [{"type": "smoke", "note": "tracks 8-10 contract"}],
+                    "confidence": 0.1,
+                }
+            ],
+        },
+        "video": {
+            "dry_run": True,
+            "hermes_run_id": "hermes-tracks-8-10-dry",
+            "videos": [
+                {
+                    "company_id": company_id,
+                    "source_url": "https://example.com/rfr-smoke-customer-video",
+                    "platform": "example",
+                    "evidence_kind": "smoke",
+                    "title": "dry_run only",
+                    "confidence": 0.1,
+                }
+            ],
+        },
+        "vendor_video": {
+            "dry_run": True,
+            "hermes_run_id": "hermes-tracks-8-10-dry",
+            "videos": [
+                {
+                    "vendor_name": "Agility Robotics",
+                    "source_url": "https://example.com/rfr-smoke-vendor-video",
+                    "platform": "example",
+                    "evidence_kind": "smoke",
+                    "title": "dry_run only",
+                    "confidence": 0.1,
+                }
+            ],
+        },
+    }
+
+
+def _tracks_8_10_dry_run(key: str, company_ids: list[int]) -> dict:
+    cid = int(company_ids[0]) if company_ids else 1
+    payloads = tracks_8_10_dry_payloads(cid)
+    seed_url = f"{SEEDS}?kind=both&missing_only=true&limit=5"
+    seed_code, seed_body = _request(seed_url, key, None)
+    buy_code, buy_body = _request(BUYING, key, payloads["buying_window"])
+    vid_code, vid_body = _request(VIDEO, key, payloads["video"])
+    vend_code, vend_body = _request(VENDOR_VIDEO, key, payloads["vendor_video"])
+    report = {
+        "seed_targets": {"http": seed_code, **_safe_summary(seed_body)},
+        "buying_window_dry_run": {"http": buy_code, **_safe_summary(buy_body)},
+        "video_evidence_dry_run": {"http": vid_code, **_safe_summary(vid_body)},
+        "vendor_video_dry_run": {"http": vend_code, **_safe_summary(vend_body)},
+    }
+    ok = (
+        seed_code == 200
+        and buy_code == 200
+        and vid_code == 200
+        and vend_code == 200
+        and not (isinstance(seed_body, dict) and seed_body.get("error"))
+        and (not isinstance(buy_body, dict) or int(buy_body.get("accepted") or 0) >= 1)
+        and (not isinstance(vid_body, dict) or int(vid_body.get("accepted") or 0) >= 1)
+        and (not isinstance(vend_body, dict) or int(vend_body.get("accepted") or 0) >= 1)
+    )
+    report["ok"] = ok
+    return report
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="RETIRED Hermes smoke. Refuses unless HERMES_RETIRED_OVERRIDE=1."
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="RETIRED. Persist infer-qualify. Still requires HERMES_RETIRED_OVERRIDE=1.",
+    )
+    args = parser.parse_args()
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+    from hermes_retired import refuse_unless_overridden
+
+    refuse_unless_overridden()
+
+    key, source = load_admin_key()
+    if not key:
+        print(
+            json.dumps(
+                {
+                    "ok": False,
+                    "reason": "no_key",
+                    "hint": "Inject RFR_ADMIN_KEY (Hermes ~/.hermes/.env) or run on the Mac.",
+                },
+                indent=2,
+            )
+        )
+        return 2
+    kind = (
+        "jwt"
+        if key.startswith("eyJ")
+        else "fingerprint"
+        if len(key) == 16 and all(c in "0123456789abcdef" for c in key.lower())
+        else "random"
+    )
+    report: dict = {
+        "key_source": source,
+        "key_len": len(key),
+        "key_kind": kind,
+        "api": FLY,
+    }
+    if kind != "random":
+        report["ok"] = False
+        report["reason"] = "wrong_kind_of_secret"
+        print(json.dumps(report, indent=2))
+        return 1
+
+    pipe = _pipeline_snapshot()
+    report["pipeline_before"] = pipe
+    company_ids = list(pipe.get("company_ids") or [])
+    # Dry infer is an auth/contract probe only. Sending every pipeline ID
+    # plus --apply on every PR push saturates Fly during cache rebuild.
+    infer_body_dry: dict = {
+        "dry_run": True,
+        "hermes_run_id": "hermes-pipeline-dry",
+        "limit": 1,
+    }
+
+    cal_code, cal_body = _request(CAL, key, None)
+    report["cal_status"] = {"http": cal_code, **_safe_summary(cal_body)}
+
+    tracks = _tracks_8_10_dry_run(key, company_ids)
+    report["tracks_8_10"] = tracks
+
+    infer_code, infer_body = _request(INFER, key, infer_body_dry)
+    infer_summary = {"http": infer_code, **_safe_summary(infer_body)}
+    infer_ok = infer_code == 200
+    infer_timeout = infer_code == 598
+    if infer_timeout:
+        infer_summary["skipped"] = "timeout_after_retries"
+    report["infer_qualify_dry_run"] = infer_summary
+
+    report["ok"] = cal_code == 200 and bool(tracks.get("ok")) and (infer_ok or infer_timeout)
+    if cal_code != 200:
+        report["reason"] = "auth_or_contract_failed"
+        print(json.dumps(report, indent=2, default=str))
+        return 1
+    if not tracks.get("ok"):
+        report["ok"] = False
+        report["reason"] = "tracks_8_10_dry_run_failed"
+        print(json.dumps(report, indent=2, default=str))
+        return 1
+    if not infer_ok and not infer_timeout:
+        report["ok"] = False
+        report["reason"] = "auth_or_contract_failed"
+        print(json.dumps(report, indent=2, default=str))
+        return 1
+
+    if args.apply:
+        live_payload: dict = {
+            "dry_run": False,
+            "hermes_run_id": "hermes-pipeline-apply",
+        }
+        if company_ids:
+            live_payload["company_ids"] = company_ids
+            live_payload["limit"] = max(len(company_ids), 1)
+        else:
+            live_payload["limit"] = 12
+        live_code, live_body = _request(INFER, key, live_payload)
+        report["infer_qualify_apply"] = {"http": live_code, **_safe_summary(live_body)}
+        report["ok"] = live_code == 200 and (
+            not isinstance(live_body, dict) or int(live_body.get("accepted") or 0) > 0
+        )
+        cache_code, cache_body = _request(CACHE, key, {})
+        report["pipeline_cache_refresh"] = {"http": cache_code, **_safe_summary(cache_body)}
+        after = _pipeline_snapshot()
+        # Cache rebuild is async (~15 min). Poll briefly; apply success is the gate.
+        for _ in range(6):
+            if after.get("hermes_qualify"):
+                break
+            time.sleep(15)
+            after = _pipeline_snapshot()
+        report["pipeline_after"] = after
+        if not report["ok"]:
+            report["reason"] = "infer_qualify_apply_failed"
+            print(json.dumps(report, indent=2, default=str))
+            return 1
+        if after.get("hermes_qualify"):
+            report["overlays_visible"] = True
+        else:
+            report["overlays_visible"] = False
+            report["note"] = (
+                "infer-qualify wrote overlays on the public pipeline company IDs; "
+                "public /api/leads/pipeline may lag until cache rebuild finishes."
+            )
+    print(json.dumps(report, indent=2, default=str))
+    return 0 if report["ok"] else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,2 @@
+timestamp_utc,action,canonical_id,canonical_name,loser_id,loser_name,website,industry,before_counts,after_counts,notes
+2026-05-12T23:29:59.565424+00:00,merge_into_existing,1103,Intuitive Surgical,6647,Intuitive Surgical and the Robot,https://www.intuitive.com/en-us,Medical Technology,"{'1103': {'signals': 10, 'scores': 1, 'contacts': 0}, '6647': {'signals': 2, 'scores': 0, 'contacts': 0}}","{'1103': {'signals': 12, 'scores': 1, 'contacts': 0}}",Exact extracted object candidate matched existing Intuitive Surgical company row.

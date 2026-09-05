@@ -1,0 +1,143 @@
+{
+  "generated_date": "2026-03-08T16:46:53.622233",
+  "overview": {
+    "total_companies": 158,
+    "total_signals": 437,
+    "avg_signals_per_company": 2.8,
+    "companies_with_strong_intent": 98,
+    "strong_intent_percentage": 62.0,
+    "recent_discoveries_30_days": 158
+  },
+  "industries": [
+    {
+      "name": "Logistics",
+      "count": 42
+    },
+    {
+      "name": "Hospitality",
+      "count": 33
+    },
+    {
+      "name": "Unknown",
+      "count": 18
+    },
+    {
+      "name": "Healthcare",
+      "count": 13
+    },
+    {
+      "name": "Casinos & Gaming",
+      "count": 10
+    },
+    {
+      "name": "Airports & Transportation",
+      "count": 9
+    },
+    {
+      "name": "Theme Parks & Entertainment",
+      "count": 9
+    },
+    {
+      "name": "Food Service",
+      "count": 8
+    },
+    {
+      "name": "Cruise Lines",
+      "count": 7
+    },
+    {
+      "name": "Real Estate & Facilities",
+      "count": 5
+    }
+  ],
+  "signal_types": [
+    {
+      "type": "news",
+      "count": 111
+    },
+    {
+      "type": "labor_shortage",
+      "count": 97
+    },
+    {
+      "type": "capex",
+      "count": 91
+    },
+    {
+      "type": "strategic_hire",
+      "count": 75
+    },
+    {
+      "type": "expansion",
+      "count": 37
+    },
+    {
+      "type": "automation_interest",
+      "count": 10
+    },
+    {
+      "type": "funding_round",
+      "count": 6
+    },
+    {
+      "type": "ma_activity",
+      "count": 5
+    },
+    {
+      "type": "job_posting",
+      "count": 5
+    }
+  ],
+  "sample_companies": [
+    {
+      "name": "Hilton Hotels",
+      "industry": "Hospitality",
+      "location": "McLean, VA"
+    },
+    {
+      "name": "Amazon Logistics",
+      "industry": "Logistics",
+      "location": "Seattle, WA"
+    },
+    {
+      "name": "Walmart Supply Chain",
+      "industry": "Retail",
+      "location": "Bentonville, AR"
+    },
+    {
+      "name": "Marriott Hotels",
+      "industry": "Hospitality",
+      "location": "Bethesda, MD"
+    },
+    {
+      "name": "UPS",
+      "industry": "Logistics",
+      "location": "Atlanta, GA"
+    },
+    {
+      "name": "Caesars Entertainment",
+      "industry": "Casinos & Gaming",
+      "location": "Las Vegas, NV"
+    },
+    {
+      "name": "Las Vegas Sands Corp",
+      "industry": "Casinos & Gaming",
+      "location": "Las Vegas, NV"
+    },
+    {
+      "name": "Wynn Resorts",
+      "industry": "Casinos & Gaming",
+      "location": "Las Vegas, NV"
+    },
+    {
+      "name": "MGM Resorts International",
+      "industry": "Casinos & Gaming",
+      "location": "Las Vegas, NV"
+    },
+    {
+      "name": "Hard Rock International",
+      "industry": "Casinos & Gaming",
+      "location": "Hollywood, FL"
+    }
+  ]
+}

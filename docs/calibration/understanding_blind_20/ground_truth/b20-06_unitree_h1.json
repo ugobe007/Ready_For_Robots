@@ -1,0 +1,69 @@
+{
+  "id": "b20-06",
+  "authored_independently": true,
+  "authored_at": "2026-08-17T01:15:00Z",
+  "researcher_method": "Unitree H1 official product page specs; authored before agent run.",
+  "primary_sources_reviewed": [
+    "https://www.unitree.com/h1"
+  ],
+  "identity": {
+    "company_any": [
+      "Unitree"
+    ],
+    "product_any": [
+      "H1",
+      "Unitree H1",
+      "H1-2"
+    ],
+    "display_class_any": [
+      "humanoid"
+    ]
+  },
+  "material_facts": [
+    {
+      "id": "f1",
+      "predicate": "product_class",
+      "value_any": [
+        "humanoid"
+      ],
+      "importance": "critical",
+      "evidence": "full-size universal humanoid robot"
+    },
+    {
+      "id": "f2",
+      "predicate": "has_mobile_base",
+      "value_any": [
+        true
+      ],
+      "importance": "high",
+      "evidence": "bipedal walk/run mobility"
+    },
+    {
+      "id": "f3",
+      "predicate": "degrees_of_freedom",
+      "value_num": 27,
+      "units_any": [],
+      "importance": "medium",
+      "evidence": "H1-2 DoF 27 (H1 base has fewer expandable arms)"
+    },
+    {
+      "id": "f4",
+      "predicate": "carrying_capacity",
+      "value_num": 7,
+      "units_any": [
+        "kg"
+      ],
+      "importance": "high",
+      "evidence": "H1-2 arm rated load ~7 kg (peak ~21 kg)"
+    }
+  ],
+  "alt_acceptable": {
+    "carrying_capacity_value_any": [
+      7,
+      21
+    ]
+  },
+  "human_tier_judgment": "A",
+  "human_tier_rationale": "Dense public parameter table on product page.",
+  "notes": "H1 vs H1-2 sibling \u2014 do not invent H1-2-only facts as H1 if unbound; accept either generation identity."
+}

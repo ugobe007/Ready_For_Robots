@@ -1,0 +1,11 @@
+object_candidate,official_url,entity_read,recommended_repair_action,notes
+Mind Robotics,https://mindrobotics.com/,robotics vendor / Rivian spinout,merge_duplicate_rows_keep_hidden_or_vendor,"Rows 811 and 901 point to same object. Real company, but a robotics seller, not buyer opportunity."
+Mews,https://www.mews.com/,hospitality operating system / software vendor,rename_keep_hidden_or_vendor,"Real object in string. Vendor/seller to hotels, not buyer opportunity."
+MGM Springfield,https://www.mgmspringfield.com/,casino hotel operator,buyer_account_repair,"Rows 838 and 1344 point to MGM Springfield. Candidate buyer/operator."
+SCALA,https://www.scalagroup.co.uk/,supply chain consultancy,rename_keep_hidden_or_vendor,"Real object in string. Consultancy/vendor, not buyer opportunity."
+Stateful Robotics,https://statefulrobotics.com/,robotics / embodied AI vendor,rename_keep_hidden_or_vendor,"Real object in Oxford spinout string. Robotics seller, not buyer opportunity."
+Egis,https://www.egis-group.com/,airport infrastructure operator / consultancy,buyer_or_partner_review,"Real object. Operates/manages airport concessions; review as buyer/partner, not automatic HOT lead."
+Intuitive Surgical,https://www.intuitive.com/en-us,robotic surgery company,merge_into_existing_keep_hidden_or_vendor,"Existing company row found. Real robotics/medtech vendor, not buyer opportunity."
+NVIDIA,https://www.nvidia.com/,AI computing hardware/software vendor,merge_duplicate_rows_keep_hidden_or_vendor,"Rows for NVIDIA/Nvidia point to real company. Tech vendor/partner, not buyer opportunity."
+SUSE,https://www.suse.com/,enterprise open-source software vendor,rename_keep_hidden_or_vendor,"Real object. Software vendor, not buyer opportunity."
+BayCare,https://baycare.org/,health system / hospital operator,merge_into_existing_buyer_review,"Existing company row found. Candidate buyer/operator; review partnership signal quality."

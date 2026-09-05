@@ -1,0 +1,4799 @@
+{
+  "generated_at": "2026-08-26T21:17:41+00:00",
+  "fetcher": "app.services.robot_understanding_v1.fetch.fetch_page",
+  "resume": "PYTHONPATH=. python3 scripts/ingest_oem_sku_catalog.py --discover-skus",
+  "fetches": 280,
+  "verified": [
+    {
+      "slug": "1x-neo",
+      "name": "Neo",
+      "company": "1X",
+      "company_slug": "1x",
+      "url": "https://www.1x.tech/neo",
+      "host": "1x.tech",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "anybotics-anymal",
+      "name": "ANYmal",
+      "company": "ANYbotics",
+      "company_slug": "anybotics",
+      "url": "https://www.anybotics.com/robotics/anymal/",
+      "host": "anybotics.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "aethon-t3-robot",
+      "name": "T3",
+      "company": "Aethon",
+      "company_slug": "aethon",
+      "url": "https://aethon.com/t3/",
+      "host": "aethon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "agility-robotics-digit",
+      "name": "Digit",
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "url": "https://www.agilityrobotics.com/sales",
+      "host": "agilityrobotics.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "apptronik-apollo",
+      "name": "Apollo",
+      "company": "Apptronik",
+      "company_slug": "apptronik",
+      "url": "https://apptronik.com/apollo/apollo-2",
+      "host": "apptronik.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "bear-robotics-servi",
+      "name": "Servi",
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "url": "https://www.bearrobotics.ai/servi",
+      "host": "bearrobotics.ai",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "bear-robotics-carti-100",
+      "name": "Carti 100",
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "url": "https://www.bearrobotics.ai/carti100",
+      "host": "bearrobotics.ai",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "boston-dynamics-spot",
+      "name": "Spot",
+      "company": "Boston Dynamics",
+      "company_slug": "boston-dynamics",
+      "url": "https://bostondynamics.com/products/spot/",
+      "host": "bostondynamics.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "boston-dynamics-atlas",
+      "name": "Atlas",
+      "company": "Boston Dynamics",
+      "company_slug": "boston-dynamics",
+      "url": "https://bostondynamics.com/products/atlas/",
+      "host": "bostondynamics.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "boston-dynamics-stretch",
+      "name": "Stretch",
+      "company": "Boston Dynamics",
+      "company_slug": "boston-dynamics",
+      "url": "https://bostondynamics.com/products/stretch/",
+      "host": "bostondynamics.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "diligent-robotics-moxi",
+      "name": "Moxi",
+      "company": "Diligent Robotics",
+      "company_slug": "diligent-robotics",
+      "url": "https://www.diligentrobots.com/moxi",
+      "host": "diligentrobots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "figure-ai-figure-03",
+      "name": "FIGURE 03",
+      "company": "Figure AI",
+      "company_slug": "figure-ai",
+      "url": "https://www.figure.ai/figure",
+      "host": "figure.ai",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "bear-robotics-carti",
+      "name": "Carti",
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "url": "https://www.bearrobotics.ai/carti100",
+      "host": "bearrobotics.ai",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "ecovacs-deebot-x12s",
+      "name": "Deebot X12S",
+      "company": "Ecovacs",
+      "company_slug": "ecovacs",
+      "url": "https://www.ecovacs.com/us/deebot-robotic-vacuum-cleaner/deebot-x12s",
+      "host": "ecovacs.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "gausium-scrubber-75",
+      "name": "Scrubber 75",
+      "company": "Gausium",
+      "company_slug": "gausium",
+      "url": "https://gausium.com/products/scrubber-75",
+      "host": "gausium.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "gausium-vacuum-40",
+      "name": "Vacuum 40",
+      "company": "Gausium",
+      "company_slug": "gausium",
+      "url": "https://gausium.com/products/vacuum40",
+      "host": "gausium.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "gausium-cd-01",
+      "name": "CD-01",
+      "company": "Gausium",
+      "company_slug": "gausium",
+      "url": "https://gausium.com/products/cd-01",
+      "host": "gausium.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "gausium-cd-04",
+      "name": "CD-04",
+      "company": "Gausium",
+      "company_slug": "gausium",
+      "url": "https://gausium.com/products/cd-04",
+      "host": "gausium.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "gausium-ws-01",
+      "name": "WS-01",
+      "company": "Gausium",
+      "company_slug": "gausium",
+      "url": "https://gausium.com/products/ws-01",
+      "host": "gausium.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "gausium-ws-02",
+      "name": "WS-02",
+      "company": "Gausium",
+      "company_slug": "gausium",
+      "url": "https://gausium.com/products/ws-02",
+      "host": "gausium.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "gausium-ws-03",
+      "name": "WS-03",
+      "company": "Gausium",
+      "company_slug": "gausium",
+      "url": "https://gausium.com/products/ws-03",
+      "host": "gausium.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-c55",
+      "name": "C55",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/C55",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-c40",
+      "name": "C40",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/C40",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-c30-3-in-1-dry-cleaning",
+      "name": "C30",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/C30",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-c20",
+      "name": "C20",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/C20",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-t10-hot-delivery-marketing-expert",
+      "name": "T10",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/T10",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-t11",
+      "name": "T11",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/T11",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-t8-optimized-compact-design",
+      "name": "T8",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/T8",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-t9-high-load-capacity",
+      "name": "T9",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/T9",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-t3-safe-and-hygienic",
+      "name": "T3",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/T3",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-w3-hot-private-and-multi-floor-service",
+      "name": "W3",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/W3",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-s300",
+      "name": "S300",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/S300",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "keenon-robotics-s100-heavy-load-courier-robot",
+      "name": "S100",
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/en/product/S100",
+      "host": "keenon.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "mobile-industrial-robots-mir250",
+      "name": "MIR250",
+      "company": "Mobile Industrial Robots",
+      "company_slug": "mobile-industrial-robots",
+      "url": "https://mobile-industrial-robots.com/products/robots/mir250",
+      "host": "mobile-industrial-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "mobile-industrial-robots-mir1200-pallet-jack",
+      "name": "MiR1200 Pallet Jack",
+      "company": "Mobile Industrial Robots",
+      "company_slug": "mobile-industrial-robots",
+      "url": "https://mobile-industrial-robots.com/products/robots/mir1200-pallet-jack",
+      "host": "mobile-industrial-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "mobile-industrial-robots-mir600",
+      "name": "MIR600",
+      "company": "Mobile Industrial Robots",
+      "company_slug": "mobile-industrial-robots",
+      "url": "https://mobile-industrial-robots.com/products/robots/mir600",
+      "host": "mobile-industrial-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "mobile-industrial-robots-mir1350",
+      "name": "MIR1350",
+      "company": "Mobile Industrial Robots",
+      "company_slug": "mobile-industrial-robots",
+      "url": "https://mobile-industrial-robots.com/products/robots/mir1350",
+      "host": "mobile-industrial-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "otto-motors-otto-100",
+      "name": "OTTO 100",
+      "company": "OTTO Motors",
+      "company_slug": "otto-motors",
+      "url": "https://ottomotors.com/100/",
+      "host": "ottomotors.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "otto-motors-otto-600",
+      "name": "OTTO 600",
+      "company": "OTTO Motors",
+      "company_slug": "otto-motors",
+      "url": "https://ottomotors.com/600/",
+      "host": "ottomotors.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "otto-motors-otto-1200",
+      "name": "OTTO 1200",
+      "company": "OTTO Motors",
+      "company_slug": "otto-motors",
+      "url": "https://ottomotors.com/1200/",
+      "host": "ottomotors.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "otto-motors-otto-1500",
+      "name": "OTTO 1500",
+      "company": "OTTO Motors",
+      "company_slug": "otto-motors",
+      "url": "https://ottomotors.com/1500/",
+      "host": "ottomotors.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "pal-robotics-tiago",
+      "name": "TIAGo",
+      "company": "PAL Robotics",
+      "company_slug": "pal-robotics",
+      "url": "https://pal-robotics.com/robot/tiago/",
+      "host": "pal-robotics.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "pudu-robotics-d9",
+      "name": "D9",
+      "company": "Pudu Robotics",
+      "company_slug": "pudu-robotics",
+      "url": "https://www.pudurobotics.com/en/products/d9",
+      "host": "pudurobotics.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "pudu-robotics-mt1",
+      "name": "MT1",
+      "company": "Pudu Robotics",
+      "company_slug": "pudu-robotics",
+      "url": "https://www.pudurobotics.com/en/products/mt1",
+      "host": "pudurobotics.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "pudu-robotics-pudu-t300",
+      "name": "PUDU T300",
+      "company": "Pudu Robotics",
+      "company_slug": "pudu-robotics",
+      "url": "https://www.pudurobotics.com/en/products/pudut300",
+      "host": "pudurobotics.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "pudu-robotics-pudua1",
+      "name": "PUDUA1",
+      "company": "Pudu Robotics",
+      "company_slug": "pudu-robotics",
+      "url": "https://www.pudurobotics.com/en/products/puduA1",
+      "host": "pudurobotics.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "pudu-robotics-pudud1",
+      "name": "PUDUD1",
+      "company": "Pudu Robotics",
+      "company_slug": "pudu-robotics",
+      "url": "https://www.pudurobotics.com/en/products/puduD1",
+      "host": "pudurobotics.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "pudu-robotics-pudush1",
+      "name": "PUDUSH1",
+      "company": "Pudu Robotics",
+      "company_slug": "pudu-robotics",
+      "url": "https://www.pudurobotics.com/en/products/puduSH1",
+      "host": "pudurobotics.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "seegrid-lift-el1-amr",
+      "name": "Lift EL1 Amr",
+      "company": "Seegrid",
+      "company_slug": "seegrid",
+      "url": "https://seegrid.com/autonomous-mobile-robots/lift-el1-amr/",
+      "host": "seegrid.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "seegrid-lift-rs1-amr",
+      "name": "Lift RS1 Amr",
+      "company": "Seegrid",
+      "company_slug": "seegrid",
+      "url": "https://seegrid.com/autonomous-mobile-robots/lift-rs1-amr/",
+      "host": "seegrid.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "seegrid-lift-cr1-amr",
+      "name": "Lift CR1 Amr",
+      "company": "Seegrid",
+      "company_slug": "seegrid",
+      "url": "https://seegrid.com/autonomous-mobile-robots/lift-cr1-amr/",
+      "host": "seegrid.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "seegrid-tow-tractor-s7-amr",
+      "name": "Tow Tractor S7 Amr",
+      "company": "Seegrid",
+      "company_slug": "seegrid",
+      "url": "https://seegrid.com/autonomous-mobile-robots/tow-tractor-s7-amr/",
+      "host": "seegrid.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "ubtech-walker-s2",
+      "name": "Walker S2",
+      "company": "UBTECH",
+      "company_slug": "ubtech",
+      "url": "https://www.ubtrobot.com/en/humanoid/products/walker-s2",
+      "host": "ubtrobot.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "ubtech-alpha-1e",
+      "name": "Alpha 1E",
+      "company": "UBTECH",
+      "company_slug": "ubtech",
+      "url": "https://www.ubtrobot.com/en/consumer/humanoid-robots/alpha-series/alpha-1e",
+      "host": "ubtrobot.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "ubtech-walker",
+      "name": "Walker",
+      "company": "UBTECH",
+      "company_slug": "ubtech",
+      "url": "https://www.ubtrobot.com/en/humanoid/products/walker",
+      "host": "ubtrobot.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-as2",
+      "name": "AS2",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/As2/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-go2",
+      "name": "GO2",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/go2/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-go1",
+      "name": "GO1",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/go1/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-a1",
+      "name": "A1",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/A1/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-a2",
+      "name": "A2",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/A2/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-b2",
+      "name": "B2",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/b2/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-b1",
+      "name": "B1",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/b1/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-z1",
+      "name": "Z1",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/z1/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-l2",
+      "name": "L2",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/L2/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-h2",
+      "name": "H2",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/H2/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-r1",
+      "name": "R1",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/R1/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "unitree-robotics-g1",
+      "name": "G1",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/g1/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "unitree-robotics-h1",
+      "name": "H1",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/h1/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "unitree-robotics-h2-d",
+      "name": "H2-D",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/H2-D/",
+      "host": "unitree.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "universal-robots-ur8-long",
+      "name": "UR8 Long",
+      "company": "Universal Robots",
+      "company_slug": "universal-robots",
+      "url": "https://www.universal-robots.com/products/ur8-long/",
+      "host": "universal-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "universal-robots-ur15",
+      "name": "UR15",
+      "company": "Universal Robots",
+      "company_slug": "universal-robots",
+      "url": "https://www.universal-robots.com/products/ur15/",
+      "host": "universal-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "universal-robots-ur18",
+      "name": "UR18",
+      "company": "Universal Robots",
+      "company_slug": "universal-robots",
+      "url": "https://www.universal-robots.com/products/ur18/",
+      "host": "universal-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "universal-robots-ur20",
+      "name": "UR20",
+      "company": "Universal Robots",
+      "company_slug": "universal-robots",
+      "url": "https://www.universal-robots.com/products/ur20/",
+      "host": "universal-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "universal-robots-ur30",
+      "name": "UR30",
+      "company": "Universal Robots",
+      "company_slug": "universal-robots",
+      "url": "https://www.universal-robots.com/products/ur30/",
+      "host": "universal-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "universal-robots-ur3e",
+      "name": "UR3E",
+      "company": "Universal Robots",
+      "company_slug": "universal-robots",
+      "url": "https://www.universal-robots.com/products/ur3e/",
+      "host": "universal-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "universal-robots-ur7e",
+      "name": "UR7E",
+      "company": "Universal Robots",
+      "company_slug": "universal-robots",
+      "url": "https://www.universal-robots.com/products/ur7e/",
+      "host": "universal-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "universal-robots-ur12e",
+      "name": "UR12E",
+      "company": "Universal Robots",
+      "company_slug": "universal-robots",
+      "url": "https://www.universal-robots.com/products/ur12e/",
+      "host": "universal-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "universal-robots-ur16e",
+      "name": "UR16E",
+      "company": "Universal Robots",
+      "company_slug": "universal-robots",
+      "url": "https://www.universal-robots.com/products/ur16e/",
+      "host": "universal-robots.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "yaskawa-motoman-gp4",
+      "name": "GP4",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp4",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "yaskawa-motoman-gp7",
+      "name": "GP7",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp7",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "yaskawa-motoman-gp8",
+      "name": "GP8",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp8",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "yaskawa-motoman-gp8l",
+      "name": "GP8L",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp8l",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "yaskawa-motoman-gp10",
+      "name": "GP10",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp10",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "yaskawa-motoman-gp12",
+      "name": "GP12",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp12",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "yaskawa-motoman-gp20hl",
+      "name": "GP20HL",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp20hl",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "yaskawa-motoman-gp25",
+      "name": "GP25",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp25",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "workbook"
+    },
+    {
+      "slug": "yaskawa-motoman-gp35l",
+      "name": "GP35L",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp35l",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "yaskawa-motoman-gp50",
+      "name": "GP50",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp50",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "yaskawa-motoman-gp70l",
+      "name": "GP70L",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp70l",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    },
+    {
+      "slug": "yaskawa-motoman-gp88",
+      "name": "GP88",
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp88",
+      "host": "motoman.com",
+      "status_code": 200,
+      "source": "oem_listing"
+    }
+  ],
+  "failed": [
+    {
+      "company": "1X",
+      "company_slug": "1x",
+      "url": "https://1x.tech/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "1X",
+      "company_slug": "1x",
+      "url": "https://www.1x.tech/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "1x-terms-of-use",
+      "name": "Terms of Use",
+      "company": "1X",
+      "company_slug": "1x",
+      "url": "https://www.1x.tech/terms-and-conditions",
+      "reason": "http_404"
+    },
+    {
+      "company": "ABB Robotics",
+      "company_slug": "abb-robotics",
+      "url": "https://abb.com/",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "ABB Robotics",
+      "company_slug": "abb-robotics",
+      "url": "https://www.abb.com/",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "ABB Robotics",
+      "company_slug": "abb-robotics",
+      "url": "https://abb.com/products",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "ABB Robotics",
+      "company_slug": "abb-robotics",
+      "url": "https://www.abb.com/products",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "ANYbotics",
+      "company_slug": "anybotics",
+      "url": "https://anybotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "ANYbotics",
+      "company_slug": "anybotics",
+      "url": "https://www.anybotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "anybotics-learn-more",
+      "name": "Learn more >",
+      "company": "ANYbotics",
+      "company_slug": "anybotics",
+      "url": "https://www.anybotics.com/solutions/automate-inspection/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://accuray.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://www.accuray.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "accuray-japanese",
+      "name": "Japanese",
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://www.accuray.com/ja/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "accuray-spanish",
+      "name": "Spanish",
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://www.accuray.com/es/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "accuray-portuguese-brazil",
+      "name": "Portuguese (Brazil)",
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://www.accuray.com/pt-br/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "accuray-korean",
+      "name": "Korean",
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://www.accuray.com/ko/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "accuray-contact-inquiry",
+      "name": "Contact Inquiry",
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://www.accuray.com/contact-us/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "accuray-precision-treatment-planning",
+      "name": "Precision Treatment Planning",
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://www.accuray.com/software/precision-treatment-planning/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "aethon-new-construction",
+      "name": "New Construction",
+      "company": "Aethon",
+      "company_slug": "aethon",
+      "url": "https://aethon.com/?p=21634",
+      "reason": "http_404"
+    },
+    {
+      "slug": "aethon-laboratory",
+      "name": "Laboratory",
+      "company": "Aethon",
+      "company_slug": "aethon",
+      "url": "https://aethon.com/mobile-delivery-robot-for-hospital-labs",
+      "reason": "http_0"
+    },
+    {
+      "slug": "aethon-hospitality",
+      "name": "Hospitality",
+      "company": "Aethon",
+      "company_slug": "aethon",
+      "url": "https://aethon.com/hospitality-robots",
+      "reason": "http_0"
+    },
+    {
+      "slug": "agility-robotics-view-more",
+      "name": "View More→",
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "url": "https://www.agilityrobotics.com/latest-press",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "agility-robotics-agility-robotics-raises-20-million",
+      "name": "Agility Robotics Raises 20 Million",
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "url": "https://www.agilityrobotics.com/content/agility-robotics-raises-20-million",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "agility-robotics-agility-robotics-secures-8m-in-funding",
+      "name": "Agility Robotics Secures 8M In Funding",
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "url": "https://www.agilityrobotics.com/content/agility-robotics-secures-8m-in-funding",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "agility-robotics-crossing-sim2real-gap-with-isaaclab",
+      "name": "Crossing SIM2REAL Gap With Isaaclab",
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "url": "https://www.agilityrobotics.com/content/crossing-sim2real-gap-with-isaaclab",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://aboutamazon.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "amazon-robotics-amazon-future-ready",
+      "name": "Amazon Future Ready",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/impact/amazon-future-ready",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "amazon-robotics-more-innovation",
+      "name": "More Innovation",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/artificial-intelligence-ai-news",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "amazon-robotics-more-prime",
+      "name": "More Prime",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/what-we-do/prime",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "amazon-robotics-more-workplace",
+      "name": "More Workplace",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/amazons-workplace-culture",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "amazon-robotics-more-international",
+      "name": "More International",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/international-news",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "amazon-robotics-more-features",
+      "name": "More Features",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/feature-stories-amazon-multimedia-storytelling",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "amazon-robotics-en",
+      "name": "EN",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com:443/more-from-amazon",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "amazon-robotics-aws",
+      "name": "AWS",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/amazon-aws-news",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Apptronik",
+      "company_slug": "apptronik",
+      "url": "https://apptronik.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Apptronik",
+      "company_slug": "apptronik",
+      "url": "https://www.apptronik.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "url": "https://bearrobotics.ai/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "url": "https://www.bearrobotics.ai/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "bossa-nova-robotics-lander",
+      "name": "Lander",
+      "company": "Bossa Nova Robotics",
+      "company_slug": "bossa-nova-robotics",
+      "url": "https://bossanova.ai/lander",
+      "reason": "http_403"
+    },
+    {
+      "company": "Diligent Robotics",
+      "company_slug": "diligent-robotics",
+      "url": "https://diligentrobots.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Diligent Robotics",
+      "company_slug": "diligent-robotics",
+      "url": "https://www.diligentrobots.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "diligent-robotics-casestudy-marywashington-aonl-v5-pdf",
+      "name": "Casestudy Marywashington Aonl V5.PDF",
+      "company": "Diligent Robotics",
+      "company_slug": "diligent-robotics",
+      "url": "https://static1.squarespace.com/static/606f1bb0f7e05e3329035ff8/t/646ea775568290180e2185b0/1746482229015/CaseStudy_MaryWashington_AONL_V5.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "diligent-robotics-aonl-shannon-casestudy-v3-pdf",
+      "name": "Aonl Shannon Casestudy V3.PDF",
+      "company": "Diligent Robotics",
+      "company_slug": "diligent-robotics",
+      "url": "https://static1.squarespace.com/static/606f1bb0f7e05e3329035ff8/t/646ea7519de79e7603715e12/1746482229015/AONL_Shannon_CaseStudy_v3.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "diligent-robotics-home",
+      "name": "Home",
+      "company": "Diligent Robotics",
+      "company_slug": "diligent-robotics",
+      "url": "https://www.diligentrobots.com/home",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "diligent-robotics-aonl",
+      "name": "Aonl",
+      "company": "Diligent Robotics",
+      "company_slug": "diligent-robotics",
+      "url": "https://www.diligentrobots.com/aonl",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Ekso Bionics",
+      "company_slug": "ekso-bionics",
+      "url": "https://eksobionics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Ekso Bionics",
+      "company_slug": "ekso-bionics",
+      "url": "https://www.eksobionics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "fanuc-skip-to-content",
+      "name": "Skip to content",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-espa-ol-mx",
+      "name": "Español (MX)",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/es-mx",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-cnc",
+      "name": "CNC",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/products/cnc",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-robodrill",
+      "name": "ROBODRILL",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/products/robodrill",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-robocut",
+      "name": "ROBOCUT",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/products/robocut",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-roboshot",
+      "name": "ROBOSHOT",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/products/roboshot",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-software",
+      "name": "Software",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/products/software",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-physical-ai",
+      "name": "Physical Ai",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/solutions/physical-ai",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-innovation-lab",
+      "name": "Innovation Lab",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/innovation-lab",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-case-studies",
+      "name": "Case Studies",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/case-studies",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-all-applications",
+      "name": "All Applications",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/applications",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-arc-welding",
+      "name": "Arc Welding",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/applications/arc-welding",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-assembly",
+      "name": "Assembly",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/applications/assembly",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-dispensing-sealing",
+      "name": "Dispensing & Sealing",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/applications/dispensing-sealing",
+      "reason": "http_429"
+    },
+    {
+      "slug": "fanuc-inspection",
+      "name": "Inspection",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/applications/inspection",
+      "reason": "http_429"
+    },
+    {
+      "company": "Fellow Robots",
+      "company_slug": "fellow-robots",
+      "url": "https://fellowrobots.com/",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Fellow Robots",
+      "company_slug": "fellow-robots",
+      "url": "https://www.fellowrobots.com/",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Fellow Robots",
+      "company_slug": "fellow-robots",
+      "url": "https://fellowrobots.com/products",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Fellow Robots",
+      "company_slug": "fellow-robots",
+      "url": "https://www.fellowrobots.com/products",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Figure AI",
+      "company_slug": "figure-ai",
+      "url": "https://figure.ai/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Figure AI",
+      "company_slug": "figure-ai",
+      "url": "https://www.figure.ai/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Fujitsu",
+      "company_slug": "fujitsu",
+      "url": "https://fujitsu.com/",
+      "reason": "UrlSafetyError",
+      "kind": "listing"
+    },
+    {
+      "company": "Fujitsu",
+      "company_slug": "fujitsu",
+      "url": "https://www.fujitsu.com/",
+      "reason": "http_429",
+      "kind": "listing"
+    },
+    {
+      "company": "Fujitsu",
+      "company_slug": "fujitsu",
+      "url": "https://fujitsu.com/products",
+      "reason": "UrlSafetyError",
+      "kind": "listing"
+    },
+    {
+      "company": "Fujitsu",
+      "company_slug": "fujitsu",
+      "url": "https://www.fujitsu.com/products",
+      "reason": "http_429",
+      "kind": "listing"
+    },
+    {
+      "company": "1X",
+      "company_slug": "1x",
+      "url": "https://1x.tech/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "1X",
+      "company_slug": "1x",
+      "url": "https://www.1x.tech/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "ABB Robotics",
+      "company_slug": "abb-robotics",
+      "url": "https://abb.com/",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "ABB Robotics",
+      "company_slug": "abb-robotics",
+      "url": "https://www.abb.com/",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "ABB Robotics",
+      "company_slug": "abb-robotics",
+      "url": "https://abb.com/products",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "ABB Robotics",
+      "company_slug": "abb-robotics",
+      "url": "https://www.abb.com/products",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "ANYbotics",
+      "company_slug": "anybotics",
+      "url": "https://anybotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "ANYbotics",
+      "company_slug": "anybotics",
+      "url": "https://www.anybotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://accuray.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://www.accuray.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://aboutamazon.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "amazon-robotics-ai-chips-aws-trainium2-explain",
+      "name": "Ai Chips Aws TRAINIUM2 Explain",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/stories/ai-chips-aws-trainium2-explain",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "amazon-robotics-hq1",
+      "name": "HQ1",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/impact/community/hq1",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "amazon-robotics-hq2",
+      "name": "HQ2",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/impact/community/hq2",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "amazon-robotics-amazon-delivering-the-future-2024",
+      "name": "Amazon Delivering The Future 2024",
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "url": "https://www.aboutamazon.com/amazon-delivering-the-future-2024",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Apptronik",
+      "company_slug": "apptronik",
+      "url": "https://apptronik.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Apptronik",
+      "company_slug": "apptronik",
+      "url": "https://www.apptronik.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "url": "https://bearrobotics.ai/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "url": "https://www.bearrobotics.ai/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "bear-robotics-bear-trifold-brochure-2025-online-pdf",
+      "name": "Bear Trifold Brochure 2025 Online.Pdf",
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "url": "https://static1.squarespace.com/static/652cbb3fb1f91809d4610dc0/t/68675dab7fd2f465f6e5c206/1751604657671/Bear_Trifold_Brochure_2025_Online.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "bear-robotics-2026-pdf",
+      "name": "2026.PDF",
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "url": "https://static1.squarespace.com/static/652cbb3fb1f91809d4610dc0/t/6a1f87d30bcfe3606b118bbf/1780992022834/%E1%84%87%E1%85%A6%E1%84%8B%E1%85%A5%E1%84%85%E1%85%A9%E1%84%87%E1%85%A9%E1%84%90%E1%85%B5%E1%86%A8%E1%84%89%E1%85%B3-%EB%B8%8C%EB%A1%9C%EC%8A%88%EC%96%B4-2026.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "bear-robotics-jp-brochure-2023-pdf",
+      "name": "Jp Brochure 2023.PDF",
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "url": "https://static1.squarespace.com/static/652cbb3fb1f91809d4610dc0/t/656877fc22963d0bf72d05c6/1701345281632/JP+Brochure+2023.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Diligent Robotics",
+      "company_slug": "diligent-robotics",
+      "url": "https://diligentrobots.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Diligent Robotics",
+      "company_slug": "diligent-robotics",
+      "url": "https://www.diligentrobots.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Ekso Bionics",
+      "company_slug": "ekso-bionics",
+      "url": "https://eksobionics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Ekso Bionics",
+      "company_slug": "ekso-bionics",
+      "url": "https://www.eksobionics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "ekso-bionics-ekso-indego-personal-page-2",
+      "name": "Ekso Indego Personal Page 2",
+      "company": "Ekso Bionics",
+      "company_slug": "ekso-bionics",
+      "url": "https://eksobionics.com/ekso-indego-personal-page-2/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "ekso-bionics-ekso-indego-test-1",
+      "name": "Ekso Indego Test 1",
+      "company": "Ekso Bionics",
+      "company_slug": "ekso-bionics",
+      "url": "https://eksobionics.com/ekso-indego-test-1/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "ekso-bionics-gatsby-scripts-1",
+      "name": "Gatsby Scripts 1",
+      "company": "Ekso Bionics",
+      "company_slug": "ekso-bionics",
+      "url": "https://eksobionics.com/_gatsby/slices/_gatsby-scripts-1",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "fanuc-crx-10ia-l-paint",
+      "name": "CRX-10iA/L Paint",
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "url": "https://www.fanucamerica.com/products/robot/crx-10ia-l-paint",
+      "reason": "http_429"
+    },
+    {
+      "company": "Fellow Robots",
+      "company_slug": "fellow-robots",
+      "url": "https://fellowrobots.com/",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Fellow Robots",
+      "company_slug": "fellow-robots",
+      "url": "https://www.fellowrobots.com/",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Fellow Robots",
+      "company_slug": "fellow-robots",
+      "url": "https://fellowrobots.com/products",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Fellow Robots",
+      "company_slug": "fellow-robots",
+      "url": "https://www.fellowrobots.com/products",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Figure AI",
+      "company_slug": "figure-ai",
+      "url": "https://figure.ai/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Figure AI",
+      "company_slug": "figure-ai",
+      "url": "https://www.figure.ai/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Fujitsu",
+      "company_slug": "fujitsu",
+      "url": "https://fujitsu.com/",
+      "reason": "UrlSafetyError",
+      "kind": "listing"
+    },
+    {
+      "company": "Fujitsu",
+      "company_slug": "fujitsu",
+      "url": "https://www.fujitsu.com/",
+      "reason": "http_429",
+      "kind": "listing"
+    },
+    {
+      "company": "Fujitsu",
+      "company_slug": "fujitsu",
+      "url": "https://fujitsu.com/products",
+      "reason": "UrlSafetyError",
+      "kind": "listing"
+    },
+    {
+      "company": "Fujitsu",
+      "company_slug": "fujitsu",
+      "url": "https://www.fujitsu.com/products",
+      "reason": "http_429",
+      "kind": "listing"
+    },
+    {
+      "slug": "kuka-produtos-servi-c3-a7os",
+      "name": "Produtos SERVI%C3%A7OS",
+      "company": "KUKA",
+      "company_slug": "kuka",
+      "url": "https://www.kuka.com/pt-br/produtos-servi%C3%A7os",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "kuka-produkty-slu-c5-beby",
+      "name": "Produkty, SLU%C5%BEBY",
+      "company": "KUKA",
+      "company_slug": "kuka",
+      "url": "https://www.kuka.com/cs-cz/produkty,-slu%C5%BEby",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "kuka-term-c3-a9kek-szolg-c3-a1ltat-c3-a1sok",
+      "name": "TERM%C3%A9KEK SZOLG%C3%A1LTAT%C3%A1SOK",
+      "company": "KUKA",
+      "company_slug": "kuka",
+      "url": "https://www.kuka.com/hu-hu/term%C3%A9kek-szolg%C3%A1ltat%C3%A1sok",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "kuka-produkty-i-us-c5-82ugi",
+      "name": "Produkty I US%C5%82UGI",
+      "company": "KUKA",
+      "company_slug": "kuka",
+      "url": "https://www.kuka.com/pl-pl/produkty-i-us%C5%82ugi",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "kuka-produkty-a-slu-c5-beby",
+      "name": "Produkty A SLU%C5%BEBY",
+      "company": "KUKA",
+      "company_slug": "kuka",
+      "url": "https://www.kuka.com/sk-sk/produkty-a-slu%C5%BEby",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "kuka-ec-a0-9c-ed-92-88",
+      "name": "%EC%A0%9C%ED%92%88",
+      "company": "KUKA",
+      "company_slug": "kuka",
+      "url": "https://www.kuka.com/ko-kr/%EC%A0%9C%ED%92%88",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "kuka-produkter-tj-c3-a4nster",
+      "name": "Produkter TJ%C3%A4NSTER",
+      "company": "KUKA",
+      "company_slug": "kuka",
+      "url": "https://www.kuka.com/sv-se/produkter-tj%C3%A4nster",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "kuka-c3-bcr-c3-bcnler",
+      "name": "%C3%BCR%C3%BCNLER",
+      "company": "KUKA",
+      "company_slug": "kuka",
+      "url": "https://www.kuka.com/tr-tr/%C3%BCr%C3%BCnler",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "kuka-s-e1-ba-a3n-ph-e1-ba-a9m",
+      "name": "S%E1%BA%A3N PH%E1%BA%A9M",
+      "company": "KUKA",
+      "company_slug": "kuka",
+      "url": "https://www.kuka.com/vi-vn/s%E1%BA%A3n-ph%E1%BA%A9m",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Karakuri",
+      "company_slug": "karakuri",
+      "url": "https://karakuri.com/",
+      "reason": "UrlSafetyError",
+      "kind": "listing"
+    },
+    {
+      "company": "Karakuri",
+      "company_slug": "karakuri",
+      "url": "https://www.karakuri.com/",
+      "reason": "UrlSafetyError",
+      "kind": "listing"
+    },
+    {
+      "company": "Karakuri",
+      "company_slug": "karakuri",
+      "url": "https://karakuri.com/products",
+      "reason": "UrlSafetyError",
+      "kind": "listing"
+    },
+    {
+      "company": "Karakuri",
+      "company_slug": "karakuri",
+      "url": "https://www.karakuri.com/products",
+      "reason": "UrlSafetyError",
+      "kind": "listing"
+    },
+    {
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://keenon.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "lg-lg-oled83w6pua-oled-4k-tv",
+      "name": "Lg OLED83W6PUA Oled 4K Tv",
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://www.lg.com/us/tvs/lg-oled83w6pua-oled-4k-tv",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "lg-lg-86mrgb95bua-mrgb-4k-tv",
+      "name": "Lg 86MRGB95BUA Mrgb 4K Tv",
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://www.lg.com/us/tvs/lg-86mrgb95bua-mrgb-4k-tv",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "lg-lg-65lx7bpua-4k-uhd-tv",
+      "name": "Lg 65LX7BPUA 4K Uhd Tv",
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://www.lg.com/us/tvs/lg-65lx7bpua-4k-uhd-tv",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "lg-uhd-4k-tvs",
+      "name": "Uhd 4K Tvs",
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://www.lg.com/us/uhd-4k-tvs",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "lg-lg-oled77w6pua-oled-4k-tv",
+      "name": "Lg OLED77W6PUA Oled 4K Tv",
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://www.lg.com/us/tvs/lg-oled77w6pua-oled-4k-tv",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "lg-lg-32u889sa-w-smart-monitor",
+      "name": "Lg 32U889SA W Smart Monitor",
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://www.lg.com/us/monitors/lg-32u889sa-w-smart-monitor",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "locus-robotics-2022-fouad-research-paper-final-pdf",
+      "name": "2022 Fouad Research Paper Final.Pdf",
+      "company": "Locus Robotics",
+      "company_slug": "locus-robotics",
+      "url": "https://locusrobotics.com/wp-content/uploads/2022-Fouad-Research-Paper-Final.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "locus-robotics-brother-case-study-1sheet-pptx-1-pdf",
+      "name": "Brother Case Study 1SHEET.PPTX 1.PDF",
+      "company": "Locus Robotics",
+      "company_slug": "locus-robotics",
+      "url": "https://locusrobotics.com/wp-content/uploads/2023/11/Brother-Case-Study-1sheet.pptx-1.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "locus-robotics-carhartt-case-study-1sheet-4-pdf",
+      "name": "Carhartt Case Study 1SHEET 4.PDF",
+      "company": "Locus Robotics",
+      "company_slug": "locus-robotics",
+      "url": "https://locusrobotics.com/wp-content/uploads/2023/11/Carhartt-Case-Study-1sheet-4.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "locus-robotics-dhl-case-study-1sheet-redsize-1-pdf",
+      "name": "Dhl Case Study 1SHEET Redsize 1.PDF",
+      "company": "Locus Robotics",
+      "company_slug": "locus-robotics",
+      "url": "https://locusrobotics.com/wp-content/uploads/2023/11/DHL-Case-Study-1sheet-redsize-1.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "locus-robotics-evo-case-study-1sheet-pdf",
+      "name": "Evo Case Study 1SHEET.PDF",
+      "company": "Locus Robotics",
+      "company_slug": "locus-robotics",
+      "url": "https://locusrobotics.com/wp-content/uploads/2023/11/evo-Case-Study-1sheet.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "locus-robotics-2023-peak-season-infographic-pdf",
+      "name": "2023 Peak Season Infographic.Pdf",
+      "company": "Locus Robotics",
+      "company_slug": "locus-robotics",
+      "url": "https://locusrobotics.com/wp-content/uploads/2024/01/2023-Peak-Season-Infographic.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "locus-robotics-locus-insights-live-schedule-1-pdf",
+      "name": "Locus Insights Live Schedule 1.PDF",
+      "company": "Locus Robotics",
+      "company_slug": "locus-robotics",
+      "url": "https://locusrobotics.com/wp-content/uploads/2024/02/Locus-Insights-Live-Schedule-1.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "locus-robotics-locus-robotics-2023-soc3-report-1-pdf",
+      "name": "Locus Robotics 2023 SOC3 Report 1.PDF",
+      "company": "Locus Robotics",
+      "company_slug": "locus-robotics",
+      "url": "https://locusrobotics.com/wp-content/uploads/2024/02/Locus-Robotics-2023-SOC3-Report-1.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Medtronic",
+      "company_slug": "medtronic",
+      "url": "https://medtronic.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Medtronic",
+      "company_slug": "medtronic",
+      "url": "https://www.medtronic.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://keenon.com/product",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/product",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://keenon.com/robots",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Keenon Robotics",
+      "company_slug": "keenon-robotics",
+      "url": "https://www.keenon.com/robots",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://lg.com/robots",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://www.lg.com/robots",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "lg-lg-ldth555ns-top-control-dishwasher",
+      "name": "Lg LDTH555NS Top Control Dishwasher",
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://www.lg.com/us/dishwashers/lg-ldth555ns-top-control-dishwasher",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "lg-lg-27lx6tyga-lifestyle-screen",
+      "name": "Lg 27LX6TYGA Lifestyle Screen",
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://www.lg.com/us/lifestyle-products/lg-27lx6tyga-lifestyle-screen",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "lg-lg-pu615u-4k-laser-projector",
+      "name": "Lg PU615U 4K Laser Projector",
+      "company": "LG",
+      "company_slug": "lg",
+      "url": "https://www.lg.com/us/projectors/lg-pu615u-4k-laser-projector",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Medtronic",
+      "company_slug": "medtronic",
+      "url": "https://medtronic.com/product",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Medtronic",
+      "company_slug": "medtronic",
+      "url": "https://www.medtronic.com/product",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Medtronic",
+      "company_slug": "medtronic",
+      "url": "https://medtronic.com/robots",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Medtronic",
+      "company_slug": "medtronic",
+      "url": "https://www.medtronic.com/robots",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Misty Robotics",
+      "company_slug": "misty-robotics",
+      "url": "https://mistyrobotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Misty Robotics",
+      "company_slug": "misty-robotics",
+      "url": "https://www.mistyrobotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "mobile-industrial-robots-mc250mir-go-approved",
+      "name": "MC250MiR Go Approved",
+      "company": "Mobile Industrial Robots",
+      "company_slug": "mobile-industrial-robots",
+      "url": "https://mobile-industrial-robots.com/products/mir-go/enabled-robotics-MC250",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "mobile-industrial-robots-mc600mir-go-approved",
+      "name": "MC600MiR Go Approved",
+      "company": "Mobile Industrial Robots",
+      "company_slug": "mobile-industrial-robots",
+      "url": "https://mobile-industrial-robots.com/products/mir-go/enabled-robotics-mc600",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Moley Robotics",
+      "company_slug": "moley-robotics",
+      "url": "https://moley.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Moley Robotics",
+      "company_slug": "moley-robotics",
+      "url": "https://www.moley.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Nala Robotics",
+      "company_slug": "nala-robotics",
+      "url": "https://nalarobotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "nala-robotics-nala-pressrelease-march1-2022-pdf",
+      "name": "Nala Pressrelease MARCH1 2022.PDF",
+      "company": "Nala Robotics",
+      "company_slug": "nala-robotics",
+      "url": "https://nalarobotics.com/press-releases/nala-pressrelease-march1-2022.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Nymble",
+      "company_slug": "nymble",
+      "url": "https://nymble.com/",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "Nymble",
+      "company_slug": "nymble",
+      "url": "https://www.nymble.com/",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "Nymble",
+      "company_slug": "nymble",
+      "url": "https://nymble.com/products",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "Nymble",
+      "company_slug": "nymble",
+      "url": "https://www.nymble.com/products",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "OTTO Motors",
+      "company_slug": "otto-motors",
+      "url": "https://ottomotors.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "OTTO Motors",
+      "company_slug": "otto-motors",
+      "url": "https://www.ottomotors.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "PAL Robotics",
+      "company_slug": "pal-robotics",
+      "url": "https://pal-robotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "PAL Robotics",
+      "company_slug": "pal-robotics",
+      "url": "https://www.pal-robotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "PARO Robots",
+      "company_slug": "paro-robots",
+      "url": "https://parorobots.com/",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "PARO Robots",
+      "company_slug": "paro-robots",
+      "url": "https://www.parorobots.com/",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "PARO Robots",
+      "company_slug": "paro-robots",
+      "url": "https://parorobots.com/products",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "PARO Robots",
+      "company_slug": "paro-robots",
+      "url": "https://www.parorobots.com/products",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "Pensa Systems",
+      "company_slug": "pensa-systems",
+      "url": "https://www.pensasystems.com/",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "Pensa Systems",
+      "company_slug": "pensa-systems",
+      "url": "https://pensasystems.com/products",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "Pensa Systems",
+      "company_slug": "pensa-systems",
+      "url": "https://www.pensasystems.com/products",
+      "reason": "http_0",
+      "kind": "listing"
+    },
+    {
+      "company": "Picnic Works",
+      "company_slug": "picnic-works",
+      "url": "https://picnicworks.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Picnic Works",
+      "company_slug": "picnic-works",
+      "url": "https://www.picnicworks.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Pizzabot",
+      "company_slug": "pizzabot",
+      "url": "https://www.pizzabot.com/",
+      "reason": "UrlSafetyError",
+      "kind": "listing"
+    },
+    {
+      "company": "Pizzabot",
+      "company_slug": "pizzabot",
+      "url": "https://pizzabot.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Pizzabot",
+      "company_slug": "pizzabot",
+      "url": "https://www.pizzabot.com/products",
+      "reason": "UrlSafetyError",
+      "kind": "listing"
+    },
+    {
+      "company": "Richtech Robotics",
+      "company_slug": "richtech-robotics",
+      "url": "https://richtechrobotics.com/",
+      "reason": "http_429",
+      "kind": "listing"
+    },
+    {
+      "company": "Richtech Robotics",
+      "company_slug": "richtech-robotics",
+      "url": "https://www.richtechrobotics.com/",
+      "reason": "http_429",
+      "kind": "listing"
+    },
+    {
+      "company": "Richtech Robotics",
+      "company_slug": "richtech-robotics",
+      "url": "https://richtechrobotics.com/products",
+      "reason": "http_429",
+      "kind": "listing"
+    },
+    {
+      "company": "Richtech Robotics",
+      "company_slug": "richtech-robotics",
+      "url": "https://www.richtechrobotics.com/products",
+      "reason": "http_429",
+      "kind": "listing"
+    },
+    {
+      "company": "Sanctuary AI",
+      "company_slug": "sanctuary-ai",
+      "url": "https://sanctuary.ai/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Sanctuary AI",
+      "company_slug": "sanctuary-ai",
+      "url": "https://www.sanctuary.ai/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Savioke",
+      "company_slug": "savioke",
+      "url": "https://savioke.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Savioke",
+      "company_slug": "savioke",
+      "url": "https://www.savioke.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "seegrid-seegrid-iso-27001-2022-pdf",
+      "name": "Seegrid Iso 27001 2022.PDF",
+      "company": "Seegrid",
+      "company_slug": "seegrid",
+      "url": "https://seegrid.com/wp-content/uploads/2026/06/Seegrid-ISO-27001-2022.pdf",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "seegrid-palion-lift-cr1",
+      "name": "Palion Lift CR1",
+      "company": "Seegrid",
+      "company_slug": "seegrid",
+      "url": "https://seegrid.com/autonomous-mobile-robots/lift-rs1-amr/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "seegrid-palion-lift-rs1",
+      "name": "Palion Lift RS1",
+      "company": "Seegrid",
+      "company_slug": "seegrid",
+      "url": "https://seegrid.com/autonomous-mobile-robots/lift-rs1-amr/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Simbe Robotics",
+      "company_slug": "simbe-robotics",
+      "url": "https://simberobotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Simbe Robotics",
+      "company_slug": "simbe-robotics",
+      "url": "https://www.simberobotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "simbe-robotics-out-on-shelf-calculator-2",
+      "name": "Out On Shelf Calculator 2",
+      "company": "Simbe Robotics",
+      "company_slug": "simbe-robotics",
+      "url": "https://www.simberobotics.com/out-on-shelf-calculator-2",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "simbe-robotics-back-to-school-2025",
+      "name": "Back To School 2025",
+      "company": "Simbe Robotics",
+      "company_slug": "simbe-robotics",
+      "url": "https://www.simberobotics.com/simbeindex/back-to-school-2025",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "slug": "simbe-robotics-simbe-at-nrf-2026-emea",
+      "name": "Simbe At Nrf 2026 Emea",
+      "company": "Simbe Robotics",
+      "company_slug": "simbe-robotics",
+      "url": "https://www.simberobotics.com/simbe-at-nrf-2026-emea",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "SoftBank Robotics",
+      "company_slug": "softbank-robotics",
+      "url": "https://softbankrobotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "SoftBank Robotics",
+      "company_slug": "softbank-robotics",
+      "url": "https://www.softbankrobotics.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Stäubli Robotics",
+      "company_slug": "staubli-robotics",
+      "url": "https://staubli.com/",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Stäubli Robotics",
+      "company_slug": "staubli-robotics",
+      "url": "https://www.staubli.com/",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Stäubli Robotics",
+      "company_slug": "staubli-robotics",
+      "url": "https://staubli.com/products",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Stäubli Robotics",
+      "company_slug": "staubli-robotics",
+      "url": "https://www.staubli.com/products",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Symbotic",
+      "company_slug": "symbotic",
+      "url": "https://symbotic.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Symbotic",
+      "company_slug": "symbotic",
+      "url": "https://www.symbotic.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Tesla",
+      "company_slug": "tesla",
+      "url": "https://tesla.com/",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Tesla",
+      "company_slug": "tesla",
+      "url": "https://www.tesla.com/",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Tesla",
+      "company_slug": "tesla",
+      "url": "https://tesla.com/products",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "Tesla",
+      "company_slug": "tesla",
+      "url": "https://www.tesla.com/products",
+      "reason": "http_403",
+      "kind": "listing"
+    },
+    {
+      "company": "UBTECH",
+      "company_slug": "ubtech",
+      "url": "https://ubtrobot.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "UBTECH",
+      "company_slug": "ubtech",
+      "url": "https://www.ubtrobot.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://unitree.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    },
+    {
+      "slug": "unitree-robotics-as2-w",
+      "name": "AS2 W",
+      "company": "Unitree Robotics",
+      "company_slug": "unitree-robotics",
+      "url": "https://www.unitree.com/As2-W/",
+      "reason": "sku_not_on_page"
+    },
+    {
+      "company": "Zimmer Biomet",
+      "company_slug": "zimmer-biomet",
+      "url": "https://zimmerbiomet.com/products",
+      "reason": "http_404",
+      "kind": "listing"
+    }
+  ],
+  "skipped": [
+    {
+      "slug": "accuray-tomotherapy",
+      "name": "TomoTherapy®",
+      "company": "Accuray",
+      "company_slug": "accuray",
+      "url": "https://www.accuray.com/radixact/",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "name": "Spec Sheet",
+      "url": "https://www.agilityrobotics.com/solutions/digit/spec-sheet",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "name": "Digit Attends Ces 2020",
+      "url": "https://www.agilityrobotics.com/content/digit-attends-ces-2020",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "name": "Digit Moves Over 100K Totes",
+      "url": "https://www.agilityrobotics.com/content/digit-moves-over-100k-totes",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "name": "Digits Next Steps",
+      "url": "https://www.agilityrobotics.com/content/digits-next-steps",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "name": "Digit Goes Shopping",
+      "url": "https://www.agilityrobotics.com/videos/digit-goes-shopping",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "name": "Amazon Devices Lab 126 Photos",
+      "url": "https://www.aboutamazon.com/stories/amazon-devices-lab-126-photos",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Amazon Robotics",
+      "company_slug": "amazon-robotics",
+      "name": "Disaster Relief",
+      "url": "https://www.aboutamazon.com/impact/community/disaster-relief",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "name": "Servi Plus",
+      "url": "https://www.bearrobotics.ai/servi-plus",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Bear Robotics",
+      "company_slug": "bear-robotics",
+      "name": "Carti Low Profile",
+      "url": "https://www.bearrobotics.ai/carti-low-profile",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Boston Dynamics",
+      "company_slug": "boston-dynamics",
+      "name": "Extras Sitemap.Xml",
+      "url": "https://bostondynamics.com/extras-sitemap.xml",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Boston Dynamics",
+      "company_slug": "boston-dynamics",
+      "name": "Payload Sitemap.Xml",
+      "url": "https://bostondynamics.com/payload-sitemap.xml",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Ecovacs",
+      "company_slug": "ecovacs",
+      "name": "Refer & Earn",
+      "url": "https://www.ecovacs.com/us/ecovacs-club/referral?utm_source=referral&utm_medium=website&utm_campaign=header_nav",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Ecovacs",
+      "company_slug": "ecovacs",
+      "name": "Refer & Earn",
+      "url": "https://www.ecovacs.com/us/ecovacs-club/referral?utm_source=referral&utm_medium=website&utm_campaign=header_nav",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Ecovacs",
+      "company_slug": "ecovacs",
+      "name": "Refer & Earn",
+      "url": "https://www.ecovacs.com/us/ecovacs-club/referral?utm_source=referral&utm_medium=website&utm_campaign=header_nav",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Ekso Bionics",
+      "company_slug": "ekso-bionics",
+      "name": "Eksonr Landing Page",
+      "url": "https://eksobionics.com/eksonr-landing-page",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "name": "Arc Welding",
+      "url": "https://www.fanucamerica.com/applications/arc-welding",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "name": "Spot Welding",
+      "url": "https://www.fanucamerica.com/applications/spot-welding",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "name": "Arc Welding",
+      "url": "https://www.fanucamerica.com/applications/arc-welding",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "name": "Spot Welding",
+      "url": "https://www.fanucamerica.com/applications/spot-welding",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "name": "Arc Welding",
+      "url": "https://www.fanucamerica.com/applications/arc-welding",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "FANUC",
+      "company_slug": "fanuc",
+      "name": "Spot Welding",
+      "url": "https://www.fanucamerica.com/applications/spot-welding",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Figure AI",
+      "company_slug": "figure-ai",
+      "name": "Index App",
+      "url": "https://www.figure.ai/index-app",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "name": "Digit Attends Ces 2020",
+      "url": "https://www.agilityrobotics.com/content/digit-attends-ces-2020",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Agility Robotics",
+      "company_slug": "agility-robotics",
+      "name": "Digit Moves Over 100K Totes",
+      "url": "https://www.agilityrobotics.com/content/digit-moves-over-100k-totes",
+      "reason": "wrong_product_url"
+    },
+    {
+      "slug": "ohmnilabs-ohmnicare-3",
+      "name": "OhmniCare™3",
+      "company": "OhmniLabs",
+      "company_slug": "ohmnilabs",
+      "url": "https://ohmnilabs.com/products/ohmnicare-mobile-telehealth-robot/",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "UBTECH",
+      "company_slug": "ubtech",
+      "name": "Cruzr 1S",
+      "url": "https://www.ubtrobot.com/en/commercial/products/cruzr-1s",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "UBTECH",
+      "company_slug": "ubtech",
+      "name": "Cruzr S2",
+      "url": "https://www.ubtrobot.com/en/humanoid/products/cruzr-s2",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "UBTECH",
+      "company_slug": "ubtech",
+      "name": "Walker C1",
+      "url": "https://www.ubtrobot.com/en/humanoid/products/walker-c1",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "UBTECH",
+      "company_slug": "ubtech",
+      "name": "Walker S1",
+      "url": "https://www.ubtrobot.com/en/humanoid/products/walker-s1",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "UBTECH",
+      "company_slug": "ubtech",
+      "name": "Walker S2",
+      "url": "https://www.ubtrobot.com/en/humanoid/products/walker-s2",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "name": "Hs 324 Demo AR1440, YRC1000",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-324-demo-ar1440,-yrc1000",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "name": "Hs 325 Demo HC10DTP, YRC1000MICRO",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-325-demo-hc10dtp,-yrc1000micro",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "name": "Hs 318 Demo GP50, YRC1000",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-318-demo-gp50,-yrc1000",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "name": "Hs 317 Demo GP35L, YRC1000",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-317-demo-gp35l,-yrc1000",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "name": "Hs 309 Demo GP8L, YRC1000",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-309-demo-gp8l,-yrc1000",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "name": "Hs 306 Demo GP35L, YRC1000",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-306-demo-gp35l,-yrc1000",
+      "reason": "wrong_product_url"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "company_slug": "yaskawa-motoman",
+      "name": "Hs 304 Demo GP70L, YRC1000",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-304-demo-gp70l,-yrc1000",
+      "reason": "wrong_product_url"
+    }
+  ],
+  "queued": [
+    {
+      "company": "Unitree Robotics",
+      "name": "R1-A / R1-A-D",
+      "url": "https://www.unitree.com/R1-D",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "G1-D",
+      "url": "https://www.unitree.com/G1-D",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "G1-Comp",
+      "url": "https://www.unitree.com/robocup",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "G1-Boxing",
+      "url": "https://www.unitree.com/boxing",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "Dex2/5",
+      "url": "https://www.unitree.com/Dex2-5",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "Dex1-1",
+      "url": "https://www.unitree.com/Dex1-1",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "Dex5-1",
+      "url": "https://www.unitree.com/Dex5-1",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "Dex3-1",
+      "url": "https://www.unitree.com/Dex3-1",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "H2PLUS",
+      "url": "https://www.unitree.com/H2plus",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "GO2 W",
+      "url": "https://www.unitree.com/go2-w",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "B2-W",
+      "url": "https://www.unitree.com/b2-w",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "A2-W",
+      "url": "https://www.unitree.com/A2-W",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "R1 Robotic Arm",
+      "url": "https://www.unitree.com/R1-ARM",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "D1-T",
+      "url": "https://www.unitree.com/D1-T",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "4D LiDAR L1",
+      "url": "https://www.unitree.com/LiDAR",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "IM6014",
+      "url": "https://www.unitree.com/IM6014",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "SV1-25",
+      "url": "https://www.unitree.com/sv1-25",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "A1 Motor",
+      "url": "https://www.unitree.com/A1/motor",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "GO-M8010-6",
+      "url": "https://www.unitree.com/go1/motor",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "Super Robot Waterproof Joints B1-16",
+      "url": "https://www.unitree.com/b1-16",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "R1-A / R1-A-D",
+      "url": "https://www.unitree.com/R1-D",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "G1-D",
+      "url": "https://www.unitree.com/G1-D",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "G1-Comp",
+      "url": "https://www.unitree.com/robocup",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "G1-Boxing",
+      "url": "https://www.unitree.com/boxing",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "Dex2/5",
+      "url": "https://www.unitree.com/Dex2-5",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "Dex1-1",
+      "url": "https://www.unitree.com/Dex1-1",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "Dex5-1",
+      "url": "https://www.unitree.com/Dex5-1",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "Dex3-1",
+      "url": "https://www.unitree.com/Dex3-1",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "H2PLUS",
+      "url": "https://www.unitree.com/H2plus",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "GO2 W",
+      "url": "https://www.unitree.com/go2-w",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "B2-W",
+      "url": "https://www.unitree.com/b2-w",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "A2-W",
+      "url": "https://www.unitree.com/A2-W",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "R1 Robotic Arm",
+      "url": "https://www.unitree.com/R1-ARM",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "D1-T",
+      "url": "https://www.unitree.com/D1-T",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "4D LiDAR L1",
+      "url": "https://www.unitree.com/LiDAR",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "IM6014",
+      "url": "https://www.unitree.com/IM6014",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "SV1-25",
+      "url": "https://www.unitree.com/sv1-25",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "A1 Motor",
+      "url": "https://www.unitree.com/A1/motor",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "GO-M8010-6",
+      "url": "https://www.unitree.com/go1/motor",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "Super Robot Waterproof Joints B1-16",
+      "url": "https://www.unitree.com/b1-16",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "A1BATTERY",
+      "url": "https://www.unitree.com/cn/a1battery",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "A1MOTOR",
+      "url": "https://www.unitree.com/cn/a1motor",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "A1 Aliengo",
+      "url": "https://www.unitree.com/cn/app/a1_aliengo",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "B1 16",
+      "url": "https://www.unitree.com/cn/b1-16",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "B2 W",
+      "url": "https://www.unitree.com/cn/b2-w",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "D1 T",
+      "url": "https://www.unitree.com/cn/D1-T",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "GO1BATTERY",
+      "url": "https://www.unitree.com/cn/go1battery",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Unitree Robotics",
+      "name": "GO1MOTOR",
+      "url": "https://www.unitree.com/cn/go1motor",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP110",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp110",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP110B",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp110b",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP165R",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp165r",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP180",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp180",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP200R",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp200r",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP200S",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp200s",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP215",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp215",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP225",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp225",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP250",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp250",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP280",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp280",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP280L",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp280l",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP400",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp400",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP400R",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp400r",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP600",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp600",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "HC10DTP",
+      "url": "https://www.motoman.com/en-us/products/robots/collaborative/hc-series/hc10dtp",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "HC20DTP",
+      "url": "https://www.motoman.com/en-us/products/robots/collaborative/hc-series/hc20dtp",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "HC30PL",
+      "url": "https://www.motoman.com/en-us/products/robots/collaborative/hc-series/hc30pl",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX7",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex7",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX10",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex10",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX20",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex20",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX35",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex35",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PL80",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/packaging-palletizing/pl-series/pl80",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PL190",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/packaging-palletizing/pl-series/pl190",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PL320",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/packaging-palletizing/pl-series/pl320",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PL500",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/packaging-palletizing/pl-series/pl500",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PL800",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/packaging-palletizing/pl-series/pl800",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPP3H",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/delta/mpp-series/mpp3h",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPP3S",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/delta/mpp-series/mpp3s",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SG400",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/sg-series/sg400",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SG650",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/sg-series/sg650",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MH900",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/mh-series/mh900",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PH130RF",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/ph-series/ph130rf",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PH200RF",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/ph-series/ph200rf",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR700",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar700",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR900",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar900",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR1440",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar1440",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR1440E",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/welding-cutting/ar-series/ar1440e",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR1730",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar1730",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR2010",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar2010",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR3120",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar/ar3120",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GA50",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ga/ga50",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "HC10",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/welding-cutting/hc-welding-series/hc10",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "HC20",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/welding-cutting/hc-welding-series/hc20",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP80",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp80",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP100",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp100",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP100B",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/welding-cutting/sp-series/sp100b",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP110H",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp/sp110h",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP150R",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp150r",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP165",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp165",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP180H",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp/sp180h",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP185R",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp185r",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP210",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp210",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP225H",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp/sp225h",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP235",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp235",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MHP45L",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/painting-dispensing/mhp/mhp45l",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPX1150",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/painting-dispensing/mpx-series/mpx1150",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPX1400",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/painting-dispensing/mpx-series/mpx1400",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPX1950",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/painting-dispensing/mpx-series/mpx1950",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPX2600",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/painting-dispensing/mpx-series/mpx2600",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPX3500",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/painting-dispensing/mpx-series/mpx3500",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP110",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp110",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP110B",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp110b",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP165R",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp165r",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP180",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp180",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP200R",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp200r",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP200S",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp200s",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP215",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp215",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP225",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp225",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP250",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp250",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP280",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp280",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP280L",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/gp-series/gp280l",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP400",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp400",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP400R",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp400r",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GP600",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/gp-series/gp600",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "HC10DTP",
+      "url": "https://www.motoman.com/en-us/products/robots/collaborative/hc-series/hc10dtp",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "HC20DTP",
+      "url": "https://www.motoman.com/en-us/products/robots/collaborative/hc-series/hc20dtp",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "HC30PL",
+      "url": "https://www.motoman.com/en-us/products/robots/collaborative/hc-series/hc30pl",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX7",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex7",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX10",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex10",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX20",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex20",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX35",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex35",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PL80",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/packaging-palletizing/pl-series/pl80",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PL190",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/packaging-palletizing/pl-series/pl190",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PL320",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/packaging-palletizing/pl-series/pl320",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PL500",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/packaging-palletizing/pl-series/pl500",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PL800",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/packaging-palletizing/pl-series/pl800",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPP3H",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/delta/mpp-series/mpp3h",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPP3S",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/delta/mpp-series/mpp3s",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SG400",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/sg-series/sg400",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SG650",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/sg-series/sg650",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MH900",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly-handling/mh-series/mh900",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PH130RF",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/ph-series/ph130rf",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "PH200RF",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/ph-series/ph200rf",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR700",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar700",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR900",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar900",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR1440",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar1440",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR1440E",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/welding-cutting/ar-series/ar1440e",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR1730",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar1730",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR2010",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar-series/ar2010",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "AR3120",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ar/ar3120",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "GA50",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/ga/ga50",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "HC10",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/welding-cutting/hc-welding-series/hc10",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "HC20",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/welding-cutting/hc-welding-series/hc20",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP80",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp80",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP100",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp100",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP100B",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/welding-cutting/sp-series/sp100b",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP110H",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp/sp110h",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP150R",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp150r",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP165",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp165",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP180H",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp/sp180h",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP185R",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp185r",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP210",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp210",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP225H",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp/sp225h",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "SP235",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/welding-cutting/sp-series/sp235",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MHP45L",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/painting-dispensing/mhp/mhp45l",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPX1150",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/painting-dispensing/mpx-series/mpx1150",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPX1400",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial-robots/painting-dispensing/mpx-series/mpx1400",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPX1950",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/painting-dispensing/mpx-series/mpx1950",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPX2600",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/painting-dispensing/mpx-series/mpx2600",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "MPX3500",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/painting-dispensing/mpx-series/mpx3500",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "Hs 263 Demo MS165, DX200",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-263-demo-ms165,-dx200",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "Hs 321 Demo GP7, YRC1000MICRO",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-321-demo-gp7,-yrc1000micro",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX7",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex7",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX10",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex10",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX35",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex35",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NEX20",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nex-series/nex20",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "NHC10",
+      "url": "https://www.motoman.com/en-us/products/robots/industrial/assembly/nhc-series/nhc10",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "YRC1000",
+      "url": "https://www.motoman.com/en-us/products/controllers/yrc1000",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "Hs 315 Demo HC30PL, YRC1000",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-315-demo-hc30pl,-yrc1000",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "Hs 314 Demo GP7, YRC1000",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-314-demo-gp7,-yrc1000",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "Hs 313 Demo Motomini, YRC1000MICRO",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-313-demo-motomini,-yrc1000micro",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "Hs 312 Demo Motomini, YRC1000MICRO",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-312-demo-motomini,-yrc1000micro",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "Hs 310 MPP3H, FS100, Closeout",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-310-mpp3h,-fs100,-closeout",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "Hs 296 Demo PL320, YRC1000",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-296-demo-pl320,-yrc1000",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Yaskawa Motoman",
+      "name": "Hs 307 Demo PL500, YRC1000",
+      "url": "https://www.motoman.com/en-us/products/robots/used/hs-307-demo-pl500,-yrc1000",
+      "reason": "oem_cap"
+    },
+    {
+      "company": "Zimmer Biomet",
+      "url": "https://www.zimmerbiomet.com/products",
+      "reason": "budget"
+    },
+    {
+      "company": "Zimmer Biomet",
+      "name": "Z1® Triple Taper Hip System",
+      "url": "https://www.zimmerbiomet.com/en/products-and-solutions/specialties/hip/z1-femoral-hip-system.html",
+      "reason": "budget"
+    },
+    {
+      "company": "temi",
+      "url": "https://robotemi.com/",
+      "reason": "budget"
+    }
+  ],
+  "oems": {
+    "1x": {
+      "name": "1X",
+      "slug": "1x",
+      "status": "complete",
+      "existing": 2,
+      "listing_tried": [
+        "https://1x.tech",
+        "https://1x.tech/products",
+        "https://www.1x.tech",
+        "https://www.1x.tech/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "abb-robotics": {
+      "name": "ABB Robotics",
+      "slug": "abb-robotics",
+      "status": "complete",
+      "existing": 5,
+      "listing_tried": [
+        "https://abb.com",
+        "https://abb.com/products",
+        "https://www.abb.com",
+        "https://www.abb.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "anybotics": {
+      "name": "ANYbotics",
+      "slug": "anybotics",
+      "status": "complete",
+      "existing": 2,
+      "listing_tried": [
+        "https://anybotics.com",
+        "https://anybotics.com/products",
+        "https://www.anybotics.com",
+        "https://www.anybotics.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "accuray": {
+      "name": "Accuray",
+      "slug": "accuray",
+      "status": "complete",
+      "existing": 2,
+      "listing_tried": [
+        "https://accuray.com",
+        "https://accuray.com/products",
+        "https://www.accuray.com",
+        "https://www.accuray.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "aethon": {
+      "name": "Aethon",
+      "slug": "aethon",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://aethon.com",
+        "https://aethon.com/products",
+        "https://www.aethon.com",
+        "https://www.aethon.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "agility-robotics": {
+      "name": "Agility Robotics",
+      "slug": "agility-robotics",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://agilityrobotics.com",
+        "https://agilityrobotics.com/products",
+        "https://www.agilityrobotics.com",
+        "https://www.agilityrobotics.com/products"
+      ],
+      "discovered": 2,
+      "sitemap": "done"
+    },
+    "amazon-robotics": {
+      "name": "Amazon Robotics",
+      "slug": "amazon-robotics",
+      "status": "complete",
+      "existing": 4,
+      "listing_tried": [
+        "https://aboutamazon.com",
+        "https://aboutamazon.com/products",
+        "https://www.aboutamazon.com",
+        "https://www.aboutamazon.com/products"
+      ],
+      "discovered": 1,
+      "sitemap": "done"
+    },
+    "apptronik": {
+      "name": "Apptronik",
+      "slug": "apptronik",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://apptronik.com",
+        "https://apptronik.com/products",
+        "https://www.apptronik.com",
+        "https://www.apptronik.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "bear-robotics": {
+      "name": "Bear Robotics",
+      "slug": "bear-robotics",
+      "status": "complete",
+      "existing": 3,
+      "listing_tried": [
+        "https://bearrobotics.ai",
+        "https://bearrobotics.ai/products",
+        "https://www.bearrobotics.ai",
+        "https://www.bearrobotics.ai/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "bossa-nova-robotics": {
+      "name": "Bossa Nova Robotics",
+      "slug": "bossa-nova-robotics",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://bossanova.ai",
+        "https://bossanova.ai/products",
+        "https://www.bossanova.ai",
+        "https://www.bossanova.ai/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "boston-dynamics": {
+      "name": "Boston Dynamics",
+      "slug": "boston-dynamics",
+      "status": "complete",
+      "existing": 3,
+      "listing_tried": [
+        "https://bostondynamics.com",
+        "https://bostondynamics.com/products",
+        "https://www.bostondynamics.com",
+        "https://www.bostondynamics.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "diligent-robotics": {
+      "name": "Diligent Robotics",
+      "slug": "diligent-robotics",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://diligentrobots.com",
+        "https://diligentrobots.com/products",
+        "https://www.diligentrobots.com",
+        "https://www.diligentrobots.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "ecovacs": {
+      "name": "Ecovacs",
+      "slug": "ecovacs",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://ecovacs.com",
+        "https://ecovacs.com/products",
+        "https://www.ecovacs.com",
+        "https://www.ecovacs.com/products"
+      ],
+      "discovered": 1,
+      "sitemap": "done"
+    },
+    "ekso-bionics": {
+      "name": "Ekso Bionics",
+      "slug": "ekso-bionics",
+      "status": "complete",
+      "existing": 2,
+      "listing_tried": [
+        "https://eksobionics.com",
+        "https://eksobionics.com/products",
+        "https://www.eksobionics.com",
+        "https://www.eksobionics.com/products"
+      ],
+      "discovered": 2,
+      "sitemap": "done"
+    },
+    "fanuc": {
+      "name": "FANUC",
+      "slug": "fanuc",
+      "status": "complete",
+      "existing": 5,
+      "listing_tried": [
+        "https://fanucamerica.com",
+        "https://fanucamerica.com/products",
+        "https://www.fanucamerica.com",
+        "https://www.fanucamerica.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "fellow-robots": {
+      "name": "Fellow Robots",
+      "slug": "fellow-robots",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://fellowrobots.com",
+        "https://fellowrobots.com/products",
+        "https://www.fellowrobots.com",
+        "https://www.fellowrobots.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "figure-ai": {
+      "name": "Figure AI",
+      "slug": "figure-ai",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://figure.ai",
+        "https://figure.ai/products",
+        "https://www.figure.ai",
+        "https://www.figure.ai/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "fourier-intelligence": {
+      "name": "Fourier Intelligence",
+      "slug": "fourier-intelligence",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://fftai.com",
+        "https://fftai.com/products",
+        "https://www.fftai.com",
+        "https://www.fftai.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "fujitsu": {
+      "name": "Fujitsu",
+      "slug": "fujitsu",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://fujitsu.com",
+        "https://fujitsu.com/products",
+        "https://www.fujitsu.com",
+        "https://www.fujitsu.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "gausium": {
+      "name": "Gausium",
+      "slug": "gausium",
+      "status": "complete",
+      "existing": 3,
+      "listing_tried": [
+        "https://gausium.com",
+        "https://gausium.com/products",
+        "https://www.gausium.com",
+        "https://www.gausium.com/products"
+      ],
+      "discovered": 6,
+      "sitemap": "done"
+    },
+    "greyorange": {
+      "name": "GreyOrange",
+      "slug": "greyorange",
+      "status": "complete",
+      "existing": 2,
+      "listing_tried": [
+        "https://greyorange.com",
+        "https://greyorange.com/products",
+        "https://www.greyorange.com",
+        "https://www.greyorange.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "hanson-robotics": {
+      "name": "Hanson Robotics",
+      "slug": "hanson-robotics",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://hansonrobotics.com",
+        "https://hansonrobotics.com/products",
+        "https://www.hansonrobotics.com",
+        "https://www.hansonrobotics.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "intuitive": {
+      "name": "Intuitive",
+      "slug": "intuitive",
+      "status": "complete",
+      "existing": 3,
+      "listing_tried": [
+        "https://intuitive.com",
+        "https://intuitive.com/products",
+        "https://www.intuitive.com",
+        "https://www.intuitive.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "kuka": {
+      "name": "KUKA",
+      "slug": "kuka",
+      "status": "complete",
+      "existing": 4,
+      "listing_tried": [
+        "https://kuka.com",
+        "https://kuka.com/products",
+        "https://www.kuka.com",
+        "https://www.kuka.com/products"
+      ],
+      "discovered": 1,
+      "sitemap": "done"
+    },
+    "karakuri": {
+      "name": "Karakuri",
+      "slug": "karakuri",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://karakuri.com",
+        "https://karakuri.com/products",
+        "https://www.karakuri.com",
+        "https://www.karakuri.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "keenon-robotics": {
+      "name": "Keenon Robotics",
+      "slug": "keenon-robotics",
+      "status": "partial",
+      "existing": 5,
+      "listing_tried": [
+        "https://keenon.com",
+        "https://keenon.com/product",
+        "https://keenon.com/products",
+        "https://keenon.com/robots",
+        "https://www.keenon.com",
+        "https://www.keenon.com/product",
+        "https://www.keenon.com/products",
+        "https://www.keenon.com/robots"
+      ],
+      "discovered": 12,
+      "sitemap": "done"
+    },
+    "lg": {
+      "name": "LG",
+      "slug": "lg",
+      "status": "partial",
+      "existing": 3,
+      "listing_tried": [
+        "https://lg.com",
+        "https://lg.com/product",
+        "https://lg.com/products",
+        "https://lg.com/robots",
+        "https://www.lg.com",
+        "https://www.lg.com/product",
+        "https://www.lg.com/products",
+        "https://www.lg.com/robots"
+      ],
+      "discovered": 13,
+      "sitemap": "done"
+    },
+    "locus-robotics": {
+      "name": "Locus Robotics",
+      "slug": "locus-robotics",
+      "status": "complete",
+      "existing": 4,
+      "listing_tried": [
+        "https://locusrobotics.com",
+        "https://locusrobotics.com/products",
+        "https://www.locusrobotics.com",
+        "https://www.locusrobotics.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "lowes-innovation-labs": {
+      "name": "Lowe's Innovation Labs",
+      "slug": "lowes-innovation-labs",
+      "status": "complete",
+      "existing": 1,
+      "listing_tried": [
+        "https://lowesinnovationlabs.com",
+        "https://lowesinnovationlabs.com/products",
+        "https://www.lowesinnovationlabs.com",
+        "https://www.lowesinnovationlabs.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "medtronic": {
+      "name": "Medtronic",
+      "slug": "medtronic",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://medtronic.com",
+        "https://medtronic.com/product",
+        "https://medtronic.com/products",
+        "https://medtronic.com/robots",
+        "https://www.medtronic.com",
+        "https://www.medtronic.com/product",
+        "https://www.medtronic.com/products",
+        "https://www.medtronic.com/robots"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "miso-robotics": {
+      "name": "Miso Robotics",
+      "slug": "miso-robotics",
+      "status": "partial",
+      "existing": 2,
+      "listing_tried": [
+        "https://misorobotics.com",
+        "https://misorobotics.com/products",
+        "https://www.misorobotics.com",
+        "https://www.misorobotics.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "misty-robotics": {
+      "name": "Misty Robotics",
+      "slug": "misty-robotics",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://mistyrobotics.com",
+        "https://mistyrobotics.com/products",
+        "https://www.mistyrobotics.com",
+        "https://www.mistyrobotics.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "mobile-industrial-robots": {
+      "name": "Mobile Industrial Robots",
+      "slug": "mobile-industrial-robots",
+      "status": "partial",
+      "existing": 6,
+      "listing_tried": [
+        "https://mobile-industrial-robots.com",
+        "https://mobile-industrial-robots.com/products",
+        "https://www.mobile-industrial-robots.com",
+        "https://www.mobile-industrial-robots.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "moley-robotics": {
+      "name": "Moley Robotics",
+      "slug": "moley-robotics",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://moley.com",
+        "https://moley.com/products",
+        "https://www.moley.com",
+        "https://www.moley.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "nala-robotics": {
+      "name": "Nala Robotics",
+      "slug": "nala-robotics",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://nalarobotics.com",
+        "https://nalarobotics.com/products",
+        "https://www.nalarobotics.com",
+        "https://www.nalarobotics.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "nymble": {
+      "name": "Nymble",
+      "slug": "nymble",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://nymble.com",
+        "https://nymble.com/products",
+        "https://www.nymble.com",
+        "https://www.nymble.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "otto-motors": {
+      "name": "OTTO Motors",
+      "slug": "otto-motors",
+      "status": "partial",
+      "existing": 3,
+      "listing_tried": [
+        "https://ottomotors.com",
+        "https://ottomotors.com/products",
+        "https://www.ottomotors.com",
+        "https://www.ottomotors.com/products"
+      ],
+      "discovered": 1,
+      "sitemap": "done"
+    },
+    "ohmnilabs": {
+      "name": "OhmniLabs",
+      "slug": "ohmnilabs",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://ohmnilabs.com",
+        "https://ohmnilabs.com/products",
+        "https://www.ohmnilabs.com",
+        "https://www.ohmnilabs.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "pal-robotics": {
+      "name": "PAL Robotics",
+      "slug": "pal-robotics",
+      "status": "partial",
+      "existing": 2,
+      "listing_tried": [
+        "https://pal-robotics.com",
+        "https://pal-robotics.com/products",
+        "https://www.pal-robotics.com",
+        "https://www.pal-robotics.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "paro-robots": {
+      "name": "PARO Robots",
+      "slug": "paro-robots",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://parorobots.com",
+        "https://parorobots.com/products",
+        "https://www.parorobots.com",
+        "https://www.parorobots.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "pensa-systems": {
+      "name": "Pensa Systems",
+      "slug": "pensa-systems",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://pensasystems.com",
+        "https://pensasystems.com/products",
+        "https://www.pensasystems.com",
+        "https://www.pensasystems.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "picnic-works": {
+      "name": "Picnic Works",
+      "slug": "picnic-works",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://picnicworks.com",
+        "https://picnicworks.com/products",
+        "https://www.picnicworks.com",
+        "https://www.picnicworks.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "pizzabot": {
+      "name": "Pizzabot",
+      "slug": "pizzabot",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://pizzabot.com",
+        "https://pizzabot.com/products",
+        "https://www.pizzabot.com",
+        "https://www.pizzabot.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "pudu-robotics": {
+      "name": "Pudu Robotics",
+      "slug": "pudu-robotics",
+      "status": "partial",
+      "existing": 7,
+      "listing_tried": [
+        "https://pudurobotics.com",
+        "https://pudurobotics.com/products",
+        "https://www.pudurobotics.com",
+        "https://www.pudurobotics.com/products"
+      ],
+      "discovered": 4,
+      "sitemap": "done"
+    },
+    "richtech-robotics": {
+      "name": "Richtech Robotics",
+      "slug": "richtech-robotics",
+      "status": "partial",
+      "existing": 2,
+      "listing_tried": [
+        "https://richtechrobotics.com",
+        "https://richtechrobotics.com/products",
+        "https://www.richtechrobotics.com",
+        "https://www.richtechrobotics.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "sanctuary-ai": {
+      "name": "Sanctuary AI",
+      "slug": "sanctuary-ai",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://sanctuary.ai",
+        "https://sanctuary.ai/products",
+        "https://www.sanctuary.ai",
+        "https://www.sanctuary.ai/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "savioke": {
+      "name": "Savioke",
+      "slug": "savioke",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://savioke.com",
+        "https://savioke.com/products",
+        "https://www.savioke.com",
+        "https://www.savioke.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "seegrid": {
+      "name": "Seegrid",
+      "slug": "seegrid",
+      "status": "partial",
+      "existing": 3,
+      "listing_tried": [
+        "https://seegrid.com",
+        "https://seegrid.com/products",
+        "https://www.seegrid.com",
+        "https://www.seegrid.com/products"
+      ],
+      "discovered": 4,
+      "sitemap": "done"
+    },
+    "simbe-robotics": {
+      "name": "Simbe Robotics",
+      "slug": "simbe-robotics",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://simberobotics.com",
+        "https://simberobotics.com/products",
+        "https://www.simberobotics.com",
+        "https://www.simberobotics.com/products"
+      ],
+      "discovered": 3,
+      "sitemap": "done"
+    },
+    "softbank-robotics": {
+      "name": "SoftBank Robotics",
+      "slug": "softbank-robotics",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://softbankrobotics.com",
+        "https://softbankrobotics.com/products",
+        "https://www.softbankrobotics.com",
+        "https://www.softbankrobotics.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "starship-technologies": {
+      "name": "Starship Technologies",
+      "slug": "starship-technologies",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://starship.xyz",
+        "https://starship.xyz/products",
+        "https://www.starship.xyz",
+        "https://www.starship.xyz/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "stryker": {
+      "name": "Stryker",
+      "slug": "stryker",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://stryker.com",
+        "https://stryker.com/products",
+        "https://www.stryker.com",
+        "https://www.stryker.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "staubli-robotics": {
+      "name": "Stäubli Robotics",
+      "slug": "staubli-robotics",
+      "status": "partial",
+      "existing": 3,
+      "listing_tried": [
+        "https://staubli.com",
+        "https://staubli.com/products",
+        "https://www.staubli.com",
+        "https://www.staubli.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "symbotic": {
+      "name": "Symbotic",
+      "slug": "symbotic",
+      "status": "partial",
+      "existing": 2,
+      "listing_tried": [
+        "https://symbotic.com",
+        "https://symbotic.com/products",
+        "https://www.symbotic.com",
+        "https://www.symbotic.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "tesla": {
+      "name": "Tesla",
+      "slug": "tesla",
+      "status": "partial",
+      "existing": 1,
+      "listing_tried": [
+        "https://tesla.com",
+        "https://tesla.com/products",
+        "https://www.tesla.com",
+        "https://www.tesla.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "ubtech": {
+      "name": "UBTECH",
+      "slug": "ubtech",
+      "status": "partial",
+      "existing": 2,
+      "listing_tried": [
+        "https://ubtrobot.com",
+        "https://ubtrobot.com/products",
+        "https://www.ubtrobot.com",
+        "https://www.ubtrobot.com/products"
+      ],
+      "discovered": 4,
+      "sitemap": "done"
+    },
+    "unitree-robotics": {
+      "name": "Unitree Robotics",
+      "slug": "unitree-robotics",
+      "status": "partial",
+      "existing": 2,
+      "listing_tried": [
+        "https://unitree.com",
+        "https://unitree.com/products",
+        "https://www.unitree.com",
+        "https://www.unitree.com/products"
+      ],
+      "discovered": 12,
+      "sitemap": "done"
+    },
+    "universal-robots": {
+      "name": "Universal Robots",
+      "slug": "universal-robots",
+      "status": "partial",
+      "existing": 9,
+      "listing_tried": [
+        "https://universal-robots.com",
+        "https://universal-robots.com/products",
+        "https://www.universal-robots.com",
+        "https://www.universal-robots.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": "done"
+    },
+    "yaskawa-motoman": {
+      "name": "Yaskawa Motoman",
+      "slug": "yaskawa-motoman",
+      "status": "partial",
+      "existing": 4,
+      "listing_tried": [
+        "https://motoman.com",
+        "https://motoman.com/products",
+        "https://www.motoman.com",
+        "https://www.motoman.com/products"
+      ],
+      "discovered": 12,
+      "sitemap": "done"
+    },
+    "zimmer-biomet": {
+      "name": "Zimmer Biomet",
+      "slug": "zimmer-biomet",
+      "status": "partial",
+      "existing": 2,
+      "listing_tried": [
+        "https://www.zimmerbiomet.com",
+        "https://zimmerbiomet.com",
+        "https://zimmerbiomet.com/products"
+      ],
+      "discovered": 0,
+      "sitemap": null
+    },
+    "temi": {
+      "name": "temi",
+      "slug": "temi",
+      "status": "partial",
+      "existing": 2,
+      "listing_tried": [],
+      "discovered": 0,
+      "sitemap": null
+    }
+  },
+  "counts": {
+    "verified": 90,
+    "failed": 220,
+    "skipped": 38,
+    "queued": 186,
+    "fetches": 280,
+    "oems_complete": 27,
+    "oems_partial": 34,
+    "oems_total": 61,
+    "scrubbed": 0
+  }
+}

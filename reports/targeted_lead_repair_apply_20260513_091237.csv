@@ -1,0 +1,19 @@
+action,company_id,canonical_id,old_name,new_name,old_industry,new_industry,status,details
+rename_canonical,4385,4385,Trailborn - hospitalitynet,Trailborn,Healthcare,Hospitality,applied,"canonical for [1122, 4385]"
+merge_duplicate_suffix,1122,4385,Trailborn - Hospitality Net,Trailborn,Healthcare,Hospitality,applied,merged into clean-name canonical
+rename_canonical,4386,4386,First Hospitality - hospitalitynet,First Hospitality,Healthcare,Hospitality,applied,"canonical for [1362, 4386]"
+merge_duplicate_suffix,1362,4386,First Hospitality - Hospitality Net,First Hospitality,Healthcare,Hospitality,applied,merged into clean-name canonical
+merge_duplicate_wynn,3520,7550,Wynn Las Vegas,Wynn Las Vegas,Hospitality,Hospitality,applied,exact duplicate Wynn Las Vegas
+update_industry,2856,2856,Room00 Next Gen Hospitality,Room00 Next Gen Hospitality,Healthcare,Hospitality,applied,"real buyer, wrong Healthcare classification"
+update_industry,2993,2993,Crown Resorts,Crown Resorts,Healthcare,Casinos & Gaming,applied,"real buyer, wrong Healthcare classification"
+update_industry,3349,3349,Peregrine Hospitality - Hospitality Net,Peregrine Hospitality,Healthcare,Hospitality,applied,"real buyer, wrong Healthcare classification"
+delete_artifact,820,,Dutch hospitality operating system Mews,,Healthcare,,applied,"{'signals': 3, 'scores': 1, 'contacts': 0, 'feedback': 0, 'lead_research_updates': 0, 'user_notifications': 0, 'crm_accounts': 0}"
+delete_artifact,1393,,Hospitality SaaS,,Healthcare,,applied,"{'signals': 2, 'scores': 1, 'contacts': 0, 'feedback': 0, 'lead_research_updates': 0, 'user_notifications': 0, 'crm_accounts': 0}"
+delete_artifact,2865,,Hospitality AI-Driven,,Healthcare,,applied,"{'signals': 3, 'scores': 1, 'contacts': 0, 'feedback': 0, 'lead_research_updates': 0, 'user_notifications': 0, 'crm_accounts': 0}"
+delete_artifact,3444,,Hospitality Advantages,,Healthcare,,applied,"{'signals': 2, 'scores': 1, 'contacts': 0, 'feedback': 0, 'lead_research_updates': 0, 'user_notifications': 0, 'crm_accounts': 0}"
+delete_artifact,4051,,Las Vegas Hospitality,,Healthcare,,applied,"{'signals': 3, 'scores': 1, 'contacts': 0, 'feedback': 0, 'lead_research_updates': 0, 'user_notifications': 0, 'crm_accounts': 0}"
+delete_artifact,5045,,Hospitality Labor ITB,,Healthcare,,applied,"{'signals': 3, 'scores': 1, 'contacts': 0, 'feedback': 0, 'lead_research_updates': 0, 'user_notifications': 0, 'crm_accounts': 0}"
+delete_artifact,5780,,Immigration Policy and the Hospitality Workforce,,Healthcare,,applied,"{'signals': 1, 'scores': 0, 'contacts': 0, 'feedback': 0, 'lead_research_updates': 0, 'user_notifications': 0, 'crm_accounts': 0}"
+delete_artifact,6034,,Research: Hospitality Technology Tops $1 Billion,,Healthcare,,applied,"{'signals': 1, 'scores': 0, 'contacts': 0, 'feedback': 0, 'lead_research_updates': 0, 'user_notifications': 0, 'crm_accounts': 0}"
+delete_artifact,6260,,Key Hospitality Technology Trends to Watch,,Healthcare,,applied,"{'signals': 1, 'scores': 0, 'contacts': 0, 'feedback': 0, 'lead_research_updates': 0, 'user_notifications': 0, 'crm_accounts': 0}"
+delete_artifact,6774,,Enhancing hospitality,,Healthcare,,applied,"{'signals': 1, 'scores': 0, 'contacts': 0, 'feedback': 0, 'lead_research_updates': 0, 'user_notifications': 0, 'crm_accounts': 0}"

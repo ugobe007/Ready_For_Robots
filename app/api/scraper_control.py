@@ -1,0 +1,707 @@
+"""
+Scraper control API - Manual trigger and monitoring
+"""
+import logging
+import os
+
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks, Query, Header
+from typing import Dict, Any, Optional
+from datetime import datetime, timedelta
+from sqlalchemy import func, cast, Date
+from app.database import get_db, SessionLocal
+from sqlalchemy.orm import Session
+from app.models.company import Company
+from app.models.signal import Signal
+
+router = APIRouter(prefix="/api/scraper", tags=["scraper-control"])
+_log = logging.getLogger(__name__)
+
+def _run_secondary_pass_sync(
+    *,
+    limit: int = 120,
+    min_score: float = 15.0,
+    use_llm: bool = True,
+    rescore: bool = True,
+) -> Dict[str, Any]:
+    """Run lead secondary pass (serialized via secondary_pass_runner)."""
+    from app.services.secondary_pass_runner import run_leads_secondary_pass_sync
+
+    return run_leads_secondary_pass_sync(
+        limit=limit,
+        min_score=min_score,
+        use_llm=use_llm,
+        rescore=rescore,
+    )
+
+
+def _run_humanoid_secondary_pass_sync(
+    *,
+    limit: int = 40,
+    sparse_threshold_pct: float = 85.0,
+    use_llm_scrape: bool = True,
+    persist_deployment_news: bool = True,
+    deployment_query_cap: int = 24,
+) -> Dict[str, Any]:
+    """Run humanoid secondary pass (serialized via secondary_pass_runner)."""
+    from app.services.secondary_pass_runner import run_humanoids_secondary_pass_sync
+
+    return run_humanoids_secondary_pass_sync(
+        limit=limit,
+        sparse_threshold_pct=sparse_threshold_pct,
+        use_llm_scrape=use_llm_scrape,
+        persist_deployment_news=persist_deployment_news,
+        deployment_query_cap=deployment_query_cap,
+    )
+
+
+def _run_full_secondary_pipeline_sync() -> Dict[str, Any]:
+    from app.services.secondary_pass_runner import run_full_secondary_pipeline_sync
+
+    return run_full_secondary_pipeline_sync()
+
+
+def _run_intelligence_scraper_sync(
+    articles_per_query: int = 15,
+    max_queries: Optional[int] = None,
+    enrich: bool = True,
+):
+    """Run intelligence scraper in-process (no Celery/Redis needed). Writes to same DB as app."""
+    import logging
+    log = logging.getLogger(__name__)
+    from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
+    from app.scrapers.scraper_watchdog import get_watchdog
+    db = SessionLocal()
+    try:
+        scraper = IntelligenceNewsScraper(db=db)
+        stats = scraper.discover_leads(
+            max_articles_per_query=articles_per_query,
+            max_queries=max_queries,
+        )
+        if enrich:
+            enrich_stats = scraper.enrich_existing_companies(limit=20)
+            stats["companies_enriched"] = enrich_stats.get("companies_enriched", 0)
+            stats["signals_created"] = stats.get("signals_created", 0) + enrich_stats.get("signals_created", 0)
+        log.info(
+            "Intelligence scraper completed: discovered=%s enriched=%s signals=%s",
+            stats.get("companies_discovered", 0),
+            stats.get("companies_enriched", 0),
+            stats.get("signals_created", 0),
+        )
+        try:
+            get_watchdog().record_external_run(
+                "intelligence_sync",
+                status="success",
+                urls_attempted=int(stats.get("companies_discovered", 0) or 0),
+                urls_succeeded=int(stats.get("companies_discovered", 0) or 0),
+            )
+        except Exception as wd_exc:
+            log.warning("Watchdog external run record failed: %s", wd_exc)
+        try:
+            from app.services.public_surface_cache import schedule_public_cache_refresh
+
+            schedule_public_cache_refresh(pipeline_only=True, reason="scraper_complete")
+        except Exception as refresh_exc:
+            log.warning("Pipeline cache refresh after scraper failed: %s", refresh_exc)
+        return stats
+    except Exception as e:
+        try:
+            get_watchdog().record_external_run(
+                "intelligence_sync",
+                status="failed",
+                errors=[str(e)],
+            )
+        except Exception:
+            pass
+        log.exception("Intelligence scraper failed: %s", e)
+        raise
+    finally:
+        db.close()
+
+
+def _run_job_board_scraper_sync(
+    industry: Optional[str] = None,
+    urls: Optional[list] = None,
+):
+    """Run job-board Robot Job ingest in-process (Fly SKIP_CELERY path)."""
+    from app.services.job_board_scraper_runner import run_job_board_scraper_sync
+
+    return run_job_board_scraper_sync(industry=industry, urls=urls)
+
+
+@router.get("/cron/run-intelligence")
+async def cron_run_intelligence(
+    background_tasks: BackgroundTasks,
+    token: str = Query("", description="Secret token (set SCRAPER_CRON_TOKEN)"),
+) -> Dict[str, Any]:
+    """
+    Cron-trigger endpoint for external schedulers (cron-job.org, GitHub Actions).
+    GET /api/scraper/cron/run-intelligence?token=YOUR_SECRET
+    Set SCRAPER_CRON_TOKEN in Fly secrets. Runs quick scrape (20 queries, ~3 min).
+    """
+    import os
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    background_tasks.add_task(
+        _run_intelligence_scraper_sync,
+        articles_per_query=15,
+        max_queries=20,
+        enrich=True,
+    )
+    return {"status": "started", "message": "Quick scrape running (20 queries)"}
+
+
+@router.get("/secondary-pass/status")
+async def secondary_pass_status() -> Dict[str, Any]:
+    """Last secondary-pass run stats and whether a job is in progress."""
+    from app.services.secondary_pass_runner import get_secondary_pass_status
+
+    return get_secondary_pass_status()
+
+
+@router.get("/cron/run-secondary-pass")
+async def cron_run_secondary_pass(
+    token: str = Query("", description="Secret token (set SCRAPER_CRON_TOKEN)"),
+    limit: int = Query(120, ge=1, le=300),
+    min_score: float = Query(15.0, ge=0.0, le=100.0),
+    use_llm: bool = Query(True),
+    rescore: bool = Query(True),
+) -> Dict[str, Any]:
+    """
+    Cron-trigger for lead secondary logic (gap audit → rescue → rank).
+    GET /api/scraper/cron/run-secondary-pass?token=YOUR_SECRET
+    """
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    from app.services.secondary_pass_runner import (
+        run_leads_secondary_pass_sync,
+        start_secondary_job_in_thread,
+    )
+
+    return start_secondary_job_in_thread(
+        run_leads_secondary_pass_sync,
+        job_kind="leads",
+        limit=limit,
+        min_score=min_score,
+        use_llm=use_llm,
+        rescore=rescore,
+    )
+
+
+@router.get("/cron/run-humanoid-secondary-pass")
+async def cron_run_humanoid_secondary_pass(
+    token: str = Query("", description="Secret token (set SCRAPER_CRON_TOKEN)"),
+    limit: int = Query(40, ge=1, le=80),
+    sparse_pct: float = Query(85.0, ge=0.0, le=100.0),
+    use_llm: bool = Query(True),
+    persist_news: bool = Query(True),
+    news_queries: int = Query(24, ge=4, le=60),
+) -> Dict[str, Any]:
+    """
+    Cron-trigger for humanoid benchmark secondary logic (spec gaps + cited news).
+    GET /api/scraper/cron/run-humanoid-secondary-pass?token=YOUR_SECRET
+    """
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    from app.services.secondary_pass_runner import (
+        run_humanoids_secondary_pass_sync,
+        start_secondary_job_in_thread,
+    )
+
+    return start_secondary_job_in_thread(
+        run_humanoids_secondary_pass_sync,
+        job_kind="humanoids",
+        limit=limit,
+        sparse_threshold_pct=sparse_pct,
+        use_llm_scrape=use_llm,
+        persist_deployment_news=persist_news,
+        deployment_query_cap=news_queries,
+    )
+
+
+@router.get("/cron/run-secondary-pipeline")
+async def cron_run_secondary_pipeline(
+    token: str = Query("", description="Secret token (set SCRAPER_CRON_TOKEN)"),
+) -> Dict[str, Any]:
+    """
+    Cron-trigger for full secondary pipeline (leads then humanoids, serialized).
+    GET /api/scraper/cron/run-secondary-pipeline?token=YOUR_SECRET
+    """
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+    from app.services.secondary_pass_runner import (
+        run_full_secondary_pipeline_sync,
+        start_secondary_job_in_thread,
+    )
+
+    return start_secondary_job_in_thread(
+        run_full_secondary_pipeline_sync,
+        job_kind="full",
+    )
+
+
+def _run_content_surfaces_refresh_sync(*, newsletter_force: bool = False) -> Dict[str, Any]:
+    import logging
+
+    log = logging.getLogger(__name__)
+    from app.services.content_surfaces import refresh_all_content_surfaces
+
+    db = SessionLocal()
+    try:
+        stats = refresh_all_content_surfaces(db, newsletter_force=newsletter_force)
+        from app.services.public_surface_cache import hydrate_public_surface_caches
+
+        hydrate_public_surface_caches()
+        log.info("Content surfaces refresh completed: %s", stats)
+        return stats
+    finally:
+        db.close()
+
+
+def _run_pipeline_surface_refresh_sync() -> Dict[str, Any]:
+    """Rebuild sales-lead caches only (homepage, summary, rotated lists, /pipeline feed)."""
+    import logging
+
+    log = logging.getLogger(__name__)
+    from app.services.public_surface_cache import (
+        hydrate_public_surface_caches,
+        refresh_pipeline_surface_caches,
+    )
+
+    db = SessionLocal()
+    try:
+        stats = refresh_pipeline_surface_caches(db)
+        hydrate_public_surface_caches()
+        log.info("Pipeline surface refresh completed: %s", stats)
+        return stats
+    finally:
+        db.close()
+
+
+@router.get("/cron/refresh-pipeline")
+async def cron_refresh_pipeline_surfaces(
+    token: str = Query("", description="Secret token (SCRAPER_CRON_TOKEN)"),
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+) -> Dict[str, Any]:
+    """
+    Rebuild pipeline/sales-lead caches with rotation (default cadence: 30 minutes).
+    GET /api/scraper/cron/refresh-pipeline?token=YOUR_SCRAPER_CRON_TOKEN
+    Or: same URL with header X-Admin-Key: YOUR_ADMIN_KEY (no query token required).
+    """
+    import os
+    import threading
+
+    from app.admin_auth import get_admin_key
+
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    admin = get_admin_key()
+    ok_cron = bool(expected and token.strip() == expected)
+    ok_admin = bool(admin and x_admin_key and x_admin_key.strip() == admin)
+    if not ok_cron and not ok_admin:
+        raise HTTPException(status_code=403, detail="Invalid token or X-Admin-Key")
+
+    threading.Thread(
+        target=_run_pipeline_surface_refresh_sync,
+        daemon=True,
+        name="cron-pipeline-cache-refresh",
+    ).start()
+    return {
+        "status": "started",
+        "message": "Refreshing homepage, summary, rotated lead lists, and /pipeline feed.",
+    }
+
+
+@router.get("/cron/refresh-content")
+async def cron_refresh_content_surfaces(
+    background_tasks: BackgroundTasks,
+    token: str = Query("", description="Secret token (SCRAPER_CRON_TOKEN)"),
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    force: bool = Query(False, description="Full newsletter rebuild"),
+) -> Dict[str, Any]:
+    """
+    Pre-build all public page caches (pipeline, newsletter, social, HEIR report + PDF).
+    GET /api/scraper/cron/refresh-content?token=YOUR_SCRAPER_CRON_TOKEN
+    Schedule every 30 minutes (or match PUBLIC_CACHE_REFRESH_INTERVAL_SEC on Fly).
+    """
+    import os
+
+    from app.admin_auth import get_admin_key
+
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    admin = get_admin_key()
+    ok_cron = bool(expected and token.strip() == expected)
+    ok_admin = bool(admin and x_admin_key and x_admin_key.strip() == admin)
+    if not ok_cron and not ok_admin:
+        raise HTTPException(status_code=403, detail="Invalid token or X-Admin-Key")
+
+    background_tasks.add_task(_run_content_surfaces_refresh_sync, newsletter_force=force)
+    return {
+        "status": "started",
+        "message": "Refreshing homepage, pipeline, newsletter, social posts, and HEIR intelligence caches.",
+    }
+
+
+def _run_data_quality_job_sync(*, apply: bool = True) -> Dict[str, Any]:
+    from app.services.scheduled_data_quality import run_weekly_data_quality_job
+
+    return run_weekly_data_quality_job(apply=apply)
+
+
+@router.get("/data-quality/status")
+async def data_quality_job_status() -> Dict[str, Any]:
+    """Last weekly data-quality run (purge, normalize, decision log export)."""
+    from app.services.scheduled_data_quality import get_data_quality_job_status
+
+    return get_data_quality_job_status()
+
+
+@router.get("/cron/run-data-quality")
+async def cron_run_data_quality(
+    background_tasks: BackgroundTasks,
+    token: str = Query("", description="Secret token (SCRAPER_CRON_TOKEN)"),
+    apply: bool = Query(True, description="Apply purge/normalize (false = dry-run export only)"),
+) -> Dict[str, Any]:
+    """
+    Cron-trigger for weekly data quality (purge junk, normalize names, export log).
+    GET /api/scraper/cron/run-data-quality?token=YOUR_SCRAPER_CRON_TOKEN
+    """
+    expected = os.getenv("SCRAPER_CRON_TOKEN")
+    if expected and token != expected:
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    background_tasks.add_task(_run_data_quality_job_sync, apply=apply)
+    return {
+        "status": "started",
+        "message": "Weekly data quality job started (purge, normalize, quality log export).",
+        "apply": apply,
+    }
+
+
+@router.post("/run-intelligence")
+async def run_intelligence_scraper(
+    background_tasks: BackgroundTasks,
+    articles_per_query: int = 15,
+    max_queries: int = 20,
+    enrich: bool = True,
+) -> Dict[str, Any]:
+    """
+    Run the intelligence news scraper (discovers new buyer leads from news).
+    Bounded default: 20 queries (~15 min) to avoid long-lived DB connections.
+    """
+    def _task():
+        _run_intelligence_scraper_sync(
+            articles_per_query=articles_per_query,
+            max_queries=max_queries,
+            enrich=enrich,
+        )
+
+    background_tasks.add_task(_task)
+    return {
+        "status": "intelligence_scraper_started",
+        "message": f"Buyer intelligence scraper running ({max_queries} queries). Check /api/leads/summary in ~15 min.",
+        "articles_per_query": articles_per_query,
+        "max_queries": max_queries,
+        "check_leads": "/api/leads/summary",
+    }
+
+
+@router.post("/run-oem")
+async def run_oem_discovery(
+    background_tasks: BackgroundTasks,
+    max_queries: int = 30,
+) -> Dict[str, Any]:
+    """Run XBOT/StageGate OEM prospect discovery in-process."""
+    def _task():
+        from app.database import SessionLocal
+        from app.services.oem_discovery import run_oem_discovery
+        db = SessionLocal()
+        try:
+            run_oem_discovery(db, max_queries=max_queries)
+        finally:
+            db.close()
+
+    background_tasks.add_task(_task)
+    return {
+        "status": "oem_discovery_started",
+        "message": "OEM/XBOT pipeline running (StageGate robot OEM prospects).",
+        "max_queries": max_queries,
+    }
+
+
+@router.post("/sync-stagegate-crm")
+async def sync_stagegate_crm_bridge(
+    background_tasks: BackgroundTasks,
+    refresh_draft: bool = False,
+    min_score: int = 45,
+) -> Dict[str, Any]:
+    """Backfill StageGate robot_companies into Cal Admin (companies + Score + CrmAccount)."""
+
+    def _task():
+        from app.database import SessionLocal
+        from app.services.stagegate_crm_bridge import sync_all_stagegate_prospects
+
+        db = SessionLocal()
+        try:
+            return sync_all_stagegate_prospects(db, refresh_draft=refresh_draft, min_score=min_score)
+        finally:
+            db.close()
+
+    background_tasks.add_task(_task)
+    return {
+        "status": "stagegate_crm_sync_started",
+        "message": "Bridging StageGate prospects to Cal Admin CRM.",
+        "min_score": min_score,
+        "refresh_draft": refresh_draft,
+    }
+
+
+@router.post("/run-all")
+async def run_all_scrapers(
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Manually trigger buyer scrapers (no OEM / StageGate vendor sync).
+    ALWAYS runs intelligence scraper in-process (no Redis needed) — guarantees new leads.
+    On Fly (SKIP_CELERY=1) also runs job boards in-process so Robot Jobs are not queued
+    onto a broker nobody consumes. When Celery Beat is live, job boards still queue as before.
+
+    For OEM/XBOT discovery use POST /api/scraper/run-oem instead.
+    """
+    # 1. ALWAYS run intelligence scraper in-process — quick mode (20 queries, ~15 min)
+    background_tasks.add_task(
+        _run_intelligence_scraper_sync,
+        articles_per_query=15,
+        max_queries=20,
+        enrich=True,
+    )
+
+    from app.runtime_role import celery_disabled
+
+    if celery_disabled():
+        background_tasks.add_task(_run_job_board_scraper_sync)
+        return {
+            "status": "scrapers_started",
+            "intelligence": "running_in_process",
+            "job_boards": "running_in_process",
+            "tasks": {"celery": "skipped_SKIP_CELERY"},
+            "estimated_completion": "20-30 minutes",
+            "check_status": "/api/scraper/status",
+            "check_leads": "/api/leads/summary",
+        }
+
+    # 2. Queue Celery tasks (job boards, news, RSS, company→news, enrich, etc.)
+    tasks = {}
+    try:
+        from worker.tasks import (
+            run_job_scraper_task,
+            run_hotel_scraper_task,
+            run_news_scraper_task,
+            run_rss_scraper_task,
+            run_company_news_task,
+            run_enrich_companies_task,
+            run_serp_scraper_task,
+            run_logistics_scraper_task,
+            run_rfp_marketplace_scraper_task,
+            run_intelligence_scraper_task,
+            generate_newsletter_edition_task,
+        )
+        tasks = {
+            "intelligence": run_intelligence_scraper_task.delay().id,
+            "company_news": run_company_news_task.delay(limit=80).id,
+            "enrich_companies": run_enrich_companies_task.delay(limit=80).id,
+            "job_boards": run_job_scraper_task.delay().id,
+            "hotel_directories": run_hotel_scraper_task.delay().id,
+            "news_feeds": run_news_scraper_task.delay().id,
+            "rss_feeds": run_rss_scraper_task.delay().id,
+            "search_engines": run_serp_scraper_task.delay().id,
+            "logistics_directories": run_logistics_scraper_task.delay().id,
+            "rfp_marketplaces": run_rfp_marketplace_scraper_task.delay().id,
+            "newsletter": generate_newsletter_edition_task.delay(limit=8).id,
+        }
+    except Exception:
+        # Celery/Redis may be down — intelligence still runs in-process
+        background_tasks.add_task(_run_job_board_scraper_sync)
+        tasks = {"celery": "unavailable", "job_boards": "running_in_process"}
+
+    return {
+        "status": "scrapers_started",
+        "intelligence": "running_in_process",
+        "tasks": tasks,
+        "estimated_completion": "20-30 minutes",
+        "check_status": "/api/scraper/status",
+        "check_leads": "/api/leads/summary",
+    }
+
+
+@router.post("/run/{scraper_type}")
+async def run_specific_scraper(
+    scraper_type: str,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+) -> Dict[str, Any]:
+    """
+    Run a specific scraper: intelligence, job_boards, hotels, news, serp, logistics, rfp_marketplace.
+    For 'intelligence' runs in-process (no Redis). Job boards also run in-process
+    when SKIP_CELERY=1 so Fly actually extracts Robot Jobs.
+    """
+    if scraper_type == "intelligence":
+        background_tasks.add_task(
+            _run_intelligence_scraper_sync,
+            articles_per_query=15,
+            max_queries=20,
+            enrich=True,
+        )
+        return {
+            "status": "scraper_started",
+            "scraper_type": "intelligence",
+            "message": "Buyer intelligence scraper running (20 queries, ~15 min). Check /api/leads/summary.",
+            "check_leads": "/api/leads/summary",
+        }
+    from app.runtime_role import celery_disabled
+
+    if scraper_type == "job_boards" and celery_disabled():
+        background_tasks.add_task(_run_job_board_scraper_sync)
+        return {
+            "status": "scraper_started",
+            "scraper_type": "job_boards",
+            "mode": "in_process",
+            "message": "Job-board Robot Job scraper running in-process.",
+            "estimated_completion": "5-15 minutes",
+        }
+    try:
+        from worker.tasks import (
+            run_job_scraper_task,
+            run_hotel_scraper_task,
+            run_news_scraper_task,
+            run_serp_scraper_task,
+            run_logistics_scraper_task,
+            run_rfp_marketplace_scraper_task,
+        )
+        from worker.tasks import (
+            run_company_news_task,
+            run_enrich_companies_task,
+            generate_newsletter_edition_task,
+        )
+        task_map = {
+            "job_boards": (run_job_scraper_task, {}),
+            "hotels": (run_hotel_scraper_task, {}),
+            "news": (run_news_scraper_task, {}),
+            "company_news": (run_company_news_task, {"limit": 80}),
+            "enrich_companies": (run_enrich_companies_task, {"limit": 80}),
+            "newsletter": (generate_newsletter_edition_task, {"limit": 8}),
+            "serp": (run_serp_scraper_task, {}),
+            "logistics": (run_logistics_scraper_task, {}),
+            "rfp_marketplace": (run_rfp_marketplace_scraper_task, {}),
+        }
+        if scraper_type not in task_map:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unknown scraper type: {scraper_type}. Use: intelligence, job_boards, hotels, news, company_news, enrich_companies, newsletter, serp, logistics, rfp_marketplace",
+            )
+        task_fn, kwargs = task_map[scraper_type]
+        task = task_fn.delay(**kwargs)
+        return {
+            "status": "scraper_started",
+            "scraper_type": scraper_type,
+            "task_id": task.id,
+            "estimated_completion": "5-10 minutes",
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to start scraper: {str(e)}")
+
+
+@router.get("/stats/daily")
+async def get_daily_stats(days: int = 7, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """
+    Get daily lead and signal statistics for the last N days
+    """
+    cutoff = datetime.utcnow() - timedelta(days=days)
+    
+    # Daily company counts
+    daily_companies = db.query(
+        cast(Company.created_at, Date).label('date'),
+        func.count(Company.id).label('count')
+    ).filter(
+        Company.created_at >= cutoff
+    ).group_by(
+        cast(Company.created_at, Date)
+    ).order_by(
+        cast(Company.created_at, Date).desc()
+    ).all()
+    
+    # Daily signal counts
+    daily_signals = db.query(
+        cast(Signal.created_at, Date).label('date'),
+        func.count(Signal.id).label('count')
+    ).filter(
+        Signal.created_at >= cutoff
+    ).group_by(
+        cast(Signal.created_at, Date)
+    ).order_by(
+        cast(Signal.created_at, Date).desc()
+    ).all()
+    
+    # Total stats
+    total_companies = db.query(func.count(Company.id)).scalar()
+    total_signals = db.query(func.count(Signal.id)).scalar()
+    companies_last_24h = db.query(func.count(Company.id)).filter(
+        Company.created_at >= datetime.utcnow() - timedelta(hours=24),
+        Company.source != "stagegate_oem",
+    ).scalar()
+    signals_last_24h = db.query(func.count(Signal.id)).filter(
+        Signal.created_at >= datetime.utcnow() - timedelta(hours=24)
+    ).scalar()
+    
+    return {
+        "period_days": days,
+        "summary": {
+            "total_companies": total_companies,
+            "total_signals": total_signals,
+            "companies_last_24h": companies_last_24h,
+            "signals_last_24h": signals_last_24h,
+            "avg_daily_companies": round(companies_last_24h / max(days, 1), 1) if companies_last_24h else 0,
+            "avg_daily_signals": round(signals_last_24h / max(days, 1), 1) if signals_last_24h else 0,
+        },
+        "daily_breakdown": {
+            "companies": [{"date": str(d.date), "count": d.count} for d in daily_companies],
+            "signals": [{"date": str(d.date), "count": d.count} for d in daily_signals],
+        }
+    }
+
+
+@router.get("/status")
+async def get_scraper_status(db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """
+    Get current scraper status and health
+    """
+    from app.scrapers.scraper_watchdog import get_watchdog
+    
+    watchdog = get_watchdog()
+    watchdog.reload_from_disk()
+    health = watchdog.status()
+    
+    # Buyer leads only — exclude StageGate OEM vendor sync rows
+    companies_last_24h = db.query(func.count(Company.id)).filter(
+        Company.created_at >= datetime.utcnow() - timedelta(hours=24),
+        Company.source != "stagegate_oem",
+    ).scalar()
+    
+    return {
+        "health": health,
+        "performance": {
+            "leads_last_24h": companies_last_24h,
+            "target_daily_leads": 150,
+            "on_track": companies_last_24h >= 100,
+            "percentage_of_target": round((companies_last_24h / 150) * 100, 1) if companies_last_24h else 0,
+        },
+        "recommendation": (
+            "✅ On track for 100-200 leads/day" if companies_last_24h >= 100 
+            else "⚠️ Below target - consider running manual scrape or checking scraper health"
+        )
+    }

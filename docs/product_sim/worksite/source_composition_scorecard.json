@@ -1,0 +1,689 @@
+{
+  "ran_at": "2026-08-16T01:00:41Z",
+  "question": "Which combination of sources reconstructs the most physical work?",
+  "summary": {
+    "panel": "origin_18_no_worksite_known",
+    "n": 18,
+    "arms": {
+      "A_company_where": {
+        "companies_with_level_ge1": 1,
+        "companies_with_level_ge2": 1,
+        "total_sites_level_ge1": 2,
+        "rate_ge1": 0.056
+      },
+      "B_jobs_what": {
+        "companies_with_evidenced_work": 3,
+        "total_evidenced_work_units": 5,
+        "rate": 0.167
+      },
+      "C_company_plus_jobs_join": {
+        "companies_with_attached_work": 0,
+        "total_attached_work_units": 0,
+        "PWRR": 0.0,
+        "rate": 0.0
+      },
+      "D_plus_news_timing": {
+        "companies_with_why_now": 10,
+        "companies_with_join_and_why_now": 0,
+        "rate_why_now": 0.556
+      }
+    },
+    "partial_jobs": {
+      "what_without_where": 3,
+      "note": "Retain as orphan evidenced work \u2014 do not discard"
+    },
+    "interpretation": "WHERE and WHAT are separate streams. Composition arm C (join) is the product metric. Rising PWRR means orphaned work is acquiring operating context."
+  },
+  "companies": [
+    {
+      "company": "Kenco",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 3,
+        "from_jobs": 2,
+        "from_company_pages": 3,
+        "unit_ids": [
+          "pick_cases",
+          "load_outbound",
+          "move_pallets"
+        ]
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [
+          {
+            "work_unit_id": "pick_cases",
+            "status": "EVIDENCED",
+            "worksite": "UNRESOLVED",
+            "origin_relevant": true
+          },
+          {
+            "work_unit_id": "load_outbound",
+            "status": "EVIDENCED",
+            "worksite": "UNRESOLVED",
+            "origin_relevant": true
+          },
+          {
+            "work_unit_id": "move_pallets",
+            "status": "EVIDENCED",
+            "worksite": "UNRESOLVED",
+            "origin_relevant": true
+          }
+        ],
+        "attached_distinct_units": 0,
+        "PWRR": 0.0,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": true
+      },
+      "partial_robot_job": {
+        "what_resolved": true,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": [
+          "pick_cases",
+          "load_outbound",
+          "move_pallets"
+        ]
+      }
+    },
+    {
+      "company": "Lineage",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": true
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "DHL Supply Chain",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": true
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "Medline",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": true
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "Dollar General",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": true
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "FedEx Ground",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": true
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "Radial",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": false
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "NFI Industries",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": false
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "UPS SCS",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": false
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "Burris Logistics",
+      "A_where": {
+        "sites_level_ge1": 2,
+        "sites_level_ge2": 2,
+        "sites_accepted_gate": 1,
+        "level_histogram": {
+          "0": 1,
+          "2": 2
+        },
+        "site_names": [
+          {
+            "name": "New Orlando Distribution Center",
+            "level": 0,
+            "level_label": "company_only",
+            "locality": null
+          },
+          {
+            "name": "Orlando Distribution Center",
+            "level": 2,
+            "level_label": "company_locality_function",
+            "locality": "orlando|fl"
+          },
+          {
+            "name": "Milford Distribution Center",
+            "level": 2,
+            "level_label": "company_locality_function",
+            "locality": "milford|de"
+          }
+        ]
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": [
+          "orlando|fl"
+        ]
+      },
+      "D_timing": {
+        "why_now_signal_present": false
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": true,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "RJW Logistics",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": true
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "Walmart",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": true
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "Amazon",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": true
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "Home Depot",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": true
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "Mondelez",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": false
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "TFI International",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 0,
+        "from_jobs": 0,
+        "from_company_pages": 0,
+        "unit_ids": []
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [],
+        "attached_distinct_units": 0,
+        "PWRR": null,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": false
+      },
+      "partial_robot_job": {
+        "what_resolved": false,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": []
+      }
+    },
+    {
+      "company": "HelloFresh Phoenix",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 1,
+        "from_jobs": 0,
+        "from_company_pages": 1,
+        "unit_ids": [
+          "load_outbound"
+        ]
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [
+          {
+            "work_unit_id": "load_outbound",
+            "status": "EVIDENCED",
+            "worksite": "UNRESOLVED",
+            "origin_relevant": true
+          }
+        ],
+        "attached_distinct_units": 0,
+        "PWRR": 0.0,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": false
+      },
+      "partial_robot_job": {
+        "what_resolved": true,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": [
+          "load_outbound"
+        ]
+      }
+    },
+    {
+      "company": "PFG",
+      "A_where": {
+        "sites_level_ge1": 0,
+        "sites_level_ge2": 0,
+        "sites_accepted_gate": 0,
+        "level_histogram": {},
+        "site_names": []
+      },
+      "B_what": {
+        "evidenced_work_units": 1,
+        "from_jobs": 1,
+        "from_company_pages": 0,
+        "unit_ids": [
+          "pick_cases"
+        ]
+      },
+      "C_join": {
+        "attached": [],
+        "orphans": [
+          {
+            "work_unit_id": "pick_cases",
+            "status": "EVIDENCED",
+            "worksite": "UNRESOLVED",
+            "origin_relevant": true
+          }
+        ],
+        "attached_distinct_units": 0,
+        "PWRR": 0.0,
+        "job_localities": []
+      },
+      "D_timing": {
+        "why_now_signal_present": false
+      },
+      "partial_robot_job": {
+        "what_resolved": true,
+        "where_resolved": false,
+        "joined": false,
+        "orphan_work_units": [
+          "pick_cases"
+        ]
+      }
+    }
+  ],
+  "next": "Improve structured job locality keys + company footprint Level 1\u20132 coverage; maximize PWRR. Do not brute-force careers HTML."
+}

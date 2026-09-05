@@ -1,0 +1,266 @@
+{
+  "ontology_id": "rfr_vertical_ontology_v1",
+  "version": "1.0.0",
+  "frozen": false,
+  "note": "Operating environments / industry verticals a robot may target. Companion to ROBOT_VERTICAL_ONTOLOGY.md, loaded by app/services/robot_ontology.py. `in_scope` marks verticals we match jobs for today; others are recognized so the front door does not choke on any robot URL. The extractor emits operating_environment = vertical key (app/services/robot_understanding_v1/facts.py); tests/test_robot_ontology.py enforces the extractor's values are a subset of these keys.",
+  "verticals": [
+    {
+      "key": "warehouse",
+      "label": "Warehouse / fulfillment / DC",
+      "in_scope": true,
+      "aliases": [
+        "warehouse",
+        "fulfillment",
+        "fulfillment center",
+        "distribution center",
+        "3pl",
+        "dc",
+        "pick station",
+        "tote",
+        "cross-dock",
+        "sortation"
+      ]
+    },
+    {
+      "key": "manufacturing",
+      "label": "Manufacturing / factory",
+      "in_scope": true,
+      "aliases": [
+        "manufacturing",
+        "factory",
+        "production",
+        "plant",
+        "assembly",
+        "machine tend",
+        "cnc",
+        "workpiece"
+      ]
+    },
+    {
+      "key": "retail",
+      "label": "Retail / grocery",
+      "in_scope": true,
+      "aliases": [
+        "retail",
+        "grocery",
+        "store",
+        "supermarket"
+      ]
+    },
+    {
+      "key": "hospitality",
+      "label": "Hospitality \u2014 hotels",
+      "in_scope": true,
+      "aliases": [
+        "hotel",
+        "hospitality",
+        "guest room",
+        "resort",
+        "casino",
+        "bellhop",
+        "room service",
+        "housekeeping"
+      ]
+    },
+    {
+      "key": "restaurant",
+      "label": "Restaurant / foodservice",
+      "in_scope": true,
+      "aliases": [
+        "restaurant",
+        "dining",
+        "foodservice",
+        "cafe",
+        "bar",
+        "kitchen",
+        "quick-service",
+        "qsr",
+        "fast casual",
+        "make line",
+        "bowl assembly",
+        "kitchen automation",
+        "prep cook",
+        "ingredient dosing",
+        "tortilla"
+      ]
+    },
+    {
+      "key": "healthcare",
+      "label": "Healthcare \u2014 hospitals, clinics, surgery, pharmacy, lab",
+      "in_scope": true,
+      "aliases": [
+        "hospital",
+        "healthcare",
+        "clinic",
+        "clinical",
+        "surgery center",
+        "surgical center",
+        "pharmacy",
+        "laboratory",
+        "medical center",
+        "nursing",
+        "nursing unit",
+        "patient",
+        "med-surg",
+        "linen",
+        "unit-delivery",
+        "operating room",
+        "or suite"
+      ]
+    },
+    {
+      "key": "eldercare",
+      "label": "Eldercare \u2014 nursing home, senior/assisted living, rehab, PT",
+      "in_scope": true,
+      "aliases": [
+        "nursing home",
+        "senior living",
+        "assisted living",
+        "memory care",
+        "skilled nursing",
+        "long-term care",
+        "rehabilitation",
+        "physical therapy"
+      ]
+    },
+    {
+      "key": "airport",
+      "label": "Airport / transit hub",
+      "in_scope": true,
+      "aliases": [
+        "airport",
+        "transit",
+        "terminal"
+      ]
+    },
+    {
+      "key": "commercial",
+      "label": "Commercial facilities / office / reception",
+      "in_scope": true,
+      "aliases": [
+        "office",
+        "workplace",
+        "facility",
+        "reception",
+        "commercial building"
+      ]
+    },
+    {
+      "key": "utilities",
+      "label": "Utilities / infrastructure inspection",
+      "in_scope": true,
+      "aliases": [
+        "utilities",
+        "power",
+        "substation",
+        "infrastructure",
+        "tunnel",
+        "pipeline"
+      ]
+    },
+    {
+      "key": "indoor",
+      "label": "Generic indoor environment",
+      "in_scope": true,
+      "aliases": [
+        "indoor",
+        "confined space"
+      ]
+    },
+    {
+      "key": "construction",
+      "label": "Construction / jobsite",
+      "in_scope": true,
+      "aliases": [
+        "construction",
+        "jobsite",
+        "construction site",
+        "homebuilding",
+        "residential construction",
+        "building construction",
+        "framing"
+      ]
+    },
+    {
+      "key": "mining",
+      "label": "Mining / quarry",
+      "in_scope": true,
+      "aliases": [
+        "mining",
+        "mine",
+        "quarry",
+        "underground",
+        "haul truck",
+        "stope",
+        "longwall",
+        "haulage"
+      ]
+    },
+    {
+      "key": "agriculture",
+      "label": "Agriculture / farm",
+      "in_scope": true,
+      "aliases": [
+        "agriculture",
+        "farm",
+        "orchard",
+        "greenhouse",
+        "crop",
+        "dairy",
+        "field",
+        "weeding",
+        "combine",
+        "tractor",
+        "row crop"
+      ]
+    },
+    {
+      "key": "marine",
+      "label": "Marine / port / underwater",
+      "in_scope": true,
+      "aliases": [
+        "marine",
+        "maritime",
+        "hull",
+        "port",
+        "harbor",
+        "underwater",
+        "shipyard"
+      ]
+    },
+    {
+      "key": "aviation",
+      "label": "Avionics — drones, eVTOL, autonomous aircraft",
+      "in_scope": true,
+      "aliases": [
+        "aviation",
+        "avionics",
+        "drone",
+        "uav",
+        "evtol",
+        "eVTOL",
+        "flying car",
+        "autonomous aircraft",
+        "autonomous plane",
+        "hangar",
+        "airside",
+        "aircraft",
+        "ramp"
+      ]
+    },
+    {
+      "key": "aerospace",
+      "label": "Aerospace — satellites, rockets, orbital robots",
+      "in_scope": true,
+      "aliases": [
+        "aerospace",
+        "satellite",
+        "orbital",
+        "space debris",
+        "rocket",
+        "on-orbit",
+        "space robot"
+      ]
+    }
+  ]
+}

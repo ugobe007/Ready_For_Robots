@@ -1,0 +1,34 @@
+{
+  "uid": "scout_crm_sync",
+  "type": "app",
+  "config": {
+    "description": "SIGNAL pushes qualified robot-demand leads from Ready For Robots into HubSpot CRM.",
+    "name": "SIGNAL CRM Sync",
+    "distribution": "private",
+    "auth": {
+      "type": "oauth",
+      "redirectUrls": [
+        "https://ready-2-robot.fly.dev/api/integrations/hubspot/callback"
+      ],
+      "requiredScopes": [
+        "crm.objects.contacts.read",
+        "crm.objects.contacts.write",
+        "crm.objects.companies.write",
+        "oauth"
+      ],
+      "optionalScopes": [],
+      "conditionallyRequiredScopes": []
+    },
+    "permittedUrls": {
+      "fetch": ["https://api.hubapi.com", "https://ready-2-robot.fly.dev"],
+      "iframe": [],
+      "img": []
+    },
+    "support": {
+      "supportEmail": "hello@readyforrobots.com",
+      "documentationUrl": "https://readyforrobots.com/integrations",
+      "supportUrl": "https://readyforrobots.com",
+      "supportPhone": ""
+    }
+  }
+}

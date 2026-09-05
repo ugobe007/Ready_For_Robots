@@ -1,0 +1,64 @@
+{
+  "ontology_id": "rfr_product_loop_v1",
+  "version": "1.0.0",
+  "description": "Control-plane graph for the ReadyForRobots product (Jobs workflow, site, deploys, DB, agent memory). Sibling of rfr_graph.v1.json (robot ↔ work). See docs/product_integrity_loop.md.",
+  "center": "JOBS_WORKFLOW",
+  "product_mantra": [
+    "Observe health.",
+    "Compile memory.",
+    "One mission.",
+    "Verify the real deploy."
+  ],
+  "layers": {
+    "knowledge": "What we believe the site and workflow do (docs, missions, chat)",
+    "truth": "What production actually does (Vercel HTML, Fly API, database snapshot, GHA duration)"
+  },
+  "node_families": [
+    {
+      "id": "JOBS_WORKFLOW",
+      "stages": ["FIND", "JOB_CARDS", "CRM", "WATCH"]
+    },
+    {
+      "id": "SURFACE",
+      "fields": ["path", "header_chrome", "src", "bundle_hash"]
+    },
+    {
+      "id": "DEPLOY",
+      "fields": ["provider", "environment", "sha", "skipped", "duration_s"]
+    },
+    {
+      "id": "DATABASE",
+      "fields": ["snapshot_available", "pipeline_cache", "jobs_watch"]
+    },
+    {
+      "id": "MISSION",
+      "fields": ["slug", "type", "outcome", "followups"]
+    },
+    {
+      "id": "MEMORY",
+      "fields": ["compiled_at", "next_mission", "open_followups"]
+    }
+  ],
+  "loops": {
+    "core": [
+      "OBSERVE_HEALTH",
+      "COMPILE_MEMORY",
+      "PICK_ONE_MISSION",
+      "ACT",
+      "VERIFY_VERCEL_FLY_DB_JOBS",
+      "LEARN",
+      "NOTIFY"
+    ],
+    "cadence": {
+      "hourly": "OBSERVE_HEALTH + COMPILE_MEMORY (no PR, no merge)",
+      "daily": "one ACT + VERIFY + NOTIFY",
+      "weekly": "LEARN / thesis rank"
+    }
+  },
+  "red_lines": [
+    "Do not merge on hourly observe",
+    "Do not treat a sub-30s Vercel GHA success as a production deploy",
+    "Do not invent jobs or labor dollars",
+    "Do not expand SIGNAL/Cal as core"
+  ]
+}

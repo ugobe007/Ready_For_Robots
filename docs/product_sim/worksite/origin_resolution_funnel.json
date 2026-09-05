@@ -1,0 +1,1311 @@
+{
+  "principle": "Recall is not enough. Worksite precision matters. Do not torture SIGNAL into geography; build Operating Footprint separately.",
+  "gate_fixtures": {
+    "automation_engineering_warehouse_accepted": false,
+    "riverside_dc_accepted": true,
+    "junk_gate": {
+      "accepted": false,
+      "place_confidence": 0.05,
+      "company_association": 0.8,
+      "function_confidence": 0.85,
+      "function": "3pl_fulfillment_center",
+      "function_known": true,
+      "reject_reasons": [
+        "non_place_entity"
+      ],
+      "scores_ok": {
+        "place": false,
+        "association": true,
+        "function_known": true
+      }
+    },
+    "good_gate": {
+      "accepted": true,
+      "place_confidence": 0.9,
+      "company_association": 0.88,
+      "function_confidence": 0.85,
+      "function": "food_distribution_center",
+      "function_known": true,
+      "reject_reasons": [],
+      "scores_ok": {
+        "place": true,
+        "association": true,
+        "function_known": true
+      }
+    }
+  },
+  "comparisons": {
+    "auto_v0": {
+      "label": "origin_auto_v0_no_footprint",
+      "n": 22,
+      "funnel": {
+        "company_resolution": 1.0,
+        "WRR_worksite_resolution": 0.0,
+        "WPR_worksite_precision": null,
+        "WCR_worksite_classification": 0.0,
+        "WorkRR_work_resolution": 0.0,
+        "ERR_evidence_resolution": 0.0,
+        "JRR_expected": 0.0,
+        "JRR_strict": 0.0
+      },
+      "precision": {
+        "accepted_worksites": 0,
+        "legitimate": 0,
+        "illegitimate": 0,
+        "unjudged": 0,
+        "WPR": null,
+        "note": "Prefer high WPR over high WRR. Unjudged must be audited before celebrating recall."
+      },
+      "counts": {
+        "expected_jobs": 0,
+        "evidenced_jobs": 0,
+        "candidates_total": 0,
+        "rejected_total": 0
+      },
+      "AJY_expected_per_100": 0.0,
+      "AJY_evidenced_per_100": 0.0,
+      "failure_distribution": {
+        "no_worksite_known": 18,
+        "multiple_worksites": 3,
+        "signal_not_site_specific": 1
+      },
+      "largest_failure_class": "no_worksite_known",
+      "largest_failure_count": 18,
+      "unresolved_failures": [
+        {
+          "company": "Sysco",
+          "failure_class": "multiple_worksites"
+        },
+        {
+          "company": "Kenco",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Lineage",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "DHL Supply Chain",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Ryder",
+          "failure_class": "multiple_worksites"
+        },
+        {
+          "company": "XPO",
+          "failure_class": "multiple_worksites"
+        },
+        {
+          "company": "Medline",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Dollar General",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "FedEx Ground",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Radial",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "NFI Industries",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "UPS SCS",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Burris Logistics",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "RJW Logistics",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Echo Global",
+          "failure_class": "signal_not_site_specific"
+        },
+        {
+          "company": "Walmart",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Amazon",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Home Depot",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Mondelez",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "TFI International",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "HelloFresh Phoenix",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "PFG",
+          "failure_class": "no_worksite_known"
+        }
+      ],
+      "accepted": []
+    },
+    "auto_v0_1_footprint_gate": {
+      "label": "origin_auto_v0_1_footprint_plus_gate",
+      "n": 22,
+      "funnel": {
+        "company_resolution": 1.0,
+        "WRR_worksite_resolution": 0.0,
+        "WPR_worksite_precision": null,
+        "WCR_worksite_classification": 0.0,
+        "WorkRR_work_resolution": 0.0,
+        "ERR_evidence_resolution": 0.0,
+        "JRR_expected": 0.0,
+        "JRR_strict": 0.0
+      },
+      "precision": {
+        "accepted_worksites": 0,
+        "legitimate": 0,
+        "illegitimate": 0,
+        "unjudged": 0,
+        "WPR": null,
+        "note": "Prefer high WPR over high WRR. Unjudged must be audited before celebrating recall."
+      },
+      "counts": {
+        "expected_jobs": 0,
+        "evidenced_jobs": 0,
+        "candidates_total": 10,
+        "rejected_total": 10
+      },
+      "AJY_expected_per_100": 0.0,
+      "AJY_evidenced_per_100": 0.0,
+      "failure_distribution": {
+        "no_worksite_known": 18,
+        "multiple_worksites": 3,
+        "signal_not_site_specific": 1
+      },
+      "largest_failure_class": "no_worksite_known",
+      "largest_failure_count": 18,
+      "unresolved_failures": [
+        {
+          "company": "Sysco",
+          "failure_class": "multiple_worksites"
+        },
+        {
+          "company": "Kenco",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Lineage",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "DHL Supply Chain",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Ryder",
+          "failure_class": "multiple_worksites"
+        },
+        {
+          "company": "XPO",
+          "failure_class": "multiple_worksites"
+        },
+        {
+          "company": "Medline",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Dollar General",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "FedEx Ground",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Radial",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "NFI Industries",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "UPS SCS",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Burris Logistics",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "RJW Logistics",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Echo Global",
+          "failure_class": "signal_not_site_specific"
+        },
+        {
+          "company": "Walmart",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Amazon",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Home Depot",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "Mondelez",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "TFI International",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "HelloFresh Phoenix",
+          "failure_class": "no_worksite_known"
+        },
+        {
+          "company": "PFG",
+          "failure_class": "no_worksite_known"
+        }
+      ],
+      "accepted": []
+    }
+  },
+  "excitement_bar": "Not 14%\u219270% via research. Excited by e.g. JRR\u2191 with WPR\u226590% and 0 manual company additions.",
+  "full": {
+    "auto_v0": {
+      "label": "origin_auto_v0_no_footprint",
+      "n": 22,
+      "funnel": {
+        "company_resolution": 1.0,
+        "WRR_worksite_resolution": 0.0,
+        "WPR_worksite_precision": null,
+        "WCR_worksite_classification": 0.0,
+        "WorkRR_work_resolution": 0.0,
+        "ERR_evidence_resolution": 0.0,
+        "JRR_expected": 0.0,
+        "JRR_strict": 0.0
+      },
+      "precision": {
+        "accepted_worksites": 0,
+        "legitimate": 0,
+        "illegitimate": 0,
+        "unjudged": 0,
+        "WPR": null,
+        "note": "Prefer high WPR over high WRR. Unjudged must be audited before celebrating recall."
+      },
+      "counts": {
+        "expected_jobs": 0,
+        "evidenced_jobs": 0,
+        "candidates_total": 0,
+        "rejected_total": 0
+      },
+      "AJY_expected_per_100": 0.0,
+      "AJY_evidenced_per_100": 0.0,
+      "failure_distribution": {
+        "no_worksite_known": 18,
+        "multiple_worksites": 3,
+        "signal_not_site_specific": 1
+      },
+      "largest_failure_class": "no_worksite_known",
+      "largest_failure_count": 18,
+      "results": [
+        {
+          "rank": 1,
+          "company": "Sysco",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "multiple_worksites",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Sysco Corporation: Sysco investing $1B over 3 years in supply chain automation including robotic picking at 100+ distribution centers Sysco distribution centers running at 70% headcount capacity; ware"
+        },
+        {
+          "rank": 2,
+          "company": "Kenco",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Kenco Logistics Southeast US facilities: warehouse associate vacancy at 38%, highest since founding; automation now strategic priority Kenco investing $60M in AMR and autonomous guided vehicle deploym"
+        },
+        {
+          "rank": 3,
+          "company": "Lineage",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Lineage celebrates fully automated expansion for Indiana cold storage facility Lineage breaks ground on new automated facility in Dallas market Lineage confirms expansion of Dutch coldstore. Lineage c"
+        },
+        {
+          "rank": 4,
+          "company": "DHL Supply Chain",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "How Nvidia-backed Artisight is taking smart hospitals to the next level with AI and computer vision DHL Supply Chain Opens 1-Million-Square-Foot Life Sciences Distribution Center in Pennsylvania, Expa"
+        },
+        {
+          "rank": 5,
+          "company": "Ryder",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "multiple_worksites",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Ryder System: Warehouse Automation Specialist | WMS, pick and place, reduce labor costs Ryder integrating AMR autonomous mobile robots across 12 DCs to combat staff shortage Ryder raises $800M growth "
+        },
+        {
+          "rank": 6,
+          "company": "XPO",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "multiple_worksites",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "XPO Logistics Completes Acquisition of 3PD Tutor Intelligence to Unveil AI-Powered Case Packing Research Designed to Dramatically Lower Automation Costs at PACK EXPO East - Packaging World. XPO Logist"
+        },
+        {
+          "rank": 7,
+          "company": "Medline",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Medline expands AI platform and warehouse robotics - Digital Commerce 360. What's driving it: New locations or capacity growth and Public automation news. Medline expands AI platform and warehouse rob"
+        },
+        {
+          "rank": 8,
+          "company": "Dollar General",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Dollar General Corporation: Dollar General investing $650M in distribution centre automation: robotic conveyors, AMR-assisted sortation, autonomous dock systems Dollar General DCs chronically understa"
+        },
+        {
+          "rank": 9,
+          "company": "FedEx Ground",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "FedEx Ground Expands Chicago Presence Construction begins on new FedEx Ground facility in Panama City - WJHG. What's driving it: New locations or capacity growth and Public automation news. FedEx Grou"
+        },
+        {
+          "rank": 10,
+          "company": "Radial",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 11,
+          "company": "NFI Industries",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 12,
+          "company": "UPS SCS",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 13,
+          "company": "Burris Logistics",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 14,
+          "company": "RJW Logistics",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "RJW Logistics Group, a large Logistics & Warehousing (3PL) operator, sits in a sector facing acute front-line labor shortages that are pushing operators to evaluate service and material-handling robot"
+        },
+        {
+          "rank": 15,
+          "company": "Echo Global",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "signal_not_site_specific",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Echo Global Logistics acquires ITS Logistics to create $5.4 billion combined entity Echo Global Logistics, a large Logistics & Supply Chain operator, sits in a sector facing acute front-line labor sho"
+        },
+        {
+          "rank": 16,
+          "company": "Walmart",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Walmart Investing Big in Montco with Store Remodels and Faster Shopping Tech Walmart plans high-tech pharmacy hub near Orlando airport Autonomous Robots powered by BrainOS to be used at Walmart. Walma"
+        },
+        {
+          "rank": 17,
+          "company": "Amazon",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Amazon's new portable Just Walk Out lanes bring checkout-free shopping to pop-up venues Amazon expands Whole Foods store assortment via 'store within a store' concept Amazon building its first-ever au"
+        },
+        {
+          "rank": 18,
+          "company": "Home Depot",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Home Depot Buys Simpl Automation to Boost Distribution Speed - News and Statistics A-list actor\u2019s restaurant chain opening locations at Home Depot, Bass Pro Shops - MLive.com. Home Depot Buys Simpl Au"
+        },
+        {
+          "rank": 19,
+          "company": "Mondelez",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 20,
+          "company": "TFI International",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 21,
+          "company": "HelloFresh Phoenix",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 22,
+          "company": "PFG",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        }
+      ]
+    },
+    "auto_v0_1": {
+      "label": "origin_auto_v0_1_footprint_plus_gate",
+      "n": 22,
+      "funnel": {
+        "company_resolution": 1.0,
+        "WRR_worksite_resolution": 0.0,
+        "WPR_worksite_precision": null,
+        "WCR_worksite_classification": 0.0,
+        "WorkRR_work_resolution": 0.0,
+        "ERR_evidence_resolution": 0.0,
+        "JRR_expected": 0.0,
+        "JRR_strict": 0.0
+      },
+      "precision": {
+        "accepted_worksites": 0,
+        "legitimate": 0,
+        "illegitimate": 0,
+        "unjudged": 0,
+        "WPR": null,
+        "note": "Prefer high WPR over high WRR. Unjudged must be audited before celebrating recall."
+      },
+      "counts": {
+        "expected_jobs": 0,
+        "evidenced_jobs": 0,
+        "candidates_total": 10,
+        "rejected_total": 10
+      },
+      "AJY_expected_per_100": 0.0,
+      "AJY_evidenced_per_100": 0.0,
+      "failure_distribution": {
+        "no_worksite_known": 18,
+        "multiple_worksites": 3,
+        "signal_not_site_specific": 1
+      },
+      "largest_failure_class": "no_worksite_known",
+      "largest_failure_count": 18,
+      "results": [
+        {
+          "rank": 1,
+          "company": "Sysco",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "multiple_worksites",
+          "candidates": 2,
+          "rejected": 2,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [
+            {
+              "name": "Sysco Corporation \u2014 Houston, TX",
+              "reasons": [
+                "company_row_city_insufficient_operation_proof"
+              ],
+              "place": 0.8,
+              "assoc": 0.4
+            },
+            {
+              "name": "Sysco multi-site network (unnamed)",
+              "reasons": [
+                "not_a_named_operating_place",
+                "network_count_not_specific_site"
+              ],
+              "place": 0.15,
+              "assoc": 0.35
+            }
+          ],
+          "text_excerpt": "Sysco Corporation: Sysco investing $1B over 3 years in supply chain automation including robotic picking at 100+ distribution centers Sysco distribution centers running at 70% headcount capacity; ware"
+        },
+        {
+          "rank": 2,
+          "company": "Kenco",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 1,
+          "rejected": 1,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [
+            {
+              "name": "Kenco Logistics \u2014 Chattanooga, TN",
+              "reasons": [
+                "company_row_city_insufficient_operation_proof",
+                "function_unknown"
+              ],
+              "place": 0.8,
+              "assoc": 0.4
+            }
+          ],
+          "text_excerpt": "Kenco Logistics Southeast US facilities: warehouse associate vacancy at 38%, highest since founding; automation now strategic priority Kenco investing $60M in AMR and autonomous guided vehicle deploym"
+        },
+        {
+          "rank": 3,
+          "company": "Lineage",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Lineage celebrates fully automated expansion for Indiana cold storage facility Lineage breaks ground on new automated facility in Dallas market Lineage confirms expansion of Dutch coldstore. Lineage c"
+        },
+        {
+          "rank": 4,
+          "company": "DHL Supply Chain",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "How Nvidia-backed Artisight is taking smart hospitals to the next level with AI and computer vision DHL Supply Chain Opens 1-Million-Square-Foot Life Sciences Distribution Center in Pennsylvania, Expa"
+        },
+        {
+          "rank": 5,
+          "company": "Ryder",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "multiple_worksites",
+          "candidates": 2,
+          "rejected": 2,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [
+            {
+              "name": "Ryder System \u2014 Miami, FL",
+              "reasons": [
+                "company_row_city_insufficient_operation_proof",
+                "function_unknown"
+              ],
+              "place": 0.8,
+              "assoc": 0.4
+            },
+            {
+              "name": "Ryder multi-site network (unnamed)",
+              "reasons": [
+                "not_a_named_operating_place",
+                "network_count_not_specific_site",
+                "function_unknown"
+              ],
+              "place": 0.15,
+              "assoc": 0.35
+            }
+          ],
+          "text_excerpt": "Ryder System: Warehouse Automation Specialist | WMS, pick and place, reduce labor costs Ryder integrating AMR autonomous mobile robots across 12 DCs to combat staff shortage Ryder raises $800M growth "
+        },
+        {
+          "rank": 6,
+          "company": "XPO",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "multiple_worksites",
+          "candidates": 2,
+          "rejected": 2,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [
+            {
+              "name": "XPO Logistics \u2014 Greenwich, CT",
+              "reasons": [
+                "city_alone_not_entity",
+                "conference_or_event_venue",
+                "company_row_city_insufficient_operation_proof",
+                "function_unknown"
+              ],
+              "place": 0.25,
+              "assoc": 0.4
+            },
+            {
+              "name": "XPO multi-site network (unnamed)",
+              "reasons": [
+                "not_a_named_operating_place",
+                "conference_or_event_venue",
+                "network_count_not_specific_site",
+                "function_unknown"
+              ],
+              "place": 0.15,
+              "assoc": 0.35
+            }
+          ],
+          "text_excerpt": "XPO Logistics Completes Acquisition of 3PD Tutor Intelligence to Unveil AI-Powered Case Packing Research Designed to Dramatically Lower Automation Costs at PACK EXPO East - Packaging World. XPO Logist"
+        },
+        {
+          "rank": 7,
+          "company": "Medline",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Medline expands AI platform and warehouse robotics - Digital Commerce 360. What's driving it: New locations or capacity growth and Public automation news. Medline expands AI platform and warehouse rob"
+        },
+        {
+          "rank": 8,
+          "company": "Dollar General",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 1,
+          "rejected": 1,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [
+            {
+              "name": "Dollar General Corporation \u2014 Goodlettsville, TN",
+              "reasons": [
+                "company_row_city_insufficient_operation_proof"
+              ],
+              "place": 0.8,
+              "assoc": 0.4
+            }
+          ],
+          "text_excerpt": "Dollar General Corporation: Dollar General investing $650M in distribution centre automation: robotic conveyors, AMR-assisted sortation, autonomous dock systems Dollar General DCs chronically understa"
+        },
+        {
+          "rank": 9,
+          "company": "FedEx Ground",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "FedEx Ground Expands Chicago Presence Construction begins on new FedEx Ground facility in Panama City - WJHG. What's driving it: New locations or capacity growth and Public automation news. FedEx Grou"
+        },
+        {
+          "rank": 10,
+          "company": "Radial",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 11,
+          "company": "NFI Industries",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 12,
+          "company": "UPS SCS",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 13,
+          "company": "Burris Logistics",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 14,
+          "company": "RJW Logistics",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "RJW Logistics Group, a large Logistics & Warehousing (3PL) operator, sits in a sector facing acute front-line labor shortages that are pushing operators to evaluate service and material-handling robot"
+        },
+        {
+          "rank": 15,
+          "company": "Echo Global",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "signal_not_site_specific",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Echo Global Logistics acquires ITS Logistics to create $5.4 billion combined entity Echo Global Logistics, a large Logistics & Supply Chain operator, sits in a sector facing acute front-line labor sho"
+        },
+        {
+          "rank": 16,
+          "company": "Walmart",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 1,
+          "rejected": 1,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [
+            {
+              "name": "Walmart \u2014 Robinson, TX",
+              "reasons": [
+                "company_row_city_insufficient_operation_proof"
+              ],
+              "place": 0.8,
+              "assoc": 0.4
+            }
+          ],
+          "text_excerpt": "Walmart Investing Big in Montco with Store Remodels and Faster Shopping Tech Walmart plans high-tech pharmacy hub near Orlando airport Autonomous Robots powered by BrainOS to be used at Walmart. Walma"
+        },
+        {
+          "rank": 17,
+          "company": "Amazon",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 1,
+          "rejected": 1,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [
+            {
+              "name": "Amazon \u2014 Amarillo, TX",
+              "reasons": [
+                "company_row_city_insufficient_operation_proof",
+                "function_unknown"
+              ],
+              "place": 0.8,
+              "assoc": 0.4
+            }
+          ],
+          "text_excerpt": "Amazon's new portable Just Walk Out lanes bring checkout-free shopping to pop-up venues Amazon expands Whole Foods store assortment via 'store within a store' concept Amazon building its first-ever au"
+        },
+        {
+          "rank": 18,
+          "company": "Home Depot",
+          "in_pipeline": true,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": "Home Depot Buys Simpl Automation to Boost Distribution Speed - News and Statistics A-list actor\u2019s restaurant chain opening locations at Home Depot, Bass Pro Shops - MLive.com. Home Depot Buys Simpl Au"
+        },
+        {
+          "rank": 19,
+          "company": "Mondelez",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 20,
+          "company": "TFI International",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 21,
+          "company": "HelloFresh Phoenix",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        },
+        {
+          "rank": 22,
+          "company": "PFG",
+          "in_pipeline": false,
+          "company_resolved": true,
+          "worksite_resolved": false,
+          "worksite_classified": false,
+          "work_resolved": false,
+          "evidence_resolved": false,
+          "expected_job": false,
+          "jrr_strict": false,
+          "failure_class": "no_worksite_known",
+          "candidates": 0,
+          "rejected": 0,
+          "accepted_worksites": [],
+          "precision_labels": [],
+          "reject_sample": [],
+          "text_excerpt": ""
+        }
+      ]
+    }
+  }
+}

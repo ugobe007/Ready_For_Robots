@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Cal meme — Monday pipeline</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 280px;
+      height: 160px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f172a;
+      color: #f8fafc;
+      overflow: hidden;
+    }
+    .frame { display: none; width: 280px; height: 160px; padding: 12px 14px; flex-direction: column; }
+    .frame.active { display: flex; }
+    .eyebrow {
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #34d399;
+      margin-bottom: 4px;
+    }
+    h1 { font-size: 18px; font-weight: 900; line-height: 1.1; }
+    .sub { font-size: 10px; color: #94a3b8; margin-top: 4px; line-height: 1.3; }
+    .panel {
+      margin-top: 6px;
+      background: #fff;
+      color: #111827;
+      border-radius: 8px;
+      padding: 8px;
+      flex: 1;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+    .lead {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 6px 8px;
+      margin-bottom: 5px;
+      font-size: 9px;
+    }
+    .lead strong { font-size: 10px; }
+    .hot {
+      background: #fef2f2;
+      color: #b91c1c;
+      font-size: 7px;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+    .cal {
+      background: linear-gradient(135deg, #ecfdf5, #fff);
+      border: 1px solid #6ee7b7;
+      border-radius: 6px;
+      padding: 6px;
+      font-size: 8px;
+      line-height: 1.35;
+      color: #065f46;
+    }
+    .draft { font-size: 8px; color: #78350f; line-height: 1.35; }
+    .btn {
+      display: inline-block;
+      background: #059669;
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+    .brand { font-size: 8px; color: #6ee7b7; font-weight: 700; margin-top: 6px; }
+    .messy { font-size: 9px; color: #6b7280; line-height: 1.4; }
+  </style>
+</head>
+<body>
+  <div id="f0" class="frame active">
+    <div class="eyebrow">Monday · pipeline</div>
+    <h1>Who's in market?</h1>
+    <p class="sub">Spreadsheets. LinkedIn. Guesswork.</p>
+  </div>
+
+  <div id="f1" class="frame">
+    <div class="eyebrow">Cal · priority match</div>
+    <div class="panel">
+      <div class="lead">
+        <div><strong>MGM Resorts</strong><br /><span style="color:#6b7280">Hospitality</span></div>
+        <span class="hot">HOT</span>
+      </div>
+      <div class="cal"><strong>Cal:</strong> Labor pressure + pilot language. Reach out this week.</div>
+    </div>
+  </div>
+
+  <div id="f2" class="frame">
+    <div class="eyebrow">Outreach ready</div>
+    <h1>Draft prepared.</h1>
+    <div class="panel">
+      <p class="draft">Subject: automation angle at MGM Resorts?</p>
+    </div>
+  </div>
+
+  <div id="f3" class="frame">
+    <div class="eyebrow">Ready For Robots</div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+      <h1 style="font-size:16px">Automate your pipeline.</h1>
+      <p class="sub" style="margin-top:4px">Cal surfaces buyers.</p>
+      <div class="btn" style="margin-top:8px">readyforrobots.com</div>
+    </div>
+  </div>
+
+  <script>
+    window.showFrame = (n) => {
+      document.querySelectorAll(".frame").forEach((el, i) => {
+        el.classList.toggle("active", i === n);
+      });
+    };
+  </script>
+</body>
+</html>

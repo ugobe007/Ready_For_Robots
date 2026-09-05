@@ -1,0 +1,204 @@
+name: Deploy to Fly.io
+
+# `push` from a GITHUB_TOKEN squash-merge (agent-verify automerge) does not
+# start this workflow. Automerge therefore workflow_dispatch-es it after merge.
+# Fly's GitHub App still builds the image on push; this job is the path that
+# restarts machines and can SSH-apply Alembic when release_command hangs.
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      ssh_migrate:
+        description: "After deploy, alembic upgrade via fly ssh (pending revisions, e.g. jruc0a1b2c3d4)"
+        type: boolean
+        default: true
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    concurrency:
+      group: fly-deploy
+      # Do NOT cancel a running deploy — killing `fly deploy` mid-roll is a prime
+      # way to strand a machine in the `stopped` state. Queue instead so each
+      # deploy finishes cleanly.
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+
+      - name: Set up flyctl
+        id: setup_flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Detect Alembic migration changes
+        id: migrate
+        run: |
+          set -euo pipefail
+          # workflow_dispatch has no github.event.before. Do not run Fly
+          # release_command (known hang waiting for `stopped`). SSH migrate
+          # after /health instead — applies revisions GITHUB_TOKEN merges skipped.
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "skip_release=true" >> "$GITHUB_OUTPUT"
+            raw="${{ github.event.inputs.ssh_migrate }}"
+            if [ -z "$raw" ] || [ "$raw" = "true" ] || [ "$raw" = "True" ]; then
+              echo "ssh_migrate=true" >> "$GITHUB_OUTPUT"
+              echo "workflow_dispatch — skip release_command; ssh_migrate=true"
+            else
+              echo "ssh_migrate=false" >> "$GITHUB_OUTPUT"
+              echo "workflow_dispatch — skip release_command; ssh_migrate=false"
+            fi
+            exit 0
+          fi
+          before="${{ github.event.before }}"
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            echo "skip_release=false" >> "$GITHUB_OUTPUT"
+            echo "ssh_migrate=false" >> "$GITHUB_OUTPUT"
+            echo "No previous SHA; running release_command."
+            exit 0
+          fi
+          if ! git cat-file -e "$before^{commit}" 2>/dev/null; then
+            git fetch --depth=1 origin "$before"
+          fi
+          if git diff --name-only "$before" "${{ github.sha }}" | grep -E '^migrations/' >/dev/null; then
+            echo "skip_release=false" >> "$GITHUB_OUTPUT"
+            echo "ssh_migrate=false" >> "$GITHUB_OUTPUT"
+            echo "migrations/ changed — running Alembic release_command."
+          else
+            echo "skip_release=true" >> "$GITHUB_OUTPUT"
+            echo "ssh_migrate=false" >> "$GITHUB_OUTPUT"
+            echo "No migration files changed — skip release_command (known Fly hang waiting for stopped)."
+          fi
+
+      - name: Deploy
+        # Machines go healthy in ~1 min, but `fly deploy` (strategy=immediate) can
+        # hang for the full wait window before returning; the post-deploy "Ensure
+        # all machines are started" + /health steps are the real source of truth
+        # for the app being up.
+        # `--wait-timeout` ALSO bounds how long we wait for the release_command
+        # (Alembic migration) machine to reach `stopped`. A slow-but-successful
+        # migration was reporting a false deploy failure at 5m ("never reached the
+        # state stopped") even though the migration applied — so keep this at 10m
+        # to give migrations headroom while post-deploy checks stay the source of
+        # truth. (`--release-command-timeout` bounds the command itself.)
+        # When this push does not touch migrations/, skip release_command: #78
+        # built the image then aborted because the migrate machine never reached
+        # `stopped` (10m). AGENTS.md: skip-release-command if no new migrations.
+        run: |
+          set -euo pipefail
+          extra=()
+          if [ "${{ steps.migrate.outputs.skip_release }}" = "true" ]; then
+            extra+=(--skip-release-command)
+            echo "flyctl deploy with --skip-release-command"
+          else
+            extra+=(--release-command-timeout 15m)
+            echo "flyctl deploy with Alembic release_command"
+          fi
+          flyctl deploy --remote-only --wait-timeout 10m "${extra[@]}"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      # The `immediate` deploy strategy (and any mid-deploy hiccup) can leave a
+      # machine `stopped`. The web http_service has min_machines_running=1, but
+      # the `worker` process has no such guarantee — [[restart]] policy=always
+      # only restarts a crashed *process* on a running machine, not a stopped
+      # machine. Bring any stopped machine back and fail loudly if we can't, so
+      # a green deploy always means "everything is actually running".
+      - name: Ensure all machines are started
+        # Recover stopped machines after a deploy hiccup, but only if flyctl
+        # actually installed. setup-flyctl@1.5 dies on Node 24 GHA runners
+        # (`flyctl: command not found`); skipping this step is better than a
+        # false red when /health is already 200.
+        if: ${{ !cancelled() && steps.setup_flyctl.outcome == 'success' }}
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          FLY_APP: ready-2-robot
+        run: |
+          set -euo pipefail
+          # Poll until every machine is `started`. Right after a deploy machines
+          # pass through transient states (replacing/starting/created) that settle
+          # on their own — only a terminal `stopped` needs a manual start. Give
+          # transient states time and fail only if something is still down at the
+          # deadline.
+          deadline=$(( $(date +%s) + 150 ))
+          while :; do
+            states=$(flyctl machines list -a "$FLY_APP" --json)
+            echo "Machine states:"
+            echo "$states" | jq -r '.[] | "  \(.id)\t\(.config.metadata.fly_process_group // "?")\t\(.state)"'
+
+            # Terminal-stopped machines won't recover on their own — start them.
+            for id in $(echo "$states" | jq -r '.[] | select(.state == "stopped") | .id'); do
+              echo "Starting stopped machine $id"
+              flyctl machine start "$id" -a "$FLY_APP" || true
+            done
+
+            if [ -z "$(echo "$states" | jq -r '.[] | select(.state != "started") | .id')" ]; then
+              echo "All machines started."
+              exit 0
+            fi
+
+            if [ "$(date +%s)" -ge "$deadline" ]; then
+              echo "::error::Machines still not started 150s after deploy:"
+              echo "$states" | jq -r '.[] | select(.state != "started") | "\(.id) (\(.config.metadata.fly_process_group // "?")) = \(.state)"'
+              exit 1
+            fi
+            echo "waiting for machines to settle..."
+            sleep 10
+          done
+
+      - name: Verify web /health
+        if: ${{ !cancelled() }}
+        run: |
+          for i in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" https://ready-2-robot.fly.dev/health || echo 000)
+            echo "attempt $i: /health -> $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 6
+          done
+          echo "::error::web /health did not return 200 after deploy"
+          exit 1
+
+      # release_command often never reaches `stopped`. SSH onto the running
+      # image and upgrade in-place. Default on for workflow_dispatch so
+      # GITHUB_TOKEN merges still apply pending revisions (jruc0a1b2c3d4).
+      - name: Apply pending Alembic via SSH
+        if: ${{ !cancelled() && steps.setup_flyctl.outcome == 'success' && steps.migrate.outputs.ssh_migrate == 'true' }}
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "alembic upgrade via fly ssh (not release_command)"
+          flyctl ssh console -a ready-2-robot -C "alembic -c /code/alembic.ini upgrade head"
+
+      - name: Setup Python for post-deploy cache refresh
+        if: success()
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements.txt
+
+      - name: Install refresh dependencies
+        if: success()
+        run: pip install -r requirements.txt
+
+      - name: Post-deploy pipeline cache refresh
+        if: success()
+        env:
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          SCRAPER_CRON_TOKEN: ${{ secrets.SCRAPER_CRON_TOKEN }}
+          HARNESS_ADMIN_BEARER: ${{ secrets.HARNESS_ADMIN_BEARER }}
+          API_BASE: https://ready-2-robot.fly.dev
+        run: |
+          if ! python3 scripts/harness_preflight.py --require-cache-auth; then
+            echo "::warning::Post-deploy cache refresh skipped — set ADMIN_KEY or SCRAPER_CRON_TOKEN in GitHub secrets."
+            exit 0
+          fi
+          python3 scripts/refresh_pipeline_cache.py --remote --wait --wait-timeout 900 --api-base "$API_BASE" \
+            || echo "::warning::Pipeline cache refresh failed — prod scheduler may rebuild within ~5 min."

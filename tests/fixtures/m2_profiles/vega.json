@@ -1,0 +1,96 @@
+{
+  "submitted_url": "https://www.dexmate.ai/",
+  "profile_confidence": "B",
+  "research_morphology": "mobile_manipulator",
+  "company": {
+    "name": "Dexmate",
+    "primary_domain": "dexmate.ai"
+  },
+  "selected_product": {
+    "name": "Vega",
+    "display_class": "mobile_manipulator"
+  },
+  "facts": [
+    {
+      "predicate": "carrying_capacity",
+      "value": 10,
+      "units": "lb",
+      "epistemic": "explicit",
+      "confidence": 0.98,
+      "evidence_span": "10+ lbs High payload",
+      "source_id": "src_edae63e272d5"
+    },
+    {
+      "predicate": "battery_runtime",
+      "value": 10,
+      "units": "hr",
+      "epistemic": "explicit",
+      "confidence": 0.9741176470588236,
+      "evidence_span": "10+ h Long operation time",
+      "source_id": "src_edae63e272d5"
+    },
+    {
+      "predicate": "product_class",
+      "value": "mobile_manipulator",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9529411764705883,
+      "evidence_span": "general-purpose mobile robot",
+      "source_id": "src_edae63e272d5"
+    },
+    {
+      "predicate": "reach_or_workspace",
+      "value": 2.2,
+      "units": "m",
+      "epistemic": "explicit",
+      "confidence": 0.9529411764705883,
+      "evidence_span": "stretch up to 7\u00e2\u0080\u00992\u00e2\u0080\u009d (2.2m)",
+      "source_id": "src_edae63e272d5"
+    },
+    {
+      "predicate": "has_dexterous_hands",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.931764705882353,
+      "evidence_span": "dexterous hands",
+      "source_id": "src_edae63e272d5"
+    },
+    {
+      "predicate": "end_effector",
+      "value": "dexterous_hand",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9,
+      "evidence_span": "dexterous hands",
+      "source_id": "src_edae63e272d5"
+    },
+    {
+      "predicate": "arm_count",
+      "value": 2,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9529411764705883,
+      "evidence_span": "bimanual",
+      "source_id": "src_edae63e272d5"
+    },
+    {
+      "predicate": "has_mobile_base",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9529411764705883,
+      "evidence_span": "omni-directional base movement",
+      "source_id": "src_edae63e272d5"
+    },
+    {
+      "predicate": "mobility_architecture",
+      "value": "omnidirectional_base",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9529411764705883,
+      "evidence_span": "omni-directional base movement",
+      "source_id": "src_edae63e272d5"
+    }
+  ]
+}

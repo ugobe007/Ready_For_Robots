@@ -1,0 +1,100 @@
+# Harness metrics — collected by scripts/harness_snapshot.py
+# Thresholds are advisory; Orchestrator uses north star priority to decide action.
+
+api_base: "${API_BASE:-https://ready-2-robot.fly.dev}"
+
+endpoints:
+  pipeline:
+    path: /api/leads/pipeline
+    fields:
+      - built_at
+      - cache_pending
+      - leads_count
+      - entitlements.visible_count
+    alerts:
+      stale_hours: 6
+      min_anonymous_leads: 1
+
+  homepage:
+    path: /api/leads/homepage
+    fields:
+      - hotLeads_count
+    alerts:
+      min_hot_leads: 1
+
+  summary:
+    path: /api/leads/summary?exclude_junk=true
+    fields:
+      - total
+      - hot
+      - warm
+      - cold
+
+  robots:
+    path: /api/humanoid/robots
+    fly_direct: true
+    vercel_proxy_warn_ms: 8000
+    fields:
+      - robots_count
+      - stale
+    alerts:
+      min_robots: 1
+      max_latency_ms: 5000
+
+  billing:
+    path: /api/billing/config
+    fields:
+      - enabled
+
+git:
+  track_branch: main
+  note_dirty_worktree: true
+
+optional_db:
+  enabled_when: DATABASE_URL
+  queries:
+    quarantined_companies: "SELECT COUNT(*) FROM companies WHERE is_internal = false"
+    active_companies: "SELECT COUNT(*) FROM companies WHERE is_internal IS NOT FALSE"
+    unknown_industry_with_signals: "companies with signals and blank/unknown industry"
+
+intelligence:
+  config: harness/intelligence.yaml
+  sections:
+    - junk_reasons
+    - gap_frequency
+    - industry_top
+    - pipeline_surface
+    - deltas
+  thesis_doc: docs/market_thesis.md
+
+product_surface:
+  canonical_frontend: readyforrobots-new/client
+  experiment_route: /experiment
+  public_read_api: getPublicReadApiBase
+  diagnostics_script: scripts/harness_diagnostics.py
+
+conversion:
+  thesis_doc: docs/conversion_agent_challenges.md
+  primary_metric: signups_7d
+  revenue_metric: active_subscriptions
+  db_tables:
+    - user_profiles
+    - crm_accounts
+    - waitlist_signups
+
+daily_report:
+  markdown: reports/harness_daily_report_latest.md
+  email_subject_prefix: "[RFR Daily]"
+  sections:
+    - executive_summary
+    - site_health
+    - code_review
+    - conversion
+    - agent_mission
+
+notification:
+  script: scripts/harness_notify.py
+  env:
+    - HARNESS_NOTIFY_EMAIL
+    - ADMIN_EMAILS
+    - RESEND_API_KEY

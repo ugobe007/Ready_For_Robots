@@ -1,0 +1,160 @@
+# fly.toml — Production stack for readyforrobots.com: Vite SPA from readyforrobots-new/
+# (built in Docker) + FastAPI. Deploy from the repository root: `flyctl deploy` or `npm run deploy:fly`.
+
+app = "ready-2-robot"
+primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
+
+[build]
+  dockerfile = "Dockerfile"
+  [build.args]
+    # Vite client (Dockerfile frontend stage) — same Supabase project and API as before.
+    VITE_PUBLIC_SUPABASE_URL      = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
+    VITE_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb3l5ZGxobGdkeXFieGtta3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNTAyOTUsImV4cCI6MjA4NzgyNjI5NX0.SImYCwJtWwMRThqjHCuIBQOXuiLlg5xm39UXm1pxKJ8"
+    VITE_PUBLIC_API_URL   = "https://ready-2-robot.fly.dev"
+
+# Run DB migrations once per deploy (before new Machines roll out). If this exits 1, the whole deploy aborts:
+# check `fly logs -a ready-2-robot` (release machine), confirm `DATABASE_URL` is set (`fly secrets list`), and that
+# the DB user can run DDL. You can also run `alembic upgrade head` from CI or Supabase SQL instead, then remove
+# release_command here (not recommended unless you own migrations elsewhere).
+
+[deploy]
+  # Single-machine app — rolling deploy fails if Fly still references a destroyed VM ID.
+  strategy = "immediate"
+  release_command = "bash /code/scripts/fly_release_migrate.sh"
+
+[env]
+  PORT = "8080"
+  # Browsers require explicit origins when cookies/credentials are used — not "*"
+  CORS_ORIGINS = "https://readyforrobots.com,https://www.readyforrobots.com,https://ready-2-robot.fly.dev,https://ready-for-robots.vercel.app,https://ready-for-robots-ax5i.vercel.app,http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
+  # Authorized 2026-08-18 reopen: evidence → inference → capability (1X NEO class).
+  ROBOT_INFERENCE_ENGINE = "1"
+  # Admin emails (comma-separated) — users with access to /admin
+  ADMIN_EMAILS = "ugobe07@gmail.com"
+  ADMIN_EMAIL = "ugobe07@gmail.com"
+  # Cal format review + daily activity digest
+  ENABLE_SCHEDULED_CAL_DAILY_DIGEST = "1"
+  CAL_DAILY_DIGEST_HOUR_UTC = "15"
+  CAL_DAILY_DIGEST_MINUTE_UTC = "0"
+  # Cal autonomous outreach — OFF 2026-08-26. Hermes retired; buyer outreach
+  # is not the Jobs product. Deploy required for this [env] change to land.
+  # Do not set HERMES_INGEST_ENABLED, MARKET_GRAPH_RUN_RESEARCH, or
+  # LEAD_RESEARCH_AGENT_ENABLED.
+  ENABLE_SCHEDULED_CAL_AUTONOMY = "0"
+  CAL_AUTONOMY_ENABLED = "0"
+  CAL_AUTONOMY_EVERY_HOURS = "3"
+  CAL_AUTONOMY_FIRST_RUN_DELAY_MINUTES = "10"
+  CAL_AUTONOMY_SEND_LIMIT = "25"
+  CAL_AUTONOMY_FOLLOWUP_LIMIT = "25"
+  CAL_AUTONOMY_DRAFT_BATCH = "100"
+  CAL_REFRESH_STALE_DAYS = "7"
+  CAL_MANUAL_APPROVAL = "0"
+  CAL_ASSEMBLY_REQUIRED = "1"
+  CAL_ASSEMBLY_LLM_REVIEW = "1"
+  CAL_TEMPLATE_VERSION = "3"
+  # Deliverability guardrails (bounce circuit breaker + post-fix canary + reconciliation)
+  ZERO_BOUNCE_CACHE_DAYS = "90"        # cache paid mailbox checks 90d — the same address is never re-billed
+  ZERO_BOUNCE_ACCEPT_CATCH_ALL = "0"   # reject accept-then-drop catch-all domains during recovery
+  CAL_BOUNCE_CANARY_SIZE = "5"         # verified-only intros allowed per window while paused
+  CAL_RECONCILE_BATCH = "60"           # stuck-'sent' messages reconciled from Resend each cycle
+  # Supply-side Cal autonomy (robot vendor signup outreach — worker process)
+  # DISABLED 2026-07-07: this loop / supply-pipeline send path emitted "StageGate /
+  # onstage.bot" trade-show-logistics copy to robot OEMs from readyforrobots.com
+  # (policy violation). Do not re-enable until the StageGate persona is fully
+  # removed from the supply/OEM draft path. See app/services/resend_email.py guard.
+  ENABLE_SCHEDULED_SUPPLY_AUTONOMY = "0"
+  SUPPLY_AUTONOMY_EVERY_HOURS = "6"
+  SUPPLY_AUTONOMY_FIRST_RUN_DELAY_MINUTES = "30"
+  SUPPLY_AUTONOMY_SEND_LIMIT = "6"
+  SUPPLY_AUTONOMY_MIN_SCORE = "60"
+  SUPPLY_AUTONOMY_BATCH = "40"
+  SUPPLY_TEMPLATE_VERSION = "1"
+  # OAuth callbacks redirect here after connect (Google Calendar, HubSpot, etc.)
+  PUBLIC_SITE_URL = "https://readyforrobots.com"
+  GOOGLE_CALENDAR_REDIRECT_URI = "https://ready-2-robot.fly.dev/api/integrations/google-calendar/callback"
+  # Supabase URL (for JWKS verification if legacy JWT secret doesn't match)
+  SUPABASE_URL = "https://lmoyydlhlgdyqbxkmkuz.supabase.co"
+  # V1 Robot Customer Acquisition Intelligence + market-graph catalog APIs
+  V1_ROBOT_INTELLIGENCE = "true"
+  # Web machine: API only — Celery workers compete for Supabase pool slots on 1024MB.
+  SKIP_CELERY = "1"
+  # Job-board Robot Jobs: in-app worker thread (Celery Beat is not consumed on Fly).
+  ENABLE_SCHEDULED_JOB_BOARD = "1"
+  JOB_BOARD_EVERY_HOURS = "6"
+  JOB_BOARD_FIRST_RUN_DELAY_MINUTES = "12"
+  JOB_SCRAPER_MAX_URLS_PER_RUN = "25"
+  # In-app scheduler (daemon thread) — secondary pass runs daily without Celery Beat
+  ENABLE_SCHEDULED_SECONDARY_PASS = "1"
+  SECONDARY_PASS_EVERY_HOURS = "24"
+  SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES = "60"
+  SECONDARY_PASS_LIMIT = "120"
+  SECONDARY_PASS_MIN_SCORE = "15"
+  SECONDARY_PASS_SALES_LEADS_ONLY = "1"
+  # Humanoid benchmark secondary pass (spec backfill + cited news evidence)
+  ENABLE_SCHEDULED_HUMANOID_SECONDARY_PASS = "1"
+  HUMANOID_SECONDARY_PASS_EVERY_HOURS = "24"
+  HUMANOID_SECONDARY_PASS_FIRST_RUN_DELAY_MINUTES = "90"
+  HUMANOID_SECONDARY_PASS_LIMIT = "40"
+  HUMANOID_SECONDARY_PASS_SPARSE_PCT = "85"
+  HUMANOID_SECONDARY_PASS_NEWS_QUERIES = "24"
+  # Nightly in-app job runs leads then humanoids in one serialized pipeline
+  SECONDARY_PIPELINE_RUN_HUMANOIDS = "1"
+  # Weekly purge, name normalize, quality decision log export
+  ENABLE_SCHEDULED_DATA_QUALITY = "1"
+  DATA_QUALITY_EVERY_HOURS = "168"
+  DATA_QUALITY_FIRST_RUN_DELAY_HOURS = "12"
+  QUALITY_LOG_EXPORT_LIMIT = "2500"
+  # Pipeline page tier slots (hot + warm + monitoring ≈ 90 on paid)
+  PIPELINE_HOT_SLOTS = "40"
+  PIPELINE_WARM_SLOTS = "30"
+  PIPELINE_MONITOR_SLOTS = "20"
+  # Self-running market graph loop (tension + vendor↔buyer matches + refresh queue)
+  ENABLE_SCHEDULED_MARKET_GRAPH_LOOP = "1"
+  MARKET_GRAPH_EVERY_HOURS = "12"
+  MARKET_GRAPH_FIRST_RUN_DELAY_MINUTES = "45"
+  MARKET_GRAPH_DEMAND_LIMIT = "80"
+  MARKET_GRAPH_VENDOR_LIMIT = "200"
+  # Defer heavy cache rebuild after deploy so /api/leads/pipeline stays responsive.
+  PUBLIC_CACHE_STARTUP_DELAY_SEC = "300"
+  # Web machine: skip social interval rebuilds (worker runs them).
+  SKIP_SOCIAL_INTERVAL_REFRESH = "1"
+
+[processes]
+  web = "bash /code/scripts/start_web.sh"
+  worker = "bash /code/scripts/start_worker.sh"
+
+[http_service]
+  processes = ["web"]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "60s"
+    interval = "10s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  processes = ["web"]
+  memory = "1024mb"
+  cpu_kind = "shared"
+  cpus = 2
+
+[[vm]]
+  processes = ["worker"]
+  # 2GB: the daily newsletter/content full rebuild peaks ~450MB RSS on top of the
+  # running app (~600MB). At 1GB the OOM-killer killed every rebuild, freezing the
+  # newsletter for weeks. 2GB gives the rebuild headroom to complete and persist.
+  memory = "2048mb"
+  cpu_kind = "shared"
+  cpus = 2
+
+# Keep the Cal worker alive: auto-restart on crash so it can't silently stay
+# stopped. The web-side watchdog (app/services/cal_watchdog.py) emails the admin
+# if the heartbeat still goes stale despite this.
+[[restart]]
+  policy = "always"
+  processes = ["worker"]

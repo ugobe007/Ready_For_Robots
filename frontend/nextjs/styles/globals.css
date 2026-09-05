@@ -1,0 +1,389 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-size: 13px;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+  body {
+    background-color: #0D0D0D;
+    color: rgb(229 229 229);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    width: 100%;
+    max-width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+    margin: 0;
+    overflow-x: hidden;
+    /* Respect iPhone notch / home indicator when using viewport-fit=cover */
+    padding-left: env(safe-area-inset-left, 0);
+    padding-right: env(safe-area-inset-right, 0);
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-feature-settings: 'ss01' 1, 'cv01' 1;
+    letter-spacing: -0.02em;
+  }
+}
+
+@layer components {
+  /* panels — Linear-inspired with subtle borders and spacing */
+  .card {
+    @apply rounded-lg border border-neutral-800/60 bg-transparent p-5;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+  .card:hover {
+    @apply border-neutral-700/80;
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.05);
+  }
+  .card-inset {
+    @apply rounded-md border border-neutral-800/60 bg-transparent px-4 py-3;
+  }
+
+  /* badges — brighter colors with subtle glow */
+  .badge {
+    @apply inline-flex items-center rounded px-2 py-0.5 text-[9px] font-semibold
+           border tracking-wide uppercase;
+    transition: all 0.2s ease;
+  }
+
+  /* buttons — Linear-style with subtle glow on hover */
+  .btn {
+    @apply inline-flex cursor-pointer items-center gap-1.5 rounded border
+           px-3 py-1.5 text-xs font-medium transition-all
+           disabled:pointer-events-none disabled:opacity-30;
+  }
+  .btn-em {
+    @apply btn border-emerald-600 text-emerald-400
+           hover:border-emerald-500 hover:text-emerald-300;
+  }
+  .btn-em:hover {
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.25);
+  }
+  .btn-cy {
+    @apply btn border-cyan-700 text-cyan-400
+           hover:border-cyan-500 hover:text-cyan-300;
+  }
+  .btn-cy:hover {
+    box-shadow: 0 0 12px rgba(6, 182, 212, 0.25);
+  }
+  .btn-ghost {
+    @apply btn border-neutral-700 text-neutral-400
+           hover:border-neutral-500 hover:text-neutral-200;
+  }
+  .btn-danger {
+    @apply btn border-red-800 text-red-400
+           hover:border-red-600 hover:text-red-300;
+  }
+
+  /* pill filter tabs — brighter colors */
+  .tab {
+    @apply cursor-pointer rounded-sm border px-2.5 py-1 text-[11px] font-medium
+           transition-all tracking-wide;
+  }
+  .tab-active {
+    @apply tab border-emerald-600 text-emerald-400;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+  }
+  .tab-inactive {
+    @apply tab border-neutral-800 text-neutral-600
+           hover:border-neutral-600 hover:text-neutral-400;
+  }
+
+  /* score bar - brighter fills */
+  .bar-track {
+    @apply h-[4px] w-full rounded-full bg-neutral-800/80;
+  }
+  .bar-fill {
+    @apply h-[4px] rounded-full transition-all duration-500;
+  }
+
+  /* divider */
+  .divider {
+    @apply border-t border-neutral-800;
+  }
+
+  /* inline label */
+  .label {
+    @apply text-[10px] uppercase tracking-widest text-neutral-400;
+  }
+
+  /* trending ticker */
+  .ticker-wrap {
+    overflow: hidden;
+    white-space: nowrap;
+  }
+  .ticker-inner {
+    display: inline-block;
+    animation: ticker-scroll 60s linear infinite;
+  }
+  .ticker-inner:hover {
+    animation-play-state: paused;
+  }
+  @keyframes ticker-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  /* custom scrollbar for sidebar */
+  .sidebar-scroll::-webkit-scrollbar {
+    width: 6px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb {
+    background: rgb(38 38 38);
+    border-radius: 3px;
+  }
+  .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+    background: rgb(64 64 64);
+  }
+  /* Firefox scrollbar */
+  .sidebar-scroll {
+    scrollbar-width: thin;
+    scrollbar-color: rgb(38 38 38) transparent;
+  }
+
+  /* Waterfall effect - cascading entrance animation */
+  @keyframes slideInFromLeft {
+    0% {
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* Exit animation - slide out to bottom */
+  @keyframes slideOutToBottom {
+    0% {
+      opacity: 1;
+      transform: translateY(0);
+      max-height: 100px;
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(20px);
+      max-height: 0;
+    }
+  }
+
+  /* Enter from top animation */
+  @keyframes slideInFromTop {
+    0% {
+      opacity: 0;
+      transform: translateY(-20px);
+      max-height: 0;
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+      max-height: 100px;
+    }
+  }
+
+  /* Slow pulse for recently updated leads */
+  @keyframes pulse-slow {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.8;
+    }
+  }
+  .animate-pulse-slow {
+    animation: pulse-slow 3s ease-in-out infinite;
+  }
+
+  /* Lead card hover elevation */
+  .lead-card {
+    @apply transition-all duration-300;
+  }
+  .lead-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 1px rgba(74, 222, 128, 0.1);
+  }
+
+  /* Tier glow effects */
+  .tier-glow-hot:hover {
+    box-shadow: 0 0 8px rgba(248, 113, 113, 0.4), 0 0 16px rgba(248, 113, 113, 0.2);
+  }
+  .tier-glow-warm:hover {
+    box-shadow: 0 0 8px rgba(234, 179, 8, 0.4), 0 0 16px rgba(234, 179, 8, 0.2);
+  }
+  .tier-glow-cold:hover {
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.4), 0 0 16px rgba(34, 211, 238, 0.2);
+  }
+
+  /* Tier filter pulse */
+  @keyframes tier-pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.02);
+    }
+  }
+  .tier-active {
+    animation: tier-pulse 2s ease-in-out infinite;
+  }
+
+  /* Score badge gradients */
+  .score-badge-high {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.05) 100%);
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.2);
+  }
+  .score-badge-medium {
+    background: linear-gradient(135deg, rgba(34, 211, 238, 0.1) 0%, rgba(6, 182, 212, 0.05) 100%);
+    box-shadow: 0 0 8px rgba(34, 211, 238, 0.2);
+  }
+  .score-badge-low {
+    background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(202, 138, 4, 0.05) 100%);
+    box-shadow: 0 0 8px rgba(234, 179, 8, 0.2);
+  }
+  .score-badge-poor {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.1) 0%, rgba(220, 38, 38, 0.05) 100%);
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.2);
+  }
+
+  /* Signal badge micro-animation */
+  .signal-badge:hover {
+    transform: scale(1.05);
+    transition: transform 0.15s ease-out;
+  }
+
+  /* Strategic Snapshot — slate / cyan (legacy pages; matches rr-theme tokens) */
+  .strategic-snapshot-bg {
+    background: linear-gradient(
+      135deg,
+      rgba(17, 24, 39, 0.98) 0%,
+      rgba(10, 15, 26, 0.99) 45%,
+      rgba(26, 34, 53, 0.98) 100%
+    );
+    border: 1px solid rgba(31, 45, 66, 0.95);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), 0 0 1px rgba(34, 211, 238, 0.12);
+  }
+
+  /*
+   * CRM workspace — explicit contrast (Tailwind + rr-theme safe).
+   * Uses plain CSS so production always matches regardless of chunk/CSS order.
+   */
+  .crm-workspace {
+    color: #e2e8f0;
+  }
+
+  .crm-workspace .crm-subtitle {
+    color: #cbd5e1 !important;
+  }
+
+  .crm-workspace .crm-section-label {
+    color: #cbd5e1 !important;
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .crm-workspace input.crm-input {
+    width: 100%;
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    background-color: #0f172a !important;
+    color: #f8fafc !important;
+    border: 1px solid #64748b !important;
+    -webkit-text-fill-color: #f8fafc;
+  }
+
+  .crm-workspace input.crm-input::placeholder {
+    color: #94a3b8 !important;
+    opacity: 1 !important;
+  }
+
+  .crm-workspace input.crm-input:focus {
+    outline: 2px solid rgba(16, 185, 129, 0.45);
+    outline-offset: 0;
+  }
+
+  .crm-workspace .crm-panel {
+    border: 1px solid #64748b !important;
+    border-radius: 0.5rem;
+    background: rgba(15, 23, 42, 0.55) !important;
+  }
+
+  .crm-workspace .crm-btn-emerald {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    background: #059669 !important;
+    color: #ffffff !important;
+    border: 1px solid #10b981 !important;
+  }
+
+  .crm-workspace .crm-btn-emerald:hover:not(:disabled) {
+    background: #047857 !important;
+  }
+
+  .crm-workspace .crm-btn-cyan {
+    font-size: 0.875rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    background: #0891b2 !important;
+    color: #ffffff !important;
+    border: 1px solid #22d3ee !important;
+  }
+
+  .crm-workspace .crm-btn-cyan:hover:not(:disabled) {
+    background: #0e7490 !important;
+  }
+
+  .crm-workspace .crm-btn-emerald:disabled,
+  .crm-workspace .crm-btn-cyan:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  .crm-workspace .crm-alert {
+    border-radius: 0.375rem;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    line-height: 1.45;
+    background: rgba(127, 29, 29, 0.65) !important;
+    border: 1px solid rgba(248, 113, 113, 0.75) !important;
+    color: #fecaca !important;
+  }
+
+  .crm-workspace a.crm-back-link {
+    display: inline-block;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    color: #a5f3fc !important;
+    border: 1px solid #64748b !important;
+    background: rgba(15, 23, 42, 0.85) !important;
+  }
+
+  .crm-workspace a.crm-back-link:hover {
+    color: #ecfeff !important;
+    border-color: #94a3b8 !important;
+  }
+}

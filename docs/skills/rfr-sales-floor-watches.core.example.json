@@ -1,0 +1,14 @@
+{
+  "slug": "sales-floor-core",
+  "cadence": "every hour at :20 America/Los_Angeles",
+  "rfr_api_base": "https://ready-2-robot.fly.dev",
+  "max_actions_per_tick": 3,
+  "scraper_target_daily": 150,
+  "hermes_qualify_hot_floor_pct": 50,
+  "cutoff_iso": "2026-08-14T00:00:00Z",
+  "last_run": null,
+  "last_run_id": null,
+  "last_actions": [],
+  "last_alerts": [],
+  "notes": "Floor Manager coaches Cal + OEM conversion. Does not send email."
+}

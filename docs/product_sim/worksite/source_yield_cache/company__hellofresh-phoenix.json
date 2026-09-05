@@ -1,0 +1,18 @@
+{
+  "company": "HelloFresh Phoenix",
+  "accepted": [],
+  "rejected": [],
+  "work_units": [
+    {
+      "work_unit_id": "load_outbound",
+      "status": "EVIDENCED",
+      "evidence_hits": [
+        "loading"
+      ],
+      "origin_relevant": true
+    }
+  ],
+  "notes": [
+    "pages_fetched\u224850"
+  ]
+}

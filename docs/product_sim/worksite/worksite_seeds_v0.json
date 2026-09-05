@@ -1,0 +1,91 @@
+{
+  "version": "0.1",
+  "notes": "Curated Worksite seeds for Origin JRR baseline. Prefer named operating sites over HQ. Expand via Worksite Resolver — do not invent.",
+  "worksites": [
+    {
+      "company_aliases": ["Sysco", "Sysco Corporation"],
+      "company_id": 8083,
+      "worksite_id": "sysco-las-vegas-dc",
+      "name": "Sysco Las Vegas Distribution Center",
+      "site_type": "food_distribution_center",
+      "city": "Las Vegas",
+      "state": "NV",
+      "country": "US",
+      "resolution": "seeded_public",
+      "confidence": 0.7,
+      "not_hq": true,
+      "evidence_notes": "Named operating DC pattern; treat as worksite candidate pending address confirm."
+    },
+    {
+      "company_aliases": ["Sysco", "Sysco Corporation"],
+      "company_id": 8083,
+      "worksite_id": "sysco-riverside-dc",
+      "name": "Sysco Riverside Distribution Center",
+      "site_type": "food_distribution_center",
+      "city": "Riverside",
+      "state": "CA",
+      "country": "US",
+      "resolution": "seeded_public",
+      "confidence": 0.65,
+      "not_hq": true
+    },
+    {
+      "company_aliases": ["Kenco", "Kenco Logistics"],
+      "company_id": 135,
+      "worksite_id": "kenco-jeffersonville",
+      "name": "Kenco Jeffersonville campus",
+      "site_type": "3pl_fulfillment_center",
+      "city": "Jeffersonville",
+      "state": "IN",
+      "country": "US",
+      "resolution": "seeded_public",
+      "confidence": 0.85,
+      "not_hq": true,
+      "evidence_notes": "Public Locus Origin campus / multi-client fulfillment narrative."
+    },
+    {
+      "company_aliases": ["HelloFresh", "HelloFresh Phoenix"],
+      "worksite_id": "hellofresh-phoenix",
+      "name": "HelloFresh Phoenix fulfillment",
+      "site_type": "meal_kit_fulfillment",
+      "city": "Phoenix",
+      "state": "AZ",
+      "country": "US",
+      "resolution": "seeded_public",
+      "confidence": 0.95,
+      "not_hq": true,
+      "evidence_notes": "Public Origin deployment; chilled induction→drop-off."
+    },
+    {
+      "company_aliases": ["Lineage", "Lineage Logistics"],
+      "worksite_id": "lineage-network-cold",
+      "name": "Lineage cold storage network (unspecified site)",
+      "site_type": "cold_storage_warehouse",
+      "city": null,
+      "state": null,
+      "country": "US",
+      "resolution": "type_only",
+      "confidence": 0.4,
+      "not_hq": true,
+      "evidence_notes": "Site TYPE known; specific worksite NOT resolved — does not count as worksite_resolved for JRR."
+    },
+    {
+      "company_aliases": ["Sofidel"],
+      "worksite_id": "sofidel-circleville",
+      "name": "Sofidel Circleville plant",
+      "site_type": "manufacturing_plant",
+      "city": "Circleville",
+      "state": "OH",
+      "country": "US",
+      "resolution": "seeded_public",
+      "confidence": 0.8,
+      "not_hq": true,
+      "evidence_notes": "Not in Origin top-22; retained for plant pattern tests."
+    }
+  ],
+  "hq_only_do_not_count": [
+    {"company": "Sysco Corporation", "city": "Houston", "state": "TX", "reason": "Corporate HQ on company row"},
+    {"company": "Kenco Logistics", "city": "Chattanooga", "state": "TN", "reason": "HQ / HQ-adjacent — Jeffersonville is the ops seed"},
+    {"company": "Ryder System", "city": "Miami", "state": "FL", "reason": "Corporate HQ"}
+  ]
+}

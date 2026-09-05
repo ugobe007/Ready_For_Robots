@@ -1,0 +1,2397 @@
+{
+  "version": 1,
+  "kind": "robot_job_match_corpus",
+  "jobs": [
+    {
+      "job_key": "origin_replacement_parts_little_rock",
+      "title": "Point-to-point tote transport between warehouse zones",
+      "industry": "auto parts warehouse",
+      "path": "zone→zone",
+      "company_name": "Replacement Parts / Crow Burlingame",
+      "locality": "Little Rock, AR",
+      "families": [
+        "transport_amr"
+      ],
+      "actions": [
+        "transport"
+      ],
+      "text": "point-to-point tote transport between warehouse zones employees are explicitly assigned to collecting and distributing totes throughout the warehouse. associates collect, organize, and distribute shipping totes across the warehouse shipping_totes transport",
+      "source": "demo",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": [
+        "Tote weight",
+        "Aisle geometry",
+        "Current automation"
+      ]
+    },
+    {
+      "job_key": "origin_napa_duncansville",
+      "title": "Cart / order movement from pick areas to shipping",
+      "industry": "auto parts dc",
+      "path": "pick→ship",
+      "company_name": "NAPA Auto Parts",
+      "locality": "Duncansville, PA",
+      "families": [
+        "transport_amr"
+      ],
+      "actions": [
+        "transport"
+      ],
+      "text": "cart / order movement from pick areas to shipping role text names cart push/pull and transporting orders to shipping. dc associates push/pull carts and transport orders to shipping locations over long distances orders_on_carts transport",
+      "source": "demo",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": [
+        "Cart load",
+        "Forklift-split tasks",
+        "WMS integration"
+      ]
+    },
+    {
+      "job_key": "origin_curascript_tempe",
+      "title": "Return empty totes and carts to pack stations / proper areas",
+      "industry": "specialty pharma dc",
+      "path": "pack→return",
+      "company_name": "CuraScript SD",
+      "locality": "Tempe, AZ",
+      "families": [
+        "transport_amr"
+      ],
+      "actions": [
+        "return"
+      ],
+      "text": "return empty totes and carts to pack stations / proper areas explicit tote/cart return language in outbound warehouse role. warehouse associates restock pack stations and return totes and carts to proper areas totes_and_carts return",
+      "source": "demo",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": [
+        "Cold-chain zones",
+        "Cart vs tote mix"
+      ]
+    },
+    {
+      "job_key": "origin_sanmar_avondale",
+      "title": "Move completed totes from pack-mod slots to packing",
+      "industry": "apparel dc",
+      "path": "slot→pack",
+      "company_name": "SanMar",
+      "locality": "Avondale, AZ",
+      "families": [
+        "transport_amr"
+      ],
+      "actions": [
+        "transport"
+      ],
+      "text": "move completed totes from pack-mod slots to packing named tote handoff from induction slot to pack. associates pick to cart/totes and take ready-to-pack totes from designated slots ready_to_pack_totes transport",
+      "source": "demo",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": [
+        "Conveyor adjacency",
+        "Peak season volume"
+      ]
+    },
+    {
+      "job_key": "origin_intuitive_smkt",
+      "title": "Point-of-use replenishment and packing-system cart/kit movement",
+      "industry": "med device manufacturing",
+      "path": "smkt→line",
+      "company_name": "Intuitive Surgical",
+      "locality": "United States (med-device mfg)",
+      "families": [
+        "transport_amr"
+      ],
+      "actions": [
+        "replenish"
+      ],
+      "text": "point-of-use replenishment and packing-system cart/kit movement explicit tote putaway, pou replenishment, and packing carts/kits. material handlers put away totes, replenish production lines, pack system carts/frus/kits kits_totes_carts replenish",
+      "source": "demo",
+      "tape_family": "transport",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Cleanroom constraints",
+        "Exact site campus"
+      ]
+    },
+    {
+      "job_key": "neo_moa_bloomington",
+      "title": "Overnight scrub of mall common-area hard floors (concourse / food court)",
+      "industry": "mall",
+      "path": "scrub → hard_floors",
+      "company_name": "Mall of America",
+      "locality": "Bloomington, MN",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [
+        "scrub"
+      ],
+      "text": "overnight scrub of mall common-area hard floors (concourse / food court) role explicitly operates auto scrubbers on mall hard floors overnight. 3rd-shift housekeeping operates ride-on and walk-behind auto scrubbers on hard surfaces after close hard_floors scrub",
+      "source": "demo",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Exact sq footage",
+        "Incumbent machines",
+        "Crowd residual"
+      ]
+    },
+    {
+      "job_key": "neo_unifi_atl",
+      "title": "Overnight terminal floor scrubbing along high-traffic routes",
+      "industry": "airport",
+      "path": "scrub → terminal_floors",
+      "company_name": "Unifi (airport floor tech)",
+      "locality": "ATL — Atlanta, GA",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [
+        "scrub"
+      ],
+      "text": "overnight terminal floor scrubbing along high-traffic routes overnight shift + named scrubber operation in terminal environment. airport floor cleaning technicians operate scrubbers overnight on building floors terminal_floors scrub",
+      "source": "demo",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "SIDA access",
+        "Mixed carpet zones"
+      ]
+    },
+    {
+      "job_key": "neo_harris_lbj",
+      "title": "Night EVS hard-floor scrub routes (riding + walk-behind scrubbers)",
+      "industry": "hospital",
+      "path": "scrub → hospital_floors",
+      "company_name": "Harris Health — LBJ Hospital",
+      "locality": "Houston, TX",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [
+        "scrub"
+      ],
+      "text": "night evs hard-floor scrub routes (riding + walk-behind scrubbers) named riding/walk-behind scrubbers on night hospital shift. evs floor tech ii nights operate walk-behind and riding scrubbers for floor care maintenance hospital_floors scrub",
+      "source": "demo",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Infection-control SOPs",
+        "Patient-area exclusions"
+      ]
+    },
+    {
+      "job_key": "neo_jhu_baltimore",
+      "title": "Recurring auto-scrubber routes on campus hard floors",
+      "industry": "university",
+      "path": "scrub → campus_floors",
+      "company_name": "Johns Hopkins University",
+      "locality": "Baltimore, MD",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [
+        "scrub"
+      ],
+      "text": "recurring auto-scrubber routes on campus hard floors auto-scrubber is the primary duty — not generic custodial. custodian floor tech operates auto-scrubbers as a primary duty ≥3 days/week campus_floors scrub",
+      "source": "demo",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Building mix",
+        "Stairs/elevator redeploy"
+      ]
+    },
+    {
+      "job_key": "neo_surge_joliet",
+      "title": "Ride-on / walk-behind sweeper-scrubber routes on warehouse and production floors",
+      "industry": "warehouse",
+      "path": "scrub → warehouse_floors",
+      "company_name": "Industrial facility (via Surge Staffing)",
+      "locality": "Joliet, IL",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [
+        "scrub"
+      ],
+      "text": "ride-on / walk-behind sweeper-scrubber routes on warehouse and production floors role is the scrubber — explicit machine + industrial floors. sweeper scrubber operator cleans warehouse/production floors with industrial ride-on or walk-behind scrubber warehouse_floors scrub",
+      "source": "demo",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Forklift traffic windows",
+        "Soil type"
+      ]
+    },
+    {
+      "job_key": "curascript_totes",
+      "title": "Return empty pharma totes",
+      "industry": "Specialty pharma",
+      "path": "PACK → OPERATING AREA",
+      "company_name": "CuraScript SD",
+      "locality": "Tempe, AZ",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "return empty pharma totes specialty pharma pack → operating area",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "hospital_med_carts",
+      "title": "Deliver medication carts",
+      "industry": "Healthcare",
+      "path": "PHARMACY → PATIENT UNITS",
+      "company_name": "Mercy General Hospital",
+      "locality": "Columbus, OH",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "deliver medication carts healthcare pharmacy → patient units",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "aerospace_kits",
+      "title": "Move aircraft production kits",
+      "industry": "Aerospace",
+      "path": "KITTING → PRODUCTION LINE",
+      "company_name": "Intuitive Surgical",
+      "locality": "United States (med-device mfg)",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move aircraft production kits aerospace kitting → production line",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "return_empty_carts",
+      "title": "Return empty carts to pack",
+      "industry": "Pharmacy DC",
+      "path": "SHIP → PACK",
+      "company_name": "CuraScript SD",
+      "locality": "Tempe, AZ",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "return empty carts to pack pharmacy dc ship → pack",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "par_carts",
+      "title": "Deliver hospital par carts",
+      "industry": "Hospital",
+      "path": "SUPPLY → PATIENT FLOOR",
+      "company_name": "St. Anne Medical Center",
+      "locality": "Toledo, OH",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "deliver hospital par carts hospital supply → patient floor",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "unifi_terminal",
+      "title": "Scrub airport concourses overnight",
+      "industry": "Airport",
+      "path": "CONCOURSE · OVERNIGHT",
+      "company_name": "Unifi (airport floor tech)",
+      "locality": "ATL — Atlanta, GA",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub airport concourses overnight airport concourse · overnight",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "lbj_scrub",
+      "title": "Scrub hospital corridors",
+      "industry": "Healthcare",
+      "path": "EVS · NIGHT ROUTES",
+      "company_name": "Harris Health — LBJ Hospital",
+      "locality": "Houston, TX",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub hospital corridors healthcare evs · night routes",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "intuitive_pou",
+      "title": "Replenish point-of-use",
+      "industry": "Med device",
+      "path": "STORES → PRODUCTION",
+      "company_name": "Intuitive Surgical",
+      "locality": "United States (med-device mfg)",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "replenish point-of-use med device stores → production",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "sanmar_pick_carts",
+      "title": "Move pick carts to pack",
+      "industry": "Apparel fulfillment",
+      "path": "PICK MODULE → PACK",
+      "company_name": "SanMar",
+      "locality": "Avondale, AZ",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move pick carts to pack apparel fulfillment pick module → pack",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "moa_scrub",
+      "title": "Scrub mall common areas",
+      "industry": "Retail",
+      "path": "CONCOURSE · OVERNIGHT",
+      "company_name": "Mall of America",
+      "locality": "Bloomington, MN",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub mall common areas retail concourse · overnight",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "novolex_cases",
+      "title": "Stack finished cases",
+      "industry": "Manufacturing",
+      "path": "CONVEYOR → PALLET",
+      "company_name": "Novolex (Pactiv Evergreen)",
+      "locality": "Kinston, NC",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "stack finished cases manufacturing conveyor → pallet",
+      "source": "tape",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "cnc_load",
+      "title": "Load parts into CNC",
+      "industry": "Machine shop",
+      "path": "STAGING → SPINDLE",
+      "company_name": "Fulcrum Technologies",
+      "locality": "Tualatin, OR",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "load parts into cnc machine shop staging → spindle",
+      "source": "tape",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "inspect_gauges",
+      "title": "Inspect gauges",
+      "industry": "Industrial",
+      "path": "ROUTE → EQUIPMENT",
+      "company_name": "OFI",
+      "locality": "Lenoir City, TN",
+      "families": [
+        "inspection_mobile"
+      ],
+      "actions": [],
+      "text": "inspect gauges industrial route → equipment",
+      "source": "tape",
+      "tape_family": "inspect",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "inspect_electrical",
+      "title": "Inspect electrical panels",
+      "industry": "Utilities",
+      "path": "PLANT → PANEL",
+      "company_name": "Siemens Energy",
+      "locality": "Charlotte, NC",
+      "families": [
+        "inspection_mobile"
+      ],
+      "actions": [],
+      "text": "inspect electrical panels utilities plant → panel",
+      "source": "tape",
+      "tape_family": "inspect",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "cnc_unload",
+      "title": "Unload finished parts",
+      "industry": "Machine shop",
+      "path": "SPINDLE → BIN",
+      "company_name": "Industrial Metal Supply",
+      "locality": "Riverside, CA",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "unload finished parts machine shop spindle → bin",
+      "source": "tape",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "staging_orders",
+      "title": "Move orders to staging",
+      "industry": "Fulfillment",
+      "path": "PACK → STAGING",
+      "company_name": "SanMar",
+      "locality": "Avondale, AZ",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move orders to staging fulfillment pack → staging",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "return_process_line",
+      "title": "Return empty totes",
+      "industry": "Manufacturing",
+      "path": "PROCESS LINE → SUPPLY",
+      "company_name": "Novolex (Pactiv Evergreen)",
+      "locality": "Kinston, NC",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "return empty totes manufacturing process line → supply",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "napa_orders",
+      "title": "Move completed orders",
+      "industry": "Auto parts DC",
+      "path": "PICK → SHIPPING",
+      "company_name": "NAPA Auto Parts",
+      "locality": "Duncansville, PA",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move completed orders auto parts dc pick → shipping",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "replacement_parts_totes",
+      "title": "Move shipping totes",
+      "industry": "Auto parts",
+      "path": "ZONE → ZONE",
+      "company_name": "Replacement Parts / Crow Burlingame",
+      "locality": "Little Rock, AR",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move shipping totes auto parts zone → zone",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "jhu_scrub",
+      "title": "Scrub campus floors",
+      "industry": "Education",
+      "path": "HARD FLOOR · RECURRING",
+      "company_name": "Johns Hopkins University",
+      "locality": "Baltimore, MD",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub campus floors education hard floor · recurring",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "industrial_scrub",
+      "title": "Scrub production floors",
+      "industry": "Industrial",
+      "path": "WAREHOUSE · PRODUCTION",
+      "company_name": "Industrial facility (via Surge Staffing)",
+      "locality": "Joliet, IL",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub production floors industrial warehouse · production",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "build_outbound",
+      "title": "Build outbound pallets",
+      "industry": "Fulfillment",
+      "path": "PACK → DOCK",
+      "company_name": "Piedmont Candy Company",
+      "locality": "Lexington, NC",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "build outbound pallets fulfillment pack → dock",
+      "source": "tape",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "plant_inspect",
+      "title": "Run plant inspection routes",
+      "industry": "Manufacturing",
+      "path": "RECURRING · FACILITY",
+      "company_name": "OFI",
+      "locality": "Lenoir City, TN",
+      "families": [
+        "inspection_mobile"
+      ],
+      "actions": [],
+      "text": "run plant inspection routes manufacturing recurring · facility",
+      "source": "tape",
+      "tape_family": "inspect",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "pack_mod_totes",
+      "title": "Move completed totes",
+      "industry": "Apparel",
+      "path": "PACK-MOD → PACKING",
+      "company_name": "SanMar",
+      "locality": "Avondale, AZ",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move completed totes apparel pack-mod → packing",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "fru_kits",
+      "title": "Move system carts",
+      "industry": "Med device",
+      "path": "KITTING → LINE",
+      "company_name": "Intuitive Surgical",
+      "locality": "United States (med-device mfg)",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move system carts med device kitting → line",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "case_wrap_pull",
+      "title": "Stack cases onto pallets",
+      "industry": "Packaging plant",
+      "path": "CASE → PALLET",
+      "company_name": "Attindas Hygiene Partners",
+      "locality": "Greenville, NC",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "stack cases onto pallets packaging plant case → pallet",
+      "source": "tape",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "hospital_supply",
+      "title": "Move supply carts",
+      "industry": "Hospital",
+      "path": "CENTRAL SUPPLY → UNITS",
+      "company_name": "Lakeside Regional Hospital",
+      "locality": "Kenosha, WI",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "move supply carts hospital central supply → units",
+      "source": "tape",
+      "tape_family": "cart",
+      "pure_amr_tote": true,
+      "unknowns": []
+    },
+    {
+      "job_key": "food_court_scrub",
+      "title": "Scrub food-court floors",
+      "industry": "Retail",
+      "path": "HARD SURFACE · CLOSE",
+      "company_name": "Mall of America",
+      "locality": "Bloomington, MN",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub food-court floors retail hard surface · close",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "terminal_routes",
+      "title": "Scrub high-traffic routes",
+      "industry": "Airport",
+      "path": "TERMINAL · OVERNIGHT",
+      "company_name": "Unifi (airport floor tech)",
+      "locality": "ATL — Atlanta, GA",
+      "families": [
+        "floor_scrub"
+      ],
+      "actions": [],
+      "text": "scrub high-traffic routes airport terminal · overnight",
+      "source": "tape",
+      "tape_family": "scrub",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "gauge_rounds",
+      "title": "Inspect plant gauges",
+      "industry": "Process plant",
+      "path": "ROUND → READOUT",
+      "company_name": "OFI",
+      "locality": "Lenoir City, TN",
+      "families": [
+        "inspection_mobile"
+      ],
+      "actions": [],
+      "text": "inspect plant gauges process plant round → readout",
+      "source": "tape",
+      "tape_family": "inspect",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "kit_to_line",
+      "title": "Deliver kits to line",
+      "industry": "Aerospace",
+      "path": "KITTING → POINT OF USE",
+      "company_name": "Intuitive Surgical",
+      "locality": "United States (med-device mfg)",
+      "families": [
+        "transport_amr",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "deliver kits to line aerospace kitting → point of use",
+      "source": "tape",
+      "tape_family": "transport",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "pallet_wrap",
+      "title": "Build wrapped pallets",
+      "industry": "CPG",
+      "path": "LINE → WRAP",
+      "company_name": "MDI Distribution (Alex Lee)",
+      "locality": "Hickory, NC",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [],
+      "text": "build wrapped pallets cpg line → wrap",
+      "source": "tape",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": []
+    },
+    {
+      "job_key": "manip_piedmont_candy_lexington_nc",
+      "title": "Stack and build cases onto outbound pallets from production",
+      "industry": "Lexington, NC",
+      "path": "PALLETIZING",
+      "company_name": "Piedmont Candy Company",
+      "locality": "Lexington, NC",
+      "families": [
+        "manipulator"
+      ],
+      "actions": [
+        "palletizing"
+      ],
+      "text": "stack and build cases onto outbound pallets from production role is palletizer & stacker — stack/build pallets and move product between production areas. palletizing {\"object\": \"case\", \"placement_target\": \"pallet\", \"grasp\": \"unknown\", \"weight\": \"up_to_50lb\", \"reach\": \"unknown\", \"cycle_time\": \"unknown\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Case dimensions",
+        "Pallet pattern",
+        "Current automation",
+        "Cycle rate"
+      ]
+    },
+    {
+      "job_key": "manip_novolex_kinston_nc",
+      "title": "Pick packed cases from conveyor and stack onto pallets per carton specifications",
+      "industry": "Kinston, NC",
+      "path": "PALLETIZING",
+      "company_name": "Novolex (Pactiv Evergreen)",
+      "locality": "Kinston, NC",
+      "families": [
+        "manipulator"
+      ],
+      "actions": [
+        "palletizing"
+      ],
+      "text": "pick packed cases from conveyor and stack onto pallets per carton specifications posting: unload cases from conveyors and stack onto pallets; wrap; pull skid. palletizing {\"object\": \"case\", \"placement_target\": \"pallet\", \"grasp\": \"unknown\", \"weight\": \"up_to_50lb\", \"reach\": \"unknown\", \"cycle_time\": \"unknown\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "SKU mix",
+        "Pattern changeover",
+        "Gripper",
+        "Line speed"
+      ]
+    },
+    {
+      "job_key": "manip_attindas_greenville_nc",
+      "title": "Stack cases of product onto pallets (manual residual beside palletizer cell)",
+      "industry": "Greenville, NC",
+      "path": "PALLETIZING",
+      "company_name": "Attindas Hygiene Partners",
+      "locality": "Greenville, NC",
+      "families": [
+        "manipulator"
+      ],
+      "actions": [
+        "palletizing"
+      ],
+      "text": "stack cases of product onto pallets (manual residual beside palletizer cell) palletizer technician: operate robotic palletizers and stack cases manually as needed. palletizing {\"object\": \"case\", \"placement_target\": \"pallet\", \"grasp\": \"unknown\", \"automation_state\": \"partial_robotic_cell\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Share of manual vs robotic",
+        "Which lines still manual"
+      ]
+    },
+    {
+      "job_key": "manip_ofi_lenoir_city_tn",
+      "title": "Remove finished-goods cases from packaging lines and stack in predetermined pallet configuration",
+      "industry": "Lenoir City, TN",
+      "path": "PALLETIZING",
+      "company_name": "OFI",
+      "locality": "Lenoir City, TN",
+      "families": [
+        "manipulator"
+      ],
+      "actions": [
+        "palletizing"
+      ],
+      "text": "remove finished-goods cases from packaging lines and stack in predetermined pallet configuration finished goods end of line palletizer — cases from packaging lines stacked to config. palletizing {\"object\": \"case\", \"placement_target\": \"pallet\", \"grasp\": \"unknown\", \"cycle_time\": \"unknown\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Case weight",
+        "Pattern",
+        "Line count"
+      ]
+    },
+    {
+      "job_key": "manip_mdi_hickory_nc",
+      "title": "Lift and stack cases; assist building pallets at automation interface",
+      "industry": "Hickory, NC",
+      "path": "PALLETIZING",
+      "company_name": "MDI Distribution (Alex Lee)",
+      "locality": "Hickory, NC",
+      "families": [
+        "manipulator"
+      ],
+      "actions": [
+        "palletizing"
+      ],
+      "text": "lift and stack cases; assist building pallets at automation interface amcap role: lift/stack cases 1–60 lb; assist building pallets directed through automation. palletizing {\"object\": \"case\", \"placement_target\": \"pallet\", \"weight\": \"1_to_60lb\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "pallet",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Depalletize vs palletize mix",
+        "Ergo tools in use"
+      ]
+    },
+    {
+      "job_key": "manip_siemens_energy_charlotte_nc",
+      "title": "Load and unload parts on CNC / process machines (material handling assist)",
+      "industry": "Charlotte, NC",
+      "path": "MACHINE → TENDING",
+      "company_name": "Siemens Energy",
+      "locality": "Charlotte, NC",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [
+        "machine_tending"
+      ],
+      "text": "load and unload parts on cnc / process machines (material handling assist) cnc/process operator: loads/unloads parts from machines using material handling devices. machine_tending {\"object\": \"part\", \"placement_target\": \"fixture\", \"machine\": \"cnc\", \"grasp\": \"unknown\", \"weight\": \"up_to_50lb\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Part geometry",
+        "Fixture design",
+        "Skill vs tend split",
+        "Crane dependency"
+      ]
+    },
+    {
+      "job_key": "manip_fulcrum_tualatin_or",
+      "title": "Load raw material and unload finished parts on CNC laser",
+      "industry": "Tualatin, OR",
+      "path": "MACHINE → TENDING",
+      "company_name": "Fulcrum Technologies",
+      "locality": "Tualatin, OR",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [
+        "machine_tending"
+      ],
+      "text": "load raw material and unload finished parts on cnc laser laser cutting operator explicitly loads/unloads raw and finished parts. machine_tending {\"object\": \"sheet_metal\", \"placement_target\": \"machine\", \"machine\": \"cnc_laser\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Sheet size",
+        "Gripper",
+        "Nesting"
+      ]
+    },
+    {
+      "job_key": "manip_ims_riverside_ca",
+      "title": "Load and unload finished parts from laser/plasma cutting machines",
+      "industry": "Riverside, CA",
+      "path": "MACHINE → TENDING",
+      "company_name": "Industrial Metal Supply",
+      "locality": "Riverside, CA",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [
+        "machine_tending"
+      ],
+      "text": "load and unload finished parts from laser/plasma cutting machines laser operator: load and unload finished parts from machine within training window. machine_tending {\"object\": \"part\", \"placement_target\": \"machine\", \"machine\": \"laser_plasma\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Part mix",
+        "Weight",
+        "EOAT"
+      ]
+    },
+    {
+      "job_key": "manip_transtech_charlotte_nc",
+      "title": "Move workpieces to/from CNC and manual machining cells",
+      "industry": "Charlotte, NC",
+      "path": "MACHINE → TENDING",
+      "company_name": "TransTech Group",
+      "locality": "Charlotte, NC",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [
+        "machine_tending"
+      ],
+      "text": "move workpieces to/from cnc and manual machining cells cnc quickmill operator — machine operation plus forklift/crane material handling for production. machine_tending {\"object\": \"part\", \"placement_target\": \"fixture\", \"machine\": \"cnc\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "Repetitive tend vs skilled fab mix"
+      ]
+    },
+    {
+      "job_key": "manip_groninger_charlotte_nc",
+      "title": "Tend CNC mills/lathes — workpiece load/unload around cycle",
+      "industry": "Charlotte, NC",
+      "path": "MACHINE → TENDING",
+      "company_name": "groninger",
+      "locality": "Charlotte, NC",
+      "families": [
+        "manipulator",
+        "mobile_manipulation"
+      ],
+      "actions": [
+        "machine_tending"
+      ],
+      "text": "tend cnc mills/lathes — workpiece load/unload around cycle cnc machinist operates production cnc equipment; robot portion is repetitive load/unload (setup remains human). machine_tending {\"object\": \"part\", \"machine\": \"cnc_mill_lathe\", \"placement_target\": \"fixture\"}",
+      "source": "manipulation_ledger",
+      "tape_family": "gripper",
+      "pure_amr_tote": false,
+      "unknowns": [
+        "How much of role is tend vs program"
+      ]
+    },
+    {
+      "job_key": "serve_restaurant_food_run",
+      "title": "Run food and drinks to dining tables",
+      "industry": "Restaurant",
+      "path": "KITCHEN → DINING ROOM",
+      "company_name": "The Cheesecake Factory",
+      "locality": "Calabasas, CA",
+      "families": [],
+      "actions": [],
+      "text": "run food and drinks to tables restaurant dining room table service food running",
+      "source": "hospitality_seed",
+      "tape_family": "serve",
+      "unknowns": [
+        "Tray weight",
+        "Aisle width"
+      ]
+    },
+    {
+      "job_key": "serve_hotel_room_service",
+      "title": "Run room-service orders to guest rooms",
+      "industry": "Hotel",
+      "path": "KITCHEN → GUEST ROOMS",
+      "company_name": "Marriott International",
+      "locality": "Bethesda, MD",
+      "families": [],
+      "actions": [],
+      "text": "deliver room service food and drinks to guest rooms hotel hospitality",
+      "source": "hospitality_seed",
+      "tape_family": "serve",
+      "unknowns": [
+        "Load weight",
+        "Elevator access"
+      ]
+    },
+    {
+      "job_key": "serve_bus_tables",
+      "title": "Bus tables and return dishware to the kitchen",
+      "industry": "Restaurant",
+      "path": "DINING ROOM → KITCHEN",
+      "company_name": "Darden Restaurants",
+      "locality": "Orlando, FL",
+      "families": [],
+      "actions": [],
+      "text": "bus tables return dishes dishware to kitchen restaurant serving",
+      "source": "hospitality_seed",
+      "tape_family": "serve",
+      "unknowns": [
+        "Load weight"
+      ]
+    },
+    {
+      "job_key": "bellhop_luggage_delivery",
+      "title": "Deliver guest luggage to hotel rooms",
+      "industry": "Hotel",
+      "path": "LOBBY → GUEST ROOMS",
+      "company_name": "Hilton Worldwide",
+      "locality": "McLean, VA",
+      "families": [],
+      "actions": [],
+      "text": "deliver guest luggage baggage to hotel rooms bellhop hospitality",
+      "source": "hospitality_seed",
+      "tape_family": "cart",
+      "unknowns": [
+        "Luggage weight",
+        "Elevator access"
+      ]
+    },
+    {
+      "job_key": "foodprep_fry_station",
+      "title": "Operate the fry station during peak service",
+      "industry": "Quick-service restaurant",
+      "path": "FRY STATION",
+      "company_name": "White Castle",
+      "locality": "Columbus, OH",
+      "families": [],
+      "actions": [],
+      "text": "operate fry station cook fried menu during peak service kitchen",
+      "source": "hospitality_seed",
+      "tape_family": "food_prep",
+      "unknowns": [
+        "Station throughput",
+        "Menu variety"
+      ]
+    },
+    {
+      "job_key": "foodprep_bowl_assembly",
+      "title": "Assemble salads and grain bowls to order",
+      "industry": "Fast-casual restaurant",
+      "path": "PREP LINE",
+      "company_name": "Chipotle Mexican Grill",
+      "locality": "Newport Beach, CA",
+      "families": [],
+      "actions": [],
+      "text": "assemble salads and grain bowls to order prepare food ingredients",
+      "source": "hospitality_seed",
+      "tape_family": "food_prep",
+      "unknowns": [
+        "Order rate",
+        "Ingredient variety"
+      ]
+    },
+    {
+      "job_key": "foodprep_grill_line",
+      "title": "Cook burgers on the grill line",
+      "industry": "Quick-service restaurant",
+      "path": "GRILL LINE",
+      "company_name": "Shake Shack",
+      "locality": "New York, NY",
+      "families": [],
+      "actions": [],
+      "text": "cook grill burgers patties on the grill line kitchen food preparation",
+      "source": "hospitality_seed",
+      "tape_family": "food_prep",
+      "unknowns": [
+        "Line rate"
+      ]
+    },
+    {
+      "job_key": "beverage_espresso_bar",
+      "title": "Prepare and serve espresso drinks at the coffee bar",
+      "industry": "Cafe",
+      "path": "COFFEE BAR",
+      "company_name": "Starbucks",
+      "locality": "Seattle, WA",
+      "families": [],
+      "actions": [],
+      "text": "prepare and serve espresso coffee latte drinks at the coffee bar barista",
+      "source": "hospitality_seed",
+      "tape_family": "beverage",
+      "unknowns": [
+        "Order rate",
+        "Menu variety"
+      ]
+    },
+    {
+      "job_key": "beverage_cocktail_bar",
+      "title": "Mix and serve cocktails at the bar",
+      "industry": "Hotel bar",
+      "path": "BAR",
+      "company_name": "Hyatt Hotels",
+      "locality": "Chicago, IL",
+      "families": [],
+      "actions": [],
+      "text": "mix and serve cocktails drinks beverages at the bar bartender",
+      "source": "hospitality_seed",
+      "tape_family": "beverage",
+      "unknowns": [
+        "Order rate"
+      ]
+    },
+    {
+      "job_key": "foodprep_corporate_dishwasher",
+      "title": "Clear dishware and load dishwashers in a corporate kitchen",
+      "industry": "Corporate dining",
+      "path": "DISH RETURN → DISHWASHER",
+      "company_name": "Compass Group",
+      "locality": "Charlotte, NC",
+      "families": [],
+      "actions": [],
+      "text": "clear tables scrape plates bus dishware load dishwasher kitchen chores corporate cafeteria dining",
+      "source": "hospitality_seed",
+      "tape_family": "food_prep",
+      "unknowns": [
+        "Dish load weight",
+        "Kitchen layout"
+      ]
+    },
+    {
+      "job_key": "foodprep_household_kitchen_chores",
+      "title": "Household kitchen chores — dishes, dishwasher, meal cleanup",
+      "industry": "Home",
+      "path": "HOUSEHOLD KITCHEN",
+      "company_name": "Sunrise Senior Living",
+      "locality": "McLean, VA",
+      "families": [],
+      "actions": [],
+      "text": "household kitchen chores dishes dishwasher meal cleanup home kitchen residential dining",
+      "source": "hospitality_seed",
+      "tape_family": "food_prep",
+      "unknowns": [
+        "Kitchen layout",
+        "Dish mix"
+      ]
+    },
+    {
+      "job_key": "restroom_office_clean",
+      "title": "Clean office-building restrooms (toilets, urinals, floors)",
+      "industry": "Facilities",
+      "path": "RESTROOMS",
+      "company_name": "CBRE",
+      "locality": "Dallas, TX",
+      "families": [],
+      "actions": [],
+      "text": "clean office building restrooms toilets urinals sinks floors fixtures",
+      "source": "hospitality_seed",
+      "tape_family": "restroom",
+      "unknowns": [
+        "Fixture layout",
+        "Traffic level"
+      ]
+    },
+    {
+      "job_key": "restroom_airport_clean",
+      "title": "Clean high-traffic airport restrooms",
+      "industry": "Airport",
+      "path": "RESTROOMS",
+      "company_name": "HMSHost",
+      "locality": "DFW Airport, TX",
+      "families": [],
+      "actions": [],
+      "text": "clean high traffic airport restrooms toilets urinals floors fixtures commercial cleaning",
+      "source": "hospitality_seed",
+      "tape_family": "restroom",
+      "unknowns": [
+        "Traffic level"
+      ]
+    },
+    {
+      "job_key": "clinical_meds_delivery",
+      "title": "Deliver medications from pharmacy to patient units",
+      "industry": "Hospital",
+      "path": "PHARMACY → PATIENT UNITS",
+      "company_name": "Mercy General Hospital",
+      "locality": "Columbus, OH",
+      "families": [],
+      "actions": [],
+      "text": "deliver medications from central pharmacy to nursing units hospital clinical delivery",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Elevator access",
+        "Secure handoff"
+      ]
+    },
+    {
+      "job_key": "clinical_specimen_runs",
+      "title": "Transport lab specimens to the laboratory",
+      "industry": "Hospital",
+      "path": "UNITS → LABORATORY",
+      "company_name": "Riverside Health System",
+      "locality": "Newport News, VA",
+      "families": [],
+      "actions": [],
+      "text": "transport lab specimens and samples to the laboratory across the hospital",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Specimen handling",
+        "Turnaround time"
+      ]
+    },
+    {
+      "job_key": "clinical_supply_replenishment",
+      "title": "Replenish supply carts to nursing units",
+      "industry": "Hospital",
+      "path": "SUPPLY → UNITS",
+      "company_name": "St. Anne Medical Center",
+      "locality": "Toledo, OH",
+      "families": [],
+      "actions": [],
+      "text": "replenish par-level supplies and materials to nursing units clinical supply delivery",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Cart weight",
+        "Restock frequency"
+      ]
+    },
+    {
+      "job_key": "clinical_meal_linen",
+      "title": "Deliver meal trays and linens to patient floors",
+      "industry": "Hospital",
+      "path": "KITCHEN/LAUNDRY → FLOORS",
+      "company_name": "Lakeside Regional Hospital",
+      "locality": "Kenosha, WI",
+      "families": [],
+      "actions": [],
+      "text": "deliver meal trays and clean linens to patient floors and remove soiled linens",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Temperature hold"
+      ]
+    },
+    {
+      "job_key": "resident_meal_delivery",
+      "title": "Deliver meals to resident rooms",
+      "industry": "Senior living",
+      "path": "KITCHEN → RESIDENT ROOMS",
+      "company_name": "Brookhaven Senior Living",
+      "locality": "Naperville, IL",
+      "families": [],
+      "actions": [],
+      "text": "deliver meals and beverages to resident rooms senior living dining delivery",
+      "source": "healthcare_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Load weight",
+        "Dining schedule"
+      ]
+    },
+    {
+      "job_key": "resident_linen_amenities",
+      "title": "Deliver linens and amenities to resident rooms",
+      "industry": "Assisted living",
+      "path": "SUPPLY → RESIDENT ROOMS",
+      "company_name": "Maple Grove Assisted Living",
+      "locality": "Rochester, MN",
+      "families": [],
+      "actions": [],
+      "text": "deliver fresh linens towels and amenities to resident rooms assisted living",
+      "source": "healthcare_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Load weight"
+      ]
+    },
+    {
+      "job_key": "resident_med_pass_support",
+      "title": "Move medication and supply carts between care wings",
+      "industry": "Skilled nursing",
+      "path": "SUPPLY → CARE WINGS",
+      "company_name": "Cedar Ridge Care Center",
+      "locality": "Boise, ID",
+      "families": [],
+      "actions": [],
+      "text": "move medication and supply carts between care wings skilled nursing resident services",
+      "source": "healthcare_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Cart weight",
+        "Access control"
+      ]
+    },
+    {
+      "job_key": "clinical_nursing_unit_errands",
+      "title": "Run nursing-unit errands and supply fetches",
+      "industry": "Hospital",
+      "path": "NURSING STATION → UNITS",
+      "company_name": "Parkland Health",
+      "locality": "Dallas, TX",
+      "families": [],
+      "actions": [],
+      "text": "run nursing-unit errands fetch supplies specimens and pharmacy items for floor nurses hospital clinical assistant",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Secure doors"
+      ]
+    },
+    {
+      "job_key": "clinical_pharmacy_restock",
+      "title": "Restock unit-dose medications from central pharmacy",
+      "industry": "Hospital",
+      "path": "PHARMACY → MED ROOMS",
+      "company_name": "UCSF Health",
+      "locality": "San Francisco, CA",
+      "families": [],
+      "actions": [],
+      "text": "restock unit-dose medications from central pharmacy to nursing med rooms hospital pharmacy delivery",
+      "source": "healthcare_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Secure handoff"
+      ]
+    },
+    {
+      "job_key": "shelf_scan_grocery_oos",
+      "title": "Scan grocery aisles for out-of-stocks and pricing",
+      "industry": "Grocery",
+      "path": "STORE AISLES",
+      "company_name": "Harvest Market Foods",
+      "locality": "Springfield, MO",
+      "families": [],
+      "actions": [],
+      "text": "autonomous shelf scanning of grocery aisles for out-of-stocks pricing and planogram compliance",
+      "source": "vertical_seed",
+      "tape_family": "shelf_scan",
+      "unknowns": [
+        "Aisle geometry",
+        "Scan frequency"
+      ]
+    },
+    {
+      "job_key": "shelf_scan_bigbox_inventory",
+      "title": "Scan big-box store shelves for inventory accuracy",
+      "industry": "Home improvement retail",
+      "path": "STORE AISLES",
+      "company_name": "BuildRight Home Centers",
+      "locality": "Grand Rapids, MI",
+      "families": [],
+      "actions": [],
+      "text": "scan shelves for inventory accuracy and planogram gaps across a large-format store",
+      "source": "vertical_seed",
+      "tape_family": "shelf_scan",
+      "unknowns": [
+        "Store size",
+        "Upper-shelf coverage"
+      ]
+    },
+    {
+      "job_key": "shelf_scan_pharmacy_retail",
+      "title": "Scan retail pharmacy shelves for stock and price accuracy",
+      "industry": "Retail pharmacy",
+      "path": "STORE AISLES",
+      "company_name": "WellPath Pharmacy",
+      "locality": "Akron, OH",
+      "families": [],
+      "actions": [],
+      "text": "scan aisles for out-of-stock detection and price accuracy in retail pharmacy",
+      "source": "vertical_seed",
+      "tape_family": "shelf_scan",
+      "unknowns": [
+        "Scan cadence"
+      ]
+    },
+    {
+      "job_key": "airport_terminal_scrub",
+      "title": "Overnight scrub of terminal concourse floors",
+      "industry": "Airport",
+      "path": "CONCOURSE",
+      "company_name": "Metro International Airport",
+      "locality": "Charlotte, NC",
+      "families": [],
+      "actions": [],
+      "text": "overnight hard-floor scrubbing of airport terminal concourse floors",
+      "source": "vertical_seed",
+      "tape_family": "scrub",
+      "unknowns": [
+        "Concourse area",
+        "Traffic window"
+      ]
+    },
+    {
+      "job_key": "airport_gate_delivery",
+      "title": "Deliver supplies and amenities between gates and lounges",
+      "industry": "Airport",
+      "path": "SUPPLY → GATES",
+      "company_name": "Skyline Airport Services",
+      "locality": "Denver, CO",
+      "families": [],
+      "actions": [],
+      "text": "deliver supplies and amenities point to point between airport gates and lounges",
+      "source": "vertical_seed",
+      "tape_family": "transport",
+      "unknowns": [
+        "Load weight",
+        "Secure areas"
+      ]
+    },
+    {
+      "job_key": "clinical_meds_delivery_2",
+      "title": "Deliver medications and IV supplies to nursing floors",
+      "industry": "Hospital",
+      "path": "PHARMACY → FLOORS",
+      "company_name": "Summit Health Medical Center",
+      "locality": "Reno, NV",
+      "families": [],
+      "actions": [],
+      "text": "deliver medications and IV supplies from pharmacy to nursing floors",
+      "source": "vertical_seed",
+      "tape_family": "clinical_delivery",
+      "unknowns": [
+        "Load weight",
+        "Elevator access"
+      ]
+    },
+    {
+      "job_key": "resident_meal_delivery_2",
+      "title": "Deliver meals and snacks to memory-care residents",
+      "industry": "Memory care",
+      "path": "KITCHEN → RESIDENT ROOMS",
+      "company_name": "Willow Bend Memory Care",
+      "locality": "Frisco, TX",
+      "families": [],
+      "actions": [],
+      "text": "deliver meals snacks and beverages to memory care resident rooms",
+      "source": "vertical_seed",
+      "tape_family": "resident_services",
+      "unknowns": [
+        "Dining schedule",
+        "Access control"
+      ]
+    },
+    {
+      "job_key": "pallet_dock_to_storage",
+      "title": "Move inbound pallets from dock to storage",
+      "industry": "Warehouse",
+      "path": "DOCK → STORAGE",
+      "company_name": "Cardinal Distribution",
+      "locality": "Memphis, TN",
+      "families": [],
+      "actions": [],
+      "text": "autonomous forklift moves pallets from receiving dock to rack storage",
+      "source": "tier_seed",
+      "tape_family": "pallet_move",
+      "unknowns": [
+        "Pallet weight",
+        "Rack height"
+      ]
+    },
+    {
+      "job_key": "pallet_line_feed",
+      "title": "Feed pallets of raw material to production lines",
+      "industry": "Manufacturing",
+      "path": "WAREHOUSE → LINE",
+      "company_name": "Delmar Manufacturing",
+      "locality": "Toledo, OH",
+      "families": [],
+      "actions": [],
+      "text": "pallet jack transports pallets of raw material to production line-side",
+      "source": "tier_seed",
+      "tape_family": "pallet_move",
+      "unknowns": [
+        "Pallet weight"
+      ]
+    },
+    {
+      "job_key": "pallet_putaway",
+      "title": "Put away pallets into racking",
+      "industry": "3PL warehouse",
+      "path": "RECEIVING → RACK",
+      "company_name": "Vanguard Logistics",
+      "locality": "Ontario, CA",
+      "families": [],
+      "actions": [],
+      "text": "autonomous forklift pallet putaway into high racking",
+      "source": "tier_seed",
+      "tape_family": "pallet_move",
+      "unknowns": [
+        "Rack height"
+      ]
+    },
+    {
+      "job_key": "trailer_unload_floor",
+      "title": "Unload floor-loaded cases from trailers",
+      "industry": "Distribution center",
+      "path": "TRAILER → CONVEYOR",
+      "company_name": "Summit Grocery DC",
+      "locality": "Kansas City, MO",
+      "families": [],
+      "actions": [],
+      "text": "robot unloads floor-loaded cases from trailers onto the conveyor",
+      "source": "tier_seed",
+      "tape_family": "trailer_unload",
+      "unknowns": [
+        "Case weight",
+        "Unload rate"
+      ]
+    },
+    {
+      "job_key": "trailer_unload_container",
+      "title": "Unload cases from import containers",
+      "industry": "Port warehouse",
+      "path": "CONTAINER → DOCK",
+      "company_name": "Harbor Freight Terminal",
+      "locality": "Savannah, GA",
+      "families": [],
+      "actions": [],
+      "text": "autonomous container unloading of cases at the dock",
+      "source": "tier_seed",
+      "tape_family": "trailer_unload",
+      "unknowns": [
+        "Case weight"
+      ]
+    },
+    {
+      "job_key": "pickpack_ecom",
+      "title": "Piece-pick items into e-commerce orders",
+      "industry": "E-commerce fulfillment",
+      "path": "PICK CELL",
+      "company_name": "Rapid Ship Fulfillment",
+      "locality": "Columbus, OH",
+      "families": [],
+      "actions": [],
+      "text": "robotic piece picking and pack of e-commerce order items",
+      "source": "tier_seed",
+      "tape_family": "pick_pack",
+      "unknowns": [
+        "Pick rate",
+        "Item variety"
+      ]
+    },
+    {
+      "job_key": "pickpack_pharma",
+      "title": "Each-pick pharmacy items for orders",
+      "industry": "Pharmacy DC",
+      "path": "PICK CELL",
+      "company_name": "MedSupply Distribution",
+      "locality": "Memphis, TN",
+      "families": [],
+      "actions": [],
+      "text": "each picking and pack of pharmacy items into orders",
+      "source": "tier_seed",
+      "tape_family": "pick_pack",
+      "unknowns": [
+        "Pick rate"
+      ]
+    },
+    {
+      "job_key": "sortation_parcel",
+      "title": "Sort parcels to destination chutes",
+      "industry": "Parcel hub",
+      "path": "INDUCTION → CHUTES",
+      "company_name": "ExpressPost Hub",
+      "locality": "Louisville, KY",
+      "families": [],
+      "actions": [],
+      "text": "robotic sortation of parcels to destination chutes",
+      "source": "tier_seed",
+      "tape_family": "sortation",
+      "unknowns": [
+        "Sort rate"
+      ]
+    },
+    {
+      "job_key": "sortation_returns",
+      "title": "Sort returned packages by disposition",
+      "industry": "Returns center",
+      "path": "INDUCTION → PUT-WALL",
+      "company_name": "ReCommerce Returns",
+      "locality": "Grove City, OH",
+      "families": [],
+      "actions": [],
+      "text": "sort returned packages to put-to-wall by disposition",
+      "source": "tier_seed",
+      "tape_family": "sortation",
+      "unknowns": [
+        "Sort rate"
+      ]
+    },
+    {
+      "job_key": "disinfect_patient_rooms",
+      "title": "UV-disinfect patient rooms between occupancies",
+      "industry": "Hospital",
+      "path": "PATIENT ROOMS",
+      "company_name": "Mercy General Hospital",
+      "locality": "Columbus, OH",
+      "families": [],
+      "actions": [],
+      "text": "uv disinfection of patient rooms and surfaces between occupancies",
+      "source": "tier_seed",
+      "tape_family": "disinfection",
+      "unknowns": [
+        "Cycle time",
+        "Room layout"
+      ]
+    },
+    {
+      "job_key": "disinfect_operating_rooms",
+      "title": "Disinfect operating rooms after procedures",
+      "industry": "Surgery center",
+      "path": "OPERATING ROOMS",
+      "company_name": "Lakeside Surgical Center",
+      "locality": "Kenosha, WI",
+      "families": [],
+      "actions": [],
+      "text": "uv-c disinfect operating rooms and surfaces after procedures",
+      "source": "tier_seed",
+      "tape_family": "disinfection",
+      "unknowns": [
+        "Cycle time"
+      ]
+    },
+    {
+      "job_key": "asrs_goods_to_person",
+      "title": "Store and retrieve totes to pick stations",
+      "industry": "E-grocery fulfillment",
+      "path": "GRID → PICK STATIONS",
+      "company_name": "FreshCart E-Grocery",
+      "locality": "Newark, NJ",
+      "families": [],
+      "actions": [],
+      "text": "automated storage and retrieval goods-to-person to pick stations",
+      "source": "tier_seed",
+      "tape_family": "asrs",
+      "unknowns": [
+        "Order rate",
+        "Grid size"
+      ]
+    },
+    {
+      "job_key": "asrs_case_handling",
+      "title": "Retrieve and present cases to packers",
+      "industry": "Retail DC",
+      "path": "ASRS → PACK",
+      "company_name": "BJ Wholesale DC",
+      "locality": "Burlington, NJ",
+      "families": [],
+      "actions": [],
+      "text": "autonomous case-handling asrs presents cases to packers",
+      "source": "tier_seed",
+      "tape_family": "asrs",
+      "unknowns": [
+        "Order rate"
+      ]
+    },
+    {
+      "job_key": "ag_laser_weeding",
+      "title": "Weed vegetable rows autonomously",
+      "industry": "Agriculture",
+      "path": "FIELD ROWS",
+      "company_name": "Green Valley Farms",
+      "locality": "Salinas, CA",
+      "families": [],
+      "actions": [],
+      "text": "autonomous laser weeding of vegetable crop rows in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Field size",
+        "Crop type"
+      ]
+    },
+    {
+      "job_key": "ag_harvest",
+      "title": "Harvest produce in the field",
+      "industry": "Agriculture",
+      "path": "FIELD",
+      "company_name": "Sunrise Orchards",
+      "locality": "Yakima, WA",
+      "families": [],
+      "actions": [],
+      "text": "robot harvests produce crops in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Crop type",
+        "Season"
+      ]
+    },
+    {
+      "job_key": "ag_mechanical_weeding",
+      "title": "Mechanically weed vegetable rows",
+      "industry": "Agriculture",
+      "path": "FIELD ROWS",
+      "company_name": "Pacific Row Crops",
+      "locality": "Oxnard, CA",
+      "families": [],
+      "actions": [],
+      "text": "mechanical weeding of vegetable crop rows in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Row spacing",
+        "Crop type"
+      ]
+    },
+    {
+      "job_key": "ag_spray",
+      "title": "Spray crop rows in the field",
+      "industry": "Agriculture",
+      "path": "FIELD",
+      "company_name": "Central Valley Growers",
+      "locality": "Fresno, CA",
+      "families": [],
+      "actions": [],
+      "text": "robot sprays crop rows in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Chemical mix",
+        "Field size"
+      ]
+    },
+    {
+      "job_key": "ag_orchard",
+      "title": "Work orchard rows",
+      "industry": "Agriculture",
+      "path": "ORCHARD",
+      "company_name": "Sierra Orchard Co-op",
+      "locality": "Modesto, CA",
+      "families": [],
+      "actions": [],
+      "text": "orchard robot works crop rows for prune or thin tasks",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Canopy height",
+        "Season"
+      ]
+    },
+    {
+      "job_key": "marine_hull_inspect",
+      "title": "Inspect a ship hull at the quay",
+      "industry": "Marine",
+      "path": "QUAY → HULL",
+      "company_name": "Harbor Line Drydock",
+      "locality": "Norfolk, VA",
+      "families": [],
+      "actions": [],
+      "text": "hull inspection robot surveys the vessel at the quay",
+      "source": "tier_seed",
+      "tape_family": "marine",
+      "unknowns": [
+        "Vessel class",
+        "Water conditions"
+      ]
+    },
+    {
+      "job_key": "marine_underwater_clean",
+      "title": "Clean a hull underwater",
+      "industry": "Marine",
+      "path": "UNDERWATER HULL",
+      "company_name": "Bay Port Services",
+      "locality": "Oakland, CA",
+      "families": [],
+      "actions": [],
+      "text": "underwater robot cleans the ship hull below the waterline",
+      "source": "tier_seed",
+      "tape_family": "marine",
+      "unknowns": [
+        "Biofouling type"
+      ]
+    },
+    {
+      "job_key": "avionics_hangar_inspect",
+      "title": "Inspect an airframe in the hangar",
+      "industry": "Aviation",
+      "path": "HANGAR",
+      "company_name": "Westfield MRO",
+      "locality": "Tulsa, OK",
+      "families": [],
+      "actions": [],
+      "text": "hangar robot inspects the aircraft fuselage on the shop floor",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Airframe type",
+        "NDT method"
+      ]
+    },
+    {
+      "job_key": "avionics_airside",
+      "title": "Walk the airside ramp around parked aircraft",
+      "industry": "Aviation",
+      "path": "RAMP",
+      "company_name": "Metro Airside Ops",
+      "locality": "Denver, CO",
+      "families": [],
+      "actions": [],
+      "text": "airside robot inspects parked aircraft on the ramp",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Ramp traffic rules"
+      ]
+    },
+    {
+      "job_key": "construction_earthwork",
+      "title": "Grade earth on the jobsite",
+      "industry": "Construction",
+      "path": "JOBSITE GRADE",
+      "company_name": "Ridge Line Civil",
+      "locality": "Phoenix, AZ",
+      "families": [],
+      "actions": [],
+      "text": "earthwork robot grades the construction jobsite",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Soil type",
+        "Site access"
+      ]
+    },
+    {
+      "job_key": "construction_layout",
+      "title": "Print floor layout on the jobsite",
+      "industry": "Construction",
+      "path": "JOBSITE FLOOR",
+      "company_name": "BuildTech Contractors",
+      "locality": "Austin, TX",
+      "families": [],
+      "actions": [],
+      "text": "layout printer robot marks construction floor layout on the jobsite",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Site conditions"
+      ]
+    },
+    {
+      "job_key": "construction_drywall",
+      "title": "Finish drywall on the jobsite",
+      "industry": "Construction",
+      "path": "JOBSITE",
+      "company_name": "Skyline Builders",
+      "locality": "Denver, CO",
+      "families": [],
+      "actions": [],
+      "text": "drywall finishing robot on the construction jobsite",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Site access"
+      ]
+    },
+    {
+      "job_key": "mining_haulage",
+      "title": "Haul ore autonomously in the pit",
+      "industry": "Mining",
+      "path": "PIT → CRUSHER",
+      "company_name": "IronRidge Mining",
+      "locality": "Hibbing, MN",
+      "families": [],
+      "actions": [],
+      "text": "autonomous haulage of ore from the pit to the crusher",
+      "source": "tier_seed",
+      "tape_family": "mining",
+      "unknowns": [
+        "Haul distance",
+        "Terrain"
+      ]
+    },
+    {
+      "job_key": "mining_drilling",
+      "title": "Autonomously drill blast holes",
+      "industry": "Mining",
+      "path": "BENCH",
+      "company_name": "Copper Basin Mining",
+      "locality": "Morenci, AZ",
+      "families": [],
+      "actions": [],
+      "text": "autonomous drilling of blast holes on the mining bench",
+      "source": "tier_seed",
+      "tape_family": "mining",
+      "unknowns": [
+        "Rock type"
+      ]
+    },
+    {
+      "job_key": "ag_combine_harvest",
+      "title": "Harvest grain with an autonomous combine",
+      "industry": "Agriculture",
+      "path": "FIELD COMBINE",
+      "company_name": "Heartland Grain Co-op",
+      "locality": "Ames, IA",
+      "families": [],
+      "actions": [],
+      "text": "autonomous combine harvest of grain with a combine header in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Crop moisture",
+        "Header width"
+      ]
+    },
+    {
+      "job_key": "ag_tractor_plant",
+      "title": "Plant rows with an autonomous tractor",
+      "industry": "Agriculture",
+      "path": "FIELD PLANT",
+      "company_name": "Prairie Seed Farms",
+      "locality": "Grand Island, NE",
+      "families": [],
+      "actions": [],
+      "text": "autonomous tractor planting crop rows in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Row spacing",
+        "Seed type"
+      ]
+    },
+    {
+      "job_key": "ag_tractor_harvest",
+      "title": "Support crop harvest with an autonomous tractor",
+      "industry": "Agriculture",
+      "path": "FIELD HARVEST",
+      "company_name": "River Bend Growers",
+      "locality": "Yuma, AZ",
+      "families": [],
+      "actions": [],
+      "text": "autonomous tractor for crop harvest support in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Crop type",
+        "Season"
+      ]
+    },
+    {
+      "job_key": "ag_implement_on_tractor",
+      "title": "Run a weeding implement on a tractor",
+      "industry": "Agriculture",
+      "path": "TRACTOR IMPLEMENT",
+      "company_name": "Green Valley Farms",
+      "locality": "Salinas, CA",
+      "families": [],
+      "actions": [],
+      "text": "tractor-implement weeding of vegetable crop rows in the field",
+      "source": "tier_seed",
+      "tape_family": "agriculture",
+      "unknowns": [
+        "Hitch class",
+        "Row spacing"
+      ]
+    },
+    {
+      "job_key": "construction_home_frame",
+      "title": "Frame a house on the residential site",
+      "industry": "Construction",
+      "path": "HOME FRAME",
+      "company_name": "Prairie Home Builders",
+      "locality": "Austin, TX",
+      "families": [],
+      "actions": [],
+      "text": "residential home framing robot on the house construction site",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Floorplan",
+        "Site access"
+      ]
+    },
+    {
+      "job_key": "construction_home_print",
+      "title": "3D-print walls for a house",
+      "industry": "Construction",
+      "path": "HOME PRINT",
+      "company_name": "Hill Country Homes",
+      "locality": "Georgetown, TX",
+      "families": [],
+      "actions": [],
+      "text": "3D print home walls for residential construction",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Mix design",
+        "Floorplan"
+      ]
+    },
+    {
+      "job_key": "construction_building_block",
+      "title": "Lay block for a commercial building",
+      "industry": "Construction",
+      "path": "BUILDING WALL",
+      "company_name": "Metro Commercial Builders",
+      "locality": "Perth, WA",
+      "families": [],
+      "actions": [],
+      "text": "block-laying robot builds a commercial building wall",
+      "source": "tier_seed",
+      "tape_family": "construction",
+      "unknowns": [
+        "Block type",
+        "Site access"
+      ]
+    },
+    {
+      "job_key": "avionics_drone_inspect",
+      "title": "Inspect assets with an autonomous drone",
+      "industry": "Avionics",
+      "path": "FLIGHT INSPECT",
+      "company_name": "Pacific Grid Inspection",
+      "locality": "Redding, CA",
+      "families": [],
+      "actions": [],
+      "text": "autonomous drone inspection of utility and airframe assets",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Flight corridor",
+        "Sensor pack"
+      ]
+    },
+    {
+      "job_key": "avionics_drone_delivery",
+      "title": "Deliver payloads with a delivery drone",
+      "industry": "Avionics",
+      "path": "FLIGHT DELIVER",
+      "company_name": "Valley Medical Logistics",
+      "locality": "South San Francisco, CA",
+      "families": [],
+      "actions": [],
+      "text": "drone delivery of medical and retail payloads on a named corridor",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Payload weight",
+        "Drop zone"
+      ]
+    },
+    {
+      "job_key": "avionics_evtol",
+      "title": "Fly an eVTOL route between vertiports",
+      "industry": "Avionics",
+      "path": "EVTOL ROUTE",
+      "company_name": "Los Angeles World Airports",
+      "locality": "Los Angeles, CA",
+      "families": [],
+      "actions": [],
+      "text": "eVTOL flying-car class flight between vertiports",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Airspace rules",
+        "Vertiport slot"
+      ]
+    },
+    {
+      "job_key": "avionics_autonomous_flight",
+      "title": "Fly an autonomous airplane between airports",
+      "industry": "Avionics",
+      "path": "IFR PAIR",
+      "company_name": "Metro Airside Ops",
+      "locality": "Denver, CO",
+      "families": [],
+      "actions": [],
+      "text": "autonomous airplane-like robot flies an IFR airport pair",
+      "source": "tier_seed",
+      "tape_family": "avionics",
+      "unknowns": [
+        "Aircraft type",
+        "Crew rules"
+      ]
+    },
+    {
+      "job_key": "aerospace_sat_service",
+      "title": "Service a satellite on orbit",
+      "industry": "Aerospace",
+      "path": "ON ORBIT SERVICE",
+      "company_name": "NASA",
+      "locality": "Low Earth orbit",
+      "families": [],
+      "actions": [],
+      "text": "satellite servicing robot docks with a client satellite on orbit",
+      "source": "tier_seed",
+      "tape_family": "aerospace",
+      "unknowns": [
+        "Client interface",
+        "Orbit"
+      ]
+    },
+    {
+      "job_key": "aerospace_debris",
+      "title": "Capture orbital debris from a servicing satellite",
+      "industry": "Aerospace",
+      "path": "DEBRIS CAPTURE",
+      "company_name": "ESA",
+      "locality": "Low Earth orbit",
+      "families": [],
+      "actions": [],
+      "text": "orbital debris capture by a robot attached to a servicing satellite",
+      "source": "tier_seed",
+      "tape_family": "aerospace",
+      "unknowns": [
+        "Target object",
+        "Capture method"
+      ]
+    },
+    {
+      "job_key": "aerospace_launch_gse",
+      "title": "Support a launch vehicle on the pad",
+      "industry": "Aerospace",
+      "path": "PAD GSE",
+      "company_name": "NASA Kennedy Space Center",
+      "locality": "Merritt Island, FL",
+      "families": [],
+      "actions": [],
+      "text": "launch and rocket ground-support robot on the pad",
+      "source": "tier_seed",
+      "tape_family": "aerospace",
+      "unknowns": [
+        "Vehicle class",
+        "Range rules"
+      ]
+    },
+    {
+      "job_key": "warehouse_tote_pick_stations",
+      "title": "Move totes between pick stations in a fulfillment DC",
+      "industry": "Warehouse",
+      "path": "PICK MODULE → PACK",
+      "company_name": "GXO Logistics",
+      "locality": "Greenwich, CT",
+      "families": [],
+      "actions": [],
+      "text": "fulfillment center tote transport between pick stations in a warehouse distribution center",
+      "source": "tier_seed",
+      "tape_family": "warehouse",
+      "unknowns": [
+        "Tote weight",
+        "Aisle width"
+      ]
+    },
+    {
+      "job_key": "warehouse_dc_aisle_cartons",
+      "title": "Move cartons from warehouse aisles to the dock",
+      "industry": "Warehouse",
+      "path": "AISLE → DOCK",
+      "company_name": "Prologis",
+      "locality": "San Francisco, CA",
+      "families": [],
+      "actions": [],
+      "text": "warehouse aisle carton moves to the dock in a fulfillment distribution center",
+      "source": "tier_seed",
+      "tape_family": "warehouse",
+      "unknowns": [
+        "Carton weight"
+      ]
+    },
+    {
+      "job_key": "warehouse_replenish_pick_totes",
+      "title": "Replenish pick-station totes in a regional DC",
+      "industry": "Warehouse",
+      "path": "RESERVE → PICK STATION",
+      "company_name": "Target",
+      "locality": "Minneapolis, MN",
+      "families": [],
+      "actions": [],
+      "text": "replenish pick-station totes in a regional warehouse fulfillment center",
+      "source": "tier_seed",
+      "tape_family": "warehouse",
+      "unknowns": [
+        "Tote mix",
+        "Slotting"
+      ]
+    },
+    {
+      "job_key": "logistics_crossdock_inbound",
+      "title": "Cross-dock inbound freight to outbound doors",
+      "industry": "Logistics",
+      "path": "INBOUND → OUTBOUND",
+      "company_name": "DHL Supply Chain",
+      "locality": "Westerville, OH",
+      "families": [],
+      "actions": [],
+      "text": "3PL cross-dock inbound freight to outbound doors logistics hub sortation",
+      "source": "tier_seed",
+      "tape_family": "logistics",
+      "unknowns": [
+        "Door assignment",
+        "Dwell time"
+      ]
+    },
+    {
+      "job_key": "logistics_parcel_inbound_sort",
+      "title": "Sort inbound parcels on the hub belt",
+      "industry": "Logistics",
+      "path": "INBOUND SORT",
+      "company_name": "FedEx Freight",
+      "locality": "Memphis, TN",
+      "families": [],
+      "actions": [],
+      "text": "parcel sortation on the inbound hub belt 3PL logistics sort",
+      "source": "tier_seed",
+      "tape_family": "logistics",
+      "unknowns": [
+        "Parcel size mix"
+      ]
+    },
+    {
+      "job_key": "logistics_outbound_hub_sort",
+      "title": "Sort outbound parcels at the hub",
+      "industry": "Logistics",
+      "path": "OUTBOUND SORT",
+      "company_name": "UPS",
+      "locality": "Atlanta, GA",
+      "families": [],
+      "actions": [],
+      "text": "outbound parcel sortation at a logistics hub 3PL cross-dock",
+      "source": "tier_seed",
+      "tape_family": "logistics",
+      "unknowns": [
+        "Sort window"
+      ]
+    },
+    {
+      "job_key": "factory_assembly_load_unload",
+      "title": "Load and unload workpieces on the assembly line",
+      "industry": "Factory",
+      "path": "LINE CELL",
+      "company_name": "Toyota Motor Manufacturing Kentucky",
+      "locality": "Georgetown, KY",
+      "families": [],
+      "actions": [],
+      "text": "factory assembly line workpiece load unload on the plant floor machine tend",
+      "source": "tier_seed",
+      "tape_family": "factory",
+      "unknowns": [
+        "Fixture geometry",
+        "Cycle time"
+      ]
+    },
+    {
+      "job_key": "factory_cnc_cell_tend",
+      "title": "Tend CNC fixtures on the plant floor",
+      "industry": "Factory",
+      "path": "CNC CELL",
+      "company_name": "Magna International",
+      "locality": "Troy, MI",
+      "families": [],
+      "actions": [],
+      "text": "factory CNC cell machine tending workpiece fixture load unload on the plant floor",
+      "source": "tier_seed",
+      "tape_family": "factory",
+      "unknowns": [
+        "Part family",
+        "Chuck change"
+      ]
+    },
+    {
+      "job_key": "factory_mill_lathe_tend",
+      "title": "Machine-tend mill and lathe cells in the factory",
+      "industry": "Factory",
+      "path": "MACHINING CELL",
+      "company_name": "Caterpillar",
+      "locality": "Peoria, IL",
+      "families": [],
+      "actions": [],
+      "text": "factory mill lathe machine tending production cell workpiece fixture",
+      "source": "tier_seed",
+      "tape_family": "factory",
+      "unknowns": [
+        "Tooling mix"
+      ]
+    },
+    {
+      "job_key": "hospitality_guest_amenities",
+      "title": "Deliver amenities to hotel guest rooms",
+      "industry": "Hotel",
+      "path": "HOUSEKEEPING → GUEST ROOMS",
+      "company_name": "Hilton",
+      "locality": "McLean, VA",
+      "families": [],
+      "actions": [],
+      "text": "hotel guest room amenity delivery hospitality bellhop room service",
+      "source": "tier_seed",
+      "tape_family": "hospitality",
+      "unknowns": [
+        "Load weight",
+        "Elevator access"
+      ]
+    },
+    {
+      "job_key": "hospitality_room_service_run",
+      "title": "Run room-service orders to guest floors",
+      "industry": "Hotel",
+      "path": "KITCHEN → GUEST FLOORS",
+      "company_name": "Hyatt",
+      "locality": "Chicago, IL",
+      "families": [],
+      "actions": [],
+      "text": "hotel room service delivery to guest floors hospitality concierge",
+      "source": "tier_seed",
+      "tape_family": "hospitality",
+      "unknowns": [
+        "Tray weight",
+        "Temperature hold"
+      ]
+    },
+    {
+      "job_key": "hospitality_bellhop_luggage",
+      "title": "Deliver guest luggage to hotel rooms",
+      "industry": "Hotel",
+      "path": "LOBBY → GUEST ROOMS",
+      "company_name": "Four Seasons",
+      "locality": "Toronto, ON",
+      "families": [],
+      "actions": [],
+      "text": "hotel bellhop luggage delivery to guest rooms hospitality housekeeping",
+      "source": "tier_seed",
+      "tape_family": "hospitality",
+      "unknowns": [
+        "Bag weight"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1949 @@
+{
+  "dataset_id": "rfr_golden_v1",
+  "version": "1.1.0-draft",
+  "status": "draft_labels_pending_review",
+  "ontology_version": "primitives.v1",
+  "scoring_version": "phase0_opportunity_rank.v0_1",
+  "spec": "docs/v1/build-pack/06_golden_calibration.md",
+  "label_policy": {
+    "draft": "Agent-proposed expectations for Sprint 0; reviewer must set label_status=reviewed before Sprint 4 gates.",
+    "unknown_rule": "Never convert missing evidence into false/zero."
+  },
+  "cases": [
+    {
+      "case_id": "ctrl_forklift_positive_riviana_class",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_001_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Did Riviana-class forklift positives still rank highly for an autonomous forklift?",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "ctrl_tugger_rejects_forklift",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_026_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ],
+        "work_match_label_in": [
+          "poor",
+          "insufficient_information"
+        ]
+      },
+      "notes": "Did the tugger workflow still reject the forklift?",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "ctrl_mixed_material_handler_partial",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_016_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "replacement_mode_in": [
+          "partial_automation",
+          "labor_augmentation"
+        ],
+        "call_priority_notin": [
+          "call_now"
+        ]
+      },
+      "notes": "Did the mixed Material Handler remain partial rather than full replacement?",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_forklift_01",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_001_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Strong transport should favor autonomous forklift / pallet movers.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_forklift_02",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_002_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Strong transport should favor autonomous forklift / pallet movers.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_forklift_03",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_003_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Strong transport should favor autonomous forklift / pallet movers.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_forklift_04",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_004_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Strong transport should favor autonomous forklift / pallet movers.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_forklift_05",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_005_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Strong transport should favor autonomous forklift / pallet movers.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_forklift_06",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_006_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Strong transport should favor autonomous forklift / pallet movers.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_forklift_07",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_007_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Strong transport should favor autonomous forklift / pallet movers.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_forklift_08",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_008_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Strong transport should favor autonomous forklift / pallet movers.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_forklift_09",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_009_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Strong transport should favor autonomous forklift / pallet movers.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_forklift_10",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_010_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Strong transport should favor autonomous forklift / pallet movers.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_amr_01",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_011_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "good",
+          "fair"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "call_now"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Platform AMR may fit if load interface exists; unknowns allowed.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_amr_02",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_012_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "good",
+          "fair"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "call_now"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Platform AMR may fit if load interface exists; unknowns allowed.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_amr_03",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_013_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "good",
+          "fair"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "call_now"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Platform AMR may fit if load interface exists; unknowns allowed.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_amr_04",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_014_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "good",
+          "fair"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "call_now"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Platform AMR may fit if load interface exists; unknowns allowed.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_transport_amr_05",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_015_strong_transport",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "good",
+          "fair"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "call_now"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Platform AMR may fit if load interface exists; unknowns allowed.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_tugger_01",
+      "robot_id": "robot:fetch_freight100",
+      "posting_id": "job:synth_026_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Tugger/milk-run should fit autonomous tugger class.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_tugger_02",
+      "robot_id": "robot:vecna_tugger",
+      "posting_id": "job:synth_027_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Tugger/milk-run should fit autonomous tugger class.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_tugger_03",
+      "robot_id": "robot:fetch_freight100",
+      "posting_id": "job:synth_028_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Tugger/milk-run should fit autonomous tugger class.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_tugger_04",
+      "robot_id": "robot:vecna_tugger",
+      "posting_id": "job:synth_029_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Tugger/milk-run should fit autonomous tugger class.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_tugger_05",
+      "robot_id": "robot:fetch_freight100",
+      "posting_id": "job:synth_030_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Tugger/milk-run should fit autonomous tugger class.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_tugger_06",
+      "robot_id": "robot:vecna_tugger",
+      "posting_id": "job:synth_031_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Tugger/milk-run should fit autonomous tugger class.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_tugger_07",
+      "robot_id": "robot:fetch_freight100",
+      "posting_id": "job:synth_032_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Tugger/milk-run should fit autonomous tugger class.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "pos_tugger_08",
+      "robot_id": "robot:vecna_tugger",
+      "posting_id": "job:synth_033_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "excellent",
+          "good"
+        ],
+        "call_priority_in": [
+          "call_now",
+          "qualify"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Tugger/milk-run should fit autonomous tugger class.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "wrong_forklift_on_tugger_01",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_026_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ],
+        "work_match_label_in": [
+          "poor",
+          "fair"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "Forklift on pure tugger route is wrong-robot control.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "wrong_forklift_on_tugger_02",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_027_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ],
+        "work_match_label_in": [
+          "poor",
+          "fair"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "Forklift on pure tugger route is wrong-robot control.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "wrong_forklift_on_tugger_03",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_028_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ],
+        "work_match_label_in": [
+          "poor",
+          "fair"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "Forklift on pure tugger route is wrong-robot control.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "wrong_forklift_on_tugger_04",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_029_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ],
+        "work_match_label_in": [
+          "poor",
+          "fair"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "Forklift on pure tugger route is wrong-robot control.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "wrong_forklift_on_tugger_05",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_030_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ],
+        "work_match_label_in": [
+          "poor",
+          "fair"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "Forklift on pure tugger route is wrong-robot control.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "wrong_forklift_on_tugger_06",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_031_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ],
+        "work_match_label_in": [
+          "poor",
+          "fair"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "Forklift on pure tugger route is wrong-robot control.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "wrong_forklift_on_tugger_07",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_032_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ],
+        "work_match_label_in": [
+          "poor",
+          "fair"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "Forklift on pure tugger route is wrong-robot control.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "wrong_forklift_on_tugger_08",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_033_tugger_line_replenishment",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ],
+        "work_match_label_in": [
+          "poor",
+          "fair"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "Forklift on pure tugger route is wrong-robot control.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_amr_01",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_016_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "replacement_mode_in": [
+          "partial_automation",
+          "labor_augmentation"
+        ],
+        "call_priority_notin": [
+          "call_now"
+        ]
+      },
+      "notes": "Mixed handler remains partial automation.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_amr_02",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_017_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "replacement_mode_in": [
+          "partial_automation",
+          "labor_augmentation"
+        ],
+        "call_priority_notin": [
+          "call_now"
+        ]
+      },
+      "notes": "Mixed handler remains partial automation.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_amr_03",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_018_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "replacement_mode_in": [
+          "partial_automation",
+          "labor_augmentation"
+        ],
+        "call_priority_notin": [
+          "call_now"
+        ]
+      },
+      "notes": "Mixed handler remains partial automation.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_amr_04",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_019_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "replacement_mode_in": [
+          "partial_automation",
+          "labor_augmentation"
+        ],
+        "call_priority_notin": [
+          "call_now"
+        ]
+      },
+      "notes": "Mixed handler remains partial automation.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_amr_05",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_020_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "replacement_mode_in": [
+          "partial_automation",
+          "labor_augmentation"
+        ],
+        "call_priority_notin": [
+          "call_now"
+        ]
+      },
+      "notes": "Mixed handler remains partial automation.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_amr_06",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_021_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "replacement_mode_in": [
+          "partial_automation",
+          "labor_augmentation"
+        ],
+        "call_priority_notin": [
+          "call_now"
+        ]
+      },
+      "notes": "Mixed handler remains partial automation.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_amr_07",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_022_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "replacement_mode_in": [
+          "partial_automation",
+          "labor_augmentation"
+        ],
+        "call_priority_notin": [
+          "call_now"
+        ]
+      },
+      "notes": "Mixed handler remains partial automation.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_amr_08",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_023_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "replacement_mode_in": [
+          "partial_automation",
+          "labor_augmentation"
+        ],
+        "call_priority_notin": [
+          "call_now"
+        ]
+      },
+      "notes": "Mixed handler remains partial automation.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_manip_01",
+      "robot_id": "robot:bd_stretch",
+      "posting_id": "job:synth_016_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "fair",
+          "good"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Mobile manipulator may address case handling share; not auto Call Now.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_manip_02",
+      "robot_id": "robot:bd_stretch",
+      "posting_id": "job:synth_017_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "fair",
+          "good"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Mobile manipulator may address case handling share; not auto Call Now.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_manip_03",
+      "robot_id": "robot:bd_stretch",
+      "posting_id": "job:synth_018_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "fair",
+          "good"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Mobile manipulator may address case handling share; not auto Call Now.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_manip_04",
+      "robot_id": "robot:bd_stretch",
+      "posting_id": "job:synth_019_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "fair",
+          "good"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Mobile manipulator may address case handling share; not auto Call Now.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "partial_mixed_manip_05",
+      "robot_id": "robot:bd_stretch",
+      "posting_id": "job:synth_020_mixed_material_handler",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "fair",
+          "good"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Mobile manipulator may address case handling share; not auto Call Now.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "block_highbay_amr_01",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_036_wrong_fit_attractive",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ]
+      },
+      "notes": "High-bay putaway must hard-block platform AMR.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "block_highbay_forklift_01",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_036_wrong_fit_attractive",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "qualify",
+          "do_not_surface"
+        ]
+      },
+      "notes": "High-bay may block low-lift forklift without verified lift height.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "block_highbay_amr_02",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_037_wrong_fit_attractive",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ]
+      },
+      "notes": "High-bay putaway must hard-block platform AMR.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "block_highbay_forklift_02",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_037_wrong_fit_attractive",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "qualify",
+          "do_not_surface"
+        ]
+      },
+      "notes": "High-bay may block low-lift forklift without verified lift height.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "block_highbay_amr_03",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_038_wrong_fit_attractive",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ]
+      },
+      "notes": "High-bay putaway must hard-block platform AMR.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "block_highbay_forklift_03",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_038_wrong_fit_attractive",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "qualify",
+          "do_not_surface"
+        ]
+      },
+      "notes": "High-bay may block low-lift forklift without verified lift height.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "block_highbay_amr_04",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_039_wrong_fit_attractive",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ]
+      },
+      "notes": "High-bay putaway must hard-block platform AMR.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "block_highbay_forklift_04",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_039_wrong_fit_attractive",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "qualify",
+          "do_not_surface"
+        ]
+      },
+      "notes": "High-bay may block low-lift forklift without verified lift height.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "block_highbay_amr_05",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_040_wrong_fit_attractive",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "do_not_surface"
+        ]
+      },
+      "notes": "High-bay putaway must hard-block platform AMR.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "block_highbay_forklift_05",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_040_wrong_fit_attractive",
+      "facility_key": null,
+      "expect": {
+        "hard_blocker": true,
+        "call_priority_in": [
+          "wrong_robot",
+          "qualify",
+          "do_not_surface"
+        ]
+      },
+      "notes": "High-bay may block low-lift forklift without verified lift height.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_mir600_01",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_041_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_otto_lifter_01",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_041_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_unitree_g1_01",
+      "robot_id": "robot:unitree_g1",
+      "posting_id": "job:synth_041_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_mir600_02",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_042_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_otto_lifter_02",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_042_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_unitree_g1_02",
+      "robot_id": "robot:unitree_g1",
+      "posting_id": "job:synth_042_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_mir600_03",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_043_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_otto_lifter_03",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_043_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_unitree_g1_03",
+      "robot_id": "robot:unitree_g1",
+      "posting_id": "job:synth_043_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_mir600_04",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_044_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_otto_lifter_04",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_044_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_unitree_g1_04",
+      "robot_id": "robot:unitree_g1",
+      "posting_id": "job:synth_044_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_mir600_05",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_045_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_otto_lifter_05",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_045_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "lowinfo_unitree_g1_05",
+      "robot_id": "robot:unitree_g1",
+      "posting_id": "job:synth_045_low_information",
+      "facility_key": null,
+      "expect": {
+        "work_match_label_in": [
+          "insufficient_information"
+        ],
+        "call_priority_in": [
+          "qualify",
+          "nurture",
+          "do_not_surface"
+        ],
+        "hard_blocker": false
+      },
+      "notes": "Low-information posting must not invent labor facts.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_mir600_01",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_046_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_otto_1500_01",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_046_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_mir1200_pallet_jack_01",
+      "robot_id": "robot:mir1200_pallet_jack",
+      "posting_id": "job:synth_046_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_otto_lifter_01",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_046_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_seegrid_lift_rs1_01",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_046_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_agility_digit_01",
+      "robot_id": "robot:agility_digit",
+      "posting_id": "job:synth_046_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_unitree_g1_01",
+      "robot_id": "robot:unitree_g1",
+      "posting_id": "job:synth_046_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_fetch_freight100_01",
+      "robot_id": "robot:fetch_freight100",
+      "posting_id": "job:synth_046_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_vecna_tugger_01",
+      "robot_id": "robot:vecna_tugger",
+      "posting_id": "job:synth_046_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_bd_stretch_01",
+      "robot_id": "robot:bd_stretch",
+      "posting_id": "job:synth_046_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_mir600_02",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_047_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_otto_1500_02",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_047_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_mir1200_pallet_jack_02",
+      "robot_id": "robot:mir1200_pallet_jack",
+      "posting_id": "job:synth_047_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_otto_lifter_02",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_047_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_seegrid_lift_rs1_02",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_047_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_agility_digit_02",
+      "robot_id": "robot:agility_digit",
+      "posting_id": "job:synth_047_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_unitree_g1_02",
+      "robot_id": "robot:unitree_g1",
+      "posting_id": "job:synth_047_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_fetch_freight100_02",
+      "robot_id": "robot:fetch_freight100",
+      "posting_id": "job:synth_047_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_vecna_tugger_02",
+      "robot_id": "robot:vecna_tugger",
+      "posting_id": "job:synth_047_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_bd_stretch_02",
+      "robot_id": "robot:bd_stretch",
+      "posting_id": "job:synth_047_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_mir600_03",
+      "robot_id": "robot:mir600",
+      "posting_id": "job:synth_048_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_otto_1500_03",
+      "robot_id": "robot:otto_1500",
+      "posting_id": "job:synth_048_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_mir1200_pallet_jack_03",
+      "robot_id": "robot:mir1200_pallet_jack",
+      "posting_id": "job:synth_048_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_otto_lifter_03",
+      "robot_id": "robot:otto_lifter",
+      "posting_id": "job:synth_048_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_seegrid_lift_rs1_03",
+      "robot_id": "robot:seegrid_lift_rs1",
+      "posting_id": "job:synth_048_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_agility_digit_03",
+      "robot_id": "robot:agility_digit",
+      "posting_id": "job:synth_048_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_unitree_g1_03",
+      "robot_id": "robot:unitree_g1",
+      "posting_id": "job:synth_048_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    },
+    {
+      "case_id": "neg_fetch_freight100_03",
+      "robot_id": "robot:fetch_freight100",
+      "posting_id": "job:synth_048_negative_control",
+      "facility_key": null,
+      "expect": {
+        "call_priority_in": [
+          "do_not_surface",
+          "wrong_robot"
+        ],
+        "hard_blocker": true
+      },
+      "notes": "CNC/precision work is negative control for material robots.",
+      "reviewed_at": null,
+      "rationale_reviewer": null,
+      "label_status": "draft"
+    }
+  ]
+}

@@ -1,0 +1,189 @@
+{
+  "eval_id": "understanding_blind_20_v1",
+  "frozen": true,
+  "scope": "phases_1_3_profile_only",
+  "mix": {
+    "amr": 4,
+    "humanoid_mobile_manipulator": 4,
+    "cleaning": 3,
+    "cobot_industrial_arm": 3,
+    "inspection": 2,
+    "service": 2,
+    "unusual_ambiguous": 2
+  },
+  "excluded_smoke_oems": [
+    "Agility Robotics / Digit",
+    "Dexmate / Vega",
+    "Locus Robotics / Origin",
+    "Avidbots / Neo"
+  ],
+  "excluded_blind5": [
+    "Mobile Industrial Robots / MiR250",
+    "Figure AI / Figure 03",
+    "Universal Robots / UR10e",
+    "Boston Dynamics / Spot",
+    "Diligent Robotics / Moxi"
+  ],
+  "cohort": [
+    {
+      "id": "b20-01",
+      "physics": "amr",
+      "company": "OTTO Motors",
+      "product": "OTTO 1500",
+      "url": "https://ottomotors.com/1500/",
+      "notes": "Heavy-duty AMR \u2014 Rockwell OTTO; not Locus/MiR"
+    },
+    {
+      "id": "b20-02",
+      "physics": "amr",
+      "company": "Geek+",
+      "product": "P800",
+      "url": "https://www.geekplus.com/en",
+      "notes": "Shelf-to-person AMR (P800/P800R); Chinese OEM diversity"
+    },
+    {
+      "id": "b20-03",
+      "physics": "amr",
+      "company": "Seegrid",
+      "product": "Lift RS1",
+      "url": "https://seegrid.com/autonomous-mobile-robots/lift-rs1-amr/",
+      "notes": "Autonomous lift AMR; Palion brand retired on current site"
+    },
+    {
+      "id": "b20-04",
+      "physics": "amr",
+      "company": "GreyOrange",
+      "product": "Ranger GTP",
+      "url": "https://www.greyorange.com/",
+      "notes": "Goods-to-person AMR; homepage seed (Ranger GTP)"
+    },
+    {
+      "id": "b20-05",
+      "physics": "humanoid_mobile_manipulator",
+      "company": "Apptronik",
+      "product": "Apollo",
+      "url": "https://apptronik.com/",
+      "notes": "General-purpose humanoid \u2014 not Figure/Agility"
+    },
+    {
+      "id": "b20-06",
+      "physics": "humanoid_mobile_manipulator",
+      "company": "Unitree",
+      "product": "H1",
+      "url": "https://www.unitree.com/h1",
+      "notes": "Bipedal humanoid with public specs page"
+    },
+    {
+      "id": "b20-07",
+      "physics": "humanoid_mobile_manipulator",
+      "company": "Sanctuary AI",
+      "product": "Phoenix",
+      "url": "https://www.sanctuary.ai/",
+      "notes": "Carbon-fiber humanoid; sparse marketing possible"
+    },
+    {
+      "id": "b20-08",
+      "physics": "humanoid_mobile_manipulator",
+      "company": "PAL Robotics",
+      "product": "TIAGo",
+      "url": "https://pal-robotics.com/robots/tiago/",
+      "notes": "Mobile manipulator research/service platform"
+    },
+    {
+      "id": "b20-09",
+      "physics": "cleaning",
+      "company": "SoftBank Robotics",
+      "product": "Whiz",
+      "url": "https://us.softbankrobotics.com/whiz",
+      "notes": "Autonomous vacuum \u2014 not Avidbots Neo"
+    },
+    {
+      "id": "b20-10",
+      "physics": "cleaning",
+      "company": "Tennant",
+      "product": "T7AMR",
+      "url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t7amr.robotic-floor-scrubber.2000056.html",
+      "notes": "Autonomous floor scrubber"
+    },
+    {
+      "id": "b20-11",
+      "physics": "cleaning",
+      "company": "LionsBot",
+      "product": "R3 Scrub Pro",
+      "url": "https://www.lionsbot.com/r3-scrub-pro-compact-robotic-floor-scrubber/",
+      "notes": "Commercial scrubber robot; APAC OEM"
+    },
+    {
+      "id": "b20-12",
+      "physics": "cobot_industrial_arm",
+      "company": "FANUC",
+      "product": "CRX-10iA",
+      "url": "https://www.fanucamerica.com/products/robot/crx-10ia",
+      "notes": "Collaborative arm \u2014 not UR10e"
+    },
+    {
+      "id": "b20-13",
+      "physics": "cobot_industrial_arm",
+      "company": "ABB",
+      "product": "GoFa CRB 15000",
+      "url": "https://search.abb.com/library/Download.aspx?DocumentID=3HAC077390-001&LanguageCode=en&DocumentPartId=&Action=Launch",
+      "notes": "GoFa family cobot; bind product name carefully [seed URL updated for fetchability: https://search.abb.com/library/Download.aspx?DocumentID=3HAC077390-001&LanguageCode=en&DocumentPartId=&Action=Launch]"
+    },
+    {
+      "id": "b20-14",
+      "physics": "cobot_industrial_arm",
+      "company": "Doosan Robotics",
+      "product": "A0509",
+      "url": "https://www.doosanrobotics.com/en/product-solutions/product/a-series/a0509/",
+      "notes": "Doosan A-SERIES cobot"
+    },
+    {
+      "id": "b20-15",
+      "physics": "inspection",
+      "company": "ANYbotics",
+      "product": "ANYmal",
+      "url": "https://www.anybotics.com/robotics/anymal/",
+      "notes": "Industrial inspection quadruped \u2014 not Spot"
+    },
+    {
+      "id": "b20-16",
+      "physics": "inspection",
+      "company": "Flyability",
+      "product": "Elios 3",
+      "url": "https://www.flyability.com/elios-3",
+      "notes": "Indoor inspection drone \u2014 unusual mobility vs wheeled"
+    },
+    {
+      "id": "b20-17",
+      "physics": "service",
+      "company": "Bear Robotics",
+      "product": "Servi Plus",
+      "url": "https://www.bearrobotics.ai/servi-plus",
+      "notes": "Restaurant delivery service robot (Servi Plus)"
+    },
+    {
+      "id": "b20-18",
+      "physics": "service",
+      "company": "SoftBank Robotics",
+      "product": "Pepper",
+      "url": "https://us.softbankrobotics.com/pepper",
+      "notes": "Social/service humanoid; same OEM as Whiz but different product"
+    },
+    {
+      "id": "b20-19",
+      "physics": "unusual_ambiguous",
+      "company": "Canvas",
+      "product": "Canvas",
+      "url": "https://www.jlg.com/en/canvas",
+      "notes": "Construction drywall finishing robot \u2014 ambiguous class; seed is JLG Canvas page (canvas.build TLS fails from fetch stack)"
+    },
+    {
+      "id": "b20-20",
+      "physics": "unusual_ambiguous",
+      "company": "Dusty Robotics",
+      "product": "FieldPrinter",
+      "url": "https://www.dustyrobotics.com/",
+      "notes": "Construction layout printer robot \u2014 unusual vs warehouse corpus"
+    }
+  ]
+}

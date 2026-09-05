@@ -1,0 +1,91 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+venv/
+.venv/
+.venv_new/
+env/
+.env/
+
+# Environment variables
+.env
+*.env
+.env.local
+frontend/nextjs/.env.local
+
+# Local scratch scripts
+test_db.py
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Logs
+*.log
+logs/
+
+# Node
+node_modules/
+node_modules.old*/
+.next/
+frontend/nextjs/.next/
+frontend/nextjs/node_modules/
+frontend/nextjs/node_modules.old*/
+
+# Next.js static export — macOS Finder "Duplicate" creates `name 2.ext` (never commit)
+frontend/nextjs/out/**/* 2.*
+frontend/nextjs/pages/* 2.*
+frontend/nextjs/pages/* 3.*
+frontend/nextjs/pages/* 4.*
+frontend/nextjs/pages/* 5.*
+
+# Next.js static export emits new hashed assets; tracked legacy files remain tracked.
+frontend/nextjs/out/_next/static/**/*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Runtime cache (newsletter edition, etc.)
+uploads/jobs_crm/
+data/
+!app/data/
+!app/data/industry_sector_ontology.json
+!app/data/vendor_robots_index.json
+!app/data/vendor_robots_commercial_seed.json
+
+# Coverage
+.coverage
+htmlcov/
+.pytest_cache/
+.vercel
+
+# Generated report artifacts (timestamped run outputs)
+reports/harness_snapshot_*.json
+reports/harness_*_latest.md
+reports/compiled_memory_latest.json
+reports/*_quarantine_*.csv
+reports/*_cleanup_*.csv
+reports/*_triage_*.csv
+reports/*_eval_*.csv
+reports/*_rescue_*.csv
+reports/*_junk_*.csv

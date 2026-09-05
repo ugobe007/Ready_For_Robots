@@ -1,0 +1,42 @@
+---
+description: Checked-in pstack defaults for Cloud agents (no home-dir model rule required)
+alwaysApply: true
+---
+
+# pstack — ReadyForRobots Cloud defaults
+
+Cloud agents often have no `~/.cursor/rules/pstack-models.mdc`. Use inherit-parent / auto unless the operator has a local setup-pstack rule. Real slugs belong only in a home rule after setup-pstack confirms them.
+
+# pstack model configuration. One line per role. inherit-parent / auto = parent chat model.
+feature, refactoring: inherit-parent
+bug-fix: inherit-parent
+perf-issue: inherit-parent
+hillclimb: inherit-parent
+judgment and prose: inherit-parent
+hardest tasks: inherit-parent
+how explorer: inherit-parent
+how explainer: inherit-parent
+how critics: inherit-parent
+why investigators: inherit-parent
+why synthesizer: inherit-parent
+reflect tooling: inherit-parent
+reflect judgment, divergent, synthesizer: inherit-parent
+arena runners: inherit-parent
+arena cross-judge pool: inherit-parent
+swarm workers: inherit-parent
+architect runners: inherit-parent
+interrogate reviewers: inherit-parent
+
+RFR role map when the home rule is missing:
+
+- How = ownership before FIND / matcher / CRM edits (`pstackSite.ts` how)
+- Act = implement Jobs path only (`pstackSite.ts` act)
+- Critic = `scripts/pstack_release.py` + verify-readyforrobots: FIND `/`, real OEM URL, abort silent, leftover CRM, signup wall, matcher
+- unslop = Jobs UI copy
+
+Jobs work uses How plus pstack_release.py plus verify-readyforrobots. After UI copy, unslop.
+
+Never Hermes. Never Vercel AI Gateway. pstack is the Jobs **release gate**, not a Fly model API, not a customer chat, not protocol chrome on FIND/CRM.
+
+FIND is `/`. Submit path is `POST /api/robot-job-search`. Matcher is `POST /api/robot-job-match`. See `docs/pstack_jobs.md` and `docs/hermes_retired.md`.
+**No Jobs product PR without pstack checks.**

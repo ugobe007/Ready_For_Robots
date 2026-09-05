@@ -1,0 +1,91 @@
+{
+  "company": "Burris Logistics",
+  "accepted": [
+    {
+      "worksite_id": "extract:new-orlando-distribution-center",
+      "name": "New Orlando Distribution Center",
+      "site_type": "food_distribution_center",
+      "city": "New Orlando",
+      "state": null,
+      "resolution": "prose_extract",
+      "confidence": 0.62,
+      "source": "company_website",
+      "not_hq": true,
+      "gate": {
+        "accepted": true,
+        "place_confidence": 0.9,
+        "company_association": 0.88,
+        "function_confidence": 0.85,
+        "function": "food_distribution_center",
+        "function_known": true,
+        "reject_reasons": [],
+        "scores_ok": {
+          "place": true,
+          "association": true,
+          "function_known": true
+        }
+      },
+      "accepted": true
+    }
+  ],
+  "rejected": [
+    {
+      "worksite_id": "company_website:orlando-fl",
+      "name": "Orlando Distribution Center",
+      "site_type": "food_distribution_center",
+      "city": "Orlando",
+      "state": "FL",
+      "resolution": "pipeline_city_state",
+      "confidence": 0.42,
+      "source": "company_website",
+      "not_hq": true,
+      "gate": {
+        "accepted": false,
+        "place_confidence": 0.9,
+        "company_association": 0.42,
+        "function_confidence": 0.85,
+        "function": "food_distribution_center",
+        "function_known": true,
+        "reject_reasons": [],
+        "scores_ok": {
+          "place": true,
+          "association": false,
+          "function_known": true
+        }
+      },
+      "accepted": false
+    },
+    {
+      "worksite_id": "company_website:milford-de",
+      "name": "Milford Distribution Center",
+      "site_type": "3pl_fulfillment_center",
+      "city": "Milford",
+      "state": "DE",
+      "resolution": "pipeline_city_state",
+      "confidence": 0.42,
+      "source": "company_website",
+      "not_hq": true,
+      "gate": {
+        "accepted": false,
+        "place_confidence": 0.9,
+        "company_association": 0.15,
+        "function_confidence": 0.85,
+        "function": "3pl_fulfillment_center",
+        "function_known": true,
+        "reject_reasons": [
+          "hq_language_for_location"
+        ],
+        "scores_ok": {
+          "place": true,
+          "association": false,
+          "function_known": true
+        }
+      },
+      "accepted": false
+    }
+  ],
+  "work_units": [],
+  "notes": [
+    "pages_fetched\u224829"
+  ]
+}

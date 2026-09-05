@@ -1,0 +1,1023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RobotReady — Dashboard</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:        #0a0f1a;
+    --surface:   #111827;
+    --surface2:  #1a2235;
+    --border:    #1f2d42;
+    --green:     #10b981;
+    --green-dim: #065f46;
+    --cyan:      #22d3ee;
+    --orange:    #f97316;
+    --red:       #ef4444;
+    --yellow:    #eab308;
+    --text:      #f1f5f9;
+    --muted:     #64748b;
+    --muted2:    #94a3b8;
+    --radius:    10px;
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  html { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; }
+  a { color: inherit; text-decoration: none; }
+  button { cursor: pointer; font-family: inherit; }
+  input, select { font-family: inherit; }
+
+  /* ── Layout ── */
+  .page-wrap { display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ── Top Nav ── */
+  .topnav {
+    display: flex; align-items: center; gap: 0;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    padding: 0 24px; height: 56px; position: sticky; top: 0; z-index: 100;
+  }
+  .topnav-brand { display: flex; align-items: center; gap: 10px; margin-right: 32px; }
+  .brand-logo {
+    width: 34px; height: 34px; background: #0d1f2d;
+    border: 1.5px solid var(--green); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 15px; color: var(--green); letter-spacing: -1px;
+  }
+  .brand-name { font-size: 13px; font-weight: 700; color: var(--text); }
+  .brand-sub  { font-size: 11px; color: var(--green); font-weight: 500; }
+  .topnav-links { display: flex; align-items: center; gap: 2px; flex: 1; }
+  .topnav-links a {
+    padding: 6px 12px; border-radius: 6px; font-size: 13px; color: var(--muted2);
+    transition: background .15s, color .15s;
+  }
+  .topnav-links a:hover { background: var(--surface2); color: var(--text); }
+  .topnav-links a.active { background: var(--surface2); color: var(--green); font-weight: 600; }
+  .topnav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+  .badge-free {
+    padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600;
+    border: 1px solid var(--green); color: var(--green); background: rgba(16,185,129,.08);
+  }
+  .topnav-time { font-size: 12px; color: var(--muted); }
+  .btn-signin {
+    padding: 5px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted2);
+    transition: border-color .15s, color .15s;
+  }
+  .btn-signin:hover { border-color: var(--green); color: var(--green); }
+
+  /* ── Body layout ── */
+  .body-layout { display: flex; flex: 1; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: 264px; min-width: 264px; background: var(--surface);
+    border-right: 1px solid var(--border); padding: 20px 16px;
+    display: flex; flex-direction: column; gap: 20px;
+  }
+  .sidebar-section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .08em;
+    color: var(--muted); text-transform: uppercase; margin-bottom: 8px;
+  }
+  .filter-group { display: flex; flex-direction: column; gap: 6px; }
+  .filter-label { font-size: 12px; color: var(--muted2); font-weight: 500; }
+  .filter-label span { color: var(--green); font-weight: 700; }
+  .filter-input {
+    width: 100%; padding: 8px 12px; border-radius: var(--radius);
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 13px; outline: none;
+    transition: border-color .15s;
+  }
+  .filter-input:focus { border-color: var(--green); }
+  .filter-input::placeholder { color: var(--muted); }
+  .filter-select {
+    width: 100%; padding: 8px 12px; border-radius: var(--radius);
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 13px; outline: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+  }
+  .tier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .tier-btn {
+    padding: 8px; border-radius: 8px; font-size: 12px; font-weight: 700;
+    border: 1px solid var(--border); background: var(--surface2);
+    color: var(--muted2); text-transform: uppercase; letter-spacing: .04em;
+    transition: all .15s;
+  }
+  .tier-btn:hover { border-color: var(--green); color: var(--green); }
+  .tier-btn.active { background: var(--green); border-color: var(--green); color: #000; }
+  .tier-btn.hot-active { background: var(--orange); border-color: var(--orange); color: #fff; }
+  .tier-btn.warm-active { background: var(--yellow); border-color: var(--yellow); color: #000; }
+  .tier-btn.cold-active { background: var(--cyan); border-color: var(--cyan); color: #000; }
+
+  /* Range slider */
+  .range-row { display: flex; justify-content: space-between; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  input[type=range] {
+    width: 100%; accent-color: var(--green); height: 4px;
+    background: var(--border); border-radius: 4px; outline: none;
+  }
+
+  /* Toggle */
+  .toggle-row { display: flex; align-items: center; gap: 10px; }
+  .toggle { position: relative; width: 36px; height: 20px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: var(--border);
+    border-radius: 20px; transition: .2s;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute; width: 14px; height: 14px;
+    left: 3px; top: 3px; background: var(--muted2); border-radius: 50%; transition: .2s;
+  }
+  .toggle input:checked + .toggle-slider { background: var(--green); }
+  .toggle input:checked + .toggle-slider::before { transform: translateX(16px); background: #fff; }
+  .toggle-label { font-size: 12px; color: var(--muted2); }
+
+  .sidebar-footer {
+    margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--muted); text-align: center; line-height: 1.5;
+  }
+  .sidebar-footer a { color: var(--green); }
+
+  /* ── Main content ── */
+  .main { flex: 1; overflow-x: hidden; padding: 24px; display: flex; flex-direction: column; gap: 24px; }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .stat-cell {
+    padding: 20px 24px; text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat-cell:last-child { border-right: none; }
+  .stat-num { font-size: 32px; font-weight: 800; letter-spacing: -1px; color: var(--text); }
+  .stat-num.orange { color: var(--orange); }
+  .stat-num.cyan   { color: var(--cyan); }
+  .stat-num.green  { color: var(--green); }
+  .stat-label { font-size: 11px; font-weight: 600; letter-spacing: .08em; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+
+  /* ── Ticker bar ── */
+  .ticker-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 16px;
+    display: flex; align-items: center; gap: 12px; overflow: hidden;
+  }
+  .ticker-label { font-size: 11px; font-weight: 700; color: var(--green); white-space: nowrap; }
+  .ticker-items { display: flex; gap: 8px; overflow: hidden; flex: 1; }
+  .ticker-chip {
+    display: flex; align-items: center; gap: 6px; white-space: nowrap;
+    font-size: 12px; color: var(--muted2);
+  }
+  .ticker-chip strong { color: var(--text); }
+  .ticker-chip .sig-tag {
+    font-size: 10px; padding: 2px 7px; border-radius: 4px;
+    background: rgba(16,185,129,.12); color: var(--green); font-weight: 600;
+  }
+  .ticker-sep { color: var(--border); }
+
+  /* ── Pipeline builder card ── */
+  .pipeline-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px 28px;
+  }
+  .pipeline-card h2 { font-size: 20px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .pipeline-card p  { font-size: 13px; color: var(--muted2); margin-bottom: 16px; }
+  .pipeline-input-row { display: flex; gap: 10px; }
+  .pipeline-input-row input {
+    flex: 1; padding: 10px 16px; border-radius: 8px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 13px; outline: none;
+    transition: border-color .15s;
+  }
+  .pipeline-input-row input:focus { border-color: var(--green); }
+  .pipeline-input-row input::placeholder { color: var(--muted); }
+  .btn-primary {
+    padding: 10px 22px; border-radius: 8px; font-size: 13px; font-weight: 700;
+    background: var(--green); border: none; color: #000;
+    transition: opacity .15s;
+  }
+  .btn-primary:hover { opacity: .85; }
+  .pipeline-meta { margin-top: 10px; font-size: 11px; color: var(--muted); }
+
+  /* ── Section header ── */
+  .section-hdr {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .section-hdr-left { display: flex; align-items: center; gap: 10px; }
+  .section-title { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--muted2); }
+  .hot-badge {
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px;
+    background: rgba(249,115,22,.15); color: var(--orange); border: 1px solid rgba(249,115,22,.3);
+  }
+  .section-hdr-right { font-size: 12px; color: var(--muted); }
+  .section-hdr-right a { color: var(--green); font-weight: 600; }
+
+  /* ── Lead card ── */
+  .lead-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 20px; margin-bottom: 10px;
+    transition: border-color .15s;
+  }
+  .lead-card:hover { border-color: var(--green); }
+  .lead-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+  .lead-rank { font-size: 12px; color: var(--muted); font-weight: 700; margin-right: 10px; }
+  .lead-name-block { flex: 1; }
+  .lead-name { font-size: 16px; font-weight: 800; color: var(--text); }
+  .lead-name a:hover { color: var(--green); }
+  .lead-meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .lead-badges { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .badge-hot  { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; background: rgba(249,115,22,.15); color: var(--orange); border: 1px solid rgba(249,115,22,.3); }
+  .badge-warm { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; background: rgba(234,179,8,.12); color: var(--yellow); border: 1px solid rgba(234,179,8,.3); }
+  .badge-sig  { font-size: 11px; padding: 3px 10px; border-radius: 4px; background: rgba(16,185,129,.08); color: var(--green); border: 1px solid rgba(16,185,129,.2); }
+  .score-pill {
+    display: flex; flex-direction: column; align-items: center;
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 8px; padding: 6px 14px; min-width: 56px;
+  }
+  .score-num { font-size: 20px; font-weight: 900; color: var(--green); line-height: 1; }
+  .score-lbl { font-size: 9px; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+  .btn-analyze {
+    padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700;
+    border: 1px solid var(--green); color: var(--green); background: transparent;
+    transition: background .15s, color .15s; white-space: nowrap;
+  }
+  .btn-analyze:hover { background: var(--green); color: #000; }
+
+  /* Score bars */
+  .score-bars { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px; }
+  .bar-item { display: flex; flex-direction: column; gap: 4px; }
+  .bar-label { font-size: 10px; font-weight: 700; letter-spacing: .05em; color: var(--muted); text-transform: uppercase; }
+  .bar-track { height: 4px; background: var(--border); border-radius: 4px; overflow: hidden; }
+  .bar-fill  { height: 100%; background: var(--green); border-radius: 4px; }
+  .bar-val   { font-size: 11px; font-weight: 700; color: var(--text); }
+
+  .lead-desc { font-size: 12px; color: var(--muted2); line-height: 1.5; }
+
+  /* ── Strategic Snapshot table ── */
+  .snapshot-table { width: 100%; border-collapse: collapse; }
+  .snapshot-table th {
+    font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--muted); padding: 10px 14px; border-bottom: 1px solid var(--border);
+    text-align: left;
+  }
+  .snapshot-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .snapshot-table tr:last-child td { border-bottom: none; }
+  .snapshot-table tr:hover td { background: rgba(255,255,255,.02); }
+  .tbl-rank { font-size: 12px; color: var(--muted); font-weight: 700; }
+  .tbl-company { font-size: 14px; font-weight: 700; color: var(--green); }
+  .tbl-industry { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .tbl-signal { font-size: 11px; color: var(--muted2); margin-top: 2px; }
+  .signal-tag {
+    display: inline-block; font-size: 11px; font-weight: 600; padding: 3px 9px;
+    border-radius: 4px; border: 1px solid; white-space: nowrap;
+  }
+  .signal-tag.labor  { color: var(--orange); border-color: rgba(249,115,22,.4); background: rgba(249,115,22,.08); }
+  .signal-tag.capex  { color: var(--cyan);   border-color: rgba(34,211,238,.4);  background: rgba(34,211,238,.08); }
+  .signal-tag.fund   { color: var(--green);  border-color: rgba(16,185,129,.4);  background: rgba(16,185,129,.08); }
+  .readiness-tag { font-size: 12px; font-weight: 700; color: var(--orange); }
+  .tbl-score {
+    font-size: 18px; font-weight: 900; color: var(--green);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 6px; padding: 4px 10px; display: inline-block;
+  }
+
+  /* ── ML Agent bar ── */
+  .ml-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .ml-bar-left { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted2); }
+  .ml-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 4px; background: rgba(16,185,129,.12); color: var(--green); }
+  .ml-bar-right { font-size: 11px; color: var(--muted); }
+
+  /* ── Unlock banner ── */
+  .unlock-banner {
+    background: linear-gradient(135deg, rgba(16,185,129,.12) 0%, rgba(34,211,238,.06) 100%);
+    border: 1px solid rgba(16,185,129,.25); border-radius: var(--radius);
+    padding: 32px; text-align: center;
+  }
+  .unlock-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px;
+    background: rgba(16,185,129,.15); color: var(--green); border: 1px solid rgba(16,185,129,.3);
+    margin-bottom: 16px;
+  }
+  .unlock-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); }
+  .unlock-banner h2 { font-size: 28px; font-weight: 900; color: var(--text); margin-bottom: 8px; }
+  .unlock-banner p  { font-size: 14px; color: var(--muted2); margin-bottom: 20px; }
+  .btn-unlock {
+    padding: 12px 28px; border-radius: 8px; font-size: 14px; font-weight: 700;
+    background: var(--green); border: none; color: #000; transition: opacity .15s;
+  }
+  .btn-unlock:hover { opacity: .85; }
+
+  /* ── Screen separator ── */
+  .screen-sep {
+    margin: 48px 0; border: none; border-top: 2px dashed var(--border);
+    position: relative;
+  }
+  .screen-sep::after {
+    content: attr(data-label);
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--bg); padding: 0 16px; font-size: 11px; color: var(--muted);
+    font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  }
+
+  /* ── Scrollable page wrapper ── */
+  .screen { background: var(--bg); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 1 — Dashboard Overview (top section)
+     ═══════════════════════════════════════════════════════════ -->
+<div class="screen" id="screen1">
+  <!-- Top Nav -->
+  <nav class="topnav">
+    <div class="topnav-brand">
+      <div class="brand-logo">R→</div>
+      <div>
+        <div class="brand-name">RobotReady</div>
+        <div class="brand-sub">Signal Intelligence</div>
+      </div>
+    </div>
+    <div class="topnav-links">
+      <a href="#" class="active">Home</a>
+      <a href="#">Refresh</a>
+      <a href="#">Search</a>
+      <a href="#">Market</a>
+      <a href="#">Signals</a>
+      <a href="#">Newsletter</a>
+      <a href="#">Studio</a>
+      <a href="#">ROI</a>
+      <a href="#">Pilot</a>
+      <a href="#">Robot Ready</a>
+      <a href="#">Brief</a>
+      <a href="#">Admin</a>
+      <a href="#">Profile</a>
+    </div>
+    <div class="topnav-right">
+      <span class="badge-free">5 free searches left</span>
+      <span class="topnav-time">5:54:16 PM</span>
+      <button class="btn-signin">Sign in to save ▾</button>
+    </div>
+  </nav>
+
+  <div class="body-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-section-label">Filters</div>
+        <div class="filter-group">
+          <div class="filter-label">Search Companies</div>
+          <input class="filter-input" type="text" placeholder="company name…" />
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Min Score <span>0</span></div>
+        <input type="range" min="0" max="100" value="0" />
+        <div class="range-row"><span>0</span><span>50</span><span>100</span></div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Priority Tier</div>
+        <div class="tier-grid">
+          <button class="tier-btn active">All</button>
+          <button class="tier-btn">Hot</button>
+          <button class="tier-btn">Warm</button>
+          <button class="tier-btn">Cold</button>
+        </div>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Industry</div>
+        <select class="filter-select">
+          <option>All</option>
+          <option>Logistics</option>
+          <option>Healthcare</option>
+          <option>Hospitality</option>
+          <option>Food Service</option>
+          <option>Retail</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Signal Type</div>
+        <select class="filter-select">
+          <option>All Signals</option>
+          <option>Labor Gap</option>
+          <option>CapEx</option>
+          <option>Funding</option>
+          <option>Expansion</option>
+        </select>
+      </div>
+
+      <div class="filter-group">
+        <div class="filter-label">Sort By</div>
+        <select class="filter-select">
+          <option>Score (High → Low)</option>
+          <option>Score (Low → High)</option>
+          <option>Most Recent Signal</option>
+          <option>Company Name</option>
+        </select>
+      </div>
+
+      <div class="toggle-row">
+        <label class="toggle">
+          <input type="checkbox" checked />
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Hide junk leads</span>
+      </div>
+
+      <div class="sidebar-footer">
+        <a href="#">+ quick scrape</a> — paste URLs to add as lead sources
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <!-- Stats bar -->
+      <div class="stats-bar">
+        <div class="stat-cell">
+          <div class="stat-num">495</div>
+          <div class="stat-label">Active Leads</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num orange">229</div>
+          <div class="stat-label">Hot</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num cyan">6,118</div>
+          <div class="stat-label">Signals</div>
+        </div>
+        <div class="stat-cell">
+          <div class="stat-num green">2</div>
+          <div class="stat-label">Warm</div>
+        </div>
+      </div>
+
+      <!-- Ticker -->
+      <div class="ticker-bar">
+        <span class="ticker-label">● Live Signals</span>
+        <div class="ticker-items">
+          <span class="ticker-chip"><strong>DoorDash &amp; Waymo</strong> <span class="sig-tag">Funding</span></span>
+          <span class="ticker-sep">→</span>
+          <span class="ticker-chip"><strong>DoorDash &amp; Waymo</strong> <span class="sig-tag">Labor Gap</span></span>
+          <span class="ticker-sep">→</span>
+          <span class="ticker-chip"><strong>Omnicell</strong> <span class="sig-tag">Labor Gap</span></span>
+          <span class="ticker-sep">→</span>
+          <span class="ticker-chip"><strong>Omnicell</strong> <span class="sig-tag">Expand</span></span>
+          <span class="ticker-sep">→</span>
+          <span class="ticker-chip"><strong>Scientific</strong> <span class="sig-tag">CapEx</span></span>
+          <span class="ticker-sep">→</span>
+          <span class="ticker-chip"><strong>Scientific</strong> <span class="sig-tag">Labor Gap</span></span>
+        </div>
+      </div>
+
+      <!-- Pipeline builder -->
+      <div class="pipeline-card">
+        <h2>Find your next customers</h2>
+        <p>Paste your site URL — see matched prospects with signals in seconds.</p>
+        <div class="pipeline-input-row">
+          <input type="text" placeholder="https://your-robotics-company.com" />
+          <button class="btn-primary">View Pipeline →</button>
+        </div>
+        <div class="pipeline-meta">No signup required · Results open on the next page</div>
+      </div>
+
+      <!-- Strategic Snapshot -->
+      <div>
+        <div class="section-hdr">
+          <div class="section-hdr-left">
+            <span style="color:var(--yellow)">⚡</span>
+            <span class="section-title">Strategic Snapshot</span>
+          </div>
+          <span class="section-hdr-right">Showing top 10 deals</span>
+        </div>
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
+          <table class="snapshot-table">
+            <thead>
+              <tr>
+                <th style="width:36px">#</th>
+                <th>Company</th>
+                <th>Signal</th>
+                <th>Readiness</th>
+                <th>Deal Size</th>
+                <th>Score</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="tbl-rank">1</td>
+                <td>
+                  <div class="tbl-company">DoorDash and Waymo</div>
+                  <div class="tbl-industry">Logistics</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td><span class="signal-tag fund">Funding</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td style="color:var(--muted)">—</td>
+                <td><span class="tbl-score">100</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+              <tr>
+                <td class="tbl-rank">2</td>
+                <td>
+                  <div class="tbl-company">Omnicell</div>
+                  <div class="tbl-industry">New</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td><span class="signal-tag labor">Labor Gap</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td style="color:var(--muted)">—</td>
+                <td><span class="tbl-score">98</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+              <tr>
+                <td class="tbl-rank">3</td>
+                <td>
+                  <div class="tbl-company">Scientific</div>
+                  <div class="tbl-industry">Healthcare</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td><span class="signal-tag capex">CapEx</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td style="color:var(--muted)">—</td>
+                <td><span class="tbl-score">98</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+              <tr>
+                <td class="tbl-rank">4</td>
+                <td>
+                  <div class="tbl-company">SpaceX Vets</div>
+                  <div class="tbl-industry">Datacenters</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td><span class="signal-tag labor">Labor Gap</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td style="color:var(--muted)">—</td>
+                <td><span class="tbl-score">96</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+              <tr>
+                <td class="tbl-rank">5</td>
+                <td>
+                  <div class="tbl-company">Capital</div>
+                  <div class="tbl-industry">Food Service</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td><span class="signal-tag capex">CapEx</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td style="color:var(--muted)">—</td>
+                <td><span class="tbl-score">96</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+              <tr>
+                <td class="tbl-rank">6</td>
+                <td>
+                  <div class="tbl-company">Marriott</div>
+                  <div class="tbl-industry">Hospitality</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td><span class="signal-tag labor">Labor Gap</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td style="color:var(--muted)">—</td>
+                <td><span class="tbl-score">96</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+              <tr>
+                <td class="tbl-rank">7</td>
+                <td>
+                  <div class="tbl-company">Experts</div>
+                  <div class="tbl-industry">New</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td><span class="signal-tag capex">CapEx</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td style="color:var(--muted)">—</td>
+                <td><span class="tbl-score">96</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 2 — Lead Cards by Industry (Logistics / Healthcare)
+     ═══════════════════════════════════════════════════════════ -->
+<hr class="screen-sep" data-label="Dashboard Screen 2 — Industry Lead Cards" />
+
+<div class="screen" id="screen2">
+  <nav class="topnav">
+    <div class="topnav-brand">
+      <div class="brand-logo">R→</div>
+      <div>
+        <div class="brand-name">RobotReady</div>
+        <div class="brand-sub">Signal Intelligence</div>
+      </div>
+    </div>
+    <div class="topnav-links">
+      <a href="#" class="active">Home</a>
+      <a href="#">Refresh</a>
+      <a href="#">Search</a>
+      <a href="#">Market</a>
+      <a href="#">Signals</a>
+      <a href="#">Newsletter</a>
+      <a href="#">Studio</a>
+      <a href="#">ROI</a>
+      <a href="#">Pilot</a>
+      <a href="#">Robot Ready</a>
+      <a href="#">Brief</a>
+      <a href="#">Admin</a>
+      <a href="#">Profile</a>
+    </div>
+    <div class="topnav-right">
+      <span class="badge-free">5 free searches left</span>
+      <span class="topnav-time">5:54:16 PM</span>
+      <button class="btn-signin">Sign in to save ▾</button>
+    </div>
+  </nav>
+
+  <div class="body-layout">
+    <!-- Sidebar (same) -->
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-section-label">Filters</div>
+        <div class="filter-group">
+          <div class="filter-label">Search Companies</div>
+          <input class="filter-input" type="text" placeholder="company name…" />
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Min Score <span>0</span></div>
+        <input type="range" min="0" max="100" value="0" />
+        <div class="range-row"><span>0</span><span>50</span><span>100</span></div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Priority Tier</div>
+        <div class="tier-grid">
+          <button class="tier-btn active">All</button>
+          <button class="tier-btn">Hot</button>
+          <button class="tier-btn">Warm</button>
+          <button class="tier-btn">Cold</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Industry</div>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Signal Type</div>
+        <select class="filter-select"><option>All Signals</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Sort By</div>
+        <select class="filter-select"><option>Score (High → Low)</option></select>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+        <span class="toggle-label">Hide junk leads</span>
+      </div>
+      <div class="sidebar-footer"><a href="#">+ quick scrape</a> — paste URLs to add as lead sources</div>
+    </aside>
+
+    <main class="main">
+
+      <!-- ML Agent bar -->
+      <div class="ml-bar">
+        <div class="ml-bar-left">
+          <span class="ml-tag">▲ ML Agent</span>
+          <span>— lead source rankings, signal patterns &amp; approach strategies</span>
+        </div>
+        <div class="ml-bar-right">⚙ settings</div>
+      </div>
+
+      <!-- LOGISTICS section -->
+      <div>
+        <div class="section-hdr">
+          <div class="section-hdr-left">
+            <span class="section-title">Logistics</span>
+            <span class="hot-badge">1 HOT</span>
+          </div>
+          <div class="section-hdr-right"><a href="#">1 Lead →</a></div>
+        </div>
+
+        <div class="lead-card">
+          <div class="lead-card-top">
+            <span class="lead-rank">#1</span>
+            <div class="lead-name-block">
+              <div class="lead-name"><a href="#">DoorDash and Waymo</a></div>
+              <div class="lead-meta">Logistics · Signal detected</div>
+            </div>
+            <div class="lead-badges" style="margin: 0 16px;">
+              <span class="badge-hot">HOT</span>
+              <span class="badge-sig">26 signals</span>
+              <a href="#" style="font-size:12px; color:var(--green);">→ View Analysis</a>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="score-pill">
+                <span class="score-num">100</span>
+                <span class="score-lbl">Score</span>
+              </div>
+              <button class="btn-analyze">Click here →</button>
+            </div>
+          </div>
+          <div class="score-bars">
+            <div class="bar-item">
+              <div class="bar-label">Automation</div>
+              <div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>
+              <div class="bar-val">100</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">Labor Pain</div>
+              <div class="bar-track"><div class="bar-fill" style="width:99%"></div></div>
+              <div class="bar-val">99</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">Expansion</div>
+              <div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>
+              <div class="bar-val">100</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">Market Fit</div>
+              <div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>
+              <div class="bar-val">100</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">Overall</div>
+              <div class="bar-track"><div class="bar-fill" style="width:100%"></div></div>
+              <div class="bar-val">100</div>
+            </div>
+          </div>
+          <div class="lead-desc">high-fit industry (Logistics) · 10 hot-type signals (funding_round, labor_shortage, capex, strategic_hire, expansion, …) · 26 signals</div>
+        </div>
+      </div>
+
+      <!-- HEALTHCARE section -->
+      <div>
+        <div class="section-hdr">
+          <div class="section-hdr-left">
+            <span class="section-title">Healthcare</span>
+            <span class="hot-badge">1 HOT</span>
+          </div>
+          <div class="section-hdr-right"><a href="#">1 Lead →</a></div>
+        </div>
+
+        <div class="lead-card">
+          <div class="lead-card-top">
+            <span class="lead-rank">#1</span>
+            <div class="lead-name-block">
+              <div class="lead-name"><a href="#">Scientific</a></div>
+              <div class="lead-meta">Healthcare · Signal detected</div>
+            </div>
+            <div class="lead-badges" style="margin: 0 16px;">
+              <span class="badge-hot">HOT</span>
+              <span class="badge-sig">6 signals</span>
+              <a href="#" style="font-size:12px; color:var(--green);">→ View Analysis</a>
+            </div>
+            <div style="display:flex; align-items:center; gap:10px;">
+              <div class="score-pill">
+                <span class="score-num">98</span>
+                <span class="score-lbl">Score</span>
+              </div>
+              <button class="btn-analyze">Click here →</button>
+            </div>
+          </div>
+          <div class="score-bars">
+            <div class="bar-item">
+              <div class="bar-label">Automation</div>
+              <div class="bar-track"><div class="bar-fill" style="width:97%"></div></div>
+              <div class="bar-val">97</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">Labor Pain</div>
+              <div class="bar-track"><div class="bar-fill" style="width:99%"></div></div>
+              <div class="bar-val">99</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">Expansion</div>
+              <div class="bar-track"><div class="bar-fill" style="width:97%"></div></div>
+              <div class="bar-val">97</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">Market Fit</div>
+              <div class="bar-track"><div class="bar-fill" style="width:98%"></div></div>
+              <div class="bar-val">98</div>
+            </div>
+            <div class="bar-item">
+              <div class="bar-label">Overall</div>
+              <div class="bar-track"><div class="bar-fill" style="width:98%"></div></div>
+              <div class="bar-val">98</div>
+            </div>
+          </div>
+          <div class="lead-desc">high-fit industry (Healthcare) · 5 hot-type signals (capex, labor_shortage, expansion, strategic_hire)</div>
+        </div>
+      </div>
+
+      <!-- Unlock banner -->
+      <div class="unlock-banner">
+        <div class="unlock-pill"><span class="unlock-dot"></span> FREE PREVIEW COMPLETE</div>
+        <h2>Unlock 195 More Hot Leads</h2>
+        <p>You've viewed 5 free leads. Create a free account to see all 200 companies.</p>
+        <button class="btn-unlock">Create Free Account →</button>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 3 — Dashboard with HOT/WARM filter active
+     ═══════════════════════════════════════════════════════════ -->
+<hr class="screen-sep" data-label="Dashboard Screen 3 — HOT Filter Active" />
+
+<div class="screen" id="screen3">
+  <nav class="topnav">
+    <div class="topnav-brand">
+      <div class="brand-logo">R→</div>
+      <div>
+        <div class="brand-name">RobotReady</div>
+        <div class="brand-sub">Signal Intelligence</div>
+      </div>
+    </div>
+    <div class="topnav-links">
+      <a href="#" class="active">Home</a>
+      <a href="#">Refresh</a>
+      <a href="#">Search</a>
+      <a href="#">Market</a>
+      <a href="#">Signals</a>
+      <a href="#">Newsletter</a>
+      <a href="#">Studio</a>
+      <a href="#">ROI</a>
+      <a href="#">Pilot</a>
+      <a href="#">Robot Ready</a>
+      <a href="#">Brief</a>
+      <a href="#">Admin</a>
+      <a href="#">Profile</a>
+    </div>
+    <div class="topnav-right">
+      <span class="badge-free">5 free searches left</span>
+      <span class="topnav-time">5:54:16 PM</span>
+      <button class="btn-signin">Sign in to save ▾</button>
+    </div>
+  </nav>
+
+  <div class="body-layout">
+    <aside class="sidebar">
+      <div>
+        <div class="sidebar-section-label">Filters</div>
+        <div class="filter-group">
+          <div class="filter-label">Search Companies</div>
+          <input class="filter-input" type="text" placeholder="company name…" />
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Min Score <span>0</span></div>
+        <input type="range" min="0" max="100" value="0" />
+        <div class="range-row"><span>0</span><span>50</span><span>100</span></div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Priority Tier</div>
+        <div class="tier-grid">
+          <button class="tier-btn">All</button>
+          <button class="tier-btn hot-active">Hot</button>
+          <button class="tier-btn">Warm</button>
+          <button class="tier-btn">Cold</button>
+        </div>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Industry</div>
+        <select class="filter-select"><option>All</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Signal Type</div>
+        <select class="filter-select"><option>All Signals</option></select>
+      </div>
+      <div class="filter-group">
+        <div class="filter-label">Sort By</div>
+        <select class="filter-select"><option>Score (High → Low)</option></select>
+      </div>
+      <div class="toggle-row">
+        <label class="toggle"><input type="checkbox" checked /><span class="toggle-slider"></span></label>
+        <span class="toggle-label">Hide junk leads</span>
+      </div>
+      <div class="sidebar-footer"><a href="#">+ quick scrape</a> — paste URLs to add as lead sources</div>
+    </aside>
+
+    <main class="main">
+      <!-- Active filter chips -->
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span style="font-size:12px; color:var(--muted);">Active filters:</span>
+        <span style="display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; background:rgba(249,115,22,.12); border:1px solid rgba(249,115,22,.3); font-size:12px; font-weight:700; color:var(--orange);">
+          HOT <span style="cursor:pointer; opacity:.6;">×</span>
+        </span>
+        <span style="font-size:12px; color:var(--muted2);">· 229 results</span>
+      </div>
+
+      <!-- HOT leads list -->
+      <div>
+        <div class="section-hdr">
+          <div class="section-hdr-left">
+            <span class="section-title">Hot Leads</span>
+            <span class="hot-badge">229 HOT</span>
+          </div>
+          <div class="section-hdr-right">Sorted by score</div>
+        </div>
+
+        <!-- Lead rows (compact table style) -->
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden;">
+          <table class="snapshot-table">
+            <thead>
+              <tr>
+                <th style="width:36px">#</th>
+                <th>Company</th>
+                <th>Industry</th>
+                <th>Signal</th>
+                <th>Readiness</th>
+                <th>Score</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="tbl-rank">7</td>
+                <td>
+                  <div class="tbl-company">SpaceX Vets</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td style="color:var(--muted2); font-size:12px;">Datacenters</td>
+                <td><span class="signal-tag labor">Labor Gap</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td><span class="tbl-score">96</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+              <tr>
+                <td class="tbl-rank">8</td>
+                <td>
+                  <div class="tbl-company">Capital</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td style="color:var(--muted2); font-size:12px;">Food Service</td>
+                <td><span class="signal-tag capex">CapEx</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td><span class="tbl-score">96</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+              <tr>
+                <td class="tbl-rank">9</td>
+                <td>
+                  <div class="tbl-company">Marriott</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td style="color:var(--muted2); font-size:12px;">Hospitality</td>
+                <td><span class="signal-tag labor">Labor Gap</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td><span class="tbl-score">96</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+              <tr>
+                <td class="tbl-rank">10</td>
+                <td>
+                  <div class="tbl-company">Experts</div>
+                  <div class="tbl-signal">Signal detected</div>
+                </td>
+                <td style="color:var(--muted2); font-size:12px;">New</td>
+                <td><span class="signal-tag capex">CapEx</span></td>
+                <td><span class="readiness-tag">Active Buyer</span></td>
+                <td><span class="tbl-score">96</span></td>
+                <td><button class="btn-analyze">Analyze →</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Pagination -->
+      <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0;">
+        <span style="font-size:12px; color:var(--muted);">Showing 7–10 of 229 hot leads</span>
+        <div style="display:flex; gap:6px;">
+          <button style="padding:6px 14px; border-radius:6px; border:1px solid var(--border); background:var(--surface2); color:var(--muted2); font-size:12px; cursor:pointer;">← Prev</button>
+          <button style="padding:6px 14px; border-radius:6px; border:1px solid var(--green); background:transparent; color:var(--green); font-size:12px; font-weight:700; cursor:pointer;">Next →</button>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+</body>
+</html>

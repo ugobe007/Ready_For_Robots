@@ -1,0 +1,1327 @@
+{
+  "version": 3,
+  "inference_anchors": [
+    "automation",
+    "automated",
+    "robot",
+    "robotics",
+    "autonomous",
+    "amr",
+    "agv",
+    "cobot",
+    "deployment",
+    "deploys",
+    "deployed",
+    "pilot",
+    "pilots"
+  ],
+  "sectors": [
+    {
+      "id": "manufacturing",
+      "label": "Manufacturing",
+      "canonical_industries": [
+        "Manufacturing",
+        "Automotive & Manufacturing",
+        "Contract Manufacturing",
+        "CPG & Consumer Goods",
+        "Food Processing & Manufacturing"
+      ],
+      "root_aliases": [
+        "manufacturing",
+        "manufacture",
+        "factory",
+        "plant",
+        "production",
+        "industrial automation"
+      ],
+      "sub_ontologies": {
+        "end_of_line_automation": {
+          "label": "End of Line Automation",
+          "terms": [
+            "end of line automation",
+            "end-of-line automation",
+            "eol automation",
+            "end of line",
+            "end-of-line",
+            "palletizer",
+            "depalletizer",
+            "case packing",
+            "case erector",
+            "case packer",
+            "shrink wrap",
+            "stretch wrap",
+            "wrapping automation"
+          ]
+        },
+        "packaging_automation": {
+          "label": "Packaging Automation",
+          "terms": [
+            "pack out",
+            "pack in",
+            "pack-out",
+            "pack-in",
+            "package handling",
+            "package automation",
+            "packaging automation",
+            "packaging line",
+            "packing line",
+            "carton erector",
+            "carton sealer",
+            "labeling automation",
+            "sortation"
+          ]
+        },
+        "production_automation": {
+          "label": "Production Automation",
+          "terms": [
+            "production automation",
+            "assembly automation",
+            "assembly line",
+            "manufacturing automation",
+            "factory automation",
+            "cobot",
+            "collaborative robot",
+            "pick and place",
+            "machine tending",
+            "quality inspection"
+          ]
+        },
+        "food_processing_automation": {
+          "label": "Food Processing Automation",
+          "subject": "food processing",
+          "modifiers": [
+            "plant",
+            "factory",
+            "packaging",
+            "sorting",
+            "prep",
+            "manufacturing"
+          ],
+          "terms": [
+            "food processing automation",
+            "food plant automation",
+            "food manufacturing robot",
+            "food factory automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "automotive",
+      "label": "Automotive",
+      "canonical_industries": [
+        "Automotive & Manufacturing",
+        "Automotive Dealerships",
+        "Logistics"
+      ],
+      "root_aliases": [
+        "automotive",
+        "automaker",
+        "auto plant",
+        "vehicle manufacturing",
+        "automotive automation"
+      ],
+      "sub_ontologies": {
+        "automotive_automation": {
+          "label": "Automotive Automation",
+          "subject": "automotive",
+          "modifiers": ["assembly", "production", "plant", "factory"],
+          "terms": [
+            "automotive automation",
+            "auto plant automation",
+            "vehicle assembly automation",
+            "automotive manufacturing robot"
+          ]
+        },
+        "parts_assembly": {
+          "label": "Parts Assembly",
+          "subject": "parts",
+          "modifiers": ["assembly", "subassembly", "line", "production"],
+          "terms": [
+            "parts assembly",
+            "parts assembly automation",
+            "component assembly",
+            "subassembly automation"
+          ]
+        },
+        "parts_logistics": {
+          "label": "Parts Logistics",
+          "subject": "parts",
+          "modifiers": [
+            "logistics",
+            "transport",
+            "delivery",
+            "warehouse",
+            "distribution"
+          ],
+          "terms": [
+            "parts logistics",
+            "parts logistics automation",
+            "spare parts logistics",
+            "automotive parts distribution"
+          ]
+        },
+        "parts_resupply": {
+          "label": "Parts Resupply Automation",
+          "subject": "parts",
+          "modifiers": ["resupply", "replenishment", "restock", "supply"],
+          "terms": [
+            "parts resupply automation",
+            "parts replenishment",
+            "line-side replenishment",
+            "kitting automation"
+          ]
+        },
+        "service_automation": {
+          "label": "Service Automation",
+          "subject": "service",
+          "modifiers": [
+            "repair",
+            "maintenance",
+            "dealership",
+            "aftermarket",
+            "bay"
+          ],
+          "terms": [
+            "service automation",
+            "service repair automation",
+            "automotive service robot",
+            "dealership service automation"
+          ]
+        },
+        "service_logistics": {
+          "label": "Service Logistics",
+          "subject": "service",
+          "modifiers": ["logistics", "parts delivery", "delivery", "transport"],
+          "terms": [
+            "service logistics",
+            "service logistics automation",
+            "service parts delivery",
+            "aftermarket logistics"
+          ]
+        },
+        "dealership_automation": {
+          "label": "Auto Dealership Automation",
+          "subject": "dealership",
+          "modifiers": [
+            "auto dealership",
+            "car dealer",
+            "showroom",
+            "service bay",
+            "sales floor"
+          ],
+          "terms": [
+            "auto dealership automation",
+            "dealership automation",
+            "car dealership robot",
+            "automotive retail automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "logistics",
+      "label": "Logistics",
+      "canonical_industries": ["Logistics", "Retail"],
+      "root_aliases": [
+        "logistics",
+        "supply chain",
+        "distribution",
+        "fulfillment",
+        "3pl",
+        "third party logistics"
+      ],
+      "sub_ontologies": {
+        "warehouse_logistics": {
+          "label": "Warehouse Logistics",
+          "terms": [
+            "warehouse logistics",
+            "warehouse automation",
+            "warehouse robot",
+            "wms automation",
+            "distribution center",
+            "fulfillment center",
+            "fulfillment centre",
+            "dc automation",
+            "cold storage automation"
+          ]
+        },
+        "intra_logistics": {
+          "label": "Intra Logistics",
+          "terms": [
+            "intra logistics",
+            "intra-logistics",
+            "in-plant logistics",
+            "internal logistics",
+            "intralogistics",
+            "material flow",
+            "material handling",
+            "goods to person",
+            "goods-to-person",
+            "gtp",
+            "amr fleet",
+            "agv fleet",
+            "mobile robot fleet"
+          ]
+        },
+        "micro_light_logistics": {
+          "label": "Micro & Light Logistics",
+          "terms": [
+            "micro logistics",
+            "light logistics",
+            "last mile logistics",
+            "last-mile logistics",
+            "on-demand logistics",
+            "urban logistics",
+            "curbside delivery",
+            "parcel locker",
+            "sort center"
+          ]
+        },
+        "package_handling": {
+          "label": "Package Handling",
+          "terms": [
+            "package handling",
+            "parcel handling",
+            "parcel sorting",
+            "sortation",
+            "conveyor automation",
+            "cross dock",
+            "cross-dock",
+            "tote handling",
+            "bin handling",
+            "pallet transport",
+            "pallet shuttle"
+          ]
+        }
+      }
+    },
+    {
+      "id": "grocery_retail",
+      "label": "Grocery & Retail Fulfillment",
+      "canonical_industries": ["Retail", "Logistics", "Food Service"],
+      "root_aliases": [
+        "grocery",
+        "supermarket",
+        "retail fulfillment",
+        "e-grocery",
+        "e grocery",
+        "grocery retail"
+      ],
+      "sub_ontologies": {
+        "grocery_logistics": {
+          "label": "Grocery Logistics",
+          "terms": [
+            "grocery logistics",
+            "grocery distribution",
+            "grocery warehouse",
+            "grocery supply chain",
+            "perishable logistics",
+            "fresh logistics",
+            "grocery dc"
+          ]
+        },
+        "grocery_fulfillment": {
+          "label": "Grocery Fulfillment Automation",
+          "terms": [
+            "grocery pick and pack",
+            "grocery fulfillment automation",
+            "grocery fulfillment",
+            "micro fulfillment",
+            "micro-fulfillment",
+            "dark store",
+            "automated grocery",
+            "click and collect",
+            "click-and-collect",
+            "curbside pickup automation"
+          ]
+        },
+        "food_picking": {
+          "label": "Food Picking",
+          "terms": [
+            "food picking",
+            "order picking",
+            "pick and pack",
+            "automated picking",
+            "e-grocery picking",
+            "grocery picking",
+            "item picking",
+            "piece picking",
+            "tote picking"
+          ]
+        }
+      }
+    },
+    {
+      "id": "food_service",
+      "label": "Food Service",
+      "canonical_industries": [
+        "Food Service",
+        "Food & Beverage",
+        "Hospitality"
+      ],
+      "root_aliases": [
+        "restaurant",
+        "restaurants",
+        "food service",
+        "foodservice",
+        "qsr",
+        "fast food",
+        "fast casual",
+        "dining",
+        "catering",
+        "cafeteria"
+      ],
+      "sub_ontologies": {
+        "kitchen_ops": {
+          "label": "Kitchen Operations",
+          "terms": [
+            "food prep",
+            "food preparation",
+            "kitchen automation",
+            "kitchen robot",
+            "commercial kitchen",
+            "back of house",
+            "ghost kitchen",
+            "dark kitchen",
+            "prep robot",
+            "cooking automation"
+          ]
+        },
+        "food_delivery": {
+          "label": "Food Delivery",
+          "terms": [
+            "food delivery",
+            "meal delivery",
+            "delivery robot",
+            "runner robot",
+            "table service",
+            "room service",
+            "food runner",
+            "last mile food"
+          ]
+        },
+        "food_robotics": {
+          "label": "Food Robotics",
+          "terms": [
+            "food robot",
+            "food robotics",
+            "serving robot",
+            "server robot",
+            "bear robotics",
+            "miso robotics",
+            "service robot restaurant"
+          ]
+        },
+        "quick_serve": {
+          "label": "Quick Serve Automation",
+          "subject": "quick serve",
+          "modifiers": [
+            "qsr",
+            "fast food",
+            "fast casual",
+            "drive-thru",
+            "drive thru",
+            "counter service"
+          ],
+          "terms": [
+            "quick serve automation",
+            "qsr automation",
+            "fast food automation",
+            "quick service restaurant automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "hospitality",
+      "label": "Hospitality",
+      "canonical_industries": [
+        "Hospitality",
+        "Casinos & Gaming",
+        "Cruise Lines"
+      ],
+      "root_aliases": [
+        "hospitality",
+        "hotel",
+        "hotels",
+        "resort",
+        "resorts",
+        "lodging",
+        "casino",
+        "casino resort"
+      ],
+      "sub_ontologies": {
+        "hospitality_automation": {
+          "label": "Hospitality Automation",
+          "terms": [
+            "hospitality automation",
+            "hotel automation",
+            "property operations automation",
+            "resort automation",
+            "guest experience automation"
+          ]
+        },
+        "front_desk": {
+          "label": "Front Desk Automation",
+          "terms": [
+            "front desk automation",
+            "check-in automation",
+            "concierge robot",
+            "reception robot",
+            "guest check-in robot",
+            "lobby automation"
+          ]
+        },
+        "room_service": {
+          "label": "Room Service Automation",
+          "terms": [
+            "room service automation",
+            "in-room dining robot",
+            "hotel delivery robot",
+            "room delivery robot",
+            "amenity delivery",
+            "guest room delivery"
+          ]
+        },
+        "housekeeping": {
+          "label": "Housekeeping Automation",
+          "terms": [
+            "house cleaning automation",
+            "housekeeping automation",
+            "housekeeping robot",
+            "evs automation",
+            "linen delivery",
+            "laundry automation",
+            "guest room cleaning"
+          ]
+        }
+      }
+    },
+    {
+      "id": "facilities",
+      "label": "Facilities & Building Services",
+      "canonical_industries": [
+        "Real Estate & Facilities",
+        "Hospitality",
+        "Healthcare"
+      ],
+      "root_aliases": [
+        "facilities",
+        "facility services",
+        "facilities management",
+        "property management",
+        "building services",
+        "commercial real estate"
+      ],
+      "sub_ontologies": {
+        "janitorial_cleaning": {
+          "label": "Janitorial & Commercial Cleaning",
+          "subject": "commercial cleaning",
+          "modifiers": [
+            "janitorial",
+            "custodial",
+            "floor care",
+            "night cleaning",
+            "contract cleaning"
+          ],
+          "terms": [
+            "janitorial automation",
+            "commercial cleaning automation",
+            "autonomous cleaning",
+            "floor scrubber",
+            "floor scrubbing robot",
+            "scrubber dryer",
+            "sweeping robot",
+            "cleaning robot",
+            "custodial automation"
+          ]
+        },
+        "commercial_laundry": {
+          "label": "Commercial Laundry Automation",
+          "subject": "laundry",
+          "modifiers": [
+            "commercial laundry",
+            "industrial laundry",
+            "linen",
+            "flatwork",
+            "uniform",
+            "hospitality laundry"
+          ],
+          "terms": [
+            "commercial laundry automation",
+            "industrial laundry automation",
+            "laundry automation",
+            "linen automation",
+            "wash floor automation"
+          ]
+        },
+        "building_maintenance": {
+          "label": "Building Maintenance Automation",
+          "terms": [
+            "building automation",
+            "building maintenance automation",
+            "facilities automation",
+            "hvac robotics",
+            "building operations",
+            "smart building robotics",
+            "maintenance robot"
+          ]
+        },
+        "landscape": {
+          "label": "Landscape Automation",
+          "terms": [
+            "landscape automation",
+            "grounds maintenance",
+            "mowing robot",
+            "outdoor maintenance",
+            "lawn mowing robot",
+            "landscaping robot",
+            "snow removal robot"
+          ]
+        }
+      }
+    },
+    {
+      "id": "healthcare",
+      "label": "Healthcare",
+      "canonical_industries": ["Healthcare", "Medical Technology"],
+      "root_aliases": [
+        "healthcare",
+        "healthcare automation",
+        "hospital",
+        "hospitals",
+        "health system",
+        "clinical",
+        "senior living",
+        "senior care"
+      ],
+      "sub_ontologies": {
+        "hospital_automation": {
+          "label": "Hospital Automation",
+          "subject": "hospital",
+          "modifiers": [
+            "operations",
+            "logistics",
+            "delivery",
+            "resupply",
+            "internal"
+          ],
+          "terms": [
+            "hospital automation",
+            "hospital resupply automation",
+            "hospital logistics automation",
+            "hospital internal delivery"
+          ]
+        },
+        "healthcare_automation": {
+          "label": "Healthcare Automation",
+          "subject": "healthcare",
+          "modifiers": ["delivery", "logistics", "operations", "system"],
+          "terms": [
+            "healthcare automation",
+            "health system automation",
+            "clinical automation"
+          ]
+        },
+        "senior_care": {
+          "label": "Senior Care Automation",
+          "subject": "senior care",
+          "modifiers": [
+            "living",
+            "assisted",
+            "nursing",
+            "memory care",
+            "resident"
+          ],
+          "terms": [
+            "senior care automation",
+            "senior living automation",
+            "assisted living robot",
+            "nursing home automation"
+          ]
+        },
+        "patient_automation": {
+          "label": "Patient Automation",
+          "subject": "patient",
+          "modifiers": [
+            "transport",
+            "mobility",
+            "care",
+            "delivery",
+            "room",
+            "rounding"
+          ],
+          "exclusions": ["patient capital", "patient investor", "patiently"],
+          "terms": [
+            "patient automation",
+            "patient transport robot",
+            "patient mobility automation",
+            "patient care robot"
+          ]
+        },
+        "outpatient_automation": {
+          "label": "Outpatient Automation",
+          "subject": "outpatient",
+          "modifiers": ["clinic", "ambulatory", "surgery center", "same day"],
+          "terms": [
+            "out patient automation",
+            "outpatient automation",
+            "ambulatory care automation",
+            "outpatient clinic robot"
+          ]
+        },
+        "lab_automation": {
+          "label": "Lab Automation",
+          "subject": "lab",
+          "modifiers": [
+            "delivery",
+            "specimen",
+            "clinical",
+            "pathology",
+            "diagnostics",
+            "sample"
+          ],
+          "exclusions": [
+            "collaborative",
+            "collaboration",
+            "scalable",
+            "availability"
+          ],
+          "terms": [
+            "lab automation",
+            "lab delivery automation",
+            "laboratory automation",
+            "clinical lab automation",
+            "specimen transport robot"
+          ]
+        },
+        "icu_automation": {
+          "label": "ICU Automation",
+          "subject": "icu",
+          "modifiers": [
+            "delivery",
+            "supply",
+            "medication",
+            "critical care",
+            "intensive care"
+          ],
+          "terms": [
+            "icu automation",
+            "intensive care automation",
+            "icu delivery robot",
+            "critical care logistics"
+          ]
+        },
+        "emergency_room": {
+          "label": "Emergency Room Automation",
+          "subject": "emergency room",
+          "modifiers": ["er", "ed", "trauma", "delivery", "supply"],
+          "terms": [
+            "emergency room automation",
+            "er automation",
+            "ed logistics robot",
+            "emergency department automation"
+          ]
+        },
+        "surgery_automation": {
+          "label": "Surgery Automation",
+          "subject": "surgery",
+          "modifiers": ["robot", "suite", "or", "operating room", "surgical"],
+          "terms": [
+            "surgery automation",
+            "surgical automation",
+            "operating room automation",
+            "surgery center automation",
+            "robotic surgery"
+          ]
+        },
+        "surgery_center": {
+          "label": "Surgery Center Automation",
+          "subject": "surgery center",
+          "modifiers": ["asc", "ambulatory surgery", "same-day", "supply"],
+          "terms": [
+            "surgery center automation",
+            "ambulatory surgery center automation",
+            "asc automation"
+          ]
+        },
+        "pharmacy_automation": {
+          "label": "Pharmacy Automation",
+          "subject": "pharmacy",
+          "modifiers": [
+            "hospital",
+            "central",
+            "iv",
+            "compounding",
+            "dispensing",
+            "medication"
+          ],
+          "terms": [
+            "pharmacy automation",
+            "hospital pharmacy automation",
+            "medication dispensing robot",
+            "iv compounding automation"
+          ]
+        },
+        "bulk_medication_picking": {
+          "label": "Bulk Medication Picking",
+          "subject": "medication",
+          "modifiers": [
+            "picking",
+            "dispensing",
+            "bulk",
+            "unit dose",
+            "cart fill"
+          ],
+          "terms": [
+            "bulk medication picking automation",
+            "medication picking robot",
+            "unit dose automation",
+            "cart fill automation"
+          ]
+        },
+        "biomedical_automation": {
+          "label": "Biomedical Automation",
+          "subject": "biomedical",
+          "modifiers": [
+            "engineering",
+            "equipment",
+            "device",
+            "clinical engineering"
+          ],
+          "terms": [
+            "biomedical automation",
+            "clinical engineering robotics",
+            "biomedical equipment delivery"
+          ]
+        },
+        "radiotherapy_automation": {
+          "label": "Radiotherapy Automation",
+          "subject": "radiotherapy",
+          "modifiers": ["oncology", "radiation", "treatment", "therapy"],
+          "terms": [
+            "radiotherapy automation",
+            "radiation therapy automation",
+            "oncology automation robot"
+          ]
+        },
+        "rehabilitation_automation": {
+          "label": "Rehabilitation Automation",
+          "subject": "rehabilitation",
+          "modifiers": [
+            "rehab",
+            "physical therapy",
+            "pt",
+            "recovery",
+            "mobility"
+          ],
+          "terms": [
+            "rehabilitation automation",
+            "rehab robot",
+            "physical therapy automation",
+            "recovery robotics"
+          ]
+        },
+        "clinical_ops": {
+          "label": "Clinical Operations",
+          "terms": [
+            "hospital logistics",
+            "internal delivery",
+            "specimen transport",
+            "medication delivery",
+            "nursing support robot"
+          ]
+        },
+        "environmental_services": {
+          "label": "Healthcare EVS",
+          "terms": [
+            "hospital evs",
+            "disinfection robot",
+            "uv-c robot",
+            "healthcare cleaning robot",
+            "infection control automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "airports",
+      "label": "Airports & Aviation",
+      "canonical_industries": ["Airports & Aviation"],
+      "root_aliases": [
+        "airport",
+        "airports",
+        "aviation",
+        "terminal",
+        "airline",
+        "airport automation"
+      ],
+      "sub_ontologies": {
+        "airport_automation": {
+          "label": "Airport Automation",
+          "subject": "airport",
+          "modifiers": ["terminal", "operations", "passenger", "gate"],
+          "terms": [
+            "airport automation",
+            "terminal automation",
+            "airport operations robot"
+          ]
+        },
+        "airport_cleaning": {
+          "label": "Airport Cleaning Automation",
+          "subject": "airport",
+          "modifiers": [
+            "cleaning",
+            "custodial",
+            "floor care",
+            "scrubber",
+            "evs"
+          ],
+          "terms": [
+            "airport cleaning automation",
+            "terminal cleaning robot",
+            "airport floor scrubber"
+          ]
+        },
+        "airport_resupply": {
+          "label": "Airport Resupply Automation",
+          "subject": "airport",
+          "modifiers": [
+            "resupply",
+            "restock",
+            "supply",
+            "replenishment",
+            "concession"
+          ],
+          "terms": [
+            "airport resupply automation",
+            "terminal resupply robot",
+            "concession restocking automation"
+          ]
+        },
+        "airport_security": {
+          "label": "Airport Security Automation",
+          "subject": "airport",
+          "modifiers": ["security", "patrol", "screening", "surveillance"],
+          "terms": [
+            "airport security automation",
+            "security patrol robot",
+            "terminal security robot"
+          ]
+        },
+        "airport_tsa": {
+          "label": "Airport TSA Automation",
+          "subject": "tsa",
+          "modifiers": ["screening", "checkpoint", "security", "queue"],
+          "terms": [
+            "airport tsa automation",
+            "tsa screening automation",
+            "checkpoint automation airport"
+          ]
+        },
+        "airport_service": {
+          "label": "Airport Service Automation",
+          "subject": "airport",
+          "modifiers": [
+            "service",
+            "passenger assistance",
+            "concierge",
+            "wayfinding"
+          ],
+          "terms": [
+            "airport service automation",
+            "passenger service robot",
+            "terminal concierge robot"
+          ]
+        },
+        "airport_food_court": {
+          "label": "Airport Food Court Automation",
+          "subject": "food court",
+          "modifiers": [
+            "airport",
+            "concession",
+            "terminal dining",
+            "restaurant"
+          ],
+          "terms": [
+            "airport food court automation",
+            "terminal food service robot",
+            "airport concession automation"
+          ]
+        },
+        "airport_wheelchair": {
+          "label": "Airport Wheelchair Automation",
+          "subject": "wheelchair",
+          "modifiers": [
+            "airport",
+            "passenger",
+            "mobility",
+            "prm",
+            "accessibility"
+          ],
+          "terms": [
+            "airport wheelchair automation",
+            "wheelchair escort robot",
+            "prm assistance robot airport"
+          ]
+        },
+        "baggage_handling": {
+          "label": "Airport Baggage Handling Automation",
+          "subject": "baggage",
+          "modifiers": ["handling", "sortation", "claim", "transfer", "bhs"],
+          "terms": [
+            "airport baggage handling automation",
+            "baggage handling robot",
+            "bhs automation",
+            "baggage sortation robot"
+          ]
+        },
+        "terminal_ops": {
+          "label": "Terminal Operations",
+          "terms": [
+            "baggage handling",
+            "terminal cleaning",
+            "airport logistics",
+            "concession delivery",
+            "gate operations"
+          ]
+        }
+      }
+    },
+    {
+      "id": "datacenters",
+      "label": "Datacenters",
+      "canonical_industries": ["Datacenters"],
+      "root_aliases": [
+        "datacenter",
+        "data center",
+        "data centres",
+        "hyperscale",
+        "colocation",
+        "colo"
+      ],
+      "sub_ontologies": {
+        "datacenter_automation": {
+          "label": "Data Center Automation",
+          "subject": "data center",
+          "modifiers": [
+            "datacenter",
+            "server farm",
+            "hyperscale",
+            "colo",
+            "facility operations",
+            "maintenance"
+          ],
+          "exclusions": [
+            "housekeeping",
+            "f&b",
+            "food and beverage",
+            "vacancy rate",
+            "casino",
+            "hotel"
+          ],
+          "terms": [
+            "data center automation",
+            "datacenter automation",
+            "data centre automation",
+            "server farm robotics",
+            "datacenter maintenance robot"
+          ]
+        }
+      }
+    },
+    {
+      "id": "car_wash",
+      "label": "Car Wash",
+      "canonical_industries": ["Car Wash", "Automotive Dealerships"],
+      "root_aliases": ["car wash", "carwash", "express wash", "tunnel wash"],
+      "sub_ontologies": {
+        "car_wash_automation": {
+          "label": "Car Wash Automation",
+          "subject": "car wash",
+          "modifiers": [
+            "tunnel",
+            "conveyor",
+            "express",
+            "self-serve",
+            "fleet wash",
+            "carwash"
+          ],
+          "terms": [
+            "car wash automation",
+            "automated car wash",
+            "carwash robot",
+            "tunnel wash automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "truck_stop",
+      "label": "Truck Stop & Travel Center",
+      "canonical_industries": ["Food Service", "Logistics", "Hospitality"],
+      "root_aliases": [
+        "truck stop",
+        "truckstop",
+        "travel center",
+        "travel plaza",
+        "highway services"
+      ],
+      "sub_ontologies": {
+        "truck_stop_automation": {
+          "label": "Truck Stop Automation",
+          "subject": "truck stop",
+          "modifiers": [
+            "travel center",
+            "fuel stop",
+            "fleet services",
+            "highway",
+            "pilot",
+            "loves",
+            "ta petro"
+          ],
+          "terms": [
+            "truck stop automation",
+            "travel center automation",
+            "truckstop robot",
+            "highway travel plaza automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "energy_utilities",
+      "label": "Energy & Utilities",
+      "canonical_industries": ["Energy & Utilities", "Logistics"],
+      "root_aliases": [
+        "energy",
+        "utilities",
+        "utility",
+        "power grid",
+        "grid",
+        "energy storage"
+      ],
+      "sub_ontologies": {
+        "energy_storage": {
+          "label": "Energy Storage Automation",
+          "subject": "energy storage",
+          "modifiers": [
+            "battery",
+            "bess",
+            "grid scale",
+            "storage facility",
+            "lithium",
+            "megapack"
+          ],
+          "terms": [
+            "energy storage automation",
+            "battery storage automation",
+            "bess automation",
+            "grid scale storage robot"
+          ]
+        },
+        "grid_automation": {
+          "label": "Grid Automation",
+          "subject": "grid",
+          "modifiers": [
+            "power grid",
+            "substation",
+            "transmission",
+            "distribution",
+            "utility",
+            "smart grid"
+          ],
+          "exclusions": ["off-grid", "off grid", "gridiron", "storyboard"],
+          "terms": [
+            "grid automation",
+            "power grid automation",
+            "substation automation",
+            "utility grid robotics",
+            "smart grid automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "robotics_channel",
+      "label": "Robotics Channel & Integrators",
+      "canonical_industries": [
+        "Contract Manufacturing",
+        "Manufacturing",
+        "Automotive & Manufacturing"
+      ],
+      "root_aliases": [
+        "robotics integrator",
+        "system integrator",
+        "automation integrator",
+        "robotics channel",
+        "robot distributor",
+        "robotics distributor",
+        "automation partner",
+        "robot oem",
+        "robotics oem"
+      ],
+      "sub_ontologies": {
+        "system_integrator": {
+          "label": "System Integrator",
+          "subject": "integrator",
+          "modifiers": [
+            "robotics",
+            "automation",
+            "industrial",
+            "warehouse",
+            "amr",
+            "cobot"
+          ],
+          "terms": [
+            "system integrator",
+            "robotics integrator",
+            "automation integrator",
+            "si partner",
+            "integration partner",
+            "robotics integration services",
+            "automation integration services"
+          ]
+        },
+        "robotics_distributor": {
+          "label": "Robotics Distributor",
+          "subject": "distributor",
+          "modifiers": [
+            "robot",
+            "robotics",
+            "automation",
+            "amr",
+            "cobot",
+            "authorized"
+          ],
+          "terms": [
+            "robot distributor",
+            "robotics distributor",
+            "authorized distributor",
+            "distribution agreement",
+            "distribution partnership",
+            "channel program",
+            "dealer network",
+            "reseller program"
+          ]
+        },
+        "robot_oem": {
+          "label": "Robot OEM",
+          "subject": "robot",
+          "modifiers": [
+            "oem",
+            "manufacturer",
+            "maker",
+            "vendor",
+            "startup",
+            "humanoid"
+          ],
+          "terms": [
+            "robot oem",
+            "robotics oem",
+            "robot manufacturer",
+            "robotics manufacturer",
+            "humanoid robot maker",
+            "amr manufacturer",
+            "cobot manufacturer"
+          ]
+        }
+      }
+    },
+    {
+      "id": "defense",
+      "label": "Defense",
+      "canonical_industries": ["Defense", "Logistics"],
+      "root_aliases": [
+        "defense",
+        "defence",
+        "military",
+        "dod",
+        "warfighter",
+        "national security"
+      ],
+      "sub_ontologies": {
+        "defense_automation": {
+          "label": "Defense Automation",
+          "subject": "defense",
+          "modifiers": [
+            "military",
+            "army",
+            "navy",
+            "air force",
+            "warfighter",
+            "autonomous systems",
+            "ugv",
+            "uav"
+          ],
+          "terms": [
+            "defense automation",
+            "military automation",
+            "defense robotics",
+            "autonomous defense systems"
+          ]
+        },
+        "defense_logistics": {
+          "label": "Defense Logistics Automation",
+          "subject": "defense",
+          "modifiers": [
+            "logistics",
+            "supply",
+            "resupply",
+            "sustainment",
+            "warehouse",
+            "distribution",
+            "material handling"
+          ],
+          "terms": [
+            "defense logistics automation",
+            "military logistics robot",
+            "defense supply chain automation",
+            "sustainment automation"
+          ]
+        }
+      }
+    },
+    {
+      "id": "extended_buyer_verticals",
+      "label": "Extended Buyer Verticals",
+      "canonical_industries": [
+        "Construction & Building",
+        "Mining & Extraction",
+        "Oil & Gas & Petrochemical",
+        "Pharmaceuticals & Life Sciences",
+        "Ports & Maritime",
+        "Rail & Transit",
+        "Agriculture & Agribusiness",
+        "Government & Public Sector",
+        "Education",
+        "Financial Services",
+        "Telecom",
+        "Software & IT",
+        "Waste & Environmental",
+        "Sports & Stadiums",
+        "Manufacturing",
+        "Food & Beverage"
+      ],
+      "root_aliases": [
+        "construction",
+        "mining",
+        "oil and gas",
+        "pharmaceutical",
+        "port",
+        "maritime",
+        "rail",
+        "agriculture",
+        "government",
+        "education",
+        "financial services",
+        "telecom",
+        "software",
+        "waste management",
+        "stadium"
+      ],
+      "sub_ontologies": {}
+    }
+  ]
+}

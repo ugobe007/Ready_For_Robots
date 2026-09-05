@@ -1,0 +1,262 @@
+{
+  "metric": "resolution_funnel_with_precision",
+  "see_also": "docs/product_sim/worksite/origin_resolution_funnel.json",
+  "auto_v0": {
+    "label": "origin_auto_v0_no_footprint",
+    "n": 22,
+    "funnel": {
+      "company_resolution": 1.0,
+      "WRR_worksite_resolution": 0.0,
+      "WPR_worksite_precision": null,
+      "WCR_worksite_classification": 0.0,
+      "WorkRR_work_resolution": 0.0,
+      "ERR_evidence_resolution": 0.0,
+      "JRR_expected": 0.0,
+      "JRR_strict": 0.0
+    },
+    "precision": {
+      "accepted_worksites": 0,
+      "legitimate": 0,
+      "illegitimate": 0,
+      "unjudged": 0,
+      "WPR": null,
+      "note": "Prefer high WPR over high WRR. Unjudged must be audited before celebrating recall."
+    },
+    "counts": {
+      "expected_jobs": 0,
+      "evidenced_jobs": 0,
+      "candidates_total": 0,
+      "rejected_total": 0
+    },
+    "AJY_expected_per_100": 0.0,
+    "AJY_evidenced_per_100": 0.0,
+    "failure_distribution": {
+      "no_worksite_known": 18,
+      "multiple_worksites": 3,
+      "signal_not_site_specific": 1
+    },
+    "largest_failure_class": "no_worksite_known",
+    "largest_failure_count": 18,
+    "unresolved_failures": [
+      {
+        "company": "Sysco",
+        "failure_class": "multiple_worksites"
+      },
+      {
+        "company": "Kenco",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Lineage",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "DHL Supply Chain",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Ryder",
+        "failure_class": "multiple_worksites"
+      },
+      {
+        "company": "XPO",
+        "failure_class": "multiple_worksites"
+      },
+      {
+        "company": "Medline",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Dollar General",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "FedEx Ground",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Radial",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "NFI Industries",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "UPS SCS",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Burris Logistics",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "RJW Logistics",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Echo Global",
+        "failure_class": "signal_not_site_specific"
+      },
+      {
+        "company": "Walmart",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Amazon",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Home Depot",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Mondelez",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "TFI International",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "HelloFresh Phoenix",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "PFG",
+        "failure_class": "no_worksite_known"
+      }
+    ],
+    "accepted": []
+  },
+  "auto_v0_1": {
+    "label": "origin_auto_v0_1_footprint_plus_gate",
+    "n": 22,
+    "funnel": {
+      "company_resolution": 1.0,
+      "WRR_worksite_resolution": 0.0,
+      "WPR_worksite_precision": null,
+      "WCR_worksite_classification": 0.0,
+      "WorkRR_work_resolution": 0.0,
+      "ERR_evidence_resolution": 0.0,
+      "JRR_expected": 0.0,
+      "JRR_strict": 0.0
+    },
+    "precision": {
+      "accepted_worksites": 0,
+      "legitimate": 0,
+      "illegitimate": 0,
+      "unjudged": 0,
+      "WPR": null,
+      "note": "Prefer high WPR over high WRR. Unjudged must be audited before celebrating recall."
+    },
+    "counts": {
+      "expected_jobs": 0,
+      "evidenced_jobs": 0,
+      "candidates_total": 10,
+      "rejected_total": 10
+    },
+    "AJY_expected_per_100": 0.0,
+    "AJY_evidenced_per_100": 0.0,
+    "failure_distribution": {
+      "no_worksite_known": 18,
+      "multiple_worksites": 3,
+      "signal_not_site_specific": 1
+    },
+    "largest_failure_class": "no_worksite_known",
+    "largest_failure_count": 18,
+    "unresolved_failures": [
+      {
+        "company": "Sysco",
+        "failure_class": "multiple_worksites"
+      },
+      {
+        "company": "Kenco",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Lineage",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "DHL Supply Chain",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Ryder",
+        "failure_class": "multiple_worksites"
+      },
+      {
+        "company": "XPO",
+        "failure_class": "multiple_worksites"
+      },
+      {
+        "company": "Medline",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Dollar General",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "FedEx Ground",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Radial",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "NFI Industries",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "UPS SCS",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Burris Logistics",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "RJW Logistics",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Echo Global",
+        "failure_class": "signal_not_site_specific"
+      },
+      {
+        "company": "Walmart",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Amazon",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Home Depot",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "Mondelez",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "TFI International",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "HelloFresh Phoenix",
+        "failure_class": "no_worksite_known"
+      },
+      {
+        "company": "PFG",
+        "failure_class": "no_worksite_known"
+      }
+    ],
+    "accepted": []
+  },
+  "gate_rejects_junk": true,
+  "gate_accepts_named_dc": true
+}

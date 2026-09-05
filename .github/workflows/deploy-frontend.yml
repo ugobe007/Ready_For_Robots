@@ -1,0 +1,97 @@
+# Deploys the canonical Vite frontend to Vercel production on every push to
+# main. Backend deploy lives in deploy.yml (Fly.io).
+#
+# Required repo secret:
+#   VERCEL_TOKEN — Account Settings → Tokens (project-scoped is OK)
+# Optional: VERCEL_ORG_ID / VERCEL_PROJECT_ID (preflight fills them).
+#
+# Do not use `vercel pull` (CLI 59 + project-scoped token). Do not rely on
+# Vercel's cloud Vite build: it returns Ready while transforming and aliases
+# a stale index-*.js. Build in GHA, pack Build Output API v3, deploy --prebuilt.
+name: Deploy frontend to Vercel
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "readyforrobots-new/**"
+      - "vercel.json"
+      - ".vercelignore"
+      - ".github/workflows/deploy-frontend.yml"
+      - "scripts/sanitize_vercel_cli_secret.py"
+      - "scripts/vercel_cli_preflight.py"
+      - "scripts/vercel_pack_static_output.py"
+      - "scripts/vercel_production_smoke.py"
+  # agent-verify automerge workflow_dispatch-es this: GITHUB_TOKEN squash
+  # does not start `push` jobs. Path filters do not apply to dispatch.
+  workflow_dispatch:
+
+concurrency:
+  group: vercel-frontend-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Vercel production deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Check Vercel secrets are configured
+        id: guard
+        run: python3 scripts/sanitize_vercel_cli_secret.py
+
+      - name: Resolve Vercel project (skip vercel pull)
+        if: steps.guard.outputs.configured == 'true'
+        run: python3 scripts/vercel_cli_preflight.py
+
+      - name: Setup Node.js
+        if: steps.guard.outputs.configured == 'true'
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+
+      - name: Install pnpm and Vercel CLI
+        if: steps.guard.outputs.configured == 'true'
+        run: npm install -g pnpm@10.4.1 vercel@latest
+
+      - name: Install frontend dependencies
+        if: steps.guard.outputs.configured == 'true'
+        run: pnpm install --frozen-lockfile -C readyforrobots-new
+
+      - name: Vite production build
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          # Vite inlines these at build time. Omitting them ships a dead /signup:
+          # Google/GitHub OAuth and magic-link never fire (supabase client is null).
+          # Same public values as fly.toml [build.args] (anon key is a client JWT).
+          VITE_PUBLIC_API_URL: https://ready-2-robot.fly.dev
+          VITE_PUBLIC_SUPABASE_URL: https://lmoyydlhlgdyqbxkmkuz.supabase.co
+          VITE_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imxtb3l5ZGxobGdkeXFieGtta3V6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIyNTAyOTUsImV4cCI6MjA4NzgyNjI5NX0.SImYCwJtWwMRThqjHCuIBQOXuiLlg5xm39UXm1pxKJ8
+        run: pnpm --dir readyforrobots-new exec vite build
+
+      - name: Pack Vercel Build Output
+        if: steps.guard.outputs.configured == 'true'
+        run: python3 scripts/vercel_pack_static_output.py
+
+      - name: Deploy prebuilt output to production
+        id: deploy
+        if: steps.guard.outputs.configured == 'true'
+        run: |
+          set -euo pipefail
+          vercel deploy --prebuilt --prod --yes --token="$VERCEL_TOKEN" --project="$VERCEL_PROJECT_ID" | tee /tmp/vercel-deploy.log
+          url="$(grep -oE 'https://[A-Za-z0-9._-]+\.vercel\.app' /tmp/vercel-deploy.log | tail -n 1 || true)"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+          echo "Deployed ${url:-unknown}"
+
+      - name: Confirm production bundle is not the stale hash
+        if: steps.guard.outputs.configured == 'true'
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: python3 scripts/vercel_production_smoke.py --domain https://readyforrobots.com --deploy-url "$DEPLOY_URL"

@@ -1,0 +1,49 @@
+name: Hermes Fly workflow (retired)
+
+# RETIRED 2026-08-26. Hermes is not a Jobs agent.
+# Do not schedule this. Do not --apply ingest to Fly.
+# FIND is POST /api/robot-job-match.
+# Skip-by-default: only workflow_dispatch with hermes_retired_override=1 runs,
+# and it never passes --apply.
+
+on:
+  workflow_dispatch:
+    inputs:
+      hermes_retired_override:
+        description: Must be 1 to run this retired smoke. Jobs does not use Hermes.
+        type: string
+        default: "0"
+
+concurrency:
+  group: hermes-fly-smoke
+  cancel-in-progress: false
+
+jobs:
+  infer-qualify:
+    name: Retired smoke (no apply)
+    if: github.event.inputs.hermes_retired_override == '1'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Refuse unless override (no --apply)
+        env:
+          HERMES_RETIRED_OVERRIDE: "1"
+          RFR_ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+        run: |
+          set -euo pipefail
+          echo "Hermes is retired — Jobs uses POST /api/robot-job-match"
+          echo "This job does not pass --apply."
+          if [ -z "${RFR_ADMIN_KEY:-}${ADMIN_KEY:-}" ]; then
+            echo "ADMIN_KEY empty; skip retired smoke."
+            exit 0
+          fi
+          python3 scripts/hermes_auth_smoke.py

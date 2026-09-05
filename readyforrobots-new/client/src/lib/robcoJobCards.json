@@ -1,0 +1,113 @@
+{
+  "pack": "robco_machine_tending_v1",
+  "robot_company": "RobCo",
+  "workflow": "machine_tending",
+  "message": "We found jobs for your robots.",
+  "qualification_default": "pending_robot",
+  "invented_economics": false,
+  "jobs": [
+    {
+      "id": "RFR-MT-001",
+      "job_key": "manip_siemens_energy_charlotte_nc",
+      "employer": "Siemens Energy",
+      "workplace": "Charlotte, NC",
+      "jobTitle": "CNC / process machine loader",
+      "work": "Load and unload parts on CNC / process machines (material handling assist).",
+      "requirements": [
+        "Object: part",
+        "Placement: fixture",
+        "Machine: CNC",
+        "Payload: up to 50 lb (stated)",
+        "Grasp: unknown"
+      ],
+      "workVolume": null,
+      "currentLabor": null,
+      "evidence": "Manipulation ledger E2. Corpus manip_siemens_energy_charlotte_nc.",
+      "qualification": "pending_robot",
+      "openQuestions": [
+        "Part geometry",
+        "Fixture design",
+        "Skill vs tend split",
+        "Crane dependency"
+      ],
+      "nextStep": "Site assessment: can a tending cell reach the fixture without the crane?",
+      "investigate": "yes"
+    },
+    {
+      "id": "RFR-MT-002",
+      "job_key": "manip_fulcrum_tualatin_or",
+      "employer": "Fulcrum Technologies",
+      "workplace": "Tualatin, OR",
+      "jobTitle": "CNC laser loader / unloader",
+      "work": "Load raw material and unload finished parts on a CNC laser.",
+      "requirements": [
+        "Object: sheet metal",
+        "Placement: machine",
+        "Machine: CNC laser"
+      ],
+      "workVolume": null,
+      "currentLabor": null,
+      "evidence": "Manipulation ledger E1. Corpus manip_fulcrum_tualatin_or.",
+      "qualification": "pending_robot",
+      "openQuestions": ["Sheet size", "Gripper", "Nesting"],
+      "nextStep": "Site assessment: sheet size vs gripper and cell envelope.",
+      "investigate": "yes"
+    },
+    {
+      "id": "RFR-MT-003",
+      "job_key": "manip_ims_riverside_ca",
+      "employer": "Industrial Metal Supply",
+      "workplace": "Riverside, CA",
+      "jobTitle": "Laser / plasma finished-part unloader",
+      "work": "Load and unload finished parts from laser/plasma cutting machines.",
+      "requirements": [
+        "Object: part",
+        "Placement: machine",
+        "Machine: laser/plasma"
+      ],
+      "workVolume": null,
+      "currentLabor": null,
+      "evidence": "Manipulation ledger E1. Corpus manip_ims_riverside_ca.",
+      "qualification": "pending_robot",
+      "openQuestions": ["Part mix", "Weight", "EOAT"],
+      "nextStep": "Site assessment: part mix and end-of-arm tooling.",
+      "investigate": "yes"
+    },
+    {
+      "id": "RFR-MT-004",
+      "job_key": "manip_transtech_charlotte_nc",
+      "employer": "TransTech Group",
+      "workplace": "Charlotte, NC",
+      "jobTitle": "CNC and manual-cell workpiece mover",
+      "work": "Move workpieces to and from CNC and manual machining cells.",
+      "requirements": ["Object: part", "Placement: fixture", "Machine: CNC"],
+      "workVolume": null,
+      "currentLabor": null,
+      "evidence": "Manipulation ledger E2. Corpus manip_transtech_charlotte_nc.",
+      "qualification": "pending_robot",
+      "openQuestions": ["Repetitive tend vs skilled fab mix"],
+      "nextStep": "Qualify the job first: how much of the shift is repetitive load/unload?",
+      "investigate": "weak"
+    },
+    {
+      "id": "RFR-MT-005",
+      "job_key": "manip_groninger_charlotte_nc",
+      "employer": "groninger",
+      "workplace": "Charlotte, NC",
+      "jobTitle": "CNC mill / lathe tender",
+      "work": "Tend CNC mills/lathes — workpiece load/unload around the cycle. Setup stays human.",
+      "requirements": [
+        "Object: part",
+        "Placement: fixture",
+        "Machine: CNC mill/lathe"
+      ],
+      "workVolume": null,
+      "currentLabor": null,
+      "evidence": "Manipulation ledger E2. Corpus manip_groninger_charlotte_nc.",
+      "qualification": "pending_robot",
+      "openQuestions": ["How much of the role is tend vs program"],
+      "nextStep": "Site assessment: cycle-side load/unload vs programming time.",
+      "investigate": "weak"
+    }
+  ]
+}

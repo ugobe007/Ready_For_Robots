@@ -1,0 +1,469 @@
+{
+  "version": 1,
+  "source": "app/data/robot_job_match_corpus.json",
+  "note": "Named-employer live tape. Drops source=tape shorts that duplicated the same work without an employer.",
+  "jobs": [
+    {
+      "key": "origin_replacement_parts_little_rock",
+      "title": "Point-to-point tote transport between warehouse zones",
+      "industry": "Replacement Parts / Crow Burlingame · Little Rock",
+      "path": "ZONE → ZONE",
+      "family": "transport"
+    },
+    {
+      "key": "origin_napa_duncansville",
+      "title": "Cart / order movement from pick areas to shipping",
+      "industry": "NAPA Auto Parts · Duncansville",
+      "path": "PICK → SHIP",
+      "family": "transport"
+    },
+    {
+      "key": "origin_curascript_tempe",
+      "title": "Return empty totes and carts to pack stations / proper areas",
+      "industry": "CuraScript SD · Tempe",
+      "path": "PACK → RETURN",
+      "family": "transport"
+    },
+    {
+      "key": "origin_sanmar_avondale",
+      "title": "Move completed totes from pack-mod slots to packing",
+      "industry": "SanMar · Avondale",
+      "path": "SLOT → PACK",
+      "family": "transport"
+    },
+    {
+      "key": "origin_intuitive_smkt",
+      "title": "Point-of-use replenishment and packing-system cart/kit movement",
+      "industry": "Intuitive Surgical",
+      "path": "SMKT → LINE",
+      "family": "transport"
+    },
+    {
+      "key": "neo_moa_bloomington",
+      "title": "Overnight scrub of mall common-area hard floors (concourse / food court)",
+      "industry": "Mall of America · Bloomington",
+      "path": "SCRUB → HARD_FLOORS",
+      "family": "scrub"
+    },
+    {
+      "key": "neo_unifi_atl",
+      "title": "Overnight terminal floor scrubbing along high-traffic routes",
+      "industry": "Unifi (airport floor tech) · Atlanta",
+      "path": "SCRUB → TERMINAL_FLOORS",
+      "family": "scrub"
+    },
+    {
+      "key": "neo_harris_lbj",
+      "title": "Night EVS hard-floor scrub routes (riding + walk-behind scrubbers)",
+      "industry": "Harris Health — LBJ Hospital · Houston",
+      "path": "SCRUB → HOSPITAL_FLOORS",
+      "family": "scrub"
+    },
+    {
+      "key": "neo_jhu_baltimore",
+      "title": "Recurring auto-scrubber routes on campus hard floors",
+      "industry": "Johns Hopkins University · Baltimore",
+      "path": "SCRUB → CAMPUS_FLOORS",
+      "family": "scrub"
+    },
+    {
+      "key": "neo_surge_joliet",
+      "title": "Ride-on / walk-behind sweeper-scrubber routes on warehouse and production floors",
+      "industry": "Industrial facility (via Surge Staffing) · Joliet",
+      "path": "SCRUB → WAREHOUSE_FLOORS",
+      "family": "scrub"
+    },
+    {
+      "key": "manip_piedmont_candy_lexington_nc",
+      "title": "Stack and build cases onto outbound pallets from production",
+      "industry": "Piedmont Candy Company · Lexington",
+      "path": "PALLETIZING",
+      "family": "pallet"
+    },
+    {
+      "key": "manip_novolex_kinston_nc",
+      "title": "Pick packed cases from conveyor and stack onto pallets per carton specifications",
+      "industry": "Novolex (Pactiv Evergreen) · Kinston",
+      "path": "PALLETIZING",
+      "family": "pallet"
+    },
+    {
+      "key": "manip_attindas_greenville_nc",
+      "title": "Stack cases of product onto pallets (manual residual beside palletizer cell)",
+      "industry": "Attindas Hygiene Partners · Greenville",
+      "path": "PALLETIZING",
+      "family": "pallet"
+    },
+    {
+      "key": "manip_ofi_lenoir_city_tn",
+      "title": "Remove finished-goods cases from packaging lines and stack in predetermined pallet configuration",
+      "industry": "OFI · Lenoir City",
+      "path": "PALLETIZING",
+      "family": "pallet"
+    },
+    {
+      "key": "manip_mdi_hickory_nc",
+      "title": "Lift and stack cases; assist building pallets at automation interface",
+      "industry": "MDI Distribution (Alex Lee) · Hickory",
+      "path": "PALLETIZING",
+      "family": "pallet"
+    },
+    {
+      "key": "manip_siemens_energy_charlotte_nc",
+      "title": "Load and unload parts on CNC / process machines (material handling assist)",
+      "industry": "Siemens Energy · Charlotte",
+      "path": "MACHINE → TENDING",
+      "family": "gripper"
+    },
+    {
+      "key": "manip_fulcrum_tualatin_or",
+      "title": "Load raw material and unload finished parts on CNC laser",
+      "industry": "Fulcrum Technologies · Tualatin",
+      "path": "MACHINE → TENDING",
+      "family": "gripper"
+    },
+    {
+      "key": "manip_ims_riverside_ca",
+      "title": "Load and unload finished parts from laser/plasma cutting machines",
+      "industry": "Industrial Metal Supply · Riverside",
+      "path": "MACHINE → TENDING",
+      "family": "gripper"
+    },
+    {
+      "key": "manip_transtech_charlotte_nc",
+      "title": "Move workpieces to/from CNC and manual machining cells",
+      "industry": "TransTech Group · Charlotte",
+      "path": "MACHINE → TENDING",
+      "family": "gripper"
+    },
+    {
+      "key": "manip_groninger_charlotte_nc",
+      "title": "Tend CNC mills/lathes — workpiece load/unload around cycle",
+      "industry": "groninger · Charlotte",
+      "path": "MACHINE → TENDING",
+      "family": "gripper"
+    },
+    {
+      "key": "serve_restaurant_food_run",
+      "title": "Run food and drinks to dining tables",
+      "industry": "The Cheesecake Factory · Calabasas",
+      "path": "KITCHEN → DINING ROOM",
+      "family": "cart"
+    },
+    {
+      "key": "serve_hotel_room_service",
+      "title": "Run room-service orders to guest rooms",
+      "industry": "Marriott International · Bethesda",
+      "path": "KITCHEN → GUEST ROOMS",
+      "family": "cart"
+    },
+    {
+      "key": "serve_bus_tables",
+      "title": "Bus tables and return dishware to the kitchen",
+      "industry": "Darden Restaurants · Orlando",
+      "path": "DINING ROOM → KITCHEN",
+      "family": "cart"
+    },
+    {
+      "key": "bellhop_luggage_delivery",
+      "title": "Deliver guest luggage to hotel rooms",
+      "industry": "Hilton Worldwide · McLean",
+      "path": "LOBBY → GUEST ROOMS",
+      "family": "cart"
+    },
+    {
+      "key": "foodprep_fry_station",
+      "title": "Operate the fry station during peak service",
+      "industry": "White Castle · Columbus",
+      "path": "FRY STATION",
+      "family": "gripper"
+    },
+    {
+      "key": "foodprep_bowl_assembly",
+      "title": "Assemble salads and grain bowls to order",
+      "industry": "Chipotle Mexican Grill · Newport Beach",
+      "path": "PREP LINE",
+      "family": "gripper"
+    },
+    {
+      "key": "foodprep_grill_line",
+      "title": "Cook burgers on the grill line",
+      "industry": "Shake Shack · New York",
+      "path": "GRILL LINE",
+      "family": "gripper"
+    },
+    {
+      "key": "beverage_espresso_bar",
+      "title": "Prepare and serve espresso drinks at the coffee bar",
+      "industry": "Starbucks · Seattle",
+      "path": "COFFEE BAR",
+      "family": "gripper"
+    },
+    {
+      "key": "beverage_cocktail_bar",
+      "title": "Mix and serve cocktails at the bar",
+      "industry": "Hyatt Hotels · Chicago",
+      "path": "BAR",
+      "family": "gripper"
+    },
+    {
+      "key": "foodprep_corporate_dishwasher",
+      "title": "Clear dishware and load dishwashers in a corporate kitchen",
+      "industry": "Compass Group · Charlotte",
+      "path": "DISH RETURN → DISHWASHER",
+      "family": "gripper"
+    },
+    {
+      "key": "foodprep_household_kitchen_chores",
+      "title": "Household kitchen chores — dishes, dishwasher, meal cleanup",
+      "industry": "Sunrise Senior Living · McLean",
+      "path": "HOUSEHOLD KITCHEN",
+      "family": "gripper"
+    },
+    {
+      "key": "restroom_office_clean",
+      "title": "Clean office-building restrooms (toilets, urinals, floors)",
+      "industry": "CBRE · Dallas",
+      "path": "RESTROOMS",
+      "family": "scrub"
+    },
+    {
+      "key": "restroom_airport_clean",
+      "title": "Clean high-traffic airport restrooms",
+      "industry": "HMSHost · DFW Airport",
+      "path": "RESTROOMS",
+      "family": "scrub"
+    },
+    {
+      "key": "clinical_meds_delivery",
+      "title": "Deliver medications from pharmacy to patient units",
+      "industry": "Mercy General Hospital · Columbus",
+      "path": "PHARMACY → PATIENT UNITS",
+      "family": "cart"
+    },
+    {
+      "key": "clinical_specimen_runs",
+      "title": "Transport lab specimens to the laboratory",
+      "industry": "Riverside Health System · Newport News",
+      "path": "UNITS → LABORATORY",
+      "family": "cart"
+    },
+    {
+      "key": "clinical_supply_replenishment",
+      "title": "Replenish supply carts to nursing units",
+      "industry": "St. Anne Medical Center · Toledo",
+      "path": "SUPPLY → UNITS",
+      "family": "cart"
+    },
+    {
+      "key": "clinical_meal_linen",
+      "title": "Deliver meal trays and linens to patient floors",
+      "industry": "Lakeside Regional Hospital · Kenosha",
+      "path": "KITCHEN/LAUNDRY → FLOORS",
+      "family": "cart"
+    },
+    {
+      "key": "resident_meal_delivery",
+      "title": "Deliver meals to resident rooms",
+      "industry": "Brookhaven Senior Living · Naperville",
+      "path": "KITCHEN → RESIDENT ROOMS",
+      "family": "cart"
+    },
+    {
+      "key": "resident_linen_amenities",
+      "title": "Deliver linens and amenities to resident rooms",
+      "industry": "Maple Grove Assisted Living · Rochester",
+      "path": "SUPPLY → RESIDENT ROOMS",
+      "family": "cart"
+    },
+    {
+      "key": "resident_med_pass_support",
+      "title": "Move medication and supply carts between care wings",
+      "industry": "Cedar Ridge Care Center · Boise",
+      "path": "SUPPLY → CARE WINGS",
+      "family": "cart"
+    },
+    {
+      "key": "shelf_scan_grocery_oos",
+      "title": "Scan grocery aisles for out-of-stocks and pricing",
+      "industry": "Harvest Market Foods · Springfield",
+      "path": "STORE AISLES",
+      "family": "inspect"
+    },
+    {
+      "key": "shelf_scan_bigbox_inventory",
+      "title": "Scan big-box store shelves for inventory accuracy",
+      "industry": "BuildRight Home Centers · Grand Rapids",
+      "path": "STORE AISLES",
+      "family": "inspect"
+    },
+    {
+      "key": "shelf_scan_pharmacy_retail",
+      "title": "Scan retail pharmacy shelves for stock and price accuracy",
+      "industry": "WellPath Pharmacy · Akron",
+      "path": "STORE AISLES",
+      "family": "inspect"
+    },
+    {
+      "key": "airport_terminal_scrub",
+      "title": "Overnight scrub of terminal concourse floors",
+      "industry": "Metro International Airport · Charlotte",
+      "path": "CONCOURSE",
+      "family": "scrub"
+    },
+    {
+      "key": "airport_gate_delivery",
+      "title": "Deliver supplies and amenities between gates and lounges",
+      "industry": "Skyline Airport Services · Denver",
+      "path": "SUPPLY → GATES",
+      "family": "transport"
+    },
+    {
+      "key": "clinical_meds_delivery_2",
+      "title": "Deliver medications and IV supplies to nursing floors",
+      "industry": "Summit Health Medical Center · Reno",
+      "path": "PHARMACY → FLOORS",
+      "family": "cart"
+    },
+    {
+      "key": "resident_meal_delivery_2",
+      "title": "Deliver meals and snacks to memory-care residents",
+      "industry": "Willow Bend Memory Care · Frisco",
+      "path": "KITCHEN → RESIDENT ROOMS",
+      "family": "cart"
+    },
+    {
+      "key": "pallet_dock_to_storage",
+      "title": "Move inbound pallets from dock to storage",
+      "industry": "Cardinal Distribution · Memphis",
+      "path": "DOCK → STORAGE",
+      "family": "pallet"
+    },
+    {
+      "key": "pallet_line_feed",
+      "title": "Feed pallets of raw material to production lines",
+      "industry": "Delmar Manufacturing · Toledo",
+      "path": "WAREHOUSE → LINE",
+      "family": "pallet"
+    },
+    {
+      "key": "pallet_putaway",
+      "title": "Put away pallets into racking",
+      "industry": "Vanguard Logistics · Ontario",
+      "path": "RECEIVING → RACK",
+      "family": "pallet"
+    },
+    {
+      "key": "trailer_unload_floor",
+      "title": "Unload floor-loaded cases from trailers",
+      "industry": "Summit Grocery DC · Kansas City",
+      "path": "TRAILER → CONVEYOR",
+      "family": "pallet"
+    },
+    {
+      "key": "trailer_unload_container",
+      "title": "Unload cases from import containers",
+      "industry": "Harbor Freight Terminal · Savannah",
+      "path": "CONTAINER → DOCK",
+      "family": "pallet"
+    },
+    {
+      "key": "pickpack_ecom",
+      "title": "Piece-pick items into e-commerce orders",
+      "industry": "Rapid Ship Fulfillment · Columbus",
+      "path": "PICK CELL",
+      "family": "transport"
+    },
+    {
+      "key": "pickpack_pharma",
+      "title": "Each-pick pharmacy items for orders",
+      "industry": "MedSupply Distribution · Memphis",
+      "path": "PICK CELL",
+      "family": "transport"
+    },
+    {
+      "key": "sortation_parcel",
+      "title": "Sort parcels to destination chutes",
+      "industry": "ExpressPost Hub · Louisville",
+      "path": "INDUCTION → CHUTES",
+      "family": "transport"
+    },
+    {
+      "key": "sortation_returns",
+      "title": "Sort returned packages by disposition",
+      "industry": "ReCommerce Returns · Grove City",
+      "path": "INDUCTION → PUT-WALL",
+      "family": "transport"
+    },
+    {
+      "key": "disinfect_patient_rooms",
+      "title": "UV-disinfect patient rooms between occupancies",
+      "industry": "Mercy General Hospital · Columbus",
+      "path": "PATIENT ROOMS",
+      "family": "scrub"
+    },
+    {
+      "key": "disinfect_operating_rooms",
+      "title": "Disinfect operating rooms after procedures",
+      "industry": "Lakeside Surgical Center · Kenosha",
+      "path": "OPERATING ROOMS",
+      "family": "scrub"
+    },
+    {
+      "key": "asrs_goods_to_person",
+      "title": "Store and retrieve totes to pick stations",
+      "industry": "FreshCart E-Grocery · Newark",
+      "path": "GRID → PICK STATIONS",
+      "family": "pallet"
+    },
+    {
+      "key": "asrs_case_handling",
+      "title": "Retrieve and present cases to packers",
+      "industry": "BJ Wholesale DC · Burlington",
+      "path": "ASRS → PACK",
+      "family": "pallet"
+    },
+    {
+      "key": "ag_laser_weeding",
+      "title": "Weed vegetable rows autonomously",
+      "industry": "Green Valley Farms · Salinas",
+      "path": "FIELD ROWS",
+      "family": "inspect"
+    },
+    {
+      "key": "ag_harvest",
+      "title": "Harvest produce in the field",
+      "industry": "Sunrise Orchards · Yakima",
+      "path": "FIELD",
+      "family": "inspect"
+    },
+    {
+      "key": "construction_layout",
+      "title": "Print floor layout on the jobsite",
+      "industry": "BuildTech Contractors · Austin",
+      "path": "JOBSITE FLOOR",
+      "family": "inspect"
+    },
+    {
+      "key": "construction_drywall",
+      "title": "Finish drywall on the jobsite",
+      "industry": "Skyline Builders · Denver",
+      "path": "JOBSITE",
+      "family": "inspect"
+    },
+    {
+      "key": "mining_haulage",
+      "title": "Haul ore autonomously in the pit",
+      "industry": "IronRidge Mining · Hibbing",
+      "path": "PIT → CRUSHER",
+      "family": "inspect"
+    },
+    {
+      "key": "mining_drilling",
+      "title": "Autonomously drill blast holes",
+      "industry": "Copper Basin Mining · Morenci",
+      "path": "BENCH",
+      "family": "inspect"
+    }
+  ]
+}

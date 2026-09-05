@@ -1,0 +1,11 @@
+# Harness venv (.venv-harness) telemetry dependencies.
+# Without these, scripts/harness_snapshot.py silently degrades the `intelligence`
+# slice (Friction theme 0 — telemetry blind spot):
+#   - sqlalchemy / psycopg2-binary -> database.telemetry + industry_top, gap DB queries
+#   - requests                      -> junk_reasons (is_junk reason aggregation)
+#   - fastapi                       -> gap_frequency (imports app API modules)
+# Install: python3 -m pip install -r harness/requirements.txt
+SQLAlchemy==2.0.51
+psycopg2-binary==2.9.12
+requests==2.34.2
+fastapi==0.138.0

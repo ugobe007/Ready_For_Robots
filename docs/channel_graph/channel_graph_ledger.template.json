@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "kind": "channel_graph_ledger",
+  "wedge": "foreign_oem_us",
+  "notes": "Fill partners + relationships with C1–C5 evidence. Do not invent authorization.",
+  "oems": [],
+  "partners": [],
+  "relationships": []
+}

@@ -1,0 +1,71 @@
+{
+  "id": "b20-05",
+  "authored_independently": true,
+  "authored_at": "2026-08-17T01:15:00Z",
+  "researcher_method": "Apptronik homepage + public unveil materials; authored before agent run.",
+  "primary_sources_reviewed": [
+    "https://apptronik.com/",
+    "https://apptronik.com/news-collection/apptronik-unveils-apollo"
+  ],
+  "identity": {
+    "company_any": [
+      "Apptronik"
+    ],
+    "product_any": [
+      "Apollo"
+    ],
+    "display_class_any": [
+      "humanoid",
+      "mobile_manipulator"
+    ]
+  },
+  "material_facts": [
+    {
+      "id": "f1",
+      "predicate": "product_class",
+      "value_any": [
+        "humanoid",
+        "mobile_manipulator"
+      ],
+      "importance": "critical",
+      "evidence": "humanoid robot Apollo"
+    },
+    {
+      "id": "f2",
+      "predicate": "has_mobile_base",
+      "value_any": [
+        true
+      ],
+      "importance": "high",
+      "evidence": "bipedal and wheeled mobility options"
+    },
+    {
+      "id": "f3",
+      "predicate": "claims_warehouse_transport",
+      "value_any": [
+        true
+      ],
+      "importance": "medium",
+      "evidence": "warehouse / manufacturing material handling claims"
+    },
+    {
+      "id": "f4",
+      "predicate": "carrying_capacity",
+      "value_num": 25,
+      "units_any": [
+        "kg"
+      ],
+      "importance": "high",
+      "evidence": "lift 55 pounds (~25 kg) in public unveil"
+    }
+  ],
+  "alt_acceptable": {
+    "carrying_capacity_value_any": [
+      25,
+      55
+    ]
+  },
+  "human_tier_judgment": "C",
+  "human_tier_rationale": "Marketing-first site; quantitative specs mostly in press materials \u2014 competent human finds identity easily, dense datasheet less so.",
+  "notes": "Accept lb or kg for payload."
+}

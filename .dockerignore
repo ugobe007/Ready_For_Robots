@@ -1,0 +1,81 @@
+# Virtual environments (huge - 237MB+)
+.venv/
+.venv_new/
+.venv-harness/
+venv/
+env/
+
+# Node (rebuilt in container; local ~161MB)
+node_modules/
+**/node_modules/
+**/node_modules.old.*/
+frontend/nextjs/node_modules/
+frontend/nextjs/.next/
+readyforrobots-new/node_modules/
+readyforrobots-new/dist/
+.next/
+
+# Python
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+.pytest_cache/
+.venv.broken/
+
+# Git
+.git/
+.gitignore
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Env files (secrets - use Fly secrets)
+.env
+.env.*
+*.env
+
+# Logs & temp
+*.log
+logs/
+*.pid
+celerybeat-schedule
+
+# Docs & extras (not needed at runtime)
+*.md
+!README.md
+!Robot Automation Signal Ontology.md
+reports/
+# Keep ontology + docs/calibration in the image (enums + vendor seed)
+frontend/
+NEW_READYFORROBOTS_WEB/
+readyforrobots-purple/
+scripts/*.backup
+frontend/nextjs/pages/*.backup
+
+# Frontend build output (Docker builds fresh via npm run build)
+frontend/nextjs/out/
+
+scraper_health.json
+
+# Local databases (Fly uses Supabase/Postgres)
+*.db
+*.sqlite
+*.sqlite3
+data/
+migrations.bak/
+test_db.py
+
+# Screenshots & images
+*.png
+*.jpg
+*.jpeg

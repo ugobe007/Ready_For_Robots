@@ -1,0 +1,182 @@
+"""Task models required by a Robot Job — slots and lookups, not fake presence."""
+from __future__ import annotations
+
+import json
+
+from app.services.robot_task_models import (
+    required_task_models_for_job,
+    task_model_open_questions,
+)
+from app.services import robot_ontology as ont
+from app.services.robot_requirement_match import match_job_spec
+
+
+def _ids(models: list[dict]) -> set[str]:
+    return {m["id"] for m in models}
+
+
+def test_ontology_loads_task_model_slots():
+    data = ont.task_model_ontology()
+    slots = data.get("slots") or data.get("slots") or []
+    assert slots
+    assert data.get("ui_term") == "task model"
+    assert data.get("internal_nickname") == "certificate"
+    dumped = json.dumps(slots).lower()
+    assert "certificate" not in dumped
+    assert data.get("shared_lookups")
+    assert data.get("qualify_filters")
+    assert data.get("pricing_lookups")
+    assert data.get("model_layers")
+    assert data.get("data_contract")
+    assert data.get("pricing_contract", {}).get("field_feedback", {}).get("automatic_rebate") is False
+    blob = json.dumps(data).lower()
+    # Chat LLMs may be named as a counterexample, never as the job policy.
+    assert "not warehouse pick" in blob or "not a chat llm" in blob or "not warehouse" in blob
+
+
+def test_warehouse_palletize_needs_pick_policy_unknown():
+    models = required_task_models_for_job(
+        tape_family="pallet",
+        industry="Kinston, NC",
+        title="Pick packed cases from conveyor and stack onto pallets",
+        path="PALLETIZING",
+        text="unload cases from conveyors and stack onto pallets",
+    )
+    assert "warehouse_pick_place_policy" in _ids(models)
+    assert all(m["presence"] == "unknown" for m in models)
+    assert all(m["where_to_look"] for m in models)
+    questions = task_model_open_questions(models)
+    assert any("pick-and-place" in q.lower() or "pick-and-place" in q.lower() for q in questions)
+    names = {d["name"] for m in models for d in m["where_to_look"]}
+    urls = {d["url"] for m in models for d in m["where_to_look"] if d.get("url")}
+    assert any("Hugging Face" in n for n in names)
+    assert any("Argo-Robot" in n or "OpenVLA" in n for n in names)
+    assert "https://openvla.github.io/" in urls
+    assert "https://www.pi.website/blog/pi05" in urls
+    assert "https://research.nvidia.com/labs/gear/gr00t-n1_5/" in urls
+    assert all("utm_source" not in (u or "") and "curius" not in (u or "") for u in urls)
+    assert any("Robotic Data" in n for n in names)
+    assert any("World Labs" in n for n in names)
+    assert any("Mercor" in n for n in names)
+    kinds = {d.get("kind") for m in models for d in m["where_to_look"]}
+    assert "training_data" in kinds
+    assert "sim_to_real" in kinds
+    assert "talent" in kinds
+    assert models[0]["qualify_filters"]
+    assert any(f["id"] == "commercial_license" for f in models[0]["qualify_filters"])
+    assert any(f["id"] == "compute_footprint" for f in models[0]["qualify_filters"])
+    price_names = {d["name"] for d in models[0]["pricing_lookups"]}
+    assert any("BenchLM" in n for n in price_names)
+    assert any("Axe Compute" in n for n in price_names)
+    assert "OpenVLA" in models[0]["candidate_families"]
+    assert "π0.5" in models[0]["candidate_families"]
+    assert any("chat LLM" in q.lower() or "vla" in q.lower() for q in questions)
+    assert any("license" in q.lower() for q in questions)
+    assert any("task-library" in q.lower() or "site-adapted" in q.lower() for q in questions)
+    assert any("field data" in q.lower() or "demo traces" in q.lower() for q in questions)
+    contract = models[0]["contract"]
+    assert contract["layer"]["id"] == "task_library"
+    assert "oem" in contract["who_trains"]
+    assert contract["time_band"]["id"] == "2_to_8_weeks"
+    assert contract["field_feedback"]["automatic_rebate"] is False
+    card = models[0]["card_contract"]
+    assert card["headline"] == "To place this job"
+    assert card["layer"].startswith("Layer:")
+    assert "2–8 weeks" in card["time"] or "2-8" in card["time"]
+    assert "do not automatically reduce" in card["field_feedback"].lower()
+    assert "Task library" in card["list_line"]
+    assert "2–8 weeks" in card["list_line"] or "2-8" in card["list_line"]
+    assert [s["n"] for s in card["steps"]] == [1, 2, 3, 4, 5, 6]
+    assert card["steps"][0]["label"] == "Name the slot"
+    assert "pick" in card["steps"][0]["body"].lower()
+    assert "foundation VLA" in card["steps"][1]["body"]
+    assert "automatically reduce" in card["steps"][5]["body"].lower()
+
+
+def test_warehouse_tote_move_is_amr_nav_not_hospital():
+    models = required_task_models_for_job(
+        tape_family="transport",
+        industry="specialty pharma dc",
+        title="Return empty totes and carts to pack stations",
+        path="pack→return",
+        text="warehouse associates restock pack stations and return totes",
+    )
+    ids = _ids(models)
+    assert "warehouse_amr_fleet_nav" in ids
+    assert "hospital_logistics_transport" not in ids
+    assert all(m["presence"] == "unknown" for m in models)
+
+
+def test_hospital_linen_run_is_clinical_not_warehouse_pick():
+    models = required_task_models_for_job(
+        tape_family="transport",
+        industry="hospital",
+        title="Move soiled linens from nursing units to laundry",
+        path="unit→laundry",
+        text="clinical corridors patient rooms linen carts",
+    )
+    ids = _ids(models)
+    assert "hospital_logistics_transport" in ids
+    assert "warehouse_pick_place_policy" not in ids
+    assert all(m["presence"] == "unknown" for m in models)
+
+
+def test_cnc_tending_needs_machine_tending_policy():
+    models = required_task_models_for_job(
+        tape_family="gripper",
+        industry="precision machining",
+        title="Tend CNC mills/lathes — workpiece load/unload around cycle",
+        path="machine-tend",
+        text="load workpieces into CNC fixtures",
+    )
+    tending = next(m for m in models if m["id"] == "machine_tending_load_unload")
+    assert tending["contract"]["layer"]["id"] == "site_adapted"
+    assert "integrator" in tending["contract"]["who_trains"]
+    assert tending["contract"]["time_band"]["id"] == "4_to_12_weeks"
+    assert "4–12 weeks" in tending["card_contract"]["time"] or "4-12" in tending["card_contract"]["time"]
+    assert "Site-adapted" in tending["card_contract"]["list_line"]
+    assert "integrator" in tending["card_contract"]["list_line"]
+
+
+def test_opaque_job_still_asks_for_a_site_task_policy():
+    models = required_task_models_for_job(
+        tape_family="unknown",
+        title="Unspecified facility work",
+    )
+    assert _ids(models) == {"site_task_policy"}
+    assert models[0]["presence"] == "unknown"
+    urls = {d["url"] for d in models[0]["where_to_look"] if d.get("url")}
+    assert "https://openvla.github.io/" in urls
+    assert "https://www.pi.website/blog/pi05" in urls
+    assert "https://research.nvidia.com/labs/gear/gr00t-n1_5/" in urls
+
+
+def test_kitchen_jobs_use_hospitality_policy_not_opaque_site_task():
+    models = required_task_models_for_job(
+        tape_family="food_prep",
+        industry="Corporate dining",
+        title="Clear dishware and load dishwashers in a corporate kitchen",
+        path="DISH RETURN → DISHWASHER",
+        text="clear tables scrape plates bus dishware load dishwasher kitchen chores",
+    )
+    assert "hospitality_kitchen_policy" in _ids(models)
+    assert "site_task_policy" not in _ids(models)
+    assert all(m["presence"] == "unknown" for m in models)
+
+
+def test_novolex_match_card_exposes_unknown_task_models():
+    from pathlib import Path
+
+    fixtures = Path(__file__).resolve().parent / "fixtures" / "m2_profiles"
+    if not (fixtures / "vega.json").exists():
+        return
+    import json as _json
+
+    profile = _json.loads((fixtures / "vega.json").read_text(encoding="utf-8"))
+    card = match_job_spec(profile, "manip_novolex_kinston_nc")
+    payload = card.to_api_job()
+    assert payload.get("required_task_models")
+    assert all(m["presence"] == "unknown" for m in payload["required_task_models"])
+    blob = _json.dumps(payload).lower()
+    assert "certificate" not in blob
+    assert any("task model" in u.lower() or "policy" in u.lower() for u in card.still_unknown)

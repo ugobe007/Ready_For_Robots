@@ -1,0 +1,1047 @@
+{
+  "ontology_id": "rfr_task_models_v1",
+  "version": "1.3.0",
+  "product_term": "task_model",
+  "internal_nickname": "certificate",
+  "ui_term": "task model",
+  "note": "A task model is a trained policy/skill pack for a specific physical job. Hardware capability is not enough. Do not call these certificates in product UI.",
+  "presence_states": ["unknown", "present", "absent"],
+  "honesty": "Chat LLMs (GPT, Claude, Gemini, Llama, Mistral) are not warehouse pick, hospital logistics, or CNC tending policies. Search vision-language-action families and OEM packs. Token API prices are not robot-policy prices. Field traces do not automatically cut the model price.",
+  "candidate_families": ["OpenVLA", "Octo", "LeRobot", "ACT", "GR00T", "π0.5"],
+  "model_layers": [
+    {
+      "id": "foundation_vla",
+      "label": "Foundation VLA / generalist policy",
+      "who_trains": ["lab", "oem"],
+      "typical_time_band": "months_to_years",
+      "note": "OpenVLA, π0.5, GR00T, Octo, ACT, LeRobot. Pretrained on many robots and tasks. Not qualified for this workplace. Distributors do not train this layer."
+    },
+    {
+      "id": "task_library",
+      "label": "Task library / skill pack",
+      "who_trains": ["oem"],
+      "typical_time_band": "licensed_days_to_weeks",
+      "note": "OEM application store: warehouse pick, hospital linen, floor scrub, kitchen dish. Specific libraries for specific tasks. Usually licensed, not trained from scratch by the distributor."
+    },
+    {
+      "id": "site_adapted",
+      "label": "Site-adapted policy",
+      "who_trains": ["integrator", "oem_field", "customer_ops"],
+      "typical_time_band": "2_to_8_weeks",
+      "note": "Fine-tune or program this floorplate, SKU mix, fixture, SOP. This is the unpaid hole when a channel only resells the chassis."
+    }
+  ],
+  "training_time_bands": [
+    {
+      "id": "licensed_days_to_weeks",
+      "label": "Days to ~2 weeks",
+      "meaning": "Install and license an existing OEM pack; mapping and smoke test. Not greenfield training."
+    },
+    {
+      "id": "1_to_4_weeks",
+      "label": "1–4 weeks",
+      "meaning": "Site map, coverage program, or a small fine-tune when demonstration traces already exist."
+    },
+    {
+      "id": "2_to_8_weeks",
+      "label": "2–8 weeks",
+      "meaning": "Collect demos, fine-tune, evaluate, and qualify on this cell. Typical pick/AMR adapt."
+    },
+    {
+      "id": "4_to_12_weeks",
+      "label": "4–12 weeks",
+      "meaning": "Custom cell, fixture, clinical SOP, or kitchen menu. Integrator SOW, not a download."
+    },
+    {
+      "id": "months_to_years",
+      "label": "Months to years",
+      "meaning": "Foundation VLA pretrain. Lab/OEM compute. Not the distributor's job."
+    }
+  ],
+  "data_contract": {
+    "summary": "The robot company or distributor must bring workplace evidence. A SKU URL is not enough to train or qualify a policy.",
+    "you_provide": [
+      {
+        "id": "site_map",
+        "label": "Site map / layout",
+        "examples": "CAD, BIM, fleet map, aisle widths, keep-out zones"
+      },
+      {
+        "id": "work_objects",
+        "label": "Work objects",
+        "examples": "SKU list, tote/case dimensions, payload, fixture drawings, menu/dish mix"
+      },
+      {
+        "id": "demonstrations",
+        "label": "Demonstration traces",
+        "examples": "Teleop or human videos of the successful task; hours of episodes, not a brochure"
+      },
+      {
+        "id": "failures",
+        "label": "Failure cases",
+        "examples": "Drops, collisions, occlusions, night-shift lighting, wet floors"
+      },
+      {
+        "id": "sop_safety",
+        "label": "SOP and safety envelope",
+        "examples": "Who shares the aisle, infection-control rules, e-stop, payload limits"
+      }
+    ],
+    "you_do_not_owe": [
+      "A foundation VLA pretrain dataset — that is the lab/OEM layer",
+      "Invented wages or FTE economics for the Job Card"
+    ]
+  },
+  "pricing_contract": {
+    "honesty": "Do not invent dollars. Token API list prices are not OEM pack prices and not GPU hours for a cell policy.",
+    "who_pays": [
+      {
+        "layer": "foundation_vla",
+        "typical": "Research weights are often free; commercial use needs a license. Training this layer is not a distributor line item."
+      },
+      {
+        "layer": "task_library",
+        "typical": "OEM quotes a pack per robot, per site, or per fleet. Usually not on a public price list."
+      },
+      {
+        "layer": "site_adapted",
+        "typical": "Integrator SOW is often the largest cost. Channel partners who only resell hardware leave this unpaid."
+      }
+    ],
+    "field_feedback": {
+      "automatic_rebate": false,
+      "note": "In-field traces usually improve the OEM's library, not the customer's invoice. A price cut happens only if the contract says so (data-for-license, reduced support, or a written rebate). Do not promise a discount because the robot learned on site."
+    }
+  },
+  "qualify_filters": [
+    {
+      "id": "task_family",
+      "label": "Is it a robot policy (VLA / OEM pack), not a chat LLM?",
+      "note": "OpenVLA, π0.5, Octo, LeRobot, ACT, GR00T N1.5, or an OEM application pack. GPT/Claude/Gemini/Llama text APIs do not pick cases or run hospital linens."
+    },
+    {
+      "id": "commercial_license",
+      "label": "Does the license allow commercial placement?",
+      "note": "Research-only and non-commercial CC licenses cannot put a robot into paid work. Check the model card before a distributor quotes a job."
+    },
+    {
+      "id": "compute_footprint",
+      "label": "Can it run on this robot, on-prem, or only in the cloud?",
+      "note": "On-robot / edge work prefers small or quantized policies (often under ~8B parameters, or an OEM stack). Cloud VLMs are not the cell policy. Physical AI also pays simulation + always-on inference, not one pretrain run."
+    },
+    {
+      "id": "context_window",
+      "label": "Does context match the job (site map, video, long SOP)?",
+      "note": "Huge context windows matter for long video or documents. A pick cell still needs the motor policy, not a 1M-token chat window."
+    },
+    {
+      "id": "site_qualification",
+      "label": "Has it been qualified on this workplace?",
+      "note": "A downloaded checkpoint is not a site-qualified warehouse or hospital policy until that site says so."
+    }
+  ],
+  "pricing_lookups": [
+    {
+      "kind": "token_price_index",
+      "name": "BenchLM LLM pricing",
+      "url": "https://benchlm.ai/llm-pricing",
+      "note": "Pay-per-token / image API list prices. Useful for managed VLMs. Not a price for an OEM warehouse pack or a trained cell policy."
+    },
+    {
+      "kind": "physical_compute",
+      "name": "Axe Compute — physical AI compute stack",
+      "url": "https://axecompute.com/physical-ai-compute-stack/",
+      "note": "Why robot policies cost more than LLMs: simulation, synthetic data, VLA training, and continuous on-robot inference. Quote GPU hours here — do not invent a dollar figure."
+    },
+    {
+      "kind": "managed_api",
+      "name": "Vertex AI Model Garden",
+      "url": "https://cloud.google.com/vertex-ai/generative-ai/docs/model-garden/explore-models",
+      "note": "Google Gemini plus curated open models, billed per token/image. Not a robot cell license."
+    },
+    {
+      "kind": "managed_api",
+      "name": "Amazon Bedrock",
+      "url": "https://aws.amazon.com/bedrock/",
+      "note": "Unified API pricing for Claude, Llama, Titan, and others. Filter by use case; still not a warehouse pick policy."
+    },
+    {
+      "kind": "managed_api",
+      "name": "Azure AI Foundry",
+      "url": "https://ai.azure.com/",
+      "note": "OpenAI frontier models plus enterprise open-source. Pay-per-token. Does not qualify a hospital AMR."
+    },
+    {
+      "kind": "managed_api",
+      "name": "Databricks Foundation Model APIs",
+      "url": "https://docs.databricks.com/gcp/en/machine-learning/foundation-model-apis/",
+      "note": "Hosted FM pay-per-token on Databricks. Orientation for cloud cost, not physical-task pricing."
+    },
+    {
+      "kind": "oem_quote",
+      "name": "OEM application / fleet license quote",
+      "url": null,
+      "note": "Usually not on a public price list. Ask the OEM what the task pack costs for this SKU."
+    },
+    {
+      "kind": "integrator_sow",
+      "name": "Integrator cell / site-program SOW",
+      "url": null,
+      "note": "Custom training and fixture programs are often the largest line item. Distributors who only resell hardware leave this unpaid."
+    }
+  ],
+  "shared_lookups": [
+    {
+      "kind": "open_weights",
+      "name": "OpenVLA",
+      "url": "https://openvla.github.io/",
+      "note": "7B open VLA pretrained on Open X-Embodiment. Project page and Hugging Face checkpoints. Presence on a candidate is unknown until named."
+    },
+    {
+      "kind": "foundation_robotics",
+      "name": "Physical Intelligence π0.5",
+      "url": "https://www.pi.website/blog/pi05",
+      "note": "VLA with open-world generalization (April 2025). Not a site-qualified warehouse or hospital pack."
+    },
+    {
+      "kind": "open_weights",
+      "name": "NVIDIA GR00T N1.5",
+      "url": "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
+      "note": "Open foundation VLA for generalist humanoid robots (NVIDIA GEAR). Weights on Hugging Face. Presence on a candidate is unknown."
+    },
+    {
+      "kind": "open_weights",
+      "name": "Hugging Face robotics models",
+      "url": "https://huggingface.co/models?pipeline_tag=robotics",
+      "note": "Filter by robotics tasks. Then search OpenVLA, Octo, LeRobot. Presence on a candidate is unknown until named."
+    },
+    {
+      "kind": "open_weights",
+      "name": "Hugging Face — OpenVLA checkpoints",
+      "url": "https://huggingface.co/models?search=openvla",
+      "note": "Downloadable OpenVLA weights. The project page is the canonical lookup; this is the checkpoint index."
+    },
+    {
+      "kind": "open_weights",
+      "name": "LeRobot on Hugging Face",
+      "url": "https://huggingface.co/lerobot",
+      "note": "Open robotics datasets and policies for download, fine-tune, and self-host."
+    },
+    {
+      "kind": "curated_survey",
+      "name": "Argo-Robot foundation models for manipulation",
+      "url": "https://github.com/Argo-Robot/foundation_models",
+      "note": "Survey of imitation-learning manipulation FMs (ACT, Octo, OpenVLA, Helix). Research map, not a storefront."
+    },
+    {
+      "kind": "curated_survey",
+      "name": "Foundation models in robotics (Robocloud)",
+      "url": "https://robocloud-dashboard.vercel.app/learn/blog/foundation-models-robotics",
+      "note": "Orientation on robotics foundation models. Not a catalog of site-qualified policies."
+    },
+    {
+      "kind": "benchmarks",
+      "name": "Papers with Code — robotics / manipulation",
+      "url": "https://paperswithcode.com/task/robot-manipulation",
+      "note": "Academic leaderboards mapped to code and weights. Best-on-benchmark ≠ qualified on this workplace."
+    },
+    {
+      "kind": "github",
+      "name": "GitHub — foundation-model codebases",
+      "url": "https://github.com/topics/foundation-models",
+      "note": "Cutting-edge weights often land here before commercial platforms. Search Awesome Foundation Models / Awesome robotics VLAs."
+    },
+    {
+      "kind": "training_data",
+      "name": "Robotic Data",
+      "url": "https://roboticdata.com/",
+      "note": "Real-world Physical AI training data (LiDAR, human/task traces). A dataset is not a site-qualified warehouse or hospital policy. Do not invent a dataset price."
+    },
+    {
+      "kind": "sim_to_real",
+      "name": "World Labs — real-to-sim-to-real (SceniX)",
+      "url": "https://www.worldlabs.ai/blog/real-to-sim-to-real",
+      "note": "Train and evaluate robot policies in reconstructed scenes, then transfer back to the physical cell. Simulation success is not workplace qualification."
+    },
+    {
+      "kind": "talent",
+      "name": "Mercor",
+      "url": "https://www.mercor.com/",
+      "note": "People who can train, fine-tune, or host a robot policy. This is who builds the task model — not SIGNAL buyers and not a price list."
+    }
+  ],
+  "slots": [
+    {
+      "id": "warehouse_pick_place_policy",
+      "label": "Warehouse pick-and-place policy",
+      "vertical": "warehouse",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Pick, place, and stow SKUs or totes in a fulfillment cell",
+      "tape_families": ["gripper", "pallet", "transport"],
+      "keywords": ["warehouse", "fulfillment", "distribution center", "asin", "pick station", "pallet", "case", "carton", "conveyor", "palletiz", "logistics", "3pl", "cross-dock"],
+      "hardware_not_enough": "A mobile manipulator can exist in the DC and still lack the pick policy for that SKU mix.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "OEM skill / application store",
+          "url": null,
+          "note": "Ask the robot OEM which warehouse pick policy they ship for this SKU class."
+        },
+        {
+          "kind": "open_weights",
+          "name": "OpenVLA",
+          "url": "https://openvla.github.io/",
+          "note": "7B open VLA. Checkpoints on Hugging Face. Presence on a candidate is unknown until named."
+        },
+        {
+          "kind": "foundation_robotics",
+          "name": "Physical Intelligence π0.5",
+          "url": "https://www.pi.website/blog/pi05",
+          "note": "Open-world VLA. Still must be qualified on this workplace."
+        },
+        {
+          "kind": "open_weights",
+          "name": "NVIDIA GR00T N1.5",
+          "url": "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
+          "note": "GEAR open foundation VLA. Not proof that this job is done."
+        },
+        {
+          "kind": "open_weights",
+          "name": "Hugging Face robotics models",
+          "url": "https://huggingface.co/models?pipeline_tag=robotics",
+          "note": "Public checkpoints. Presence on a candidate is unknown until named."
+        }
+      ]
+    },
+    {
+      "id": "warehouse_amr_fleet_nav",
+      "label": "Warehouse AMR navigation / fleet policy",
+      "vertical": "warehouse",
+      "layer": "task_library",
+      "who_trains": ["oem", "customer_ops"],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Navigate aisles, docks, and human traffic while moving goods",
+      "tape_families": ["transport", "cart"],
+      "keywords": ["amr", "agv", "warehouse", "fulfillment", "dock", "tote", "cart", "aisle", "zone", "logistics", "3pl", "cross-dock"],
+      "hardware_not_enough": "A drive base is not a site-qualified navigation model for that map and traffic mix.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "AMR OEM fleet software",
+          "url": null,
+          "note": "Site map + traffic rules are usually OEM-specific, not transferable hardware."
+        },
+        {
+          "kind": "open_weights",
+          "name": "Hugging Face robotics / navigation checkpoints",
+          "url": "https://huggingface.co/models?pipeline_tag=robotics",
+          "note": "Look for navigation or VLN policies; do not assume they run on this SKU."
+        }
+      ]
+    },
+    {
+      "id": "machine_tending_load_unload",
+      "label": "Machine-tending load/unload policy",
+      "vertical": "manufacturing",
+      "layer": "site_adapted",
+      "who_trains": ["integrator"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Load and unload parts on CNC / process machines without crashing the fixture",
+      "tape_families": ["gripper"],
+      "keywords": ["cnc", "machine tend", "machine-tend", "lathe", "mill", "workpiece", "fixture", "load/unload", "tending", "factory", "assembly line", "plant"],
+      "hardware_not_enough": "Reach and payload do not encode fixture geometry or cycle interlocks.",
+      "where_to_look": [
+        {
+          "kind": "integrator_cell",
+          "name": "Integrator / OEM tending cell software",
+          "url": null,
+          "note": "Often a custom cell program, not a downloadable general model."
+        },
+        {
+          "kind": "sim_to_real",
+          "name": "NVIDIA Isaac industrial examples",
+          "url": "https://developer.nvidia.com/isaac",
+          "note": "Starting point only; the fixture model is site-specific."
+        }
+      ]
+    },
+    {
+      "id": "hospital_logistics_transport",
+      "label": "Hospital logistics transport policy",
+      "vertical": "healthcare",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Move linens, meals, meds, or samples through clinical corridors under hospital rules",
+      "tape_families": ["clinical_delivery", "transport", "cart"],
+      "keywords": [
+        "hospital",
+        "healthcare",
+        "clinic",
+        "clinical",
+        "nursing",
+        "nursing unit",
+        "patient",
+        "pharmacy",
+        "linen",
+        "or suite",
+        "operating room",
+        "med-surg",
+        "unit-delivery",
+        "unit delivery",
+        "medication",
+        "specimen",
+        "lab sample"
+      ],
+      "hardware_not_enough": "Indoor mobility is not a HIPAA/infection-control qualified clinical transport policy.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Clinical AMR OEM application pack",
+          "url": null,
+          "note": "Aethon, Diligent, and similar ship hospital-specific behaviors — not warehouse AMR software."
+        },
+        {
+          "kind": "open_weights",
+          "name": "Hugging Face robotics models",
+          "url": "https://huggingface.co/models?pipeline_tag=robotics",
+          "note": "Public models rarely include hospital SOP. Treat as unknown unless named."
+        }
+      ]
+    },
+    {
+      "id": "floor_cleaning_policy",
+      "label": "Autonomous floor-cleaning policy",
+      "vertical": "commercial",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Cover and reclean floors to a specified soil standard without colliding with people",
+      "tape_families": ["scrub"],
+      "keywords": ["scrub", "floor clean", "janitorial", "custodial"],
+      "hardware_not_enough": "A scrub deck is not the coverage policy for that floorplate.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Scrubber OEM autonomy stack",
+          "url": null,
+          "note": "Avidbots, Tennant, etc. ship site maps + cleaning programs with the machine."
+        }
+      ]
+    },
+    {
+      "id": "inspection_route_policy",
+      "label": "Inspection-route policy",
+      "vertical": "utilities",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Follow a route and capture the right observations (leak, thermal, visual)",
+      "tape_families": ["inspect"],
+      "keywords": ["inspect", "patrol", "thermal", "leak"],
+      "hardware_not_enough": "Cameras plus legs/wheels are not an inspection checklist model.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Inspection OEM mission software",
+          "url": null,
+          "note": "Spot, ANYmal, and similar: missions are sold/configured separately from the platform."
+        }
+      ]
+    },
+    {
+      "id": "hospitality_kitchen_policy",
+      "label": "Kitchen / hospitality task policy",
+      "vertical": "hospitality",
+      "layer": "site_adapted",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Prepare food or drinks, run dishes, or clean up a kitchen under that site's rules",
+      "tape_families": ["serve", "food_prep", "beverage"],
+      "keywords": [
+        "kitchen", "restaurant", "cafe", "hotel", "dining", "espresso",
+        "barista", "dishwasher", "hospitality", "cafeteria", "cocktail"
+      ],
+      "hardware_not_enough": "A kitchen-capable chassis is not a trained policy for this site's menu, dish mix, or layout.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "OEM kitchen / hospitality skill pack",
+          "url": null,
+          "note": "Ask which food, drink, or dish policy they ship for this workplace — not only which robot."
+        },
+        {
+          "kind": "open_weights",
+          "name": "OpenVLA",
+          "url": "https://openvla.github.io/",
+          "note": "Open VLA. Presence on a candidate is unknown until named."
+        },
+        {
+          "kind": "foundation_robotics",
+          "name": "Physical Intelligence π0.5",
+          "url": "https://www.pi.website/blog/pi05",
+          "note": "Open-world VLA. Still must be qualified on this kitchen."
+        },
+        {
+          "kind": "open_weights",
+          "name": "NVIDIA GR00T N1.5",
+          "url": "https://research.nvidia.com/labs/gear/gr00t-n1_5/",
+          "note": "Humanoid foundation model. Presence on this SKU is unknown until named."
+        }
+      ]
+    },
+    {
+      "id": "restroom_cleaning_policy",
+      "label": "Restroom cleaning policy",
+      "vertical": "commercial",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Clean restroom fixtures and floors to that facility's standard",
+      "tape_families": ["restroom"],
+      "keywords": ["restroom", "bathroom", "toilet", "urinal"],
+      "hardware_not_enough": "A mobile cleaner is not the restroom coverage policy for this floorplate.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Cleaning OEM autonomy stack",
+          "url": null,
+          "note": "Ask which restroom program they ship for this workplace."
+        }
+      ]
+    },
+    {
+      "id": "crop_weeding_policy",
+      "label": "Crop weeding policy",
+      "vertical": "agriculture",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Remove weeds in row crops with laser or mechanical tools without damaging the crop",
+      "tape_families": ["agriculture"],
+      "keywords": ["weed", "weeding", "laserweed", "laser weeder", "row crop", "vegetable row", "field", "agriculture", "crop"],
+      "hardware_not_enough": "A field robot is not a trained weeding policy for that crop, spacing, and soil.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Agriculture OEM weeding pack",
+          "url": null,
+          "note": "Ask Carbon Robotics / FarmWise which weeding policy they ship for this crop and row spacing. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "crop_field_policy",
+      "label": "Field spray / harvest policy",
+      "vertical": "agriculture",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Spray, seed, or harvest a named crop under that field's map and season rules",
+      "tape_families": ["agriculture"],
+      "keywords": ["harvest", "spray", "seed", "orchard", "vineyard", "crop"],
+      "hardware_not_enough": "A tractor or gantry is not the spray/harvest policy for this crop mix.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Agriculture OEM application pack",
+          "url": null,
+          "note": "Ask which field policy they ship for this crop — not only which chassis."
+        }
+      ]
+    },
+    {
+      "id": "marine_hull_policy",
+      "label": "Hull / port / underwater work policy",
+      "vertical": "marine",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Inspect or clean a hull, quay, or underwater structure along a named route",
+      "tape_families": ["marine"],
+      "keywords": ["hull", "port", "underwater", "quay", "shipyard", "ballast"],
+      "hardware_not_enough": "A wet chassis is not a qualified hull-inspection or quay policy.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Marine OEM mission software",
+          "url": null,
+          "note": "Ask which hull/port mission they ship for this vessel class. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "aviation_hangar_policy",
+      "label": "Hangar / airside aircraft work policy",
+      "vertical": "aviation",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Inspect or service an aircraft in a hangar or on the ramp under airside rules",
+      "tape_families": ["avionics"],
+      "keywords": ["hangar", "airside", "aircraft", "fuselage", "ramp", "aviation"],
+      "hardware_not_enough": "A mobile platform is not an airside-qualified aircraft inspection policy. A drone may do this work; satellites are aerospace, not this slot.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Aviation OEM hangar / NDT pack",
+          "url": null,
+          "note": "Ask which hangar or airside policy they ship for this airframe. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "construction_jobsite_policy",
+      "label": "Jobsite layout / earthwork / finishing policy",
+      "vertical": "construction",
+      "layer": "site_adapted",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Print layout, move earth, or finish surfaces on this jobsite under that GC's rules",
+      "tape_families": ["construction"],
+      "keywords": ["jobsite", "layout", "drywall", "earthwork", "rebar", "grade", "framing", "construction", "bricklaying"],
+      "hardware_not_enough": "A construction chassis is not the layout or finishing policy for this floorplate.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Construction OEM jobsite pack",
+          "url": null,
+          "note": "Ask Dusty / Built / Canvas which site policy they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "combine_harvest_policy",
+      "label": "Combine harvest policy",
+      "vertical": "agriculture",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Autonomously harvest grain with a combine header under that field's map and crop moisture rules",
+      "tape_families": ["agriculture"],
+      "keywords": ["combine", "x9", "lexion", "grain harvest", "header", "thresh"],
+      "hardware_not_enough": "A combine chassis is not the harvest policy for this crop, header, and moisture band.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Combine OEM autonomy pack",
+          "url": null,
+          "note": "Ask John Deere / CLAAS / CNH which combine harvest policy they ship for this header. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "tractor_plant_harvest_policy",
+      "label": "Tractor planting / harvest policy",
+      "vertical": "agriculture",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Plant or support harvest with an autonomous tractor under that field's AB lines and season rules",
+      "tape_families": ["agriculture"],
+      "keywords": ["tractor", "planting", "autonomous tractor", "mk-v", "8r"],
+      "hardware_not_enough": "A tractor is not the plant/harvest policy for this crop mix and implement set.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Tractor OEM autonomy pack",
+          "url": null,
+          "note": "Ask Deere / Monarch / CNH / AGCO which field policy they ship for this tractor SKU. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "tractor_implement_policy",
+      "label": "Tractor-implement work policy",
+      "vertical": "agriculture",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Run a named implement on a tractor host (weed, see-and-spray, precision spray) without treating the implement as its own company class",
+      "tape_families": ["agriculture"],
+      "keywords": ["implement", "three-point", "hitch", "see & spray", "see-and-spray", "ara sprayer"],
+      "hardware_not_enough": "An implement on a tractor is a configuration. The host plus the implement still need the field policy for this crop.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Implement OEM pack on the named tractor host",
+          "url": null,
+          "note": "Configuration = implement_on_host + host_platform=tractor. Ask which crop policy they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "residential_construction_policy",
+      "label": "Residential home construction policy",
+      "vertical": "construction",
+      "layer": "site_adapted",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Frame, print, or finish a house under that builder's plans and site rules",
+      "tape_families": ["construction"],
+      "keywords": ["home", "house", "residential", "framing", "3d print home", "vulcan"],
+      "hardware_not_enough": "A construction chassis is not the home-building policy for this floorplan.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Homebuilding OEM site pack",
+          "url": null,
+          "note": "Ask ICON / Diamond Age / Mighty Buildings which house policy they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "building_construction_policy",
+      "label": "Building construction policy",
+      "vertical": "construction",
+      "layer": "site_adapted",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Lay block, print, or finish a commercial or multi-story building under that GC's rules",
+      "tape_families": ["construction"],
+      "keywords": ["building", "commercial building", "hadrian", "bod2", "bricklay", "block laying"],
+      "hardware_not_enough": "A building robot is not the layout or masonry policy for this structure.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Building OEM site pack",
+          "url": null,
+          "note": "Ask FBR / COBOD / Monumental / Construction Robotics which building policy they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "drone_inspection_policy",
+      "label": "Drone inspection policy",
+      "vertical": "aviation",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Fly an inspection route and capture the right observations (airframe, utility, site)",
+      "tape_families": ["avionics"],
+      "keywords": ["drone inspect", "uav inspect", "skydio", "aerial inspect", "airframe inspect"],
+      "hardware_not_enough": "A drone airframe is not the inspection checklist model for that asset.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Drone OEM mission software",
+          "url": null,
+          "note": "Ask Skydio / Shield which inspection mission they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "drone_delivery_policy",
+      "label": "Drone delivery policy",
+      "vertical": "aviation",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Fly a delivery route and drop or dock a payload under that corridor's rules",
+      "tape_families": ["avionics"],
+      "keywords": ["drone delivery", "zipline", "wing delivery", "medical drone"],
+      "hardware_not_enough": "A delivery airframe is not the corridor and drop policy for this route.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Delivery-drone OEM fleet software",
+          "url": null,
+          "note": "Ask Zipline / Wing which route policy they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "evtol_flight_policy",
+      "label": "eVTOL flight policy",
+      "vertical": "aviation",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Fly an eVTOL (flying-car class) route under that vertiport and airspace rule set",
+      "tape_families": ["avionics"],
+      "keywords": ["evtol", "e-vtol", "flying car", "joby", "archer", "wisk", "beta alia"],
+      "hardware_not_enough": "An eVTOL airframe is not the type-certified route policy for this city pair.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "eVTOL OEM flight software",
+          "url": null,
+          "note": "Ask Joby / Archer / Wisk / Beta which flight policy they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "autonomous_flight_policy",
+      "label": "Autonomous airplane flight policy",
+      "vertical": "aviation",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Fly an airplane-like robot under that IFR route and airport pair",
+      "tape_families": ["avionics"],
+      "keywords": ["autonomous aircraft", "autonomous plane", "optionally piloted", "reliable robotics"],
+      "hardware_not_enough": "An airplane airframe is not the autonomous flight policy for this pair of airports.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Autonomous-aircraft OEM stack",
+          "url": null,
+          "note": "Ask which type-specific flight policy they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "satellite_servicing_policy",
+      "label": "Satellite servicing policy",
+      "vertical": "aerospace",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "months_to_years",
+      "physical_task": "Rendezvous, dock, or service a named satellite on orbit",
+      "tape_families": ["aerospace"],
+      "keywords": ["satellite servicing", "elsa-d", "on-orbit servicing", "mission extension", "refuel satellite"],
+      "hardware_not_enough": "A servicing bus is not the rendezvous policy for that client satellite.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Servicing OEM flight software",
+          "url": null,
+          "note": "Ask Astroscale / Northrop / Orbit Fab which servicing policy they fly. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "orbital_debris_policy",
+      "label": "Orbital debris removal policy",
+      "vertical": "aerospace",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "months_to_years",
+      "physical_task": "Capture or deorbit debris with a robot attached to a servicing satellite",
+      "tape_families": ["aerospace"],
+      "keywords": ["space debris", "orbital debris", "debris capture", "adras-j", "clearspace", "debris removal"],
+      "hardware_not_enough": "A capture arm on a satellite is a configuration. The debris-capture policy is still unknown until named.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Debris-removal OEM mission software",
+          "url": null,
+          "note": "Ask Astroscale / ClearSpace which capture policy they fly. Presence starts unknown. Do not invent a space-Walmart employer."
+        }
+      ]
+    },
+    {
+      "id": "launch_ground_support_policy",
+      "label": "Launch / rocket ground-support policy",
+      "vertical": "aerospace",
+      "layer": "site_adapted",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Handle, inspect, or service a launch vehicle or payload on the pad under that range's rules",
+      "tape_families": ["aerospace"],
+      "keywords": ["launch pad", "ground support", "rocket", "payload processing"],
+      "hardware_not_enough": "A ground robot is not the pad policy for this vehicle and range.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "GSE / pad OEM program",
+          "url": null,
+          "note": "Ask which pad policy they ship. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "mining_haulage_policy",
+      "label": "Mine / quarry haulage policy",
+      "vertical": "mining",
+      "layer": "task_library",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "2_to_8_weeks",
+      "physical_task": "Haul ore or overburden on a named pit, stope, or underground route under that mine's traffic rules",
+      "tape_families": ["mining"],
+      "keywords": [
+        "mining",
+        "mine",
+        "quarry",
+        "haul truck",
+        "haulage",
+        "underground mining",
+        "stope",
+        "longwall",
+        "ore",
+        "overburden"
+      ],
+      "hardware_not_enough": "A haul chassis is not the traffic and dump policy for this pit or stope.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Mining OEM autonomy pack",
+          "url": null,
+          "note": "Ask which haulage policy they ship for this pit or underground loop. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "hotel_guest_service_policy",
+      "label": "Hotel / guest delivery and serving policy",
+      "vertical": "hospitality",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Deliver amenities, luggage, or table items through hotel or dining floors under that property's guest rules",
+      "tape_families": ["serve", "cart"],
+      "keywords": [
+        "hotel",
+        "resort",
+        "guest room",
+        "guest delivery",
+        "bellhop",
+        "room service",
+        "housekeeping",
+        "table service",
+        "food running",
+        "bussing",
+        "serving",
+        "hospitality"
+      ],
+      "hardware_not_enough": "Indoor mobility is not a guest-service policy for this property's floors and SOPs.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Hospitality OEM guest-service pack",
+          "url": null,
+          "note": "Ask which hotel or serving policy they ship for this property — not only which chassis."
+        }
+      ]
+    },
+    {
+      "id": "food_prep_station_policy",
+      "label": "Food-prep station policy",
+      "vertical": "restaurant",
+      "layer": "site_adapted",
+      "who_trains": ["oem", "integrator"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Cook or prep named menu items at a fry, grill, or prep station under that kitchen's recipes",
+      "tape_families": ["food_prep"],
+      "keywords": [
+        "food prep",
+        "food preparation",
+        "fry station",
+        "fryer",
+        "grill",
+        "cooking",
+        "cook",
+        "kitchen",
+        "make line",
+        "bowl assembly",
+        "prep cook",
+        "qsr",
+        "fast casual",
+        "kitchen automation",
+        "ingredient dosing",
+        "tortilla",
+        "assembly line kitchen"
+      ],
+      "hardware_not_enough": "A kitchen-capable arm is not the recipe and station policy for this menu.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Food-prep OEM skill pack",
+          "url": null,
+          "note": "Ask which fry/grill/prep policy they ship for this station. Presence starts unknown."
+        }
+      ]
+    },
+    {
+      "id": "site_task_policy",
+      "label": "Site-specific task policy",
+      "vertical": "any",
+      "layer": "site_adapted",
+      "who_trains": ["integrator", "oem_field"],
+      "typical_time_band": "4_to_12_weeks",
+      "physical_task": "Perform this job's physical tasks under this workplace's rules",
+      "tape_families": [],
+      "keywords": [],
+      "hardware_not_enough": "A robot SKU is not a trained policy for this workplace's tasks.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "OEM skill / application store",
+          "url": null,
+          "note": "Ask which task policy they ship for this work — not only which chassis."
+        },
+        {
+          "kind": "integrator_cell",
+          "name": "Integrator-developed cell or site program",
+          "url": null,
+          "note": "Often custom and expensive. Distributors who only resell hardware leave this unpaid."
+        },
+        {
+          "kind": "open_weights",
+          "name": "Hugging Face robotics models",
+          "url": "https://huggingface.co/models?pipeline_tag=robotics",
+          "note": "Public checkpoints. Presence on a candidate is unknown until named."
+        }
+      ]
+    },
+    {
+      "id": "dining_floor_service_policy",
+      "label": "Dining-floor serving policy",
+      "vertical": "restaurant",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Run food and drinks to tables and bus dishware under that venue's floor rules",
+      "tape_families": ["serve"],
+      "keywords": [
+        "table service",
+        "food running",
+        "bussing",
+        "tray delivery",
+        "restaurant delivery",
+        "waiter",
+        "dining room"
+      ],
+      "hardware_not_enough": "A tray-carrying AMR is not the serving policy for this dining room.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Serving OEM floor pack",
+          "url": null,
+          "note": "Ask which table-service or bussing policy they ship for this restaurant — not only which chassis."
+        }
+      ]
+    },
+    {
+      "id": "commercial_cleaning_policy",
+      "label": "Commercial floor-cleaning policy",
+      "vertical": "commercial",
+      "layer": "task_library",
+      "who_trains": ["oem"],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Vacuum, scrub, or mop named floors in F&B and public venues to that site's soil standard",
+      "tape_families": ["scrub", "restroom"],
+      "keywords": [
+        "floor cleaning",
+        "commercial cleaning",
+        "vacuuming",
+        "scrubbing",
+        "mopping",
+        "sweeping",
+        "janitor",
+        "custodian"
+      ],
+      "hardware_not_enough": "A scrub deck is not the coverage policy for this floorplate.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Cleaning OEM autonomy pack",
+          "url": null,
+          "note": "Ask which floor program they ship for this venue — not only which chassis."
+        }
+      ]
+    }
+  ]
+}

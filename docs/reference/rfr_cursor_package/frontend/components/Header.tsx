@@ -1,0 +1,251 @@
+/**
+ * Header — ReadyForRobots
+ * Floating nav · transparent · desktop links + mobile slide-in drawer
+ * Color system: #0d0520 bg · #7c3aed purple (brand) · #03DAC5 teal (action/live/CTA)
+ * Mobile drawer: full-height slide-in from right, includes SCOUT chat entry
+ */
+import { useState, useEffect } from "react";
+import { Menu, X, ArrowRight, Zap, MessageSquare, LayoutDashboard, Radio, HelpCircle, DollarSign, Info, ChevronRight, Settings2 } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { useScoutChat } from "@/components/ScoutChat";
+
+function smoothScroll(href: string) {
+  if (href.startsWith("#")) {
+    const el = document.querySelector(href);
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  }
+}
+
+export default function Header() {
+  const [open, setOpen] = useState(false);
+  const [location] = useLocation();
+  const { openChat } = useScoutChat();
+
+  const isHome = location === "/";
+
+  // Lock body scroll when drawer is open
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [open]);
+
+  const closeDrawer = () => setOpen(false);
+
+  const navLinks = [
+    { label: "Pipeline", href: "/pipeline", icon: LayoutDashboard, desc: "Your live prospect queue" },
+    { label: "Signals", href: "/signals", icon: Radio, desc: "Buying signals detected today" },
+    { label: "How It Works", href: "/how-it-works", icon: HelpCircle, desc: "How SCOUT finds your deals" },
+    { label: "Pricing", href: "/pricing", icon: DollarSign, desc: "Plans & pricing" },
+  ];
+
+  return (
+    <>
+      <header className="fixed top-0 left-0 right-0 z-50">
+        <div
+          className="absolute inset-0 pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, rgba(13,5,32,0.92) 0%, transparent 100%)" }}
+        />
+        <div className="relative max-w-6xl mx-auto px-6 py-5 flex items-center justify-between gap-4">
+
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0">
+            <img
+              src="/manus-storage/pasted_file_CaSE94_favicon2_51319e23.png"
+              alt="ReadyForRobots logo"
+              className="h-8 w-8 rounded-lg"
+            />
+            <span className="text-sm font-semibold text-white tracking-tight" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+              ReadyForRobots
+            </span>
+          </Link>
+
+          {/* Desktop nav */}
+          <nav className="hidden md:flex items-center gap-1">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="px-3.5 py-2 rounded-lg text-xs font-semibold transition-colors"
+                style={
+                  location === link.href
+                    ? { color: "#03DAC5", background: "rgba(3,218,197,0.1)" }
+                    : { color: "rgba(255,255,255,0.45)" }
+                }
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
+
+          {/* Right side */}
+          <div className="flex items-center gap-2">
+            {/* Live badge */}
+            <span
+              className="hidden sm:flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full"
+              style={{ color: "#03DAC5", background: "rgba(3,218,197,0.1)", border: "1px solid rgba(3,218,197,0.25)" }}
+            >
+              <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
+              Live
+            </span>
+
+            {/* CTA */}
+            <Link href="/results?url=">
+              <button
+                className="hidden sm:flex items-center gap-1.5 text-sm font-semibold px-4 py-2 rounded-lg transition-all hover:-translate-y-0.5"
+                style={{ color: "#03DAC5", border: "1px solid rgba(3,218,197,0.45)", background: "rgba(3,218,197,0.06)" }}
+              >
+                <Zap className="h-3.5 w-3.5" /> Scan URL
+              </button>
+            </Link>
+
+            {/* Hamburger */}
+            <button
+              onClick={() => setOpen(!open)}
+              className="h-9 w-9 flex items-center justify-center rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+              aria-label={open ? "Close menu" : "Open menu"}
+            >
+              {open ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/* ── Mobile drawer ── */}
+      {/* Backdrop */}
+      <div
+        className="fixed inset-0 z-40 transition-opacity duration-300"
+        style={{
+          background: "rgba(0,0,0,0.6)",
+          backdropFilter: "blur(4px)",
+          opacity: open ? 1 : 0,
+          pointerEvents: open ? "auto" : "none",
+        }}
+        onClick={closeDrawer}
+      />
+
+      {/* Drawer panel */}
+      <div
+        className="fixed top-0 right-0 bottom-0 z-50 flex flex-col overflow-y-auto"
+        style={{
+          width: "min(320px, 90vw)",
+          background: "rgba(13,5,32,0.98)",
+          backdropFilter: "blur(24px)",
+          borderLeft: "1px solid rgba(255,255,255,0.08)",
+          boxShadow: "-24px 0 80px rgba(0,0,0,0.6)",
+          transform: open ? "translateX(0)" : "translateX(100%)",
+          transition: "transform 0.3s cubic-bezier(0.4,0,0.2,1)",
+        }}
+      >
+        {/* Drawer header */}
+        <div className="flex items-center justify-between px-5 py-5 border-b border-white/8 shrink-0">
+          <Link href="/" onClick={closeDrawer} className="flex items-center gap-2.5">
+            <img
+              src="/manus-storage/pasted_file_CaSE94_favicon2_51319e23.png"
+              alt="ReadyForRobots logo"
+              className="h-7 w-7 rounded-lg"
+            />
+            <span className="text-sm font-semibold text-white" style={{ fontFamily: "'Sora', system-ui, sans-serif" }}>
+              ReadyForRobots
+            </span>
+          </Link>
+          <button
+            onClick={closeDrawer}
+            className="h-8 w-8 flex items-center justify-center rounded-lg text-white/40 hover:text-white hover:bg-white/8 transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        {/* SCOUT entry — prominent at top */}
+        <div className="px-4 pt-4 pb-3">
+          <button
+            onClick={() => { closeDrawer(); openChat(); }}
+            className="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl border transition-all hover:bg-amber-400/8"
+            style={{
+              border: "1.5px solid rgba(255,176,0,0.4)",
+              background: "rgba(255,176,0,0.05)",
+            }}
+          >
+            <div
+              className="h-8 w-8 rounded-xl flex items-center justify-center shrink-0"
+              style={{ background: "linear-gradient(135deg, #03DAC5, #7c3aed)" }}
+            >
+              <Zap className="h-4 w-4 text-white" strokeWidth={2.5} />
+            </div>
+            <div className="text-left flex-1">
+              <p className="text-sm font-bold leading-none" style={{ color: "#FFB000" }}>Activate Pipeline</p>
+              <p className="text-[11px] text-white/40 mt-0.5">Ask your AI sales agent anything</p>
+            </div>
+            <span className="h-1.5 w-1.5 rounded-full animate-pulse shrink-0" style={{ background: "#03DAC5" }} />
+          </button>
+        </div>
+
+        {/* Nav links */}
+        <div className="px-4 pb-2">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 px-1 mb-2">Navigate</p>
+          {navLinks.map((item) => {
+            const Icon = item.icon;
+            const isActive = location === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={closeDrawer}
+                className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all mb-0.5"
+                style={isActive
+                  ? { background: "rgba(3,218,197,0.08)", color: "#03DAC5" }
+                  : { color: "rgba(255,255,255,0.6)" }}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold leading-none">{item.label}</p>
+                  <p className="text-[11px] text-white/30 mt-0.5">{item.desc}</p>
+                </div>
+                <ChevronRight className="h-3.5 w-3.5 text-white/20 shrink-0" />
+              </Link>
+            );
+          })}
+        </div>
+
+        {/* Secondary links */}
+        <div className="px-4 pt-1 pb-2 border-t border-white/6 mt-1">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-white/25 px-1 mb-2 mt-3">More</p>
+          {[
+            { label: "About Us", href: "/about" },
+            { label: "Case Studies", href: "/case-studies" },
+            { label: "FAQ", href: "/faq" },
+            { label: "SCOUT Settings", href: "/scout-settings" },
+          ].map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              onClick={() => {
+                closeDrawer();
+                if (item.href.startsWith("/#")) {
+                  setTimeout(() => smoothScroll(item.href.replace("/", "")), 150);
+                }
+              }}
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl text-sm text-white/45 hover:text-white/70 hover:bg-white/4 transition-colors"
+            >
+              {item.label}
+              <ChevronRight className="h-3.5 w-3.5 text-white/20" />
+            </Link>
+          ))}
+        </div>
+
+        {/* Bottom CTA */}
+        <div className="mt-auto px-4 py-5 border-t border-white/8">
+          <Link href="/" onClick={closeDrawer}>
+            <button
+              className="w-full flex items-center justify-center gap-2 text-sm font-bold py-3 rounded-xl transition-all active:scale-95"
+              style={{ color: "#03DAC5", border: "1.5px solid rgba(3,218,197,0.5)", background: "rgba(3,218,197,0.06)" }}
+            >
+              <Zap className="h-3.5 w-3.5" /> Start a Scan
+            </button>
+          </Link>
+          <p className="text-center text-[10px] text-white/20 mt-2.5">No signup required · Free to start</p>
+        </div>
+      </div>
+    </>
+  );
+}

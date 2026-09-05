@@ -1,0 +1,54 @@
+{
+  "submitted_url": "https://example.com/cobot-arm",
+  "profile_confidence": "B",
+  "research_morphology": "cobot",
+  "company": {
+    "name": "Example Cobot",
+    "primary_domain": "example.com"
+  },
+  "selected_product": {
+    "name": "FixedArm",
+    "display_class": "cobot"
+  },
+  "facts": [
+    {
+      "predicate": "product_class",
+      "value": "cobot",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.95,
+      "evidence_span": "collaborative robot arm",
+      "source_id": "src_arm"
+    },
+    {
+      "predicate": "arm_count",
+      "value": 1,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.95,
+      "evidence_span": "single arm",
+      "source_id": "src_arm"
+    },
+    {
+      "predicate": "end_effector",
+      "value": "gripper",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9,
+      "evidence_span": "parallel gripper",
+      "source_id": "src_arm"
+    },
+    {
+      "predicate": "reach_or_workspace",
+      "value": 1.3,
+      "units": "m",
+      "epistemic": "explicit",
+      "confidence": 0.9,
+      "evidence_span": "1300 mm reach",
+      "source_id": "src_arm"
+    }
+  ],
+  "notes": [
+    "Fixed cell cobot \u2014 no mobile base fact."
+  ]
+}

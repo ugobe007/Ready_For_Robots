@@ -1,0 +1,1566 @@
+{
+  "dataset_id": "tier2_oem_stubs_v1",
+  "version": "1.0.0",
+  "calibration_tier": 2,
+  "policy": "Light manufacturer stubs toward ~100 OEMs \u2014 no invented capabilities",
+  "manufacturers": [
+    {
+      "slug": "abb-robotics",
+      "name": "ABB Robotics",
+      "website": "https://abb.com/robotics",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "abb-robotics-default",
+          "name": "ABB Robotics portfolio",
+          "primary_class": "industrial",
+          "models": [
+            {
+              "slug": "abb-robotics-placeholder",
+              "name": "ABB Robotics (placeholder)",
+              "primary_class": "industrial",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "kuka",
+      "name": "KUKA",
+      "website": "https://www.kuka.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "kuka-default",
+          "name": "KUKA portfolio",
+          "primary_class": "industrial",
+          "models": [
+            {
+              "slug": "kuka-placeholder",
+              "name": "KUKA (placeholder)",
+              "primary_class": "industrial",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "omron-robotics",
+      "name": "OMRON Robotics",
+      "website": "https://robotics.omron.com",
+      "country": "Japan",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "omron-robotics-default",
+          "name": "OMRON Robotics portfolio",
+          "primary_class": "amr",
+          "models": [
+            {
+              "slug": "omron-ld-series",
+              "name": "LD Series Mobile Robot",
+              "primary_class": "amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://robotics.omron.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "omron-hd-series",
+              "name": "HD Series Mobile Robot",
+              "primary_class": "amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://robotics.omron.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "omron-tm-series",
+              "name": "TM Series Collaborative Robot",
+              "primary_class": "cobot",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://robotics.omron.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "kivnon",
+      "name": "Kivnon",
+      "website": "https://www.kivnon.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "kivnon-default",
+          "name": "Kivnon portfolio",
+          "primary_class": "amr",
+          "models": [
+            {
+              "slug": "kivnon-placeholder",
+              "name": "Kivnon (placeholder)",
+              "primary_class": "amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "staubli-robotics",
+      "name": "St\u00e4ubli Robotics",
+      "website": "https://www.staubli.com/robotics",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "staubli-robotics-default",
+          "name": "St\u00e4ubli Robotics portfolio",
+          "primary_class": "industrial",
+          "models": [
+            {
+              "slug": "staubli-robotics-placeholder",
+              "name": "St\u00e4ubli Robotics (placeholder)",
+              "primary_class": "industrial",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "balyo",
+      "name": "BALYO",
+      "website": "https://www.balyo.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "balyo-default",
+          "name": "BALYO portfolio",
+          "primary_class": "autonomous_forklift",
+          "models": [
+            {
+              "slug": "balyo-placeholder",
+              "name": "BALYO (placeholder)",
+              "primary_class": "autonomous_forklift",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "agilox",
+      "name": "AGILOX",
+      "website": "https://www.agilox.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "agilox-default",
+          "name": "AGILOX portfolio",
+          "primary_class": "autonomous_forklift",
+          "models": [
+            {
+              "slug": "agilox-placeholder",
+              "name": "AGILOX (placeholder)",
+              "primary_class": "autonomous_forklift",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "anybotics",
+      "name": "ANYbotics",
+      "website": "https://www.anybotics.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "anybotics-default",
+          "name": "ANYbotics portfolio",
+          "primary_class": "inspection",
+          "models": [
+            {
+              "slug": "anybotics-placeholder",
+              "name": "ANYbotics (placeholder)",
+              "primary_class": "inspection",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "clearpath-robotics",
+      "name": "Clearpath Robotics",
+      "website": "https://clearpathrobotics.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "clearpath-robotics-default",
+          "name": "Clearpath Robotics portfolio",
+          "primary_class": "amr",
+          "models": [
+            {
+              "slug": "clearpath-robotics-placeholder",
+              "name": "Clearpath Robotics (placeholder)",
+              "primary_class": "amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "righthand-robotics",
+      "name": "RightHand Robotics",
+      "website": "https://www.righthandrobotics.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "righthand-robotics-default",
+          "name": "RightHand Robotics portfolio",
+          "primary_class": "manipulation",
+          "models": [
+            {
+              "slug": "righthand-robotics-placeholder",
+              "name": "RightHand Robotics (placeholder)",
+              "primary_class": "manipulation",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "covariant",
+      "name": "Covariant",
+      "website": "https://www.covariant.ai",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "covariant-default",
+          "name": "Covariant portfolio",
+          "primary_class": "manipulation",
+          "models": [
+            {
+              "slug": "covariant-placeholder",
+              "name": "Covariant (placeholder)",
+              "primary_class": "manipulation",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "plus-one-robotics",
+      "name": "Plus One Robotics",
+      "website": "https://www.plusonerobotics.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "plus-one-robotics-default",
+          "name": "Plus One Robotics portfolio",
+          "primary_class": "manipulation",
+          "models": [
+            {
+              "slug": "plus-one-robotics-placeholder",
+              "name": "Plus One Robotics (placeholder)",
+              "primary_class": "manipulation",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ambi-robotics",
+      "name": "Ambi Robotics",
+      "website": "https://www.ambirobotics.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "ambi-robotics-default",
+          "name": "Ambi Robotics portfolio",
+          "primary_class": "manipulation",
+          "models": [
+            {
+              "slug": "ambi-robotics-placeholder",
+              "name": "Ambi Robotics (placeholder)",
+              "primary_class": "manipulation",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "osaro",
+      "name": "Osaro",
+      "website": "https://www.osaro.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "osaro-default",
+          "name": "Osaro portfolio",
+          "primary_class": "manipulation",
+          "models": [
+            {
+              "slug": "osaro-placeholder",
+              "name": "Osaro (placeholder)",
+              "primary_class": "manipulation",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "robust-ai",
+      "name": "Robust AI",
+      "website": "https://www.robust.ai",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "robust-ai-default",
+          "name": "Robust AI portfolio",
+          "primary_class": "manipulation",
+          "models": [
+            {
+              "slug": "robust-ai-placeholder",
+              "name": "Robust AI (placeholder)",
+              "primary_class": "manipulation",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "universal-robots",
+      "name": "Universal Robots",
+      "website": "https://www.universal-robots.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "universal-robots-default",
+          "name": "Universal Robots portfolio",
+          "primary_class": "cobot",
+          "models": [
+            {
+              "slug": "universal-robots-placeholder",
+              "name": "Universal Robots (placeholder)",
+              "primary_class": "cobot",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "fanuc",
+      "name": "FANUC",
+      "website": "https://www.fanuc.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "fanuc-default",
+          "name": "FANUC portfolio",
+          "primary_class": "industrial",
+          "models": [
+            {
+              "slug": "fanuc-placeholder",
+              "name": "FANUC (placeholder)",
+              "primary_class": "industrial",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "yaskawa-motoman",
+      "name": "Yaskawa Motoman",
+      "website": "https://www.motoman.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "yaskawa-motoman-default",
+          "name": "Yaskawa Motoman portfolio",
+          "primary_class": "industrial",
+          "models": [
+            {
+              "slug": "yaskawa-motoman-placeholder",
+              "name": "Yaskawa Motoman (placeholder)",
+              "primary_class": "industrial",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "doosan-robotics",
+      "name": "Doosan Robotics",
+      "website": "https://www.doosanrobotics.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "doosan-robotics-default",
+          "name": "Doosan Robotics portfolio",
+          "primary_class": "cobot",
+          "models": [
+            {
+              "slug": "doosan-robotics-placeholder",
+              "name": "Doosan Robotics (placeholder)",
+              "primary_class": "cobot",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "techman-robot",
+      "name": "Techman Robot",
+      "website": "https://www.tm-robot.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "techman-robot-default",
+          "name": "Techman Robot portfolio",
+          "primary_class": "cobot",
+          "models": [
+            {
+              "slug": "techman-robot-placeholder",
+              "name": "Techman Robot (placeholder)",
+              "primary_class": "cobot",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "lionsbot",
+      "name": "LionsBot",
+      "website": "https://www.lionsbot.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "lionsbot-default",
+          "name": "LionsBot portfolio",
+          "primary_class": "cleaning_amr",
+          "models": [
+            {
+              "slug": "lionsbot-placeholder",
+              "name": "LionsBot (placeholder)",
+              "primary_class": "cleaning_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "gausium",
+      "name": "Gausium (Gaussian Robotics)",
+      "website": "https://www.gaussianrobotics.com",
+      "country": "Singapore",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "gausium-default",
+          "name": "Gausium portfolio",
+          "primary_class": "cleaning_amr",
+          "models": [
+            {
+              "slug": "gausium-scrubber-50",
+              "name": "Scrubber 50",
+              "primary_class": "cleaning_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.gaussianrobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "gausium-scrubber-75",
+              "name": "Scrubber 75",
+              "primary_class": "cleaning_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.gaussianrobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "gausium-phantas",
+              "name": "Phantas",
+              "primary_class": "cleaning_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.gaussianrobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "gausium-vacuum-40",
+              "name": "Vacuum 40",
+              "primary_class": "cleaning_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.gaussianrobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "gausium-beetle",
+              "name": "Beetle",
+              "primary_class": "cleaning_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.gaussianrobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "keenon-robotics",
+      "name": "KEENON Robotics",
+      "website": "https://www.keenon.com",
+      "country": "China",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "keenon-robotics-default",
+          "name": "KEENON Robotics portfolio",
+          "primary_class": "service_amr",
+          "models": [
+            {
+              "slug": "keenon-dinerbot-t10",
+              "name": "DINERBOT T10",
+              "primary_class": "service_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.keenon.com/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "keenon-butlerbot-w3",
+              "name": "BUTLERBOT W3",
+              "primary_class": "service_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.keenon.com/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "keenon-kleenbot-c40",
+              "name": "KLEENBOT C40",
+              "primary_class": "cleaning_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.keenon.com/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "keenon-xman-r1",
+              "name": "XMAN-R1",
+              "primary_class": "humanoid",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.keenon.com/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "relay-robotics",
+      "name": "Relay Robotics",
+      "website": "https://www.relayrobotics.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "relay-robotics-default",
+          "name": "Relay Robotics portfolio",
+          "primary_class": "service_amr",
+          "models": [
+            {
+              "slug": "relay-robotics-placeholder",
+              "name": "Relay Robotics (placeholder)",
+              "primary_class": "service_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "ghost-robotics",
+      "name": "Ghost Robotics",
+      "website": "https://www.ghostrobotics.io",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "ghost-robotics-default",
+          "name": "Ghost Robotics portfolio",
+          "primary_class": "inspection",
+          "models": [
+            {
+              "slug": "ghost-robotics-placeholder",
+              "name": "Ghost Robotics (placeholder)",
+              "primary_class": "inspection",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "fetch-robotics",
+      "name": "Fetch Robotics",
+      "website": "https://fetchrobotics.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "fetch-robotics-default",
+          "name": "Fetch Robotics portfolio",
+          "primary_class": "amr",
+          "models": [
+            {
+              "slug": "fetch-robotics-placeholder",
+              "name": "Fetch Robotics (placeholder)",
+              "primary_class": "amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "fetch-freight",
+      "name": "Fetch Freight (historical)",
+      "website": "https://fetchrobotics.com",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "fetch-freight-default",
+          "name": "Fetch Freight (historical) portfolio",
+          "primary_class": "autonomous_tugger",
+          "models": [
+            {
+              "slug": "fetch-freight-placeholder",
+              "name": "Fetch Freight (historical) (placeholder)",
+              "primary_class": "autonomous_tugger",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "richtech-robotics",
+      "name": "Richtech Robotics",
+      "website": "https://richtechrobotics.com",
+      "country": "USA",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "richtech-robotics-default",
+          "name": "Richtech Robotics portfolio",
+          "primary_class": "service_amr",
+          "models": [
+            {
+              "slug": "richtech-adam",
+              "name": "ADAM",
+              "primary_class": "manipulation",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://richtechrobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "richtech-scorpion",
+              "name": "Scorpion",
+              "primary_class": "manipulation",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://richtechrobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "richtech-titan",
+              "name": "Titan",
+              "primary_class": "service_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://richtechrobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "richtech-matradee",
+              "name": "Matradee",
+              "primary_class": "service_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://richtechrobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "richtech-medbot",
+              "name": "Medbot",
+              "primary_class": "service_amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://richtechrobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "deep-robotics",
+      "name": "DEEP Robotics",
+      "website": "https://www.deeprobotics.cn/en",
+      "country": "China",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "deep-robotics-default",
+          "name": "DEEP Robotics portfolio",
+          "primary_class": "inspection",
+          "models": [
+            {
+              "slug": "deep-robotics-x30",
+              "name": "X30",
+              "primary_class": "inspection",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.deeprobotics.cn/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "deep-robotics-lite3",
+              "name": "Lite3",
+              "primary_class": "inspection",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.deeprobotics.cn/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "deep-robotics-lynx",
+              "name": "Lynx",
+              "primary_class": "inspection",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.deeprobotics.cn/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "magiclab",
+      "name": "MagicLab",
+      "website": "https://www.magiclab.top/en",
+      "country": "China",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "magiclab-default",
+          "name": "MagicLab portfolio",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "magiclab-magicbot-x1",
+              "name": "MagicBot X1",
+              "primary_class": "humanoid",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.magiclab.top/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "magiclab-magicbot-z1",
+              "name": "MagicBot Z1",
+              "primary_class": "humanoid",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.magiclab.top/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "magiclab-magicdog-y1",
+              "name": "MagicDog Y1",
+              "primary_class": "inspection",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.magiclab.top/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "magiclab-magicdog-w",
+              "name": "MagicDog-W",
+              "primary_class": "inspection",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.magiclab.top/en",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "humanoid",
+      "name": "Humanoid",
+      "website": "https://thehumanoid.ai",
+      "country": "United Kingdom",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "humanoid-default",
+          "name": "Humanoid portfolio",
+          "primary_class": "humanoid",
+          "models": [
+            {
+              "slug": "humanoid-hmnd-01-alpha",
+              "name": "HMND 01 Alpha",
+              "primary_class": "humanoid",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://thehumanoid.ai",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "standard-bots",
+      "name": "Standard Bots",
+      "website": "https://standardbots.com",
+      "country": "USA",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "standard-bots-default",
+          "name": "Standard Bots portfolio",
+          "primary_class": "cobot",
+          "models": [
+            {
+              "slug": "standard-bots-spark",
+              "name": "Spark",
+              "primary_class": "cobot",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://standardbots.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "standard-bots-core",
+              "name": "Core",
+              "primary_class": "cobot",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://standardbots.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "standard-bots-thor",
+              "name": "Thor",
+              "primary_class": "cobot",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://standardbots.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "standard-bots-bolt",
+              "name": "Bolt",
+              "primary_class": "mobile_manipulation",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://standardbots.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "seer-robotics",
+      "name": "SEER Robotics",
+      "website": "https://seer-robotics.ai",
+      "country": "China",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "seer-robotics-default",
+          "name": "SEER Robotics portfolio",
+          "primary_class": "amr",
+          "models": [
+            {
+              "slug": "seer-lifting-robots",
+              "name": "SEER Lifting Robots",
+              "primary_class": "amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://seer-robotics.ai",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "seer-base-robots",
+              "name": "SEER Base Robots",
+              "primary_class": "amr",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://seer-robotics.ai",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "slug": "hai-robotics",
+      "name": "Hai Robotics",
+      "website": "https://www.hairobotics.com",
+      "country": "China",
+      "calibration_tier": 2,
+      "families": [
+        {
+          "slug": "hai-robotics-default",
+          "name": "Hai Robotics portfolio",
+          "primary_class": "goods_to_person",
+          "models": [
+            {
+              "slug": "hai-robotics-haipick-climb",
+              "name": "HaiPick Climb",
+              "primary_class": "goods_to_person",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.hairobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "hai-robotics-haipick-system-1",
+              "name": "HaiPick System 1",
+              "primary_class": "goods_to_person",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.hairobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "hai-robotics-haipick-system-2",
+              "name": "HaiPick System 2",
+              "primary_class": "goods_to_person",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.hairobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            },
+            {
+              "slug": "hai-robotics-haipick-system-3",
+              "name": "HaiPick System 3",
+              "primary_class": "goods_to_person",
+              "work_to_map": [],
+              "calibration_tier": 2,
+              "commercial_maturity": "unknown",
+              "capability_stubs": [],
+              "work_envelope_stubs": [],
+              "product_url": "https://www.hairobotics.com",
+              "configurations": [
+                {
+                  "slug": "default",
+                  "name": "Default",
+                  "is_default": true
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

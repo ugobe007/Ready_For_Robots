@@ -1,0 +1,98 @@
+{
+  "ontology_id": "rfr_enums_v1",
+  "version": "1.0.0",
+  "frozen": true,
+  "note": "API/DB use lowercase values. Product docs may show UPPERCASE labels.",
+  "truth_states": [
+    "observed",
+    "inferred",
+    "oem_verified",
+    "customer_confirmed",
+    "site_verified",
+    "deployment_verified",
+    "unknown"
+  ],
+  "opportunity_states": [
+    "discovered",
+    "matched",
+    "prioritized",
+    "contacted",
+    "engaged",
+    "qualified",
+    "site_review",
+    "pilot",
+    "deployed"
+  ],
+  "dispositions": ["active", "watch", "paused", "lost"],
+  "call_priorities": [
+    "call_now",
+    "qualify",
+    "watch",
+    "wrong_robot",
+    "insufficient_evidence",
+    "do_not_surface"
+  ],
+  "work_match_labels": [
+    "excellent",
+    "good",
+    "possible",
+    "poor",
+    "insufficient_information"
+  ],
+  "work_contribution": [
+    "primary",
+    "significant",
+    "secondary",
+    "incidental",
+    "unknown"
+  ],
+  "automation_theses": [
+    "replace",
+    "transfer",
+    "expand",
+    "cover",
+    "protect",
+    "safety"
+  ],
+  "source_types": [
+    "job_posting",
+    "company_career_page",
+    "company_website",
+    "product_page",
+    "oem_spec",
+    "public_news",
+    "user_input",
+    "seller_feedback",
+    "customer_confirmation",
+    "site_survey",
+    "deployment_result"
+  ],
+  "commercial_maturity": [
+    "concept",
+    "prototype",
+    "pilot",
+    "commercial",
+    "production",
+    "discontinued",
+    "unknown"
+  ],
+  "calibration_tiers": [1, 2],
+  "vendor_roles": [
+    "robot_oem",
+    "robot_brand",
+    "white_label_brand",
+    "distributor",
+    "system_integrator",
+    "autonomy_provider",
+    "robot_as_a_service",
+    "component_supplier"
+  ],
+  "vendor_types": [
+    "oem",
+    "robot_brand",
+    "distributor",
+    "integrator",
+    "platform",
+    "other"
+  ]
+}

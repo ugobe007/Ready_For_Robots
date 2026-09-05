@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RobotReady — Home</title>
+<style>
+  /* ── Reset & Base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg:        #0a0f1a;
+    --surface:   #111827;
+    --surface2:  #1a2235;
+    --border:    #1f2d42;
+    --green:     #10b981;
+    --green-dim: #065f46;
+    --cyan:      #22d3ee;
+    --orange:    #f97316;
+    --red:       #ef4444;
+    --yellow:    #eab308;
+    --text:      #f1f5f9;
+    --muted:     #64748b;
+    --muted2:    #94a3b8;
+    --radius:    12px;
+    --font: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+  html { font-family: var(--font); background: var(--bg); color: var(--text); font-size: 14px; line-height: 1.6; }
+  a { color: inherit; text-decoration: none; }
+  button { cursor: pointer; font-family: inherit; }
+
+  /* ── Navbar ── */
+  .navbar {
+    display: flex; align-items: center;
+    background: rgba(10,15,26,.92); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 40px; height: 60px;
+    position: sticky; top: 0; z-index: 200;
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 10px; margin-right: 40px;
+  }
+  .brand-logo {
+    width: 36px; height: 36px; background: #0d1f2d;
+    border: 1.5px solid var(--green); border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 15px; color: var(--green);
+  }
+  .nav-links { display: flex; align-items: center; gap: 4px; flex: 1; }
+  .nav-links a {
+    padding: 6px 14px; border-radius: 6px; font-size: 13px; color: var(--muted2);
+    transition: background .15s, color .15s;
+  }
+  .nav-links a:hover { background: var(--surface2); color: var(--text); }
+  .nav-right { display: flex; align-items: center; gap: 12px; margin-left: auto; }
+  .btn-signin {
+    padding: 7px 16px; border-radius: 7px; font-size: 13px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted2);
+    transition: border-color .15s, color .15s;
+  }
+  .btn-signin:hover { border-color: var(--green); color: var(--green); }
+  .btn-signup {
+    padding: 7px 18px; border-radius: 7px; font-size: 13px; font-weight: 700;
+    border: 1.5px solid var(--green); background: transparent; color: var(--green);
+    transition: background .15s, color .15s;
+  }
+  .btn-signup:hover { background: var(--green); color: #000; }
+
+  /* ── Section wrapper ── */
+  .section { padding: 80px 40px; max-width: 1200px; margin: 0 auto; }
+  .section-full { padding: 80px 40px; }
+  .section-full > * { max-width: 1200px; margin-left: auto; margin-right: auto; }
+
+  /* ── Hero ── */
+  .hero {
+    padding: 80px 40px 60px;
+    max-width: 1200px; margin: 0 auto;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;
+  }
+  .hero-eyebrow {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 20px;
+  }
+  .hero-eyebrow span { color: var(--muted); }
+  .hero h1 {
+    font-size: 48px; font-weight: 900; line-height: 1.1; letter-spacing: -1.5px;
+    color: var(--text); margin-bottom: 20px;
+  }
+  .hero h1 em { font-style: normal; color: var(--green); }
+  .hero p {
+    font-size: 16px; color: var(--muted2); line-height: 1.7; margin-bottom: 32px;
+  }
+  .hero-cta { display: flex; gap: 12px; align-items: center; }
+  .btn-hero-primary {
+    padding: 13px 28px; border-radius: 9px; font-size: 15px; font-weight: 700;
+    background: var(--green); border: none; color: #000; transition: opacity .15s;
+  }
+  .btn-hero-primary:hover { opacity: .85; }
+  .btn-hero-secondary {
+    padding: 13px 28px; border-radius: 9px; font-size: 15px; font-weight: 600;
+    border: 1.5px solid var(--border); background: transparent; color: var(--muted2);
+    transition: border-color .15s, color .15s;
+  }
+  .btn-hero-secondary:hover { border-color: var(--green); color: var(--green); }
+  .hero-visual {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; position: relative;
+  }
+  .hero-visual::before {
+    content: ''; position: absolute; inset: -1px;
+    border-radius: var(--radius);
+    background: linear-gradient(135deg, rgba(16,185,129,.2), transparent 60%);
+    pointer-events: none;
+  }
+
+  /* ── Testimonial ticker ── */
+  .testimonial-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 18px 24px;
+    display: flex; align-items: flex-start; gap: 16px;
+  }
+  .testimonial-icon { font-size: 20px; margin-top: 2px; }
+  .testimonial-text { font-size: 14px; color: var(--text); font-style: italic; }
+  .testimonial-source { font-size: 12px; color: var(--muted2); margin-top: 4px; }
+  .testimonial-source .cost-tag {
+    color: var(--orange); font-weight: 600; font-style: normal;
+  }
+  .testimonial-counter { margin-left: auto; font-size: 12px; color: var(--muted); white-space: nowrap; padding-top: 4px; }
+
+  /* ── Stats grid ── */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .stat-cell {
+    padding: 28px 24px; text-align: center;
+    border-right: 1px solid var(--border);
+  }
+  .stat-cell:last-child { border-right: none; }
+  .stat-num { font-size: 40px; font-weight: 900; letter-spacing: -2px; }
+  .stat-num.white  { color: var(--text); }
+  .stat-num.orange { color: var(--orange); }
+  .stat-num.cyan   { color: var(--cyan); }
+  .stat-num.green  { color: var(--green); }
+  .stat-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+
+  /* ── Industry tags ── */
+  .industry-cloud {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px 24px;
+  }
+  .industry-cloud-label { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-bottom: 14px; }
+  .industry-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ind-tag {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 500;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted2);
+    transition: border-color .15s, color .15s;
+  }
+  .ind-tag:hover { border-color: var(--green); color: var(--green); }
+  .ind-tag .cnt { font-weight: 700; color: var(--green); }
+
+  /* ── Pipeline builder section ── */
+  .pipeline-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 40px;
+  }
+  .pipeline-eyebrow {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 20px;
+    background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.25); color: var(--green);
+    margin-bottom: 16px;
+  }
+  .pipeline-section h2 { font-size: 32px; font-weight: 900; color: var(--green); margin-bottom: 8px; }
+  .pipeline-section p  { font-size: 15px; color: var(--muted2); margin-bottom: 24px; }
+  .pipeline-input {
+    width: 100%; padding: 14px 18px; border-radius: 9px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); font-size: 14px; outline: none;
+    transition: border-color .15s; margin-bottom: 12px;
+  }
+  .pipeline-input:focus { border-color: var(--green); }
+  .pipeline-input::placeholder { color: var(--muted); }
+  .btn-build {
+    width: 100%; padding: 14px; border-radius: 9px; font-size: 15px; font-weight: 700;
+    background: var(--green); border: none; color: #000; transition: opacity .15s;
+  }
+  .btn-build:hover { opacity: .85; }
+  .pipeline-checks { display: flex; justify-content: space-between; margin-top: 14px; }
+  .pipeline-check { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted2); }
+  .pipeline-check::before { content: '✓'; color: var(--green); font-weight: 700; }
+  .browse-all-btn {
+    display: block; width: 100%; padding: 14px; border-radius: 9px; font-size: 14px; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--muted2);
+    text-align: center; margin-top: 12px; transition: border-color .15s, color .15s;
+  }
+  .browse-all-btn:hover { border-color: var(--green); color: var(--green); }
+
+  /* ── Signals explainer ── */
+  .why-signals-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; transition: border-color .15s;
+  }
+  .why-signals-bar:hover { border-color: var(--green); }
+  .why-signals-bar-left { display: flex; align-items: center; gap: 10px; }
+  .why-icon { font-size: 16px; }
+  .why-title { font-size: 14px; font-weight: 700; color: var(--green); }
+  .why-sub   { font-size: 13px; color: var(--muted2); }
+  .why-arrow { color: var(--green); font-size: 18px; }
+
+  /* ── Daily Spotlight ── */
+  .spotlight-eyebrow {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    padding: 4px 10px; border-radius: 4px; background: var(--surface2); border: 1px solid var(--border);
+    color: var(--muted2); margin-bottom: 16px;
+  }
+  .spotlight-title { font-size: 36px; font-weight: 900; color: var(--text); margin-bottom: 8px; }
+  .spotlight-sub   { font-size: 15px; color: var(--muted2); margin-bottom: 28px; }
+
+  .tier-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+  .tier-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .tier-card-label { font-size: 12px; font-weight: 800; letter-spacing: .06em; margin-bottom: 4px; }
+  .tier-card-label.hot  { color: var(--orange); }
+  .tier-card-label.warm { color: var(--yellow); }
+  .tier-card-label.emrg { color: var(--cyan); }
+  .tier-card-sub { font-size: 11px; color: var(--muted); margin-bottom: 10px; }
+  .tier-card p { font-size: 12px; color: var(--muted2); line-height: 1.6; }
+
+  .scoring-bar {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .scoring-bar-left { font-size: 13px; color: var(--muted2); }
+  .scoring-bar-left strong { color: var(--text); }
+  .scoring-bar-right { font-size: 12px; color: var(--green); font-weight: 600; cursor: pointer; }
+
+  /* ── Deal card ── */
+  .deal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 22px 24px; margin-bottom: 14px;
+    transition: border-color .15s;
+  }
+  .deal-card:hover { border-color: var(--green); }
+  .deal-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+  .deal-name { font-size: 18px; font-weight: 800; color: var(--text); }
+  .deal-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .deal-badges { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .badge-hot-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700;
+    background: rgba(249,115,22,.15); border: 1px solid rgba(249,115,22,.3); color: var(--orange);
+  }
+  .badge-tag {
+    padding: 3px 9px; border-radius: 4px; font-size: 11px; font-weight: 600;
+    background: var(--surface2); border: 1px solid var(--border); color: var(--muted2);
+  }
+  .deal-score-block { text-align: right; }
+  .deal-score-num { font-size: 36px; font-weight: 900; color: var(--green); line-height: 1; }
+  .deal-score-lbl { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; }
+  .deal-body {
+    background: var(--surface2); border-left: 3px solid var(--green);
+    border-radius: 0 6px 6px 0; padding: 14px 16px; margin-bottom: 14px;
+    font-size: 13px; color: var(--muted2); line-height: 1.7;
+  }
+  .deal-actions { display: flex; align-items: center; gap: 10px; }
+  .btn-share {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 600;
+    border: 1px solid var(--border); background: transparent; color: var(--muted2);
+    transition: border-color .15s, color .15s;
+  }
+  .btn-share:hover { border-color: var(--green); color: var(--green); }
+  .btn-full-analysis {
+    padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700;
+    border: 1px solid var(--green); background: transparent; color: var(--green);
+    transition: background .15s, color .15s;
+  }
+  .btn-full-analysis:hover { background: var(--green); color: #000; }
+
+  /* ── Signal Intelligence section ── */
+  .signal-intel-section { text-align: center; }
+  .signal-intel-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 16px;
+  }
+  .signal-intel-title { font-size: 40px; font-weight: 900; color: var(--text); margin-bottom: 12px; }
+  .signal-intel-sub   { font-size: 16px; color: var(--muted2); margin-bottom: 40px; }
+
+  .signal-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 40px; }
+  .signal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px;
+    transition: border-color .15s;
+  }
+  .signal-card:hover { border-color: var(--green); }
+  .signal-card-icon { font-size: 24px; margin-bottom: 10px; }
+  .signal-card-title { font-size: 15px; font-weight: 800; color: var(--text); margin-bottom: 12px; }
+  .signal-card-quotes { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+  .signal-quote { font-size: 12px; color: var(--muted2); font-style: italic; }
+  .signal-weight { font-size: 11px; font-weight: 700; color: var(--orange); }
+
+  .scoring-breakdown {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 32px; text-align: center;
+  }
+  .scoring-breakdown h3 { font-size: 18px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+  .scoring-breakdown p  { font-size: 13px; color: var(--muted2); margin-bottom: 24px; }
+  .scoring-factors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+  .factor-cell { text-align: center; }
+  .factor-pct { font-size: 32px; font-weight: 900; margin-bottom: 4px; }
+  .factor-pct.orange { color: var(--orange); }
+  .factor-pct.green  { color: var(--green); }
+  .factor-pct.cyan   { color: var(--cyan); }
+  .factor-pct.yellow { color: var(--yellow); }
+  .factor-label { font-size: 12px; color: var(--muted2); font-weight: 600; }
+
+  /* ── Success Stories ── */
+  .success-section { text-align: center; }
+  .success-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 16px;
+  }
+  .success-title { font-size: 40px; font-weight: 900; color: var(--text); margin-bottom: 8px; }
+  .success-sub   { font-size: 15px; color: var(--muted2); margin-bottom: 40px; }
+
+  .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .story-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 24px; text-align: left;
+  }
+  .story-title { font-size: 15px; font-weight: 800; color: var(--green); margin-bottom: 14px; }
+  .story-row { margin-bottom: 8px; font-size: 13px; color: var(--muted2); line-height: 1.6; }
+  .story-row strong { color: var(--muted2); font-weight: 700; }
+  .story-row .result { color: var(--green); font-weight: 700; }
+
+  /* ── Action Plan ── */
+  .action-section {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 40px;
+  }
+  .action-eyebrow {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+    color: var(--green); margin-bottom: 12px;
+  }
+  .action-title { font-size: 32px; font-weight: 900; color: var(--text); margin-bottom: 28px; }
+  .action-steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .action-step {}
+  .action-step-num { font-size: 13px; font-weight: 800; color: var(--green); margin-bottom: 6px; }
+  .action-step-title { font-size: 18px; font-weight: 800; color: var(--green); margin-bottom: 8px; }
+  .action-step p { font-size: 13px; color: var(--muted2); line-height: 1.6; margin-bottom: 12px; }
+  .action-step a { font-size: 13px; color: var(--green); font-weight: 600; }
+  .action-step a:hover { text-decoration: underline; }
+
+  /* ── Footer ── */
+  .footer {
+    border-top: 1px solid var(--border); padding: 32px 40px;
+    text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+  .footer-logo {
+    width: 32px; height: 32px; background: #0d1f2d;
+    border: 1.5px solid var(--green); border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 900; font-size: 13px; color: var(--green); margin-bottom: 4px;
+  }
+  .footer-copy { font-size: 12px; color: var(--muted); }
+
+  /* ── Screen separator ── */
+  .screen-sep {
+    margin: 60px 0; border: none; border-top: 2px dashed var(--border);
+    position: relative;
+  }
+  .screen-sep::after {
+    content: attr(data-label);
+    position: absolute; top: -10px; left: 50%; transform: translateX(-50%);
+    background: var(--bg); padding: 0 16px; font-size: 11px; color: var(--muted);
+    font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HOME SCREEN 1 — Hero + Stats + Industry Cloud
+     ═══════════════════════════════════════════════════════════ -->
+<div id="home1">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="brand-logo">R→</div>
+    </div>
+    <div class="nav-links">
+      <a href="#">Dashboard</a>
+      <a href="#">Market Insights</a>
+      <a href="#">Signals</a>
+      <a href="#">Browse Leads</a>
+      <a href="#">📰 Newsletter</a>
+      <a href="#">ROI Calculator</a>
+    </div>
+    <div class="nav-right">
+      <button class="btn-signin">Sign in ▾</button>
+      <button class="btn-signup">Sign Up Free</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div>
+      <div class="hero-eyebrow">
+        ⚡ Curated Lead Lists <span>·</span> 14 Signal Types <span>·</span> 140+ Sources
+      </div>
+      <h1>Robot Automation Projects<br/><em>With Signal Intelligence</em></h1>
+      <p>We track buying intent across 150+ sources — labor shortages, CapEx, new facilities, executive hires. Each lead comes with signals you can act on.</p>
+      <div class="hero-cta">
+        <button class="btn-hero-primary">Build Your Pipeline →</button>
+        <button class="btn-hero-secondary">Browse All Leads</button>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <!-- Testimonial inside hero visual -->
+      <div class="testimonial-bar">
+        <span class="testimonial-icon">💬</span>
+        <div>
+          <div class="testimonial-text">"Labor costs are up 35% — automation ROI is finally positive"</div>
+          <div class="testimonial-source">Pacific Hotel Chain · <span class="cost-tag">Cost Pressure</span></div>
+        </div>
+        <div class="testimonial-counter">2/20</div>
+      </div>
+      <!-- Mini stats inside hero -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px;">
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px; text-align:center;">
+          <div style="font-size:28px; font-weight:900; color:var(--text);">495</div>
+          <div style="font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-top:4px;">Active Leads</div>
+        </div>
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px; text-align:center;">
+          <div style="font-size:28px; font-weight:900; color:var(--orange);">229</div>
+          <div style="font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-top:4px;">Hot Deals</div>
+        </div>
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px; text-align:center;">
+          <div style="font-size:28px; font-weight:900; color:var(--cyan);">6,118</div>
+          <div style="font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-top:4px;">Live Signals</div>
+        </div>
+        <div style="background:var(--surface2); border:1px solid var(--border); border-radius:8px; padding:16px; text-align:center;">
+          <div style="font-size:28px; font-weight:900; color:var(--green);">2</div>
+          <div style="font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--muted); text-transform:uppercase; margin-top:4px;">Warm Pipeline</div>
+        </div>
+      </div>
+      <div style="margin-top:14px; font-size:12px; color:var(--muted); text-align:center;">
+        Emerging · 264 opportunities in the full pipeline
+      </div>
+    </div>
+  </div>
+
+  <!-- Industry cloud -->
+  <div class="section" style="padding-top:0;">
+    <div class="industry-cloud">
+      <div class="industry-cloud-label">Leads by Industry</div>
+      <div class="industry-tags">
+        <span class="ind-tag">New <span class="cnt">157</span></span>
+        <span class="ind-tag">Logistics <span class="cnt">91</span></span>
+        <span class="ind-tag">Hospitality <span class="cnt">60</span></span>
+        <span class="ind-tag">Healthcare <span class="cnt">34</span></span>
+        <span class="ind-tag">Food Service <span class="cnt">34</span></span>
+        <span class="ind-tag">Retail <span class="cnt">23</span></span>
+        <span class="ind-tag">Datacenters <span class="cnt">16</span></span>
+        <span class="ind-tag">Airports &amp; Aviation <span class="cnt">13</span></span>
+        <span class="ind-tag">Casinos &amp; Gaming <span class="cnt">12</span></span>
+        <span class="ind-tag">Theme Parks &amp; Entertainment <span class="cnt">11</span></span>
+        <span class="ind-tag">Airports &amp; Transportation <span class="cnt">10</span></span>
+        <span class="ind-tag">Medical Technology <span class="cnt">9</span></span>
+        <span class="ind-tag">Cruise Lines <span class="cnt">8</span></span>
+        <span class="ind-tag">Logistics &amp; Warehousing <span class="cnt">5</span></span>
+        <span class="ind-tag">Apparel &amp; Textiles <span class="cnt">5</span></span>
+        <span class="ind-tag">Real Estate &amp; Facilities <span class="cnt">4</span></span>
+        <span class="ind-tag">Food Processing &amp; Mfg <span class="cnt">2</span></span>
+        <span class="ind-tag">Food Service &amp; Distribution <span class="cnt">1</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HOME SCREEN 2 — Pipeline Builder + Why Signals
+     ═══════════════════════════════════════════════════════════ -->
+<hr class="screen-sep" data-label="Home Screen 2 — Pipeline Builder" />
+
+<div id="home2">
+  <nav class="navbar">
+    <div class="nav-brand"><div class="brand-logo">R→</div></div>
+    <div class="nav-links">
+      <a href="#">Dashboard</a><a href="#">Market Insights</a><a href="#">Signals</a>
+      <a href="#">Browse Leads</a><a href="#">📰 Newsletter</a><a href="#">ROI Calculator</a>
+    </div>
+    <div class="nav-right">
+      <button class="btn-signin">Sign in ▾</button>
+      <button class="btn-signup">Sign Up Free</button>
+    </div>
+  </nav>
+
+  <div class="section">
+    <!-- Pipeline builder -->
+    <div class="pipeline-section" style="margin-bottom:20px;">
+      <div class="pipeline-eyebrow">● Free Pipeline Builder</div>
+      <h2>Build Your Pipeline</h2>
+      <p>See your top 5 prospect matches instantly — with engagement strategy &amp; buying signals</p>
+      <input class="pipeline-input" type="text" placeholder="Enter your robot company website (e.g., amplibotics.ai)" />
+      <button class="btn-build">Build Pipeline →</button>
+      <div class="pipeline-checks">
+        <span class="pipeline-check">No signup required</span>
+        <span class="pipeline-check">Instant results</span>
+        <span class="pipeline-check">Free trial</span>
+      </div>
+    </div>
+
+    <a href="#" class="browse-all-btn">Browse All 495 Leads by Industry →</a>
+
+    <!-- Why signals bar -->
+    <div class="why-signals-bar" style="margin-top:16px;">
+      <div class="why-signals-bar-left">
+        <span class="why-icon">💡</span>
+        <span class="why-title">Why Signals Matter</span>
+        <span class="why-sub">Learn how we identify buying intent</span>
+      </div>
+      <span class="why-arrow">→</span>
+    </div>
+
+    <!-- Daily spotlight header -->
+    <div style="margin-top:48px;">
+      <div class="spotlight-eyebrow">Daily Spotlight</div>
+      <div class="spotlight-title">Daily spotlight deals</div>
+      <div class="spotlight-sub">Five accounts rotate each day: three Hot and two Warm, ranked by newest signal activity first.</div>
+
+      <div class="tier-cards">
+        <div class="tier-card">
+          <div class="tier-card-label hot">HOT — Act this week</div>
+          <div class="tier-card-sub"></div>
+          <p>Strong buying-intent signals—funding, leadership moves, capex, M&amp;A, robotics pilots or installs, vendor selection, RFPs—and high automation fit. Prioritize direct outreach.</p>
+        </div>
+        <div class="tier-card">
+          <div class="tier-card-label warm">WARM — Nurture &amp; sequence</div>
+          <div class="tier-card-sub"></div>
+          <p>Solid operational signals: expansion, hiring, labor pressure, automation interest, newsflow, integrations. Worth a research pass and a structured follow-up sequence.</p>
+        </div>
+        <div class="tier-card">
+          <div class="tier-card-label emrg">EMERGING — Explore &amp; watchlist</div>
+          <div class="tier-card-sub"></div>
+          <p>Earlier or lighter signals in our model—still real opportunities. Add to watchlists, monitor for new signals; tier moves up as intent sharpens.</p>
+        </div>
+      </div>
+
+      <div class="scoring-bar">
+        <div class="scoring-bar-left"><strong>How Hot deals are scored</strong> &nbsp; Weights and thresholds · tune in backend</div>
+        <div class="scoring-bar-right">Click to expand</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HOME SCREEN 3 — Deal Cards (Spotlight)
+     ═══════════════════════════════════════════════════════════ -->
+<hr class="screen-sep" data-label="Home Screen 3 — Daily Spotlight Deal Cards" />
+
+<div id="home3">
+  <nav class="navbar">
+    <div class="nav-brand"><div class="brand-logo">R→</div></div>
+    <div class="nav-links">
+      <a href="#">Dashboard</a><a href="#">Market Insights</a><a href="#">Signals</a>
+      <a href="#">Browse Leads</a><a href="#">📰 Newsletter</a><a href="#">ROI Calculator</a>
+    </div>
+    <div class="nav-right">
+      <button class="btn-signin">Sign in ▾</button>
+      <button class="btn-signup">Sign Up Free</button>
+    </div>
+  </nav>
+
+  <div class="section">
+    <!-- Deal card 1 -->
+    <div class="deal-card">
+      <div class="deal-card-top">
+        <div>
+          <div class="deal-name">Sycuan Casino Resort</div>
+          <div class="deal-meta">Casinos &amp; Gaming · El Cajon, CA</div>
+          <div class="deal-badges">
+            <span class="badge-hot-pill">🔥 Hot</span>
+            <span style="font-size:12px; color:var(--muted); cursor:pointer;">▾</span>
+          </div>
+        </div>
+        <div class="deal-score-block">
+          <div class="deal-score-num">76</div>
+          <div class="deal-score-lbl">Score</div>
+        </div>
+      </div>
+      <div class="deal-body">
+        Sycuan Casino Resort is targeting automation for their robotic automation due to operational efficiency and labor costs, which aligns with our signals: Labor Shortage, News Signal, Leadership Hire. The timing of this project is within 60–90 days. Sycuan Casino Resort is a mid-market Casinos &amp; Gaming company based in El Cajon, CA, with 9 active buying indicators in our database. The leading indicator is a Labor Shortage, consistent with companies actively evaluating robotic automation. Qualifying factors: 7 hot-type signals (labor_shortage, strategic_hire, capex, ma_activity, …); 9 signals.
+      </div>
+      <div class="deal-badges" style="margin-bottom:12px;">
+        <span class="badge-tag">Labor Shortage</span>
+        <span class="badge-tag">News Signal</span>
+        <span class="badge-tag">Leadership Hire</span>
+        <span class="badge-tag">CapEx Budget</span>
+        <span class="badge-tag">M&amp;A Activity</span>
+      </div>
+      <div class="deal-actions">
+        <button class="btn-share">↗ Share</button>
+        <button class="btn-full-analysis">Full analysis →</button>
+      </div>
+    </div>
+
+    <!-- Deal card 2 -->
+    <div class="deal-card">
+      <div class="deal-card-top">
+        <div>
+          <div class="deal-name">Galaxy Entertainment Group</div>
+          <div class="deal-meta">Casinos &amp; Gaming · Location N/A</div>
+          <div class="deal-badges">
+            <span class="badge-hot-pill">🔥 Hot</span>
+            <span style="font-size:12px; color:var(--muted); cursor:pointer;">▾</span>
+          </div>
+        </div>
+        <div class="deal-score-block">
+          <div class="deal-score-num">73</div>
+          <div class="deal-score-lbl">Score</div>
+        </div>
+      </div>
+      <div class="deal-body">
+        Galaxy Entertainment Group is targeting automation for their robotic automation due to operational efficiency and labor costs, which aligns with our signals: News Signal, CapEx Budget, Expansion. The timing of this project is within 60–90 days. Galaxy Entertainment Group is a large enterprise Casinos &amp; Gaming company with 10 active buying indicators in our database. Key evidence — News Signal: "Galaxy Macau deploys 24 autonomous delivery robots for in-room dining and resort corridors; guest satisfaction up 22%" Qualifying factors: 8 hot-type signals (strategic_hire, labor_shortage, capex, funding_round, expansion, …); 10 signals.
+      </div>
+      <div class="deal-badges" style="margin-bottom:12px;">
+        <span class="badge-tag">News Signal</span>
+        <span class="badge-tag">CapEx Budget</span>
+        <span class="badge-tag">Expansion</span>
+        <span class="badge-tag">Leadership Hire</span>
+        <span class="badge-tag">Labor Shortage</span>
+      </div>
+      <div class="deal-actions">
+        <button class="btn-share">↗ Share</button>
+        <button class="btn-full-analysis">Full analysis →</button>
+      </div>
+    </div>
+
+    <!-- Deal card 3 -->
+    <div class="deal-card">
+      <div class="deal-card-top">
+        <div>
+          <div class="deal-name">Melco Resorts &amp; Entertainment</div>
+          <div class="deal-meta">Casinos &amp; Gaming · Location N/A</div>
+          <div class="deal-badges">
+            <span class="badge-hot-pill">🔥 Hot</span>
+            <span style="font-size:12px; color:var(--muted); cursor:pointer;">▾</span>
+          </div>
+        </div>
+        <div class="deal-score-block">
+          <div class="deal-score-num">74</div>
+          <div class="deal-score-lbl">Score</div>
+        </div>
+      </div>
+      <div class="deal-body">
+        Melco Resorts &amp; Entertainment is targeting automation for their robotic automation due to operational efficiency and labor costs, which aligns with our signals: News Signal, CapEx Budget, Labor Shortage. The timing of this project is within 60–90 days. Melco Resorts &amp; Entertainment is a large enterprise Casinos &amp; Gaming company with 8 active buying indicators in our database. Key evidence — News Signal: "Melco deploys robotic food and beverage delivery across City of Dreams Macau; 18 units operating across casino floors and hotel restaurants" Qualifying factors: 6 hot-type signals (labor_shortage, strategic_hire, capex, expansion, …); 8 signals.
+      </div>
+      <div class="deal-badges" style="margin-bottom:12px;">
+        <span class="badge-tag">News Signal</span>
+        <span class="badge-tag">CapEx Budget</span>
+        <span class="badge-tag">Labor Shortage</span>
+        <span class="badge-tag">Leadership Hire</span>
+        <span class="badge-tag">Expansion</span>
+      </div>
+      <div class="deal-actions">
+        <button class="btn-share">↗ Share</button>
+        <button class="btn-full-analysis">Full analysis →</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HOME SCREEN 4 — Signal Intelligence + Scoring
+     ═══════════════════════════════════════════════════════════ -->
+<hr class="screen-sep" data-label="Home Screen 4 — Signal Intelligence" />
+
+<div id="home4">
+  <nav class="navbar">
+    <div class="nav-brand"><div class="brand-logo">R→</div></div>
+    <div class="nav-links">
+      <a href="#">Dashboard</a><a href="#">Market Insights</a><a href="#">Signals</a>
+      <a href="#">Browse Leads</a><a href="#">📰 Newsletter</a><a href="#">ROI Calculator</a>
+    </div>
+    <div class="nav-right">
+      <button class="btn-signin">Sign in ▾</button>
+      <button class="btn-signup">Sign Up Free</button>
+    </div>
+  </nav>
+
+  <div class="section">
+    <!-- View Full Dashboard CTA -->
+    <div style="text-align:center; margin-bottom:48px;">
+      <button class="btn-hero-secondary" style="padding:12px 28px; font-size:14px;">View Full Dashboard →</button>
+    </div>
+
+    <!-- Signal Intelligence -->
+    <div class="signal-intel-section">
+      <div class="signal-intel-eyebrow">Signal Intelligence</div>
+      <div class="signal-intel-title">What Are Buying Signals?</div>
+      <div class="signal-intel-sub">Real-world indicators that a company needs automation — before they post an RFP</div>
+
+      <div class="signal-cards">
+        <div class="signal-card">
+          <div class="signal-card-icon">🔥</div>
+          <div class="signal-card-title">Labor Shortage Signals</div>
+          <div class="signal-card-quotes">
+            <div class="signal-quote">"We can't find enough workers to cover shifts"</div>
+            <div class="signal-quote">"Turnover is killing us — constant training"</div>
+            <div class="signal-quote">"Wages up 30%, still can't fill positions"</div>
+          </div>
+          <div class="signal-weight">Strongest automation trigger (35% weight)</div>
+        </div>
+        <div class="signal-card">
+          <div class="signal-card-icon">📈</div>
+          <div class="signal-card-title">Expansion Signals</div>
+          <div class="signal-card-quotes">
+            <div class="signal-quote">"Opening new facility next quarter"</div>
+            <div class="signal-quote">"Need 24/7 operations but can't staff it"</div>
+            <div class="signal-quote">"Scaling to meet new demand"</div>
+          </div>
+          <div class="signal-weight">Growth-driven automation (25% weight)</div>
+        </div>
+        <div class="signal-card">
+          <div class="signal-card-icon">⚠️</div>
+          <div class="signal-card-title">Safety Signals</div>
+          <div class="signal-card-quotes">
+            <div class="signal-quote">"OSHA citation for repetitive stress"</div>
+            <div class="signal-quote">"Multiple injuries in manual operations"</div>
+            <div class="signal-quote">"Heavy lifting causing worker comp claims"</div>
+          </div>
+          <div class="signal-weight">Risk reduction driver (20% weight)</div>
+        </div>
+      </div>
+
+      <!-- Scoring breakdown -->
+      <div class="scoring-breakdown">
+        <h3>How We Score Leads</h3>
+        <p>Every company gets a score (0–100) based on 4 factors:</p>
+        <div class="scoring-factors">
+          <div class="factor-cell">
+            <div class="factor-pct orange">35%</div>
+            <div class="factor-label">Labor Pain</div>
+          </div>
+          <div class="factor-cell">
+            <div class="factor-pct green">30%</div>
+            <div class="factor-label">Expansion</div>
+          </div>
+          <div class="factor-cell">
+            <div class="factor-pct cyan">25%</div>
+            <div class="factor-label">Automation Fit</div>
+          </div>
+          <div class="factor-cell">
+            <div class="factor-pct yellow">10%</div>
+            <div class="factor-label">Timing</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     HOME SCREEN 5 — Success Stories + Action Plan + Footer
+     ═══════════════════════════════════════════════════════════ -->
+<hr class="screen-sep" data-label="Home Screen 5 — Success Stories + CTA + Footer" />
+
+<div id="home5">
+  <nav class="navbar">
+    <div class="nav-brand"><div class="brand-logo">R→</div></div>
+    <div class="nav-links">
+      <a href="#">Dashboard</a><a href="#">Market Insights</a><a href="#">Signals</a>
+      <a href="#">Browse Leads</a><a href="#">📰 Newsletter</a><a href="#">ROI Calculator</a>
+    </div>
+    <div class="nav-right">
+      <button class="btn-signin">Sign in ▾</button>
+      <button class="btn-signup">Sign Up Free</button>
+    </div>
+  </nav>
+
+  <div class="section">
+    <!-- Success Stories -->
+    <div class="success-section">
+      <div class="success-eyebrow">Success Stories</div>
+      <div class="success-title">Real Signals → Real Deals</div>
+      <div class="success-sub">How robotics companies are using signals to close deals before RFPs</div>
+
+      <div class="story-grid">
+        <div class="story-card">
+          <div class="story-title">Regional Hotel Chain → AMR Deployment</div>
+          <div class="story-row"><strong>Signal detected:</strong> "Can't staff overnight shifts" + "40% housekeeping vacancy" in earnings call</div>
+          <div class="story-row"><strong>Action:</strong> Reached out 4 months before RFP with overnight automation case study</div>
+          <div class="story-row"><span class="result">Result:</span> Shaped requirements, won pilot without competition → 15-robot deployment</div>
+        </div>
+        <div class="story-card">
+          <div class="story-title">3PL Warehouse → Palletizing System</div>
+          <div class="story-row"><strong>Signal detected:</strong> "Opening 2 new DCs" + posting for "automation engineer"</div>
+          <div class="story-row"><strong>Action:</strong> Contacted during facility design phase with layout recommendations</div>
+          <div class="story-row"><span class="result">Result:</span> Designed automation into new buildings → $2.4M contract</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Plan -->
+    <div class="action-section" style="margin-top:48px;">
+      <div class="action-eyebrow">Get Started</div>
+      <div class="action-title">Your Action Plan</div>
+      <div class="action-steps">
+        <div class="action-step">
+          <div class="action-step-num">1.</div>
+          <div class="action-step-title">Try It Free</div>
+          <p>Enter your robot company URL above to see your top 5 prospects instantly — no signup required</p>
+        </div>
+        <div class="action-step">
+          <div class="action-step-num">2.</div>
+          <div class="action-step-title">Browse Database</div>
+          <p>View all 229 HOT leads organized by industry — see signals, scores, and contact insights</p>
+          <a href="#">View Dashboard →</a>
+        </div>
+        <div class="action-step">
+          <div class="action-step-num">3.</div>
+          <div class="action-step-title">Get Daily Alerts</div>
+          <p>Sign up to receive new hot leads the moment signals are detected — be first to engage</p>
+          <a href="#">Create Free Account →</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-logo">R→</div>
+    <div class="footer-copy">© 2026 Signal intelligence for robotics sales.</div>
+  </footer>
+</div>
+
+</body>
+</html>

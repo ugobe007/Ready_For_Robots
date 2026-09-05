@@ -1,0 +1,27 @@
+{
+  "name": "ready-for-robots",
+  "private": true,
+  "description": "Root scripts delegate to the canonical readyforrobots-new Vite app. Legacy Next.js commands are explicitly named.",
+  "engines": {
+    "node": ">=20.12.0"
+  },
+  "scripts": {
+    "install:web": "npx --yes pnpm@10.4.1 install --frozen-lockfile -C readyforrobots-new",
+    "dev": "npx --yes pnpm@10.4.1 -C readyforrobots-new dev",
+    "build": "npx --yes pnpm@10.4.1 -C readyforrobots-new build",
+    "build:vercel": "npx --yes pnpm@10.4.1 -C readyforrobots-new exec vite build",
+    "check": "npx --yes pnpm@10.4.1 -C readyforrobots-new check",
+    "validate": "npm run check",
+    "format": "npx --yes pnpm@10.4.1 -C readyforrobots-new format",
+    "legacy:next:dev": "npm run dev --prefix frontend/nextjs",
+    "legacy:next:build": "cd frontend/nextjs && npm run build",
+    "legacy:next:lint": "npm run lint --prefix frontend/nextjs",
+    "deploy:fly": "flyctl deploy --strategy immediate -a ready-2-robot",
+    "deploy:vercel": "NODE_VERSION=22 vercel build --prod && vercel deploy --prebuilt --prod",
+    "ship": "./scripts/ship.sh"
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.103.3"
+  }
+}

@@ -1,0 +1,263 @@
+# Agent verification on PRs. Honest Jobs proof (Fly + Vercel JS canaries),
+# then squash auto-merge for cursor/* (or label automerge-after-verify).
+#
+# pstack How / Act / Critic is the Jobs release authority. It runs on drafts.
+# Draft-skip is how malformed FIND/CRM landed; do not restore it on pstack-release.
+# Hourly observe must not use this workflow. Skip-green Vercel fails verify.
+# Label do-not-merge blocks auto-merge.
+name: Agent verify
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
+    branches: [main]
+
+concurrency:
+  group: agent-verify-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: read
+  checks: read
+
+jobs:
+  pstack-release:
+    name: pstack How / Act / Critic
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: python3 -m pip install pytest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.4.1
+
+      - name: pstack How / Act / Critic
+        run: |
+          mkdir -p pstack-artifacts
+          python3 scripts/pstack_release.py --evidence pstack-artifacts
+        env:
+          RFR_FLY_API: https://ready-2-robot.fly.dev
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: pstack pytest
+        run: python3 -m pytest tests/test_pstack_release.py tests/test_pstack_protocol.py tests/test_class_picker_chrome.py tests/test_pstack_healthcare_class.py tests/test_ontology_industry_language.py tests/test_robot_ontology.py tests/test_url_workflow_critic.py -q --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: pstack vitest (FIND abort + leftover CRM)
+        run: |
+          pnpm install --frozen-lockfile -C readyforrobots-new
+          pnpm --dir readyforrobots-new exec vitest run \
+            client/src/lib/pstackRelease.test.ts \
+            client/src/lib/pstackSite.test.ts \
+            client/src/lib/robotClassOptions.test.ts \
+            client/src/lib/knownOemLineups.test.ts \
+            client/src/lib/robotUrlIdentity.test.ts \
+            client/src/lib/jobsCrmAccount.test.ts \
+            client/src/lib/jobsHandoffSnapshot.test.ts
+
+      - name: Upload pstack evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pstack-release-${{ github.event.pull_request.number }}
+          path: pstack-artifacts
+          if-no-files-found: warn
+
+  verify:
+    name: Jobs path + chrome
+    needs: pstack-release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      skip_green: ${{ steps.summary.outputs.skip_green }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install pytest
+        run: python3 -m pip install pytest
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "20"
+
+      - name: Install pnpm
+        run: npm install -g pnpm@10.4.1
+
+      - name: Feature map shape
+        run: python3 scripts/agent_verify.py map
+
+      - name: Doctor + drive (production)
+        id: verify
+        run: |
+          mkdir -p verify-artifacts
+          python3 scripts/agent_verify.py ci --evidence verify-artifacts
+        env:
+          RFR_SITE: https://readyforrobots.com
+          RFR_FLY_API: https://ready-2-robot.fly.dev
+          RFR_VERIFY_EVIDENCE: ${{ github.workspace }}/verify-artifacts
+
+      - name: Record skip-green
+        id: summary
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import json, os, pathlib
+          p = pathlib.Path("verify-artifacts")
+          files = sorted(p.glob("*/summary.json")) + sorted(p.glob("summary.json"))
+          skip = "false"
+          if files:
+              data = json.loads(files[-1].read_text())
+              skip = "true" if data.get("skip_green") else "false"
+          with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+              fh.write(f"skip_green={skip}\n")
+          print("skip_green", skip)
+          PY
+
+      - name: Targeted pytest
+        run: python3 -m pytest tests/test_agent_verify.py tests/test_pstack_release.py tests/test_pstack_protocol.py tests/test_class_picker_chrome.py tests/test_pstack_healthcare_class.py tests/test_ontology_industry_language.py tests/test_robot_ontology.py tests/test_url_workflow_critic.py tests/test_employer_robot_match.py -q --tb=short
+        env:
+          PYTHONPATH: ${{ github.workspace }}
+
+      - name: Frontend deps + vitest (Jobs chrome)
+        run: |
+          pnpm install --frozen-lockfile -C readyforrobots-new
+          pnpm --dir readyforrobots-new exec vitest run \
+            client/src/lib/jobsLanding.test.ts \
+            client/src/lib/jobsWorkflow.test.ts \
+            client/src/lib/siteIcons.test.ts \
+            client/src/lib/robotClassOptions.test.ts \
+            client/src/lib/robotJobCard.test.ts \
+            client/src/lib/jobsApply.test.ts \
+            client/src/lib/pstackSite.test.ts \
+            client/src/lib/pstackRelease.test.ts \
+            client/src/lib/jobsCrmAccount.test.ts \
+            client/src/lib/jobsHandoffSnapshot.test.ts \
+            client/src/lib/robotUrlIdentity.test.ts \
+            client/src/lib/findResearch.test.ts \
+            client/src/lib/employerRobotMatch.test.ts
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: agent-verify-${{ github.event.pull_request.number }}
+          path: verify-artifacts
+          if-no-files-found: warn
+
+  automerge:
+    name: Auto-merge after verify
+    needs: [pstack-release, verify]
+    if: |
+      success() &&
+      github.event.pull_request.draft == false &&
+      needs.verify.outputs.skip_green != 'true' &&
+      !contains(github.event.pull_request.labels.*.name, 'do-not-merge') &&
+      (
+        startsWith(github.head_ref, 'cursor/') ||
+        contains(github.event.pull_request.labels.*.name, 'automerge-after-verify')
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      actions: write
+    steps:
+      - name: Squash-merge and dispatch production deploys
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const pr = context.payload.pull_request;
+            const title = (pr.title || "").toLowerCase();
+            if (title.includes("[wip]") || title.includes("do not merge")) {
+              core.info("Title blocks auto-merge");
+              return;
+            }
+            // GITHUB_TOKEN squash-merge does not fire `push` workflows
+            // (deploy.yml / deploy-frontend.yml). Native enablePullRequestAutoMerge
+            // has the same gap. Merge in this job, then workflow_dispatch
+            // (explicitly allowed to start other workflows).
+            let merged = false;
+            try {
+              await github.rest.pulls.merge({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                pull_number: pr.number,
+                merge_method: "squash",
+              });
+              merged = true;
+              core.info("Squash-merged immediately.");
+            } catch (mergeErr) {
+              const msg = mergeErr.message || "";
+              if (/already merged/i.test(msg)) {
+                merged = true;
+                core.info("PR already merged.");
+              } else {
+                try {
+                  await github.graphql(
+                    `mutation($id: ID!) {
+                      enablePullRequestAutoMerge(input: {
+                        pullRequestId: $id,
+                        mergeMethod: SQUASH
+                      }) { pullRequest { number } }
+                    }`,
+                    { id: pr.node_id }
+                  );
+                  core.warning("Immediate merge failed; enabled native auto-merge. GHA deploy will not run until a workflow_dispatch.");
+                } catch (err) {
+                  core.setFailed(`Could not merge: ${mergeErr.message}`);
+                  return;
+                }
+              }
+            }
+            if (!merged) {
+              return;
+            }
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+            for (const workflow_id of ["deploy.yml", "deploy-frontend.yml"]) {
+              let lastErr = null;
+              for (let attempt = 1; attempt <= 5; attempt++) {
+                try {
+                  await github.rest.actions.createWorkflowDispatch({
+                    owner,
+                    repo,
+                    workflow_id,
+                    ref: "main",
+                  });
+                  core.info(`Dispatched ${workflow_id} on main.`);
+                  lastErr = null;
+                  break;
+                } catch (err) {
+                  lastErr = err;
+                  core.info(`dispatch ${workflow_id} attempt ${attempt}: ${err.message}`);
+                  await sleep(4000);
+                }
+              }
+              if (lastErr) {
+                core.warning(`Could not dispatch ${workflow_id}: ${lastErr.message}`);
+              }
+            }

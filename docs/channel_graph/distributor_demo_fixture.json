@@ -1,0 +1,69 @@
+{
+  "version": 1,
+  "kind": "distributor_demo_fixture",
+  "product_line": "Find jobs for the robots you sell.",
+  "demos": [
+    {
+      "demo_key": "rg_group_amr",
+      "partner_key": "rg_group",
+      "partner_name": "RG Group",
+      "distributor_kind": "solution_integrator",
+      "headline": "We found jobs for robots you sell.",
+      "job_count_total": 37,
+      "jobs_preview": 5,
+      "portfolio_lines": ["MiR", "Seegrid", "VisionNav", "ROEQ modules"],
+      "capability_families": ["transport_amr"],
+      "breakdown": [
+        {"label": "Material movement / tote & cart transport", "count": 37}
+      ],
+      "source_corpus": "origin_open_world_subset",
+      "note": "Illustrative subset of ~67 Origin jobs; not a scored territory filter yet.",
+      "sample_job_keys": [
+        "origin_napa_duncansville",
+        "origin_replacement_parts_little_rock",
+        "origin_curascript_tempe",
+        "origin_sanmar_avondale",
+        "origin_intuitive_smkt"
+      ]
+    },
+    {
+      "demo_key": "xcube_pudu",
+      "partner_key": "xcube",
+      "partner_name": "XCube Robotics",
+      "distributor_kind": "catalog_vad",
+      "headline": "We found jobs for robots you sell.",
+      "job_count_total": 16,
+      "jobs_preview": 5,
+      "portfolio_lines": ["Pudu cleaning", "Pudu delivery"],
+      "capability_families": ["floor_scrub", "service_delivery"],
+      "breakdown": [
+        {"label": "Hard-floor scrubbing", "count": 16}
+      ],
+      "source_corpus": "avidbots_neo_transfer_25",
+      "sample_job_keys": [
+        "neo_moa_bloomington",
+        "neo_unifi_atl",
+        "neo_harris_lbj",
+        "neo_jhu_baltimore",
+        "neo_surge_joliet"
+      ]
+    },
+    {
+      "demo_key": "robotshop_agibot",
+      "partner_key": "robotshop",
+      "partner_name": "RobotShop",
+      "distributor_kind": "catalog_vad",
+      "headline": "We found jobs for robots you sell.",
+      "job_count_total": 29,
+      "jobs_preview": 5,
+      "portfolio_lines": ["AGIBOT C5", "AGIBOT D1", "AGIBOT A2/X2"],
+      "capability_families": ["floor_scrub", "inspection_mobile", "humanoid"],
+      "breakdown": [
+        {"label": "Cleaning", "count": 16},
+        {"label": "Inspection routes", "count": 13}
+      ],
+      "source_corpus": "neo_25 + spot_15",
+      "note": "Cleaning jobs via C5 family overlap with Neo; inspection via D1/Spot-class. Humanoid jobs not yet in corpus."
+    }
+  ]
+}

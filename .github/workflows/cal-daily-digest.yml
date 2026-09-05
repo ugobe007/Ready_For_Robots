@@ -1,0 +1,55 @@
+name: Cal daily digest
+
+# Fly in-process + Celery Beat own this send. This Action is the backup.
+# Hermes is retired (2026-08-26). Do not cron digest on Hermes / AI Gateway.
+# Secrets: ADMIN_KEY and/or SCRAPER_CRON_TOKEN (same as harness-daily).
+
+on:
+  schedule:
+    - cron: "5 15 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: cal-daily-digest
+  cancel-in-progress: false
+
+jobs:
+  send:
+    name: POST daily-digest-send
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Send digest via Fly (no LLM)
+        env:
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          SCRAPER_CRON_TOKEN: ${{ secrets.SCRAPER_CRON_TOKEN }}
+        run: |
+          set -euo pipefail
+          URL="https://ready-2-robot.fly.dev/api/v1/market-graph/daily-digest-send"
+          BODY='{"force": false, "period_hours": 24}'
+          post() {
+            local extra=("$@")
+            local tmp
+            tmp="$(mktemp)"
+            local code
+            code="$(curl -sS -o "$tmp" -w "%{http_code}" -X POST "$URL" \
+              -H "Content-Type: application/json" \
+              "${extra[@]}" \
+              -d "$BODY" || true)"
+            echo "HTTP $code"
+            cat "$tmp"
+            echo
+            if [ "$code" != "200" ]; then
+              echo "::error::daily-digest-send failed HTTP $code. If the body mentions a 16-character hex fingerprint, GitHub ADMIN_KEY is the fly secrets list digest — set the real ADMIN_KEY (same value as Fly), not the fingerprint."
+              exit 1
+            fi
+          }
+          if [ -n "${ADMIN_KEY:-}" ]; then
+            post -H "X-Admin-Key: ${ADMIN_KEY}"
+          elif [ -n "${SCRAPER_CRON_TOKEN:-}" ]; then
+            URL="${URL}?token=${SCRAPER_CRON_TOKEN}"
+            post
+          else
+            echo "No ADMIN_KEY or SCRAPER_CRON_TOKEN in Actions. Fly in-process digest still owns the send."
+            exit 0
+          fi

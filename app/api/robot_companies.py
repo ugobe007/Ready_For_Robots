@@ -1,0 +1,2248 @@
+"""
+Robot Companies API
+Lead generation system for robotics vendors
+Focus: Chinese companies entering U.S. market
+"""
+from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.encoders import jsonable_encoder
+from sqlalchemy.orm import Session
+from sqlalchemy.orm import joinedload
+from typing import Any, List, Optional
+from datetime import datetime, timezone
+from pydantic import BaseModel
+from html import unescape
+import hashlib
+import logging
+import os
+import re
+import secrets
+import threading
+import uuid
+from urllib.parse import urljoin, urlparse
+
+logger = logging.getLogger(__name__)
+
+import requests
+from bs4 import BeautifulSoup
+
+from app.database import get_db
+from app.api.auth_deps import _require_user
+from app.api.crm import _ensure_default_team, _uid_uuid
+from app.models.company import Company
+from app.models.crm import CrmAccount
+from app.models.outreach import OutreachMessage
+from app.models.robot_company import RobotCompany
+from app.models.supply_outreach import SupplyOutreachMessage
+from app.services.agent_messaging import (
+    CAL_VENDOR_OFFRAMP_LINE,
+    CAL_VENDOR_STRATEGY_CALL_CTA,
+    VEGAS_DISTRIBUTION_LINE,
+    cal_signature,
+    cal_vendor_match_paragraph,
+)
+from app.services.cal_insights import pick_cal_insight
+from app.services.company_domain import normalize_website_domain
+from app.services.email_templates import get_email_template
+from app.services.cal_email_send import send_cal_email_via_resend
+from app.services.resend_email import ResendEmailError, send_email_via_resend
+from app.services.sales_learning_agent import record_sales_experience
+from app.services.shared_api_cache import shared_cache_get, shared_cache_set
+from app.services.vendor_scoring import compute_vendor_list_score
+
+router = APIRouter(prefix="/api/robot-companies", tags=["robot-companies"])
+
+
+class SendRobotCompanyEmailRequest(BaseModel):
+    to_email: str | list[str]
+    template_type: str = "intro"
+    subject: Optional[str] = None
+    body: Optional[str] = None
+    approved_message_id: Optional[str] = None
+
+
+class ApproveSupplyOutreachRequest(BaseModel):
+    to_email: str | list[str]
+    template_type: str = "supply_pipeline"
+    subject: str
+    body: str
+    payload: Optional[dict[str, Any]] = None
+
+
+def _split_terms(*values: Any) -> set[str]:
+    terms: set[str] = set()
+    for value in values:
+        if not value:
+            continue
+        raw = str(value).lower().replace("/", " ").replace("-", " ")
+        for part in raw.replace("&", " ").replace(",", " ").split():
+            if len(part) >= 3:
+                terms.add(part.strip())
+    return terms
+
+
+def _robot_market_terms(rc: RobotCompany) -> set[str]:
+    terms = _split_terms(
+        getattr(rc, "robot_type", None),
+        getattr(rc, "target_market", None),
+        getattr(rc, "product_category", None),
+    )
+    aliases = {
+        "amr": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+        "cobot": {"manufacturing", "assembly", "industrial", "production"},
+        "industrial": {"manufacturing", "assembly", "production", "factory"},
+        "service": {"hospitality", "healthcare", "retail", "cleaning"},
+        "vision": {"inspection", "quality", "manufacturing", "safety"},
+        "humanoid": {"warehouse", "manufacturing", "service", "hospitality"},
+    }
+    for term in list(terms):
+        terms.update(aliases.get(term, set()))
+    return terms
+
+
+def _explicit_robot_market_terms(rc: RobotCompany) -> set[str]:
+    return _split_terms(
+        getattr(rc, "robot_type", None),
+        getattr(rc, "target_market", None),
+        getattr(rc, "product_category", None),
+    )
+
+
+# Buyer industry → robot-domain vocabulary (shared with vendor terms/aliases in
+# _robot_market_terms). Industries with a clear automation domain map to matching
+# tokens; industries with no inherent robot fit (aviation, finance, media, government)
+# are intentionally absent — they only match a vendor when the buyer's own signal or
+# requirements name the relevant automation (explicit term overlap), never on score alone.
+_INDUSTRY_DOMAIN_TOKENS: dict[str, set[str]] = {
+    "logistics": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+    "warehouse": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+    "supply chain": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+    "freight": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+    "3pl": {"warehouse", "logistics", "fulfillment", "distribution", "material", "handling"},
+    "manufacturing": {"manufacturing", "assembly", "production", "factory", "industrial"},
+    "automotive": {"manufacturing", "assembly", "production", "factory", "industrial"},
+    "industrial": {"manufacturing", "assembly", "production", "factory", "industrial"},
+    "electronics": {"manufacturing", "assembly", "production", "factory", "industrial"},
+    "food": {"manufacturing", "production", "service", "hospitality"},
+    "restaurant": {"service", "hospitality", "production"},
+    "hospitality": {"hospitality", "service", "cleaning"},
+    "hotel": {"hospitality", "service", "cleaning"},
+    "retail": {"retail", "service", "cleaning"},
+    "grocery": {"retail", "service", "cleaning", "warehouse"},
+    "healthcare": {"healthcare", "service", "cleaning"},
+    "hospital": {"healthcare", "service", "cleaning"},
+    "medical": {"healthcare", "service", "cleaning"},
+    "cleaning": {"cleaning", "service"},
+    "facility": {"cleaning", "service"},
+    "facilities": {"cleaning", "service"},
+    "construction": {"industrial", "production"},
+    "agriculture": {"production", "manufacturing"},
+}
+
+
+def _buyer_domain_tokens(company: Company) -> set[str]:
+    ind = " ".join(
+        str(x or "").lower() for x in (company.industry, company.sub_industry)
+    )
+    tokens: set[str] = set()
+    for key, toks in _INDUSTRY_DOMAIN_TOKENS.items():
+        if key in ind:
+            tokens |= toks
+    return tokens
+
+
+def _vendor_buyer_domain_fit(rc: RobotCompany, company: Company) -> bool:
+    """True when the buyer plausibly needs this vendor's robots.
+
+    Fit requires either explicit term overlap (the buyer's requirements/signals name
+    automation the vendor supplies) or that the buyer's industry maps to a robot domain
+    the vendor serves. A high intent score alone is never enough — that is exactly how
+    off-domain buyers (e.g. an airline trialing humanoids) were being cited to AMR/cleaning
+    vendors and then blocked at assembly.
+    """
+    vendor_terms = _robot_market_terms(rc)
+    if not vendor_terms:
+        return True  # unknown vendor profile — do not over-filter
+    if vendor_terms & _lead_terms(company):
+        return True
+    return bool(vendor_terms & _buyer_domain_tokens(company))
+
+
+def _vendor_allows_logistics(rc: RobotCompany) -> bool:
+    logistics_terms = {
+        "agv",
+        "amr",
+        "distribution",
+        "fulfillment",
+        "handling",
+        "intralogistics",
+        "logistics",
+        "material",
+        "supply",
+        "warehouse",
+    }
+    return bool(_explicit_robot_market_terms(rc).intersection(logistics_terms))
+
+
+def _is_logistics_lead(company: Company) -> bool:
+    terms = _split_terms(company.industry, company.sub_industry, company.name)
+    return bool(terms.intersection({"logistics", "warehouse", "fulfillment", "distribution", "supply", "freight", "3pl"}))
+
+
+def _lead_terms(company: Company) -> set[str]:
+    """Domain vocabulary describing what the buyer actually needs.
+
+    Only pulls from controlled fields — industry, sub-industry, explicit automation
+    requirements, and signal types. It deliberately does NOT stringify the whole
+    `crm_metadata` enrichment blob: that blob embeds the inference engine's *suggested*
+    robot forms (e.g. "logistics_warehouse", "material_handling", "cobot", "humanoid") for
+    almost every HOT lead, which made every enriched buyer spuriously "overlap" every
+    vendor and let off-domain buyers (an airline) match AMR/warehouse vendors.
+    """
+    profile = company.automation_profile or {}
+    requirements: list[Any] = []
+    if isinstance(profile, dict):
+        requirements = list(profile.get("requirements") or profile.get("automation_requirements") or [])
+    meta = company.crm_metadata or {}
+    if isinstance(meta, dict):
+        meta_reqs = meta.get("automation_requirements")
+        if isinstance(meta_reqs, list):
+            requirements += meta_reqs
+    signal_terms = [s.signal_type for s in (company.signals or [])[:5]]
+    return _split_terms(company.industry, company.sub_industry, *requirements, *signal_terms)
+
+
+def _lead_score(company: Company, vendor_terms: set[str]) -> float:
+    score = 0.0
+    if company.scores:
+        score += max(float(s.overall_intent_score or 0) for s in company.scores)
+    lead_terms = _lead_terms(company)
+    overlap = vendor_terms.intersection(lead_terms)
+    score += min(25.0, len(overlap) * 6.0)
+    score += min(15.0, len(company.signals or []) * 2.5)
+    return round(score, 1)
+
+
+def _vendor_seed(rc: RobotCompany) -> int:
+    key = "|".join(
+        str(value or "").lower()
+        for value in [
+            getattr(rc, "id", None),
+            getattr(rc, "company_name", None),
+            getattr(rc, "website", None),
+            getattr(rc, "robot_type", None),
+            getattr(rc, "target_market", None),
+        ]
+    )
+    return sum((idx + 1) * ord(char) for idx, char in enumerate(key))
+
+
+def _vendor_specific_tiebreak(rc: RobotCompany, company: Company) -> float:
+    key = f"{_vendor_seed(rc)}|{company.id}|{company.name or ''}"
+    return (sum((idx + 1) * ord(char) for idx, char in enumerate(key)) % 1000) / 1000.0
+
+
+def _lead_signal_strength(company: Company) -> float:
+    if company.scores:
+        return max(float(s.overall_intent_score or 0) for s in company.scores)
+    return 0.0
+
+
+_ACADEMIC_BUYER_NAME_RE = re.compile(
+    r"(?i)("
+    r"\b(university|univ\.?|college|institute of technology|polytechnic|"
+    r"school of medicine|academy of sciences)\b"
+    r"|\bUC\s+[A-Za-z]{3,}"  # UC Davis, UC Berkeley, UC San Diego …
+    r"|\b(MIT|Caltech|UCLA|UCSF|UCSD|UCSB|USC|NYU|CMU|Carnegie\s+Mellon|"
+    r"ETH\s+Z[uü]rich|Georgia\s+Tech|Virginia\s+Tech)\b"
+    r")",
+)
+_RESEARCH_ONLY_SIGNAL_RE = re.compile(
+    r"\b("
+    r"study led by|research study|clinical trial|academic study|"
+    r"dementia care|nurses on humanoid|university launches|"
+    r"first long-term.*study|led by nurses"
+    r")\b",
+    re.I,
+)
+_HUMANOID_CARE_SIGNAL_RE = re.compile(
+    r"\b(humanoid|social robot|companion robot)\b",
+    re.I,
+)
+_CARE_CONTEXT_RE = re.compile(
+    r"\b(dementia|elder|nursing|nurses|care home|hospital|healthcare|clinical)\b",
+    re.I,
+)
+_OPERATING_BUYER_EVIDENCE_RE = re.compile(
+    r"\b("
+    r"capex|capital expenditure|rfp|request for proposal|"
+    r"warehouse deployment|factory automation|production line|"
+    r"procurement|purchase order|vendor selection|pilot production|"
+    r"labor shortage|automation budget|install.*robot"
+    r")\b",
+    re.I,
+)
+
+
+def _primary_signal_blob(company: Company) -> str:
+    parts: list[str] = []
+    for sig in (company.signals or [])[:6]:
+        parts.append(str(getattr(sig, "signal_text", "") or ""))
+        parts.append(str(getattr(sig, "signal_type", "") or ""))
+    return " ".join(parts)
+
+
+def _supply_buyer_lead_eligible(company: Company, rc: RobotCompany) -> tuple[bool, str]:
+    """
+    Supply-side Cal emails must only cite pipeline-grade buyer opportunities —
+    same junk / buyer-intent / OEM gates as the public pipeline, plus product fit.
+    """
+    from app.services.lead_filter import classify_lead
+    from app.services.robot_vendor_names import is_known_robotics_vendor_name
+
+    name = (company.name or "").strip()
+    if is_known_robotics_vendor_name(name):
+        return False, "known robotics vendor/OEM — not a buyer"
+
+    junk, junk_reason, pri = classify_lead(company, company.scores, company.signals)
+    if junk:
+        return False, junk_reason or "classified as junk"
+
+    from app.services.robot_vendor_names import vendor_oem_junk_match
+
+    oem_junk, oem_reason = vendor_oem_junk_match(name, mode="buyer")
+    if oem_junk:
+        return False, oem_reason or "robotics vendor/OEM — not a buyer"
+
+    if pri.tier not in ("HOT", "WARM"):
+        return False, f"tier {pri.tier} — supply outreach requires HOT/WARM"
+
+    blob = _primary_signal_blob(company)
+    low_blob = blob.lower()
+
+    if _ACADEMIC_BUYER_NAME_RE.search(name):
+        # Universities/research institutes are not cold-outreach robot buyers for our
+        # vendors. Reject unconditionally — a manufacturing-looking scraped signal on a
+        # university row is almost always mis-attributed headline text, and citing it to a
+        # vendor only produces a blocked draft downstream.
+        return False, "academic/research institution — not an operating automation buyer"
+
+    explicit_vendor = _explicit_robot_market_terms(rc)
+    industrial_vendor = explicit_vendor.intersection(
+        {"cobot", "industrial", "manufacturing", "assembly", "production", "factory", "amr", "agv"}
+    )
+    if industrial_vendor and _HUMANOID_CARE_SIGNAL_RE.search(blob) and _CARE_CONTEXT_RE.search(blob):
+        if not _OPERATING_BUYER_EVIDENCE_RE.search(blob):
+            return False, "healthcare/humanoid research signal — poor fit for industrial/cobot vendor"
+
+    if industrial_vendor and _RESEARCH_ONLY_SIGNAL_RE.search(blob) and not _OPERATING_BUYER_EVIDENCE_RE.search(blob):
+        return False, "research headline — not a deployment buyer"
+
+    return True, ""
+
+
+def _curated_vendor_leads(rc: RobotCompany, rows: list[dict[str, Any]], limit: int) -> list[dict[str, Any]]:
+    if not rows:
+        return []
+    explicit_terms = _explicit_robot_market_terms(rc)
+    chosen: list[dict[str, Any]] = []
+    seen_industries: set[str] = set()
+    seen_companies: set[int] = set()
+
+    def row_sort(row: dict[str, Any]) -> tuple[float, float, float]:
+        explicit_overlap = len(explicit_terms.intersection(set(row.get("lead_terms") or [])))
+        return (
+            float(explicit_overlap * 40),
+            float(row.get("fit_score") or 0),
+            float(row.get("signal_strength") or 0),
+            float(row.get("vendor_tiebreak") or 0),
+        )
+
+    strong_fit = [
+        row
+        for row in rows
+        if row.get("overlap_count", 0) > 0
+        or bool(explicit_terms.intersection(set(row.get("lead_terms") or [])))
+    ]
+    pool = sorted(strong_fit or rows, key=row_sort, reverse=True)
+    for row in pool:
+        industry_key = str(row.get("industry") or "unknown").strip().lower()
+        if row["id"] in seen_companies:
+            continue
+        if len(chosen) < max(1, limit - 1) and industry_key in seen_industries:
+            continue
+        chosen.append(row)
+        seen_companies.add(row["id"])
+        seen_industries.add(industry_key)
+        if len(chosen) >= limit:
+            break
+
+    if len(chosen) < limit:
+        for row in pool:
+            if row["id"] in seen_companies:
+                continue
+            chosen.append(row)
+            seen_companies.add(row["id"])
+            if len(chosen) >= limit:
+                break
+
+    return chosen[:limit]
+
+
+def _match_buyer_leads(db: Session, rc: RobotCompany, limit: int = 3) -> list[dict[str, Any]]:
+    vendor_terms = _robot_market_terms(rc)
+    allow_logistics = _vendor_allows_logistics(rc)
+    candidates = (
+        db.query(Company)
+        .options(joinedload(Company.signals), joinedload(Company.scores))
+        .filter(Company.is_internal.is_(True))
+        .order_by(Company.updated_at.desc().nullslast(), Company.created_at.desc().nullslast())
+        .limit(300)
+        .all()
+    )
+    ranked = []
+    for c in candidates:
+        eligible, _skip = _supply_buyer_lead_eligible(c, rc)
+        if not eligible:
+            continue
+        if not allow_logistics and _is_logistics_lead(c):
+            continue
+        if not _vendor_buyer_domain_fit(rc, c):
+            continue
+        lead_terms = _lead_terms(c)
+        overlap = vendor_terms.intersection(lead_terms)
+        fit_score = _lead_score(c, vendor_terms)
+        if fit_score <= 0:
+            continue
+        ranked.append(
+            {
+                "id": c.id,
+                "company_name": c.name,
+                "industry": c.industry,
+                "location": ", ".join(x for x in [c.location_city, c.location_state] if x) or None,
+                "score": fit_score,
+                "fit_score": fit_score,
+                "signal_strength": _lead_signal_strength(c),
+                "overlap_count": len(overlap),
+                "vendor_tiebreak": _vendor_specific_tiebreak(rc, c),
+                "lead_terms": sorted(lead_terms),
+                "signal": (c.signals[0].signal_text if c.signals else None),
+                "signal_type": (c.signals[0].signal_type if c.signals else None),
+                "why_match": _why_match(rc, c, vendor_terms),
+            }
+        )
+    selected = _curated_vendor_leads(rc, ranked, limit)
+    return [
+        {key: value for key, value in row.items() if key not in {"fit_score", "signal_strength", "overlap_count", "vendor_tiebreak", "lead_terms"}}
+        for row in selected
+    ]
+
+
+def _select_supply_batch_matches(
+    candidate_matches: list[dict[str, Any]],
+    used_lead_ids: set[int],
+    *,
+    limit: int = 3,
+) -> list[dict[str, Any]]:
+    selected: list[dict[str, Any]] = []
+    seen: set[int] = set()
+
+    for match in candidate_matches:
+        match_id = int(match.get("id") or 0)
+        if not match_id or match_id in used_lead_ids or match_id in seen:
+            continue
+        selected.append(match)
+        seen.add(match_id)
+        if len(selected) >= limit:
+            return selected
+
+    for match in candidate_matches:
+        match_id = int(match.get("id") or 0)
+        if not match_id or match_id in seen:
+            continue
+        selected.append(match)
+        seen.add(match_id)
+        if len(selected) >= limit:
+            break
+
+    return selected
+
+
+def _why_match(rc: RobotCompany, company: Company, vendor_terms: set[str]) -> str:
+    overlap = sorted(vendor_terms.intersection(_lead_terms(company)))
+    if overlap:
+        return f"Relevant market signal: {_human_join(overlap[:3])}."
+    if company.industry and rc.target_market:
+        return f"{company.industry} account with a possible {rc.target_market} use case."
+    return "Active automation signal worth a closer look."
+
+
+def _human_join(values: list[str]) -> str:
+    cleaned = [str(v or "").strip() for v in values if str(v or "").strip()]
+    if not cleaned:
+        return "robot automation"
+    if len(cleaned) == 1:
+        return cleaned[0]
+    if len(cleaned) == 2:
+        return f"{cleaned[0]} and {cleaned[1]}"
+    return f"{', '.join(cleaned[:-1])}, and {cleaned[-1]}"
+
+
+ROLE_INBOXES = ("partnerships", "events", "marketing", "sales")
+CONTACT_RESEARCH_PATHS = (
+    "",
+    "/about",
+    "/company",
+    "/leadership",
+    "/team",
+    "/contact",
+    "/partners",
+    "/partnerships",
+    "/events",
+)
+CONTACT_RESEARCH_TITLES = (
+    "chief revenue officer",
+    "chief marketing officer",
+    "chief commercial officer",
+    "vp sales",
+    "vice president sales",
+    "head of sales",
+    "head of partnerships",
+    "partnerships",
+    "business development",
+    "channel",
+    "marketing",
+    "events",
+    "sales",
+    "founder",
+    "ceo",
+)
+
+
+def _reply_domain() -> str:
+    raw = (
+        os.getenv("SCOUT_REPLY_DOMAIN")
+        or os.getenv("RESEND_REPLY_DOMAIN")
+        or os.getenv("RESEND_FROM_EMAIL")
+        or "readyforrobots.com"
+    ).strip()
+    if "<" in raw and ">" in raw:
+        raw = raw.split("<", 1)[1].split(">", 1)[0]
+    raw = raw.replace("mailto:", "").strip().strip("<>")
+    if "://" in raw:
+        raw = urlparse(raw).netloc or raw
+    if "@" in raw:
+        raw = raw.rsplit("@", 1)[1]
+    raw = raw.strip().strip("/").lower()
+    if not raw or " " in raw or "@" in raw:
+        return "readyforrobots.com"
+    return raw
+
+
+def _supply_reply_address(reply_token: str) -> str:
+    local = (os.getenv("SUPPLY_REPLY_LOCAL_PART") or "supply").strip().split("@", 1)[0] or "supply"
+    return f"{local}+{reply_token}@{_reply_domain()}"
+
+
+def _contact_strategy(rc: RobotCompany, research: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+    domain = normalize_website_domain(getattr(rc, "website", None))
+    role_inboxes = _role_inbox_emails(domain)
+    research = research or {}
+    decision_maker_candidates = _decision_maker_email_candidates(rc, domain, research)
+    targets = []
+    partnerships_email = _clean_email(getattr(rc, "partnerships_contact", None))
+    sales_email = _clean_email(getattr(rc, "sales_contact", None))
+    contact_email = _clean_email(getattr(rc, "contact_email", None))
+    if partnerships_email:
+        targets.append({"role": "Partnerships", "contact": partnerships_email, "priority": 1, "source": "stored"})
+    if sales_email:
+        targets.append({"role": "Sales leadership", "contact": sales_email, "priority": 2, "source": "stored"})
+    if contact_email:
+        targets.append({"role": "General contact", "contact": contact_email, "priority": 3, "source": "stored"})
+    targets.extend(decision_maker_candidates)
+    targets.extend(role_inboxes)
+    targets = _dedupe_contact_targets(targets)
+    if not targets:
+        targets.append({"role": "Research needed", "contact": None, "priority": 9, "source": "missing"})
+    default_inboxes = [f"sales@{domain}", f"marketing@{domain}"] if domain else []
+    policy_recipients = _dedupe_emails(
+        default_inboxes + [target["contact"] for target in decision_maker_candidates]
+    ) or _dedupe_emails(
+        [target["contact"] for target in role_inboxes]
+        + [target["contact"] for target in decision_maker_candidates]
+    )
+    return {
+        "primary": targets[0],
+        "targets": targets,
+        "recommended_to": policy_recipients,
+        "communication_policy": {
+            "role_inboxes": [target["contact"] for target in role_inboxes],
+            "decision_maker_patterns": [
+                "first.last@domain",
+                "firstinitiallast@domain",
+                "last@domain",
+                "first@domain",
+            ],
+            "research_sources": [
+                source
+                for source in [
+                    getattr(rc, "website", None),
+                    getattr(rc, "linkedin_url", None),
+                    *(research.get("sources") or []),
+                    *(research.get("linkedin_urls") or []),
+                ]
+                if source
+            ],
+            "researched_decision_makers": research.get("decision_makers") or [],
+            "research_status": research.get("status") or "not_run",
+        },
+        "research_notes": [
+            "Research the company URL and LinkedIn to identify current partnerships, marketing, events, sales, and business development decision makers.",
+            "Look for VP Sales, Head of Partnerships, Channel, or Business Development.",
+            "Send role inbox outreach to partnerships, events, marketing, and sales when direct decision-maker emails are missing.",
+            "When a decision-maker name is known, verify likely email patterns before sending.",
+        ],
+    }
+
+
+def _clean_email(value: Any) -> Optional[str]:
+    raw = str(value or "").strip()
+    if not raw or raw.startswith(("http://", "https://")):
+        return None
+    if "@" not in raw:
+        return None
+    return raw.strip("<> ,;")
+
+
+def _role_inbox_emails(domain: Optional[str]) -> list[dict[str, Any]]:
+    if not domain:
+        return []
+    return [
+        {
+            "role": f"{local.title()} inbox",
+            "contact": f"{local}@{domain}",
+            "priority": index + 4,
+            "source": "domain_inferred",
+            "needs_verification": True,
+        }
+        for index, local in enumerate(ROLE_INBOXES)
+    ]
+
+
+def _decision_maker_email_candidates(
+    rc: RobotCompany,
+    domain: Optional[str],
+    research: Optional[dict[str, Any]] = None,
+) -> list[dict[str, Any]]:
+    if not domain:
+        return []
+    candidates = []
+    for first, last, source, title in _decision_maker_names(rc, research):
+        patterns = [
+            (f"{first}.{last}@{domain}", "first.last"),
+            (f"{first[0]}{last}@{domain}", "firstinitiallast"),
+            (f"{last}@{domain}", "last"),
+            (f"{first}@{domain}", "first"),
+        ]
+        for offset, (email, pattern) in enumerate(patterns):
+            candidates.append(
+                {
+                    "role": f"Decision maker ({first.title()} {last.title()})",
+                    "contact": email,
+                    "priority": 20 + offset,
+                    "source": source,
+                    "title": title,
+                    "pattern": pattern,
+                    "needs_verification": True,
+                }
+            )
+    return candidates
+
+
+def _decision_maker_names(
+    rc: RobotCompany,
+    research: Optional[dict[str, Any]] = None,
+) -> list[tuple[str, str, str, Optional[str]]]:
+    values = [getattr(rc, "sales_contact", None), getattr(rc, "partnerships_contact", None)]
+    for container in [getattr(rc, "market_intelligence", None), getattr(rc, "workflow_history", None)]:
+        values.extend(_flatten_strings(container))
+    names: list[tuple[str, str, str, Optional[str]]] = []
+    for person in (research or {}).get("decision_makers") or []:
+        first = str(person.get("first_name") or "").strip().lower()
+        last = str(person.get("last_name") or "").strip().lower()
+        if first and last:
+            names.append((first, last, "website_research", person.get("title")))
+    for value in values:
+        if not value or "@" in str(value):
+            continue
+        for first, last in re.findall(r"\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b", str(value)):
+            names.append((first.lower(), last.lower(), "decision_maker_inferred", None))
+    seen: set[tuple[str, str]] = set()
+    deduped: list[tuple[str, str, str, Optional[str]]] = []
+    for first, last, source, title in names:
+        key = (first, last)
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append((first, last, source, title))
+    return deduped[:3]
+
+
+def _flatten_strings(value: Any) -> list[str]:
+    if not value:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        out: list[str] = []
+        for item in value.values():
+            out.extend(_flatten_strings(item))
+        return out
+    if isinstance(value, list):
+        out = []
+        for item in value:
+            out.extend(_flatten_strings(item))
+        return out
+    return []
+
+
+def _research_robot_company_contacts(
+    rc: RobotCompany,
+    *,
+    enabled: bool = True,
+    max_pages: int = 2,
+    timeout: float = 1.5,
+) -> dict[str, Any]:
+    if not enabled:
+        return {"status": "skipped", "decision_makers": [], "sources": [], "linkedin_urls": []}
+    website = getattr(rc, "website", None)
+    domain = normalize_website_domain(website)
+    if not website or not domain:
+        return {"status": "missing_website", "decision_makers": [], "sources": [], "linkedin_urls": []}
+
+    cache_key = f"{domain}:{getattr(rc, 'updated_at', None) or ''}"
+    cached = shared_cache_get("robot_contact_research", cache_key)
+    if cached:
+        return cached
+
+    decision_makers: list[dict[str, Any]] = []
+    linkedin_urls: list[str] = []
+    sources: list[str] = []
+    for url in _contact_research_urls(website)[:max_pages]:
+        html = _fetch_contact_research_page(url, timeout=timeout)
+        if not html:
+            continue
+        sources.append(url)
+        extracted = _extract_contact_research(html, url)
+        decision_makers.extend(extracted["decision_makers"])
+        linkedin_urls.extend(extracted["linkedin_urls"])
+        if len(_dedupe_people(decision_makers)) >= 3:
+            break
+
+    decision_makers = _dedupe_people(decision_makers)[:3]
+    result = {
+        "status": "found" if decision_makers else ("checked" if sources else "unavailable"),
+        "decision_makers": decision_makers,
+        "sources": _dedupe_emails_or_urls(sources),
+        "linkedin_urls": _dedupe_emails_or_urls(linkedin_urls)[:5],
+    }
+    shared_cache_set("robot_contact_research", cache_key, result, ttl_sec=24 * 60 * 60)
+    return result
+
+
+def _contact_research_urls(website: str) -> list[str]:
+    base = website if "://" in str(website) else f"https://{website}"
+    parsed = urlparse(base)
+    root = f"{parsed.scheme}://{parsed.netloc}"
+    return [urljoin(root, path) for path in CONTACT_RESEARCH_PATHS]
+
+
+def _fetch_contact_research_page(url: str, *, timeout: float) -> Optional[str]:
+    try:
+        response = requests.get(
+            url,
+            headers={"User-Agent": "ReadyForRobots/1.0 (contact research)"},
+            timeout=timeout,
+            allow_redirects=True,
+        )
+    except requests.RequestException:
+        return None
+    if response.status_code >= 400:
+        return None
+    content_type = response.headers.get("content-type", "")
+    if "text/html" not in content_type and "application/xhtml" not in content_type and content_type:
+        return None
+    return response.text[:250_000]
+
+
+def _extract_contact_research(html: str, source_url: str) -> dict[str, Any]:
+    soup = BeautifulSoup(html, "html.parser")
+    linkedin_urls = _extract_linkedin_profile_urls(soup, source_url)
+    text = soup.get_text("\n", strip=True)
+    candidates = _extract_people_from_text(text, source_url)
+    candidates.extend(_extract_people_from_linkedin_links(soup, source_url))
+    return {
+        "decision_makers": _dedupe_people(candidates)[:5],
+        "linkedin_urls": linkedin_urls,
+    }
+
+
+def _extract_linkedin_profile_urls(soup: BeautifulSoup, source_url: str) -> list[str]:
+    urls = []
+    for anchor in soup.find_all("a", href=True):
+        href = urljoin(source_url, str(anchor.get("href") or ""))
+        low = href.lower()
+        if "linkedin.com/in/" in low or "linkedin.com/company/" in low:
+            urls.append(href.split("?")[0].rstrip("/"))
+    return _dedupe_emails_or_urls(urls)
+
+
+def _extract_people_from_linkedin_links(soup: BeautifulSoup, source_url: str) -> list[dict[str, Any]]:
+    people = []
+    for anchor in soup.find_all("a", href=True):
+        href = urljoin(source_url, str(anchor.get("href") or ""))
+        if "linkedin.com/in/" not in href.lower():
+            continue
+        label = anchor.get_text(" ", strip=True)
+        match = re.search(r"\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b", label)
+        if not match:
+            slug = href.rstrip("/").split("/in/", 1)[-1].split("/", 1)[0]
+            match = re.match(r"([a-zA-Z]+)-([a-zA-Z]+)", slug)
+        if match:
+            first, last = match.group(1), match.group(2)
+            people.append(
+                {
+                    "first_name": first.title(),
+                    "last_name": last.title(),
+                    "title": None,
+                    "source_url": href.split("?")[0].rstrip("/"),
+                    "source": "linkedin_profile_link",
+                }
+            )
+    return people
+
+
+def _extract_people_from_text(text: str, source_url: str) -> list[dict[str, Any]]:
+    normalized = re.sub(r"\s+", " ", text or " ").strip()
+    if not normalized:
+        return []
+    title_pattern = "|".join(re.escape(title) for title in sorted(CONTACT_RESEARCH_TITLES, key=len, reverse=True))
+    patterns = [
+        rf"\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b[^.|\n]{{0,90}}?\b({title_pattern})\b",
+        rf"\b({title_pattern})\b[^.|\n]{{0,90}}?\b([A-Z][a-z]+)\s+([A-Z][a-z]+)\b",
+    ]
+    people: list[dict[str, Any]] = []
+    for pattern in patterns:
+        for match in re.finditer(pattern, normalized, flags=re.IGNORECASE):
+            groups = match.groups()
+            if len(groups) != 3:
+                continue
+            if groups[0].lower() in CONTACT_RESEARCH_TITLES:
+                title, first, last = groups[0], groups[1], groups[2]
+            else:
+                first, last, title = groups[0], groups[1], groups[2]
+            if _looks_like_person_name(first, last):
+                people.append(
+                    {
+                        "first_name": first.title(),
+                        "last_name": last.title(),
+                        "title": title.title(),
+                        "source_url": source_url,
+                        "source": "website_text",
+                    }
+                )
+    return people
+
+
+def _looks_like_person_name(first: str, last: str) -> bool:
+    bad = {
+        "About",
+        "Contact",
+        "Company",
+        "Marketing",
+        "Partnerships",
+        "Business",
+        "Development",
+        "Privacy",
+        "Terms",
+        "Ready",
+        "Robots",
+    }
+    if first in bad or last in bad:
+        return False
+    return bool(re.match(r"^[A-Z][a-z]{1,24}$", first) and re.match(r"^[A-Z][a-z]{1,24}$", last))
+
+
+def _dedupe_people(people: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[tuple[str, str]] = set()
+    deduped = []
+    for person in people:
+        first = str(person.get("first_name") or "").strip()
+        last = str(person.get("last_name") or "").strip()
+        key = (first.lower(), last.lower())
+        if not first or not last or key in seen:
+            continue
+        seen.add(key)
+        deduped.append(person)
+    return deduped
+
+
+def _dedupe_emails_or_urls(values: list[Any]) -> list[str]:
+    seen: set[str] = set()
+    deduped = []
+    for value in values:
+        item = str(value or "").strip()
+        key = item.lower()
+        if not item or key in seen:
+            continue
+        seen.add(key)
+        deduped.append(item)
+    return deduped
+
+
+def _dedupe_contact_targets(targets: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    seen: set[str] = set()
+    deduped = []
+    for target in sorted(targets, key=lambda row: row.get("priority", 99)):
+        contact = (target.get("contact") or "").strip().lower()
+        if not contact or contact in seen:
+            continue
+        seen.add(contact)
+        deduped.append(target)
+    return deduped
+
+
+def _dedupe_emails(values: list[Any]) -> list[str]:
+    seen: set[str] = set()
+    emails = []
+    for value in values:
+        email = str(value or "").strip()
+        if "@" not in email:
+            continue
+        key = email.lower()
+        if key in seen:
+            continue
+        seen.add(key)
+        emails.append(email)
+    return emails
+
+
+def _request_emails(value: str | list[str]) -> list[str]:
+    if isinstance(value, list):
+        raw_values = value
+    else:
+        raw_values = str(value or "").replace(";", ",").split(",")
+    return _dedupe_emails(raw_values)
+
+
+def _require_supply_outreach_payload(payload: ApproveSupplyOutreachRequest) -> tuple[list[str], str, str]:
+    to_emails = _request_emails(payload.to_email)
+    subject = (payload.subject or "").strip()
+    body = (payload.body or "").strip()
+    if not to_emails:
+        raise HTTPException(status_code=400, detail="At least one recipient email is required")
+    if not subject:
+        raise HTTPException(status_code=400, detail="Subject is required")
+    if not body:
+        raise HTTPException(status_code=400, detail="Body is required")
+    return to_emails, subject, body
+
+
+def _supply_pipeline_subject(company: RobotCompany) -> str:
+    return f"Sales channel signals for {company.company_name}"
+
+
+def _validate_supply_pipeline_copy(company: RobotCompany, subject: str, body: str) -> None:
+    expected_subject = _supply_pipeline_subject(company)
+    company_name = str(company.company_name or "").strip()
+    if subject.strip() != expected_subject:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Subject/company mismatch. Expected subject: {expected_subject}",
+        )
+    if company_name and company_name not in body:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Body/company mismatch. Draft body must mention {company_name}.",
+        )
+
+
+def _prepare_supply_pipeline_copy(company: RobotCompany, subject: str, body: str) -> tuple[str, str]:
+    prepared_subject = _supply_pipeline_subject(company)
+    prepared_body = body.strip()
+    _validate_supply_pipeline_copy(company, prepared_subject, prepared_body)
+    return prepared_subject, prepared_body
+
+
+def _create_supply_outreach_record(
+    db: Session,
+    company: RobotCompany,
+    *,
+    to_emails: list[str],
+    subject: str,
+    body: str,
+    template_type: str,
+    status: str,
+    is_test: bool = False,
+    send_result: Optional[dict[str, Any]] = None,
+    payload: Optional[dict[str, Any]] = None,
+) -> SupplyOutreachMessage:
+    now = datetime.now(timezone.utc)
+    reply_token = secrets.token_urlsafe(18)
+    msg = SupplyOutreachMessage(
+        id=_uuid_for_session(db),
+        robot_company_id=company.id,
+        to_emails=to_emails,
+        from_email=(send_result or {}).get("from_email"),
+        reply_to=_supply_reply_address(reply_token),
+        reply_token=reply_token,
+        subject=subject,
+        body_text=body,
+        template_type=(template_type or "supply_pipeline").strip() or "supply_pipeline",
+        resend_id=(send_result or {}).get("resend_id"),
+        status=status,
+        is_test=is_test,
+        payload=payload or {},
+        approved_at=now if status in {"draft_approved", "test_sent", "sent"} else None,
+        sent_at=now if status in {"test_sent", "sent"} else None,
+    )
+    db.add(msg)
+    return msg
+
+
+def _approved_supply_outreach_record(
+    db: Session,
+    *,
+    company_id: int,
+    approved_message_id: Optional[str],
+) -> Optional[SupplyOutreachMessage]:
+    if not approved_message_id:
+        return None
+    try:
+        message_uuid = uuid.UUID(str(approved_message_id))
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid approved outreach message id") from None
+    return (
+        db.query(SupplyOutreachMessage)
+        .filter(
+            SupplyOutreachMessage.id == message_uuid,
+            SupplyOutreachMessage.robot_company_id == company_id,
+            SupplyOutreachMessage.status == "draft_approved",
+        )
+        .first()
+    )
+
+
+def _create_crm_supply_tracking_copy(
+    db: Session,
+    company: RobotCompany,
+    *,
+    user: dict[str, Any],
+    to_emails: list[str],
+    subject: str,
+    body: str,
+    reply_to: str,
+    send_result: dict[str, Any],
+    supply_message: SupplyOutreachMessage,
+) -> tuple[CrmAccount, OutreachMessage]:
+    uid = _uid_uuid(user)
+    team = _ensure_default_team(db, uid, user.get("email") or "")
+
+    linked_company_id = None
+    mi = company.market_intelligence if isinstance(company.market_intelligence, dict) else {}
+    if mi.get("crm_company_id"):
+        linked_company_id = int(mi["crm_company_id"])
+
+    account = (
+        db.query(CrmAccount)
+        .filter(CrmAccount.team_id == team.id, CrmAccount.name == company.company_name)
+        .first()
+    )
+    if not account and linked_company_id:
+        account = (
+            db.query(CrmAccount)
+            .filter(CrmAccount.team_id == team.id, CrmAccount.company_id == linked_company_id)
+            .first()
+        )
+    if not account:
+        account = CrmAccount(
+            team_id=team.id,
+            company_id=linked_company_id,
+            name=company.company_name,
+            website=company.website,
+            industry=company.target_market,
+            account_type="vendor",
+            owner_user_id=uid,
+        )
+        db.add(account)
+        db.flush()
+    now = datetime.now(timezone.utc)
+    primary_to = to_emails[0]
+    account.website = account.website or company.website
+    account.industry = account.industry or company.target_market
+    account.owner_user_id = account.owner_user_id or uid
+    account.account_type = "vendor"
+    if linked_company_id and not account.company_id:
+        account.company_id = linked_company_id
+    account.contact_email = primary_to
+    account.outreach_draft = body
+    account.outreach_sent_at = now
+    account.outreach_stage = "supply_outreach_sent"
+    message = OutreachMessage(
+        id=_uuid_for_session(db),
+        team_id=_uuid_for_json_uuid_column(db, team.id),
+        crm_account_id=_uuid_for_json_uuid_column(db, account.id),
+        company_id=None,
+        sender_user_id=_uuid_for_json_uuid_column(db, uid),
+        to_email=primary_to,
+        from_email=send_result.get("from_email"),
+        reply_to=reply_to,
+        reply_token=secrets.token_urlsafe(18),
+        subject=subject,
+        body_text=body,
+        send_identity="scout",
+        resend_id=send_result.get("resend_id"),
+        status="sent",
+        payload={
+            "source": "supply_pipeline",
+            "supply_outreach_message_id": str(supply_message.id),
+            "robot_company_id": company.id,
+            "robot_company_name": company.company_name,
+            "all_recipients": to_emails,
+            "checkpoint": "Supply outreach sent and copied to CRM.",
+        },
+        sent_at=now,
+    )
+    db.add(message)
+    record_sales_experience(
+        db,
+        event_type="supply_outreach_sent",
+        outcome="sent",
+        team_id=team.id,
+        user_id=uid,
+        crm_account_id=account.id,
+        robot_company_id=company.id,
+        channel="email",
+        confidence=0.82,
+        payload={
+            "supply_outreach_message_id": str(supply_message.id),
+            "crm_outreach_message_id": str(message.id),
+            "all_recipients": to_emails,
+        },
+    )
+    return account, message
+
+
+def _uuid_for_session(db: Session):
+    value = uuid.uuid4()
+    bind = db.get_bind()
+    if bind is not None and bind.dialect.name == "sqlite":
+        return str(value)
+    return value
+
+
+def _uuid_for_json_uuid_column(db: Session, value: Any):
+    bind = db.get_bind()
+    if bind is not None and bind.dialect.name == "sqlite":
+        return str(value) if value is not None else None
+    return value
+
+
+def _recommended_response_playbook(matches: list[dict[str, Any]]) -> str:
+    if not matches:
+        return "If this is close to a market you care about, I can send over the first few qualified accounts and the context behind them."
+    lead_lines = "\n".join(
+        f"- {m['company_name']}: what changed, why it may matter, and who likely owns the project."
+        for m in matches[:3]
+    )
+    return f"""If any of these look interesting, I can send the fuller context:
+{lead_lines}
+
+No pressure to chase all three. The goal is to see whether any are worth a real sales conversation."""
+
+
+def _vendor_focus_phrase(rc: RobotCompany) -> str:
+    parts = [
+        getattr(rc, "robot_type", None),
+        getattr(rc, "product_category", None),
+        getattr(rc, "target_market", None),
+    ]
+    cleaned = []
+    seen: set[str] = set()
+    for part in parts:
+        value = str(part or "").strip()
+        key = value.lower()
+        if not value or key in {"unknown", "none", "null"} or key in seen:
+            continue
+        seen.add(key)
+        cleaned.append(value)
+    if not cleaned:
+        return "robot automation"
+    return _human_join(cleaned[:3])
+
+
+def _vendor_possessive(name: str) -> str:
+    return f"{name}'" if name.endswith("s") else f"{name}'s"
+
+
+def _clamp_sentence(value: str, limit: int) -> str:
+    text = " ".join(str(value or "").split())
+    return text if len(text) <= limit else f"{text[: limit - 3]}..."
+
+
+def _clean_signal_for_email(value: str, limit: int = 130) -> str:
+    text = BeautifulSoup(str(value or ""), "html.parser").get_text(" ")
+    text = unescape(text)
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"\s+", " ", text).strip(" -:|")
+    return _clamp_sentence(text, limit)
+
+
+def _match_line(match: dict[str, Any]) -> str:
+    industry = str(match.get("industry") or "").strip()
+    why = str(match.get("why_match") or "There is an active automation signal worth reviewing.").strip()
+    signal = _clean_signal_for_email(str(match.get("signal") or ""))
+    label = match["company_name"] if not industry or industry.lower() in {"unknown", "other"} else f"{match['company_name']} ({industry})"
+    if signal:
+        return f"- {label}: {why} Signal: {signal}"
+    return f"- {label}: {why}"
+
+
+def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]], *, force_rfr: bool = False) -> dict[str, str]:
+    trade_show = getattr(rc, "next_trade_show", None)
+    trade_shows = getattr(rc, "trade_shows", None)
+    if not trade_show and isinstance(trade_shows, list) and trade_shows:
+        trade_show = trade_shows[0]
+
+    data_source = (getattr(rc, "data_source", None) or "").lower()
+    if (
+        not force_rfr
+        and (data_source.startswith("stagegate") or "stagegate_oem" in str(getattr(rc, "market_intelligence", {}) or {}))
+    ):
+        from app.services.stagegate_crm_bridge import build_stagegate_draft
+
+        return build_stagegate_draft(rc)
+
+    subject = f"Buyer matches for {rc.company_name}"
+    focus = _vendor_focus_phrase(rc)
+    possessive = _vendor_possessive(rc.company_name)
+    lead_lines = "\n".join(_match_line(m) for m in matches[:3]) or "- I have buyer matches ready to review once your team is onboarded."
+    response_playbook = _recommended_response_playbook(matches)
+    insight = pick_cal_insight(
+        company_name=rc.company_name,
+        trade_show=trade_show,
+        robot_type=getattr(rc, "robot_type", None),
+        allow_humor=True,
+    )
+    from app.services.agent_messaging import cal_vendor_match_paragraph
+
+    body = f"""Hi,
+
+{cal_vendor_match_paragraph(rc.company_name, industry=focus)}
+
+{insight}
+
+A few accounts stood out — not list noise, timing signals behind them:
+
+{lead_lines}
+
+{response_playbook}
+
+I'm not assuming each one is a fit. PoCs fail when capabilities don't match buyer requirements; I'll flag what aligns and what doesn't.
+
+If you're pushing West Coast expansion or hospitality adoption, we can map a channel strategy around {possessive} hardware. {VEGAS_DISTRIBUTION_LINE}
+
+{CAL_VENDOR_OFFRAMP_LINE}
+
+{CAL_VENDOR_STRATEGY_CALL_CTA}
+
+{cal_signature()}"""
+    return {"subject": subject, "body": body}
+
+
+def _supply_agent_row(
+    db: Session,
+    rc: RobotCompany,
+    *,
+    research_contacts: bool = True,
+    lead_matches: Optional[list[dict[str, Any]]] = None,
+) -> dict[str, Any]:
+    matches = lead_matches if lead_matches is not None else _match_buyer_leads(db, rc, limit=3)
+    research = _research_robot_company_contacts(rc, enabled=research_contacts)
+    contact = _contact_strategy(rc, research)
+    draft = _vendor_signup_email(rc, matches)
+    enriched = _enrich_robot_company(rc)
+    history = _supply_outreach_history(db, rc.id)
+    from app.services.stagegate_crm_bridge import bridge_status
+
+    return {
+        "robot_company": enriched,
+        "contact_strategy": contact,
+        "contact_research": research,
+        "outreach_history": history,
+        "lead_matches": matches,
+        "email": draft,
+        "cal_bridge": bridge_status(rc),
+        "cta": {
+            "signup": "Create a Ready For Robots account to receive matched leads in your inbox.",
+            "meeting": "Set up a short call with Ready For Robots to tune target markets and lead delivery.",
+        },
+        "review_required": True,
+    }
+
+
+def _supply_outreach_history(db: Session, robot_company_id: int, limit: int = 5) -> list[dict[str, Any]]:
+    rows = (
+        db.query(SupplyOutreachMessage)
+        .filter(SupplyOutreachMessage.robot_company_id == robot_company_id)
+        .order_by(SupplyOutreachMessage.created_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": str(row.id),
+            "status": row.status,
+            "is_test": bool(row.is_test),
+            "to_emails": row.to_emails or [],
+            "subject": row.subject,
+            "reply_to": row.reply_to,
+            "resend_id": row.resend_id,
+            "approved_at": row.approved_at.isoformat() if row.approved_at else None,
+            "sent_at": row.sent_at.isoformat() if row.sent_at else None,
+            "created_at": row.created_at.isoformat() if row.created_at else None,
+            "delivery_status": (row.payload or {}).get("delivery_status"),
+            "delivered_at": (row.payload or {}).get("delivered_at"),
+            "opened_at": (row.payload or {}).get("opened_at"),
+            "clicked_at": (row.payload or {}).get("clicked_at"),
+            "problem_at": (row.payload or {}).get("problem_at"),
+            "problem_reason": (row.payload or {}).get("problem_reason"),
+            "cal_delivery_action": (row.payload or {}).get("cal_delivery_action"),
+        }
+        for row in rows
+    ]
+
+
+def _enrich_robot_company(c: RobotCompany) -> dict[str, Any]:
+    """JSON-serializable dict with computed vendor_list_score for UI sorting."""
+    d = jsonable_encoder(c)
+    d.update(compute_vendor_list_score(c))
+    return d
+
+
+@router.get("/")
+def get_robot_companies(
+    skip: int = 0,
+    limit: int = 50,
+    country: Optional[str] = None,
+    robot_type: Optional[str] = None,
+    us_presence: Optional[str] = None,
+    priority_tier: Optional[str] = None,
+    market_entry_wave: Optional[str] = None,
+    distributor_needed: Optional[str] = None,
+    outreach_status: Optional[str] = None,
+    min_score: int = 0,
+    search: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Get robot companies with filtering
+    
+    Filters:
+    - country: China, US, EU, Korea, Japan
+    - robot_type: industrial, AMR, cobot, humanoid, service, vision
+    - us_presence: office, distributor, none
+    - priority_tier: hot, warm, cold
+    - market_entry_wave: wave_1, wave_2, wave_3
+    - distributor_needed: yes, maybe, no
+    - min_score: minimum lead score (0-100)
+    - outreach_status: not_contacted, contacted, responded, meeting_scheduled, partnership
+    - search: company name search
+    """
+    query = db.query(RobotCompany)
+    
+    if country:
+        query = query.filter(RobotCompany.country == country)
+    
+    if robot_type:
+        query = query.filter(RobotCompany.robot_type == robot_type)
+    
+    if us_presence:
+        query = query.filter(RobotCompany.us_presence == us_presence)
+    
+    if priority_tier:
+        query = query.filter(RobotCompany.priority_tier == priority_tier)
+    
+    if market_entry_wave:
+        query = query.filter(RobotCompany.market_entry_wave == market_entry_wave)
+    
+    if distributor_needed:
+        query = query.filter(RobotCompany.distributor_needed == distributor_needed)
+    
+    if min_score > 0:
+        query = query.filter(RobotCompany.lead_score >= min_score)
+
+    if outreach_status:
+        query = query.filter(RobotCompany.outreach_status == outreach_status)
+    
+    if search:
+        query = query.filter(RobotCompany.company_name.ilike(f"%{search}%"))
+    
+    # Order by lead score descending (count before pagination)
+    query = query.order_by(RobotCompany.lead_score.desc())
+    total = query.count()
+    companies = query.offset(skip).limit(limit).all()
+
+    return {
+        "companies": [_enrich_robot_company(c) for c in companies],
+        "total": total,
+        "skip": skip,
+        "limit": limit,
+    }
+
+
+@router.get("/hot-leads")
+def get_hot_leads(
+    min_score: int = 80,
+    db: Session = Depends(get_db)
+):
+    """Get HOT priority leads (score >= 80) ready for outreach"""
+    companies = db.query(RobotCompany).filter(
+        RobotCompany.priority_tier == "hot",
+        RobotCompany.lead_score >= min_score
+    ).order_by(RobotCompany.lead_score.desc()).all()
+    
+    return {
+        "hot_leads": [_enrich_robot_company(c) for c in companies],
+        "count": len(companies),
+    }
+
+
+@router.get("/chinese-companies")
+def get_chinese_companies(
+    us_presence: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Get Chinese robotics companies
+    Filter by U.S. presence: none (needs distribution), distributor (has some), office (established)
+    """
+    query = db.query(RobotCompany).filter(RobotCompany.country == "China")
+    
+    if us_presence:
+        query = query.filter(RobotCompany.us_presence == us_presence)
+    
+    companies = query.order_by(RobotCompany.lead_score.desc()).all()
+    
+    return {
+        "companies": [_enrich_robot_company(c) for c in companies],
+        "total": len(companies),
+        "filter": us_presence or "all",
+    }
+
+
+@router.get("/market-entry-waves")
+def get_market_entry_waves(db: Session = Depends(get_db)):
+    """
+    Get companies grouped by market entry wave
+    Wave 1: 2020-2024 (established)
+    Wave 2: 2024-2026 (expanding)
+    Wave 3: 2025-2027 (emerging)
+    """
+    wave_1 = db.query(RobotCompany).filter(
+        RobotCompany.market_entry_wave == "wave_1"
+    ).order_by(RobotCompany.lead_score.desc()).all()
+    
+    wave_2 = db.query(RobotCompany).filter(
+        RobotCompany.market_entry_wave == "wave_2"
+    ).order_by(RobotCompany.lead_score.desc()).all()
+    
+    wave_3 = db.query(RobotCompany).filter(
+        RobotCompany.market_entry_wave == "wave_3"
+    ).order_by(RobotCompany.lead_score.desc()).all()
+    
+    return {
+        "wave_1": {
+            "companies": [_enrich_robot_company(c) for c in wave_1],
+            "count": len(wave_1),
+            "description": "Already Entered U.S. (2020-2024)",
+        },
+        "wave_2": {
+            "companies": [_enrich_robot_company(c) for c in wave_2],
+            "count": len(wave_2),
+            "description": "Rapid Expansion (2024-2026)",
+        },
+        "wave_3": {
+            "companies": [_enrich_robot_company(c) for c in wave_3],
+            "count": len(wave_3),
+            "description": "Next-Generation AI Robots (2025-2027)",
+        },
+    }
+
+
+@router.get("/needs-distribution")
+def get_needs_distribution(db: Session = Depends(get_db)):
+    """Get companies that explicitly need U.S. distribution"""
+    companies = db.query(RobotCompany).filter(
+        RobotCompany.distributor_needed == "yes"
+    ).order_by(RobotCompany.lead_score.desc()).all()
+    
+    return {
+        "companies": [_enrich_robot_company(c) for c in companies],
+        "count": len(companies),
+        "message": "Companies actively seeking U.S. distribution partners",
+    }
+
+
+@router.get("/by-robot-type")
+def get_by_robot_type(db: Session = Depends(get_db)):
+    """Get companies grouped by robot type"""
+    types = ["industrial", "cobot", "AMR", "humanoid", "service", "vision"]
+    
+    result = {}
+    for robot_type in types:
+        companies = db.query(RobotCompany).filter(
+            RobotCompany.robot_type == robot_type
+        ).order_by(RobotCompany.lead_score.desc()).all()
+        
+        result[robot_type] = {
+            "companies": [_enrich_robot_company(c) for c in companies],
+            "count": len(companies),
+        }
+    
+    return result
+
+
+@router.get("/stats")
+def get_stats(db: Session = Depends(get_db)):
+    """Get database statistics"""
+    total = db.query(RobotCompany).count()
+    
+    chinese_companies = db.query(RobotCompany).filter(
+        RobotCompany.country == "China"
+    ).count()
+    
+    needs_distribution = db.query(RobotCompany).filter(
+        RobotCompany.distributor_needed == "yes"
+    ).count()
+    
+    hot_leads = db.query(RobotCompany).filter(
+        RobotCompany.priority_tier == "hot"
+    ).count()
+    
+    no_us_presence = db.query(RobotCompany).filter(
+        RobotCompany.us_presence == "none"
+    ).count()
+    
+    return {
+        "total_companies": total,
+        "chinese_companies": chinese_companies,
+        "needs_distribution": needs_distribution,
+        "hot_leads": hot_leads,
+        "no_us_presence": no_us_presence,
+        "opportunity": f"{no_us_presence} companies with NO U.S. presence need market entry support"
+    }
+
+
+@router.get("/{company_id}")
+def get_robot_company(company_id: int, db: Session = Depends(get_db)):
+    """Get single robot company by ID"""
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    return _enrich_robot_company(company)
+
+
+@router.put("/{company_id}/outreach")
+def update_outreach_status(
+    company_id: int,
+    status: str,
+    notes: Optional[str] = None,
+    db: Session = Depends(get_db)
+):
+    """
+    Update outreach status
+    Status: not_contacted, contacted, responded, meeting_scheduled, partnership
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    company.outreach_status = status
+    company.last_contact_date = datetime.now()
+    
+    if notes:
+        if company.outreach_notes:
+            company.outreach_notes += f"\n\n[{datetime.now().strftime('%Y-%m-%d')}] {notes}"
+        else:
+            company.outreach_notes = f"[{datetime.now().strftime('%Y-%m-%d')}] {notes}"
+    
+    db.commit()
+    db.refresh(company)
+
+    return _enrich_robot_company(company)
+
+
+@router.get("/search/by-trade-show")
+def search_by_trade_show(
+    trade_show: str = Query(..., description="Automate, ProMat, CES, Hannover"),
+    db: Session = Depends(get_db)
+):
+    """Find companies attending specific trade shows"""
+    companies = db.query(RobotCompany).filter(
+        RobotCompany.trade_shows.contains([trade_show])
+    ).order_by(RobotCompany.lead_score.desc()).all()
+    
+    return {
+        "trade_show": trade_show,
+        "companies": [_enrich_robot_company(c) for c in companies],
+        "count": len(companies),
+    }
+
+
+@router.post("/")
+def create_robot_company(company_data: dict, db: Session = Depends(get_db)):
+    """Create new robot company lead"""
+    company = RobotCompany(**company_data)
+    db.add(company)
+    db.commit()
+    db.refresh(company)
+    return _enrich_robot_company(company)
+
+
+@router.put("/{company_id}")
+def update_robot_company(
+    company_id: int,
+    company_data: dict,
+    db: Session = Depends(get_db)
+):
+    """Update robot company"""
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    for key, value in company_data.items():
+        setattr(company, key, value)
+    
+    db.commit()
+    db.refresh(company)
+
+    return _enrich_robot_company(company)
+
+
+@router.put("/{company_id}/workflow")
+def update_workflow(
+    company_id: int,
+    workflow_data: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    Update workflow next steps for a company
+    Body: {
+        "workflow_stage": "demo|outreach|proposal|negotiation|partnership",
+        "next_action": "Schedule product demo",
+        "next_action_date": "2026-03-15",
+        "assigned_to": "Sales Team",
+        "workflow_notes": "CEO interested in AMR solutions",
+        "blockers": null
+    }
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Update workflow fields
+    if "workflow_stage" in workflow_data:
+        old_stage = company.workflow_stage
+        company.workflow_stage = workflow_data["workflow_stage"]
+        
+        # Log to history
+        history = company.workflow_history or []
+        history.append({
+            "date": datetime.now().strftime('%Y-%m-%d %H:%M'),
+            "stage": workflow_data["workflow_stage"],
+            "previous_stage": old_stage,
+            "action": workflow_data.get("next_action", "Stage updated")
+        })
+        company.workflow_history = history
+    
+    if "next_action" in workflow_data:
+        company.next_action = workflow_data["next_action"]
+    if "next_action_date" in workflow_data:
+        company.next_action_date = datetime.fromisoformat(workflow_data["next_action_date"])
+    if "assigned_to" in workflow_data:
+        company.assigned_to = workflow_data["assigned_to"]
+    if "workflow_notes" in workflow_data:
+        # Append to running log
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+        existing = company.workflow_notes or ""
+        company.workflow_notes = f"{existing}\n[{timestamp}] {workflow_data['workflow_notes']}".strip()
+    if "blockers" in workflow_data:
+        company.blockers = workflow_data["blockers"]
+    
+    db.commit()
+    db.refresh(company)
+    
+    return {
+        "message": "Workflow updated",
+        "company": company.company_name,
+        "workflow_stage": company.workflow_stage,
+        "next_action": company.next_action,
+        "next_action_date": str(company.next_action_date) if company.next_action_date else None
+    }
+
+
+@router.get("/workflow/upcoming")
+def get_upcoming_actions(days: int = 7, db: Session = Depends(get_db)):
+    """
+    Get companies with upcoming next actions in the next N days
+    """
+    from datetime import timedelta
+    
+    cutoff_date = datetime.now() + timedelta(days=days)
+    
+    companies = db.query(RobotCompany).filter(
+        RobotCompany.next_action_date <= cutoff_date,
+        RobotCompany.next_action_date >= datetime.now()
+    ).order_by(RobotCompany.next_action_date).all()
+    
+    return {
+        "upcoming_actions": [
+            {
+                "id": c.id,
+                "company_name": c.company_name,
+                "workflow_stage": c.workflow_stage,
+                "next_action": c.next_action,
+                "next_action_date": str(c.next_action_date),
+                "assigned_to": c.assigned_to,
+                "priority_tier": c.priority_tier,
+                "lead_score": c.lead_score,
+                "blockers": c.blockers
+            }
+            for c in companies
+        ],
+        "count": len(companies),
+        "days": days
+    }
+
+
+# Supply-side agent is expensive (~25s: matches 300 candidates per vendor).
+# Cache the built payload in the durable pipeline_cache_store and serve
+# stale-while-revalidate so only the very first build pays the full cost.
+_SUPPLY_SIDE_CACHE_TTL_MIN = int(os.getenv("SUPPLY_SIDE_CACHE_TTL_MIN", "15") or "15")
+_supply_side_refresh_guard = threading.Lock()
+_supply_side_refreshing: set[str] = set()
+
+
+def _supply_side_cache_key(
+    limit: int, min_score: int, search: Optional[str], research_contacts: bool, research_limit: int
+) -> str:
+    raw = f"{limit}|{min_score}|{(search or '').strip().lower()}|{int(research_contacts)}|{research_limit}"
+    digest = hashlib.sha1(raw.encode("utf-8")).hexdigest()[:16]
+    return f"supply_side_agent:v1:{digest}"
+
+
+def _build_supply_side_payload(
+    db: Session,
+    *,
+    limit: int,
+    min_score: int,
+    search: Optional[str],
+    research_contacts: bool,
+    research_limit: int,
+) -> dict[str, Any]:
+    query = db.query(RobotCompany)
+    if min_score:
+        query = query.filter(RobotCompany.lead_score >= min_score)
+    if search:
+        query = query.filter(RobotCompany.company_name.ilike(f"%{search}%"))
+    companies = query.order_by(
+        RobotCompany.lead_score.desc(), RobotCompany.updated_at.desc().nullslast()
+    ).limit(limit).all()
+    candidate_limit = min(150, max(18, limit * 3))
+    used_lead_ids: set[int] = set()
+    rows = []
+    for index, rc in enumerate(companies):
+        candidate_matches = _match_buyer_leads(db, rc, limit=candidate_limit)
+        matches = _select_supply_batch_matches(candidate_matches, used_lead_ids, limit=3)
+        used_lead_ids.update(int(match["id"]) for match in matches if match.get("id"))
+        rows.append(
+            _supply_agent_row(
+                db,
+                rc,
+                research_contacts=research_contacts and index < research_limit,
+                lead_matches=matches,
+            )
+        )
+    return {
+        "agent": "robot_company_supply_pipeline",
+        "review_required": True,
+        "instructions": "Review contact strategy and drafted email before sending. Each email shows only 3 buyer matches.",
+        "companies": rows,
+        "count": len(rows),
+    }
+
+
+def _refresh_supply_side_cache_async(
+    cache_key: str,
+    *,
+    limit: int,
+    min_score: int,
+    search: Optional[str],
+    research_contacts: bool,
+    research_limit: int,
+) -> None:
+    """Rebuild the payload off the request path (dogpile-guarded)."""
+    with _supply_side_refresh_guard:
+        if cache_key in _supply_side_refreshing:
+            return
+        _supply_side_refreshing.add(cache_key)
+
+    def _run() -> None:
+        from app.database import SessionLocal
+        from app.services.pipeline_cache_store import cache_write
+
+        db = SessionLocal()
+        try:
+            payload = _build_supply_side_payload(
+                db,
+                limit=limit,
+                min_score=min_score,
+                search=search,
+                research_contacts=research_contacts,
+                research_limit=research_limit,
+            )
+            cache_write(db, cache_key, payload, ttl_minutes=_SUPPLY_SIDE_CACHE_TTL_MIN)
+        except Exception as exc:  # noqa: BLE001 — background refresh must not crash
+            logger.warning("supply-side cache refresh failed (%s): %s", cache_key, exc)
+        finally:
+            db.close()
+            with _supply_side_refresh_guard:
+                _supply_side_refreshing.discard(cache_key)
+
+    threading.Thread(target=_run, name="supply-side-refresh", daemon=True).start()
+
+
+@router.get("/agent/supply-side")
+def supply_side_agent(
+    limit: int = Query(10, ge=1, le=50),
+    min_score: int = Query(0, ge=0, le=100),
+    search: Optional[str] = None,
+    research_contacts: bool = Query(True, description="Run bounded official-site contact research"),
+    research_limit: int = Query(4, ge=0, le=10, description="Maximum rows to live-research per request"),
+    refresh: bool = Query(False, description="Bypass cache and rebuild synchronously"),
+    db: Session = Depends(get_db),
+):
+    """
+    Research robot companies, identify who to contact, match up to 3 buyer leads,
+    and draft signup/meeting outreach for review.
+
+    Served from a durable cache with stale-while-revalidate: a fresh entry returns
+    instantly, an expired entry serves stale immediately while rebuilding in the
+    background, and only the first-ever build pays the full ~25s.
+    """
+    from app.services.pipeline_cache_store import cache_read_safe, cache_write
+
+    cache_key = _supply_side_cache_key(limit, min_score, search, research_contacts, research_limit)
+
+    if not refresh:
+        fresh = cache_read_safe(cache_key, stale_ok=False)
+        if fresh is not None:
+            return {**fresh, "cache": "fresh"}
+        stale = cache_read_safe(cache_key, stale_ok=True)
+        if stale is not None:
+            _refresh_supply_side_cache_async(
+                cache_key,
+                limit=limit,
+                min_score=min_score,
+                search=search,
+                research_contacts=research_contacts,
+                research_limit=research_limit,
+            )
+            return {**stale, "cache": "stale-revalidating"}
+
+    payload = _build_supply_side_payload(
+        db,
+        limit=limit,
+        min_score=min_score,
+        search=search,
+        research_contacts=research_contacts,
+        research_limit=research_limit,
+    )
+    try:
+        cache_write(db, cache_key, payload, ttl_minutes=_SUPPLY_SIDE_CACHE_TTL_MIN)
+    except Exception as exc:  # noqa: BLE001 — cache write is best-effort
+        logger.warning("supply-side cache write failed (%s): %s", cache_key, exc)
+    return {**payload, "cache": "forced" if refresh else "miss"}
+
+
+@router.post("/{company_id}/email/approve")
+def approve_supply_outreach(
+    company_id: int,
+    payload: ApproveSupplyOutreachRequest,
+    db: Session = Depends(get_db),
+):
+    """
+    Persist an operator-approved supply-side draft before any live send.
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    to_emails, subject, body = _require_supply_outreach_payload(payload)
+    if (payload.template_type or "supply_pipeline") == "supply_pipeline":
+        subject, body = _prepare_supply_pipeline_copy(company, subject, body)
+    msg = _create_supply_outreach_record(
+        db,
+        company,
+        to_emails=to_emails,
+        subject=subject,
+        body=body,
+        template_type=payload.template_type,
+        status="draft_approved",
+        payload=payload.payload,
+    )
+    company.workflow_stage = company.workflow_stage or "outreach"
+    company.next_action = "Send approved Ready For Robots supply outreach"
+    db.commit()
+    db.refresh(msg)
+    return {
+        "approved": True,
+        "supply_outreach_message_id": str(msg.id),
+        "status": msg.status,
+        "to_email": msg.to_emails,
+        "approved_at": msg.approved_at.isoformat() if msg.approved_at else None,
+        "reply_to": msg.reply_to,
+    }
+
+
+@router.get("/{company_id}/email")
+def generate_email(
+    company_id: int,
+    template_type: str = Query("intro", description="intro, demo, proposal, followup, trade_show, hot_lead"),
+    db: Session = Depends(get_db)
+):
+    """
+    Generate personalized email for company outreach
+    
+    Template types:
+    - intro: Initial introduction email
+    - demo: Request product demonstration
+    - proposal: Partnership proposal after demo
+    - followup: Follow-up for non-responsive leads
+    - trade_show: Trade show meeting invitation
+    - hot_lead: High-priority outreach for hot leads
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Convert company to dict for template
+    company_data = {
+        'company_name': company.company_name,
+        'robot_type': company.robot_type,
+        'target_market': company.target_market,
+        'us_presence': company.us_presence,
+        'lead_score': company.lead_score,
+        'unique_selling_points': company.unique_selling_points or [],
+        'website': company.website
+    }
+    
+    # Use workflow_stage if template_type is 'auto'
+    if template_type == 'auto':
+        template_type = company.workflow_stage or 'intro'
+    
+    email = get_email_template(template_type, company_data)
+    
+    return {
+        "company_id": company_id,
+        "company_name": company.company_name,
+        "template_type": template_type,
+        "email": email
+    }
+
+
+@router.post("/{company_id}/email/log")
+def log_email_sent(
+    company_id: int,
+    email_data: dict,
+    db: Session = Depends(get_db)
+):
+    """
+    Log that an email was sent to a company
+    Updates workflow notes and last contact date
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Update last contact date
+    company.last_contact_date = datetime.now()
+    
+    # Log to workflow notes
+    timestamp = datetime.now().strftime('%Y-%m-%d %H:%M')
+    template_type = email_data.get('template_type', 'email')
+    subject = email_data.get('subject', 'Email sent')
+    
+    existing = company.workflow_notes or ""
+    company.workflow_notes = f"{existing}\n[{timestamp}] Sent {template_type} email: {subject}".strip()
+    
+    # Update outreach status if not contacted yet
+    if company.outreach_status == 'not_contacted':
+        company.outreach_status = 'contacted'
+    
+    db.commit()
+    db.refresh(company)
+    
+    return {
+        "message": "Email logged successfully",
+        "company": company.company_name,
+        "last_contact_date": str(company.last_contact_date)
+    }
+
+
+@router.post("/{company_id}/email/send")
+def send_email(
+    company_id: int,
+    payload: SendRobotCompanyEmailRequest,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    """
+    Send outreach email via Resend and log activity.
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    company_data = {
+        "company_name": company.company_name,
+        "robot_type": company.robot_type,
+        "target_market": company.target_market,
+        "us_presence": company.us_presence,
+        "lead_score": company.lead_score,
+        "unique_selling_points": company.unique_selling_points or [],
+        "website": company.website,
+    }
+    template_type = (payload.template_type or "intro").strip() or "intro"
+    email = get_email_template(template_type, company_data)
+    subject = payload.subject or email.get("subject", "Partnership Opportunity")
+    body = payload.body or email.get("body", "")
+    to_emails = _request_emails(payload.to_email)
+    if not to_emails:
+        raise HTTPException(status_code=400, detail="At least one recipient email is required")
+    approved_msg = _approved_supply_outreach_record(
+        db,
+        company_id=company.id,
+        approved_message_id=payload.approved_message_id,
+    )
+    if payload.approved_message_id and not approved_msg:
+        raise HTTPException(status_code=404, detail="Approved outreach checkpoint not found")
+    if template_type == "supply_pipeline":
+        if approved_msg:
+            subject = approved_msg.subject
+            body = approved_msg.body_text
+        subject, body = _prepare_supply_pipeline_copy(company, subject, body)
+    reply_token = approved_msg.reply_token if approved_msg and approved_msg.reply_token else secrets.token_urlsafe(18)
+    reply_to = _supply_reply_address(reply_token)
+
+    _supply_inbound_missing = False
+    _include_demo = template_type in ("intro", "supply_pipeline", "vendor_signup")
+    try:
+        send_fn = send_cal_email_via_resend if _include_demo else send_email_via_resend
+        send_kwargs: dict = {
+            "to_email": to_emails,
+            "subject": subject,
+            "body_text": body,
+            "from_display_name": "Cal",
+            "reply_to": reply_to,
+            "idempotency_key": f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}",
+        }
+        if _include_demo:
+            send_kwargs["include_demo"] = True
+        send_result = send_fn(**send_kwargs)
+    except ResendEmailError as exc:
+        err_text = str(exc).lower()
+        if any(kw in err_text for kw in ("notification service", "notification_service", "notification url", "notification_url", "inbound", "not set", "not configured")):
+            _supply_inbound_missing = True
+            try:
+                fallback_kwargs = {
+                    **send_kwargs,
+                    "reply_to": None,
+                    "idempotency_key": f"supply-outreach/{company.id}/{'-'.join(to_emails)[:120]}/no-inbound",
+                }
+                send_result = send_fn(**fallback_kwargs)
+            except ResendEmailError as exc2:
+                raise HTTPException(status_code=400, detail=str(exc2)) from exc2
+        else:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    now = datetime.now(timezone.utc)
+    effective_reply_to = None if _supply_inbound_missing else reply_to
+    if approved_msg:
+        msg = approved_msg
+        msg.to_emails = to_emails
+        msg.from_email = send_result.get("from_email")
+        msg.reply_to = effective_reply_to
+        msg.reply_token = reply_token
+        msg.subject = subject
+        msg.body_text = body
+        msg.template_type = template_type
+        msg.resend_id = send_result.get("resend_id")
+        msg.status = "sent"
+        msg.is_test = False
+        msg.sent_at = now
+        msg.payload = {
+            **(msg.payload or {}),
+            "source": "supply_pipeline",
+            "approved_checkpoint_reused": True,
+            **({"inbound_not_configured": True} if _supply_inbound_missing else {}),
+        }
+    else:
+        msg = SupplyOutreachMessage(
+            id=_uuid_for_session(db),
+            robot_company_id=company.id,
+            to_emails=to_emails,
+            from_email=send_result.get("from_email"),
+            reply_to=effective_reply_to,
+            reply_token=reply_token,
+            subject=subject,
+            body_text=body,
+            template_type=template_type,
+            resend_id=send_result.get("resend_id"),
+            status="sent",
+            is_test=False,
+            payload={"source": "supply_pipeline", **({"inbound_not_configured": True} if _supply_inbound_missing else {})},
+            approved_at=now,
+            sent_at=now,
+        )
+        db.add(msg)
+    crm_account, crm_message = _create_crm_supply_tracking_copy(
+        db,
+        company,
+        user=user,
+        to_emails=to_emails,
+        subject=subject,
+        body=body,
+        reply_to=effective_reply_to,
+        send_result=send_result,
+        supply_message=msg,
+    )
+    company.last_contact_date = now
+    timestamp = now.strftime("%Y-%m-%d %H:%M")
+    existing = company.workflow_notes or ""
+    company.workflow_notes = (
+        f"{existing}\n[{timestamp}] Sent {template_type} email to {send_result.get('to') or to_emails}: {subject}"
+    ).strip()
+    if company.outreach_status == "not_contacted":
+        company.outreach_status = "contacted"
+
+    db.commit()
+    db.refresh(company)
+    db.refresh(msg)
+    db.refresh(crm_account)
+    db.refresh(crm_message)
+
+    resp: dict[str, Any] = {
+        "message": "Email sent via Resend",
+        "company": company.company_name,
+        "to_email": send_result.get("to") or to_emails,
+        "template_type": template_type,
+        "subject": subject,
+        "supply_outreach_message_id": str(msg.id),
+        "status": msg.status,
+        "resend_id": send_result.get("resend_id"),
+        "from_email": send_result.get("from_email"),
+        "reply_to": effective_reply_to,
+        "crm_account_id": str(crm_account.id),
+        "crm_outreach_message_id": str(crm_message.id),
+        "workflow_checkpoint": "Sent checkpoint recorded and copied to CRM.",
+        "last_contact_date": str(company.last_contact_date),
+    }
+    if _supply_inbound_missing:
+        resp["warning"] = (
+            "Email sent without reply tracking. "
+            "Configure the Resend inbound webhook in your Resend dashboard: "
+            "Domains → your domain → Inbound → Notification URL → "
+            "https://ready-2-robot.fly.dev/api/webhooks/resend/inbound"
+        )
+    return resp
+
+
+@router.post("/{company_id}/email/test-send")
+def test_send_email(
+    company_id: int,
+    payload: SendRobotCompanyEmailRequest,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    """
+    Send a test outreach email via Resend without mutating workflow state.
+    """
+    company = db.query(RobotCompany).filter(RobotCompany.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    company_data = {
+        "company_name": company.company_name,
+        "robot_type": company.robot_type,
+        "target_market": company.target_market,
+        "us_presence": company.us_presence,
+        "lead_score": company.lead_score,
+        "unique_selling_points": company.unique_selling_points or [],
+        "website": company.website,
+    }
+    template_type = (payload.template_type or "intro").strip() or "intro"
+    email = get_email_template(template_type, company_data)
+    raw_subject = payload.subject or email.get("subject", "Partnership Opportunity")
+    body = payload.body or email.get("body", "")
+    if template_type == "supply_pipeline":
+        raw_subject, body = _prepare_supply_pipeline_copy(company, raw_subject, body)
+    subject = f"[TEST] {raw_subject}"
+    to_emails = _request_emails(user.get("email") or "")
+    if not to_emails:
+        raise HTTPException(status_code=400, detail="Your profile needs a valid email address before sending a test")
+
+    try:
+        send_result = send_email_via_resend(
+            to_email=to_emails,
+            subject=subject,
+            body_text=body,
+            from_display_name="Cal",
+            idempotency_key=f"supply-outreach-test/{company.id}/{'-'.join(to_emails)[:120]}",
+        )
+    except ResendEmailError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    msg = _create_supply_outreach_record(
+        db,
+        company,
+        to_emails=to_emails,
+        subject=subject,
+        body=body,
+        template_type=template_type,
+        status="test_sent",
+        is_test=True,
+        send_result=send_result,
+        payload={"source": "supply_pipeline_test"},
+    )
+    db.commit()
+    db.refresh(msg)
+
+    return {
+        "message": "Test email sent via Resend",
+        "company": company.company_name,
+        "to_email": send_result.get("to") or to_emails,
+        "template_type": template_type,
+        "subject": subject,
+        "supply_outreach_message_id": str(msg.id),
+        "status": msg.status,
+        "resend_id": send_result.get("resend_id"),
+        "from_email": send_result.get("from_email"),
+        "reply_to": msg.reply_to,
+    }
+

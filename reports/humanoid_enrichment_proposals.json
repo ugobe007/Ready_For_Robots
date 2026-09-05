@@ -1,0 +1,1112 @@
+{
+  "model": "claude-sonnet-4-5-20250929",
+  "items": [
+    {
+      "slug": "1x-eve",
+      "name": "1X Eve",
+      "vendor": "1X Technologies",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "agibot-g5",
+      "name": "Agibot G5",
+      "vendor": "Agibot (Zhiyuan Robotics)",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "astribot-s2",
+      "name": "Astribot S2",
+      "vendor": "Astribot",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "booster-k1",
+      "name": "Booster K1",
+      "vendor": "Booster Robotics",
+      "fill_before_pct": 0.0,
+      "specs": {
+        "can_run": true,
+        "price_usd": 5999,
+        "has_sdk": true
+      },
+      "evidence": {
+        "can_run": {
+          "url": "https://booster.tech",
+          "quote": "Run, Booster T1, run!"
+        },
+        "price_usd": {
+          "url": "https://booster.tech",
+          "quote": "From $5,999"
+        },
+        "has_sdk": {
+          "url": "https://booster.tech",
+          "quote": "supports secondary development"
+        }
+      }
+    },
+    {
+      "slug": "booster-t1",
+      "name": "Booster T1",
+      "vendor": "Booster Robotics",
+      "fill_before_pct": 0.0,
+      "specs": {
+        "can_run": true,
+        "has_sdk": true,
+        "price_usd": 5999
+      },
+      "evidence": {
+        "can_run": {
+          "url": "https://booster.tech",
+          "quote": "Run, Booster T1, run!"
+        },
+        "has_sdk": {
+          "url": "https://booster.tech",
+          "quote": "supports secondary development"
+        },
+        "price_usd": {
+          "url": "https://booster.tech",
+          "quote": "Booster K1 From $5,999"
+        }
+      }
+    },
+    {
+      "slug": "deep-robotics-dr01",
+      "name": "Deep Robotics DR01",
+      "vendor": "Deep Robotics",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "engineai-pm01",
+      "name": "EngineAI PM01",
+      "vendor": "EngineAI",
+      "fill_before_pct": 0.0,
+      "specs": {
+        "height_cm": 138
+      },
+      "evidence": {
+        "height_cm": {
+          "url": "https://en.engineai.com.cn/",
+          "quote": "138CM Height"
+        }
+      }
+    },
+    {
+      "slug": "engineai-sa01",
+      "name": "EngineAI SA01",
+      "vendor": "EngineAI",
+      "fill_before_pct": 0.0,
+      "specs": {
+        "height_cm": 138
+      },
+      "evidence": {
+        "height_cm": {
+          "url": "https://en.engineai.com.cn/",
+          "quote": "138CM Height"
+        }
+      }
+    },
+    {
+      "slug": "fourier-n1",
+      "name": "Fourier N1",
+      "vendor": "Fourier Intelligence",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "honda-asimo-successor",
+      "name": "Honda ASIMO Successor",
+      "vendor": "Honda",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "kepler-k1",
+      "name": "Kepler Forerunner K1",
+      "vendor": "Kepler Exploration Robotics",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "kepler-k2",
+      "name": "Kepler Forerunner K2",
+      "vendor": "Kepler Exploration Robotics",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "leju-kuavo",
+      "name": "Leju Kuavo",
+      "vendor": "Leju Robotics",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "mentee-bot",
+      "name": "MenteeBot",
+      "vendor": "Mentee Robotics",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "persona-ai-gen2",
+      "name": "Persona AI Gen2",
+      "vendor": "Persona AI",
+      "fill_before_pct": 0.0,
+      "specs": {
+        "has_dexterous_hands": true
+      },
+      "evidence": {
+        "has_dexterous_hands": {
+          "url": "https://persona.ai",
+          "quote": "Human Like Dexterity and Precision Capabilities Strong and capable of fine dexterity"
+        }
+      }
+    },
+    {
+      "slug": "reflex-humanoid",
+      "name": "Reflex Humanoid",
+      "vendor": "Reflex Robotics",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "sanctuary-m-series",
+      "name": "Sanctuary M-Series",
+      "vendor": "Sanctuary AI",
+      "fill_before_pct": 0.0,
+      "specs": {
+        "has_dexterous_hands": true
+      },
+      "evidence": {
+        "has_dexterous_hands": {
+          "url": "https://www.sanctuary.ai",
+          "quote": "We focus on dexterity, tactile feedback, and fine manipulation."
+        }
+      }
+    },
+    {
+      "slug": "toyota-thr3",
+      "name": "Toyota T-HR3",
+      "vendor": "Toyota",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "ubtech-walker-s",
+      "name": "UBTECH Walker S",
+      "vendor": "UBTECH Robotics",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "xpeng-iron",
+      "name": "XPeng Iron",
+      "vendor": "XPeng Robotics",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "xiaomi-cyberone",
+      "name": "Xiaomi CyberOne",
+      "vendor": "Xiaomi",
+      "fill_before_pct": 0.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "engineai-t800",
+      "name": "EngineAI T800",
+      "vendor": "EngineAI",
+      "fill_before_pct": 5.0,
+      "specs": {
+        "height_cm": 173,
+        "peak_torque_nm": 450
+      },
+      "evidence": {
+        "height_cm": {
+          "url": "https://en.engineai.com.cn/",
+          "quote": "173CM Height"
+        },
+        "peak_torque_nm": {
+          "url": "https://en.engineai.com.cn/",
+          "quote": "450N\u00b7m Maximum joint torque up to"
+        }
+      }
+    },
+    {
+      "slug": "fourier-gr1",
+      "name": "Fourier GR-1",
+      "vendor": "Fourier Intelligence",
+      "fill_before_pct": 5.0,
+      "specs": {
+        "height_cm": 165,
+        "weight_kg": 55,
+        "top_speed_mps": 1.39,
+        "peak_torque_nm": 230
+      },
+      "evidence": {
+        "height_cm": {
+          "url": "https://www.fftai.com/products-gr1",
+          "quote": "Height 165 cm"
+        },
+        "weight_kg": {
+          "url": "https://www.fftai.com/products-gr1",
+          "quote": "Weight 55 kg"
+        },
+        "top_speed_mps": {
+          "url": "https://www.fftai.com/products-gr1",
+          "quote": "Speed 5 km/hr"
+        },
+        "peak_torque_nm": {
+          "url": "https://www.fftai.com/products-gr1",
+          "quote": "Max. peak torque 230 N.m"
+        }
+      }
+    },
+    {
+      "slug": "high-torque-mini-pi",
+      "name": "High Torque Mini Pi",
+      "vendor": "High Torque Robotics",
+      "fill_before_pct": 5.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "limx-luna",
+      "name": "LimX Luna",
+      "vendor": "LimX Dynamics",
+      "fill_before_pct": 5.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "limx-oli",
+      "name": "LimX Oli",
+      "vendor": "LimX Dynamics",
+      "fill_before_pct": 5.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "limx-tron1",
+      "name": "LimX TRON 1",
+      "vendor": "LimX Dynamics",
+      "fill_before_pct": 5.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "pal-reem-c",
+      "name": "PAL Robotics REEM-C",
+      "vendor": "PAL Robotics",
+      "fill_before_pct": 5.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "pal-talos",
+      "name": "PAL Robotics TALOS",
+      "vendor": "PAL Robotics",
+      "fill_before_pct": 5.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "robotera-star1",
+      "name": "Robotera STAR1",
+      "vendor": "Robotera",
+      "fill_before_pct": 5.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "robotera-star2",
+      "name": "Robotera STAR2",
+      "vendor": "Robotera",
+      "fill_before_pct": 5.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "xpeng-px5",
+      "name": "XPeng PX5",
+      "vendor": "XPeng Robotics",
+      "fill_before_pct": 5.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "astribot-s1",
+      "name": "Astribot S1",
+      "vendor": "Astribot",
+      "fill_before_pct": 10.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "deep-robotics-dr02",
+      "name": "Deep Robotics DR02",
+      "vendor": "Deep Robotics",
+      "fill_before_pct": 10.0,
+      "specs": {
+        "can_navigate_rough_terrain": true
+      },
+      "evidence": {
+        "can_navigate_rough_terrain": {
+          "url": "https://www.deeprobotics.cn/en/index/dr02.html",
+          "quote": "It achieves stable traversal across various basic complex terrains"
+        }
+      }
+    },
+    {
+      "slug": "eden-robotics",
+      "name": "Eden Robot",
+      "vendor": "Eden Robotics",
+      "fill_before_pct": 10.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "engineered-arts-ameca",
+      "name": "Engineered Arts Ameca",
+      "vendor": "Engineered Arts",
+      "fill_before_pct": 10.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "limx-tron2",
+      "name": "LimX TRON 2",
+      "vendor": "LimX Dynamics",
+      "fill_before_pct": 10.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "matrix-3",
+      "name": "Matrix Robotics MATRIX-3",
+      "vendor": "Matrix Robotics",
+      "fill_before_pct": 10.0,
+      "specs": {
+        "has_dexterous_hands": true,
+        "autonomy_level": "autonomous"
+      },
+      "evidence": {
+        "has_dexterous_hands": {
+          "url": "https://matrixrobotics.ai",
+          "quote": "27-DoF Dexterous Hand: Equipped with a newly designed 27-degree-of-freedom (DoF) hand"
+        },
+        "autonomy_level": {
+          "url": "https://matrixrobotics.ai",
+          "quote": "MATRIX-3 is a safe, autonomous, and highly generalizable physical intelligence platform"
+        }
+      }
+    },
+    {
+      "slug": "unitree-r1",
+      "name": "Unitree R1",
+      "vendor": "Unitree Robotics",
+      "fill_before_pct": 10.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "fourier-gr2",
+      "name": "Fourier GR-2",
+      "vendor": "Fourier Intelligence",
+      "fill_before_pct": 15.0,
+      "specs": {
+        "height_cm": 175,
+        "weight_kg": 63,
+        "battery_life_h": 2,
+        "top_speed_mps": 1.39,
+        "peak_torque_nm": 380,
+        "has_dexterous_hands": true,
+        "has_sdk": true,
+        "has_api": true
+      },
+      "evidence": {
+        "height_cm": {
+          "url": "https://www.fftai.com/products-gr2",
+          "quote": "Height 175 cm"
+        },
+        "weight_kg": {
+          "url": "https://www.fftai.com/products-gr2",
+          "quote": "Weight 63 kg"
+        },
+        "battery_life_h": {
+          "url": "https://www.fftai.com/products-gr2",
+          "quote": "Battery 2 hours"
+        },
+        "top_speed_mps": {
+          "url": "https://www.fftai.com/products-gr2",
+          "quote": "Speed 5 km/h"
+        },
+        "peak_torque_nm": {
+          "url": "https://www.fftai.com/products-gr2",
+          "quote": "Peak Torques 380 N.m"
+        },
+        "has_dexterous_hands": {
+          "url": "https://www.fftai.com/products-gr2",
+          "quote": "GR-2 introduces 12-DoF dexterous hands"
+        },
+        "has_sdk": {
+          "url": "https://www.fftai.com/products-gr2",
+          "quote": "The upgraded Software Development Kit allows developers to have easy access"
+        },
+        "has_api": {
+          "url": "https://www.fftai.com/products-gr2",
+          "quote": "easy access to a robust suite of pre-optimized modules via intuitive APIs"
+        }
+      }
+    },
+    {
+      "slug": "persona-ai-gen1",
+      "name": "Persona AI Gen1",
+      "vendor": "Persona AI",
+      "fill_before_pct": 15.0,
+      "specs": {
+        "has_dexterous_hands": true
+      },
+      "evidence": {
+        "has_dexterous_hands": {
+          "url": "https://persona.ai",
+          "quote": "Human Like Dexterity and Precision Capabilities Strong and capable of fine dexterity"
+        }
+      }
+    },
+    {
+      "slug": "fourier-gr3c",
+      "name": "Fourier GR-3C Cosmo",
+      "vendor": "Fourier Robotics",
+      "fill_before_pct": 25.0,
+      "specs": {
+        "height_cm": 165,
+        "weight_kg": 71,
+        "battery_life_h": 3,
+        "hot_swap_battery": true,
+        "has_dexterous_hands": true
+      },
+      "evidence": {
+        "height_cm": {
+          "url": "https://www.fftai.com/products-gr3series",
+          "quote": "Height 165cm"
+        },
+        "weight_kg": {
+          "url": "https://www.fftai.com/products-gr3series",
+          "quote": "Weight 71kg"
+        },
+        "battery_life_h": {
+          "url": "https://www.fftai.com/products-gr3series",
+          "quote": "Battery 3hr"
+        },
+        "hot_swap_battery": {
+          "url": "https://www.fftai.com/products-gr3series",
+          "quote": "Dual hot-swappable batteries keep the robot running around the clock"
+        },
+        "has_dexterous_hands": {
+          "url": "https://www.fftai.com/products-gr3series",
+          "quote": "Equipped with Fourier's high-performance actuators and multi-DoF dexterous hands"
+        }
+      }
+    },
+    {
+      "slug": "humanoid-hmnd01-alpha-wheeled",
+      "name": "Humanoid HMND 01 Alpha Wheeled",
+      "vendor": "Humanoid (SKL Robotics)",
+      "fill_before_pct": 25.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "hexagon-aeon",
+      "name": "Hexagon AEON",
+      "vendor": "Hexagon Robotics",
+      "fill_before_pct": 30.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "neura-4ne1",
+      "name": "Neura 4NE1",
+      "vendor": "Neura Robotics",
+      "fill_before_pct": 30.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "noble-machines",
+      "name": "Noble Machines",
+      "vendor": "Noble Machines",
+      "fill_before_pct": 30.0,
+      "specs": {
+        "top_speed_mps": 0.8,
+        "can_climb_stairs": true,
+        "can_navigate_rough_terrain": true,
+        "payload_kg": 23,
+        "battery_life_h": 5,
+        "has_sdk": true
+      },
+      "evidence": {
+        "top_speed_mps": {
+          "url": "https://www.noblemachines.ai",
+          "quote": "Walking speed 0.8 m/s"
+        },
+        "can_climb_stairs": {
+          "url": "https://www.noblemachines.ai",
+          "quote": "Designed to handle stairs, scaffolding, unstable terrain, and cluttered spaces."
+        },
+        "can_navigate_rough_terrain": {
+          "url": "https://www.noblemachines.ai",
+          "quote": "Designed to handle stairs, scaffolding, unstable terrain, and cluttered spaces."
+        },
+        "payload_kg": {
+          "url": "https://www.noblemachines.ai",
+          "quote": "Payload 23KG/50LB"
+        },
+        "battery_life_h": {
+          "url": "https://www.noblemachines.ai",
+          "quote": "Battery life 5 hours"
+        },
+        "has_sdk": {
+          "url": "https://www.noblemachines.ai",
+          "quote": "Select access for teams ready to develop and test their own use cases with our software toolkits and hardware"
+        }
+      }
+    },
+    {
+      "slug": "rainbow-hubo",
+      "name": "Rainbow HUBO2",
+      "vendor": "Rainbow Robotics",
+      "fill_before_pct": 30.0,
+      "specs": {
+        "height_cm": 120,
+        "weight_kg": 43
+      },
+      "evidence": {
+        "height_cm": {
+          "url": "https://www.rainbow-robotics.com/en_hubo2",
+          "quote": "Height : 120cm"
+        },
+        "weight_kg": {
+          "url": "https://www.rainbow-robotics.com/en_hubo2",
+          "quote": "Weight : 43kg"
+        }
+      }
+    },
+    {
+      "slug": "1x-neo",
+      "name": "1X NEO",
+      "vendor": "1X Technologies",
+      "fill_before_pct": 35.0,
+      "specs": {
+        "top_speed_mps": 6.2,
+        "can_run": true,
+        "payload_kg": 25,
+        "has_dexterous_hands": true,
+        "autonomy_level": "autonomous",
+        "battery_life_h": 4,
+        "height_cm": 167.64,
+        "weight_kg": 29.94
+      },
+      "evidence": {
+        "top_speed_mps": {
+          "url": "https://www.1x.tech/neo",
+          "quote": "Max run speed 6.2 m/s"
+        },
+        "can_run": {
+          "url": "https://www.1x.tech/neo",
+          "quote": "Max run speed 6.2 m/s"
+        },
+        "payload_kg": {
+          "url": "https://www.1x.tech/neo",
+          "quote": "Carry 55 lbs"
+        },
+        "has_dexterous_hands": {
+          "url": "https://www.1x.tech/neo",
+          "quote": "Hands 22x2"
+        },
+        "autonomy_level": {
+          "url": "https://www.1x.tech/neo",
+          "quote": "NEO works autonomously by default"
+        },
+        "battery_life_h": {
+          "url": "https://www.1x.tech/neo",
+          "quote": "Run-time 4h"
+        },
+        "height_cm": {
+          "url": "https://www.1x.tech/neo",
+          "quote": "Robot Height 5'6\""
+        },
+        "weight_kg": {
+          "url": "https://www.1x.tech/neo",
+          "quote": "Weight 66 lbs"
+        }
+      }
+    },
+    {
+      "slug": "agibot-a2",
+      "name": "Agibot A2",
+      "vendor": "Agibot (Zhiyuan Robotics)",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "andromeda-abi",
+      "name": "Andromeda Abi",
+      "vendor": "Andromeda Robotics",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "apptronik-apollo",
+      "name": "Apptronik Apollo",
+      "vendor": "Apptronik",
+      "fill_before_pct": 35.0,
+      "specs": {
+        "payload_kg": 24.95,
+        "battery_life_h": 4,
+        "hot_swap_battery": true,
+        "height_cm": 172.72,
+        "weight_kg": 72.57
+      },
+      "evidence": {
+        "payload_kg": {
+          "url": "https://apptronik.com/apollo",
+          "quote": "PAYLOAD 55 Lbs"
+        },
+        "battery_life_h": {
+          "url": "https://apptronik.com/apollo",
+          "quote": "RUNTIME 4 hours per battery pack"
+        },
+        "hot_swap_battery": {
+          "url": "https://apptronik.com/apollo",
+          "quote": "Hot swappable battery packs, each with a four-hour runtime, allow Apollo to continue working with a simple battery change"
+        },
+        "height_cm": {
+          "url": "https://apptronik.com/apollo",
+          "quote": "HEIGHT 5'8\""
+        },
+        "weight_kg": {
+          "url": "https://apptronik.com/apollo",
+          "quote": "WEIGHT 160 Lbs"
+        }
+      }
+    },
+    {
+      "slug": "boston-dynamics-atlas",
+      "name": "Boston Dynamics Atlas",
+      "vendor": "Boston Dynamics",
+      "fill_before_pct": 35.0,
+      "specs": {
+        "payload_kg": 50,
+        "battery_life_h": 4,
+        "hot_swap_battery": true,
+        "height_cm": 190,
+        "weight_kg": 90,
+        "autonomy_level": "autonomous"
+      },
+      "evidence": {
+        "payload_kg": {
+          "url": "https://bostondynamics.com/atlas",
+          "quote": "Weight Capacity (Instant) 50 kg (110 lbs)"
+        },
+        "battery_life_h": {
+          "url": "https://bostondynamics.com/atlas",
+          "quote": "Battery Life 4 hours"
+        },
+        "hot_swap_battery": {
+          "url": "https://bostondynamics.com/atlas",
+          "quote": "Atlas autonomously navigates to a charging station and swaps out its own battery"
+        },
+        "height_cm": {
+          "url": "https://bostondynamics.com/atlas",
+          "quote": "Height 1.9 m (6.2 ft)"
+        },
+        "weight_kg": {
+          "url": "https://bostondynamics.com/atlas",
+          "quote": "Weight 90 kg (198 lbs)"
+        },
+        "autonomy_level": {
+          "url": "https://bostondynamics.com/atlas",
+          "quote": "Atlas learns new tasks quickly, adapts to dynamic environments, and works autonomously with minimal supervision"
+        }
+      }
+    },
+    {
+      "slug": "figure-01",
+      "name": "Figure 01",
+      "vendor": "Figure AI",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "figure-02",
+      "name": "Figure 02",
+      "vendor": "Figure AI",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "figure-03",
+      "name": "Figure 03",
+      "vendor": "Figure AI",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "foundation-phantom",
+      "name": "Foundation Phantom",
+      "vendor": "Foundation Future Industries",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "fourier-gr3",
+      "name": "Fourier GR-3",
+      "vendor": "Fourier Robotics",
+      "fill_before_pct": 35.0,
+      "specs": {
+        "height_cm": 165,
+        "weight_kg": 71,
+        "battery_life_h": 3,
+        "hot_swap_battery": true,
+        "has_dexterous_hands": true
+      },
+      "evidence": {
+        "height_cm": {
+          "url": "https://www.fftai.com/products-gr3series",
+          "quote": "Height 165cm"
+        },
+        "weight_kg": {
+          "url": "https://www.fftai.com/products-gr3series",
+          "quote": "Weight 71kg"
+        },
+        "battery_life_h": {
+          "url": "https://www.fftai.com/products-gr3series",
+          "quote": "Battery 3hr"
+        },
+        "hot_swap_battery": {
+          "url": "https://www.fftai.com/products-gr3series",
+          "quote": "Dual hot-swappable batteries keep the robot running around the clock"
+        },
+        "has_dexterous_hands": {
+          "url": "https://www.fftai.com/products-gr3series",
+          "quote": "Equipped with Fourier's high-performance actuators and multi-DoF dexterous hands"
+        }
+      }
+    },
+    {
+      "slug": "galaxea-kengo",
+      "name": "Galaxea Kengo",
+      "vendor": "Galaxea Dynamics",
+      "fill_before_pct": 35.0,
+      "specs": {
+        "height_cm": 170,
+        "weight_kg": 65,
+        "peak_torque_nm": 130,
+        "can_climb_stairs": true
+      },
+      "evidence": {
+        "height_cm": {
+          "url": "https://humanoid.guide/welcome-kengo/",
+          "quote": "It stands 170 cm tall"
+        },
+        "weight_kg": {
+          "url": "https://humanoid.guide/welcome-kengo/",
+          "quote": "weighs 65 kg"
+        },
+        "peak_torque_nm": {
+          "url": "https://humanoid.guide/welcome-kengo/",
+          "quote": "Each joint can deliver more than 130 newton meters of torque"
+        },
+        "can_climb_stairs": {
+          "url": "https://humanoid.guide/welcome-kengo/",
+          "quote": "walking stairs"
+        }
+      }
+    },
+    {
+      "slug": "generalist-gen1",
+      "name": "Generalist GEN-1",
+      "vendor": "Generalist AI",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "high-torque-mini-pi-plus",
+      "name": "High Torque Mini Pi plus",
+      "vendor": "High Torque Robotics",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "humanoid-hmnd01-alpha-bipedal",
+      "name": "Humanoid HMND 01 Alpha Bipedal",
+      "vendor": "Humanoid (SKL Robotics)",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "sanctuary-phoenix",
+      "name": "Sanctuary Phoenix",
+      "vendor": "Sanctuary AI",
+      "fill_before_pct": 35.0,
+      "specs": {
+        "has_dexterous_hands": true
+      },
+      "evidence": {
+        "has_dexterous_hands": {
+          "url": "https://www.sanctuary.ai",
+          "quote": "We focus on dexterity, tactile feedback, and fine manipulation."
+        }
+      }
+    },
+    {
+      "slug": "tesla-optimus-gen1",
+      "name": "Tesla Optimus Gen 1",
+      "vendor": "Tesla",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "tesla-optimus-gen2",
+      "name": "Tesla Optimus Gen 2",
+      "vendor": "Tesla",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "ubtech-walker-x",
+      "name": "UBTECH Walker X",
+      "vendor": "UBTECH Robotics",
+      "fill_before_pct": 35.0,
+      "specs": {},
+      "evidence": {}
+    },
+    {
+      "slug": "agility-digit",
+      "name": "Agility Digit",
+      "vendor": "Agility Robotics",
+      "fill_before_pct": 40.0,
+      "specs": {
+        "payload_kg": 15.88,
+        "battery_life_h": 4,
+        "has_support_sla": true
+      },
+      "evidence": {
+        "payload_kg": {
+          "url": "https://www.agilityrobotics.com/solutions",
+          "quote": "Digit has a 35 pound carrying capacity"
+        },
+        "battery_life_h": {
+          "url": "https://www.agilityrobotics.com/solutions",
+          "quote": "4 hour battery life"
+        },
+        "has_support_sla": {
+          "url": "https://www.agilityrobotics.com/solutions",
+          "quote": "Our commitment doesn't stop at deployment. We back every relationship with on-site service, online support, and real-time monitoring"
+        }
+      }
+    },
+    {
+      "slug": "agility-digit-2",
+      "name": "Agility Digit 2",
+      "vendor": "Agility Robotics",
+      "fill_before_pct": 40.0,
+      "specs": {
+        "payload_kg": 15.88,
+        "battery_life_h": 4,
+        "has_support_sla": true
+      },
+      "evidence": {
+        "payload_kg": {
+          "url": "https://www.agilityrobotics.com/solutions",
+          "quote": "Digit has a 35 pound carrying capacity"
+        },
+        "battery_life_h": {
+          "url": "https://www.agilityrobotics.com/solutions",
+          "quote": "4 hour battery life"
+        },
+        "has_support_sla": {
+          "url": "https://www.agilityrobotics.com/solutions",
+          "quote": "Our global support infrastructure allows us to provide rapid response on-site"
+        }
+      }
+    },
+    {
+      "slug": "dexmate-vega",
+      "name": "Dexmate Vega",
+      "vendor": "Dexmate",
+      "fill_before_pct": 40.0,
+      "specs": {
+        "payload_kg": 4.54,
+        "has_dexterous_hands": true,
+        "has_sdk": false,
+        "has_api": true,
+        "battery_life_h": 10,
+        "height_cm": 220
+      },
+      "evidence": {
+        "payload_kg": {
+          "url": "https://www.dexmate.ai/product/vega",
+          "quote": "10 lbs per arm at any pose"
+        },
+        "has_dexterous_hands": {
+          "url": "https://www.dexmate.ai/product/vega",
+          "quote": "Can easily handle tasks that require bimanual dexterity"
+        },
+        "has_sdk": {
+          "url": "https://www.dexmate.ai/product/vega",
+          "quote": "Python API Just pip install"
+        },
+        "has_api": {
+          "url": "https://www.dexmate.ai/product/vega",
+          "quote": "Python API Just pip install"
+        },
+        "battery_life_h": {
+          "url": "https://www.dexmate.ai/product/vega",
+          "quote": "10+ hours, can exceed 30 hours per charge moving both arms without payload"
+        },
+        "height_cm": {
+          "url": "https://www.dexmate.ai/product/vega",
+          "quote": "stretch up to 7'2'' (2.2m)"
+        }
+      }
+    },
+    {
+      "slug": "unitree-g1",
+      "name": "Unitree G1",
+      "vendor": "Unitree Robotics",
+      "fill_before_pct": 40.0,
+      "specs": {
+        "payload_kg": 3,
+        "finger_count": 3,
+        "has_dexterous_hands": true,
+        "has_sdk": true,
+        "battery_life_h": 2,
+        "hot_swap_battery": true,
+        "price_usd": 13500,
+        "height_cm": 132,
+        "weight_kg": 35,
+        "peak_torque_nm": 120
+      },
+      "evidence": {
+        "payload_kg": {
+          "url": "https://www.unitree.com/g1",
+          "quote": "Arm Maximum Load\u2475 About 2Kg About 3Kg"
+        },
+        "finger_count": {
+          "url": "https://www.unitree.com/g1",
+          "quote": "Optional Force control of three-fingered hand"
+        },
+        "has_dexterous_hands": {
+          "url": "https://www.unitree.com/g1",
+          "quote": "Force control dexterous hand, manipulation of all things"
+        },
+        "has_sdk": {
+          "url": "https://www.unitree.com/g1",
+          "quote": "Secondary Development\u2476 / YES"
+        },
+        "battery_life_h": {
+          "url": "https://www.unitree.com/g1",
+          "quote": "Battery Life About 2h About 2h"
+        },
+        "hot_swap_battery": {
+          "url": "https://www.unitree.com/g1",
+          "quote": "Smart Battery (Quick Release) 9000mAh 9000mAh"
+        },
+        "price_usd": {
+          "url": "https://www.unitree.com/g1",
+          "quote": "Price from $13.5K"
+        },
+        "height_cm": {
+          "url": "https://www.unitree.com/g1",
+          "quote": "Height, Width and Thickness\uff08Stand\uff09 1320x450x200mm"
+        },
+        "weight_kg": {
+          "url": "https://www.unitree.com/g1",
+          "quote": "Weight (With Battery) About 35kg About 35kg+"
+        },
+        "peak_torque_nm": {
+          "url": "https://www.unitree.com/g1",
+          "quote": "Maximum Torque of Knee Joint\u2474 90N.m 120N.m"
+        }
+      }
+    },
+    {
+      "slug": "unitree-h1",
+      "name": "Unitree H1",
+      "vendor": "Unitree Robotics",
+      "fill_before_pct": 40.0,
+      "specs": {
+        "top_speed_mps": 3.3,
+        "can_run": true,
+        "has_dexterous_hands": true,
+        "hot_swap_battery": true,
+        "height_cm": 180,
+        "weight_kg": 47,
+        "peak_torque_nm": 360
+      },
+      "evidence": {
+        "top_speed_mps": {
+          "url": "https://www.unitree.com/h1",
+          "quote": "Moving speed of 3.3m/s"
+        },
+        "can_run": {
+          "url": "https://www.unitree.com/h1",
+          "quote": "The first full-size general-purpose humanoid robot that can run in China"
+        },
+        "has_dexterous_hands": {
+          "url": "https://www.unitree.com/h1",
+          "quote": "Dexterous Hand Optional"
+        },
+        "hot_swap_battery": {
+          "url": "https://www.unitree.com/h1",
+          "quote": "Battery capacity: 864Wh, quickly replaceable"
+        },
+        "height_cm": {
+          "url": "https://www.unitree.com/h1",
+          "quote": "Height about 180CM"
+        },
+        "weight_kg": {
+          "url": "https://www.unitree.com/h1",
+          "quote": "Weight about 47kg"
+        },
+        "peak_torque_nm": {
+          "url": "https://www.unitree.com/h1",
+          "quote": "Maximum Joint Torque 360N.m"
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,501 @@
+company_name,website,country,vendor_role,robot_category,primary_robots,work_type,industries,commercial_maturity,us_availability,sales_model,notes,source,verification,vendor_type
+MiR (Mobile Industrial Robots),https://www.mobile-industrial-robots.com,Denmark,robot_oem,amr_agv_material_transport,MiR250/600/1350,cart/pallet transport,Logistics;Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+OTTO Motors,https://ottomotors.com,Canada,robot_oem,amr_agv_material_transport,OTTO 100/750/1500,material transport,Logistics;Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Locus Robotics,https://locusrobotics.com,USA,robot_oem,amr_agv_material_transport,Locus Origin/Vector,picking assist AMR,Logistics;Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Geek+,https://www.geekplus.com,China,robot_oem,amr_agv_material_transport,P800/PopPick,GTP / sorting,Logistics;Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hai Robotics,https://www.hairobotics.com,China,robot_oem,amr_agv_material_transport,HAIPICK,ACR / tote handling,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Quicktron,https://www.quicktron.com,China,robot_oem,amr_agv_material_transport,Quicktron AMR,warehouse transport,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+ForwardX Robotics,https://www.forwardx.com,China,robot_oem,amr_agv_material_transport,Flex/Max,picking / pallet AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+GreyOrange,https://www.greyorange.com,USA,robot_oem,amr_agv_material_transport,Ranger,GTP,Logistics;Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Exotec,https://www.exotec.com,France,robot_oem,amr_agv_material_transport,Skypod,AS/RS GTP,Logistics;Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Fetch Robotics / Zebra,https://www.zebra.com,USA,robot_oem,amr_agv_material_transport,FetchFreight/Cart,AMR transport,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Vecna Robotics,https://www.vecnarobotics.com,USA,robot_oem,amr_agv_material_transport,Vecna AMR,material transport,Logistics;Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Seegrid,https://seegrid.com,USA,robot_oem,amr_agv_material_transport,Palion,vision AMR / tow,Manufacturing;Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+6 River Systems (Shopify),https://6river.com,USA,robot_oem,amr_agv_material_transport,Chuck,fulfillment AMR,Retail;Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+AutoGuide Mobile Robots,https://www.autoguidemobiles.com,USA,robot_oem,amr_agv_material_transport,MAX N10,tugger/AMR,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Clearpath Robotics,https://clearpathrobotics.com,Canada,robot_oem,amr_agv_material_transport,OTTO/OTTO Fleet,AMR platforms,Manufacturing;Research,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Omron Mobile Robots,https://automation.omron.com,Japan,robot_oem,amr_agv_material_transport,LD/HD series,AMR,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Kivnon,https://www.kivnon.com,Spain,robot_oem,amr_agv_material_transport,Kivnon AGV,AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Swisslog,https://www.swisslog.com,Switzerland,robot_oem,amr_agv_material_transport,CarryPick,GTP AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Dematic,https://www.dematic.com,USA,robot_oem,amr_agv_material_transport,Mobile Robots,warehouse AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Murata Machinery,https://www.muratec.net,Japan,robot_oem,amr_agv_material_transport,AGV/AMR,material transport,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Daifuku,https://www.daifuku.com,Japan,robot_oem,amr_agv_material_transport,AGV systems,material transport,Logistics;Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+JBT Corporation,https://www.jbtc.com,USA,robot_oem,amr_agv_material_transport,AGV,industrial AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Oceaneering AGV,https://www.oceaneering.com,USA,robot_oem,amr_agv_material_transport,AGV,industrial AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Transbotics,https://www.transbotics.com,USA,robot_oem,amr_agv_material_transport,AGV,AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Bastians,https://www.bastian-solutions.com,USA,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+inVia Robotics,https://www.invitarobotics.com,USA,robot_oem,amr_agv_material_transport,Picker,GTP AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+IAM Robotics,https://www.iamrobotics.com,USA,robot_oem,amr_agv_material_transport,Swift,mobile pick,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Magazino,https://www.magazino.eu,Germany,robot_oem,amr_agv_material_transport,TORU/SOTO,piece picking AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SAFELOG,https://www.safelog.de,Germany,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+AGILOX,https://www.agilox.com,Austria,robot_oem,amr_agv_material_transport,ONE/OCF,swarm AMR/fork,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SEER Robotics,https://www.seer-group.com,China,robot_oem,amr_agv_material_transport,AMR,AMR,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hikrobot,https://www.hikrobotics.com,China,robot_oem,amr_agv_material_transport,Latent AMR,AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Standard Robots,https://www.standard-robots.com,China,robot_oem,amr_agv_material_transport,AMR,AMR,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+CSG Huashu,https://www.csg.com.cn,China,robot_oem,amr_agv_material_transport,AMR,AMR,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Youibot,https://www.youibot.com,China,robot_oem,amr_agv_material_transport,AMR,AMR,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Multiway Robotics,https://www.multiway-robotics.com,China,robot_oem,amr_agv_material_transport,AMR/fork,AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+VisionNav Robotics,https://www.visionnav.com,China,robot_oem,amr_agv_material_transport,VisionNav AMR,AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Knott AGV,https://www.knott.de,Germany,robot_oem,amr_agv_material_transport,AGV,AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+DS Automotion,https://www.ds-automotion.com,Austria,robot_oem,amr_agv_material_transport,AGV,AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Servus Intralogistics,https://www.servus.info,Austria,robot_oem,amr_agv_material_transport,Servus,in-production AMR,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Grenzebach,https://www.grenzebach.com,Germany,robot_oem,amr_agv_material_transport,Lifting AGV,AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+ASTI Mobile Robotics (ABB),https://global.abb,Spain,robot_oem,amr_agv_material_transport,ASTI AMR,AMR,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+BlueBotics,https://www.bluebotics.com,Switzerland,robot_oem,amr_agv_material_transport,ANT navigation,AMR autonomy,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Kollmorgen AGV,https://www.kollmorgen.com,USA,robot_oem,amr_agv_material_transport,NDC,AGV controls,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SICK Mobile Robots,https://www.sick.com,Germany,robot_oem,amr_agv_material_transport,safety AMR stack,AMR sensing,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Neobotix,https://www.neobotix-roboter.de,Germany,robot_oem,amr_agv_material_transport,mobile platforms,AMR platforms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Robotnik,https://www.robotnik.eu,Spain,robot_oem,amr_agv_material_transport,RB-VOGUI,mobile platforms,Manufacturing;Research,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+PAL Robotics,https://pal-robotics.com,Spain,robot_oem,amr_agv_material_transport,TIAGo/ARI,service mobile,Research;Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Addverb,https://addverb.com,India,robot_oem,amr_agv_material_transport,SortIE/CartIE,warehouse AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+System Logistics,https://www.systemlogistics.com,Italy,robot_oem,amr_agv_material_transport,AGV,AGV,Food & Beverage,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Eurofork,https://www.eurofork.com,Italy,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Scaglia INDEVA,https://www.indevagroup.com,Italy,robot_oem,amr_agv_material_transport,AGV,AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Mirage AGV,https://www.mirage.biz,Italy,robot_oem,amr_agv_material_transport,AGV,AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Rocla AGV (Mitsubishi Logisnext),https://www.rocla.com,Finland,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Mitsubishi Logisnext,https://www.mitsubishi-logisnext.com,Japan,robot_oem,amr_agv_material_transport,AGV/fork,material handling,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Toyota Material Handling AGV,https://www.toyota-forklifts.eu,Japan,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Jungheinrich AGV,https://www.jungheinrich.com,Germany,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Still AGV,https://www.still.eu,Germany,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Linde Material Handling AGV,https://www.linde-mh.com,Germany,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Crown Equipment AGV,https://www.crown.com,USA,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hyster-Yale AGV,https://www.hyster.com,USA,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Raymond AGV,https://www.raymondcorp.com,USA,robot_oem,amr_agv_material_transport,AGV,AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Balyo,https://www.balyo.com,France,robot_oem,amr_agv_material_transport,Driven by Balyo,autonomous pallet,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Symbotic,https://www.symbotic.com,USA,robot_oem,amr_agv_material_transport,Symbotic system,warehouse robotics,Retail;Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Ocado Technology,https://www.ocadotechnology.com,UK,robot_oem,amr_agv_material_transport,grid bots,grocery automation,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Alert Innovation (Walmart),https://www.walmart.com,USA,robot_oem,amr_agv_material_transport,Alphabot,GTP,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Takeoff Technologies,https://www.takeoff.com,USA,robot_oem,amr_agv_material_transport,eGrocery microfulfillment,microfulfillment,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Fabric,https://fabric.inc,USA,robot_oem,amr_agv_material_transport,microfulfillment,microfulfillment,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Attabotics,https://www.attabotics.com,Canada,robot_oem,amr_agv_material_transport,3D structure,storage/retrieval,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+AutoStore,https://www.autostore.com,Norway,robot_oem,amr_agv_material_transport,R5/R5+,cube storage,Logistics;Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Berkshire Grey,https://www.berkshiregrey.com,USA,robot_oem,amr_agv_material_transport,robotic sortation,sortation,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Kindred AI (Ocado),https://www.kindred.ai,Canada,robot_oem,amr_agv_material_transport,SORT,piece picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Caja Robotics,https://www.cajarobotics.com,Israel,robot_oem,amr_agv_material_transport,AMR,fulfillment AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Gideon Brothers,https://www.gideon.ai,Croatia,robot_oem,amr_agv_material_transport,AMR,material transport,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Milvus Robotics,https://www.milvusrobotics.com,Turkey,robot_oem,amr_agv_material_transport,AMR,AMR,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Ottonomy,https://www.ottonomy.io,USA,robot_oem,amr_agv_material_transport,Ottobot,indoor/outdoor AMR,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Fox Robotics,https://www.foxrobotics.com,USA,robot_oem,autonomous_forklift_pallet,FoxBot ATL,trailer load/unload,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Third Wave Automation,https://www.thirdwave.ai,USA,robot_oem,autonomous_forklift_pallet,TWA Reach,warehouse pallet,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Cyngn,https://cyngn.com,USA,robot_oem,autonomous_forklift_pallet,DriveMod,industrial vehicle autonomy,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hangcha Intelligent,https://www.hangcha.com,China,robot_oem,autonomous_forklift_pallet,intelligent forklift,autonomous forklift,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+EP Equipment,https://www.ep-equipment.com,China,robot_oem,autonomous_forklift_pallet,EP autonomous,pallet trucks,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Heli Intelligent,https://www.helichina.com,China,robot_oem,autonomous_forklift_pallet,Heli AGV fork,autonomous forklift,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Yale Reliant / robotic,https://www.yale.com,USA,robot_oem,autonomous_forklift_pallet,robotic solutions,material handling,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Clark Material Handling robotic,https://www.clarkmhc.com,USA,robot_oem,autonomous_forklift_pallet,robotic forklift,forklift automation,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Combilift AGV,https://www.combilift.com,Ireland,robot_oem,autonomous_forklift_pallet,Combi-AGV,long-load AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hubtex AGV,https://www.hubtex.com,Germany,robot_oem,autonomous_forklift_pallet,AGV multidirectional,sideloader AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+BAUMANN AGV,https://www.baumann-sideloaders.com,Germany,robot_oem,autonomous_forklift_pallet,sideloader AGV,long loads,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Landing AI Logistics partners,https://landing.ai,USA,robot_oem,autonomous_forklift_pallet,vision forklift,vision autonomy,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Outrider,https://www.outrider.ai,USA,robot_oem,autonomous_forklift_pallet,yard truck autonomy,yard logistics,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Gatik,https://gatik.ai,USA,robot_oem,autonomous_forklift_pallet,middle-mile autonomy,freight,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Phantom Auto,https://phantom.auto,USA,robot_oem,autonomous_forklift_pallet,teleop forklift,remote forklift,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Robotic Research / RR.AI,https://www.roboticresearch.com,USA,robot_oem,autonomous_forklift_pallet,AutoDrive,vehicle autonomy,Defense;Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+EK Robotics,https://www.ek-robotics.com,Germany,robot_oem,autonomous_forklift_pallet,AGV/AMR,AGV,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+MT Robot,https://www.mtrobot.com,China,robot_oem,autonomous_forklift_pallet,forklift AMR,autonomous forklift,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Reeman Robotics,https://www.reeman.cn,China,robot_oem,autonomous_forklift_pallet,forklift AMR,autonomous forklift,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Zhejiang Guozi Robotics,https://www.guozirobot.com,China,robot_oem,autonomous_forklift_pallet,forklift AMR,autonomous forklift,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Shanghai Noblelift Intelligent,https://www.noblelift.com,China,robot_oem,autonomous_forklift_pallet,intelligent trucks,pallet trucks,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Doosan Industrial Vehicle robotic,https://www.doosanindustrialvehicle.com,South Korea,robot_oem,autonomous_forklift_pallet,robotic forklift,forklift,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hyundai Material Handling robotic,https://www.hyundaice.com,South Korea,robot_oem,autonomous_forklift_pallet,robotic forklift,forklift,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Mitsubishi Forklift Automation,https://www.mitsubishi-forklift.co.uk,Japan,robot_oem,autonomous_forklift_pallet,automated,forklift AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+UniCarriers automated,https://www.unicarrierseurope.com,Japan,robot_oem,autonomous_forklift_pallet,automated,forklift AGV,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+PALOMAT automated pallet,https://www.palomat.com,Denmark,robot_oem,autonomous_forklift_pallet,pallet magazine,pallet handling,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SoftBank Robotics warehouse partners,https://www.softbankrobotics.com,Japan,robot_oem,autonomous_forklift_pallet,warehouse AMR partners,warehouse,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+FANUC,https://www.fanuc.com,Japan,robot_oem,industrial_robot_arms,R-2000/LR Mate,welding/handling,Automotive & Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+KUKA,https://www.kuka.com,Germany,robot_oem,industrial_robot_arms,KR series,industrial arms,Automotive & Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Yaskawa Motoman,https://www.motoman.com,Japan,robot_oem,industrial_robot_arms,GP/HC series,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Kawasaki Robotics,https://robotics.kawasaki.com,Japan,robot_oem,industrial_robot_arms,RS/BX series,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Mitsubishi Electric Robotics,https://www.mitsubishielectric.com,Japan,robot_oem,industrial_robot_arms,RV/RH,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Nachi Robotics,https://www.nachirobotics.com,Japan,robot_oem,industrial_robot_arms,MZ/MC,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Denso Robotics,https://www.densorobotics.com,Japan,robot_oem,industrial_robot_arms,VS/HM,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Epson Robots,https://epson.com/robots,Japan,robot_oem,industrial_robot_arms,SCARA/6-axis,assembly,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Staubli Robotics,https://www.staubli.com/robotics,Switzerland,robot_oem,industrial_robot_arms,TX/TS,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Comau,https://www.comau.com,Italy,robot_oem,industrial_robot_arms,NJ/Racer,automotive arms,Automotive & Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Igus ReBeL / robolink,https://www.igus.com,Germany,robot_oem,industrial_robot_arms,ReBeL,low-cost arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Reis Robotics,https://www.reisrobotics.com,Germany,robot_oem,industrial_robot_arms,welding systems,welding,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+CLOOS Robotics,https://www.cloos.de,Germany,robot_oem,industrial_robot_arms,welding robots,welding,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+OTC Daihen,https://www.daihen-usa.com,Japan,robot_oem,industrial_robot_arms,welding robots,welding,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Panasonic Robotics welding,https://www.panasonic.com,Japan,robot_oem,industrial_robot_arms,welding robots,welding,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hyundai Robotics,https://www.hyundai-robotics.com,South Korea,robot_oem,industrial_robot_arms,HS/HH,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hanwha Robotics,https://www.hanwharobotics.com,South Korea,robot_oem,industrial_robot_arms,HCR/HCR series,industrial/cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Estun Automation,https://www.estun.com,China,robot_oem,industrial_robot_arms,ER series,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SIASUN,https://www.siasun.com,China,robot_oem,industrial_robot_arms,industrial robots,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+EFORT Intelligent,https://www.efort.com.cn,China,robot_oem,industrial_robot_arms,ER series,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+STEP Electric,https://www.stepelectric.com,China,robot_oem,industrial_robot_arms,industrial robots,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+GSK CNC Equipment robots,https://www.gsk.com.cn,China,robot_oem,industrial_robot_arms,GSK robots,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Peitian Robotics,https://www.peitian.com,China,robot_oem,industrial_robot_arms,industrial robots,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Harbin Boshi Automation,https://www.boshi.cn,China,robot_oem,industrial_robot_arms,industrial robots,industrial arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Rethink Robotics (original Sawyer legacy),https://www.rethinkrobotics.com,USA,robot_oem,industrial_robot_arms,Sawyer legacy,cobot/arm,Manufacturing,discontinued,yes,direct+distributor,,curated_oem_list,curated,oem
+Brooks Automation,https://www.brooks.com,USA,robot_oem,industrial_robot_arms,semiconductor robots,wafer handling,Semiconductor,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Genmark Automation,https://www.genmarkautomation.com,USA,robot_oem,industrial_robot_arms,wafer robots,semiconductor,Semiconductor,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+RORZE,https://www.rorze.com,Japan,robot_oem,industrial_robot_arms,wafer robots,semiconductor,Semiconductor,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hirata Corporation,https://www.hirata.co.jp,Japan,robot_oem,industrial_robot_arms,transfer robots,semiconductor/FPD,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Yamaha Robotics,https://global.yamaha-motor.com,Japan,robot_oem,industrial_robot_arms,SCARA/linear,assembly,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+IAI Corporation,https://www.intelligentactuator.com,Japan,robot_oem,industrial_robot_arms,actuators/robots,assembly,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Toshiba Machine / Shibaura Machine,https://www.shibaura-machine.co.jp,Japan,robot_oem,industrial_robot_arms,industrial robots,injection/handling,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Olympus robotics medical arms,https://www.olympus-global.com,Japan,robot_oem,industrial_robot_arms,medical systems,medical,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Intuitive Surgical,https://www.intuitive.com,USA,robot_oem,industrial_robot_arms,da Vinci,surgical robot,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Stryker Mako,https://www.stryker.com,USA,robot_oem,industrial_robot_arms,Mako,orthopedic robot,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Medtronic Hugo / Mazor,https://www.medtronic.com,USA,robot_oem,industrial_robot_arms,Hugo/Mazor,surgical,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+CMR Surgical,https://cmrsurgical.com,UK,robot_oem,industrial_robot_arms,Versius,surgical,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Asensus Surgical,https://www.asensus.com,USA,robot_oem,industrial_robot_arms,Senhance,surgical,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Smith+Nephew CORI,https://www.smith-nephew.com,UK,robot_oem,industrial_robot_arms,CORI,ortho robot,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Zimmer Biomet ROSA,https://www.zimmerbiomet.com,USA,robot_oem,industrial_robot_arms,ROSA,ortho robot,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Johnson & Johnson Ottava,https://www.jnj.com,USA,robot_oem,industrial_robot_arms,Ottava,surgical,Healthcare,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+Brainlab robotics,https://www.brainlab.com,Germany,robot_oem,industrial_robot_arms,cirq,surgical assist,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Renishaw neurological robots,https://www.renishaw.com,UK,robot_oem,industrial_robot_arms,neuromate,neuro surgery,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Auris Health (J&J),https://www.jnjmedtech.com,USA,robot_oem,industrial_robot_arms,Monarch,bronchoscopy robot,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+PROCEPT BioRobotics,https://www.procept-biorobotics.com,USA,robot_oem,industrial_robot_arms,AquaBeam,urology robot,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Accuray,https://www.accuray.com,USA,robot_oem,industrial_robot_arms,CyberKnife,radiosurgery,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Elekta,https://www.elekta.com,Sweden,robot_oem,industrial_robot_arms,Unity/linac robotics,radiotherapy,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Siemens Healthineers robotics,https://www.siemens-healthineers.com,Germany,robot_oem,industrial_robot_arms,imaging robotics,medical,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+GE Healthcare robotics,https://www.gehealthcare.com,USA,robot_oem,industrial_robot_arms,imaging systems,medical,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Philips Image Guided Therapy robotics,https://www.philips.com,Netherlands,robot_oem,industrial_robot_arms,IGT robotics,medical,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Franka Emika industrial,https://www.franka.de,Germany,robot_oem,industrial_robot_arms,FR3,research/industrial,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Kassow Robots,https://www.kassowrobots.com,Denmark,robot_oem,industrial_robot_arms,7-axis,industrial cobot-class,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Universal Robots,https://www.universal-robots.com,Denmark,robot_oem,cobots,UR3e/5e/10e/20,collaborative arms,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Doosan Robotics,https://www.doosanrobotics.com,South Korea,robot_oem,cobots,A/M/H series,cobots,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Techman Robot,https://www.tm-robot.com,Taiwan,robot_oem,cobots,TM AI Cobot,vision cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Fanuc CRX,https://www.fanucamerica.com,Japan,robot_oem,cobots,CRX,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+AUBO Robotics,https://www.aubo-robotics.com,China,robot_oem,cobots,i series,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+JAKA Robotics,https://www.jaka.com,China,robot_oem,cobots,Zu/Pro,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Elephant Robotics,https://www.elephantrobotics.com,China,robot_oem,cobots,myCobot,compact cobot,Education;Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Dobot,https://www.dobot.cc,China,robot_oem,cobots,CR/MG400,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Elite Robots,https://www.eliterobots.com,China,robot_oem,cobots,EC series,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Han's Robot,https://www.hansrobot.net,China,robot_oem,cobots,Elfin,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Productive Robotics,https://www.productiverobotics.com,USA,robot_oem,cobots,OB7,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Neura Robotics,https://www.neura-robotics.com,Germany,robot_oem,cobots,MIRA/4NE1,cognitive cobot/humanoid,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Bota Systems sensing,https://www.botasys.com,Switzerland,component_supplier,cobots,force torque,cobot sensing,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,component_supplier
+OnRobot,https://onrobot.com,Denmark,component_supplier,cobots,EOAT,cobot tooling,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,component_supplier
+Robotiq,https://robotiq.com,Canada,component_supplier,cobots,grippers/FT,cobot tooling,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,component_supplier
+Schunk cobot grippers,https://schunk.com,Germany,component_supplier,cobots,EOAT,grippers,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,component_supplier
+Zimmer Group,https://www.zimmer-group.com,Germany,component_supplier,cobots,EOAT,grippers,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,component_supplier
+ATI Industrial Automation,https://www.ati-ia.com,USA,component_supplier,cobots,FT sensors,tooling,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,component_supplier
+Soft Robotics Inc,https://www.softroboticsinc.com,USA,component_supplier,cobots,mGrip,soft grippers,Food Service;Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,component_supplier
+Weiss Robotics,https://www.weiss-robotics.com,Germany,component_supplier,cobots,grippers,EOAT,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,component_supplier
+RH-AL-Robotics,https://www.rh-al.com,China,robot_oem,cobots,cobot,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Rokae,https://www.rokae.com,China,robot_oem,cobots,xMate,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Tuopu Robotics,https://www.tuopurobot.com,China,robot_oem,cobots,cobot,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Qjar Robotics,https://www.qjar.com,China,robot_oem,cobots,cobot,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Fairino,https://www.fairino.com,China,robot_oem,cobots,FR series,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+HITBOT,https://www.hitbot.cc,China,robot_oem,cobots,Z-Arm,SCARA cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Standard Bots,https://standardbots.com,USA,robot_oem,cobots,RO1,cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Automata Technologies,https://automata.tech,UK,robot_oem,cobots,EVA,lab cobot,Lab Automation,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+AgileX Cobot partners,https://www.agilex.ai,China,robot_oem,cobots,mobile cobot bases,mobile manip,Research,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Mecademic,https://www.mecademic.com,Canada,robot_oem,cobots,Meca500,micro cobot,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+RightHand Robotics,https://www.righthandrobotics.com,USA,robot_oem,picking_manipulation_palletizing,RightPick,piece picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Covariant,https://covariant.ai,USA,robot_oem,picking_manipulation_palletizing,RFM,AI picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Plus One Robotics,https://www.plusonerobotics.com,USA,robot_oem,picking_manipulation_palletizing,Yonder,parcel induction,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Ambi Robotics,https://www.ambirobotics.com,USA,robot_oem,picking_manipulation_palletizing,AmbiSort,sortation picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Osaro,https://www.osaro.com,USA,robot_oem,picking_manipulation_palletizing,Osaro Pick,piece picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Robust AI,https://www.robust.ai,USA,robot_oem,picking_manipulation_palletizing,Carter,mobile manipulation,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Pickle Robot,https://picklerobot.com,USA,robot_oem,picking_manipulation_palletizing,Pickle,truck unloading,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Dexterity,https://www.dexterity.ai,USA,robot_oem,picking_manipulation_palletizing,Dexterity platform,loading/unloading,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Mujin,https://www.mujin-corp.com,Japan,robot_oem,picking_manipulation_palletizing,MujinController,palletizing,Logistics;Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Brightpick,https://www.brightpick.ai,USA,robot_oem,picking_manipulation_palletizing,Autopicker,autonomous picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Boston Dynamics Stretch,https://bostondynamics.com,USA,robot_oem,picking_manipulation_palletizing,Stretch,case unload,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+XYZ Robotics,https://www.xyzrobotics.ai,China,robot_oem,picking_manipulation_palletizing,picking cells,piece picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SSI Schaefer robotics,https://www.ssi-schaefer.com,Germany,robot_oem,picking_manipulation_palletizing,robotics cells,picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+TGW Robotics,https://www.tgw-group.com,Austria,robot_oem,picking_manipulation_palletizing,Rovolution,picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Knapp Open Shuttle / Pick-it-Easy,https://www.knapp.com,Austria,robot_oem,picking_manipulation_palletizing,Pick-it-Easy,picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Witron,https://www.witron.com,Germany,robot_oem,picking_manipulation_palletizing,OPM,warehouse automation,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Honeywell Intelligrated robotics,https://www.honeywell.com,USA,robot_oem,picking_manipulation_palletizing,robotic UNNAX,unloading,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Fortna robotics design,https://www.fortna.com,USA,system_integrator,picking_manipulation_palletizing,systems,warehouse robotics SI,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,system_integrator
+Bastian Solutions robotics,https://www.bastiansolutions.com,USA,system_integrator,picking_manipulation_palletizing,robotic cells,integration,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,system_integrator
+Invata Intralogistics,https://www.invata.com,USA,system_integrator,picking_manipulation_palletizing,robotic systems,integration,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,system_integrator
+Numina Group,https://www.numinagroup.com,USA,system_integrator,picking_manipulation_palletizing,RDS,warehouse controls,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,system_integrator
+Righthand / Onward Robotics,https://www.onwardrobotics.com,USA,robot_oem,picking_manipulation_palletizing,HearMe,collaborative picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Tompkins Robotics,https://www.tompkinsrobotics.com,USA,robot_oem,picking_manipulation_palletizing,t-Sort,sortation,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Megvii Robotics logistics,https://www.megvii.com,China,robot_oem,picking_manipulation_palletizing,warehouse robots,picking,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Kuwaiti / Falcon Autotech,https://www.falconautotech.com,India,robot_oem,picking_manipulation_palletizing,sortation,sortation,Logistics,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Agility Robotics,https://agilityrobotics.com,USA,robot_oem,humanoids_general_purpose,Digit,tote/material movement,Logistics;Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Figure AI,https://www.figure.ai,USA,robot_oem,humanoids_general_purpose,Figure 02,manufacturing/logistics,Manufacturing;Logistics,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+Apptronik,https://apptronik.com,USA,robot_oem,humanoids_general_purpose,Apollo,manufacturing/logistics,Manufacturing,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+Sanctuary AI,https://www.sanctuary.ai,Canada,robot_oem,humanoids_general_purpose,Phoenix,general manipulation,Manufacturing,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+1X Technologies,https://www.1x.tech,Norway,robot_oem,humanoids_general_purpose,NEO/EVE,general physical tasks,Manufacturing;Service,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+Tesla Optimus,https://www.tesla.com,USA,robot_oem,humanoids_general_purpose,Optimus,manufacturing,Manufacturing,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Unitree,https://www.unitree.com,China,robot_oem,humanoids_general_purpose,G1/H1,general/research,Research;Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+UBTECH,https://www.ubtrobot.com,China,robot_oem,humanoids_general_purpose,Walker/Walker S,industrial/service,Manufacturing;Service,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+AgiBot (Zhiyuan),https://agibot.com,China,robot_oem,humanoids_general_purpose,A/X/G,manufacturing/general,Manufacturing,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+Fourier Intelligence,https://www.fftai.com,China,robot_oem,humanoids_general_purpose,GR series,humanoid,Healthcare;Research,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+EngineAI,https://www.engineai.com.cn,China,robot_oem,humanoids_general_purpose,SA01,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Kepler Exploration,https://www.kepler-exp.com,China,robot_oem,humanoids_general_purpose,Forerunner,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+LimX Dynamics,https://www.limxdynamics.com,China,robot_oem,humanoids_general_purpose,TRON/CL-1,humanoid/legged,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Booster Robotics,https://www.boosterobotics.com,China,robot_oem,humanoids_general_purpose,Booster T1,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Noetix Robotics,https://www.noetixrobotics.com,China,robot_oem,humanoids_general_purpose,Noetix,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Robotera,https://www.robotera.com,China,robot_oem,humanoids_general_purpose,Star1,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+PNDbotics,https://www.pndbotics.com,China,robot_oem,humanoids_general_purpose,Adam,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Leju Robotics,https://www.lejurobot.com,China,robot_oem,humanoids_general_purpose,Kuavo,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Stardust Intelligence,https://www.stardust-intelligence.com,China,robot_oem,humanoids_general_purpose,humanoid,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+High Torque Robotics,https://www.hightorque.cn,China,robot_oem,humanoids_general_purpose,humanoid actuators platforms,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Deep Robotics humanoid line,https://www.deeprobotics.cn,China,robot_oem,humanoids_general_purpose,humanoid R&D,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Xiaomi CyberOne,https://www.mi.com,China,robot_oem,humanoids_general_purpose,CyberOne,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+ByteDance robotics research,https://www.bytedance.com,China,robot_oem,humanoids_general_purpose,research humanoid,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Tencent Robotics X,https://www.tencent.com,China,robot_oem,humanoids_general_purpose,research platforms,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Huawei robotics research,https://www.huawei.com,China,robot_oem,humanoids_general_purpose,research,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Reflective / Reflex Robotics,https://www.reflexrobotics.com,USA,robot_oem,humanoids_general_purpose,Reflex,industrial humanoid,Manufacturing,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+Humanoid (HMND),https://thehumanoid.ai,UK,robot_oem,humanoids_general_purpose,HMND 01 Alpha,industrial humanoid,Manufacturing,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+Honda ASIMO legacy,https://global.honda,Japan,robot_oem,humanoids_general_purpose,ASIMO,research,Research,discontinued,yes,direct+distributor,,curated_oem_list,curated,oem
+Toyota T-HR3 / human support,https://www.toyota.com,Japan,robot_oem,humanoids_general_purpose,T-HR3,research,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Kawada Nextage,https://www.kawada-robotics.com,Japan,robot_oem,humanoids_general_purpose,Nextage,dual-arm humanoid-like,Manufacturing,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Waseda / partner humanoids,https://www.waseda.jp,Japan,robot_oem,humanoids_general_purpose,research,research,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Clone Robotics,https://www.clonerobotics.com,Poland,robot_oem,humanoids_general_purpose,android hands,humanoid components,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Galbot,https://www.galbot.com,China,robot_oem,humanoids_general_purpose,Galbot,mobile manip/humanoid,Logistics,pilot,yes,direct+distributor,,curated_oem_list,curated,oem
+MagicLab,https://www.magiclab.top,China,robot_oem,humanoids_general_purpose,humanoid,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Astribot,https://www.astribot.com,China,robot_oem,humanoids_general_purpose,S1,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Foundation Future Industries,https://www.ffi.com,USA,robot_oem,humanoids_general_purpose,humanoid research,humanoid,Research,prototype,yes,direct+distributor,,curated_oem_list,curated,oem
+Avidbots,https://www.avidbots.com,Canada,robot_oem,cleaning_robots,Neo,floor scrubbing,Commercial Real Estate,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Brain Corp,https://www.braincorp.com,USA,robot_oem,cleaning_robots,BrainOS scrubbers,autonomous cleaning,Retail;CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Tennant,https://www.tennantco.com,USA,robot_oem,cleaning_robots,AMR scrubbers,industrial cleaning,Manufacturing;CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Nilfisk Liberty,https://www.nilfisk.com,Denmark,robot_oem,cleaning_robots,Liberty SC50,scrubbing,CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Kärcher KIRA,https://www.kaercher.com,Germany,robot_oem,cleaning_robots,KIRA B 50,scrubbing,CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Pudu CC1,https://www.pudurobotics.com,China,robot_oem,cleaning_robots,CC1,cleaning,Hospitality,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Gausium,https://www.gausium.com,China,robot_oem,cleaning_robots,Phantas/Scrubber,cleaning,CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+LionsBot,https://www.lionsbot.com,Singapore,robot_oem,cleaning_robots,R3/Orex,cleaning,CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Gaussian Robotics,https://www.gaussianrobotics.com,China,robot_oem,cleaning_robots,scrubbers,cleaning,CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Diversey TASKI,https://diversey.com,USA,robot_oem,cleaning_robots,TASKI Intellibot,cleaning,CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+IceRobotics / cleaning partners,https://www.icerobotics.com,UK,robot_oem,cleaning_robots,agri sensors,specialty,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Cleanfix Robotics,https://www.cleanfix.com,USA,robot_oem,cleaning_robots,40-Series,restroom cleaning,CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Peppermint Robotics,https://peppermint.ltd,India,robot_oem,cleaning_robots,Mitra/cleaners,cleaning,CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Solow Robotics,https://www.solowrobotics.com,India,robot_oem,cleaning_robots,cleaning,cleaning,CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Ecovacs commercial,https://www.ecovacs.com,China,robot_oem,cleaning_robots,commercial,cleaning,CRE,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Robomow / commercial outdoor,https://www.robomow.com,Israel,robot_oem,cleaning_robots,mowers,outdoor,Landscaping,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Husqvarna Automower commercial,https://www.husqvarna.com,Sweden,robot_oem,cleaning_robots,Automower,mowing,Landscaping,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Belrobotics,https://www.belrobotics.com,Belgium,robot_oem,cleaning_robots,Bigmow,sports turf,Sports,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+RC Mowers,https://www.rcmowers.com,USA,robot_oem,cleaning_robots,remote/auto mowers,mowing,Landscaping,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Scythe Robotics,https://www.scytherobotics.com,USA,robot_oem,cleaning_robots,M.52,commercial mowing,Landscaping,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Renu Robotics,https://www.renurobotics.com,USA,robot_oem,cleaning_robots,Renubot,solar farm vegetation,Energy,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Bear Robotics,https://www.bearrobotics.ai,USA,robot_oem,hospitality_foodservice_delivery,Servi,food delivery,Food Service;Hospitality,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Keenon Robotics,https://www.keenon.com,China,robot_oem,hospitality_foodservice_delivery,T8/Peanut,delivery,Hospitality,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Relay Robotics,https://www.relayrobotics.com,USA,robot_oem,hospitality_foodservice_delivery,Relay,hotel delivery,Hospitality,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Savioke Relay,https://www.savioke.com,USA,robot_oem,hospitality_foodservice_delivery,Relay,hotel delivery,Hospitality,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Aethon TUG,https://www.aethon.com,USA,robot_oem,hospitality_foodservice_delivery,TUG,hospital delivery,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Diligent Robotics,https://www.diligentrobots.com,USA,robot_oem,hospitality_foodservice_delivery,Moxi,hospital assist,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Temi,https://www.robotemi.com,USA,robot_oem,hospitality_foodservice_delivery,Temi,telepresence service,Healthcare;Hospitality,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Richtech Robotics,https://www.richtechrobotics.com,USA,robot_oem,hospitality_foodservice_delivery,ADAM/Matradee,bar/service,Hospitality,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Miso Robotics,https://misorobotics.com,USA,robot_oem,hospitality_foodservice_delivery,Flippy,kitchen automation,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hyphen,https://www.hyphenfoods.com,USA,robot_oem,hospitality_foodservice_delivery,Maker assembly,kitchen,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Creator,https://www.creator.rest,USA,robot_oem,hospitality_foodservice_delivery,burger robot,kitchen,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Spyce / Sweetgreen,https://www.sweetgreen.com,USA,robot_oem,hospitality_foodservice_delivery,kitchen automation,kitchen,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Picnic,https://www.picnic.co,USA,robot_oem,hospitality_foodservice_delivery,pizza automation,kitchen,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Nala Robotics,https://www.nalarobotics.com,USA,robot_oem,hospitality_foodservice_delivery,kitchen robots,kitchen,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Pazzi,https://www.pazzi.tech,France,robot_oem,hospitality_foodservice_delivery,pizza robot,kitchen,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Oracle / MICROS kitchen partners,https://www.oracle.com,USA,robot_oem,hospitality_foodservice_delivery,kitchen display partners,kitchen ops,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Starship Technologies indoor,https://www.starship.xyz,Estonia,robot_oem,hospitality_foodservice_delivery,delivery robots,campus delivery,Education,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Serve Robotics,https://www.serverobotics.com,USA,robot_oem,hospitality_foodservice_delivery,sidewalk delivery,delivery,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Coco Delivery,https://cocodelivery.com,USA,robot_oem,hospitality_foodservice_delivery,sidewalk robots,delivery,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Kiwibot,https://www.kiwibot.com,Colombia,robot_oem,hospitality_foodservice_delivery,campus delivery,delivery,Education,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Refraction AI,https://www.refraction.ai,USA,robot_oem,hospitality_foodservice_delivery,last-meter,delivery,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SoftBank Robotics America hospitality,https://us.softbankrobotics.com,USA,robot_oem,hospitality_foodservice_delivery,Whiz/Pepper,service,Hospitality,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+LG CLOi ServeBot,https://www.lg.com,South Korea,robot_oem,hospitality_foodservice_delivery,CLOi,service delivery,Hospitality,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Samsung Bot Care / service,https://www.samsung.com,South Korea,robot_oem,hospitality_foodservice_delivery,Bot Care,service,Hospitality,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+ANYbotics,https://www.anybotics.com,Switzerland,robot_oem,inspection_security_quadrupeds,ANYmal,industrial inspection,Energy;Oil & Gas,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Ghost Robotics,https://www.ghostrobotics.io,USA,robot_oem,inspection_security_quadrupeds,Vision 60,security/defense,Defense,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Exyn Technologies,https://www.exyn.com,USA,robot_oem,inspection_security_quadrupeds,ExynAero,aerial inspection,Mining,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Flyability,https://www.flyability.com,Switzerland,robot_oem,inspection_security_quadrupeds,Elios,confined aerial,Energy,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Skydio,https://www.skydio.com,USA,robot_oem,inspection_security_quadrupeds,X10,inspection drones,Energy;Defense,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Percepto,https://percepto.co,Israel,robot_oem,inspection_security_quadrupeds,AIM,autonomous drones,Energy,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Dedrone / Axon,https://www.dedrone.com,USA,robot_oem,inspection_security_quadrupeds,airspace security,security,Security,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Knightscope,https://www.knightscope.com,USA,robot_oem,inspection_security_quadrupeds,K5/K1,security robots,Security,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SMP Robotics,https://smprobotics.com,USA,robot_oem,inspection_security_quadrupeds,security robots,security,Security,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Cobalt Robotics,https://www.cobaltrobotics.com,USA,robot_oem,inspection_security_quadrupeds,Cobalt,indoor security,Security,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Asylon Robotics,https://www.asylonrobotics.com,USA,robot_oem,inspection_security_quadrupeds,DroneSentry,perimeter security,Security,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Sarcos / Guardian,https://www.sarcos.com,USA,robot_oem,inspection_security_quadrupeds,Guardian,teleop inspection,Industrial,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Energid / Hexagon inspection,https://hexagon.com,Sweden,robot_oem,inspection_security_quadrupeds,inspection systems,inspection,Industrial,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+John Deere autonomous,https://www.deere.com,USA,robot_oem,agriculture,autonomous tractor,field autonomy,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+CNH Industrial Raven / Case,https://www.cnhindustrial.com,Netherlands,robot_oem,agriculture,Raven Autonomy,ag autonomy,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+AGCO Fendt,https://www.agcocorp.com,USA,robot_oem,agriculture,Fendt Guide,precision ag,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Naïo Technologies,https://www.naio-technologies.com,France,robot_oem,agriculture,Oz/Dino,weeding robots,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+FarmWise,https://www.farmwise.io,USA,robot_oem,agriculture,Titan,weeding,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Carbon Robotics,https://carbonrobotics.com,USA,robot_oem,agriculture,LaserWeeder,laser weeding,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Iron Ox,https://ironox.com,USA,robot_oem,agriculture,greenhouse robots,indoor ag,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Plenty,https://www.plenty.ag,USA,robot_oem,agriculture,vertical farm automation,indoor ag,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+AppHarvest automation,https://www.appharvest.com,USA,robot_oem,agriculture,greenhouse,indoor ag,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Harvest CROO,https://harvestcroorobotics.com,USA,robot_oem,agriculture,strawberry robot,harvesting,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Advanced Farm Technologies,https://www.advanced.farm,USA,robot_oem,agriculture,apple harvester,harvesting,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Tortuga AgTech,https://www.tortugaagtech.com,USA,robot_oem,agriculture,berry robots,harvesting,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+FFRobotics,https://www.ffrobotics.com,Israel,robot_oem,agriculture,apple harvester,harvesting,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Tevel Aerobotics,https://www.tevel-tech.com,Israel,robot_oem,agriculture,flying harvesters,harvesting,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Ecorobotix,https://www.ecorobotix.com,Switzerland,robot_oem,agriculture,ARA,precision spray,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Small Robot Company,https://www.smallrobotcompany.com,UK,robot_oem,agriculture,Tom/Dick/Harry,field robots,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Saga Robotics,https://sagarobotics.com,Norway,robot_oem,agriculture,Thorvald,UV/berry,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Muddy Machines,https://www.muddymachines.com,UK,robot_oem,agriculture,sprout harvester,harvesting,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Agrobot,https://www.agrobot.com,Spain,robot_oem,agriculture,strawberry robot,harvesting,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Dogtooth Technologies,https://dogtooth.tech,UK,robot_oem,agriculture,soft fruit robots,harvesting,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Burro,https://www.helloburro.com,USA,robot_oem,agriculture,Burro,farm transport,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Monarch Tractor,https://www.monarchtractor.com,USA,robot_oem,agriculture,MK-V,electric autonomous tractor,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+GUSS Automation,https://gussag.com,USA,robot_oem,agriculture,GUSS sprayer,orchard spray,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SwarmFarm Robotics,https://www.swarmfarm.com,Australia,robot_oem,agriculture,SwarmBot,field robots,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+AgXeed,https://www.agxeed.com,Netherlands,robot_oem,agriculture,AgBot,autonomous tractor,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Yanmar autonomous ag,https://www.yanmar.com,Japan,robot_oem,agriculture,autonomous tractor,ag autonomy,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Kubota autonomous,https://www.kubota.com,Japan,robot_oem,agriculture,ag robots,ag autonomy,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Iseki autonomous,https://www.iseki.co.jp,Japan,robot_oem,agriculture,ag robots,ag,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+XAG,https://www.xa.com,China,robot_oem,agriculture,agricultural drones,spray drones,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+DJI Agriculture,https://ag.dji.com,China,robot_oem,agriculture,Agras,spray drones,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Topcon Agriculture autonomy,https://www.topconpositioning.com,Japan,robot_oem,agriculture,guidance,precision ag,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Trimble Agriculture,https://agriculture.trimble.com,USA,robot_oem,agriculture,guidance/autonomy,precision ag,Agriculture,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Built Robotics,https://www.builtrobotics.com,USA,robot_oem,construction,Exosystem,excavator autonomy,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SafeAI,https://www.safeai.ai,USA,robot_oem,construction,heavy equipment autonomy,haul trucks,Construction;Mining,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Caterpillar Command,https://www.cat.com,USA,robot_oem,construction,Command for dozing,autonomous equipment,Construction;Mining,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Komatsu Autonomous Haulage,https://www.komatsu.com,Japan,robot_oem,construction,AHS,haul trucks,Mining,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Volvo CE autonomous,https://www.volvoce.com,Sweden,robot_oem,construction,TA15/HX04,construction autonomy,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Dusty Robotics,https://www.dustyrobotics.com,USA,robot_oem,construction,FieldPrinter,layout printing,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Canvas,https://www.canvas.build,USA,robot_oem,construction,drywall robot,finishing,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Okibo,https://www.okibo.com,Israel,robot_oem,construction,plastering robot,finishing,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Construction Robotics,https://www.construction-robotics.com,USA,robot_oem,construction,SAM/MULE,bricklaying,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Fastbrick Robotics,https://www.fbr.com.au,Australia,robot_oem,construction,Hadrian X,block laying,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Scaled Robotics,https://www.scaledrobotics.com,Spain,robot_oem,construction,site scanner,progress monitoring,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Doxel,https://www.doxel.ai,USA,robot_oem,construction,site AI robots,progress monitoring,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Hilti Jaibot,https://www.hilti.com,Liechtenstein,robot_oem,construction,Jaibot,ceiling drilling,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+nLink,https://www.nlink.no,Norway,robot_oem,construction,drilling robot,ceiling drilling,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Brokk,https://www.brokk.com,Sweden,robot_oem,construction,demolition robots,demolition,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+TopTec Spezialmaschinen,https://www.toptec.org,Germany,robot_oem,construction,construction robots,specialized,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Advanced Construction Robotics,https://www.constructionrobots.com,USA,robot_oem,construction,TyBot/IronBot,rebar tying,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Toggle Robotics,https://www.togglerobotics.com,USA,robot_oem,construction,prefab robots,prefab,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Branch Technology,https://www.branch.technology,USA,robot_oem,construction,C-FAB,additive construction,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+ICON,https://www.iconbuild.com,USA,robot_oem,construction,Vulcan,3D print construction,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Apis Cor,https://www.apis-cor.com,USA,robot_oem,construction,3D printer,3D print construction,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SQ4D,https://www.sq4d.com,USA,robot_oem,construction,ARCS,3D print construction,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Mighty Buildings,https://www.mightybuildings.com,USA,robot_oem,construction,3D prefab,prefab,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Autodesk Construction partners robotics,https://www.autodesk.com,USA,robot_oem,construction,partner robots,digital construction,Construction,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Swisslog Healthcare,https://www.swisslog-healthcare.com,Switzerland,robot_oem,healthcare_hospital_service,TransLogic/Relay,hospital transport,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Omnicell robotics,https://www.omnicell.com,USA,robot_oem,healthcare_hospital_service,pharmacy robots,pharmacy,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+BD Rowa,https://www.bd.com,USA,robot_oem,healthcare_hospital_service,pharmacy automation,pharmacy,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Xenex,https://xenex.com,USA,robot_oem,healthcare_hospital_service,LightStrike,UV disinfection,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+UVD Robots,https://uvd.blue-ocean-robotics.com,Denmark,robot_oem,healthcare_hospital_service,UVD,UV disinfection,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Akara Robotics,https://www.akara.ai,Ireland,robot_oem,healthcare_hospital_service,Stevie/UV,eldercare/UV,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Double Robotics,https://www.doublerobotics.com,USA,robot_oem,healthcare_hospital_service,Double 3,telepresence,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+OhmniLabs,https://ohmnilabs.com,USA,robot_oem,healthcare_hospital_service,Ohmni,telepresence,Healthcare,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Nuro,https://www.nuro.ai,USA,robot_oem,last_mile_outdoor_delivery,Nuro R3,road delivery,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Amazon Scout (legacy),https://www.amazon.com,USA,robot_oem,last_mile_outdoor_delivery,Scout,sidewalk,Retail,discontinued,yes,direct+distributor,,curated_oem_list,curated,oem
+Cartken,https://www.cartken.com,USA,robot_oem,last_mile_outdoor_delivery,Cartken,sidewalk,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Robby Technologies,https://www.robby.io,USA,robot_oem,last_mile_outdoor_delivery,Robby,sidewalk,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Neolix,https://www.neolix.ai,China,robot_oem,last_mile_outdoor_delivery,X3,unmanned delivery vehicle,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+White Rhino Auto,https://www.whiterhino.cc,China,robot_oem,last_mile_outdoor_delivery,delivery UGV,delivery,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Meituan delivery robots,https://about.meituan.com,China,robot_oem,last_mile_outdoor_delivery,delivery robots,delivery,Food Service,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Alibaba Xiaomanlv,https://www.alibabagroup.com,China,robot_oem,last_mile_outdoor_delivery,Xiaomanlv,delivery,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+JD.com delivery robots,https://www.jd.com,China,robot_oem,last_mile_outdoor_delivery,delivery robots,delivery,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+SITA / airport baggage robotics partners,https://www.sita.aero,Switzerland,robot_oem,specialty_commercial,baggage robots,airport,Airports,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Aurrigo,https://www.aurrigo.com,UK,robot_oem,specialty_commercial,Auto-Dolly,airport baggage,Airports,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Olis Robotics,https://www.olisrobotics.com,USA,robot_oem,specialty_commercial,teleop industrial,remote ops,Industrial,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Reach Robotics,https://www.reachrobotics.com,Australia,robot_oem,specialty_commercial,Reach Bravo,underwater manip,Maritime,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Saab Seaeye,https://www.saabseaeye.com,UK,robot_oem,specialty_commercial,ROVs,underwater,Maritime,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Greensea IQ,https://greensea.com,USA,robot_oem,specialty_commercial,OPENSEA,marine autonomy,Maritime,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+Fellow Robots retail,https://www.fellowrobots.com,USA,robot_oem,specialty_commercial,retail robots,retail inventory,Retail,commercial,yes,direct+distributor,,curated_oem_list,curated,oem
+6 River Systems,https://www.shopify.com/fulfillment,USA,robot_oem,amr_agv_material_transport,Chuck,fulfillment AMR,Logistics,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Syrius Robotics,https://www.syriusrobotics.com,China,robot_oem,amr_agv_material_transport,E retriever,fulfillment,Logistics,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+InOrbit partner fleets,https://www.inorbit.ai,USA,robot_oem,amr_agv_material_transport,fleet platforms,AMR ops,Logistics,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+IGM Robotersysteme,https://www.igm-group.com,Austria,robot_oem,industrial_robot_arms,welding robots,welding,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Panasonic Connect welding robots,https://connect.panasonic.com,Japan,robot_oem,industrial_robot_arms,TM / TL,welding,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Elite Robot,https://www.eliterobot.com,China,robot_oem,cobots,EC series,cobot,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Rainbow Robotics,https://www.rainbow-robotics.com,South Korea,robot_oem,cobots,RB series,cobot,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Neuromeka,https://www.neuromeka.com,South Korea,robot_oem,cobots,Indy,cobot,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Grabit Inc,https://www.grabitinc.com,USA,robot_oem,picking_manipulation_palletizing,electroadhesion grippers,pick,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Shadow Robot Company,https://www.shadowrobot.com,UK,robot_oem,picking_manipulation_palletizing,Dexterous Hand,manipulation,Research,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Pilz service robotics,https://www.pilz.com,Germany,robot_oem,picking_manipulation_palletizing,Service Robotics Module,safe manip,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Unchained Robotics,https://unchainedrobotics.de,Germany,robot_oem,picking_manipulation_palletizing,modular cells,pick/pack,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Robomotive,https://www.robomotive.nl,Netherlands,robot_oem,picking_manipulation_palletizing,bin picking,bin pick,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Solomon 3D vision pick,https://www.solomon-3d.com,Taiwan,robot_oem,picking_manipulation_palletizing,AccuPick,bin pick,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Photoneo,https://www.photoneo.com,Slovakia,robot_oem,picking_manipulation_palletizing,Locator / MotionCam,bin pick vision,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Mech-Mind Robotics,https://www.mech-mind.com,China,robot_oem,picking_manipulation_palletizing,Mech-Eye / Mech-Viz,3D pick,Manufacturing,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Sereact,https://sereact.ai,Germany,robot_oem,picking_manipulation_palletizing,PickGPT,AI pick,Logistics,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Kepler Exploration Robot,https://www.kepler-explore.com,China,robot_oem,humanoids_general_purpose,Forerunner,humanoid,Industrial,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Mentee Robotics,https://www.menteebot.com,Israel,robot_oem,humanoids_general_purpose,MenteeBot,humanoid,Industrial,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Wandercraft,https://www.wandercraft.eu,France,robot_oem,humanoids_general_purpose,Atalante,exoskeleton/humanoid gait,Healthcare,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Intelligent Cleaning Equipment ICE,https://www.icecompanies.com,USA,robot_oem,cleaning_robots,robot scrubbers,cleaning,Facilities,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Wave Robotics cleaning,https://www.waverobotics.com,USA,robot_oem,cleaning_robots,commercial clean,scrubber,Facilities,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Adaptalift Cleanbots,https://www.adaptalift.com.au,Australia,robot_oem,cleaning_robots,cleanbots,cleaning,Facilities,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Solowash / robotic wash,https://www.solowash.com,Italy,robot_oem,cleaning_robots,vehicle wash robots,wash,Automotive,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+OrionStar Robotics,https://www.orionstar.com,China,robot_oem,hospitality_foodservice_delivery,Lucki / Hello,service,Hospitality,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Hease Robotics,https://www.hease-robotics.com,France,robot_oem,hospitality_foodservice_delivery,Hoomano / Heasy,reception,Hospitality,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Goodtime Robotics,https://www.goodtime.io,USA,robot_oem,hospitality_foodservice_delivery,QSR automation,QSR,Food Service,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Hyphen robotic kitchen,https://www.hypheninnovation.com,USA,robot_oem,hospitality_foodservice_delivery,Maker station,assembly kitchen,Food Service,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Energy Robotics,https://www.energy-robotics.com,Germany,robot_oem,inspection_security_quadrupeds,fleet autonomy,inspection,Energy,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+ExRobotics,https://www.exrobotics.global,Netherlands,robot_oem,inspection_security_quadrupeds,ExR-1,ATEX inspection,Energy,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Taurob,https://www.taurob.com,Austria,robot_oem,inspection_security_quadrupeds,Inspector,ATEX,Energy,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Square Robot,https://www.squarerobots.com,USA,robot_oem,inspection_security_quadrupeds,submersible tank,tank inspection,Energy,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Invert Robotics,https://www.invertrobotics.com,Ireland,robot_oem,inspection_security_quadrupeds,crawler inspection,NDT,Industrial,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Agerris,https://agerris.com,Australia,robot_oem,agriculture,Digital Farmhand,field,Agriculture,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Volvo Autonomous Solutions,https://www.volvoautonomoussolutions.com,Sweden,robot_oem,construction,TA15 / HAUL,haulage,Construction,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Toyota HSR hospitals,https://www.toyota-global.com,Japan,robot_oem,healthcare_hospital_service,HSR,care assist,Healthcare,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Meituan autonomous delivery,https://www.meituan.com,China,robot_oem,last_mile_outdoor_delivery,delivery bots,last mile,Delivery,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+JD Logistics drones/bots,https://www.jdl.com,China,robot_oem,last_mile_outdoor_delivery,delivery robots,last mile,Delivery,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Uber Elevate / AV delivery partners,https://www.uber.com,USA,robot_oem,last_mile_outdoor_delivery,AV delivery,last mile,Delivery,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+FedEx Roxo,https://www.fedex.com,USA,robot_oem,last_mile_outdoor_delivery,Roxo,same-day bot,Delivery,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+DHL Parcelcopter / robot pilots,https://www.dhl.com,Germany,robot_oem,last_mile_outdoor_delivery,robot delivery pilots,last mile,Delivery,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Alibaba Cainiao robots,https://www.cainiao.com,China,robot_oem,last_mile_outdoor_delivery,Cainiao bots,last mile,Delivery,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Bossa Nova Robotics,https://www.bossanova.com,USA,robot_oem,specialty_commercial,shelf scanning,retail,Retail,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Simbe Robotics,https://www.simberobotics.com,USA,robot_oem,specialty_commercial,Tally,retail inventory,Retail,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Badger Technologies,https://www.badger-technologies.com,USA,robot_oem,specialty_commercial,retail robot,retail,Retail,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+HaiPick Systems,https://www.haipick.com,China,robot_oem,amr_agv_material_transport,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Vention,https://vention.io/,Unknown,robot_oem,industrial_robot_arms,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Flexiv,https://www.flexiv.com,China,robot_oem,cobots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Zhiyuan Robotics,https://www.zhiyuanrobotics.com,China,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Dji,https://www.dji.com/,Unknown,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Mir,https://mir.com,Unknown,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+AI to Wear: German Bionic,https://www.germanbionic.com/,Unknown,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+WIRobotics,https://www.wirobotics.com/,Unknown,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+IntBot,,Unknown,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Lotte Hotel,https://www.lottehotel.com/,Unknown,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Pudu,https://www.pudutech.com/,Unknown,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Andromeda Robotics,https://andromedarobotics.ai/,Australia,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Chery Robotics,https://www.cheryinternational.com,China,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+CloudMinds,https://www.cloudminds.com,China,robot_oem,humanoids_general_purpose,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Rohde & Schwarz,https://www.rohde-schwarz.com,Unknown,robot_oem,hospitality_foodservice_delivery,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Baubot,https://www.baubot.com,Austria,robot_oem,autonomous_forklift_pallet,Baubot,on-site mobile,Construction,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Autonomous Solutions Inc ASI,https://www.asirobots.com,USA,robot_oem,autonomous_forklift_pallet,Mobius,vehicle autonomy,Construction,commercial,yes,direct+distributor,,extra_unique_vendors,curated,oem
+Unbox Robotics,https://www.unboxrobotics.com/,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Carbon,https://www.carbon3d.com/,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Eos,https://eos.io/,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Robosizeme,https://www.robosizeme.com/,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Mobile Industrial Robots,https://www.mobileindustrialrobots.com/,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Yaskawa,https://www.yaskawa.com/,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Fetch Robotics,https://fetchrobotics.com/,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Korean All-Solid,,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Blue Ocean Robotics,https://www.blueoceanrobotics.com/,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Waymo,https://waymo.com/,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Cognex,https://www.cognex.com/,Unknown,robot_oem,autonomous_forklift_pallet,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Moon Surgical,https://moonsurgical.com/,Unknown,robot_oem,cobots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Omron,https://www.omron.com/,Unknown,robot_oem,cobots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Skild Ai,https://www.skild.ai/,Unknown,robot_oem,cobots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Milagrow,https://www.milagrow.in/,Unknown,robot_oem,cobots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Autonomous Solutions,https://www.autonomoussolutions.com/,Unknown,robot_oem,cobots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Tgw,,Unknown,robot_oem,cobots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Richtech,https://www.richtech.com/,Unknown,robot_oem,picking_manipulation_palletizing,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Intelligrated,https://www.intelligrated.com/,Unknown,robot_oem,picking_manipulation_palletizing,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Keenon,https://www.keenonrobot.com/,Unknown,robot_oem,picking_manipulation_palletizing,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Libiao,,Unknown,robot_oem,picking_manipulation_palletizing,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+StudioLab,https://www.studiolab.com/,Unknown,robot_oem,picking_manipulation_palletizing,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Dexmate,https://www.dexmate.ai/product/vega,USA,robot_oem,picking_manipulation_palletizing,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+DLR,https://www.dlr.de,Germany,robot_oem,cleaning_robots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Eden Robotics,https://edenrobotics.ai,USA,robot_oem,cleaning_robots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Engineered Arts,,UK,robot_oem,cleaning_robots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Estun Codroid,https://www.codroid.ai,China,robot_oem,cleaning_robots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Faraday Future,https://www.morningstar.com/news/business-wire/20260616306065/faraday-future-unveils-full-form-eai-robot-world-spanning-six-product-series-launches-worlds-first-three-in-one-eai-robotics-education-ecosystem-strategy-and-debuts-all-new-futurist-humanoid-robot-and-fx-navi-priced-at-1990,USA,robot_oem,cleaning_robots,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Galaxea Dynamics,https://galaxea.ai,China,robot_oem,hospitality_foodservice_delivery,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Generalist AI,https://generalistai.com/,USA,robot_oem,hospitality_foodservice_delivery,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Generative Bionics,https://www.therobotreport.com/generative-bionics-unveils-humanoid-robot-with-full-body-tactile-sensing/,Italy,robot_oem,hospitality_foodservice_delivery,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Hexagon Robotics,https://robotics.hexagon.com/,Switzerland,robot_oem,hospitality_foodservice_delivery,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Kawasaki Heavy Industries,https://kawasakirobotics.com,Japan,robot_oem,hospitality_foodservice_delivery,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Kepler,https://www.gotokepler.com,China,robot_oem,hospitality_foodservice_delivery,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Matrix Robotics,https://matrixrobotics.ai,China,robot_oem,inspection_security_quadrupeds,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+NASA Johnson,https://www.nasa.gov,USA,robot_oem,inspection_security_quadrupeds,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Noble Machines,https://www.noblemachines.ai,USA,robot_oem,inspection_security_quadrupeds,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Pangolin Robot,https://www.pangolin-robot.com,China,robot_oem,inspection_security_quadrupeds,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Paxini Robotics,https://paxini.com,China,robot_oem,inspection_security_quadrupeds,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Persona AI,https://persona.ai,USA,robot_oem,inspection_security_quadrupeds,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+PrimeBOT,https://www.msn.com/en-us/news/technology/china-s-primebot-unveils-world-s-first-transformable-personal-humanoid-robot/ar-AA28nn6z?ocid=BingNewsVerp,China,robot_oem,inspection_security_quadrupeds,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Qinglong Bot,https://www.openloong.org.cn,China,robot_oem,agriculture,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Realbotix,https://www.nasdaq.com/press-release/onconetix-highlights-realbotixs-launch-humanoid-robot-and-ai-teachers-assistant-pilot,Canada,robot_oem,agriculture,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+RealMan Robotics,https://www.realman-robotics.com,China,robot_oem,healthcare_hospital_service,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Samsung Research,https://research.samsung.com,South Korea,robot_oem,healthcare_hospital_service,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Segway Robotics,https://www.segwayrobotics.com,China,robot_oem,healthcare_hospital_service,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Shanghai Electric,https://www.tmcnet.com/usubmit/2026/07/24/10419773.htm,China,robot_oem,healthcare_hospital_service,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Spirit AI,https://www.spirit-ai.com,China,robot_oem,healthcare_hospital_service,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+STEP Robotics,,China,robot_oem,healthcare_hospital_service,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Ti5 Robot,https://www.ti5robot.com/en,China,robot_oem,healthcare_hospital_service,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+Toyota,https://global.toyota/en,Japan,robot_oem,healthcare_hospital_service,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+XPeng Robotics,https://www.xpeng.com,China,robot_oem,healthcare_hospital_service,,,,unknown,unknown,unknown,from robot_companies,robot_companies_db,db_import,oem
+UMA,https://finance.yahoo.com/technology/ai/articles/uma-unveils-vision-next-generation-120000373.html,France,robot_oem,healthcare_hospital_service,,humanoid labor,Manufacturing;Logistics,unknown,unknown,unknown,from humanoid_benchmarks,humanoid_benchmarks,db_import,oem
+AGIBOT,https://www.reuters.com/press-releases/agibot-humanoid-robot-cannes-film-festival-2026-06-24/,China,robot_oem,healthcare_hospital_service,,humanoid labor,Manufacturing;Logistics,unknown,unknown,unknown,from humanoid_benchmarks,humanoid_benchmarks,db_import,oem

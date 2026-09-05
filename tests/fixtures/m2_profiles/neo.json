@@ -1,0 +1,33 @@
+{
+  "submitted_url": "https://www.avidbots.com/",
+  "profile_confidence": "C",
+  "research_morphology": "autonomous_scrubber",
+  "company": {
+    "name": "Avidbots",
+    "primary_domain": "avidbots.com"
+  },
+  "selected_product": {
+    "name": "Neo",
+    "display_class": "autonomous_scrubber"
+  },
+  "facts": [
+    {
+      "predicate": "product_class",
+      "value": "autonomous_scrubber",
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.9741176470588236,
+      "evidence_span": "floor scrubber",
+      "source_id": "src_43266387fc89"
+    },
+    {
+      "predicate": "supports_hard_floor_scrubbing",
+      "value": true,
+      "units": null,
+      "epistemic": "explicit",
+      "confidence": 0.98,
+      "evidence_span": "floor scrubbing",
+      "source_id": "src_43266387fc89"
+    }
+  ]
+}

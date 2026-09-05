@@ -1,0 +1,58 @@
+{
+  "id": "b20-04",
+  "authored_independently": true,
+  "authored_at": "2026-08-17T01:15:00Z",
+  "researcher_method": "GreyOrange public site + Ranger GTP product materials; authored before agent run.",
+  "primary_sources_reviewed": [
+    "https://www.greyorange.com/",
+    "https://www.greyorange.com/resource/greyorange-goods-to-person-g2p-solution-ranger-gtp-autonomous-mobile-robot/"
+  ],
+  "identity": {
+    "company_any": [
+      "GreyOrange",
+      "Grey Orange"
+    ],
+    "product_any": [
+      "Ranger GTP",
+      "Ranger",
+      "GTP"
+    ],
+    "display_class_any": [
+      "amr",
+      "autonomous_mobile_robot"
+    ]
+  },
+  "material_facts": [
+    {
+      "id": "f1",
+      "predicate": "product_class",
+      "value_any": [
+        "amr",
+        "mobile_robot"
+      ],
+      "importance": "critical",
+      "evidence": "Ranger GTP autonomous mobile robot / goods-to-person"
+    },
+    {
+      "id": "f2",
+      "predicate": "claims_warehouse_transport",
+      "value_any": [
+        true
+      ],
+      "importance": "high",
+      "evidence": "warehouse fulfillment / goods-to-person"
+    },
+    {
+      "id": "f3",
+      "predicate": "warehouse_or_factory_deployment",
+      "value_any": [
+        true
+      ],
+      "importance": "medium",
+      "evidence": "distribution centers / warehouse automation"
+    }
+  ],
+  "human_tier_judgment": "C",
+  "human_tier_rationale": "Current homepage is orchestration-heavy; Ranger GTP facts exist but are thinner on the seed URL \u2014 Tier C is a fair professional judgment for sparse subject binding.",
+  "notes": "Obscure/marketing-thin seed may correctly yield Tier C."
+}
