@@ -47,8 +47,8 @@ const tiers = [
       `${CRM_UNLOCKED_JOBS} Robot Jobs in native CRM after FIND`,
       "Paste a robot URL or pick a named catalog SKU",
       "Job Cards: employer, workplace, work",
-      "Open CRM from FIND (signup wall if unsigned)",
-      "No buyer pipeline on the Jobs path",
+      "Save and manage matched jobs in native CRM",
+      "Direct robot-to-work job matching",
     ],
     limitations: [
       "No SIGNAL research feed",
@@ -123,11 +123,11 @@ const supportServices = [
 const faqs = [
   {
     q: "What do I get on free?",
-    a: `Five Robot Jobs in native CRM after you find work for your robot. No card. Open CRM from FIND. Cal sits on the signed Jobs desk only — not on landing or employer MATCH.`,
+    a: `Five Robot Jobs in native CRM after you find work for your robot. No card required to start matching and saving jobs to your workspace.`,
   },
   {
     q: "Is this a buyer pipeline?",
-    a: "No. This page prices Jobs: find work for a robot and keep it in CRM. SIGNAL buyer lists are a different product. Jobs CRM is /pipeline?src=jobs_activate.",
+    a: "No. You can match robots directly to physical jobs, qualify evidence, and save opportunities to your native CRM workspace.",
   },
   {
     q: "Is there a contract or commitment?",
