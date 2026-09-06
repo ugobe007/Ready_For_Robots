@@ -3587,7 +3587,11 @@ export default function Admin() {
                       <button
                         key={`${prospect.company_id}-${idx}`}
                         type="button"
-                        className={`admin-table-row grid w-full grid-cols-[2fr_1fr_1fr] gap-2 rounded-lg px-3 py-2.5 text-left transition hover:bg-[#0b162f] ${selected ? "bg-[#0b162f] ring-1 ring-emerald-400/60" : ""}`}
+                        className={`grid w-full grid-cols-[2fr_1fr_1fr] gap-2 rounded-lg border px-3 py-2.5 text-left transition ${
+                          selected
+                            ? "border-emerald-400/60 bg-[#0b162f] ring-1 ring-emerald-400/60"
+                            : "border-slate-700/60 bg-[#0a1226] hover:border-slate-600 hover:bg-[#0d1a33]"
+                        }`}
                         onClick={() => {
                           setCalSelectedIdx(idx);
                           if (prospect.crm_account_id && prospect.has_draft)
@@ -3651,7 +3655,7 @@ export default function Admin() {
                         : "buyer (RFR)"}
                     </p>
                     {calSelectedProspect.account_type !== "vendor" ? (
-                      <p className="mt-1 inline-flex items-center rounded-full bg-indigo-50 px-2 py-0.5 text-[10px] font-bold text-indigo-700">
+                      <p className="mt-1 inline-flex items-center rounded-full border border-indigo-500/30 bg-indigo-950/40 px-2 py-0.5 text-[10px] font-bold text-indigo-300">
                         Angle: {buyerAngleLabel(calSelectedProspect.company_id)}
                       </p>
                     ) : null}
@@ -3674,7 +3678,7 @@ export default function Admin() {
                           Preview all 3 angles
                         </SupabaseInlineLink>
                         {selectedVariantPreview?.selected_variant ? (
-                          <span className="rounded-full border border-indigo-200 bg-indigo-50 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-800">
+                          <span className="rounded-full border border-indigo-500/40 bg-indigo-950/60 px-1.5 py-0.5 text-[10px] font-semibold text-indigo-300">
                             selected:{" "}
                             {selectedVariantPreview.selected_variant.replace(
                               /_/g,
@@ -3685,26 +3689,26 @@ export default function Admin() {
                       </div>
                     ) : null}
                     {calVariantPreviewError ? (
-                      <p className="mt-1 text-[10px] text-rose-700">
+                      <p className="mt-1 text-[10px] text-rose-400">
                         {calVariantPreviewError}
                       </p>
                     ) : null}
                     {selectedVariantPreview?.variants?.length ? (
-                      <div className="mt-2 space-y-2 rounded-lg border border-indigo-200 bg-indigo-50/40 p-2">
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-900">
+                      <div className="mt-2 space-y-2 rounded-lg border border-indigo-500/30 bg-indigo-950/20 p-2">
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-indigo-300">
                           Buyer angle preview
                         </p>
                         {selectedVariantPreview.reason ? (
-                          <p className="text-[10px] text-indigo-900/90">
+                          <p className="text-[10px] text-indigo-200/90">
                             Grounded reason: {selectedVariantPreview.reason}
                           </p>
                         ) : null}
                         {selectedVariantPreview.variants.map(v => (
                           <details
                             key={v.variant_id}
-                            className="rounded-md border border-indigo-200 bg-white/85 px-2 py-1.5"
+                            className="rounded-md border border-indigo-500/30 bg-[#060c1c] px-2 py-1.5"
                           >
-                            <summary className="cursor-pointer text-[10px] font-semibold text-indigo-900">
+                            <summary className="cursor-pointer text-[10px] font-semibold text-indigo-300">
                               {v.variant_id.replace(/_/g, " ")} · {v.subject}
                             </summary>
                             {calSelectedProspect.crm_account_id ? (
@@ -3729,26 +3733,26 @@ export default function Admin() {
                               readOnly
                               value={v.body}
                               rows={8}
-                              className="mt-1.5 w-full rounded-md border border-indigo-100 bg-slate-50 px-2 py-2 font-mono text-[10px] leading-relaxed text-gray-800"
+                              className="mt-1.5 w-full rounded-md border border-slate-700/60 bg-[#060c1c] px-2 py-2 font-mono text-[10px] leading-relaxed text-slate-200"
                             />
                           </details>
                         ))}
                       </div>
                     ) : null}
                     {calSelectedProspect.semantic_summary ? (
-                      <p className="mt-2 text-xs text-gray-600 leading-relaxed">
+                      <p className="mt-2 text-xs text-slate-400 leading-relaxed">
                         {calSelectedProspect.semantic_summary}
                       </p>
                     ) : null}
 
-                    <div className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-3">
+                    <div className="mt-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3">
                       <div className="mb-2 flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-emerald-700" />
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-900">
+                        <FileText className="h-3.5 w-3.5 text-emerald-400" />
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-300">
                           RFQ + project spec handoff
                         </p>
                       </div>
-                      <p className="text-[11px] text-emerald-900/90">
+                      <p className="text-[11px] text-emerald-200/90">
                         Capture buyer RFQ/spec context, then hand this lead to
                         Robert for direct follow-up.
                       </p>
@@ -3757,13 +3761,13 @@ export default function Admin() {
                           value={rfqTimeline}
                           onChange={e => setRfqTimeline(e.target.value)}
                           placeholder="Timeline (e.g. pilot in Q4)"
-                          className="rounded-lg border border-emerald-200 bg-white px-2.5 py-2 text-[11px] text-gray-800"
+                          className="rounded-lg border border-slate-700/60 bg-[#060c1c] px-2.5 py-2 text-[11px] text-slate-100 placeholder:text-slate-500"
                         />
                         <input
                           value={rfqBudgetBand}
                           onChange={e => setRfqBudgetBand(e.target.value)}
                           placeholder="Budget band (e.g. $150k-$300k)"
-                          className="rounded-lg border border-emerald-200 bg-white px-2.5 py-2 text-[11px] text-gray-800"
+                          className="rounded-lg border border-slate-700/60 bg-[#060c1c] px-2.5 py-2 text-[11px] text-slate-100 placeholder:text-slate-500"
                         />
                       </div>
                       <textarea
@@ -3771,7 +3775,7 @@ export default function Admin() {
                         onChange={e => setRfqSpecNotes(e.target.value)}
                         rows={3}
                         placeholder="Spec notes: robot type, payload, throughput, site constraints, integration needs"
-                        className="mt-2 w-full rounded-lg border border-emerald-200 bg-white px-2.5 py-2 text-[11px] text-gray-800"
+                        className="mt-2 w-full rounded-lg border border-slate-700/60 bg-[#060c1c] px-2.5 py-2 text-[11px] text-slate-100 placeholder:text-slate-500"
                       />
                       <div className="mt-2 text-[11px]">
                         <SupabaseInlineLink
@@ -3818,7 +3822,7 @@ export default function Admin() {
                               }));
                             }}
                             placeholder="name@company.com"
-                            className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 font-mono text-[11px] text-gray-800"
+                            className="w-full rounded-lg border border-slate-700/60 bg-[#060c1c] px-3 py-2 font-mono text-[11px] text-slate-100 placeholder:text-slate-500"
                           />
                         </label>
                       )}

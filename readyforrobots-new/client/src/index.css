@@ -2688,62 +2688,62 @@
   /* Form controls stay high-contrast (dark text on white) so typed values and
      dropdowns are always readable — never white-on-white. */
   .admin-workspace :where(input, select, textarea) {
-    @apply bg-white text-gray-900;
+    @apply border-slate-700/60 bg-[#060c1c] text-slate-100 placeholder:text-slate-500;
   }
   .admin-workspace :where(input, select, textarea)::placeholder {
-    @apply text-gray-500;
+    @apply text-slate-500;
   }
 
   .admin-card {
-    @apply rounded-xl border border-gray-300 bg-white p-4 shadow-sm;
+    @apply rounded-xl border border-slate-700/60 bg-[#0a1226] p-4 shadow-sm text-slate-100;
   }
 
   .admin-card-clickable {
-    @apply w-full cursor-pointer text-left transition hover:border-emerald-400 hover:shadow-md;
+    @apply w-full cursor-pointer text-left transition hover:border-emerald-400/60 hover:bg-[#0d1a33] hover:shadow-md;
   }
 
   .admin-card-active {
-    @apply border-emerald-500 ring-2 ring-emerald-400/40;
+    @apply border-emerald-400 ring-2 ring-emerald-400/40 bg-[#0b162f];
   }
 
   .admin-card-label {
-    @apply text-[10px] font-bold uppercase tracking-[0.16em] text-gray-700;
+    @apply text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400;
   }
 
   .admin-card-value {
-    @apply mt-2 font-mono text-2xl font-bold text-gray-950;
+    @apply mt-2 font-mono text-2xl font-bold text-slate-100;
   }
 
   .admin-card-sub {
-    @apply mt-1 text-xs font-medium text-gray-700;
+    @apply mt-1 text-xs font-medium text-slate-400;
   }
 
   .admin-panel {
-    @apply rounded-xl border border-gray-300 bg-white p-4 shadow-sm;
+    @apply rounded-xl border border-slate-700/60 bg-[#0a1226] p-4 shadow-sm text-slate-100;
   }
 
   .admin-table-head {
-    @apply border-b-2 border-gray-300 pb-2 text-[10px] font-bold uppercase tracking-widest text-gray-700;
+    @apply border-b border-slate-700/60 pb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400;
   }
 
   .admin-table-row {
-    @apply rounded-xl border border-gray-300 bg-white transition-colors hover:border-gray-400 hover:bg-gray-50;
+    @apply rounded-xl border border-slate-700/60 bg-[#0a1226] text-slate-100 transition-colors hover:border-slate-600 hover:bg-[#0d1a33];
   }
 
   .admin-muted {
-    @apply text-gray-700;
+    @apply text-slate-400;
   }
 
   .admin-kicker {
-    @apply text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-900;
+    @apply text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400;
   }
 
   .admin-section {
-    @apply rounded-2xl border border-gray-300 bg-white p-5 shadow-sm;
+    @apply rounded-2xl border border-slate-700/60 bg-[#0a1226] p-5 shadow-sm text-slate-100;
   }
 
   .admin-caption {
-    @apply text-[11px] font-medium text-gray-700;
+    @apply text-[11px] font-medium text-slate-400;
   }
 }
 
