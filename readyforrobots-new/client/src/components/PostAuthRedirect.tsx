@@ -43,8 +43,10 @@ export default function PostAuthRedirect() {
       handled.current = true;
       return;
     }
-    // Already on product home with a home-shaped pending (e.g. / or /?src=) — stay if paths match.
-    if (path === "/" && target.split("?")[0] === "/" && !target.includes("?")) {
+    // On product home (/): any home-shaped pending (e.g. / or /?new=1 or /?visit=jobs) is already on home.
+    // Clear pending intent and NEVER trigger window.location.replace reload loop.
+    const targetPath = (target.split("?")[0] || "/").trim();
+    if (path === "/" && (targetPath === "/" || targetPath === "")) {
       clearPendingNext();
       handled.current = true;
       return;
