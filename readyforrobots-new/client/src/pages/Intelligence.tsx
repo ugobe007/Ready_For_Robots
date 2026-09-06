@@ -1,8 +1,10 @@
 /**
  * About (`/intelligence`) — Jobs chrome. Robot URL → jobs → CRM.
+ * Upgraded design with modern glassmorphism, dynamic glowing cards,
+ * responsive visual hierarchy, and smooth micro-animations.
  */
 import { useEffect, useState } from "react";
-import { ArrowRight, Building2, FileText, Mail, Search } from "lucide-react";
+import { ArrowRight, Building2, Check, FileText, Mail, Search, Sparkles } from "lucide-react";
 import { Link } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import JobsPstackProtocol from "@/components/JobsPstackProtocol";
@@ -59,7 +61,7 @@ const JOBS_LOOP = [
   },
 ];
 
-const EYEBROW = "text-[10px] font-semibold uppercase tracking-[0.15em]";
+const EYEBROW = "font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-400";
 const JOBS_SIGNUP_HREF = jobsCrmOpenHref(false);
 
 export default function Intelligence() {
@@ -134,99 +136,115 @@ export default function Intelligence() {
   }
 
   const inputClass =
-    "w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none transition-colors focus:border-emerald-400";
+    "w-full rounded-lg border border-slate-700/70 bg-[#070e20] px-3.5 py-2.5 text-sm text-slate-100 placeholder-slate-500 outline-none transition-all duration-150 focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/20";
 
   return (
     <div
       className={`intelligence-page flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
     >
       <ExperimentHeader />
-      <PageHeroDark
-        maxWidthClass="max-w-6xl"
-        eyebrow="ReadyForRobots"
-        title={
-          <span className="inline-flex items-center gap-4">
-            <PixelIcon
-              map={KARE_FACE}
-              scale={3}
-              fill={FACE_EMERALD}
-              background="transparent"
-            />
-            <span className="font-display text-emerald-400">About</span>
-          </span>
-        }
-        description={
-          <>
-            Robots need jobs. We find the work your machine is qualified to do —
-            employer, workplace, work — then keep it in CRM.
-          </>
-        }
-        innerClassName="pb-8"
-      >
-        <div className="mt-6 space-y-6">
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-            {ABOUT_STATS.map(([value, label]) => (
-              <div
-                key={label}
-                className="border border-white/10 bg-white/5 px-3 py-2.5"
+
+      {/* Hero Beat */}
+      <div className="relative overflow-hidden bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-950/30 via-[#060b18] to-[#060b18]">
+        <PageHeroDark
+          maxWidthClass="max-w-6xl"
+          eyebrow={
+            <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]">
+              <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
+              ReadyForRobots · Intelligence
+            </span>
+          }
+          title={
+            <span className="inline-flex flex-wrap items-center gap-4">
+              <PixelIcon
+                map={KARE_FACE}
+                scale={3}
+                fill={FACE_EMERALD}
+                background="transparent"
+              />
+              <span className="font-display bg-gradient-to-r from-white via-slate-100 to-emerald-300 bg-clip-text text-transparent">
+                Robots Need Jobs. We Find the Work.
+              </span>
+            </span>
+          }
+          description={
+            <p className="text-base sm:text-lg leading-relaxed text-slate-300">
+              We discover the physical work your machine is qualified to do — employer, workplace, and exact task — then turn matches directly into actionable CRM opportunities.
+            </p>
+          }
+          innerClassName="pb-10 pt-4"
+        >
+          <div className="mt-8 space-y-6">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+              {ABOUT_STATS.map(([value, label]) => (
+                <div
+                  key={label}
+                  className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-md transition-all duration-200 hover:border-emerald-400/40 hover:bg-white/[0.05] hover:shadow-lg hover:shadow-emerald-950/30"
+                >
+                  <div className="font-mono text-2xl font-black text-emerald-400">
+                    {value}
+                  </div>
+                  <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">
+                    {label}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4 pt-2">
+              <Link
+                href={jobsFindHref()}
+                className="group inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-bold text-slate-950 shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400 hover:shadow-emerald-400/30"
               >
-                <div className="font-mono text-xl font-black text-emerald-400">
-                  {value}
-                </div>
-                <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-500">
-                  {label}
-                </div>
-              </div>
-            ))}
+                {FIND_JOBS_CTA}
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link
+                href={JOBS_SIGNUP_HREF}
+                className="group inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-[#0b162f] px-4 py-2.5 text-sm font-semibold text-slate-200 transition-all hover:border-violet-400/50 hover:bg-[#111f42] hover:text-white"
+              >
+                Keep jobs in CRM
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </Link>
+              <a
+                href="#report"
+                className="group inline-flex items-center gap-2 rounded-xl border border-slate-700/60 px-4 py-2.5 text-sm font-medium text-slate-400 transition-all hover:border-slate-500 hover:text-slate-200"
+              >
+                Download report
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </a>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 text-[13px]">
-            <Link
-              href={jobsFindHref()}
-              className="group inline-flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
-            >
-              {FIND_JOBS_CTA}
-            </Link>
-            <Link
-              href={JOBS_SIGNUP_HREF}
-              className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white"
-            >
-              Keep jobs in CRM{" "}
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-            </Link>
-            <a
-              href="#report"
-              className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white"
-            >
-              Download report{" "}
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-            </a>
-          </div>
-        </div>
-      </PageHeroDark>
+        </PageHeroDark>
+      </div>
+
       <div className="page-hero-fade" aria-hidden />
 
-      <main className="flex-1 px-6 pb-20">
-        <div className="max-w-6xl mx-auto">
-          <section className="mb-12 overflow-hidden border border-slate-600 bg-[#0b162f]">
-            <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr]">
-              <div className="border-b border-slate-600 p-6 lg:border-b-0 lg:border-r">
-                <p className={`mb-3 ${EYEBROW}`} style={{ color: "#34d399" }}>
-                  How Jobs works
+      <main className="flex-1 px-4 sm:px-6 pb-20">
+        <div className="max-w-6xl mx-auto space-y-12">
+
+          {/* How Jobs Works & Vocabulary */}
+          <section className="overflow-hidden rounded-2xl border border-slate-700/60 bg-[#0a1226]/90 shadow-2xl backdrop-blur-md">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr]">
+              <div className="border-b border-slate-700/60 p-6 sm:p-8 lg:border-b-0 lg:border-r">
+                <p className={`mb-3 ${EYEBROW}`}>
+                  Process Architecture
                 </p>
-                <h2 className="max-w-xl font-display text-xl font-bold leading-tight text-white lg:text-2xl">
+                <h2 className="font-display text-2xl font-bold leading-tight text-white lg:text-3xl">
                   {JOBS_FOR_YOUR_ROBOT_HEADING}
                 </h2>
-                <p className="mt-4 max-w-xl text-[13px] leading-relaxed text-slate-400">
+                <p className="mt-3.5 text-sm leading-relaxed text-slate-300">
                   Companies have physical work. Robots need qualified jobs. Paste a product URL,
                   inspect matched opportunities, and manage your pipeline in your native CRM.
                 </p>
-                <div className="mt-5 grid grid-cols-3 gap-px overflow-hidden border border-slate-600 bg-[#081126]">
+
+                <div className="mt-6 grid grid-cols-3 gap-2 rounded-xl border border-slate-700/60 bg-[#060c1c] p-2">
                   {JOBS_PROCESS_STEPS.map(step => (
-                    <div key={step.id} className="bg-[#0b162f] p-3">
-                      <p className="font-mono text-[13px] font-bold text-emerald-400">
+                    <div key={step.id} className="rounded-lg bg-[#0b162f] p-3 transition-colors hover:bg-[#101e3d]">
+                      <p className="font-mono text-sm font-bold text-emerald-400">
                         {step.n}
                       </p>
-                      <p className="mt-0.5 text-[11px] text-slate-400">
+                      <p className="mt-1 text-xs font-medium text-slate-300">
                         {step.label}
                       </p>
                     </div>
@@ -234,8 +252,11 @@ export default function Intelligence() {
                 </div>
               </div>
 
-              <div className="p-6">
-                <div className="space-y-3.5">
+              <div className="p-6 sm:p-8 bg-[#091022]/80">
+                <p className={`mb-4 ${EYEBROW}`}>
+                  Core Definitions
+                </p>
+                <div className="space-y-3">
                   {[
                     [
                       "Employer",
@@ -253,12 +274,12 @@ export default function Intelligence() {
                   ].map(([label, copy]) => (
                     <div
                       key={label}
-                      className="border-l-2 border-emerald-400/50 bg-emerald-400/[0.04] px-3.5 py-2.5"
+                      className="group rounded-xl border-l-2 border-emerald-400 bg-emerald-950/20 p-3.5 transition-all duration-200 hover:bg-emerald-950/30 hover:border-emerald-300"
                     >
-                      <p className="text-[13px] font-semibold text-slate-100">
+                      <p className="text-sm font-bold text-slate-100 group-hover:text-emerald-300 transition-colors">
                         {label}
                       </p>
-                      <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+                      <p className="mt-1 text-xs leading-relaxed text-slate-400">
                         {copy}
                       </p>
                     </div>
@@ -268,151 +289,147 @@ export default function Intelligence() {
             </div>
           </section>
 
-          <section className="mb-12">
+          {/* Protocol Architecture Component */}
+          <section className="rounded-2xl border border-violet-500/30 bg-[#0a1226] shadow-xl overflow-hidden">
             <JobsPstackProtocol aboutLink={false} />
           </section>
 
+          {/* 2026 Work Briefing Download Section */}
           <section
             id="report"
-            className="mb-12 grid grid-cols-1 gap-px overflow-hidden border border-slate-600 lg:grid-cols-[1fr_360px] bg-[#081126]"
+            className="overflow-hidden rounded-2xl border border-slate-700/60 bg-[#0a1226] shadow-2xl"
           >
-            <div className="p-6 bg-[#0b162f]">
-              <p className={`mb-3 ${EYEBROW}`} style={{ color: "#34d399" }}>
-                Work briefing
-              </p>
-              <h2 className="max-w-2xl font-display text-2xl font-bold leading-tight text-white lg:text-3xl">
-                Labor-intensive workplaces still have jobs robots can do.
-              </h2>
-              <p className="mt-4 max-w-2xl text-[13px] leading-relaxed text-slate-400">
-                A short briefing on where physical work is piling up — so robot
-                companies show up with jobs, not a generic sales dump.
-              </p>
-              <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
-                {[
-                  ["Logistics", "warehouses with work to fill"],
-                  ["Labor shortage", "shifts robots can cover"],
-                  ["Site work", "employer · workplace · task"],
-                ].map(([label, copy]) => (
-                  <div
-                    key={label}
-                    className="border-l px-3 py-1.5"
-                    style={{ borderColor: "rgba(3,218,197,0.45)" }}
-                  >
-                    <p className="text-[13px] font-semibold text-slate-100">
-                      {label}
-                    </p>
-                    <p className="mt-0.5 text-xs text-slate-400">{copy}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="p-5 bg-[#081126]">
-              <div className="mb-4 flex items-center gap-2.5">
-                <div
-                  className="flex h-8 w-8 items-center justify-center border"
-                  style={{
-                    borderColor: "rgba(52,211,153,0.35)",
-                    background: "rgba(52,211,153,0.07)",
-                  }}
-                >
-                  <FileText className="h-4 w-4" style={{ color: "#34d399" }} />
-                </div>
-                <div>
-                  <p className="text-[13px] font-semibold text-white">
-                    Download the 2026 briefing
-                  </p>
-                  <p className="text-[11px] text-slate-400">
-                    Work, not a buyer dump.
-                  </p>
-                </div>
-              </div>
-              {reportStatus === "success" ? (
-                <div
-                  className="border border-teal-300/20 px-3.5 py-3 text-[13px]"
-                  style={{
-                    color: "#99f6e4",
-                    background: "rgba(3,218,197,0.06)",
-                  }}
-                >
-                  Briefing requested. We saved your request and queued the
-                  follow-up email.
-                </div>
-              ) : (
-                <form onSubmit={requestReport} className="relative space-y-2.5">
-                  <label
-                    className="absolute -left-[10000px] h-px w-px overflow-hidden"
-                    aria-hidden="true"
-                  >
-                    Website
-                    <input
-                      type="text"
-                      name="website"
-                      tabIndex={-1}
-                      autoComplete="off"
-                      value={reportForm.website}
-                      onChange={e =>
-                        setReportForm(current => ({
-                          ...current,
-                          website: e.target.value,
-                        }))
-                      }
-                    />
-                  </label>
+            <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_380px]">
+              <div className="p-6 sm:p-8 bg-[#0a1226]">
+                <p className={`mb-3 ${EYEBROW}`}>
+                  Work Briefing · 2026
+                </p>
+                <h2 className="font-display text-2xl font-bold leading-tight text-white lg:text-3xl">
+                  Labor-intensive workplaces still have jobs robots can do.
+                </h2>
+                <p className="mt-3.5 text-sm leading-relaxed text-slate-300">
+                  A short briefing on where physical work is piling up — so robot
+                  companies show up with jobs, not a generic sales dump.
+                </p>
+
+                <div className="mt-8 grid grid-cols-1 gap-3.5 sm:grid-cols-3">
                   {[
-                    ["name", "Name", "text"],
-                    ["email", "Work email", "email"],
-                    ["company", "Company", "text"],
-                    ["robotCategory", "Robot you place", "text"],
-                  ].map(([key, label, type]) => (
-                    <input
-                      key={key}
-                      type={type}
-                      required={key === "email"}
-                      placeholder={label}
-                      value={reportForm[key as keyof typeof reportForm]}
-                      onChange={e =>
-                        setReportForm(current => ({
-                          ...current,
-                          [key]: e.target.value,
-                        }))
-                      }
-                      className={inputClass}
-                    />
+                    ["Logistics", "Warehouses with work to fill"],
+                    ["Labor Shortage", "Shifts robots can cover"],
+                    ["Site Work", "Employer · workplace · task"],
+                  ].map(([label, copy]) => (
+                    <div
+                      key={label}
+                      className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5 transition-all hover:border-emerald-400/40"
+                    >
+                      <p className="text-sm font-bold text-emerald-300">
+                        {label}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400 leading-normal">{copy}</p>
+                    </div>
                   ))}
-                  {reportStatus === "error" && (
-                    <p className="text-xs text-red-300">
-                      Could not request briefing. Try again.
+                </div>
+              </div>
+
+              <div className="p-6 sm:p-8 bg-[#060c1c] border-t border-slate-700/60 lg:border-t-0 lg:border-l">
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-400/30 bg-emerald-500/10 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">
+                      Download the 2026 Briefing
+                    </h3>
+                    <p className="text-xs text-slate-400">
+                      Work, not a buyer dump.
                     </p>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={reportStatus === "submitting"}
-                    className="group inline-flex items-center gap-1.5 pt-1 text-[13px] font-semibold transition-colors hover:text-teal-200 disabled:opacity-50"
-                    style={{ color: "#059669" }}
-                  >
-                    {reportStatus === "submitting"
-                      ? "Requesting…"
-                      : "Download free briefing"}
-                    <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-                  </button>
-                </form>
-              )}
+                  </div>
+                </div>
+
+                {reportStatus === "success" ? (
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs text-emerald-300 flex items-start gap-2.5">
+                    <Check className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
+                    <span>Briefing requested. We saved your request and queued the follow-up email.</span>
+                  </div>
+                ) : (
+                  <form onSubmit={requestReport} className="relative space-y-3">
+                    <label
+                      className="absolute -left-[10000px] h-px w-px overflow-hidden"
+                      aria-hidden="true"
+                    >
+                      Website
+                      <input
+                        type="text"
+                        name="website"
+                        tabIndex={-1}
+                        autoComplete="off"
+                        value={reportForm.website}
+                        onChange={e =>
+                          setReportForm(current => ({
+                            ...current,
+                            website: e.target.value,
+                          }))
+                        }
+                      />
+                    </label>
+                    {[
+                      ["name", "Name", "text"],
+                      ["email", "Work email", "email"],
+                      ["company", "Company", "text"],
+                      ["robotCategory", "Robot you place", "text"],
+                    ].map(([key, label, type]) => (
+                      <input
+                        key={key}
+                        type={type}
+                        required={key === "email"}
+                        placeholder={label}
+                        value={reportForm[key as keyof typeof reportForm]}
+                        onChange={e =>
+                          setReportForm(current => ({
+                            ...current,
+                            [key]: e.target.value,
+                          }))
+                        }
+                        className={inputClass}
+                      />
+                    ))}
+                    {reportStatus === "error" && (
+                      <p className="text-xs text-rose-400">
+                        Could not request briefing. Try again.
+                      </p>
+                    )}
+                    <button
+                      type="submit"
+                      disabled={reportStatus === "submitting"}
+                      className="group w-full mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-md transition-all hover:bg-emerald-400 disabled:opacity-50"
+                    >
+                      {reportStatus === "submitting"
+                        ? "Requesting…"
+                        : "Download Free Briefing"}
+                      <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+                    </button>
+                  </form>
+                )}
+              </div>
             </div>
           </section>
 
-          <section className="mb-12 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {/* 4-Card Feature Grid */}
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {JOBS_LOOP.map(item => {
               const Icon = item.icon;
               return (
                 <div
                   key={item.title}
-                  className="border border-slate-600 bg-[#0b162f] p-4 transition-colors hover:border-emerald-400/40"
+                  className="group rounded-2xl border border-slate-700/60 bg-[#0a1226] p-5 backdrop-blur-md transition-all duration-200 hover:-translate-y-1 hover:border-emerald-400/50 hover:shadow-[0_8px_25px_rgba(16,185,129,0.12)]"
                 >
-                  <Icon className="mb-4 h-[18px] w-[18px] text-emerald-400" />
-                  <p className="mb-1 text-[13px] font-semibold text-white">
+                  <div className="mb-4 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-400 transition-colors group-hover:bg-emerald-500/20 group-hover:text-emerald-300">
+                    <Icon className="h-4 w-4" />
+                  </div>
+                  <h3 className="mb-1.5 text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
                     {item.title}
-                  </p>
-                  <p className="text-[13px] leading-relaxed text-slate-400">
+                  </h3>
+                  <p className="text-xs leading-relaxed text-slate-400">
                     {item.copy}
                   </p>
                 </div>
@@ -420,32 +437,33 @@ export default function Intelligence() {
             })}
           </section>
 
+          {/* Weekly Briefing & Email Subscription */}
           <section
             id="brief"
-            className="border border-slate-600 bg-[#0b162f] p-6"
+            className="rounded-2xl border border-slate-700/60 bg-[#0a1226] p-6 sm:p-8 shadow-xl"
           >
-            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_300px]">
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
               <div>
-                <p className={`mb-2.5 ${EYEBROW}`} style={{ color: "#34d399" }}>
-                  Jobs brief
+                <p className={`mb-2.5 ${EYEBROW}`}>
+                  Weekly Intelligence
                 </p>
-                <h2 className="max-w-2xl font-display text-2xl font-bold leading-tight text-white">
+                <h2 className="font-display text-2xl font-bold leading-tight text-white">
                   A weekly look at work robots can take.
                 </h2>
-                <p className="mt-3 max-w-2xl text-[13px] leading-relaxed text-slate-400">
+                <p className="mt-3 text-sm leading-relaxed text-slate-300">
                   Deployments, open work, and SKUs getting hired — so you run
                   FIND on the next robot instead of waiting on a sales cycle.
                 </p>
                 {stories.length > 0 && (
-                  <div className="mt-6 grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <div className="mt-6 grid grid-cols-1 gap-3.5 md:grid-cols-3">
                     {stories.slice(0, 3).map((story, i) => (
                       <div
                         key={`${story.title || story.company || i}`}
-                        className="border border-slate-600 bg-[#081126] p-3.5"
+                        className="rounded-xl border border-slate-700/60 bg-[#060c1c] p-4 transition-all hover:border-emerald-400/40"
                       >
-                        <p className="break-words mb-1.5 text-[13px] font-semibold text-slate-100">
+                        <p className="break-words mb-1.5 text-xs font-bold text-slate-100">
                           {cleanScrapedText(story.title || story.company) ||
-                            "Work story"}
+                            "Work Story"}
                         </p>
                         <p className="break-words text-xs leading-relaxed text-slate-400">
                           {cleanScrapedText(story.summary) ||
@@ -456,65 +474,73 @@ export default function Intelligence() {
                   </div>
                 )}
               </div>
+
               <form
                 onSubmit={subscribe}
-                className="border border-slate-600 bg-[#081126] p-4"
+                className="rounded-xl border border-slate-700/60 bg-[#060c1c] p-5 shadow-lg flex flex-col justify-between"
               >
-                <Mail className="mb-3 h-[18px] w-[18px] text-emerald-400" />
-                <p className="mb-1.5 text-[13px] font-semibold text-white">
-                  Subscribe free
-                </p>
-                <p className="mb-3.5 text-xs leading-relaxed text-slate-400">
-                  Jobs, workplaces, and which robots are getting the work.
-                </p>
-                <input
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  type="email"
-                  placeholder="work email"
-                  className={inputClass}
-                />
-                {newsletterStatus === "success" && (
-                  <p className="mt-2.5 text-xs" style={{ color: "#059669" }}>
-                    Subscribed.
+                <div>
+                  <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-emerald-400/30 bg-emerald-500/10 text-emerald-400">
+                    <Mail className="h-4 w-4" />
+                  </div>
+                  <h3 className="mb-1 text-sm font-bold text-white">
+                    Subscribe Free
+                  </h3>
+                  <p className="mb-4 text-xs leading-relaxed text-slate-400">
+                    Jobs, workplaces, and which robots are getting the work.
                   </p>
-                )}
-                {newsletterStatus === "error" && (
-                  <p className="mt-2.5 text-xs text-red-300">
-                    Could not subscribe. Try again.
-                  </p>
-                )}
+                  <input
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    type="email"
+                    placeholder="Work email address"
+                    className={inputClass}
+                  />
+                  {newsletterStatus === "success" && (
+                    <p className="mt-2 text-xs text-emerald-400 flex items-center gap-1">
+                      <Check className="h-3.5 w-3.5" /> Subscribed!
+                    </p>
+                  )}
+                  {newsletterStatus === "error" && (
+                    <p className="mt-2 text-xs text-rose-400">
+                      Could not subscribe. Try again.
+                    </p>
+                  )}
+                </div>
                 <button
                   type="submit"
                   disabled={newsletterStatus === "submitting"}
-                  className="group mt-3 inline-flex items-center gap-1.5 text-[13px] font-semibold text-emerald-400 transition-colors hover:text-emerald-300 disabled:opacity-50"
+                  className="group mt-4 w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold text-slate-950 shadow-md transition-all hover:bg-emerald-400 disabled:opacity-50"
                 >
                   {newsletterStatus === "submitting"
                     ? "Subscribing…"
-                    : "Subscribe free"}
-                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+                    : "Subscribe Free"}
+                  <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
                 </button>
               </form>
             </div>
           </section>
 
-          <div className="mt-8 flex flex-wrap items-center justify-center gap-5 text-[13px]">
+          {/* Footer CTA Beat */}
+          <div className="pt-4 flex flex-wrap items-center justify-center gap-4 text-sm">
             <Link
               href={jobsFindHref()}
-              className="group inline-flex items-center gap-1.5 font-semibold text-emerald-400 transition-colors hover:text-emerald-300"
+              className="group inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-5 py-2.5 font-bold text-slate-950 shadow-lg shadow-emerald-500/20 transition-all hover:bg-emerald-400"
             >
               {FIND_JOBS_CTA}
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
             <Link
               href={JOBS_SIGNUP_HREF}
-              className="group inline-flex items-center gap-1.5 font-semibold text-slate-400 transition-colors hover:text-white"
+              className="group inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-[#0b162f] px-4 py-2.5 font-semibold text-slate-200 transition-all hover:border-violet-400/50 hover:bg-[#111f42] hover:text-white"
             >
-              Keep jobs in CRM{" "}
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+              Keep jobs in CRM
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
         </div>
       </main>
+
       <SiteFooter />
     </div>
   );
