@@ -175,18 +175,57 @@ export default function Intelligence() {
           innerClassName="pb-10 pt-4"
         >
           <div className="mt-8 space-y-6">
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-              {ABOUT_STATS.map(([value, label]) => (
-                <div
-                  key={label}
-                  className="group relative overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-md transition-all duration-200 hover:border-emerald-400/40 hover:bg-white/[0.05] hover:shadow-lg hover:shadow-emerald-950/30"
-                >
-                  <div className="font-mono text-2xl font-black text-emerald-400">
-                    {value}
+            {/* Real Stats Bar: 1,000+ Verified Jobs */}
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4 backdrop-blur-md shadow-[0_0_20px_rgba(16,185,129,0.1)]">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <span className="relative flex h-3 w-3">
+                    <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                    <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
+                  </span>
+                  <div>
+                    <span className="font-mono text-2xl font-black text-white sm:text-3xl">1,000+</span>
+                    <span className="ml-2 font-display text-sm font-bold uppercase tracking-wider text-emerald-400">
+                      Verified Jobs Available
+                    </span>
                   </div>
-                  <div className="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400 group-hover:text-slate-200 transition-colors">
-                    {label}
+                </div>
+                <div className="flex flex-wrap items-center gap-6 text-xs text-slate-300 font-medium">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-white">100+</span>
+                    <span className="text-slate-400">Indexed SKUs</span>
                   </div>
+                  <span className="text-slate-600">•</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-white">100%</span>
+                    <span className="text-slate-400">Evidence-Backed</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Workflow Steps 01 -> 02 -> 03 with arrow connectors */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              {ABOUT_STATS.map(([value, label], idx) => (
+                <div key={label} className="flex flex-1 items-center gap-2">
+                  <div className="group relative flex-1 overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] p-4 backdrop-blur-md transition-all duration-200 hover:border-emerald-400/40 hover:bg-white/[0.05] hover:shadow-lg hover:shadow-emerald-950/30">
+                    <div className="flex items-center justify-between">
+                      <div className="font-mono text-2xl font-black text-emerald-400">
+                        {value}
+                      </div>
+                      <span className="font-mono text-[10px] uppercase tracking-widest text-slate-500">
+                        Step {idx + 1}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs font-bold uppercase tracking-wider text-slate-300 group-hover:text-white transition-colors">
+                      {label}
+                    </div>
+                  </div>
+                  {idx < ABOUT_STATS.length - 1 ? (
+                    <div className="hidden sm:flex shrink-0 items-center justify-center px-1 text-emerald-400/60" aria-hidden="true">
+                      <ArrowRight className="h-5 w-5 animate-pulse text-emerald-400" />
+                    </div>
+                  ) : null}
                 </div>
               ))}
             </div>
@@ -238,15 +277,22 @@ export default function Intelligence() {
                   inspect matched opportunities, and manage your pipeline in your native CRM.
                 </p>
 
-                <div className="mt-6 grid grid-cols-3 gap-2 rounded-xl border border-slate-700/60 bg-[#060c1c] p-2">
-                  {JOBS_PROCESS_STEPS.map(step => (
-                    <div key={step.id} className="rounded-lg bg-[#0b162f] p-3 transition-colors hover:bg-[#101e3d]">
-                      <p className="font-mono text-sm font-bold text-emerald-400">
-                        {step.n}
-                      </p>
-                      <p className="mt-1 text-xs font-medium text-slate-300">
-                        {step.label}
-                      </p>
+                <div className="mt-6 flex flex-col gap-2 rounded-xl border border-slate-700/60 bg-[#060c1c] p-2.5 sm:flex-row sm:items-center sm:justify-between">
+                  {JOBS_PROCESS_STEPS.map((step, idx) => (
+                    <div key={step.id} className="flex flex-1 items-center gap-2">
+                      <div className="flex-1 rounded-lg bg-[#0b162f] p-3 transition-colors hover:bg-[#101e3d]">
+                        <p className="font-mono text-sm font-bold text-emerald-400">
+                          {step.n}
+                        </p>
+                        <p className="mt-1 text-xs font-medium text-slate-300">
+                          {step.label}
+                        </p>
+                      </div>
+                      {idx < JOBS_PROCESS_STEPS.length - 1 ? (
+                        <div className="hidden sm:flex shrink-0 px-0.5 text-emerald-400/70" aria-hidden="true">
+                          <ArrowRight className="h-4 w-4 text-emerald-400" />
+                        </div>
+                      ) : null}
                     </div>
                   ))}
                 </div>
