@@ -2893,12 +2893,16 @@
   background: var(--landing-emerald);
   box-shadow: 0 0 8px var(--landing-emerald);
   animation: rfr-pulse 2s infinite ease-in-out;
+  will-change: opacity;
 }
 
 @keyframes rfr-pulse {
-  0% { transform: scale(0.95); opacity: 0.8; }
-  50% { transform: scale(1.35); opacity: 1; }
-  100% { transform: scale(0.95); opacity: 0.8; }
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 1;
+  }
 }
 
 .rfr-landing-stat-value {

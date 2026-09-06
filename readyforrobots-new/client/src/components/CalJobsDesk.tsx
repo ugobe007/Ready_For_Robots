@@ -278,6 +278,11 @@ export default function CalJobsDesk({
   const catalog = focus?.catalog_skus || [];
   const draft = focus?.application?.draft;
 
+  const toggleCollapse = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsCollapsed(prev => !prev);
+  };
+
   return (
     <section
       className="mt-4 rounded-lg border border-violet-500/30 bg-[#0a1226] p-3.5 sm:p-4 transition-all"
@@ -286,7 +291,7 @@ export default function CalJobsDesk({
     >
       <div
         className="flex cursor-pointer select-none items-center justify-between gap-2"
-        onClick={() => setIsCollapsed(!isCollapsed)}
+        onClick={toggleCollapse}
       >
         <div className="flex flex-wrap items-center gap-2">
           <p className={`${JOBS_EYEBROW_CLASS} font-semibold text-violet-400`}>
@@ -299,10 +304,7 @@ export default function CalJobsDesk({
         </div>
         <button
           type="button"
-          onClick={e => {
-            e.stopPropagation();
-            setIsCollapsed(!isCollapsed);
-          }}
+          onClick={toggleCollapse}
           className="inline-flex shrink-0 items-center gap-1.5 rounded border border-slate-700 bg-[#111c38] px-2.5 py-1 text-xs font-semibold text-slate-300 hover:border-violet-400 hover:text-white"
         >
           <span>{isCollapsed ? "Expand" : "Collapse"}</span>
