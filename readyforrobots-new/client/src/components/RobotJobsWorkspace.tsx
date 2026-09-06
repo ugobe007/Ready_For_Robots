@@ -688,6 +688,19 @@ export default function RobotJobsWorkspace() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Job Cards render with the first card already expanded (pickSelectedJobKey),
+  // so the value-proof step was invisible to the funnel: recordJobView only ran
+  // from selectJob(), i.e. when a user clicked a *different* job. Every visitor
+  // who read the auto-opened card and left counted as discovery_complete with
+  // zero job_viewed. Record the view when the expanded card is actually on
+  // screen; recordJobView dedupes via viewedRef, so re-runs are safe.
+  useEffect(() => {
+    if (stage !== "jobs" || !expandedJob) return;
+    const job = (active?.jobs || []).find(j => j.job_key === expandedJob);
+    if (job) recordJobView(job);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [stage, expandedJob, active]);
+
   useEffect(() => {
     const token = session?.access_token;
     if (!token) {
@@ -1958,7 +1971,18 @@ export default function RobotJobsWorkspace() {
 
   function recordJobView(job: MatchJob) {
     if (viewedRef.current.has(job.job_key)) return;
+    const isFirst = viewedRef.current.size === 0;
     viewedRef.current.add(job.job_key);
+    if (isFirst) {
+      // discovery_complete → first_job_viewed is the "did they see real work?"
+      // step. Declared in RobotJobsFunnelStep but never fired by this surface.
+      trackRobotJobsFunnel("first_job_viewed", {
+        ...funnelBase(),
+        job_key: job.job_key,
+        company_name: job.company_name,
+        robot_name: active?.productName,
+      });
+    }
     trackRobotJobsFunnel("job_viewed", {
       ...funnelBase(),
       job_key: job.job_key,
