@@ -5280,17 +5280,17 @@ export default function Pipeline() {
           )}
 
           {step3Intro ? (
-            <div className="pipeline-workspace overflow-hidden rounded-2xl border border-amber-400/40 bg-gradient-to-b from-slate-50 to-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.45)]">
-              <div className="border-b border-amber-200/80 bg-amber-50/80 px-5 py-4 sm:px-8">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-800">
+            <div className="pipeline-workspace overflow-hidden rounded-2xl border border-amber-400/40 bg-[#0a1226] shadow-[0_20px_50px_-30px_rgba(0,0,0,0.7)]">
+              <div className="border-b border-slate-700/60 bg-[#060c1c] px-5 py-4 sm:px-8">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">
                   URL-matched queue · locked
                 </p>
-                <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
+                <p className="mt-1 text-xl font-bold text-slate-100 sm:text-2xl">
                   {scopeMatchesCount > 0
                     ? `${Math.min(scopeMatchesCount, BUILD_PIPELINE_TARGET)} buyers matched to your robot profile`
                     : `${BUILD_PIPELINE_TARGET} matched sales leads waiting`}
                 </p>
-                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
                   Step 5 unlocks these {BUILD_PIPELINE_TARGET} sales leads after
                   you provide customer name and information above.
                 </p>
@@ -5302,19 +5302,19 @@ export default function Pipeline() {
                     .map(deal => (
                       <li
                         key={deal.id}
-                        className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3"
+                        className="flex items-center justify-between rounded-xl border border-slate-700/60 bg-[#0d1a33] px-4 py-3"
                       >
-                        <span className="truncate text-sm font-semibold text-slate-800">
+                        <span className="truncate text-sm font-semibold text-slate-100">
                           {deal.company}
                         </span>
-                        <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                        <span className="text-xs font-bold uppercase tracking-wide text-slate-400">
                           {deal.priorityTier || deal.stage}
                         </span>
                       </li>
                     ))}
                   {(displayedDeals.length > 0 ? displayedDeals : deals)
                     .length === 0 ? (
-                    <li className="rounded-xl border border-dashed border-emerald-200 bg-emerald-50/60 px-4 py-8 text-center">
+                    <li className="rounded-xl border border-dashed border-emerald-500/40 bg-emerald-500/10 px-4 py-8 text-center">
                       <div className="flex items-center justify-center gap-3">
                         <PixelIcon
                           map={KARE_FACE}
@@ -5322,16 +5322,16 @@ export default function Pipeline() {
                           fill="#3ecf8e"
                           background="transparent"
                         />
-                        <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600">
+                        <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-400">
                           {loadCountdown}s
                         </span>
                       </div>
-                      <p className="mt-3 text-sm font-semibold text-emerald-900">
+                      <p className="mt-3 text-sm font-semibold text-emerald-300">
                         Loading matched opportunities…
                       </p>
                     </li>
                   ) : loadUiVisible ? (
-                    <li className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                    <li className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3">
                       <div className="flex items-center justify-center gap-3">
                         <PixelIcon
                           map={KARE_FACE}
@@ -5339,26 +5339,26 @@ export default function Pipeline() {
                           fill="#3ecf8e"
                           background="transparent"
                         />
-                        <span className="text-sm font-bold text-emerald-950">
+                        <span className="text-sm font-bold text-emerald-200">
                           Loading jobs…
                         </span>
-                        <span className="font-mono text-xl font-extrabold tabular-nums text-emerald-600">
+                        <span className="font-mono text-xl font-extrabold tabular-nums text-emerald-400">
                           {loadCountdown}s
                         </span>
                       </div>
                     </li>
                   ) : null}
                 </ul>
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-white via-white/85 to-white/40 px-4">
-                  <div className="w-full max-w-md rounded-2xl border border-amber-400/60 bg-white/95 p-5 text-center shadow-xl sm:p-6">
-                    <p className="text-sm font-semibold text-slate-800 sm:text-base">
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-[#081126] via-[#081126]/90 to-transparent px-4">
+                  <div className="w-full max-w-md rounded-2xl border border-amber-400/60 bg-[#0a1226]/95 p-5 text-center shadow-xl sm:p-6 text-slate-100">
+                    <p className="text-sm font-semibold text-slate-100 sm:text-base">
                       {workspaceProfileComplete
                         ? isSignedIn
                           ? `Your ${BUILD_PIPELINE_TARGET} sales leads unlock after you save customer details above.`
                           : `Free account unlocks ${BUILD_PIPELINE_TARGET} sales leads after customer details above.`
                         : "Provide customer name and information in the form above."}
                     </p>
-                    <p className="mt-3 text-xs font-medium text-slate-500">
+                    <p className="mt-3 text-xs font-medium text-slate-400">
                       Use the yellow button in the Step 4 panel above — one
                       action only.
                     </p>
@@ -5923,8 +5923,8 @@ export default function Pipeline() {
 
                           {/* Inline deal rows */}
                           {stageDeals.length === 0 ? (
-                            <div className="mx-1 mb-2 rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-4 py-3">
-                              <p className="text-[11px] text-gray-400 italic">
+                            <div className="mx-1 mb-2 rounded-xl border border-dashed border-slate-700 bg-[#060c1c] px-4 py-3">
+                              <p className="text-[11px] text-slate-400 italic">
                                 No deals in this stage
                               </p>
                             </div>
@@ -5975,7 +5975,7 @@ export default function Pipeline() {
                                             In CRM
                                           </span>
                                         ) : null}
-                                        <span className="text-sm text-slate-400 shrink-0">
+                                        <span className="text-sm text-slate-300 shrink-0">
                                           {deal.location}
                                         </span>
                                         <span
@@ -6074,11 +6074,11 @@ export default function Pipeline() {
                                           />
                                         </span>
                                       )}
-                                      <span className="text-[10px] text-gray-400 font-mono-data hidden sm:block">
+                                      <span className="text-[10px] text-slate-300 font-mono-data hidden sm:block">
                                         {deal.updatedAt}
                                       </span>
                                       <ChevronRight
-                                        className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-600" : "text-gray-300 group-hover:text-emerald-500"}`}
+                                        className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-400" : "text-slate-400 group-hover:text-emerald-400"}`}
                                       />
                                     </div>
                                   </div>
@@ -6108,7 +6108,7 @@ export default function Pipeline() {
                             <span className="pipeline-tier-title">
                               {userBucketLabel(bucket)}
                             </span>
-                            <span className="ml-0.5 text-[10px] font-medium text-slate-600">
+                            <span className="ml-0.5 text-[10px] font-medium text-slate-300">
                               — {meta.desc}
                             </span>
                             <span
@@ -6177,7 +6177,7 @@ export default function Pipeline() {
                                             In CRM
                                           </span>
                                         ) : null}
-                                        <span className="text-sm text-slate-400 shrink-0">
+                                        <span className="text-sm text-slate-300 shrink-0">
                                           {deal.industry}
                                         </span>
                                         <span
@@ -6262,7 +6262,7 @@ export default function Pipeline() {
                                         {deal.signalType}
                                       </span>
                                       <ChevronRight
-                                        className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-600" : "text-gray-300 group-hover:text-emerald-500"}`}
+                                        className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-400" : "text-slate-400 group-hover:text-emerald-400"}`}
                                       />
                                     </div>
                                   </div>

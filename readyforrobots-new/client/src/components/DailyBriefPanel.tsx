@@ -132,22 +132,24 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
   };
 
   return (
-    <div className="mb-4 rounded-xl border-2 border-gray-300 bg-white px-5 py-5 shadow-sm">
+    <div className="mb-4 rounded-xl border border-slate-700/60 bg-[#0a1226] px-5 py-5 shadow-lg text-slate-100">
       <div className="mb-3 flex items-center gap-2">
-        <Sun size={16} className="text-amber-600" />
+        <Sun size={16} className="text-amber-400 shrink-0" />
         <div>
-          <h2 className="text-sm font-bold text-gray-900">Daily brief</h2>
-          <p className="text-[11px] text-gray-600">UTC {today}</p>
+          <h2 className="text-sm font-bold text-slate-100">Daily brief</h2>
+          <p className="text-[11px] text-slate-400">UTC {today}</p>
         </div>
       </div>
 
       {loading ? (
-        <p className="py-2 text-sm text-gray-600">Loading…</p>
+        <p className="py-2 text-sm text-slate-400">Loading…</p>
       ) : (
         <>
           <div className="mb-4">
-            <p className="admin-kicker mb-1.5">Do now · in workflow order</p>
-            <div className="text-sm leading-relaxed text-gray-800">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-1.5">
+              Do now · in workflow order
+            </p>
+            <div className="text-sm leading-relaxed text-slate-200">
               {(() => {
                 const items: Array<{
                   rank: number;
@@ -240,12 +242,12 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                 items.sort((a, b) => a.rank - b.rank);
                 if (items.length === 0) {
                   return (
-                    <span className="text-gray-600">No pending actions.</span>
+                    <span className="text-slate-400">No pending actions.</span>
                   );
                 }
                 return items.map((item, i) => (
                   <span key={item.key}>
-                    {i > 0 ? <span className="text-gray-400"> · </span> : null}
+                    {i > 0 ? <span className="text-slate-500"> · </span> : null}
                     {item.node}
                   </span>
                 ));
@@ -253,19 +255,19 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
             </div>
           </div>
 
-          <div className="text-sm text-gray-700">
-            <span className="font-semibold text-gray-950">Cal queue:</span>{" "}
+          <div className="text-sm text-slate-300">
+            <span className="font-semibold text-slate-100">Cal queue:</span>{" "}
             {calTotal} leads · {calPending} need draft · {calUnsent} unsent ·{" "}
             {calSendable} sendable
             {(m?.scout_drafted ?? 0) > 0 ? (
-              <span className="text-gray-600">
+              <span className="text-slate-400">
                 {" "}
                 · SIGNAL drafts separate ({m?.scout_drafted})
               </span>
             ) : null}
             {calTotal > 0 ? (
               <>
-                <span className="text-gray-400"> · </span>
+                <span className="text-slate-500"> · </span>
                 <SupabaseInlineLink tone="gray" onClick={openQueue}>
                   jump to workflow
                 </SupabaseInlineLink>

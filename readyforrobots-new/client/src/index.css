@@ -1375,7 +1375,7 @@
       .text-sky-900,
       .text-sky-800
     ) {
-    color: #e2e8f0 !important;
+    color: #f8fafc !important;
   }
   .pipeline-page-bg
     :where(
@@ -1395,7 +1395,7 @@
       .text-sky-700,
       .text-sky-700\/80
     ) {
-    color: #94a3b8 !important;
+    color: #cbd5e1 !important;
   }
   .pipeline-page-bg
     :where(

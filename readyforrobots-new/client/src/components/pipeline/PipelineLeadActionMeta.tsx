@@ -105,28 +105,28 @@ export default function PipelineLeadActionMeta({
 
   const actionClass =
     variant === "dark"
-      ? "text-slate-300 text-sm"
+      ? "text-slate-200 text-sm"
       : variant === "hero"
         ? "text-[12px] text-slate-300 leading-snug"
         : variant === "compact"
-          ? "pipeline-deal-action leading-snug"
-          : "text-xs text-gray-700 leading-snug";
+          ? "text-[12px] text-slate-200 font-medium leading-snug"
+          : "text-xs text-slate-200 leading-snug";
 
   const chipClass =
     variant === "dark"
       ? "inline-flex rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300"
       : variant === "hero"
         ? "inline-flex rounded-full border border-sky-300/28 bg-sky-400/8 px-2 py-0.5 text-[10px] font-medium text-sky-200/85"
-        : "pipeline-robot-type-chip";
+        : "inline-flex rounded-full border border-emerald-400/40 bg-emerald-400/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-300";
 
   const proofClass =
     variant === "dark"
-      ? "text-[11px] text-emerald-200/90 leading-snug"
+      ? "text-[11px] text-emerald-300 font-medium leading-snug"
       : variant === "hero"
         ? "text-[11px] text-slate-400 leading-snug"
         : variant === "compact"
-          ? "text-[10px] text-emerald-700 leading-snug"
-          : "text-[11px] text-emerald-700 leading-snug";
+          ? "text-[11px] text-emerald-300 font-semibold leading-snug"
+          : "text-[11px] text-emerald-300 font-semibold leading-snug";
 
   const prefix = action.includes(":") ? action.split(":")[0]?.trim() : null;
   const body =
@@ -147,7 +147,7 @@ export default function PipelineLeadActionMeta({
                     ? "font-bold text-emerald-400"
                     : variant === "hero"
                       ? "font-bold text-cyan-300"
-                      : "font-bold text-emerald-800"
+                      : "font-bold text-emerald-400"
                 }
               >
                 {prefix}:
