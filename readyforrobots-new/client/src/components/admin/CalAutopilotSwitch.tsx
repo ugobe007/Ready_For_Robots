@@ -21,10 +21,10 @@ export default function CalAutopilotSwitch({
 }: Props) {
   return (
     <div
-      className={`flex items-center gap-3 rounded-xl border px-3 py-2 ${
+      className={`flex items-center gap-3 rounded-xl border px-3 py-2 transition ${
         enabled
-          ? "border-emerald-200 bg-emerald-50/80"
-          : "border-amber-200 bg-amber-50/60"
+          ? "border-emerald-500/40 bg-emerald-950/30 text-emerald-200"
+          : "border-amber-500/40 bg-amber-950/20 text-amber-200"
       } ${disabled ? "opacity-60" : ""}`}
       title={
         disabled
@@ -35,11 +35,11 @@ export default function CalAutopilotSwitch({
       }
     >
       <div className="min-w-0">
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-gray-700">
+        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">
           Cal autopilot
         </p>
         {!compact ? (
-          <p className="text-[11px] text-gray-600">
+          <p className="text-[11px] text-slate-400">
             {enabled
               ? `On · up to ${sendLimit} verified sends / ${everyHours}h cycle`
               : "Off · manual draft & send only"}
@@ -48,7 +48,7 @@ export default function CalAutopilotSwitch({
       </div>
       <div className="flex shrink-0 items-center gap-2">
         <span
-          className={`text-[10px] font-bold ${enabled ? "text-emerald-700" : "text-amber-700"}`}
+          className={`text-[10px] font-bold ${enabled ? "text-emerald-400" : "text-amber-400"}`}
         >
           {busy ? "…" : enabled ? "ON" : "OFF"}
         </span>

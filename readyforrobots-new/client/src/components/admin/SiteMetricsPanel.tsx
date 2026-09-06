@@ -9,21 +9,21 @@ const ACCENT: Record<
 > = {
   emerald: {
     border: "border-l-emerald-500",
-    iconBg: "bg-emerald-50",
-    icon: "text-emerald-600",
-    stat: "text-emerald-700",
+    iconBg: "bg-emerald-500/10 border border-emerald-500/30",
+    icon: "text-emerald-400",
+    stat: "text-emerald-300",
   },
   amber: {
     border: "border-l-amber-500",
-    iconBg: "bg-amber-50",
-    icon: "text-amber-700",
-    stat: "text-amber-800",
+    iconBg: "bg-amber-500/10 border border-amber-500/30",
+    icon: "text-amber-400",
+    stat: "text-amber-300",
   },
   blue: {
     border: "border-l-blue-500",
-    iconBg: "bg-blue-50",
-    icon: "text-blue-700",
-    stat: "text-blue-800",
+    iconBg: "bg-blue-500/10 border border-blue-500/30",
+    icon: "text-blue-400",
+    stat: "text-blue-300",
   },
 };
 
@@ -69,27 +69,27 @@ function MetricCard({
   const tone = ACCENT[accent];
   return (
     <div
-      className={`rounded-xl border border-gray-200 bg-white p-6 shadow-sm border-l-4 ${tone.border} transition-shadow hover:shadow-md`}
+      className={`rounded-xl border border-slate-700/60 bg-[#0a1226] p-6 shadow-xl border-l-4 ${tone.border} transition-all duration-200 hover:-translate-y-0.5 hover:shadow-2xl`}
     >
       <div className="mb-5 flex items-start justify-between gap-3">
         <div
-          className={`flex h-11 w-11 items-center justify-center rounded-lg ${tone.iconBg}`}
+          className={`flex h-11 w-11 items-center justify-center rounded-xl ${tone.iconBg}`}
         >
           <Icon size={22} className={tone.icon} />
         </div>
         <div className="text-right">
           <p
-            className={`font-mono text-2xl font-bold tabular-nums ${tone.stat}`}
+            className={`font-mono text-2xl font-black tabular-nums ${tone.stat}`}
           >
             {value}
           </p>
-          <p className="text-xs font-medium text-gray-600">{statLabel}</p>
+          <p className="text-xs font-medium text-slate-400">{statLabel}</p>
         </div>
       </div>
-      <h3 className="mb-2 font-display text-xl font-bold text-gray-900">
+      <h3 className="mb-2 font-display text-xl font-bold text-white">
         {title}
       </h3>
-      <p className="text-sm leading-relaxed text-gray-700">{description}</p>
+      <p className="text-sm leading-relaxed text-slate-300">{description}</p>
     </div>
   );
 }
@@ -144,14 +144,14 @@ export default function SiteMetricsPanel({
   return (
     <section className="mb-8">
       <div className="mb-6 text-center md:text-left">
-        <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-800">
+        <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-400">
           Site funnel · {timeRangeLabel}
         </p>
-        <h2 className="font-display text-xl font-bold text-gray-900 sm:text-2xl">
+        <h2 className="font-display text-xl font-bold text-white sm:text-2xl">
           Discover traffic, develop intent, deploy capture.
         </h2>
         {loading ? (
-          <p className="mt-2 text-xs font-medium text-gray-600">
+          <p className="mt-2 text-xs font-medium text-slate-400">
             Refreshing metrics…
           </p>
         ) : null}
@@ -163,20 +163,20 @@ export default function SiteMetricsPanel({
         ))}
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-gray-300 bg-gray-50 px-4 py-3 text-sm">
-        <span className="font-semibold text-gray-900">
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-700/60 bg-[#0a1226] px-4 py-3 text-sm">
+        <span className="font-semibold text-white">
           Pipeline backing data
         </span>
-        <span className="rounded-full border border-emerald-300 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-900">
+        <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-300">
           {formatCount(data.hotCount)} hot
         </span>
-        <span className="rounded-full border border-amber-300 bg-amber-50 px-3 py-1 text-xs font-bold text-amber-900">
+        <span className="rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-xs font-bold text-amber-300">
           {formatCount(data.warmCount)} warm
         </span>
-        <span className="rounded-full border border-blue-300 bg-blue-50 px-3 py-1 text-xs font-bold text-blue-900">
+        <span className="rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs font-bold text-blue-300">
           {hotShare}% hot share
         </span>
-        <span className="text-xs text-gray-700">
+        <span className="text-xs text-slate-400">
           {formatCount(data.totalSignals)} total signals in database
         </span>
       </div>
@@ -231,13 +231,13 @@ function SignupFunnelStrip({
   }
 
   return (
-    <div className="mt-4 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
+    <div className="mt-4 rounded-xl border border-slate-700/60 bg-[#0a1226] p-4 shadow-xl">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-800">
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
           Signup funnel · {timeRangeLabel}
         </p>
         {!hasData ? (
-          <span className="text-[11px] font-medium text-gray-500">
+          <span className="text-[11px] font-medium text-slate-400">
             Collecting funnel events…
           </span>
         ) : null}
@@ -245,19 +245,19 @@ function SignupFunnelStrip({
       <div className="flex items-stretch gap-2">
         {steps.map((step, i) => (
           <div key={step.label} className="flex flex-1 items-center gap-2">
-            <div className="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2.5 text-center">
-              <p className="font-mono text-xl font-bold tabular-nums text-gray-900">
+            <div className="flex-1 rounded-lg border border-slate-700/60 bg-[#060c1c] px-3 py-2.5 text-center">
+              <p className="font-mono text-xl font-bold tabular-nums text-white">
                 {formatCount(step.value)}
               </p>
-              <p className="mt-0.5 text-xs font-semibold text-gray-700">
+              <p className="mt-0.5 text-xs font-semibold text-slate-200">
                 {step.label}
               </p>
-              <p className="text-[10px] text-gray-500">{step.sub}</p>
+              <p className="text-[10px] text-slate-400">{step.sub}</p>
             </div>
             {i < steps.length - 1 ? (
-              <div className="flex shrink-0 flex-col items-center text-gray-400">
+              <div className="flex shrink-0 flex-col items-center text-slate-400">
                 <span className="text-lg leading-none">→</span>
-                <span className="text-[10px] font-bold text-emerald-700">
+                <span className="text-[10px] font-bold text-emerald-400">
                   {formatRate(steps[i + 1].rate)}
                 </span>
               </div>
@@ -265,7 +265,7 @@ function SignupFunnelStrip({
           </div>
         ))}
       </div>
-      {hint ? <p className="mt-3 text-xs text-gray-600">{hint}</p> : null}
+      {hint ? <p className="mt-3 text-xs text-slate-400">{hint}</p> : null}
     </div>
   );
 }
