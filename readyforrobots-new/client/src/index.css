@@ -2891,8 +2891,10 @@
   height: 7px;
   border-radius: 50%;
   background: var(--landing-emerald);
-  box-shadow: 0 0 8px var(--landing-emerald);
+  box-shadow: 0 0 6px var(--landing-emerald);
   animation: rfr-pulse 2s infinite ease-in-out;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   will-change: opacity;
 }
 

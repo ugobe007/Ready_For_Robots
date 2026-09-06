@@ -280,18 +280,27 @@ export default function CalJobsDesk({
 
   const toggleCollapse = (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsCollapsed(prev => !prev);
   };
 
   return (
     <section
-      className="mt-4 rounded-lg border border-violet-500/30 bg-[#0a1226] p-3.5 sm:p-4 transition-all"
+      className="mt-4 rounded-lg border border-violet-500/30 bg-[#0a1226] p-3.5 sm:p-4 transition-colors"
       data-cal-jobs-desk="1"
       aria-label={OEM_CAL_DESK_EYEBROW}
     >
       <div
         className="flex cursor-pointer select-none items-center justify-between gap-2"
         onClick={toggleCollapse}
+        role="button"
+        tabIndex={0}
+        onKeyDown={e => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            setIsCollapsed(prev => !prev);
+          }
+        }}
       >
         <div className="flex flex-wrap items-center gap-2">
           <p className={`${JOBS_EYEBROW_CLASS} font-semibold text-violet-400`}>
@@ -302,14 +311,10 @@ export default function CalJobsDesk({
             Automate your job applications & proposals
           </span>
         </div>
-        <button
-          type="button"
-          onClick={toggleCollapse}
-          className="inline-flex shrink-0 items-center gap-1.5 rounded border border-slate-700 bg-[#111c38] px-2.5 py-1 text-xs font-semibold text-slate-300 hover:border-violet-400 hover:text-white"
-        >
+        <span className="inline-flex shrink-0 items-center gap-1.5 rounded border border-slate-700 bg-[#111c38] px-2.5 py-1 text-xs font-semibold text-slate-300 hover:border-violet-400 hover:text-white">
           <span>{isCollapsed ? "Expand" : "Collapse"}</span>
           <span className="text-[10px]">{isCollapsed ? "▼" : "▲"}</span>
-        </button>
+        </span>
       </div>
 
       {!isCollapsed ? (

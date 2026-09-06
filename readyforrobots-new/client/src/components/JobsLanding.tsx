@@ -195,17 +195,13 @@ export default function JobsLanding() {
           <div className="rfr-landing-hero-samples">
             <span className="rfr-landing-samples-label">Try sample robot:</span>
             {SAMPLE_ROBOTS.map((sample) => (
-              <button
+              <a
                 key={sample.url}
-                type="button"
+                href={jobsFindHref(sample.url)}
                 className="rfr-landing-sample-chip"
-                onClick={() => {
-                  setHeroUrl(sample.url);
-                  window.location.href = jobsFindHref(sample.url);
-                }}
               >
                 {sample.label}
-              </button>
+              </a>
             ))}
           </div>
           <div className="rfr-landing-hero-actions">
