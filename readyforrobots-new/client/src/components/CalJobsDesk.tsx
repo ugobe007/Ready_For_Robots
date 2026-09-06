@@ -122,6 +122,8 @@ export default function CalJobsDesk({
   const [priceDraft, setPriceDraft] = useState("");
   const [pocDraft, setPocDraft] = useState("");
 
+  const [isCollapsed, setIsCollapsed] = useState(true);
+
   const focus = useMemo(() => {
     const jobs = desk?.jobs || [];
     return (
@@ -278,67 +280,92 @@ export default function CalJobsDesk({
 
   return (
     <section
-      className="mt-4 rounded-lg border border-violet-500/30 bg-[#0a1226] p-4 sm:p-5"
+      className="mt-4 rounded-lg border border-violet-500/30 bg-[#0a1226] p-3.5 sm:p-4 transition-all"
       data-cal-jobs-desk="1"
       aria-label={OEM_CAL_DESK_EYEBROW}
     >
-      <p className={`${JOBS_EYEBROW_CLASS} text-violet-400`}>
-        {OEM_CAL_DESK_EYEBROW}
-      </p>
-      <h2 className="mt-1 font-display text-xl font-bold text-white">
-        Job Recruiter
-      </h2>
-      <p className="mt-1.5 max-w-3xl text-xs sm:text-sm leading-relaxed text-slate-300">
-        {OEM_CAL_DESK_LEAD}
-      </p>
-
-      {desk?.jobs.length ? (
-        <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
-          {desk.jobs.slice(0, 3).map(job => {
-            const isFocused = focus?.job_key === job.job_key;
-            return (
-              <div
-                key={job.job_key}
-                className={`rounded-md border p-3 text-left transition ${
-                  isFocused
-                    ? "border-emerald-400/80 bg-emerald-950/20 text-white"
-                    : "border-slate-700/60 bg-[#101b38] text-slate-300"
-                }`}
-              >
-                <span className="block font-bold text-emerald-300 text-xs truncate">
-                  {job.employer_name || "Employer"}
-                </span>
-                <span className="mt-1 block text-xs text-slate-200 line-clamp-2">
-                  {job.work_title || "Job match"}
-                </span>
-                <span className="mt-2 block text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
-                  {jobStatusLine(job, pendingByJob[job.job_key])}
-                </span>
-              </div>
-            );
-          })}
+      <div
+        className="flex cursor-pointer select-none items-center justify-between gap-2"
+        onClick={() => setIsCollapsed(!isCollapsed)}
+      >
+        <div className="flex flex-wrap items-center gap-2">
+          <p className={`${JOBS_EYEBROW_CLASS} font-semibold text-violet-400`}>
+            {OEM_CAL_DESK_EYEBROW}
+          </p>
+          <span className="hidden text-slate-500 sm:inline">•</span>
+          <span className="max-w-md truncate text-xs font-medium text-slate-300">
+            Automate your job applications & proposals
+          </span>
         </div>
-      ) : (
-        <p className="mt-3 text-xs text-slate-400">{desk?.greeting}</p>
-      )}
+        <button
+          type="button"
+          onClick={e => {
+            e.stopPropagation();
+            setIsCollapsed(!isCollapsed);
+          }}
+          className="inline-flex shrink-0 items-center gap-1.5 rounded border border-slate-700 bg-[#111c38] px-2.5 py-1 text-xs font-semibold text-slate-300 hover:border-violet-400 hover:text-white"
+        >
+          <span>{isCollapsed ? "Expand" : "Collapse"}</span>
+          <span className="text-[10px]">{isCollapsed ? "▼" : "▲"}</span>
+        </button>
+      </div>
 
-      <ol className="mt-3 space-y-2" aria-live="polite">
-        {thread.slice(-4).map((line, i) => (
-          <li
-            key={`${line.who}-${i}-${line.text.slice(0, 20)}`}
-            className={
-              line.who === "cal"
-                ? "text-xs sm:text-sm leading-relaxed text-slate-100"
-                : "text-xs sm:text-sm leading-relaxed text-emerald-200"
-            }
-          >
-            <span className={`${JOBS_EYEBROW_CLASS} text-slate-500`}>
-              {line.who === "cal" ? "Recruiter" : "You"}
-            </span>
-            <span className="mt-0.5 block">{line.text}</span>
-          </li>
-        ))}
-      </ol>
+      {!isCollapsed ? (
+        <div className="mt-3 border-t border-violet-500/20 pt-3">
+          <h2 className="font-display text-xl font-bold text-white">
+            Job Recruiter
+          </h2>
+          <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-slate-300 sm:text-sm">
+            {OEM_CAL_DESK_LEAD}
+          </p>
+
+          {desk?.jobs.length ? (
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+              {desk.jobs.slice(0, 3).map(job => {
+                const isFocused = focus?.job_key === job.job_key;
+                return (
+                  <div
+                    key={job.job_key}
+                    className={`rounded-md border p-3 text-left transition ${
+                      isFocused
+                        ? "border-emerald-400/80 bg-emerald-950/20 text-white"
+                        : "border-slate-700/60 bg-[#101b38] text-slate-300"
+                    }`}
+                  >
+                    <span className="block truncate text-xs font-bold text-emerald-300">
+                      {job.employer_name || "Employer"}
+                    </span>
+                    <span className="line-clamp-2 mt-1 block text-xs text-slate-200">
+                      {job.work_title || "Job match"}
+                    </span>
+                    <span className="mt-2 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {jobStatusLine(job, pendingByJob[job.job_key])}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-slate-400">{desk?.greeting}</p>
+          )}
+
+          <ol className="mt-3 space-y-2" aria-live="polite">
+            {thread.slice(-4).map((line, i) => (
+              <li
+                key={`${line.who}-${i}-${line.text.slice(0, 20)}`}
+                className={
+                  line.who === "cal"
+                    ? "text-xs leading-relaxed text-slate-100 sm:text-sm"
+                    : "text-xs leading-relaxed text-emerald-200 sm:text-sm"
+                }
+              >
+                <span className={`${JOBS_EYEBROW_CLASS} text-slate-500`}>
+                  {line.who === "cal" ? "Recruiter" : "You"}
+                </span>
+                <span className="mt-0.5 block">{line.text}</span>
+              </li>
+            ))}
+          </ol>
 
       {focus?.contacts_note ? (
         <p className="mt-3 text-sm text-slate-400">
@@ -547,6 +574,8 @@ export default function CalJobsDesk({
       ) : null}
 
       {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
+        </div>
+      ) : null}
     </section>
   );
 }

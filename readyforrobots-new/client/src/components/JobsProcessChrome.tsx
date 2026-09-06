@@ -58,7 +58,7 @@ export default function JobsProcessChrome({
           </a>
         );
       })}
-      {signedIn && jobCount > 0 ? (
+      {signedIn && jobCount > 0 && current !== "activate" ? (
         <a
           href={jobsCrmOfferHref(true, submissionId)}
           className={`rfr-jobs-process-action m-2 shrink-0 ${JOBS_APPLY_CTA_CLASS}`}
