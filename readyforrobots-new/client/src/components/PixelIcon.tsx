@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type { PixelMap } from "@/lib/kareIcons";
 
 type Props = {
@@ -23,6 +24,24 @@ export default function PixelIcon({
 }: Props) {
   const n = map.length;
   const size = n * scale;
+
+  const cells = useMemo(
+    () =>
+      map.flatMap((row, y) =>
+        row.map((bit, x) => (
+          <span
+            key={`${x}-${y}`}
+            style={{
+              background: bit ? fill : "transparent",
+              boxShadow: showGrid
+                ? "inset 0 0 0 0.5px rgba(100,100,100,0.25)"
+                : undefined,
+            }}
+          />
+        ))
+      ),
+    [map, fill, showGrid]
+  );
 
   return (
     <div className={className}>
@@ -50,19 +69,7 @@ export default function PixelIcon({
             gridTemplateRows: `repeat(${n}, ${scale}px)`,
           }}
         >
-          {map.flatMap((row, y) =>
-            row.map((bit, x) => (
-              <span
-                key={`${x}-${y}`}
-                style={{
-                  background: bit ? fill : "transparent",
-                  boxShadow: showGrid
-                    ? "inset 0 0 0 0.5px rgba(100,100,100,0.25)"
-                    : undefined,
-                }}
-              />
-            ))
-          )}
+          {cells}
         </div>
       </div>
     </div>

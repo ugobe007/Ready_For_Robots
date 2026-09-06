@@ -3043,7 +3043,7 @@
   flex-shrink: 0;
   align-items: center;
   justify-content: center;
-  align-self: flex-center;
+  align-self: center;
   order: 2;
   margin-left: auto;
   width: auto;
