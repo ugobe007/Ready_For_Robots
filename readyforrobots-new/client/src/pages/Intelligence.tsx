@@ -155,15 +155,15 @@ export default function Intelligence() {
             </span>
           }
           title={
-            <span className="inline-flex flex-wrap items-center gap-4">
+            <span className="inline-flex flex-wrap items-center gap-3 sm:gap-4">
               <PixelIcon
                 map={KARE_FACE}
                 scale={3}
                 fill={FACE_EMERALD}
                 background="transparent"
               />
-              <span className="font-display bg-gradient-to-r from-white via-slate-100 to-emerald-300 bg-clip-text text-transparent">
-                Robots Need Jobs. We Find the Work.
+              <span className="font-display font-bold text-white tracking-tight">
+                <span className="text-emerald-400">Robots Need Jobs.</span> We Find the Work.
               </span>
             </span>
           }
