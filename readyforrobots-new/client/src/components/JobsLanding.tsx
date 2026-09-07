@@ -205,18 +205,6 @@ export default function JobsLanding() {
               Find jobs →
             </button>
           </div>
-          <div className="rfr-landing-hero-samples">
-            <span className="rfr-landing-samples-label">Try sample robot:</span>
-            {SAMPLE_ROBOTS.map((sample) => (
-              <a
-                key={sample.url}
-                href={jobsFindHref(sample.url)}
-                className="rfr-landing-sample-chip"
-              >
-                {sample.label}
-              </a>
-            ))}
-          </div>
           <div className="rfr-landing-hero-actions">
             <a
               href={jobsCandidatesHref()}
@@ -229,7 +217,6 @@ export default function JobsLanding() {
       </section>
 
       <section className="rfr-landing-brief" aria-label="Live job feed">
-        <p className="rfr-landing-brief-eyebrow">{LANDING_BRIEF_EYEBROW}</p>
         <h2 className="rfr-landing-brief-headline">{LANDING_BRIEF_HEADLINE}</h2>
         <p className="rfr-landing-brief-note">{LANDING_BRIEF_NOTE}</p>
         <div className="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-[#081126] shadow-2xl">

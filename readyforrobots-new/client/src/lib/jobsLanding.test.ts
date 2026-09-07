@@ -213,10 +213,7 @@ describe("landing fork", () => {
     expect(landing).toMatch(/LandingFace scale=\{7\}/);
     expect(landing).toMatch(/ready_for_robots_hero\.jpg/);
     expect(landing).toMatch(/Find jobs →/);
-    expect(landing).toMatch(/rfr-landing-hero-samples/);
-    expect(landing).toMatch(/Humanoid/);
-    expect(landing).toMatch(/Logistics robot/);
-    expect(landing).toMatch(/Agriculture robot/);
+    expect(landing).not.toMatch(/rfr-landing-hero-samples/);
     expect(landing).toMatch(/rfr-landing-stats-bar/);
     expect(landing).not.toMatch(/PixelBriefcase|PixelDoc|PixelHand/);
     expect(landing).not.toMatch(/PixelRobot/);
