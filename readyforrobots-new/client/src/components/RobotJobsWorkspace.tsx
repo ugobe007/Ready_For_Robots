@@ -1606,7 +1606,7 @@ export default function RobotJobsWorkspace() {
         kind: "dump",
         label: "Kept from FIND",
         jobKey: job.job_key,
-        company: job.company || undefined,
+        company: (job as any).company || (job as any).employer_name || undefined,
         robotUrl: submittedUrlRef.current,
       });
     }

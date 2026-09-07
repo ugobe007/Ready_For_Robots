@@ -6619,7 +6619,7 @@ export default function Pipeline() {
                                 action: selected.pipelineAction,
                                 company: selected.company,
                                 industry: selected.industry,
-                                title: selected.signals?.[0]?.display_text,
+                                title: (typeof selected.signal?.[0] === 'string' ? selected.signal[0] : (selected.signal?.[0] as any)?.display_text) || (selected as any).signals?.[0]?.display_text,
                               }) ||
                               "This is the work — inspect the station, shift, and robot fit.";
                             return (

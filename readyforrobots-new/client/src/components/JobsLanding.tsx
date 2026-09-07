@@ -108,16 +108,19 @@ function AccentLabel({ parts }: { parts: LandingAccentPart[] }) {
 }
 
 function BriefJobCard({ job }: { job: LandingBriefJob }) {
+  const isConditional = job.status === "CONDITIONAL";
+  const displayStatus = isConditional ? "Needs verification" : job.status;
+
   return (
     <article className="rfr-landing-brief-job">
       <div className="rfr-landing-brief-row">
         <span className="rfr-landing-brief-id">{job.id}</span>
         <h3 className="rfr-landing-brief-employer">{job.employer}</h3>
-        <span className="rfr-landing-brief-sector">{job.sector}</span>
+        <span className="rfr-landing-brief-sector">{job.workplace || job.sector}</span>
         <span
           className={`rfr-landing-brief-status rfr-landing-brief-status--${job.status.toLowerCase()}`}
         >
-          {job.status}
+          {displayStatus}
         </span>
       </div>
       <p className="rfr-landing-brief-field-label">{LANDING_BRIEF_JOB_FIELD}</p>
@@ -151,19 +154,27 @@ export default function JobsLanding() {
           <span className="rfr-landing-kicker-jobs">{LANDING_KICKER_JOBS}</span>
         </p>
         <div className="rfr-landing-hero-row">
-          <h1 className="rfr-landing-headline">
-            {LANDING_HEADLINE_BEFORE}
-            <span className="rfr-landing-accent">{LANDING_HEADLINE_ROBOT}</span>
-            {LANDING_HEADLINE_AFTER}
-            <br />
-            {LANDING_HEADLINE_END}
-          </h1>
-          <div className="rfr-landing-hero-mark" aria-hidden="true">
-            <LandingFace scale={7} />
+          <div className="rfr-landing-hero-left">
+            <h1 className="rfr-landing-headline">
+              {LANDING_HEADLINE_BEFORE}
+              <span className="rfr-landing-accent">{LANDING_HEADLINE_ROBOT}</span>
+              {LANDING_HEADLINE_AFTER}
+              <br />
+              {LANDING_HEADLINE_END}
+            </h1>
+            <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
+            <p className="rfr-landing-intro">{LANDING_INTRO}</p>
+          </div>
+          <div className="rfr-landing-hero-right">
+            <div className="rfr-landing-hero-poster-wrap">
+              <img
+                src="/ready_for_robots_hero.jpg"
+                alt="Ready For Robots - A More Productive Tomorrow"
+                className="rfr-landing-hero-poster"
+              />
+            </div>
           </div>
         </div>
-        <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
-        <p className="rfr-landing-intro">{LANDING_INTRO}</p>
 
         <div className="rfr-landing-stats-bar">
           {LANDING_STATS.map((stat, idx) => (

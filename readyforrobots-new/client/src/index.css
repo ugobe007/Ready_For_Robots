@@ -2927,7 +2927,7 @@
   border: 2px solid #8b5cf6;
   border-radius: 8px;
   padding: 0.4rem 0.5rem;
-  box-shadow: 0 0 20px rgba(139, 92, 246, 0.22);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
@@ -2964,13 +2964,13 @@
   border-radius: 6px;
   cursor: pointer;
   transition: background 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
-  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 14px rgba(139, 92, 246, 0.4);
 }
 
 .rfr-landing-hero-submit:hover {
   background: #7c3aed;
   transform: translateY(-1px);
-  box-shadow: 0 0 18px rgba(139, 92, 246, 0.6);
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.6);
 }
 
 .rfr-landing-hero-samples {
@@ -3016,14 +3016,38 @@
   font-family: var(--font-landing-sans);
   font-size: 0.85rem;
   font-weight: 500;
-  color: var(--landing-muted);
+  color: #d6b15d;
   text-decoration: underline;
   text-underline-offset: 3px;
   transition: color 0.15s ease;
 }
 
 .rfr-landing-employer-link:hover {
-  color: #c4b5fd;
+  color: #f5b73d;
+}
+
+.rfr-landing-hero-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 1rem;
+  margin-left: auto;
+  order: 2;
+}
+
+.rfr-landing-hero-poster-wrap {
+  max-width: 17.5rem;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(139, 92, 246, 0.4);
+  box-shadow: 0 0 30px rgba(139, 92, 246, 0.25), 0 12px 28px rgba(0, 0, 0, 0.6);
+}
+
+.rfr-landing-hero-poster {
+  width: 100%;
+  height: auto;
+  display: block;
+  object-fit: cover;
 }
 
 .rfr-landing-hero-mark {
@@ -3032,13 +3056,46 @@
   align-items: center;
   justify-content: center;
   align-self: center;
-  order: 2;
   margin-left: auto;
   width: auto;
   height: auto;
   border: none;
   background: transparent;
   filter: drop-shadow(0 0 12px rgba(16, 185, 129, 0.35));
+}
+
+.rfr-landing-capability-panel {
+  background: var(--landing-navy-2);
+  border: 1px solid rgba(214, 177, 93, 0.4);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  max-width: 17rem;
+}
+
+.rfr-capability-header {
+  font-family: var(--font-landing-ui);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d6b15d;
+  margin-bottom: 0.4rem;
+}
+
+.rfr-capability-metrics {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.rfr-cap-chip {
+  font-family: var(--font-landing-sans);
+  font-size: 0.76rem;
+  color: var(--landing-cream);
+  background: rgba(255, 255, 255, 0.04);
+  padding: 0.2rem 0.45rem;
+  border-radius: 3px;
+  border-left: 2px solid var(--landing-emerald);
 }
 
 .rfr-landing-doors {
@@ -3124,7 +3181,7 @@
   width: auto;
   height: auto;
   padding: 0.15rem;
-  border: 2px solid var(--landing-violet);
+  border: 2px solid #d6b15d;
   border-radius: 4px;
   background: transparent;
 }
@@ -3203,6 +3260,8 @@
 .rfr-landing-brief-job {
   padding: 0.75rem 0.95rem 0.85rem;
   border: 1px solid var(--landing-line);
+  border-radius: 6px;
+  background: var(--landing-navy-2);
 }
 
 .rfr-landing-brief-row {
@@ -3245,6 +3304,18 @@
   padding: 0.18rem 0.45rem;
   color: var(--landing-navy);
   background: var(--landing-emerald);
+  border-radius: 3px;
+  font-weight: 700;
+}
+
+.rfr-landing-brief-status--conditional,
+.rfr-landing-brief-status--needs-verification {
+  padding: 0.18rem 0.45rem;
+  color: #d6b15d;
+  background: transparent;
+  border: 1px solid #d6b15d;
+  border-radius: 3px;
+  font-weight: 600;
 }
 
 .rfr-landing-brief-field-label {

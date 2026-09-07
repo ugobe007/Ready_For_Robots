@@ -75,7 +75,7 @@ describe("landing fork", () => {
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
     expect(LANDING_DOORS_CUE).toBe("START HERE →");
     expect(LANDING_DOOR_ICON_SCALE).toBe(3);
-    expect(LANDING_DOOR_ICON_FILL).toBe("#7C3AED");
+    expect(LANDING_DOOR_ICON_FILL).toBe("#8B5CF6");
     expect(LANDING_JOBS_LABEL).toBe("Robot owner");
     expect(LANDING_CANDIDATES_LABEL).toBe("Employer");
     expect(LANDING_JOBS_DOOR_LINE).toBe("Paste a robot URL.");
@@ -116,7 +116,7 @@ describe("landing fork", () => {
     expect(LANDING_EYEBROW).toBe("Ready For Robots");
     expect(LANDING_KICKER_JOBS).toBe("Jobs");
     expect(LANDING_SUBHEAD).toBe(
-      "Find jobs for robots and robots for jobs...."
+      "Paste a robot product page. We’ll match its capabilities to real physical work."
     );
     expect(LANDING_INTRO).toBe(
       "Submit your robot URL or your robot job. We put robots to work."
@@ -191,7 +191,7 @@ describe("landing fork", () => {
     const html = readFileSync(join(here, "../../index.html"), "utf8");
     expect(LANDING_HEADLINE).toBe("Put Robots to Work.");
     expect(LANDING_SUBHEAD).toBe(
-      "Find jobs for robots and robots for jobs...."
+      "Paste a robot product page. We’ll match its capabilities to real physical work."
     );
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
@@ -209,10 +209,9 @@ describe("landing fork", () => {
     expect(landing).not.toMatch(/rfr-landing-door-who/);
     expect(landing).toMatch(/rfr-landing-accent/);
     expect(landing.indexOf("rfr-landing-headline")).toBeLessThan(
-      landing.indexOf("rfr-landing-hero-mark")
+      landing.indexOf("rfr-landing-hero-poster-wrap")
     );
-    expect(landing).toMatch(/KARE_FACE/);
-    expect(landing).toMatch(/LandingFace scale=\{7\}/);
+    expect(landing).toMatch(/ready_for_robots_hero\.jpg/);
     expect(landing).toMatch(/Find jobs →/);
     expect(landing).toMatch(/rfr-landing-hero-samples/);
     expect(landing).toMatch(/Humanoid/);
@@ -316,7 +315,7 @@ describe("landing fork", () => {
       /\.rfr-landing-door--candidates\s*\{[\s\S]*?border:\s*2px solid var\(--landing-cream\);/
     );
     expect(css).toMatch(
-      /\.rfr-landing-door-mark[\s\S]*?border:\s*2px solid var\(--landing-violet\);/
+      /\.rfr-landing-door-mark[\s\S]*?border:\s*2px solid #d6b15d;/
     );
     expect(css).toMatch(
       /\.rfr-landing-door-mark[\s\S]*?background:\s*transparent;/

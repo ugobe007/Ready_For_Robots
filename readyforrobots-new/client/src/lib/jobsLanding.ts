@@ -27,7 +27,7 @@ export const LOOK_FOR_ROBOT_CANDIDATES_CTA = "Robots for Jobs";
 export const LANDING_DOORS_CUE = "START HERE →";
 /** 24×24 maps at this scale so the truck / handshake read as marks, not crumbs. */
 export const LANDING_DOOR_ICON_SCALE = 3;
-export const LANDING_DOOR_ICON_FILL = "#7C3AED";
+export const LANDING_DOOR_ICON_FILL = "#8B5CF6";
 export const LANDING_JOBS_DOOR_LINE = "Paste a robot URL.";
 export const LANDING_CANDIDATES_DOOR_LINE = "Name the work.";
 
@@ -39,7 +39,8 @@ export const LANDING_HEADLINE_ROBOT = "Robots";
 export const LANDING_HEADLINE_AFTER = "";
 export const LANDING_HEADLINE_LEAD = `${LANDING_HEADLINE_BEFORE}${LANDING_HEADLINE_ROBOT}${LANDING_HEADLINE_AFTER}`;
 export const LANDING_HEADLINE_END = "to Work.";
-export const LANDING_SUBHEAD = "Find jobs for robots and robots for jobs....";
+export const LANDING_SUBHEAD =
+  "Paste a robot product page. We’ll match its capabilities to real physical work.";
 export const LANDING_INTRO =
   "Submit your robot URL or your robot job. We put robots to work.";
 export const LANDING_CTA_ROBOT_WORD = "Robots";
@@ -64,7 +65,7 @@ export const LANDING_HOW_STEPS = [
   {
     n: "02",
     title: "Available jobs",
-    body: "Inspect employment cards: employer, workplace, work. Cards stay Conditional until there is evidence.",
+    body: "Inspect employment cards: employer, workplace, work. Evidence shown on every verified match.",
     href: "/?visit=jobs",
     cta: "See available jobs →",
   },
@@ -87,7 +88,7 @@ export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
 export const LANDING_BRIEF_HEADLINE = "Jobs for robots.";
 export const LANDING_BRIEF_JOB_FIELD = "Jobs";
 export const LANDING_BRIEF_NOTE =
-  "1,000+ verified jobs. Cards stay Conditional until evidence.";
+  "Evidence shown on every verified match.";
 
 export type LandingBriefJob = {
   id: string;
@@ -108,7 +109,7 @@ export const LANDING_BRIEF_JOBS: readonly LandingBriefJob[] = [
     employer: "Amazon",
     sector: "Logistics & Fulfillment",
     workplace: "European fulfillment network",
-    work: "Warehouse automation across a €10bn Europe expansion — new fulfillment capacity, pick-and-place lines.",
+    work: "Move totes from storage to packing lines and operate pick-and-place sorting stations across fulfillment centers.",
     drivers: [
       "New locations / capacity growth",
       "Public automation news",
@@ -127,7 +128,7 @@ export const LANDING_BRIEF_JOBS: readonly LandingBriefJob[] = [
     employer: "Benchmark Senior Living",
     sector: "Senior Living & Assisted Living",
     workplace: "Large multi-site care operator",
-    work: "Front-line labor shortage pushing evaluation of service and material-handling robots across residences.",
+    work: "Transport meal trays, linens, and care supplies between facility kitchens and resident care wings.",
     drivers: [
       "Staffing pressure",
       "Capacity growth",
@@ -146,7 +147,7 @@ export const LANDING_BRIEF_JOBS: readonly LandingBriefJob[] = [
     employer: "Whitsons Culinary Group",
     sector: "Food Service & Catering",
     workplace: "Large food-service production facilities",
-    work: "Acute front-line labor shortages pushing evaluation of service and material-handling robots in kitchens.",
+    work: "Palletize end-of-line food boxes and assist kitchen staff with automated ingredient conveyance.",
     drivers: ["Staffing pressure", "Capacity growth", "Robot job posted"],
     window: "90–210 days (capital program phase)",
     fit: ["Humanoid robots", "Service robots", "Delivery robots"],
