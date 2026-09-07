@@ -109,7 +109,6 @@ function AccentLabel({ parts }: { parts: LandingAccentPart[] }) {
 
 function BriefJobCard({ job }: { job: LandingBriefJob }) {
   const isConditional = job.status === "CONDITIONAL";
-  const displayStatus = isConditional ? "Needs verification" : job.status;
 
   return (
     <article className="rfr-landing-brief-job">
@@ -117,11 +116,13 @@ function BriefJobCard({ job }: { job: LandingBriefJob }) {
         <span className="rfr-landing-brief-id">{job.id}</span>
         <h3 className="rfr-landing-brief-employer">{job.employer}</h3>
         <span className="rfr-landing-brief-sector">{job.workplace || job.sector}</span>
-        <span
-          className={`rfr-landing-brief-status rfr-landing-brief-status--${job.status.toLowerCase()}`}
-        >
-          {displayStatus}
-        </span>
+        {!isConditional && (
+          <span
+            className={`rfr-landing-brief-status rfr-landing-brief-status--${job.status.toLowerCase()}`}
+          >
+            {job.status}
+          </span>
+        )}
       </div>
       <p className="rfr-landing-brief-field-label">{LANDING_BRIEF_JOB_FIELD}</p>
       <p className="rfr-landing-brief-jobs">{job.work}</p>
