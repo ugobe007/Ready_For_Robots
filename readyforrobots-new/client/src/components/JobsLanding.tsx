@@ -5,6 +5,8 @@
 import { useState, type FormEvent } from "react";
 import PixelIcon from "@/components/PixelIcon";
 import SiteIcon from "@/components/SiteIcon";
+import LiveJobTape from "@/components/jobs/LiveJobTape";
+import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
   LANDING_BRIEF_EYEBROW,
@@ -226,14 +228,18 @@ export default function JobsLanding() {
         </form>
       </section>
 
-      <section className="rfr-landing-brief" aria-label="Jobs brief">
+      <section className="rfr-landing-brief" aria-label="Live job feed">
         <p className="rfr-landing-brief-eyebrow">{LANDING_BRIEF_EYEBROW}</p>
         <h2 className="rfr-landing-brief-headline">{LANDING_BRIEF_HEADLINE}</h2>
         <p className="rfr-landing-brief-note">{LANDING_BRIEF_NOTE}</p>
-        <div className="rfr-landing-brief-list">
-          {LANDING_BRIEF_JOBS.map(job => (
-            <BriefJobCard key={job.id} job={job} />
-          ))}
+        <div className="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-[#081126] shadow-2xl">
+          <LiveJobTape
+            title="Verified Physical Work Feed"
+            subtitle="Classified job opportunities highlighting as they reach the top of the feed"
+            corpus={MARKET_TAPE_JOBS}
+            baseCount={MARKET_TAPE_JOBS.length}
+            running={true}
+          />
         </div>
       </section>
 

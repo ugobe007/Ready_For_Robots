@@ -156,10 +156,8 @@ describe("landing fork", () => {
     expect(landing).toMatch(/LANDING_HEADLINE_ROBOT/);
     expect(landing).toMatch(/rfr-landing-hero-form/);
     expect(landing).toMatch(/rfr-landing-employer-link/);
-    expect(landing).toMatch(/LANDING_SUBHEAD/);
-    expect(landing).toMatch(/LANDING_BRIEF_JOBS/);
-    expect(landing).toMatch(/LANDING_BRIEF_JOB_FIELD/);
-    expect(landing).toMatch(/rfr-landing-brief-employer/);
+    expect(landing).toMatch(/LiveJobTape/);
+    expect(landing).toMatch(/MARKET_TAPE_JOBS/);
     expect(landing).not.toMatch(/LANDING_HOW_STEPS|LANDING_VOCAB/);
     expect(landing).not.toMatch(
       /Look for buyers|SIGNAL|Apollo|Who is this visit/i

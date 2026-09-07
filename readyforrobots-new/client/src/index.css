@@ -2807,15 +2807,7 @@
   -webkit-mask-image: radial-gradient(circle at 75% 45%, rgba(0, 0, 0, 1) 15%, rgba(0, 0, 0, 0) 80%);
 }
 
-.rfr-landing-hero-bg::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(139, 92, 246, 0.3) 1.2px, transparent 1.2px);
-  background-size: 6px 6px;
-  pointer-events: none;
-  opacity: 0.85;
-}
+
 
 .rfr-landing-hero-bg-img {
   width: 100%;
