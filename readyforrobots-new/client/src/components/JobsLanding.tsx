@@ -175,7 +175,6 @@ export default function JobsLanding() {
           </div>
         </div>
         <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
-        <p className="rfr-landing-intro">{LANDING_INTRO}</p>
 
         <div className="rfr-landing-stats-bar">
           {LANDING_STATS.map((stat, idx) => (

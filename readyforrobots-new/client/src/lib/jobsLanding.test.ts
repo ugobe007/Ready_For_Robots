@@ -156,7 +156,7 @@ describe("landing fork", () => {
     expect(landing).toMatch(/LANDING_HEADLINE_ROBOT/);
     expect(landing).toMatch(/rfr-landing-hero-form/);
     expect(landing).toMatch(/rfr-landing-employer-link/);
-    expect(landing).toMatch(/LANDING_INTRO/);
+    expect(landing).toMatch(/LANDING_SUBHEAD/);
     expect(landing).toMatch(/LANDING_BRIEF_JOBS/);
     expect(landing).toMatch(/LANDING_BRIEF_JOB_FIELD/);
     expect(landing).toMatch(/rfr-landing-brief-employer/);
@@ -202,7 +202,7 @@ describe("landing fork", () => {
     expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
     expect(landing).not.toMatch(/rfr-landing-windowbar/);
     expect(landing).toMatch(/rfr-landing-headline/);
-    expect(landing).toMatch(/rfr-landing-intro/);
+    expect(landing).toMatch(/rfr-landing-subhead/);
     expect(landing).toMatch(/rfr-landing-hero-form/);
     expect(landing).toMatch(/rfr-landing-employer-link/);
     expect(landing).not.toMatch(/rfr-landing-doors-cue/);
