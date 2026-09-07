@@ -2785,17 +2785,72 @@
 }
 
 .rfr-landing-hero {
+  position: relative;
   display: flex;
   flex-direction: column;
   max-width: 58rem;
   margin: 0 auto;
   padding: 2.25rem 1.25rem 1.75rem;
+  overflow: hidden;
+}
+
+.rfr-landing-hero-bg {
+  position: absolute;
+  top: 0;
+  right: -2rem;
+  bottom: 0;
+  width: 44rem;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.32;
+  mask-image: radial-gradient(circle at 75% 45%, rgba(0, 0, 0, 1) 15%, rgba(0, 0, 0, 0) 80%);
+  -webkit-mask-image: radial-gradient(circle at 75% 45%, rgba(0, 0, 0, 1) 15%, rgba(0, 0, 0, 0) 80%);
+}
+
+.rfr-landing-hero-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(139, 92, 246, 0.3) 1.2px, transparent 1.2px);
+  background-size: 6px 6px;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.rfr-landing-hero-bg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 75% 25%;
+  filter: contrast(1.25) brightness(0.9);
+}
+
+.rfr-landing-hero-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    var(--landing-navy) 0%,
+    rgba(10, 15, 30, 0.7) 45%,
+    rgba(10, 15, 30, 0.15) 100%
+  );
 }
 
 @media (min-width: 768px) {
   .rfr-landing-hero {
     padding: 2.75rem 1.75rem 2rem;
   }
+}
+
+.rfr-landing-kicker,
+.rfr-landing-hero-row,
+.rfr-landing-subhead,
+.rfr-landing-intro,
+.rfr-landing-stats-bar,
+.rfr-landing-hero-form,
+.rfr-landing-doors {
+  position: relative;
+  z-index: 1;
 }
 
 .rfr-landing-kicker {

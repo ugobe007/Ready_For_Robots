@@ -148,33 +148,33 @@ export default function JobsLanding() {
   return (
     <div className="rfr-landing">
       <section className="rfr-landing-hero">
+        <div className="rfr-landing-hero-bg" aria-hidden="true">
+          <img
+            src="/ready_for_robots_hero.jpg"
+            alt=""
+            className="rfr-landing-hero-bg-img"
+          />
+          <div className="rfr-landing-hero-bg-overlay" />
+        </div>
         <p className="rfr-landing-kicker">
           {LANDING_EYEBROW}
           {" · "}
           <span className="rfr-landing-kicker-jobs">{LANDING_KICKER_JOBS}</span>
         </p>
         <div className="rfr-landing-hero-row">
-          <div className="rfr-landing-hero-left">
-            <h1 className="rfr-landing-headline">
-              {LANDING_HEADLINE_BEFORE}
-              <span className="rfr-landing-accent">{LANDING_HEADLINE_ROBOT}</span>
-              {LANDING_HEADLINE_AFTER}
-              <br />
-              {LANDING_HEADLINE_END}
-            </h1>
-            <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
-            <p className="rfr-landing-intro">{LANDING_INTRO}</p>
-          </div>
-          <div className="rfr-landing-hero-right">
-            <div className="rfr-landing-hero-poster-wrap">
-              <img
-                src="/ready_for_robots_hero.jpg"
-                alt="Ready For Robots - A More Productive Tomorrow"
-                className="rfr-landing-hero-poster"
-              />
-            </div>
+          <h1 className="rfr-landing-headline">
+            {LANDING_HEADLINE_BEFORE}
+            <span className="rfr-landing-accent">{LANDING_HEADLINE_ROBOT}</span>
+            {LANDING_HEADLINE_AFTER}
+            <br />
+            {LANDING_HEADLINE_END}
+          </h1>
+          <div className="rfr-landing-hero-mark" aria-hidden="true">
+            <LandingFace scale={7} />
           </div>
         </div>
+        <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
+        <p className="rfr-landing-intro">{LANDING_INTRO}</p>
 
         <div className="rfr-landing-stats-bar">
           {LANDING_STATS.map((stat, idx) => (

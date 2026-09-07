@@ -209,8 +209,10 @@ describe("landing fork", () => {
     expect(landing).not.toMatch(/rfr-landing-door-who/);
     expect(landing).toMatch(/rfr-landing-accent/);
     expect(landing.indexOf("rfr-landing-headline")).toBeLessThan(
-      landing.indexOf("rfr-landing-hero-poster-wrap")
+      landing.indexOf("rfr-landing-hero-mark")
     );
+    expect(landing).toMatch(/KARE_FACE/);
+    expect(landing).toMatch(/LandingFace scale=\{7\}/);
     expect(landing).toMatch(/ready_for_robots_hero\.jpg/);
     expect(landing).toMatch(/Find jobs →/);
     expect(landing).toMatch(/rfr-landing-hero-samples/);
