@@ -79,9 +79,9 @@ export const LANDING_HOW_STEPS = [
 ] as const;
 
 export const LANDING_STATS = [
-  { value: "1,000+", label: "Verified Jobs", pulse: true },
-  { value: "100+", label: "Indexed SKUs", pulse: false },
-  { value: "100%", label: "Evidence-Backed", pulse: false },
+  { value: "3,000+", label: "Verified Job Leads", pulse: true },
+  { value: "109+", label: "Benchmarked Humanoids", pulse: false },
+  { value: "25", label: "Free Preview Leads", pulse: false },
 ] as const;
 
 export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
