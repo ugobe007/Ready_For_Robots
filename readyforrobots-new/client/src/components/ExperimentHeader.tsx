@@ -1,9 +1,9 @@
 /**
  * Top panel for product front door — Kare face + ReadyForRobots, dark brand chrome.
  * JOBS selected on / and /jobs/:slug; ABOUT links to /intelligence.
- * Jobs chrome hides Pipeline. CRM is step 03 (`/pipeline?src=jobs_activate`)
- * and is in the header on Jobs chrome even when signed out.
+ * Includes clean Explore ▾ dropdown menu for Pipeline, Robot Ready, CRM, ROI Calculator, and Intelligence.
  */
+import { useState, useRef, useEffect } from "react";
 import { useRoute, useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
@@ -29,6 +29,24 @@ export default function ExperimentHeader() {
   const [location] = useLocation();
   const search = useSearch();
   const [onJobsSlug] = useRoute("/jobs/:slug");
+  
+  const [exploreOpen, setExploreOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setExploreOpen(false);
+      }
+    }
+    if (exploreOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [exploreOpen]);
+
   const jobsActive =
     location === "/" || location.startsWith("/?") || Boolean(onJobsSlug);
   const jobsSrc = new URLSearchParams(search).get("src");
@@ -88,20 +106,112 @@ export default function ExperimentHeader() {
             ) : null}
             Jobs
           </a>
+
+          {/* Explore Platform Dropdown Menu */}
+          <div ref={dropdownRef} className="relative inline-block text-left">
+            <button
+              type="button"
+              onClick={() => setExploreOpen(!exploreOpen)}
+              className={`inline-flex items-center gap-1 ${exploreOpen ? "text-emerald-400 font-semibold" : navIdle}`}
+              aria-expanded={exploreOpen}
+            >
+              <span>Explore</span>
+              <span className="text-xs opacity-70">▾</span>
+            </button>
+
+            {exploreOpen && (
+              <div className="absolute right-0 top-full mt-2 w-64 border border-slate-700/80 bg-[#0d1b38] p-2 shadow-2xl rounded-xl z-50 normal-case tracking-normal">
+                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-700/50 mb-1">
+                  Platform Links
+                </div>
+                <a
+                  href="/pipeline"
+                  onClick={() => setExploreOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-emerald-400 hover:bg-slate-800/60 rounded-lg transition-colors"
+                >
+                  <span className="text-base">📊</span>
+                  <div>
+                    <div className="font-semibold text-slate-100">Lead Pipeline</div>
+                    <div className="text-[11px] text-slate-400 font-normal">Active buyer signals & workspace</div>
+                  </div>
+                </a>
+                <a
+                  href="/robot-ready"
+                  onClick={() => setExploreOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-emerald-400 hover:bg-slate-800/60 rounded-lg transition-colors"
+                >
+                  <span className="text-base">🤖</span>
+                  <div>
+                    <div className="font-semibold text-slate-100">Robot Ready</div>
+                    <div className="text-[11px] text-slate-400 font-normal">Match product URLs to robot jobs</div>
+                  </div>
+                </a>
+                <a
+                  href={crmHref}
+                  onClick={() => setExploreOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-emerald-400 hover:bg-slate-800/60 rounded-lg transition-colors"
+                >
+                  <span className="text-base">🗂️</span>
+                  <div>
+                    <div className="font-semibold text-slate-100">CRM Accounts</div>
+                    <div className="text-[11px] text-slate-400 font-normal">Buyer pool & account staging</div>
+                  </div>
+                </a>
+                <a
+                  href="/intelligence"
+                  onClick={() => setExploreOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-cyan-400 hover:bg-slate-800/60 rounded-lg transition-colors"
+                >
+                  <span className="text-base">📰</span>
+                  <div>
+                    <div className="font-semibold text-slate-100">Intelligence & HEIR</div>
+                    <div className="text-[11px] text-slate-400 font-normal">Humanoid readiness & reports</div>
+                  </div>
+                </a>
+                <a
+                  href="/roi-calculator"
+                  onClick={() => setExploreOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-amber-400 hover:bg-slate-800/60 rounded-lg transition-colors"
+                >
+                  <span className="text-base">💰</span>
+                  <div>
+                    <div className="font-semibold text-slate-100">RaaS ROI Engine</div>
+                    <div className="text-[11px] text-slate-400 font-normal">$8.5k/mo RaaS vs CapEx TCO</div>
+                  </div>
+                </a>
+                <a
+                  href="/market-insights"
+                  onClick={() => setExploreOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-cyan-400 hover:bg-slate-800/60 rounded-lg transition-colors"
+                >
+                  <span className="text-base">📈</span>
+                  <div>
+                    <div className="font-semibold text-slate-100">Market Insights</div>
+                    <div className="text-[11px] text-slate-400 font-normal">Vendor deployment tracking</div>
+                  </div>
+                </a>
+                {isAdmin && (
+                  <a
+                    href="/admin"
+                    onClick={() => setExploreOpen(false)}
+                    className="flex items-center gap-2.5 px-3 py-2 text-xs text-emerald-400 hover:bg-slate-800/60 rounded-lg transition-colors border-t border-slate-700/50 mt-1"
+                  >
+                    <span className="text-base">⚙️</span>
+                    <div>
+                      <div className="font-semibold">Admin Panel</div>
+                    </div>
+                  </a>
+                )}
+              </div>
+            )}
+          </div>
+
           <a
             href="/intelligence"
             className={`${aboutActive ? navActive : navIdle}`}
           >
             About
           </a>
-          {showPipeline ? (
-            <a
-              href="/pipeline"
-              className={pipelineActive ? navActive : navIdle}
-            >
-              Pipeline
-            </a>
-          ) : null}
           {session || !showPipeline ? (
             <a href={crmHref} className={crmActive ? navActive : navIdle}>
               CRM
