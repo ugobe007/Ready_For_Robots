@@ -127,6 +127,15 @@ export const HEIF_BENCHMARK: HeifRow[] = [
     dataPipeline: 2.0,
     production: 3.0,
   },
+  {
+    company: "Reflex Robotics",
+    mobility: 3.5,
+    manipulation: 3.5,
+    cognition: 2.5,
+    safety: 2.5,
+    dataPipeline: 3.0,
+    production: 3.5,
+  },
 ];
 
 export const READINESS_FUNNEL = [
