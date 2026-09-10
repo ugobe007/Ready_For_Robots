@@ -3814,6 +3814,16 @@
       }
     ]
   },
+  "nucleuslab.ai": {
+    "vendor_name": "Nucleus Robotics",
+    "robots": [
+      {
+        "name": "Nucleus Humanoid",
+        "description": "Nucleus Humanoid: Autonomous bipedal humanoid for industrial manipulation, warehouse logistics, and workplace task execution.",
+        "display_class": "humanoid"
+      }
+    ]
+  },
   "nuro.ai": {
     "vendor_name": "Nuro",
     "robots": [
