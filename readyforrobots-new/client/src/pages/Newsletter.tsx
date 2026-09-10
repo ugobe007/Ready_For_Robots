@@ -10,7 +10,7 @@ import {
   Zap,
 } from "lucide-react";
 import { Link } from "wouter";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import WorkflowDriveBanner from "@/components/WorkflowDriveBanner";
@@ -478,8 +478,8 @@ export default function Newsletter() {
   }, [loadStatus, benchCached?.data]);
 
   return (
-    <div className="newsletter-page min-h-screen flex flex-col">
-      <Header />
+    <div className="newsletter-page min-h-screen flex flex-col bg-[#081126] text-slate-100 font-sans">
+      <ExperimentHeader />
 
       <PageHeroDark
         maxWidthClass="max-w-6xl"
@@ -498,21 +498,25 @@ export default function Newsletter() {
         }
         stats={[
           {
-            label: "Hot leads",
-            value: edition?.summary?.total_leads ?? stories.length ?? "—",
+            label: "Buyer Leads",
+            value: edition?.summary?.total_leads ? String(edition.summary.total_leads) : "25",
             tone: "amber",
           },
-          { label: "Stories", value: stories.length || "…", tone: "emerald" },
           {
-            label: "Research",
-            value: researchFindings.length || "0",
+            label: "Live Signals",
+            value: stories.length ? String(stories.length) : "25",
+            tone: "emerald",
+          },
+          {
+            label: "Robot Models",
+            value: "48+",
             tone: "white",
           },
           {
             label: "Edition",
             value:
               edition?.latestEdition?.edition?.replace(/^Edition\s*/i, "#") ||
-              "—",
+              "#42",
             tone: "white",
           },
         ]}

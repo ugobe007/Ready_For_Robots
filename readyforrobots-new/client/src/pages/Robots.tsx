@@ -7,7 +7,7 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import WorkflowDriveBanner from "@/components/WorkflowDriveBanner";
@@ -363,7 +363,7 @@ function ConfidenceChip({ robot }: { robot: RobotRow }) {
 function RobotNameLink({ name, url }: { name: string; url?: string }) {
   if (!url) {
     return (
-      <p className="font-bold text-gray-900 text-base leading-tight">{name}</p>
+      <p className="font-bold text-slate-100 text-base leading-tight">{name}</p>
     );
   }
   return (
@@ -372,7 +372,7 @@ function RobotNameLink({ name, url }: { name: string; url?: string }) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={e => e.stopPropagation()}
-      className="font-bold text-gray-900 text-base leading-tight transition-colors hover:text-emerald-700 underline-offset-2 hover:underline"
+      className="font-bold text-slate-100 text-base leading-tight transition-colors hover:text-emerald-400 underline-offset-2 hover:underline"
     >
       {name}
     </a>
@@ -394,36 +394,36 @@ function AiStackPanel({ stack }: { stack: AiStack }) {
     ? (MODEL_FAMILY_LABELS[stack.model_family] ?? stack.model_family)
     : null;
   return (
-    <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-emerald-500/20 bg-emerald-600/[0.06] px-4 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/80 mb-2">
+    <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 px-4 py-3">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-2">
         AI stack
       </p>
-      <p className="text-sm font-semibold text-gray-900">
+      <p className="text-sm font-semibold text-slate-100">
         {stack.primary_model}
       </p>
       {family ? (
-        <p className="text-[11px] text-gray-500 mt-0.5">{family}</p>
+        <p className="text-[11px] text-slate-300 mt-0.5">{family}</p>
       ) : null}
       {stack.stack_layers && stack.stack_layers.length > 0 ? (
-        <p className="text-[11px] text-gray-500 mt-2">
-          <span className="text-gray-400">Layers: </span>
+        <p className="text-[11px] text-slate-400 mt-2">
+          <span className="text-slate-400 font-medium">Layers: </span>
           {stack.stack_layers.join(" → ")}
         </p>
       ) : null}
       {stack.compute ? (
-        <p className="text-[11px] text-gray-500 mt-1">
-          <span className="text-gray-400">Compute: </span>
+        <p className="text-[11px] text-slate-400 mt-1">
+          <span className="text-slate-400 font-medium">Compute: </span>
           {stack.compute}
         </p>
       ) : null}
       {stack.third_party && stack.third_party.length > 0 ? (
-        <p className="text-[11px] text-gray-500 mt-1">
-          <span className="text-gray-400">Partners / platform: </span>
+        <p className="text-[11px] text-slate-400 mt-1">
+          <span className="text-slate-400 font-medium">Partners / platform: </span>
           {stack.third_party.join(", ")}
         </p>
       ) : null}
       {stack.unique_claim ? (
-        <p className="text-[11px] text-gray-600 mt-2 leading-relaxed border-t border-gray-100 pt-2">
+        <p className="text-[11px] text-slate-300 mt-2 leading-relaxed border-t border-slate-800 pt-2">
           {stack.unique_claim}
         </p>
       ) : null}
@@ -489,7 +489,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
         className="w-full grid gap-4 px-5 py-4 text-left items-center"
         style={{ gridTemplateColumns: "2rem 2.25rem 1fr 4.5rem 4.5rem 3rem" }}
       >
-        <span className="text-xl font-black text-gray-900 tabular-nums">
+        <span className="text-xl font-black text-slate-100 tabular-nums">
           #{rank}
         </span>
         <RobotAvatar
@@ -532,10 +532,10 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
               </span>
             ) : null}
           </div>
-          <p className="text-[11px] text-gray-600 mt-0.5">{robot.vendor}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{robot.vendor}</p>
           {aiStack?.primary_model ? (
             <p
-              className="text-[10px] text-emerald-600/70 mt-1 truncate max-w-md"
+              className="text-[10px] text-emerald-400 mt-1 truncate max-w-md"
               title={aiStack.primary_model}
             >
               {aiStack.primary_model}
@@ -874,8 +874,8 @@ export default function Robots() {
     : null;
 
   return (
-    <div className="robots-page min-h-screen flex flex-col">
-      <Header />
+    <div className="robots-page min-h-screen flex flex-col bg-[#081126] text-slate-100 font-sans">
+      <ExperimentHeader />
 
       <PageHeroDark
         maxWidthClass="max-w-5xl"

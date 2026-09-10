@@ -89,6 +89,7 @@ function Router() {
       <Route path="/results" component={Results} />
       <Route path="/sales/samples" component={SalesSamples} />
       <Route path="/pipeline" component={PipelineRoute} />
+      <Route path="/about" component={Intelligence} />
       <Route path="/compare" component={Compare} />
       <Route path="/signals" component={Signals} />
       <Route path="/intelligence" component={Newsletter} />

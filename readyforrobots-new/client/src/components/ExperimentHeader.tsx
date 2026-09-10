@@ -55,7 +55,8 @@ export default function ExperimentHeader() {
   const crmActive =
     location.startsWith("/crm") ||
     (location.startsWith("/pipeline") && isJobsHandoffSrc(jobsSrc));
-  const aboutActive = location.startsWith("/intelligence");
+  const aboutActive = location.startsWith("/about");
+  const newsletterActive = location.startsWith("/newsletter") || location.startsWith("/intelligence");
   const adminActive = location.startsWith("/admin");
   const showPipeline = showSignalPipelineNav({
     pathname: location,
@@ -207,7 +208,13 @@ export default function ExperimentHeader() {
           </div>
 
           <a
-            href="/intelligence"
+            href="/newsletter"
+            className={`${newsletterActive ? navActive : navIdle}`}
+          >
+            Newsletter
+          </a>
+          <a
+            href="/about"
             className={`${aboutActive ? navActive : navIdle}`}
           >
             About

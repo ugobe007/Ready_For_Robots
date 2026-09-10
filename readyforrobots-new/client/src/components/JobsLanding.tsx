@@ -205,12 +205,18 @@ export default function JobsLanding() {
               Find jobs →
             </button>
           </div>
-          <div className="rfr-landing-hero-actions">
+          <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-center gap-4">
             <a
               href={jobsCandidatesHref()}
               className="rfr-landing-employer-link"
             >
               Employers: Find robots for your job →
+            </a>
+            <a
+              href="/newsletter"
+              className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/40 bg-purple-950/50 px-4 py-1.5 text-xs font-semibold text-purple-300 hover:bg-purple-900/70 hover:text-white transition-all shadow-md"
+            >
+              <span>📰 Read Daily Newsletter →</span>
             </a>
           </div>
         </form>
