@@ -14,7 +14,7 @@
       },
       {
         "name": "NEO Gamma",
-        "description": "NEO Gamma: General-purpose household and service tasks. Homes · service environments.",
+        "description": "NEO Gamma: General-purpose household and service tasks. Homes \u00b7 service environments.",
         "display_class": "humanoid"
       }
     ]
@@ -34,7 +34,7 @@
     "robots": [
       {
         "name": "YuMi",
-        "description": "YuMi: Small-parts assembly. Electronics · light industry.",
+        "description": "YuMi: Small-parts assembly. Electronics \u00b7 light industry.",
         "display_class": "industrial_arm"
       },
       {
@@ -54,7 +54,7 @@
       },
       {
         "name": "IRB 6700",
-        "description": "IRB 6700: Heavy industrial handling. Automotive · manufacturing.",
+        "description": "IRB 6700: Heavy industrial handling. Automotive \u00b7 manufacturing.",
         "display_class": "industrial_arm"
       }
     ]
@@ -149,7 +149,7 @@
       },
       {
         "name": "Matrice 350 RTK",
-        "description": "Matrice 350 RTK: Autonomous drone inspection of assets. Outdoor inspection · flight.",
+        "description": "Matrice 350 RTK: Autonomous drone inspection of assets. Outdoor inspection \u00b7 flight.",
         "display_class": "drone"
       }
     ]
@@ -169,7 +169,7 @@
     "robots": [
       {
         "name": "eBee X",
-        "description": "eBee X: Autonomous drone mapping and inspection. Survey · flight.",
+        "description": "eBee X: Autonomous drone mapping and inspection. Survey \u00b7 flight.",
         "display_class": "drone"
       }
     ]
@@ -197,7 +197,11 @@
         "description": "Payload 20.0 kg. Runtime 2.0 h.",
         "display_class": "humanoid"
       },
-      { "name": "Agibot G5", "description": null, "display_class": "humanoid" },
+      {
+        "name": "Agibot G5",
+        "description": null,
+        "display_class": "humanoid"
+      },
       {
         "name": "G2 humanoid robot",
         "description": null,
@@ -205,12 +209,12 @@
       },
       {
         "name": "X2",
-        "description": "AGIBOT X2: Fully intelligent and agile humanoid. Industrial · research.",
+        "description": "AGIBOT X2: Fully intelligent and agile humanoid. Industrial \u00b7 research.",
         "display_class": "humanoid"
       },
       {
         "name": "AGIBOT G1",
-        "description": "AGIBOT G1: Universal embodied intelligent robot. Industrial · research.",
+        "description": "AGIBOT G1: Universal embodied intelligent robot. Industrial \u00b7 research.",
         "display_class": "humanoid"
       }
     ]
@@ -230,7 +234,7 @@
     "robots": [
       {
         "name": "Agility Digit",
-        "description": "Digit: Tote movement and facility work. Warehouses · factories. Payload 16.0 kg. Runtime 4.0 h.",
+        "description": "Digit: Tote movement and facility work. Warehouses \u00b7 factories. Payload 16.0 kg. Runtime 4.0 h.",
         "display_class": "humanoid"
       },
       {
@@ -275,7 +279,7 @@
     "robots": [
       {
         "name": "AgBot",
-        "description": "AgBot: Autonomous tractor for planting and field work. Fields · planting.",
+        "description": "AgBot: Autonomous tractor for planting and field work. Fields \u00b7 planting.",
         "display_class": "agricultural_robot"
       }
     ]
@@ -330,7 +334,7 @@
     "robots": [
       {
         "name": "ANYmal",
-        "description": "ANYmal: Autonomous industrial inspection. Energy · process industry.",
+        "description": "ANYmal: Autonomous industrial inspection. Energy \u00b7 process industry.",
         "display_class": "quadruped"
       },
       {
@@ -345,7 +349,7 @@
     "robots": [
       {
         "name": "SW80 A",
-        "description": "SW80 A: 3-in-1 mopping, sweeping, and vacuuming on commercial floors. Malls · factories · conference halls.",
+        "description": "SW80 A: 3-in-1 mopping, sweeping, and vacuuming on commercial floors. Malls \u00b7 factories \u00b7 conference halls.",
         "display_class": "cleaning"
       },
       {
@@ -380,7 +384,7 @@
     "robots": [
       {
         "name": "Apptronik Apollo",
-        "description": "Apollo: Palletizing and material handling. Warehouses · manufacturing. Payload 25.0 kg. Runtime 4.0 h.",
+        "description": "Apollo: Palletizing and material handling. Warehouses \u00b7 manufacturing. Payload 25.0 kg. Runtime 4.0 h.",
         "display_class": "humanoid"
       }
     ]
@@ -555,7 +559,7 @@
     "robots": [
       {
         "name": "Neo",
-        "description": "Neo: Fully autonomous commercial floor scrubbing. Airports · warehouses · retail.",
+        "description": "Neo: Fully autonomous commercial floor scrubbing. Airports \u00b7 warehouses \u00b7 retail.",
         "display_class": "cleaning"
       },
       {
@@ -615,17 +619,17 @@
     "robots": [
       {
         "name": "Servi",
-        "description": "Servi: AI robot waiter assistant. Table service and food delivery.. Restaurants · hospitality. Payload 30.0 kg. Runtime 12.0 h.",
+        "description": "Servi: AI robot waiter assistant. Table service and food delivery.. Restaurants \u00b7 hospitality. Payload 30.0 kg. Runtime 12.0 h.",
         "display_class": "serving"
       },
       {
         "name": "Servi Plus",
-        "description": "Servi Plus: High-capacity food delivery. Restaurants · hospitality. Payload 40.0 kg. Runtime 14.0 h.",
+        "description": "Servi Plus: High-capacity food delivery. Restaurants \u00b7 hospitality. Payload 40.0 kg. Runtime 14.0 h.",
         "display_class": "serving"
       },
       {
         "name": "Carti 100",
-        "description": "Carti 100: Autonomous cart transport in restaurants and hotels. Restaurants · hotels. Payload 100.0 kg.",
+        "description": "Carti 100: Autonomous cart transport in restaurants and hotels. Restaurants \u00b7 hotels. Payload 100.0 kg.",
         "display_class": "amr"
       },
       {
@@ -635,7 +639,7 @@
       },
       {
         "name": "Carti",
-        "description": "Carti: Autonomous cart transport. Restaurants · hotels.",
+        "description": "Carti: Autonomous cart transport. Restaurants \u00b7 hotels.",
         "display_class": null
       },
       {
@@ -645,7 +649,7 @@
       },
       {
         "name": "Servi Clean",
-        "description": "Servi Clean: Commercial floor cleaning. Vacuuming and scrubbing.. Restaurants · hospitality floors.",
+        "description": "Servi Clean: Commercial floor cleaning. Vacuuming and scrubbing.. Restaurants \u00b7 hospitality floors.",
         "display_class": "cleaning"
       },
       {
@@ -750,12 +754,12 @@
     "robots": [
       {
         "name": "Boston Dynamics Atlas",
-        "description": "Atlas: Dynamic handling and manipulation. Industrial R&D · factories. Payload 11.0 kg. Runtime 1.5 h.",
+        "description": "Atlas: Dynamic handling and manipulation. Industrial R&D \u00b7 factories. Payload 11.0 kg. Runtime 1.5 h.",
         "display_class": "humanoid"
       },
       {
         "name": "Spot",
-        "description": "Spot: Inspection and remote observation. Industrial sites · energy.",
+        "description": "Spot: Inspection and remote observation. Industrial sites \u00b7 energy.",
         "display_class": "quadruped"
       },
       {
@@ -850,7 +854,7 @@
     "robots": [
       {
         "name": "LaserWeeder",
-        "description": "LaserWeeder: Laser and mechanical weed removal in row crops. Fields · row crops · vegetable beds.",
+        "description": "LaserWeeder: Laser and mechanical weed removal in row crops. Fields \u00b7 row crops \u00b7 vegetable beds.",
         "display_class": "agricultural_robot"
       }
     ]
@@ -860,17 +864,17 @@
     "robots": [
       {
         "name": "Cartken Hauler",
-        "description": "Cartken Hauler: Outdoor material transport on mixed indoor and outdoor routes. Factories · labs · campuses.",
+        "description": "Cartken Hauler: Outdoor material transport on mixed indoor and outdoor routes. Factories \u00b7 labs \u00b7 campuses.",
         "display_class": "amr"
       },
       {
         "name": "Cartken Courier",
-        "description": "Cartken Courier: Lightweight outdoor AMR for secured deliveries. Factories · campuses.",
+        "description": "Cartken Courier: Lightweight outdoor AMR for secured deliveries. Factories \u00b7 campuses.",
         "display_class": "amr"
       },
       {
         "name": "Cartken Mover",
-        "description": "Cartken Mover: Outdoor pallet pick and putaway for heavy loads. Factories · campuses.",
+        "description": "Cartken Mover: Outdoor pallet pick and putaway for heavy loads. Factories \u00b7 campuses.",
         "display_class": "amr"
       }
     ]
@@ -890,7 +894,7 @@
     "robots": [
       {
         "name": "S5",
-        "description": "S5: Autonomous industrial floor sweeping. Factories · warehouses.",
+        "description": "S5: Autonomous industrial floor sweeping. Factories \u00b7 warehouses.",
         "display_class": "cleaning"
       },
       {
@@ -930,7 +934,7 @@
     "robots": [
       {
         "name": "LEXION 8000-7000",
-        "description": "LEXION 8000-7000: Grain harvest with a LEXION combine. Fields · grain harvest.",
+        "description": "LEXION 8000-7000: Grain harvest with a LEXION combine. Fields \u00b7 grain harvest.",
         "display_class": "agricultural_robot"
       }
     ]
@@ -1105,7 +1109,7 @@
     "robots": [
       {
         "name": "TyBot",
-        "description": "TyBOT: Ties rebar on decks for buildings and civil work. Building construction · decks.",
+        "description": "TyBOT: Ties rebar on decks for buildings and civil work. Building construction \u00b7 decks.",
         "display_class": "construction_robot"
       },
       {
@@ -1180,12 +1184,12 @@
       },
       {
         "name": "X20",
-        "description": "X20: Industrial patrol inspection on a quadruped. Power · utilities · outdoor industry.",
+        "description": "X20: Industrial patrol inspection on a quadruped. Power \u00b7 utilities \u00b7 outdoor industry.",
         "display_class": "quadruped"
       },
       {
         "name": "X30",
-        "description": "X30: Industrial inspection and rescue on a quadruped. Power stations · factories · emergency.",
+        "description": "X30: Industrial inspection and rescue on a quadruped. Power stations \u00b7 factories \u00b7 emergency.",
         "display_class": "quadruped"
       }
     ]
@@ -1195,17 +1199,17 @@
     "robots": [
       {
         "name": "autonomous tractor",
-        "description": "Autonomous Tractor: Autonomous tractor for planting and field work. Fields · planting · harvest support.",
+        "description": "Autonomous Tractor: Autonomous tractor for planting and field work. Fields \u00b7 planting \u00b7 harvest support.",
         "display_class": "agricultural_robot"
       },
       {
         "name": "X Series Combine",
-        "description": "X Series Combine: Grain harvest with an X Series combine. Fields · grain harvest.",
+        "description": "X Series Combine: Grain harvest with an X Series combine. Fields \u00b7 grain harvest.",
         "display_class": "agricultural_robot"
       },
       {
         "name": "See & Spray Ultimate",
-        "description": "See & Spray Ultimate: See-and-spray implement on a tractor/sprayer host. Fields · row crops.",
+        "description": "See & Spray Ultimate: See-and-spray implement on a tractor/sprayer host. Fields \u00b7 row crops.",
         "display_class": "agricultural_robot"
       }
     ]
@@ -1238,7 +1242,11 @@
   "dexory.com": {
     "vendor_name": "Dexory",
     "robots": [
-      { "name": "DexoryView", "description": null, "display_class": null }
+      {
+        "name": "DexoryView",
+        "description": null,
+        "display_class": null
+      }
     ]
   },
   "dexterity.ai": {
@@ -1291,7 +1299,7 @@
       },
       {
         "name": "Matrice 350 RTK",
-        "description": "Matrice 350 RTK: Autonomous drone inspection of assets. Outdoor inspection · flight.",
+        "description": "Matrice 350 RTK: Autonomous drone inspection of assets. Outdoor inspection \u00b7 flight.",
         "display_class": "drone"
       }
     ]
@@ -1401,7 +1409,7 @@
     "robots": [
       {
         "name": "FieldPrinter",
-        "description": "FieldPrinter: Prints construction layout on the floor. Homes · buildings · jobsites.",
+        "description": "FieldPrinter: Prints construction layout on the floor. Homes \u00b7 buildings \u00b7 jobsites.",
         "display_class": "construction_robot"
       }
     ]
@@ -1411,7 +1419,7 @@
     "robots": [
       {
         "name": "Ecorobotix ARA",
-        "description": "ARA: Ultra-high precision spray implement on a tractor host. Fields · row crops.",
+        "description": "ARA: Ultra-high precision spray implement on a tractor host. Fields \u00b7 row crops.",
         "display_class": "agricultural_robot"
       }
     ]
@@ -1426,7 +1434,7 @@
       },
       {
         "name": "WINBOT W2 OMNI",
-        "description": "WINBOT W2 OMNI: Window cleaning. Commercial · residential buildings.",
+        "description": "WINBOT W2 OMNI: Window cleaning. Commercial \u00b7 residential buildings.",
         "display_class": "cleaning"
       },
       {
@@ -1441,12 +1449,12 @@
     "robots": [
       {
         "name": "DEEBOT PRO M1",
-        "description": "DEEBOT PRO M1: Scrub, sweep, and mop commercial floors. Hospitality · malls · offices.",
+        "description": "DEEBOT PRO M1: Scrub, sweep, and mop commercial floors. Hospitality \u00b7 malls \u00b7 offices.",
         "display_class": "cleaning"
       },
       {
         "name": "DEEBOT PRO K1 VAC",
-        "description": "DEEBOT PRO K1 VAC: Autonomous vacuuming on commercial floors. Offices · public buildings.",
+        "description": "DEEBOT PRO K1 VAC: Autonomous vacuuming on commercial floors. Offices \u00b7 public buildings.",
         "display_class": "cleaning"
       }
     ]
@@ -1454,7 +1462,11 @@
   "edenrobotics.ai": {
     "vendor_name": "Eden Robotics",
     "robots": [
-      { "name": "Eden Robot", "description": null, "display_class": "humanoid" }
+      {
+        "name": "Eden Robot",
+        "description": null,
+        "display_class": "humanoid"
+      }
     ]
   },
   "efort.com.cn": {
@@ -1482,7 +1494,7 @@
     "robots": [
       {
         "name": "EksoNR",
-        "description": "EksoNR: Rehabilitation and gait training. Clinics · rehabilitation.",
+        "description": "EksoNR: Rehabilitation and gait training. Clinics \u00b7 rehabilitation.",
         "display_class": null
       },
       {
@@ -1772,7 +1784,7 @@
       },
       {
         "name": "R-2000iD",
-        "description": "R-2000iD: Heavy payload handling. Automotive · manufacturing.",
+        "description": "R-2000iD: Heavy payload handling. Automotive \u00b7 manufacturing.",
         "display_class": "industrial_arm"
       }
     ]
@@ -1782,7 +1794,7 @@
     "robots": [
       {
         "name": "FD20",
-        "description": "FD20: Solar-powered seeding and mechanical weeding in row crops. Fields · row crops.",
+        "description": "FD20: Solar-powered seeding and mechanical weeding in row crops. Fields \u00b7 row crops.",
         "display_class": "agricultural_robot"
       }
     ]
@@ -1840,7 +1852,11 @@
         "description": null,
         "display_class": "humanoid"
       },
-      { "name": "Nova", "description": null, "display_class": "humanoid" },
+      {
+        "name": "Nova",
+        "description": null,
+        "display_class": "humanoid"
+      },
       {
         "name": "All-New Futurist Ultra",
         "description": null,
@@ -1878,10 +1894,14 @@
       },
       {
         "name": "Fourier GR-1",
-        "description": "GR-1: Humanoid mobility and rehabilitation research. Healthcare · research.",
+        "description": "GR-1: Humanoid mobility and rehabilitation research. Healthcare \u00b7 research.",
         "display_class": "humanoid"
       },
-      { "name": "Fourier N1", "description": null, "display_class": "humanoid" }
+      {
+        "name": "Fourier N1",
+        "description": null,
+        "display_class": "humanoid"
+      }
     ]
   },
   "figure.ai": {
@@ -1894,7 +1914,7 @@
       },
       {
         "name": "Figure 02",
-        "description": "Figure 02: Material handling and industrial tasks. Factories · logistics. Payload 20.0 kg. Runtime 5.0 h.",
+        "description": "Figure 02: Material handling and industrial tasks. Factories \u00b7 logistics. Payload 20.0 kg. Runtime 5.0 h.",
         "display_class": "humanoid"
       },
       {
@@ -1914,7 +1934,7 @@
       },
       {
         "name": "Elios 3",
-        "description": "Elios 3: Autonomous drone inspection inside confined assets. Indoor inspection · flight.",
+        "description": "Elios 3: Autonomous drone inspection inside confined assets. Indoor inspection \u00b7 flight.",
         "display_class": "drone"
       }
     ]
@@ -2039,7 +2059,7 @@
     "robots": [
       {
         "name": "Phantas",
-        "description": "Phantas: Commercial vacuum cleaning. Shopping centers · offices.",
+        "description": "Phantas: Commercial vacuum cleaning. Shopping centers \u00b7 offices.",
         "display_class": "cleaning"
       },
       {
@@ -2059,7 +2079,7 @@
       },
       {
         "name": "Beetle",
-        "description": "Beetle: Indoor and outdoor autonomous sweeping. Indoor · outdoor commercial.",
+        "description": "Beetle: Indoor and outdoor autonomous sweeping. Indoor \u00b7 outdoor commercial.",
         "display_class": "cleaning"
       },
       {
@@ -2112,7 +2132,11 @@
   "gbionics.ai": {
     "vendor_name": "Generative Bionics",
     "robots": [
-      { "name": "Gene.01", "description": null, "display_class": "humanoid" }
+      {
+        "name": "Gene.01",
+        "description": null,
+        "display_class": "humanoid"
+      }
     ]
   },
   "geekplus.com": {
@@ -2175,7 +2199,7 @@
     "robots": [
       {
         "name": "GITAI S2",
-        "description": "GITAI S2: In-space work and satellite servicing. On orbit · space development.",
+        "description": "GITAI S2: In-space work and satellite servicing. On orbit \u00b7 space development.",
         "display_class": "aerospace_robot"
       }
     ]
@@ -2225,7 +2249,7 @@
     "robots": [
       {
         "name": "Burro",
-        "description": "Burro: Follows crews and hauls harvest totes. Fields · orchards · nurseries.",
+        "description": "Burro: Follows crews and hauls harvest totes. Fields \u00b7 orchards \u00b7 nurseries.",
         "display_class": "agricultural_robot"
       }
     ]
@@ -2350,7 +2374,7 @@
     "robots": [
       {
         "name": "Sophia",
-        "description": "Sophia: Social interaction and public engagement. Events · education · research.",
+        "description": "Sophia: Social interaction and public engagement. Events \u00b7 education \u00b7 research.",
         "display_class": "humanoid"
       }
     ]
@@ -2575,7 +2599,7 @@
     "robots": [
       {
         "name": "Vulcan",
-        "description": "Vulcan: 3D-prints walls for homes and buildings. Residential construction · community build.",
+        "description": "Vulcan: 3D-prints walls for homes and buildings. Residential construction \u00b7 community build.",
         "display_class": "construction_robot"
       }
     ]
@@ -2731,7 +2755,7 @@
     ]
   },
   "kaercher.com": {
-    "vendor_name": "Kärcher KIRA",
+    "vendor_name": "K\u00e4rcher KIRA",
     "robots": [
       {
         "name": "KIRA B 50",
@@ -2825,7 +2849,7 @@
       },
       {
         "name": "Dinerbot T10",
-        "description": "Dinerbot T10: Food and beverage service. Restaurants · hotels.",
+        "description": "Dinerbot T10: Food and beverage service. Restaurants \u00b7 hotels.",
         "display_class": "serving"
       },
       {
@@ -2845,7 +2869,7 @@
       },
       {
         "name": "Keenon M2",
-        "description": "Keenon M2: Delivery and reception. Hospitality · retail.",
+        "description": "Keenon M2: Delivery and reception. Hospitality \u00b7 retail.",
         "display_class": null
       },
       {
@@ -3025,7 +3049,7 @@
       },
       {
         "name": "KR QUANTEC",
-        "description": "KR QUANTEC: Welding and material handling. Automotive · industry.",
+        "description": "KR QUANTEC: Welding and material handling. Automotive \u00b7 industry.",
         "display_class": "industrial_arm"
       },
       {
@@ -3095,12 +3119,12 @@
       },
       {
         "name": "CLOi GuideBot",
-        "description": "CLOi GuideBot: Wayfinding and information. Retail · public spaces.",
+        "description": "CLOi GuideBot: Wayfinding and information. Retail \u00b7 public spaces.",
         "display_class": null
       },
       {
         "name": "CLOi ServeBot",
-        "description": "CLOi ServeBot: Delivery and service. Retail · hospitality.",
+        "description": "CLOi ServeBot: Delivery and service. Retail \u00b7 hospitality.",
         "display_class": null
       },
       {
@@ -3190,7 +3214,7 @@
     "robots": [
       {
         "name": "Sherpa Drone",
-        "description": "Sherpa Drone: Exterior window, facade, and building washing from a cleaning drone. Not a floor scrubber.. Building exteriors · windows · facades.",
+        "description": "Sherpa Drone: Exterior window, facade, and building washing from a cleaning drone. Not a floor scrubber.. Building exteriors \u00b7 windows \u00b7 facades.",
         "display_class": "cleaning_drone"
       },
       {
@@ -3250,7 +3274,7 @@
       },
       {
         "name": "MagicBot X1",
-        "description": "MagicBot X1: Humanoid patrol, inspection, and material delivery. Parks · scenic areas.",
+        "description": "MagicBot X1: Humanoid patrol, inspection, and material delivery. Parks \u00b7 scenic areas.",
         "display_class": "humanoid"
       },
       {
@@ -3365,7 +3389,7 @@
     "robots": [
       {
         "name": "Misty II",
-        "description": "Misty II: Guidance and information. Retail · museums · offices.",
+        "description": "Misty II: Guidance and information. Retail \u00b7 museums \u00b7 offices.",
         "display_class": null
       }
     ]
@@ -3410,22 +3434,22 @@
     "robots": [
       {
         "name": "MiR250",
-        "description": "MiR250: Internal material transport up to 250 kg. Factories · warehouses.",
+        "description": "MiR250: Internal material transport up to 250 kg. Factories \u00b7 warehouses.",
         "display_class": "amr"
       },
       {
         "name": "MiR600",
-        "description": "MiR600: Autonomous pallet transport up to 600 kg. Factories · warehouses.",
+        "description": "MiR600: Autonomous pallet transport up to 600 kg. Factories \u00b7 warehouses.",
         "display_class": "amr"
       },
       {
         "name": "MiR1200 Pallet Jack",
-        "description": "MiR1200 Pallet Jack: Autonomous pallet detection, transport, and delivery. Factories · warehouses.",
+        "description": "MiR1200 Pallet Jack: Autonomous pallet detection, transport, and delivery. Factories \u00b7 warehouses.",
         "display_class": "amr"
       },
       {
         "name": "MiR1350",
-        "description": "MiR1350: Heavy internal transport up to 1350 kg. Factories · logistics.",
+        "description": "MiR1350: Heavy internal transport up to 1350 kg. Factories \u00b7 logistics.",
         "display_class": "amr"
       },
       {
@@ -3445,7 +3469,7 @@
     "robots": [
       {
         "name": "Monarch MK-V",
-        "description": "MK-V: Electric tractor for planting and field work. Vineyards · orchards · fields.",
+        "description": "MK-V: Electric tractor for planting and field work. Vineyards \u00b7 orchards \u00b7 fields.",
         "display_class": "agricultural_robot"
       }
     ]
@@ -3581,11 +3605,11 @@
     ]
   },
   "naio-technologies.com": {
-    "vendor_name": "Naïo Technologies",
+    "vendor_name": "Na\u00efo Technologies",
     "robots": [
       {
         "name": "Oz",
-        "description": "Oz: Mechanical weeding in vegetable rows. Fields · vegetable beds.",
+        "description": "Oz: Mechanical weeding in vegetable rows. Fields \u00b7 vegetable beds.",
         "display_class": "agricultural_robot"
       },
       {
@@ -3600,12 +3624,12 @@
       },
       {
         "name": "Jo",
-        "description": "Jo: Mechanical weeding with larger tools. Fields · vegetable beds.",
+        "description": "Jo: Mechanical weeding with larger tools. Fields \u00b7 vegetable beds.",
         "display_class": "agricultural_robot"
       },
       {
         "name": "Orio",
-        "description": "Orio: Mechanical weeding and sowing in vegetable beds. Fields · vegetable beds.",
+        "description": "Orio: Mechanical weeding and sowing in vegetable beds. Fields \u00b7 vegetable beds.",
         "display_class": "agricultural_robot"
       }
     ]
@@ -3620,7 +3644,7 @@
       },
       {
         "name": "Nala Chef",
-        "description": "Nala Chef: Recipe-based cooking. Restaurants · foodservice.",
+        "description": "Nala Chef: Recipe-based cooking. Restaurants \u00b7 foodservice.",
         "display_class": null
       }
     ]
@@ -3650,7 +3674,7 @@
     "robots": [
       {
         "name": "MP-400",
-        "description": "MP-400: Autonomous indoor material transport. Factories · warehouses.",
+        "description": "MP-400: Autonomous indoor material transport. Factories \u00b7 warehouses.",
         "display_class": "amr"
       }
     ]
@@ -3695,7 +3719,7 @@
     "robots": [
       {
         "name": "YuMi",
-        "description": "YuMi: Small-parts assembly. Electronics · light industry.",
+        "description": "YuMi: Small-parts assembly. Electronics \u00b7 light industry.",
         "display_class": "industrial_arm"
       },
       {
@@ -3715,7 +3739,7 @@
       },
       {
         "name": "IRB 6700",
-        "description": "IRB 6700: Heavy industrial handling. Automotive · manufacturing.",
+        "description": "IRB 6700: Heavy industrial handling. Automotive \u00b7 manufacturing.",
         "display_class": "industrial_arm"
       }
     ]
@@ -3815,7 +3839,7 @@
     "robots": [
       {
         "name": "Ohmni",
-        "description": "Ohmni: Remote presence and teleoperation. Healthcare · education.",
+        "description": "Ohmni: Remote presence and teleoperation. Healthcare \u00b7 education.",
         "display_class": null
       }
     ]
@@ -3950,7 +3974,7 @@
       },
       {
         "name": "OTTO 600",
-        "description": "OTTO 600: Pallet and cart transport. Factories · warehouses.",
+        "description": "OTTO 600: Pallet and cart transport. Factories \u00b7 warehouses.",
         "display_class": "amr"
       },
       {
@@ -3995,12 +4019,12 @@
       },
       {
         "name": "PAL Robotics TALOS",
-        "description": "TALOS: Whole-body humanoid research. Industrial R&D · research.",
+        "description": "TALOS: Whole-body humanoid research. Industrial R&D \u00b7 research.",
         "display_class": "humanoid"
       },
       {
         "name": "TIAGo",
-        "description": "TIAGo: Mobile manipulation and research. Research · healthcare.",
+        "description": "TIAGo: Mobile manipulation and research. Research \u00b7 healthcare.",
         "display_class": "humanoid"
       }
     ]
@@ -4030,7 +4054,7 @@
     "robots": [
       {
         "name": "PARO",
-        "description": "PARO: Companionship and sensory stimulation. Care facilities · therapy.",
+        "description": "PARO: Companionship and sensory stimulation. Care facilities \u00b7 therapy.",
         "display_class": null
       }
     ]
@@ -4040,7 +4064,7 @@
     "robots": [
       {
         "name": "ANAFI USA",
-        "description": "ANAFI USA: Autonomous drone inspection of assets. Outdoor inspection · flight.",
+        "description": "ANAFI USA: Autonomous drone inspection of assets. Outdoor inspection \u00b7 flight.",
         "display_class": "drone"
       }
     ]
@@ -4170,7 +4194,7 @@
     "robots": [
       {
         "name": "Pizzabot",
-        "description": "Pizzabot: Pizza preparation and topping. Pizzerias · foodservice.",
+        "description": "Pizzabot: Pizza preparation and topping. Pizzerias \u00b7 foodservice.",
         "display_class": null
       }
     ]
@@ -4215,12 +4239,12 @@
     "robots": [
       {
         "name": "Star50",
-        "description": "Star50: Industrial waterless sweeping and dust control. Warehouses · logistics.",
+        "description": "Star50: Industrial waterless sweeping and dust control. Warehouses \u00b7 logistics.",
         "display_class": "cleaning"
       },
       {
         "name": "Star60",
-        "description": "Star60: Waterless commercial floor care on hard floors. Healthcare · retail · hospitality.",
+        "description": "Star60: Waterless commercial floor care on hard floors. Healthcare \u00b7 retail \u00b7 hospitality.",
         "display_class": "cleaning"
       },
       {
@@ -4255,12 +4279,12 @@
       },
       {
         "name": "KettyBot",
-        "description": "KettyBot: Front-of-house delivery and greeting. Restaurants · cafés.",
+        "description": "KettyBot: Front-of-house delivery and greeting. Restaurants \u00b7 caf\u00e9s.",
         "display_class": "serving"
       },
       {
         "name": "HolaBot",
-        "description": "HolaBot: Tray delivery and dish return. Restaurants · hospitality.",
+        "description": "HolaBot: Tray delivery and dish return. Restaurants \u00b7 hospitality.",
         "display_class": "serving"
       },
       {
@@ -4290,12 +4314,12 @@
       },
       {
         "name": "PUDU T300",
-        "description": "PUDU T300: Commercial floor cleaning. Public · commercial floors.",
+        "description": "PUDU T300: Commercial floor cleaning. Public \u00b7 commercial floors.",
         "display_class": "cleaning"
       },
       {
         "name": "MT-1",
-        "description": "MT-1: Outdoor sweeping and cleaning. Campuses · public spaces.",
+        "description": "MT-1: Outdoor sweeping and cleaning. Campuses \u00b7 public spaces.",
         "display_class": "cleaning"
       }
     ]
@@ -4325,7 +4349,7 @@
     "robots": [
       {
         "name": "BellaBot",
-        "description": "BellaBot: Tray delivery and guest interaction. Restaurants · hotels. Payload 10.0 kg. Runtime 9.0 h.",
+        "description": "BellaBot: Tray delivery and guest interaction. Restaurants \u00b7 hotels. Payload 10.0 kg. Runtime 9.0 h.",
         "display_class": "serving"
       },
       {
@@ -4335,17 +4359,17 @@
       },
       {
         "name": "KettyBot",
-        "description": "KettyBot: Front-of-house delivery and greeting. Restaurants · cafés.",
+        "description": "KettyBot: Front-of-house delivery and greeting. Restaurants \u00b7 caf\u00e9s.",
         "display_class": "serving"
       },
       {
         "name": "HolaBot",
-        "description": "HolaBot: Tray delivery and dish return. Restaurants · hospitality.",
+        "description": "HolaBot: Tray delivery and dish return. Restaurants \u00b7 hospitality.",
         "display_class": "serving"
       },
       {
         "name": "FlashBot",
-        "description": "FlashBot: Elevator-enabled room delivery. Hotels · hospitals.",
+        "description": "FlashBot: Elevator-enabled room delivery. Hotels \u00b7 hospitals.",
         "display_class": null
       },
       {
@@ -4355,12 +4379,12 @@
       },
       {
         "name": "MT1",
-        "description": "MT1: Outdoor sweeping and cleaning. Campuses · public spaces.",
+        "description": "MT1: Outdoor sweeping and cleaning. Campuses \u00b7 public spaces.",
         "display_class": "cleaning"
       },
       {
         "name": "PUDU T300",
-        "description": "PUDU T300: Commercial floor cleaning. Public · commercial floors.",
+        "description": "PUDU T300: Commercial floor cleaning. Public \u00b7 commercial floors.",
         "display_class": "cleaning"
       },
       {
@@ -4535,7 +4559,7 @@
     "robots": [
       {
         "name": "ADAM",
-        "description": "ADAM: Beverage and cocktail preparation. Restaurants · bars.",
+        "description": "ADAM: Beverage and cocktail preparation. Restaurants \u00b7 bars.",
         "display_class": "serving"
       },
       {
@@ -4640,12 +4664,12 @@
       },
       {
         "name": "temi Classic",
-        "description": "temi Classic: Telepresence and guided interaction. Healthcare · education.",
+        "description": "temi Classic: Telepresence and guided interaction. Healthcare \u00b7 education.",
         "display_class": null
       },
       {
         "name": "temi V3",
-        "description": "temi V3: Telepresence and service. Business · hospitality.",
+        "description": "temi V3: Telepresence and service. Business \u00b7 hospitality.",
         "display_class": null
       }
     ]
@@ -4710,7 +4734,7 @@
       },
       {
         "name": "RB-ROBOUT",
-        "description": "RB-ROBOUT: Autonomous indoor material transport. Factories · warehouses.",
+        "description": "RB-ROBOUT: Autonomous indoor material transport. Factories \u00b7 warehouses.",
         "display_class": "amr"
       }
     ]
@@ -4790,7 +4814,7 @@
     "robots": [
       {
         "name": "Sanctuary Phoenix",
-        "description": "Phoenix: General-purpose dexterous work. Factories · warehouses. Payload 25.0 kg. Runtime 8.0 h.",
+        "description": "Phoenix: General-purpose dexterous work. Factories \u00b7 warehouses. Payload 25.0 kg. Runtime 8.0 h.",
         "display_class": "humanoid"
       }
     ]
@@ -4810,7 +4834,7 @@
     "robots": [
       {
         "name": "Relay",
-        "description": "Relay+: Secure indoor item delivery. Hotels · hospitals.",
+        "description": "Relay+: Secure indoor item delivery. Hotels \u00b7 hospitals.",
         "display_class": "delivery_robot"
       }
     ]
@@ -4845,7 +4869,7 @@
       },
       {
         "name": "Palion Tow Tractor",
-        "description": "Palion Tow Tractor: Autonomous towing. Factories · warehouses.",
+        "description": "Palion Tow Tractor: Autonomous towing. Factories \u00b7 warehouses.",
         "display_class": "amr"
       },
       {
@@ -4935,7 +4959,7 @@
     "robots": [
       {
         "name": "Magnus",
-        "description": "Magnus: Autonomous indoor material transport. Factories · warehouses.",
+        "description": "Magnus: Autonomous indoor material transport. Factories \u00b7 warehouses.",
         "display_class": "amr"
       }
     ]
@@ -4953,9 +4977,21 @@
   "shanghai-electric.com": {
     "vendor_name": "Shanghai Electric",
     "robots": [
-      { "name": "Mermaid", "description": null, "display_class": "humanoid" },
-      { "name": "SUYUAN", "description": null, "display_class": "humanoid" },
-      { "name": "TUOYUAN", "description": null, "display_class": "humanoid" }
+      {
+        "name": "Mermaid",
+        "description": null,
+        "display_class": "humanoid"
+      },
+      {
+        "name": "SUYUAN",
+        "description": null,
+        "display_class": "humanoid"
+      },
+      {
+        "name": "TUOYUAN",
+        "description": null,
+        "display_class": "humanoid"
+      }
     ]
   },
   "shield.ai": {
@@ -4963,7 +4999,7 @@
     "robots": [
       {
         "name": "V-BAT",
-        "description": "V-BAT: Autonomous VTOL drone for inspection and ISR flight. Flight · inspection.",
+        "description": "V-BAT: Autonomous VTOL drone for inspection and ISR flight. Flight \u00b7 inspection.",
         "display_class": "drone"
       }
     ]
@@ -5003,7 +5039,7 @@
     "robots": [
       {
         "name": "Tally",
-        "description": "Tally: Shelf scanning and inventory analytics. Grocery · big-box retail.",
+        "description": "Tally: Shelf scanning and inventory analytics. Grocery \u00b7 big-box retail.",
         "display_class": null
       }
     ]
@@ -5023,7 +5059,7 @@
     "robots": [
       {
         "name": "Skydio X10",
-        "description": "X10: Autonomous drone inspection of assets and airframes. Outdoor inspection · flight.",
+        "description": "X10: Autonomous drone inspection of assets and airframes. Outdoor inspection \u00b7 flight.",
         "display_class": "drone"
       }
     ]
@@ -5083,7 +5119,7 @@
     "robots": [
       {
         "name": "Pepper",
-        "description": "Pepper: Reception, guidance, engagement. Retail · events · public spaces. Payload 1 kg. Runtime 12 h.",
+        "description": "Pepper: Reception, guidance, engagement. Retail \u00b7 events \u00b7 public spaces. Payload 1 kg. Runtime 12 h.",
         "display_class": "humanoid"
       }
     ]
@@ -5193,7 +5229,7 @@
       },
       {
         "name": "TX2-60",
-        "description": "TX2-60: Precision assembly. Factories · labs.",
+        "description": "TX2-60: Precision assembly. Factories \u00b7 labs.",
         "display_class": "industrial_arm"
       },
       {
@@ -5203,7 +5239,7 @@
       },
       {
         "name": "HEM4",
-        "description": "HEM4: Hygienic handling. Food · pharma manufacturing.",
+        "description": "HEM4: Hygienic handling. Food \u00b7 pharma manufacturing.",
         "display_class": "industrial_arm"
       }
     ]
@@ -5228,7 +5264,7 @@
     "robots": [
       {
         "name": "Memo",
-        "description": "Helpful home robot for kitchen chores — dishes, dishwasher, espresso — wheeled home helper, not an office biped.",
+        "description": "Helpful home robot for kitchen chores \u2014 dishes, dishwasher, espresso \u2014 wheeled home helper, not an office biped.",
         "display_class": null
       }
     ]
@@ -5343,7 +5379,7 @@
     "robots": [
       {
         "name": "MiR1200 Pallet Jack",
-        "description": "MiR1200 Pallet Jack: Autonomous pallet movement with AI-based pallet detection. Manufacturing · logistics.",
+        "description": "MiR1200 Pallet Jack: Autonomous pallet movement with AI-based pallet detection. Manufacturing \u00b7 logistics.",
         "display_class": "amr"
       }
     ]
@@ -5363,7 +5399,7 @@
       },
       {
         "name": "Optimus",
-        "description": "Optimus: General-purpose manipulation. Factories · R&D.",
+        "description": "Optimus: General-purpose manipulation. Factories \u00b7 R&D.",
         "display_class": "humanoid"
       }
     ]
@@ -5516,14 +5552,26 @@
         "description": "Walker X: Bipedal service and interaction. Public spaces. Payload 5.0 kg. Runtime 2.5 h.",
         "display_class": "humanoid"
       },
-      { "name": "U1 Pro", "description": null, "display_class": "humanoid" },
+      {
+        "name": "U1 Pro",
+        "description": null,
+        "display_class": "humanoid"
+      },
       {
         "name": "UBTECH Walker S2",
         "description": "Walker S2: Bipedal humanoid. Payload 15.0 kg.",
         "display_class": "humanoid"
       },
-      { "name": "U1 Lite", "description": null, "display_class": "humanoid" },
-      { "name": "U1 Ultra", "description": null, "display_class": "humanoid" },
+      {
+        "name": "U1 Lite",
+        "description": null,
+        "display_class": "humanoid"
+      },
+      {
+        "name": "U1 Ultra",
+        "description": null,
+        "display_class": "humanoid"
+      },
       {
         "name": "UBTECH Walker S",
         "description": "Payload 15.0 kg.",
@@ -5531,12 +5579,12 @@
       },
       {
         "name": "Cruzr",
-        "description": "Cruzr: Reception, guidance, engagement. Hotels · public spaces.",
+        "description": "Cruzr: Reception, guidance, engagement. Hotels \u00b7 public spaces.",
         "display_class": null
       },
       {
         "name": "Walker",
-        "description": "Walker: Bipedal walking, object manipulation, household and office service. Homes · offices.",
+        "description": "Walker: Bipedal walking, object manipulation, household and office service. Homes \u00b7 offices.",
         "display_class": "humanoid"
       },
       {
@@ -5579,15 +5627,19 @@
   "unitree.com": {
     "vendor_name": "Unitree Robotics",
     "robots": [
-      { "name": "H2 Plus", "description": null, "display_class": "humanoid" },
+      {
+        "name": "H2 Plus",
+        "description": null,
+        "display_class": "humanoid"
+      },
       {
         "name": "Unitree G1",
-        "description": "G1: Bipedal research and manipulation. Research · education. Payload 3.0 kg. Runtime 1.75 h.",
+        "description": "G1: Bipedal research and manipulation. Research \u00b7 education. Payload 3.0 kg. Runtime 1.75 h.",
         "display_class": "humanoid"
       },
       {
         "name": "Unitree H1",
-        "description": "H1: Bipedal research platform. Research · industrial R&D. Payload 30.0 kg. Runtime 1.5 h.",
+        "description": "H1: Bipedal research platform. Research \u00b7 industrial R&D. Payload 30.0 kg. Runtime 1.5 h.",
         "display_class": "humanoid"
       },
       {
@@ -5657,7 +5709,7 @@
     "robots": [
       {
         "name": "UR3e",
-        "description": "UR3e: Light assembly and handling. Factories · labs.",
+        "description": "UR3e: Light assembly and handling. Factories \u00b7 labs.",
         "display_class": "cobot"
       },
       {
@@ -5747,7 +5799,7 @@
     "robots": [
       {
         "name": "Sharp Shooter",
-        "description": "Sharp Shooter: See-and-spray implement on a tractor host. Fields · row crops.",
+        "description": "Sharp Shooter: See-and-spray implement on a tractor host. Fields \u00b7 row crops.",
         "display_class": "agricultural_robot"
       }
     ]
@@ -5772,7 +5824,7 @@
     "robots": [
       {
         "name": "Voliro T",
-        "description": "Voliro T: Autonomous drone inspection of industrial assets. Outdoor inspection · flight.",
+        "description": "Voliro T: Autonomous drone inspection of industrial assets. Outdoor inspection \u00b7 flight.",
         "display_class": "drone"
       }
     ]
@@ -5852,7 +5904,7 @@
     "robots": [
       {
         "name": "WingtraOne GEN II",
-        "description": "WingtraOne GEN II: Autonomous drone mapping and inspection. Survey · flight.",
+        "description": "WingtraOne GEN II: Autonomous drone mapping and inspection. Survey \u00b7 flight.",
         "display_class": "drone"
       }
     ]
@@ -6024,6 +6076,101 @@
         "name": "Zipline Platform 2",
         "description": "Zipline Platform 2: Autonomous drone delivery of medical and retail payloads. Delivery corridors.",
         "display_class": "drone"
+      }
+    ]
+  },
+  "agile-robots.com": {
+    "vendor_name": "Agile Robots",
+    "robots": [
+      {
+        "name": "Agile Humanoid",
+        "description": "Agile Bipedal Humanoid: Torque-controlled full-body humanoid with dexterous hands for industrial assembly & logistics.",
+        "display_class": "humanoid"
+      },
+      {
+        "name": "Diana 7",
+        "description": "Diana 7: 7-DOF torque-controlled cobot arm for high-precision manipulation and humanoid research.",
+        "display_class": "industrial_arm"
+      }
+    ]
+  },
+  "devanthro.com": {
+    "vendor_name": "Devanthro",
+    "robots": [
+      {
+        "name": "Robody",
+        "description": "Robody: Tele-operated humanoid avatar for remote physical presence, elder care, and hospital assistance.",
+        "display_class": "humanoid"
+      }
+    ]
+  },
+  "enchanted.tools": {
+    "vendor_name": "Enchanted Tools",
+    "robots": [
+      {
+        "name": "Miroka\u00ef",
+        "description": "Miroka\u00ef: 28-DOF rolling humanoid with animated expressive face & ball-drive mobility for hospital and hospitality tasks.",
+        "display_class": "humanoid"
+      },
+      {
+        "name": "Miroki",
+        "description": "Miroki: Compact collaborative humanoid assistant designed for healthcare, logistics, and public spaces.",
+        "display_class": "humanoid"
+      }
+    ]
+  },
+  "pollen-robotics.com": {
+    "vendor_name": "Pollen Robotics",
+    "robots": [
+      {
+        "name": "Reachy 2",
+        "description": "Reachy 2: Open-source humanoid torso with expressive head, VR teleoperation, and dexterous arms for AI & manipulation research.",
+        "display_class": "humanoid"
+      },
+      {
+        "name": "Reachy 1",
+        "description": "Reachy 1: Modular open-source humanoid upper-body for interactive AI research.",
+        "display_class": "humanoid"
+      }
+    ]
+  },
+  "iono-robotics.com": {
+    "vendor_name": "IONO Robotics",
+    "robots": [
+      {
+        "name": "IONO Humanoid",
+        "description": "IONO Humanoid: Modular European humanoid platform for industrial inspection and autonomous service tasks.",
+        "display_class": "humanoid"
+      }
+    ]
+  },
+  "polcero.com": {
+    "vendor_name": "POLCERO",
+    "robots": [
+      {
+        "name": "Polcero Humanoid",
+        "description": "Polcero Humanoid: Polish bipedal humanoid platform focused on autonomous locomotion and material handling.",
+        "display_class": "humanoid"
+      }
+    ]
+  },
+  "robotgeorge.cz": {
+    "vendor_name": "Robot George",
+    "robots": [
+      {
+        "name": "George Humanoid",
+        "description": "George Humanoid: Czech humanoid robot platform designed for educational, research, and collaborative service applications.",
+        "display_class": "humanoid"
+      }
+    ]
+  },
+  "robotgeorge.com": {
+    "vendor_name": "Robot George",
+    "robots": [
+      {
+        "name": "George Humanoid",
+        "description": "George Humanoid: Czech humanoid robot platform designed for educational, research, and collaborative service applications.",
+        "display_class": "humanoid"
       }
     ]
   }
