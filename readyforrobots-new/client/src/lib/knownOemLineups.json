@@ -1239,6 +1239,16 @@
       }
     ]
   },
+  "ultra.tech": {
+    "vendor_name": "Ultra",
+    "robots": [
+      {
+        "name": "Ultra Humanoid",
+        "description": "Ultra Humanoid: Mobile dual-arm humanoid for factory assembly, machine tending, and logistics material handling.",
+        "display_class": "humanoid"
+      }
+    ]
+  },
   "dexory.com": {
     "vendor_name": "Dexory",
     "robots": [
