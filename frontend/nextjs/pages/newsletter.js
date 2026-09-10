@@ -316,6 +316,208 @@ Competitive dynamics create urgency. Sales cycles compress from 12 months to 6 m
     }
   ];
 
+const SCORE_INTELLIGENCE_LEADS = [
+  {
+    company: 'GXO Logistics',
+    score: 9.8,
+    tier: 'HOT',
+    vertical: '3PL & Warehousing',
+    readiness: 'Tier 1 Operational',
+    intentSignals: ['RFP for 200+ AMRs & Humanoid Tote Pickers', '$15M Automation CapEx Allocation'],
+    techFit: 'High (Case Picking, Tote Movement, Multi-Shift)',
+    monthlyOpExEstimate: '$8,500/mo RaaS x 15 units',
+  },
+  {
+    company: 'DHL Supply Chain',
+    score: 9.5,
+    tier: 'HOT',
+    vertical: 'Contract Logistics',
+    readiness: 'Tier 1 Operational',
+    intentSignals: ['RaaS Fleet Expansion', 'Bavaria Hub Automation Hiring'],
+    techFit: 'High (Goods-to-Person, Palletizing)',
+    monthlyOpExEstimate: '$8,500/mo RaaS x 22 units',
+  },
+  {
+    company: 'Pololu Robotics',
+    score: 9.2,
+    tier: 'HOT',
+    vertical: 'Electronics Manufacturing',
+    readiness: 'Tier 2 Operational',
+    intentSignals: ['PCB Micro-Assembly Line Scaling', 'Las Vegas Facility Expansion'],
+    techFit: 'High (Tactile Precision, Force Control)',
+    monthlyOpExEstimate: '$7,200/mo RaaS x 4 units',
+  },
+  {
+    company: 'SpartanNash',
+    score: 8.9,
+    tier: 'WARM',
+    vertical: 'Grocery Distribution',
+    readiness: 'Tier 2 Operational',
+    intentSignals: ['Cold-Storage Case Picking Pilot', 'Labor Shortage Press Releases'],
+    techFit: 'Medium-High (Heavy Tote & Case Handling)',
+    monthlyOpExEstimate: '$8,500/mo RaaS x 8 units',
+  },
+  {
+    company: 'Pritchard Industries',
+    score: 8.6,
+    tier: 'WARM',
+    vertical: 'Facility Services',
+    readiness: 'Tier 2 Operational',
+    intentSignals: ['Commercial Cleaning Robot Integration', 'Facility Services Re-bidding'],
+    techFit: 'Medium (Autonomous Floor & Disinfection)',
+    monthlyOpExEstimate: '$5,500/mo RaaS x 10 units',
+  },
+];
+
+const HEIR_MATURITY_LEVELS = [
+  {
+    level: 1,
+    title: 'Level 1: Teleoperation & Scripted Motion',
+    autonomy: '0–15% Autonomous',
+    mtbf: '< 10 hrs MTBF',
+    focus: 'Pre-programmed joint playback, joystick remote control, static test rigs',
+    tactilePrecision: 'None (Basic open/close grippers)',
+    status: 'Legacy Baseline (2020–2022)',
+    badgeColor: 'bg-neutral-800 text-neutral-400 border-neutral-700',
+  },
+  {
+    level: 2,
+    title: 'Level 2: Task-Constrained Perception',
+    autonomy: '15–40% Autonomous',
+    mtbf: '50–100 hrs MTBF',
+    focus: 'Fixed camera 2D vision, rigid target coordinates, bounded workspace safety zones',
+    tactilePrecision: 'Low (On/off vacuum grippers, coarse optical alignment)',
+    status: 'Early Commercial Pilot (2023–2024)',
+    badgeColor: 'bg-amber-950/40 text-amber-400 border-amber-800/50',
+  },
+  {
+    level: 3,
+    title: 'Level 3: Tactile Feedback & Force Control',
+    autonomy: '40–70% Autonomous',
+    mtbf: '200–500 hrs MTBF',
+    focus: 'Dynamic pressure sensing, compliant payload handling, real-time force feedback',
+    tactilePrecision: 'High (Fine pressure sensitivity, delicate multi-step assembly)',
+    status: 'Current Commercial Frontier (2025–2026)',
+    badgeColor: 'bg-emerald-950/50 text-emerald-400 border-emerald-700/60',
+  },
+  {
+    level: 4,
+    title: 'Level 4: Multi-Task Workstation Agility',
+    autonomy: '70–90% Autonomous',
+    mtbf: '500–1,500 hrs MTBF',
+    focus: 'Rapid retraining (<48 hours), tool swapping, cross-station mobility & obstacle avoidance',
+    tactilePrecision: 'Very High (Sub-millimeter alignment, dynamic grip adjustment)',
+    status: 'Active Automotive & 3PL Beta (2026)',
+    badgeColor: 'bg-cyan-950/50 text-cyan-400 border-cyan-700/60',
+  },
+  {
+    level: 5,
+    title: 'Level 5: Fully Autonomous Fleet Swarms',
+    autonomy: '90–100% Autonomous',
+    mtbf: '> 2,500 hrs MTBF',
+    focus: 'Zero-shot task generalization, self-orchestrating fleet dispatch, continuous online reinforcement learning',
+    tactilePrecision: 'Human-Parity Tactile Generalization',
+    status: 'HEIR 2028 Horizon Target',
+    badgeColor: 'bg-purple-950/50 text-purple-400 border-purple-700/60',
+  },
+];
+
+const HUMANOID_READINESS_METRICS = {
+  kpis: [
+    { label: 'Site Readiness Index', value: '78/100', change: '+12% YoY', description: 'Power charging density, floor gradient, and 5G/Wi-Fi coverage across audited facilities.' },
+    { label: 'Fleet Uptime Rate', value: '96.4%', change: '+4.2% YoY', description: 'Average operational uptime across 150+ monitored commercial humanoid installations.' },
+    { label: 'Mean Time Between Failures', value: '412 hrs', change: '+85 hrs YoY', description: 'Continuous uninterrupted operation before hardware intervention or reset.' },
+    { label: 'RaaS Deployment Share', value: '64%', change: '+18% YoY', description: 'Percentage of new commercial humanoid contracts choosing $8.5k/mo RaaS vs CapEx.' },
+  ],
+  verticals: [
+    { sector: 'Logistics & 3PL Fulfillment', score: 88, status: 'Production Ready', focus: 'Tote transfer, conveyor loading, case palletizing', keyDeployers: 'GXO, Amazon, DHL' },
+    { sector: 'Automotive Sub-Assembly', score: 82, status: 'Production Pilot', focus: 'Kitting, parts insertion, sheet metal handling', keyDeployers: 'BMW, Mercedes-Benz, Tesla' },
+    { sector: 'Electronics & Hardware', score: 74, status: 'Beta Testing', focus: 'PCB handling, precision assembly, packaging', keyDeployers: 'Pololu, Foxconn' },
+    { sector: 'Healthcare & Hospital Logistics', score: 61, status: 'Early Validation', focus: 'Linen transfer, specimen transport, sterile room delivery', keyDeployers: 'Diligent Robotics, Texas Medical Center' },
+  ],
+};
+
+const HUMANOID_PLATFORM_COMPARISON = [
+  {
+    name: 'Agility Robotics Digit',
+    raasPrice: '$8,500 / month',
+    capexPrice: '$200,000',
+    deploymentFee: '$25,000 upfront',
+    tco5Year: '$535k RaaS vs $400k CapEx',
+    payload: '35 kg (77 lbs)',
+    runtime: '2.5 hrs (Hot-swappable)',
+    deployments: 'GXO Logistics, Amazon, Spanx',
+    category: 'Logistics / Warehouse',
+    highlight: 'Commercial RaaS benchmark with proven warehouse tote handling math.',
+    dof: 30,
+  },
+  {
+    name: 'Figure AI Figure 02',
+    raasPrice: 'Custom RaaS',
+    capexPrice: '$210,000 (est.)',
+    deploymentFee: '$20,000 upfront',
+    tco5Year: 'Custom Enterprise Tier',
+    payload: '20 kg (44 lbs)',
+    runtime: '2.2 hrs',
+    deployments: 'BMW Spartanburg Plant',
+    category: 'Automotive / Manufacturing',
+    highlight: 'Integrated OpenAI VLA vision-language action model for autonomous part placement.',
+    dof: 34,
+  },
+  {
+    name: 'Apptronik Apollo',
+    raasPrice: '$7,900 / month',
+    capexPrice: '$185,000',
+    deploymentFee: '$18,000 upfront',
+    tco5Year: '$492k RaaS vs $365k CapEx',
+    payload: '25 kg (55 lbs)',
+    runtime: '4 hrs (Swappable Battery)',
+    deployments: 'Mercedes-Benz Group',
+    category: 'Manufacturing / Assembly',
+    highlight: 'Modular humanoid form factor with quick battery swap architecture.',
+    dof: 32,
+  },
+  {
+    name: 'Tesla Optimus Gen 2',
+    raasPrice: 'Internal Fleet Only',
+    capexPrice: '$25,000 target',
+    deploymentFee: 'Internal Deployment',
+    tco5Year: 'Internal Manufacturing Cost',
+    payload: '20 kg (44 lbs)',
+    runtime: '3.5 hrs',
+    deployments: 'Tesla Fremont & Giga Texas',
+    category: 'Factory / Heavy Industrial',
+    highlight: 'Full end-to-end neural network control with custom high-torque actuators.',
+    dof: 28,
+  },
+  {
+    name: 'Fourier Intelligence GR-1 / GR-2',
+    raasPrice: '$6,500 / month',
+    capexPrice: '$130,000',
+    deploymentFee: '$15,000 upfront',
+    tco5Year: '$405k RaaS vs $280k CapEx',
+    payload: '50 kg (110 lbs)',
+    runtime: '2.0 hrs',
+    deployments: 'Rehabilitation & Industrial Logistics',
+    category: 'Heavy Lift / Healthcare',
+    highlight: 'Highest payload-to-weight ratio with 300 Nm peak torque density.',
+    dof: 40,
+  },
+  {
+    name: 'Unitree G1 / H1',
+    raasPrice: '$3,500 / month',
+    capexPrice: '$16,000 – $90,000',
+    deploymentFee: '$5,000 upfront',
+    tco5Year: '$215k RaaS vs $140k CapEx',
+    payload: '30 kg (66 lbs)',
+    runtime: '2.0 hrs',
+    deployments: 'R&D Labs & Industrial Feasibility',
+    category: 'High-Agility / R&D Entry',
+    highlight: 'Ultra-low cost entry point with 360-degree LiDAR and backflip locomotion.',
+    dof: 23,
+  },
+];
+
 export default function Newsletter() {
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [email, setEmail] = useState('');
@@ -325,6 +527,11 @@ export default function Newsletter() {
   const [topStories, setTopStories] = useState(FALLBACK_STORIES);
   const [industryBrief, setIndustryBrief] = useState(null);
   const [loading, setLoading] = useState(true);
+  
+  // Interactive section states
+  const [selectedMaturityLevel, setSelectedMaturityLevel] = useState(3);
+  const [selectedScoreTier, setSelectedScoreTier] = useState('all');
+  const [comparisonCategory, setComparisonCategory] = useState('all');
 
   useEffect(() => {
     const subscribed = localStorage.getItem('newsletter_subscribed') === 'true';
@@ -616,6 +823,325 @@ export default function Newsletter() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* SECTION 1: Optional Analysis - Deployment & Score Intelligence */}
+        <div className="border-t border-neutral-800 bg-neutral-950/40">
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2.5 py-1 rounded-full">
+                  Optional Analysis
+                </span>
+                <h3 className="text-2xl font-bold text-white mt-2">
+                  Deployment & Score Intelligence
+                </h3>
+                <p className="text-sm text-neutral-400 mt-1 max-w-2xl">
+                  AI-powered intent scoring (0–10) and real-time deployment readiness calculated across 150+ operational data feeds.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 bg-neutral-900 p-1.5 rounded-lg border border-neutral-800">
+                <button
+                  type="button"
+                  onClick={() => setSelectedScoreTier('all')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                    selectedScoreTier === 'all' ? 'bg-emerald-500 text-black' : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  All (5)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedScoreTier('HOT')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                    selectedScoreTier === 'HOT' ? 'bg-emerald-500 text-black' : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  HOT (3)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedScoreTier('WARM')}
+                  className={`px-3 py-1 text-xs font-semibold rounded-md transition-colors ${
+                    selectedScoreTier === 'WARM' ? 'bg-amber-500 text-black' : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  WARM (2)
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              {SCORE_INTELLIGENCE_LEADS
+                .filter(item => selectedScoreTier === 'all' || item.tier === selectedScoreTier)
+                .map((item, idx) => (
+                  <div key={idx} className="border border-neutral-800 rounded-xl bg-neutral-900/60 p-5 hover:border-emerald-500/50 transition-all">
+                    <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className={`text-xs font-mono font-bold px-2.5 py-1 rounded ${
+                          item.tier === 'HOT' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
+                        }`}>
+                          {item.tier} LEAD · {item.score}/10
+                        </span>
+                        <h4 className="text-lg font-bold text-white">{item.company}</h4>
+                        <span className="text-xs text-neutral-400 bg-neutral-800 px-2 py-0.5 rounded">{item.vertical}</span>
+                      </div>
+                      <span className="text-xs font-semibold text-cyan-400 bg-cyan-950/40 border border-cyan-800/50 px-2.5 py-1 rounded-full">
+                        {item.readiness}
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3 text-xs">
+                      <div className="bg-neutral-950/60 p-2.5 rounded border border-neutral-800">
+                        <div className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Detected Intent Signals</div>
+                        <ul className="space-y-1">
+                          {item.intentSignals.map((sig, sIdx) => (
+                            <li key={sIdx} className="text-neutral-200 flex items-start gap-1">
+                              <span className="text-emerald-400 font-bold">›</span> {sig}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div className="bg-neutral-950/60 p-2.5 rounded border border-neutral-800">
+                        <div className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">Technical Fit Matrix</div>
+                        <p className="text-neutral-200 font-medium">{item.techFit}</p>
+                      </div>
+                      <div className="bg-neutral-950/60 p-2.5 rounded border border-neutral-800">
+                        <div className="text-[10px] text-neutral-500 uppercase tracking-wider mb-1">RaaS Est. Monthly OpEx</div>
+                        <p className="text-emerald-400 font-mono font-bold text-sm">{item.monthlyOpExEstimate}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 2: HEIR 2026 Research - Engineering Maturity Framework */}
+        <div className="border-t border-neutral-800 bg-neutral-900/30">
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="mb-6">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-cyan-400 bg-cyan-950/60 border border-cyan-800/60 px-2.5 py-1 rounded-full">
+                HEIR 2026 Research
+              </span>
+              <h3 className="text-2xl font-bold text-white mt-2">
+                Humanoid Engineering Maturity Framework
+              </h3>
+              <p className="text-sm text-neutral-400 mt-1 max-w-2xl">
+                Standardized 5-stage benchmark evaluating hardware control, tactile perception, and autonomy readiness for industrial deployment.
+              </p>
+            </div>
+
+            {/* Level selector tabs */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mb-6">
+              {HEIR_MATURITY_LEVELS.map((lvl) => (
+                <button
+                  key={lvl.level}
+                  type="button"
+                  onClick={() => setSelectedMaturityLevel(lvl.level)}
+                  className={`p-3 rounded-lg text-left border transition-all ${
+                    selectedMaturityLevel === lvl.level
+                      ? 'border-emerald-500 bg-emerald-950/30 shadow-md shadow-emerald-500/10'
+                      : 'border-neutral-800 bg-neutral-900/50 hover:border-neutral-700'
+                  }`}
+                >
+                  <div className="text-[10px] font-bold text-neutral-500 uppercase">Level {lvl.level}</div>
+                  <div className="text-xs font-bold text-white truncate mt-0.5">{lvl.title.split(':')[1]}</div>
+                  <div className="text-[10px] text-emerald-400 font-mono mt-1">{lvl.autonomy}</div>
+                </button>
+              ))}
+            </div>
+
+            {/* Active Level Detail Card */}
+            {(() => {
+              const active = HEIR_MATURITY_LEVELS.find(l => l.level === selectedMaturityLevel) || HEIR_MATURITY_LEVELS[2];
+              return (
+                <div className="border-2 border-emerald-500/50 rounded-xl bg-neutral-900/80 p-6 space-y-4 shadow-xl">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-800 pb-4">
+                    <div>
+                      <span className={`text-xs font-mono font-bold px-3 py-1 rounded-full border ${active.badgeColor}`}>
+                        {active.status}
+                      </span>
+                      <h4 className="text-xl font-bold text-white mt-2">{active.title}</h4>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-xs text-neutral-500">Autonomous Capacity</div>
+                      <div className="text-lg font-mono font-bold text-emerald-400">{active.autonomy}</div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="bg-neutral-950/60 p-3.5 rounded-lg border border-neutral-800">
+                      <div className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider mb-1">Operational Focus</div>
+                      <p className="text-xs text-neutral-200 leading-relaxed">{active.focus}</p>
+                    </div>
+                    <div className="bg-neutral-950/60 p-3.5 rounded-lg border border-neutral-800">
+                      <div className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider mb-1">Tactile & Force Precision</div>
+                      <p className="text-xs text-cyan-300 leading-relaxed">{active.tactilePrecision}</p>
+                    </div>
+                    <div className="bg-neutral-950/60 p-3.5 rounded-lg border border-neutral-800">
+                      <div className="text-[10px] font-semibold text-neutral-400 uppercase tracking-wider mb-1">Reliability Benchmark</div>
+                      <p className="text-sm font-mono font-bold text-amber-400 mt-1">{active.mtbf}</p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+
+        {/* SECTION 3: Monthly Report - Humanoid Readiness & Deployment */}
+        <div className="border-t border-neutral-800 bg-neutral-950/60">
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="mb-6">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-amber-400 bg-amber-950/60 border border-amber-800/60 px-2.5 py-1 rounded-full">
+                Monthly Report
+              </span>
+              <h3 className="text-2xl font-bold text-white mt-2">
+                Humanoid Readiness & Deployment Index
+              </h3>
+              <p className="text-sm text-neutral-400 mt-1 max-w-2xl">
+                Monthly empirical assessment of site readiness, charging infrastructure, safety compliance, and labor payback milestones.
+              </p>
+            </div>
+
+            {/* KPI Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+              {HUMANOID_READINESS_METRICS.kpis.map((kpi, kIdx) => (
+                <div key={kIdx} className="bg-neutral-900 border border-neutral-800 rounded-xl p-4">
+                  <div className="text-xs text-neutral-400 mb-1">{kpi.label}</div>
+                  <div className="flex items-baseline justify-between">
+                    <span className="text-2xl font-bold text-emerald-400 font-mono">{kpi.value}</span>
+                    <span className="text-[10px] text-cyan-400 font-medium">{kpi.change}</span>
+                  </div>
+                  <p className="text-[11px] text-neutral-500 mt-2 leading-tight">{kpi.description}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Verticals Table */}
+            <div className="border border-neutral-800 rounded-xl overflow-hidden bg-neutral-900/40">
+              <div className="p-4 border-b border-neutral-800 font-bold text-sm text-white flex items-center justify-between">
+                <span>Vertical Deployment Readiness Scores</span>
+                <span className="text-xs text-emerald-400 font-normal">Audited across 150+ commercial sites</span>
+              </div>
+              <table className="w-full text-xs text-left">
+                <thead className="bg-neutral-950 text-neutral-400 uppercase font-semibold border-b border-neutral-800">
+                  <tr>
+                    <th className="p-3">Industry Vertical</th>
+                    <th className="p-3">Readiness Score</th>
+                    <th className="p-3">Primary Focus Workflows</th>
+                    <th className="p-3">Key Active Deployers</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-neutral-800 text-neutral-300">
+                  {HUMANOID_READINESS_METRICS.verticals.map((vert, vIdx) => (
+                    <tr key={vIdx} className="hover:bg-neutral-900/80">
+                      <td className="p-3 font-bold text-white">{vert.sector}</td>
+                      <td className="p-3">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-emerald-400">{vert.score}/100</span>
+                          <span className="text-[10px] text-neutral-500 bg-neutral-800 px-1.5 py-0.5 rounded">{vert.status}</span>
+                        </div>
+                      </td>
+                      <td className="p-3 text-neutral-400">{vert.focus}</td>
+                      <td className="p-3 text-cyan-400 font-medium">{vert.keyDeployers}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        {/* SECTION 4: Humanoid Comparison Report */}
+        <div className="border-t border-neutral-800 bg-neutral-900/40">
+          <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-purple-400 bg-purple-950/60 border border-purple-800/60 px-2.5 py-1 rounded-full">
+                  Comparison Matrix
+                </span>
+                <h3 className="text-2xl font-bold text-white mt-2">
+                  Humanoid Platform Comparison Report (2026)
+                </h3>
+                <p className="text-sm text-neutral-400 mt-1 max-w-2xl">
+                  Direct head-to-head analysis of leading commercial humanoids on RaaS pricing, CapEx, payload capacity, and real-world deployment sites.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 bg-neutral-900 p-1.5 rounded-lg border border-neutral-800 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setComparisonCategory('all')}
+                  className={`px-3 py-1 font-semibold rounded-md transition-colors ${
+                    comparisonCategory === 'all' ? 'bg-purple-500 text-black' : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  All Platforms
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setComparisonCategory('logistics')}
+                  className={`px-3 py-1 font-semibold rounded-md transition-colors ${
+                    comparisonCategory === 'logistics' ? 'bg-purple-500 text-black' : 'text-neutral-400 hover:text-white'
+                  }`}
+                >
+                  Logistics & Warehouse
+                </button>
+              </div>
+            </div>
+
+            {/* Comparison Cards Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {HUMANOID_PLATFORM_COMPARISON
+                .filter(p => comparisonCategory === 'all' || p.category.toLowerCase().includes(comparisonCategory))
+                .map((bot, bIdx) => (
+                  <div key={bIdx} className="border border-neutral-800 bg-neutral-950/80 rounded-xl p-5 hover:border-purple-500/50 transition-all flex flex-col justify-between">
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-2">
+                        <div>
+                          <span className="text-[10px] uppercase tracking-wider text-purple-400 font-bold bg-purple-950/60 border border-purple-800/60 px-2 py-0.5 rounded">
+                            {bot.category}
+                          </span>
+                          <h4 className="text-lg font-bold text-white mt-1.5">{bot.name}</h4>
+                        </div>
+                        <span className="text-xs font-mono text-emerald-400 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded font-bold">
+                          {bot.raasPrice}
+                        </span>
+                      </div>
+
+                      <p className="text-xs text-neutral-300 italic mb-4 leading-relaxed bg-neutral-900/50 p-2.5 rounded border border-neutral-800">
+                        "{bot.highlight}"
+                      </p>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+                        <div className="bg-neutral-900 p-2 rounded border border-neutral-850">
+                          <span className="text-[10px] text-neutral-500 block">CapEx Purchase</span>
+                          <span className="font-mono text-cyan-400 font-semibold">{bot.capexPrice}</span>
+                        </div>
+                        <div className="bg-neutral-900 p-2 rounded border border-neutral-850">
+                          <span className="text-[10px] text-neutral-500 block">Deployment Fee</span>
+                          <span className="font-mono text-neutral-300 font-semibold">{bot.deploymentFee}</span>
+                        </div>
+                        <div className="bg-neutral-900 p-2 rounded border border-neutral-850">
+                          <span className="text-[10px] text-neutral-500 block">Payload Capacity</span>
+                          <span className="font-mono text-emerald-400 font-semibold">{bot.payload}</span>
+                        </div>
+                        <div className="bg-neutral-900 p-2 rounded border border-neutral-850">
+                          <span className="text-[10px] text-neutral-500 block">Battery Runtime</span>
+                          <span className="font-mono text-amber-400 font-semibold">{bot.runtime}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-neutral-800 flex items-center justify-between text-xs text-neutral-400">
+                      <span>Deployers: <strong className="text-white">{bot.deployments}</strong></span>
+                      <span className="text-[10px] font-mono text-purple-400 bg-purple-950/40 px-2 py-0.5 rounded border border-purple-800/50">{bot.dof} DoF</span>
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
 
