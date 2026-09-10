@@ -1014,6 +1014,67 @@ export default function Robots() {
         />
       </section>
 
+      {/* Robot AI Modeling & Foundation Model Training Section */}
+      <section className="mx-auto max-w-5xl px-4 pb-12">
+        <div className="rounded-2xl border border-slate-700/80 bg-[#0d1b38] p-6 shadow-2xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 pb-4 mb-6">
+            <div>
+              <span className="text-[11px] font-mono uppercase font-bold text-purple-400 tracking-wider">
+                Embodied AI & Model Training Platform
+              </span>
+              <h2 className="text-xl font-bold text-white font-display mt-0.5">
+                Robot Foundation Models & General-Purpose AI Intelligence
+              </h2>
+            </div>
+            <a
+              href="https://www.skild.ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-3.5 py-1 text-xs font-mono font-bold text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-colors"
+            >
+              Featured Partner: Skild AI <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-3">
+            <div className="rounded-xl border border-purple-500/40 bg-[#081126] p-4.5 shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-slate-100 font-display text-base">Skild AI</h3>
+                <a href="https://www.skild.ai/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+              <p className="text-xs text-purple-300 font-mono font-bold mb-2">Skild Brain · Embodied Foundation Model</p>
+              <p className="text-xs leading-relaxed text-slate-300">
+                Scalable general-purpose AI brain for robotics. Enables cross-robot manipulation, locomotion, and rapid task adaptation across diverse physical form factors.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-slate-100 font-display text-base">Physical Intelligence</h3>
+                <span className="text-xs font-mono text-slate-400">Universal Control</span>
+              </div>
+              <p className="text-xs text-emerald-300 font-mono font-bold mb-2">pi0 · Foundation Model</p>
+              <p className="text-xs leading-relaxed text-slate-300">
+                Brings high-level reasoning and physical dexterity to general-purpose hardware through large multimodal physical models.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-slate-100 font-display text-base">Covariant</h3>
+                <span className="text-xs font-mono text-slate-400">Logistics RFM</span>
+              </div>
+              <p className="text-xs text-amber-300 font-mono font-bold mb-2">RFM-1 · Robotics Foundation Model</p>
+              <p className="text-xs leading-relaxed text-slate-300">
+                Language-guided manipulation intelligence designed for autonomous bin picking, sorting, and warehouse fulfillment automation.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer CTA — inline, no panel */}
       <section className="mx-auto max-w-5xl px-4 pb-16 text-sm text-gray-500">
         <p>

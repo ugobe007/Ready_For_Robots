@@ -419,6 +419,11 @@ function MarketIntelligenceDashboard() {
           </h3>
           <ul className="space-y-2.5 text-xs text-slate-300">
             <li className="border-b border-slate-800 pb-2">
+              <strong className="text-white">
+                <a href="https://www.skild.ai/" target="_blank" rel="noopener noreferrer" className="text-purple-300 hover:underline">Skild AI</a> Brain:
+              </strong> Scalable general-purpose foundation model for robot manipulation & cross-hardware task training.
+            </li>
+            <li className="border-b border-slate-800 pb-2">
               <strong className="text-white">Helix & VLA Models:</strong> Vision-Language-Action foundation models trained directly on human teleoperation.
             </li>
             <li className="border-b border-slate-800 pb-2">

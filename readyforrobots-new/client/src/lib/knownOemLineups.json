@@ -1109,6 +1109,16 @@
       }
     ]
   },
+  "skild.ai": {
+    "vendor_name": "Skild AI",
+    "robots": [
+      {
+        "name": "Skild Brain",
+        "description": "Skild Brain: Scalable general-purpose foundation model for embodied robotics AI, manipulation, locomotion, and cross-robot task training.",
+        "display_class": "humanoid"
+      }
+    ]
+  },
   "covariant.ai": {
     "vendor_name": "Covariant",
     "robots": [
