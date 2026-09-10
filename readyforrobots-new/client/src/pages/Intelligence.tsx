@@ -175,7 +175,7 @@ export default function Intelligence() {
           innerClassName="pb-10 pt-4"
         >
           <div className="mt-8 space-y-6">
-            {/* Real Stats Bar: 1,000+ Verified Jobs */}
+            {/* Real Live Stats Bar */}
             <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4 backdrop-blur-md shadow-[0_0_20px_rgba(16,185,129,0.1)]">
               <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -184,21 +184,26 @@ export default function Intelligence() {
                     <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
                   </span>
                   <div>
-                    <span className="font-mono text-2xl font-black text-white sm:text-3xl">1,000+</span>
+                    <span className="font-mono text-2xl font-black text-white sm:text-3xl">3,000+</span>
                     <span className="ml-2 font-display text-sm font-bold uppercase tracking-wider text-emerald-400">
-                      Verified Jobs Available
+                      Verified Buyer Leads
                     </span>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-6 text-xs text-slate-300 font-medium">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-white">100+</span>
-                    <span className="text-slate-400">Indexed SKUs</span>
+                    <span className="font-mono font-bold text-white">109+</span>
+                    <span className="text-slate-400">Robot Models</span>
                   </div>
                   <span className="text-slate-600">•</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-white">100%</span>
-                    <span className="text-slate-400">Evidence-Backed</span>
+                    <span className="font-mono font-bold text-emerald-400">42</span>
+                    <span className="text-slate-400">Active Open Trials</span>
+                  </div>
+                  <span className="text-slate-600">•</span>
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono font-bold text-amber-400">25</span>
+                    <span className="text-slate-400">Daily Action Signals</span>
                   </div>
                 </div>
               </div>
