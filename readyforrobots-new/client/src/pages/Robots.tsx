@@ -10,6 +10,7 @@ import {
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
+import WorkflowDriveBanner from "@/components/WorkflowDriveBanner";
 import RobotsLeaderCards from "@/components/robots/RobotsLeaderCards";
 import HeirResearchAppendix from "@/components/HeirResearchAppendix";
 import HumanoidIndexSummaryIntro from "@/components/HumanoidIndexSummaryIntro";
@@ -1039,6 +1040,12 @@ export default function Robots() {
           </Link>
           <ArrowRight className="inline h-3.5 w-3.5 ml-1 opacity-40" />
         </p>
+
+        <WorkflowDriveBanner
+          title="Scan Your Robot URL & Find 25 Active Jobs"
+          subtitle="Match any humanoid, AMR, or industrial robot product page against 25 live enterprise buyer leads."
+          buttonText="Build 25 Lead Pipeline"
+        />
       </section>
       <SiteFooter />
     </div>

@@ -2629,8 +2629,8 @@
     @apply min-w-0 flex-1 rounded-xl border border-white/20 bg-white/10 px-4 py-2.5 text-sm font-medium text-white placeholder:text-slate-400 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-500/25;
   }
 
-  .newsletter-subscribe-btn {
-    @apply shrink-0 rounded-xl bg-amber-400 px-5 py-2.5 text-sm font-bold text-gray-950 transition hover:bg-amber-300 disabled:opacity-50;
+  .rfr-btn-primary {
+    @apply shrink-0 rounded-xl bg-purple-600 px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500 disabled:opacity-50;
   }
 
   .humanoid-report-dark {

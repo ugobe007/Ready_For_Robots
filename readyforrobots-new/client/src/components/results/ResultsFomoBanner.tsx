@@ -64,7 +64,7 @@ export default function ResultsFomoBanner({
           </div>
           <Link
             href={`/signup?next=${encodeURIComponent(signupNext)}`}
-            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-amber-400 px-4 py-2 text-xs font-bold text-slate-950 hover:bg-amber-300"
+            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
           >
             Unlock all matches
             <ArrowRight className="h-3.5 w-3.5" />

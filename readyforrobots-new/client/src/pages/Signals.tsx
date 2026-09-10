@@ -21,6 +21,7 @@ import {
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
+import WorkflowDriveBanner from "@/components/WorkflowDriveBanner";
 import {
   fetchWithTimeoutRetry,
   getPublicReadApiBase,
@@ -1422,6 +1423,14 @@ export default function Signals() {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <WorkflowDriveBanner
+            title="Convert Buying Signals into 25 Qualified Deals"
+            subtitle="Paste your robot product URL to map active labor, expansion, and OSHA buying signals into a 25-lead pipeline."
+            buttonText="Build 25 Lead Pipeline"
+          />
         </div>
       </section>
       <SiteFooter />

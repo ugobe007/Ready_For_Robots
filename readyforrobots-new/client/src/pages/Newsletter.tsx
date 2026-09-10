@@ -13,6 +13,7 @@ import { Link } from "wouter";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
+import WorkflowDriveBanner from "@/components/WorkflowDriveBanner";
 import {
   fetchWithTimeout,
   getApiBase,
@@ -804,12 +805,18 @@ export default function Newsletter() {
             onClick={() => {
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-sm font-bold text-gray-950"
+            className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2.5 text-sm font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
           >
             Subscribe at top
             <ArrowRight className="h-4 w-4" />
           </button>
         </div>
+
+        <WorkflowDriveBanner
+          title="Turn Humanoid Intelligence into Buyer Pipeline"
+          subtitle="Paste your robot URL to instantly analyze task feasibility and generate 25 verified buyer leads."
+          buttonText="Build 25 Lead Pipeline"
+        />
       </main>
 
       <SiteFooter />

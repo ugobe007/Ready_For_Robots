@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import Header from "@/components/Header";
 import SiteFooter from "@/components/layout/SiteFooter";
+import WorkflowDriveBanner from "@/components/WorkflowDriveBanner";
 
 // ── Data ─────────────────────────────────────────────────────────────────────
 
@@ -459,10 +460,10 @@ export default function Benchmark() {
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link
-              href="/find-robots"
-              className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white hover:bg-emerald-700"
+              href="/pipeline"
+              className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-purple-500/25 hover:bg-purple-500"
             >
-              Find robots <ArrowRight className="h-4 w-4" />
+              Build 25 Lead Pipeline <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
               href="/intelligence"
@@ -472,6 +473,12 @@ export default function Benchmark() {
             </Link>
           </div>
         </div>
+
+        <WorkflowDriveBanner
+          title="Turn RaaS ROI Analysis into 25 Live Deals"
+          subtitle="Match your deployment cost benchmark to 25 verified enterprise buyers currently searching for automation."
+          buttonText="Generate 25 Lead Pipeline"
+        />
       </section>
       <SiteFooter />
     </div>

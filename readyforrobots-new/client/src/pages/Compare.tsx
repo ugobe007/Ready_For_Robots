@@ -6,6 +6,7 @@ import { Link } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
+import WorkflowDriveBanner from "@/components/WorkflowDriveBanner";
 import {
   FIND_JOBS_CTA,
   JOBS_HEADER_OFFSET_CLASS,
@@ -235,18 +236,24 @@ export default function Compare() {
           <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Link
               href={jobsFindHref()}
-              className="inline-flex items-center gap-2 border border-emerald-400 bg-emerald-500/15 px-6 py-3 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/25"
+              className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
             >
               {FIND_JOBS_CTA}
               <ArrowRight size={14} />
             </Link>
             <Link
               href={jobsCrmOpenHref(false)}
-              className="inline-flex items-center gap-2 border border-slate-600 bg-[#0b162f] px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-400"
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-600 bg-[#0b162f] px-6 py-3 text-sm font-semibold text-slate-200 transition hover:border-slate-400"
             >
               Keep jobs in CRM
             </Link>
           </div>
+
+          <WorkflowDriveBanner
+            title="Ready to Build Your 25-Lead Robot Pipeline?"
+            subtitle="Skip generic lead lists. Paste your product URL to get 25 verified robot jobs and active buyer signals."
+            buttonText="Build 25 Lead Pipeline"
+          />
         </div>
       </main>
 
