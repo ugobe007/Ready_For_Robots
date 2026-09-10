@@ -95,7 +95,7 @@ export default function ExperimentHeader() {
             ReadyForRobots
           </span>
         </a>
-        <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 font-mono text-sm font-semibold uppercase tracking-[0.08em] sm:gap-x-5 sm:text-base">
+        <nav className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 font-sans text-sm font-medium tracking-normal sm:gap-x-5 sm:text-base">
           <a
             href={jobsHref}
             className={`inline-flex items-center gap-1.5 ${jobsActive ? navActive : navIdle}`}
