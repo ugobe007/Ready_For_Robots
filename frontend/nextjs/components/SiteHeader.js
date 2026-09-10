@@ -66,8 +66,11 @@ export default function SiteHeader({ active = '', session = null }) {
           <Link href="/pricing" className={navCls('pricing')}>
             Pricing
           </Link>
-          <Link href="/newsletter" className={navCls('newsletter')}>
-            Intelligence
+          <Link
+            href="/newsletter"
+            className="rounded-lg border border-emerald-400 px-3 py-1 text-xs font-bold text-emerald-400 hover:bg-emerald-400/10 transition-all"
+          >
+            Newsletter
           </Link>
           <Link href="/newsletter#compare" className={navCls('compare')}>
             Compare

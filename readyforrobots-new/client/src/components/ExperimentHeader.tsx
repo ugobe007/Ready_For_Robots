@@ -209,7 +209,7 @@ export default function ExperimentHeader() {
 
           <a
             href="/newsletter"
-            className={`${newsletterActive ? navActive : navIdle}`}
+            className="rounded-lg border border-emerald-400 px-3 py-1 text-xs font-bold text-emerald-400 hover:bg-emerald-400/10 transition-all"
           >
             Newsletter
           </a>

@@ -178,18 +178,22 @@ function SectionShell({
   accent?: string;
 }) {
   return (
-    <section className="newsletter-section">
+    <section className="mb-8 overflow-hidden rounded-2xl border border-slate-700/80 bg-[#0d1b38] shadow-2xl">
       <div
-        className="newsletter-section-head"
+        className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-700/80 px-6 py-4"
         style={{ borderLeft: `4px solid ${accent}` }}
       >
         <div>
-          <p className="newsletter-kicker">{kicker}</p>
-          <h2 className="newsletter-section-title">{title}</h2>
+          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-emerald-400 font-mono">
+            {kicker}
+          </p>
+          <h2 className="mt-1 text-xl font-bold tracking-tight text-white font-display">
+            {title}
+          </h2>
         </div>
         {action}
       </div>
-      <div className="px-5 py-5">{children}</div>
+      <div className="px-6 py-6 text-slate-200">{children}</div>
     </section>
   );
 }
@@ -269,42 +273,42 @@ function StoryCard({
 
   if (featured) {
     return (
-      <article className="newsletter-featured">
+      <article className="relative overflow-hidden rounded-2xl border border-slate-700/80 bg-[#0d1b38] p-6 shadow-2xl sm:p-8 border-l-4 border-l-emerald-500">
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <CategoryBadge label={category} />
           <TierBadge tier={tier} />
           {score != null ? (
-            <span className="font-mono-data text-xs font-bold text-gray-500">
+            <span className="font-mono text-xs font-bold text-slate-300">
               {score}/100 intent
             </span>
           ) : null}
           {story.industry ? (
-            <span className="newsletter-meta">
+            <span className="text-xs font-medium text-slate-400">
               {cleanScrapedText(story.industry)}
             </span>
           ) : null}
         </div>
-        <h3 className="font-display text-2xl font-bold tracking-tight text-gray-950 sm:text-3xl">
-          <Link href={href} className="hover:text-emerald-700">
+        <h3 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+          <Link href={href} className="hover:text-emerald-400 transition-colors">
             {company}
           </Link>
         </h3>
-        <p className="newsletter-body mt-4">{summary}</p>
+        <p className="mt-4 text-base leading-relaxed text-slate-300">{summary}</p>
         {bullets.length > 0 && (
-          <ul className="mt-5 space-y-2 border-t border-gray-100 pt-4">
+          <ul className="mt-5 space-y-2 border-t border-slate-700/60 pt-4">
             {bullets.map((bullet, index) => (
               <li
                 key={index}
-                className="flex gap-2 text-sm leading-relaxed text-gray-800"
+                className="flex gap-2 text-sm leading-relaxed text-slate-200"
               >
-                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-500" />
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
                 <span>{bullet}</span>
               </li>
             ))}
           </ul>
         )}
         <div className="mt-6 flex flex-wrap gap-4">
-          <InlineLink href={href}>Open in pipeline</InlineLink>
+          <InlineLink href={href} color="#34d399">Open in pipeline</InlineLink>
           <InlineLink href="/results?url=" color={AMBER}>
             Find similar buyers
           </InlineLink>
@@ -314,23 +318,23 @@ function StoryCard({
   }
 
   return (
-    <article className="newsletter-story-card">
+    <article className="flex h-full flex-col rounded-xl border border-slate-700/80 bg-[#0d1b38] p-5 shadow-lg transition-all hover:border-emerald-400/50 hover:shadow-2xl">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <CategoryBadge label={category} color={tier === "HOT" ? AMBER : TEAL} />
         {score != null ? (
-          <span className="font-mono-data text-[10px] font-bold text-gray-500">
-            {score}
+          <span className="font-mono text-[11px] font-bold text-slate-300">
+            {score}/100 intent
           </span>
         ) : null}
       </div>
-      <h3 className="newsletter-story-title">
-        <Link href={href} className="hover:text-emerald-700">
+      <h3 className="text-lg font-bold leading-snug text-white font-display">
+        <Link href={href} className="hover:text-emerald-400 transition-colors">
           {company}
         </Link>
       </h3>
-      <p className="newsletter-story-copy">{summary}</p>
-      <div className="mt-3 pt-2">
-        <InlineLink href={href}>Pipeline</InlineLink>
+      <p className="mt-2 flex-1 text-xs leading-relaxed text-slate-300">{summary}</p>
+      <div className="mt-4 pt-3 border-t border-slate-700/60">
+        <InlineLink href={href} color="#34d399">Pipeline →</InlineLink>
       </div>
     </article>
   );
@@ -611,14 +615,14 @@ export default function Newsletter() {
                 return (
                   <div
                     key={index}
-                    className="rounded-xl border border-gray-100 bg-slate-50 p-4"
+                    className="rounded-xl border border-slate-700/80 bg-[#081126] p-4.5 shadow-sm"
                   >
                     <div className="mb-2 flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-emerald-600" />
-                      <p className="text-sm font-bold text-gray-950">{title}</p>
+                      <TrendingUp className="h-4 w-4 text-emerald-400" />
+                      <p className="text-sm font-bold text-slate-100 font-display">{title}</p>
                     </div>
                     {detail ? (
-                      <p className="text-sm leading-relaxed text-gray-700">
+                      <p className="text-xs leading-relaxed text-slate-300">
                         {detail}
                       </p>
                     ) : null}
@@ -634,16 +638,16 @@ export default function Newsletter() {
                   return (
                     <div
                       key={`s-${index}`}
-                      className="rounded-xl border border-gray-100 bg-slate-50 p-4"
+                      className="rounded-xl border border-slate-700/80 bg-[#081126] p-4.5 shadow-sm"
                     >
                       <div className="mb-2 flex items-center gap-2">
-                        <Radio className="h-4 w-4 text-amber-600" />
-                        <p className="text-sm font-bold text-gray-950">
+                        <Radio className="h-4 w-4 text-purple-400" />
+                        <p className="text-sm font-bold text-slate-100 font-display">
                           {title}
                         </p>
                       </div>
                       {detail ? (
-                        <p className="text-sm leading-relaxed text-gray-700">
+                        <p className="text-xs leading-relaxed text-slate-300">
                           {detail}
                         </p>
                       ) : null}
