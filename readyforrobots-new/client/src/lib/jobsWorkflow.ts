@@ -567,24 +567,24 @@ export function searchNamesForSegment(
     .slice(0, cap);
 }
 
-export const JOBS_EXAMPLE_CAP = 5;
-/** Lineup preview: one sample job per robot. Run each SKU for five jobs. */
+export const JOBS_EXAMPLE_CAP = 25;
+/** Lineup preview: one sample job per robot. Run each SKU for 25 jobs. */
 export const JOBS_LINEUP_JOBS_PER_ROBOT = 1;
-export const BUYER_LEADS_ANON_CAP = 5;
-/** See All on `/` — more than the 5-example cap, still the same page. */
-export const JOBS_PIPELINE_CAP = 15;
-/** Live list after Activate: checked jobs first, then fill to this cap. */
-export const JOBS_ACTIVATE_CAP = 15;
-/** Free CRM taste — keep in sync with `JOBS_CRM_FREE_BATCH` in plan_entitlements. */
-export const CRM_UNLOCKED_JOBS = 5;
+export const BUYER_LEADS_ANON_CAP = 25;
+/** See All on `/` — 25 verified jobs cap. */
+export const JOBS_PIPELINE_CAP = 25;
+/** Live list after Activate: checked jobs first, then fill to 25 cap. */
+export const JOBS_ACTIVATE_CAP = 25;
+/** Free CRM taste — 25 jobs. */
+export const CRM_UNLOCKED_JOBS = 25;
 /** Free FIND dump size. Paid skips the cap. Spec: docs/jobs_crm.md */
 export const CRM_FREE_BATCH = CRM_UNLOCKED_JOBS;
 export const CRM_FREE_BATCHES_PER_MONTH = 3;
 export const CRM_FREE_MONTHLY_CAP = CRM_FREE_BATCH * CRM_FREE_BATCHES_PER_MONTH;
 export const CRM_FREE_TTL_DAYS = 7;
-/** Free / anonymous: search this many SKUs per FIND. Paid unlocks five. */
-export const JOBS_PRODUCT_CAP_FREE = 3;
-export const JOBS_PRODUCT_CAP_PAID = 5;
+/** Free / anonymous: search this many SKUs per FIND. Paid unlocks 25. */
+export const JOBS_PRODUCT_CAP_FREE = 5;
+export const JOBS_PRODUCT_CAP_PAID = 25;
 /** FIND shows this many robots per picker page. Not a company roster cap. */
 export const JOBS_LINEUP_DISPLAY_CAP = 3;
 export const OEM_LISTING_TIMEOUT_MS = 5_000;
@@ -988,12 +988,12 @@ export function jobsListHint(opts: {
   productName: string;
 }): string {
   if (opts.robotCount > 1) {
-    return "One sample job per robot. Rows start checked. Run each robot by itself for five jobs, then Open CRM. Apply from the desk.";
+    return "One sample job per robot. Rows start checked. Run each robot by itself for 25 jobs, then Open CRM. Apply from the desk.";
   }
-  return `Five example jobs ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM. Apply from the desk.`;
+  return `25 example jobs ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM. Apply from the desk.`;
 }
 
-export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
+export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 25 jobs →";
 export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
   "Check a job to keep it. Open CRM to save the list. Apply from the desk.";

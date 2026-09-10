@@ -3476,13 +3476,13 @@ export default function Pipeline() {
   const nextStepsTitle = arrivedFromResultsScan
     ? !build25Started
       ? "Step 4 · Provide customer name and information"
-      : "Step 5 of 5 · 15 sales leads"
+      : "Step 5 of 5 · 25 sales leads"
     : crmActivated
       ? "Your next CRM action"
       : "Activate CRM";
   const nextStepsHeadline = arrivedFromResultsScan
     ? !build25Started
-      ? "Provide customer name and information to unlock 15 sales leads"
+      ? "Provide customer name and information to unlock 25 sales leads"
       : "Curate sales leads & run outreach"
     : isFirstWorkspaceRun
       ? "Activate CRM — save a job, then work the draft"
@@ -3628,8 +3628,8 @@ export default function Pipeline() {
           : step5Phase === "save" && step5SaveTarget
             ? `Next: save a lead (${build25Progress + 1}/${BUILD_PIPELINE_TARGET}), then copy the draft and send.`
             : build25Progress >= BUILD_PIPELINE_TARGET
-              ? "All 15 slots filled. Keep sending from saved leads, or open CRM to track replies."
-              : "Pick a lead on the left, then use the yellow button for the next action."
+              ? "All 25 slots filled. Keep sending from saved leads, or open CRM to track replies."
+              : "Pick a lead on the left, then use the button for the next action."
       : null;
 
   // Manual lead click = engagement. Pin the selection and stop auto-rotation so the
@@ -4976,6 +4976,23 @@ export default function Pipeline() {
           </div>
         ) : null}
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-[#120826] via-[#1b1035] to-[#0d162d] px-5 py-3.5 shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <span className="text-lg">🤖</span>
+              <div>
+                <p className="text-xs font-bold text-white">Find Jobs for Your Robot</p>
+                <p className="text-[11px] text-slate-300">Scan any robot URL to build your 25-lead buyer pipeline.</p>
+              </div>
+            </div>
+            <a
+              href="/?visit=jobs"
+              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
+            >
+              <span>Go to Robot Jobs (/?visit=jobs)</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+
           <div className="border border-slate-600 bg-[#0b162f] px-5 py-5 sm:px-6">
             <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>
               ReadyForRobots
@@ -5137,9 +5154,9 @@ export default function Pipeline() {
                     <p className="text-sm text-slate-400 sm:max-w-xs">
                       {workspaceProfileComplete
                         ? isSignedIn
-                          ? "Opens your 15 URL-matched sales leads — not the global market feed."
-                          : "Details saved — next create your free account to unlock 15 sales leads."
-                        : "Fill the three fields above, then unlock 15 sales leads."}
+                          ? "Opens your 25 URL-matched sales leads — not the global market feed."
+                          : "Details saved — next create your free account to unlock 25 sales leads."
+                        : "Fill the three fields above, then unlock 25 sales leads."}
                     </p>
                   </div>
                 </div>
@@ -6409,7 +6426,7 @@ export default function Pipeline() {
                                 type="button"
                                 onClick={() => void handleSaveLead(selected)}
                                 disabled={advancingLeadId === selected.id}
-                                className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
+                                className="inline-flex items-center justify-center rounded-lg bg-purple-600 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500 disabled:opacity-60"
                               >
                                 {advancingLeadId === selected.id
                                   ? "Saving…"
@@ -6418,7 +6435,7 @@ export default function Pipeline() {
                             ) : (
                               <Link
                                 href="/crm"
-                                className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-amber-300"
+                                className="inline-flex items-center justify-center rounded-lg bg-purple-600 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
                               >
                                 Open native CRM
                               </Link>
@@ -6430,7 +6447,7 @@ export default function Pipeline() {
                                 selected.company,
                                 { src: "pipeline_crm_activate" }
                               )}
-                              className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-amber-300"
+                              className="inline-flex items-center justify-center rounded-lg bg-purple-600 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
                             >
                               Start free workspace
                             </Link>
@@ -6959,8 +6976,8 @@ export default function Pipeline() {
                               )}
                             {panelPlan === "anonymous" && (
                               <p className="text-[10px] leading-relaxed text-emerald-700">
-                                Free workspace unlocks up to 15 leads, save up
-                                to 5 leads, and copy outreach drafts. Upgrade to
+                                Free workspace unlocks up to 25 leads, save up
+                                to 25 leads, and copy outreach drafts. Upgrade to
                                 Pro to unlock more leads and automate your sales
                                 pipeline.
                               </p>

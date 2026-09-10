@@ -123,7 +123,7 @@ export default function SiteHeader({ active = '', session = null }) {
           <LoginDropdown label="Sign in" variant="default" />
           <Link
             href="/login"
-            className="px-4 py-2 text-xs font-bold text-black bg-emerald-500 hover:bg-emerald-400 rounded-lg transition-colors shadow-md shadow-emerald-500/20"
+            className="px-4 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 rounded-lg transition-colors shadow-md shadow-purple-500/25"
           >
             ⚡ Start free workspace
           </Link>
@@ -168,7 +168,7 @@ export default function SiteHeader({ active = '', session = null }) {
             💰 ROI Calculator
           </Link>
           <div className="pt-2 border-t border-neutral-800 flex flex-col gap-2">
-            <Link href="/login" className="block text-center px-4 py-2 text-xs font-bold text-black bg-emerald-500 rounded-lg">
+            <Link href="/login" className="block text-center px-4 py-2 text-xs font-bold text-white bg-purple-600 rounded-lg">
               ⚡ Start free workspace
             </Link>
           </div>

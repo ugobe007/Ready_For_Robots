@@ -72,7 +72,7 @@ export const LANDING_HOW_STEPS = [
   {
     n: "03",
     title: "CRM",
-    body: "Keep 5 opportunities on free. Run the next robot the same way.",
+    body: "Keep 25 opportunities on free. Run the next robot the same way.",
     href: "/signup?next=%2Fpipeline%3Fsrc%3Djobs_activate&src=jobs_activate",
     cta: "Open CRM →",
   },
@@ -178,7 +178,7 @@ export const LANDING_VOCAB = [
 
 export const LANDING_CLOSE_HEADLINE = LANDING_HEADLINE;
 export const LANDING_CLOSE_SUBHEAD =
-  "Start a free workspace — 5 jobs, 5 CRM opportunities, no card required.";
+  "Start a free workspace — 25 jobs, 25 CRM opportunities, no card required.";
 export const LANDING_START_FREE_CTA = "Start free workspace";
 export const LANDING_BRIEFING_CTA = "Download the 2026 briefing";
 export const LANDING_SIGNUP_HREF =

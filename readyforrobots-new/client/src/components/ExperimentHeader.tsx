@@ -233,13 +233,20 @@ export default function ExperimentHeader() {
               </button>
             </>
           ) : (
-            <a
-              href={signInHref}
-              className="border px-4 py-2 text-emerald-400 transition hover:bg-white/5"
-              style={{ borderColor: "#1E8F6B" }}
-            >
-              Sign In
-            </a>
+            <>
+              <a
+                href={signInHref}
+                className="text-slate-300 transition hover:text-white"
+              >
+                Sign In
+              </a>
+              <a
+                href="/signup?next=/&src=robot_jobs"
+                className="rounded-lg bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
+              >
+                Start free workspace
+              </a>
+            </>
           )}
         </nav>
       </div>
