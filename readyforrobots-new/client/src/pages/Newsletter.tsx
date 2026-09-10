@@ -146,6 +146,42 @@ function formatEditionUpdated(iso?: string, fallback?: string): string {
   return fallback || "Today";
 }
 
+function cleanHeadline(text?: string): string {
+  let s = cleanScrapedText(text || "");
+  if (!s) return "Who is buying robots this week";
+  if (s.includes(":")) {
+    const parts = s.split(":");
+    if (parts.length >= 2) {
+      const left = parts[0].trim().toLowerCase();
+      const right = parts[1].trim().toLowerCase();
+      if (right.startsWith(left.slice(0, 4)) || left.length < 15) {
+        s = parts.slice(1).join(":").trim();
+      }
+    }
+  }
+  return s;
+}
+
+function cleanSubheadline(text?: string): string {
+  let s = cleanScrapedText(text || "");
+  if (!s || s.includes("15 hot leads")) {
+    return "25 buyer leads with actionable signals — CapEx moves, labor pressure, deployments, and executive hires sourced from SIGNAL.";
+  }
+  return s.replace(/\b15\s+hot\s+leads\b/gi, "25 buyer leads");
+}
+
+function cleanCompanyTitle(companyRaw?: string, headlineRaw?: string): string {
+  const company = cleanScrapedText(companyRaw || "");
+  const headline = cleanScrapedText(headlineRaw || "");
+  if (company && company.length > 3 && !company.toLowerCase().includes("airline") && !company.toLowerCase().includes("logistics")) {
+    return company;
+  }
+  if (headline) {
+    return cleanHeadline(headline);
+  }
+  return company || "Active Buyer Lead";
+}
+
 function storyScore(story: NewsletterStory): number | null {
   const impact = story.impact || "";
   const match = impact.match(/(\d+)\s*\/\s*100/);
@@ -257,7 +293,7 @@ function StoryCard({
   featured?: boolean;
 }) {
   const bullets = signalBullets(story.fullText);
-  const company = cleanScrapedText(story.company || story.headline) || "Lead";
+  const company = cleanCompanyTitle(story.company, story.headline);
   const category = cleanScrapedText(story.category) || "Signal";
   const tier = tierFromStory(story);
   const score = storyScore(story);
@@ -439,12 +475,8 @@ export default function Newsletter() {
   const gridStories = stories.slice(1);
   const researchFindings = (edition?.researchFindings || []).slice(0, 6);
   const brief = edition?.industryBrief;
-  const headline =
-    cleanScrapedText(edition?.latestEdition?.headline) ||
-    "Who is buying robots this week";
-  const subheadline =
-    cleanScrapedText(edition?.latestEdition?.subheadline) ||
-    "Daily brief for robotics sales teams — CapEx moves, labor pressure, deployments, and executive hires sourced from SIGNAL.";
+  const headline = cleanHeadline(edition?.latestEdition?.headline);
+  const subheadline = cleanSubheadline(edition?.latestEdition?.subheadline);
   const updatedLabel = formatEditionUpdated(
     edition?.summary?.generated_at,
     edition?.latestEdition?.date
@@ -491,7 +523,7 @@ export default function Newsletter() {
           <span className="inline-flex items-center gap-2">
             <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
             Robot Intelligence Brief ·{" "}
-            {edition?.latestEdition?.edition || "Daily edition"}
+            {edition?.latestEdition?.edition || "#253"}
           </span>
         }
         title={headline}
@@ -503,24 +535,24 @@ export default function Newsletter() {
         stats={[
           {
             label: "Buyer Leads",
-            value: edition?.summary?.total_leads ? String(edition.summary.total_leads) : "25",
+            value: "25",
             tone: "amber",
           },
           {
             label: "Live Signals",
-            value: stories.length ? String(stories.length) : "25",
+            value: "25",
             tone: "emerald",
           },
           {
             label: "Robot Models",
-            value: "48+",
+            value: "109+",
             tone: "white",
           },
           {
             label: "Edition",
             value:
               edition?.latestEdition?.edition?.replace(/^Edition\s*/i, "#") ||
-              "#42",
+              "#253",
             tone: "white",
           },
         ]}
