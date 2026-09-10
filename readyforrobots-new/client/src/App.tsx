@@ -82,8 +82,12 @@ function Router() {
       <Route path="/pipeline" component={Pipeline} />
       <Route path="/compare" component={Compare} />
       <Route path="/signals" component={Signals} />
-      <Route path="/intelligence" component={Intelligence} />
+      <Route path="/intelligence" component={Newsletter} />
       <Route path="/newsletter" component={Newsletter} />
+      <Route path="/market-insights" component={Newsletter} />
+      <Route path="/robot-ready" component={Robots} />
+      <Route path="/roi-calculator" component={Benchmark} />
+      <Route path="/roi" component={Benchmark} />
       <Route path="/how-it-works">
         <Redirect to="/intelligence" />
       </Route>

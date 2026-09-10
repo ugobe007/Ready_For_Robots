@@ -1069,12 +1069,12 @@ type PipelineEntitlements = {
   };
 };
 
-const PIPELINE_LIMIT_ANONYMOUS = 5;
-const PIPELINE_LIMIT_FREE = 15;
+const PIPELINE_LIMIT_ANONYMOUS = 25;
+const PIPELINE_LIMIT_FREE = 25;
 const PIPELINE_LIMIT_PAID = PIPELINE_FEED_TOTAL;
 /** Target curated working list after Results → Pipeline onboarding. */
-const BUILD_PIPELINE_ANON = 5;
-const BUILD_PIPELINE_SIGNED_IN = 15;
+const BUILD_PIPELINE_ANON = 25;
+const BUILD_PIPELINE_SIGNED_IN = 25;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
 const PIPELINE_LEAD_READ_MS = 7_000;
 const PIPELINE_SESSION_KEY = "pipeline_feed_v7";
@@ -2100,8 +2100,8 @@ export default function Pipeline() {
     if (hasReviewedFiveLeads()) return;
     clearBuild15UnlockFlags();
     const dest = workflowResultsPath(
-      { company_url: submittedUrlFromQuery, src: "pipeline_needs_5_review" },
-      `/results?url=${encodeURIComponent(submittedUrlFromQuery)}&limit=5`
+      { company_url: submittedUrlFromQuery, src: "pipeline_needs_25_review" },
+      `/results?url=${encodeURIComponent(submittedUrlFromQuery)}&limit=25`
     );
     window.location.replace(dest);
   }, [arrivedFromResultsScan, submittedUrlFromQuery, isSignedIn]);
