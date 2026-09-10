@@ -6168,5 +6168,45 @@
         "display_class": "humanoid"
       }
     ]
+  },
+  "aandkrobotics.com": {
+    "vendor_name": "A&K Robotics",
+    "robots": [
+      {
+        "name": "A&K Cruz Autonomous Pod",
+        "description": "A&K Cruz: Self-driving mobility pod for airports, transit hubs, and hospital campuses with indoor LiDAR navigation.",
+        "display_class": "amr"
+      },
+      {
+        "name": "A&K Autonomous Wheelchair",
+        "description": "A&K Autonomous Wheelchair: Self-driving wheelchair platform featuring obstacle avoidance and automatic dock returning.",
+        "display_class": "amr"
+      }
+    ]
+  },
+  "xstomobility.com": {
+    "vendor_name": "XSTO Mobility",
+    "robots": [
+      {
+        "name": "XSTO Stair-Climbing Wheelchair",
+        "description": "XSTO Stair-Climbing Wheelchair: Powered mobility robot with crawler tracks and auto-balancing for stair navigation.",
+        "display_class": "amr"
+      },
+      {
+        "name": "XSTO Powered Stair Climber Transporter",
+        "description": "XSTO Stair Climber Transporter: Heavy-duty stair-climbing robot for patient and cargo transport.",
+        "display_class": "amr"
+      }
+    ]
+  },
+  "thomasnet.com": {
+    "vendor_name": "ThomasNet Robotics Supplier Index",
+    "robots": [
+      {
+        "name": "US Industrial Automation & AMR Directory",
+        "description": "ThomasNet verified US industrial robot manufacturers, integrators, and mobility suppliers.",
+        "display_class": "industrial_arm"
+      }
+    ]
   }
 }
