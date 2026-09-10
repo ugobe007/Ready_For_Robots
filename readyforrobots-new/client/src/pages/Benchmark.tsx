@@ -11,12 +11,20 @@ import {
   ChevronDown,
   ChevronUp,
   ExternalLink,
+  Calculator,
+  TrendingUp,
+  DollarSign,
+  Clock,
+  Bot,
+  Sparkles,
+  CheckCircle2,
 } from "lucide-react";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
+import PageHeroDark from "@/components/layout/PageHeroDark";
 import SiteFooter from "@/components/layout/SiteFooter";
 import WorkflowDriveBanner from "@/components/WorkflowDriveBanner";
 
-// ── Data ─────────────────────────────────────────────────────────────────────
+// ── Criteria Data ────────────────────────────────────────────────────────────
 
 const CRITERIA = [
   {
@@ -246,240 +254,593 @@ const BUYERS_CHECKLIST = [
   "Get contractual software update commitments — current humanoids are early-stage products",
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
+// ── Interactive ROI Calculator Component ─────────────────────────────────────
+
+function InteractiveRoiCalculator() {
+  const [fleetSize, setFleetSize] = useState(10);
+  const [laborRate, setLaborRate] = useState(32);
+  const [shifts, setShifts] = useState(2);
+  const [model, setModel] = useState<"raas" | "capex">("raas");
+  const [raasFee, setRaasFee] = useState(6500);
+  const [capexCost, setCapexCost] = useState(95000);
+
+  // Calculations
+  const hoursPerShiftPerDay = 8;
+  const operatingDaysPerYear = 300;
+  const annualHoursPerRobot = shifts * hoursPerShiftPerDay * operatingDaysPerYear; // e.g. 2 * 8 * 300 = 4,800 hrs
+
+  // Annual Human Labor Cost Replaced (1 robot replaces ~1 FTE per shift)
+  const annualHumanLaborCost = fleetSize * annualHoursPerRobot * laborRate;
+  const hourlyHumanCost = laborRate;
+
+  // RaaS Model Costs
+  const annualRaasCost = fleetSize * raasFee * 12;
+  const raasHourlyCost = (raasFee * 12) / annualHoursPerRobot;
+  const annualSavingsRaas = annualHumanLaborCost - annualRaasCost;
+  const raasOpExSavingsPct = Math.round((annualSavingsRaas / annualHumanLaborCost) * 100);
+
+  // CapEx Model Costs (Maintenance & Software Support = ~$8k/yr per robot)
+  const totalCapExInitial = fleetSize * capexCost;
+  const annualCapExMaintenance = fleetSize * 8000;
+  const annualSavingsCapEx = annualHumanLaborCost - annualCapExMaintenance;
+  const capexPaybackMonths = Math.max(0.5, (totalCapExInitial / Math.max(1, annualSavingsCapEx)) * 12);
+  const capexFiveYearNetSavings = annualSavingsCapEx * 5 - totalCapExInitial;
+  const capexFiveYearRoiPct = Math.round((capexFiveYearNetSavings / Math.max(1, totalCapExInitial)) * 100);
+
+  // Active metrics depending on selected model
+  const activeAnnualSavings = model === "raas" ? annualSavingsRaas : annualSavingsCapEx;
+  const activePaybackLabel = model === "raas" ? "Day 1 (Instant Cashflow)" : `${capexPaybackMonths.toFixed(1)} Months`;
+  const activeHourlyCost = model === "raas" ? raasHourlyCost : (capexCost / (annualHoursPerRobot * 3)) + (8000 / annualHoursPerRobot);
+  const activeSavingsPct = model === "raas" ? raasOpExSavingsPct : Math.round((activeAnnualSavings / annualHumanLaborCost) * 100);
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-700/80 bg-[#0d1b38] shadow-2xl p-6 sm:p-8 mb-12">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-700/80 pb-6 mb-6">
+        <div>
+          <span className="inline-flex items-center gap-2 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-mono font-bold text-purple-300">
+            <Calculator className="h-3.5 w-3.5 text-purple-400" />
+            Interactive Enterprise Financial Model
+          </span>
+          <h2 className="text-2xl font-extrabold text-white font-display mt-2">
+            Humanoid & Automation ROI & RaaS Payback Calculator
+          </h2>
+          <p className="text-xs text-slate-300 mt-1 max-w-2xl">
+            Simulate OpEx savings, hourly cost replacement, and payback timelines for RaaS subscriptions vs CapEx purchases across 300 operating days.
+          </p>
+        </div>
+        <div className="flex items-center gap-2 rounded-xl bg-[#081126] p-1 border border-slate-700/80">
+          <button
+            type="button"
+            onClick={() => setModel("raas")}
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+              model === "raas"
+                ? "bg-purple-600 text-white shadow-md shadow-purple-500/30"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            RaaS (Subscription)
+          </button>
+          <button
+            type="button"
+            onClick={() => setModel("capex")}
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition-all ${
+              model === "capex"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-500/30"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            CapEx (Outright Purchase)
+          </button>
+        </div>
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-12">
+        {/* Controls Column */}
+        <div className="lg:col-span-6 space-y-6">
+          {/* Fleet Size */}
+          <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-mono font-bold uppercase text-slate-300 flex items-center gap-1.5">
+                <Bot className="h-4 w-4 text-purple-400" /> Fleet Size (Humanoids / AMRs)
+              </label>
+              <span className="font-mono text-base font-extrabold text-purple-300 bg-purple-500/20 px-2.5 py-0.5 rounded-lg border border-purple-500/30">
+                {fleetSize} Robots
+              </span>
+            </div>
+            <input
+              type="range"
+              min="1"
+              max="50"
+              value={fleetSize}
+              onChange={(e) => setFleetSize(Number(e.target.value))}
+              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
+            />
+            <div className="flex justify-between text-[10px] font-mono text-slate-400 mt-1">
+              <span>1 Robot (Pilot)</span>
+              <span>25 Robots (Facility)</span>
+              <span>50 Robots (Enterprise)</span>
+            </div>
+          </div>
+
+          {/* Hourly Labor Rate */}
+          <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-mono font-bold uppercase text-slate-300 flex items-center gap-1.5">
+                <DollarSign className="h-4 w-4 text-emerald-400" /> Hourly Labor Cost Replaced
+              </label>
+              <span className="font-mono text-base font-extrabold text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
+                ${laborRate}/hr
+              </span>
+            </div>
+            <input
+              type="range"
+              min="18"
+              max="65"
+              step="1"
+              value={laborRate}
+              onChange={(e) => setLaborRate(Number(e.target.value))}
+              className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+            />
+            <div className="flex justify-between text-[10px] font-mono text-slate-400 mt-1">
+              <span>$18/hr (Basic Warehouse)</span>
+              <span>$35/hr (Manufacturing)</span>
+              <span>$65/hr (Specialized)</span>
+            </div>
+          </div>
+
+          {/* Shifts */}
+          <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-xs font-mono font-bold uppercase text-slate-300 flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-amber-400" /> Operational Shifts / Day
+              </label>
+              <span className="font-mono text-base font-extrabold text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-lg border border-amber-500/30">
+                {shifts} Shift{shifts > 1 ? "s" : ""} ({shifts * 8} hrs/day)
+              </span>
+            </div>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              {[1, 2, 3].map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => setShifts(s)}
+                  className={`py-2 text-xs font-mono font-bold rounded-lg border transition-all ${
+                    shifts === s
+                      ? "border-amber-400 bg-amber-500/20 text-amber-300"
+                      : "border-slate-800 bg-slate-900 text-slate-400 hover:border-slate-700"
+                  }`}
+                >
+                  {s} Shift{s > 1 ? "s" : ""} ({s * 8}h)
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Model Specific Cost Input */}
+          {model === "raas" ? (
+            <div className="rounded-xl border border-purple-500/30 bg-purple-950/20 p-4">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs font-mono font-bold uppercase text-purple-300">
+                  RaaS Monthly Subscription / Robot
+                </label>
+                <span className="font-mono text-sm font-extrabold text-purple-200">
+                  ${raasFee.toLocaleString()}/mo
+                </span>
+              </div>
+              <input
+                type="range"
+                min="4500"
+                max="12000"
+                step="500"
+                value={raasFee}
+                onChange={(e) => setRaasFee(Number(e.target.value))}
+                className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-400"
+              />
+              <p className="text-[11px] text-slate-400 mt-2">
+                Includes hardware lease, software updates, maintenance, and 24/7 cloud support.
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4">
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs font-mono font-bold uppercase text-emerald-300">
+                  CapEx Purchase Price / Robot
+                </label>
+                <span className="font-mono text-sm font-extrabold text-emerald-200">
+                  ${capexCost.toLocaleString()}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="45000"
+                max="180000"
+                step="5000"
+                value={capexCost}
+                onChange={(e) => setCapexCost(Number(e.target.value))}
+                className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
+              />
+              <p className="text-[11px] text-slate-400 mt-2">
+                Outright hardware purchase + ~$8k/year per robot maintenance & software license.
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Results KPI Panel */}
+        <div className="lg:col-span-6 flex flex-col justify-between space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            {/* Net Annual Savings */}
+            <div className="rounded-xl border border-emerald-500/40 bg-gradient-to-br from-[#08152c] to-[#0a2336] p-5 shadow-lg">
+              <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1">
+                <TrendingUp className="h-3.5 w-3.5" /> Net Annual Savings
+              </p>
+              <p className="mt-2 text-3xl font-black font-mono text-emerald-300">
+                ${Math.max(0, activeAnnualSavings).toLocaleString()}
+              </p>
+              <p className="mt-1 text-[11px] text-emerald-400/80 font-medium">
+                {activeSavingsPct}% Reduction in Annual Labor Cost
+              </p>
+            </div>
+
+            {/* Payback Window */}
+            <div className="rounded-xl border border-purple-500/40 bg-gradient-to-br from-[#0f1430] to-[#1c123d] p-5 shadow-lg">
+              <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1">
+                <Sparkles className="h-3.5 w-3.5 text-purple-400" /> Payback Window
+              </p>
+              <p className="mt-2 text-2xl font-black font-mono text-purple-200">
+                {activePaybackLabel}
+              </p>
+              <p className="mt-1 text-[11px] text-purple-300/80 font-medium">
+                {model === "raas" ? "Zero upfront capital requirement" : "Full payback of initial hardware expenditure"}
+              </p>
+            </div>
+
+            {/* Effective Hourly Cost per Robot */}
+            <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                Robot Hourly Cost
+              </p>
+              <p className="mt-1 text-2xl font-black font-mono text-cyan-300">
+                ${activeHourlyCost.toFixed(2)}/hr
+              </p>
+              <p className="mt-1 text-[11px] text-slate-400">
+                vs <span className="line-through text-slate-500">${hourlyHumanCost}.00/hr</span> human rate
+              </p>
+            </div>
+
+            {/* 5-Year Cumulative Impact */}
+            <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+                {model === "raas" ? "5-Year Cumulative Savings" : "5-Year ROI %"}
+              </p>
+              <p className="mt-1 text-2xl font-black font-mono text-amber-300">
+                {model === "raas"
+                  ? `$${(annualSavingsRaas * 5).toLocaleString()}`
+                  : `${capexFiveYearRoiPct}% ROI`}
+              </p>
+              <p className="mt-1 text-[11px] text-slate-400">
+                Across {fleetSize} deployed units over 5 years
+              </p>
+            </div>
+          </div>
+
+          {/* Comparative Summary Table */}
+          <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4 text-xs">
+            <h4 className="font-mono font-bold uppercase tracking-wider text-slate-300 mb-3 text-[11px]">
+              Annual Operational Breakdown ({fleetSize} Robots · {shifts} Shifts)
+            </h4>
+            <div className="space-y-2">
+              <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
+                <span>Human Labor Base Cost:</span>
+                <span className="font-mono text-slate-200 font-bold">${annualHumanLaborCost.toLocaleString()}/yr</span>
+              </div>
+              <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
+                <span>{model === "raas" ? "RaaS Subscription Cost:" : "CapEx Maintenance & License:"}</span>
+                <span className="font-mono text-purple-300 font-bold">
+                  -${(model === "raas" ? annualRaasCost : annualCapExMaintenance).toLocaleString()}/yr
+                </span>
+              </div>
+              <div className="flex justify-between pt-1 font-bold text-emerald-300 text-sm">
+                <span>Net Operating Advantage:</span>
+                <span className="font-mono">+${Math.max(0, activeAnnualSavings).toLocaleString()}/yr</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-2">
+            <Link
+              href="/pipeline"
+              className="w-full flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/30 hover:bg-purple-500 transition-all cursor-pointer"
+            >
+              Match This ROI Model to 25 Verified Buyer Leads <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Main Page Component ──────────────────────────────────────────────────────
 
 export default function Benchmark() {
-  const [expanded, setExpanded] = useState<number | null>(null);
+  const [expanded, setExpanded] = useState<number | null>(0);
 
   const toggle = (i: number) => setExpanded(expanded === i ? null : i);
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-gray-900">
-      <Header />
+    <div className="min-h-screen flex flex-col bg-[#081126] text-slate-100 font-sans">
+      <ExperimentHeader />
 
-      {/* ── Hero ── */}
-      <section className="mx-auto max-w-5xl px-4 pt-24 pb-16 text-center">
-        <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-gray-200 px-4 py-1.5 text-[11px] font-bold uppercase tracking-widest text-gray-500">
-          Buyer Evaluation Guide
-        </div>
-        <h1 className="mb-5 text-4xl font-extrabold leading-tight tracking-tight sm:text-5xl">
-          How to benchmark a<br />
-          <span style={{ color: "#10b981" }}>humanoid robot</span>
-        </h1>
-        <p className="mx-auto max-w-2xl text-base text-gray-500 leading-relaxed">
-          Most vendors show demos. Independent benchmarks show reality.
-          Fraunhofer IPA — one of Europe's largest applied research institutes —
-          developed a six-criteria test framework for humanoids. This is what
-          every buyer should ask for before deploying.
-        </p>
-        <div className="mt-6 flex flex-wrap items-center justify-center gap-3 text-[12px] text-gray-400">
-          <span>Source: Fraunhofer IPA, May 2026</span>
-          <span className="text-gray-300">·</span>
-          <a
-            href="https://www.therobotreport.com/fraunhofer-ipa-offers-new-test-benchmark-for-humanoid-robots/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 hover:text-gray-600 transition-colors"
-          >
-            Original article <ExternalLink className="h-3 w-3" />
-          </a>
-          <span className="text-gray-300">·</span>
-          <span>Reference robot: Unitree G1</span>
-        </div>
-      </section>
+      <PageHeroDark
+        maxWidthClass="max-w-6xl"
+        eyebrow={
+          <span className="inline-flex items-center gap-2">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-400" />
+            Robotics Financial Model & Fraunhofer Benchmark
+          </span>
+        }
+        title={
+          <span>
+            Enterprise Robotics <span className="text-emerald-400">ROI Calculator</span> & Benchmark
+          </span>
+        }
+        description={
+          <p className="max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
+            Model RaaS subscription payback, calculate hourly labor replacement costs, and review independent Fraunhofer IPA testing benchmarks for humanoid deployments.
+          </p>
+        }
+        stats={[
+          {
+            label: "Avg RaaS Payback",
+            value: "Day 1",
+            tone: "emerald",
+          },
+          {
+            label: "OpEx Reduction",
+            value: "34%–48%",
+            tone: "amber",
+          },
+          {
+            label: "Evaluated Criteria",
+            value: "6 Pillars",
+            tone: "white",
+          },
+          {
+            label: "Reference Model",
+            value: "Unitree G1",
+            tone: "white",
+          },
+        ]}
+      />
 
-      {/* ── Six criteria ── */}
-      <section className="mx-auto max-w-4xl px-4 pb-16 space-y-3">
-        {CRITERIA.map((c, i) => {
-          const Icon = c.icon;
-          const open = expanded === i;
-          return (
-            <div
-              key={i}
-              className={`rounded-2xl border overflow-hidden transition-all bg-white shadow-sm ${open ? "ring-1 ring-emerald-100" : ""}`}
-              style={{ borderColor: open ? c.border : "rgba(15,23,42,0.08)" }}
+      <div className="page-dark-shell-fade" />
+
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-20 pt-8 lg:px-6">
+        {/* Interactive ROI Calculator */}
+        <InteractiveRoiCalculator />
+
+        {/* ── Fraunhofer Benchmark Section Header ── */}
+        <div className="mb-8 text-center sm:text-left">
+          <span className="text-[11px] font-mono uppercase font-bold text-emerald-400 tracking-wider">
+            Fraunhofer IPA Evaluation Standards
+          </span>
+          <h2 className="text-2xl font-bold text-white font-display mt-1">
+            How to Benchmark a Humanoid Robot Before Deployment
+          </h2>
+          <p className="mt-2 max-w-3xl text-sm text-slate-300">
+            Most vendors show curated marketing demos. Independent benchmarks show reality. Fraunhofer IPA — Europe&apos;s leading applied research institute — established a six-criteria test framework for humanoid robotics.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3 text-[12px] text-slate-400">
+            <span>Source: Fraunhofer IPA, May 2026</span>
+            <span className="text-slate-600">·</span>
+            <a
+              href="https://www.therobotreport.com/fraunhofer-ipa-offers-new-test-benchmark-for-humanoid-robots/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-emerald-400 hover:underline"
             >
-              {/* Header row */}
-              <button
-                type="button"
-                onClick={() => toggle(i)}
-                className="w-full flex items-center gap-4 px-6 py-5 text-left"
+              Original article <ExternalLink className="h-3 w-3" />
+            </a>
+            <span className="text-slate-600">·</span>
+            <span>Reference Unit: Unitree G1</span>
+          </div>
+        </div>
+
+        {/* ── Six criteria accordion ── */}
+        <section className="mb-12 space-y-4">
+          {CRITERIA.map((c, i) => {
+            const Icon = c.icon;
+            const open = expanded === i;
+            return (
+              <div
+                key={i}
+                className={`rounded-2xl border overflow-hidden transition-all bg-[#0d1b38] shadow-xl ${
+                  open ? "border-emerald-500/50" : "border-slate-700/80"
+                }`}
               >
-                <span
-                  className="shrink-0 flex items-center justify-center rounded-xl w-10 h-10 font-mono text-[11px] font-bold"
-                  style={{
-                    background: c.bg,
-                    color: c.color,
-                    border: `1px solid ${c.border}`,
-                  }}
+                {/* Header row */}
+                <button
+                  type="button"
+                  onClick={() => toggle(i)}
+                  className="w-full flex items-center gap-4 px-6 py-5 text-left hover:bg-slate-800/30 transition-colors"
                 >
-                  {c.number}
-                </span>
-                <Icon className="h-5 w-5 shrink-0" style={{ color: c.color }} />
-                <div className="flex-1 min-w-0">
-                  <p className="font-bold text-gray-900 text-[15px]">
-                    {c.label}
-                  </p>
-                  <p className="text-[12px] text-gray-500 mt-0.5">
-                    {c.summary}
-                  </p>
-                </div>
-                {open ? (
-                  <ChevronUp className="h-4 w-4 text-gray-400 shrink-0" />
-                ) : (
-                  <ChevronDown className="h-4 w-4 text-gray-400 shrink-0" />
-                )}
-              </button>
-
-              {/* Expanded detail */}
-              {open && (
-                <div className="px-6 pb-6 space-y-5 border-t border-gray-100 pt-5">
-                  <p className="text-sm text-gray-500 leading-relaxed">
-                    {c.description}
-                  </p>
-
-                  {c.standard && (
-                    <p className="text-[11px] font-mono text-gray-400">
-                      Standard:{" "}
-                      <span className="text-gray-500">{c.standard}</span>
-                    </p>
-                  )}
-
-                  {/* Tests */}
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
-                      What is tested
-                    </p>
-                    <ul className="space-y-1.5">
-                      {c.tests.map((t, j) => (
-                        <li
-                          key={j}
-                          className="flex items-start gap-2 text-[12px] text-gray-500"
-                        >
-                          <span
-                            className="mt-1.5 h-1 w-1 rounded-full shrink-0"
-                            style={{ background: c.color }}
-                          />
-                          {t}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  {/* G1 results */}
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2">
-                      Unitree G1 results (reference)
-                    </p>
-                    <div className="grid gap-2 sm:grid-cols-2">
-                      {c.g1Results.map((r, j) => (
-                        <div
-                          key={j}
-                          className="rounded-xl px-3 py-2.5"
-                          style={{
-                            background: r.warn
-                              ? "rgba(248,113,113,0.07)"
-                              : "rgba(255,255,255,0.03)",
-                            border: r.warn
-                              ? "1px solid rgba(248,113,113,0.2)"
-                              : "1px solid rgba(255,255,255,0.06)",
-                          }}
-                        >
-                          <p className="text-[10px] text-gray-400 mb-0.5">
-                            {r.label}
-                          </p>
-                          <p
-                            className="text-[12px] font-semibold"
-                            style={{
-                              color: r.warn
-                                ? "#f87171"
-                                : "rgba(255,255,255,0.75)",
-                            }}
-                          >
-                            {r.value}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Verdict */}
-                  <div
-                    className="rounded-xl px-4 py-3"
+                  <span
+                    className="shrink-0 flex items-center justify-center rounded-xl w-10 h-10 font-mono text-[11px] font-bold"
                     style={{
-                      background: `${c.color}0d`,
+                      background: c.bg,
+                      color: c.color,
                       border: `1px solid ${c.border}`,
                     }}
                   >
-                    <p
-                      className="text-[10px] font-bold uppercase tracking-widest mb-1"
-                      style={{ color: c.color }}
-                    >
-                      Buyer takeaway
+                    {c.number}
+                  </span>
+                  <Icon className="h-5 w-5 shrink-0" style={{ color: c.color }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="font-bold text-white text-[15px] font-display">
+                      {c.label}
                     </p>
-                    <p className="text-[12px] text-gray-600">{c.verdict}</p>
+                    <p className="text-[12px] text-slate-300 mt-0.5">
+                      {c.summary}
+                    </p>
                   </div>
-                </div>
-              )}
+                  {open ? (
+                    <ChevronUp className="h-4 w-4 text-slate-400 shrink-0" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-slate-400 shrink-0" />
+                  )}
+                </button>
+
+                {/* Expanded detail */}
+                {open && (
+                  <div className="px-6 pb-6 space-y-5 border-t border-slate-700/60 pt-5">
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      {c.description}
+                    </p>
+
+                    {c.standard && (
+                      <p className="text-[11px] font-mono text-slate-400">
+                        Standard:{" "}
+                        <span className="text-emerald-300">{c.standard}</span>
+                      </p>
+                    )}
+
+                    {/* Tests */}
+                    <div>
+                      <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400 mb-2">
+                        What is tested
+                      </p>
+                      <ul className="space-y-1.5">
+                        {c.tests.map((t, j) => (
+                          <li
+                            key={j}
+                            className="flex items-start gap-2 text-[12px] text-slate-300"
+                          >
+                            <span
+                              className="mt-1.5 h-1.5 w-1.5 rounded-full shrink-0"
+                              style={{ background: c.color }}
+                            />
+                            {t}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* G1 results */}
+                    <div>
+                      <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-slate-400 mb-2">
+                        Unitree G1 results (reference)
+                      </p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {c.g1Results.map((r, j) => (
+                          <div
+                            key={j}
+                            className="rounded-xl px-3 py-2.5"
+                            style={{
+                              background: r.warn
+                                ? "rgba(248,113,113,0.12)"
+                                : "#081126",
+                              border: r.warn
+                                ? "1px solid rgba(248,113,113,0.3)"
+                                : "1px solid rgba(51,65,85,0.6)",
+                            }}
+                          >
+                            <p className="text-[10px] font-mono text-slate-400 mb-0.5">
+                              {r.label}
+                            </p>
+                            <p
+                              className="text-[12px] font-semibold"
+                              style={{
+                                color: r.warn
+                                  ? "#f87171"
+                                  : "#e2e8f0",
+                              }}
+                            >
+                              {r.value}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Verdict */}
+                    <div
+                      className="rounded-xl px-4 py-3"
+                      style={{
+                        background: `${c.color}0d`,
+                        border: `1px solid ${c.border}`,
+                      }}
+                    >
+                      <p
+                        className="text-[10px] font-mono font-bold uppercase tracking-widest mb-1"
+                        style={{ color: c.color }}
+                      >
+                        Buyer takeaway
+                      </p>
+                      <p className="text-[12px] text-slate-200">{c.verdict}</p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </section>
+
+        {/* ── Buyer checklist ── */}
+        <section className="mb-12">
+          <div className="rounded-2xl border border-emerald-500/40 bg-gradient-to-br from-[#08152c] to-[#0a2336] p-8 shadow-2xl">
+            <div className="mb-2 text-[10px] font-mono font-bold uppercase tracking-widest text-emerald-400">
+              Procurement Audit Checklist
             </div>
-          );
-        })}
-      </section>
-
-      {/* ── Buyer checklist ── */}
-      <section className="mx-auto max-w-4xl px-4 pb-16">
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/50 p-8">
-          <div className="mb-2 text-[10px] font-bold uppercase tracking-widest text-emerald-700">
-            Before you buy
+            <h2 className="font-display text-2xl font-extrabold text-white mb-6">
+              7 Critical Questions Every Robotics Buyer Must Ask
+            </h2>
+            <ul className="space-y-3.5">
+              {BUYERS_CHECKLIST.map((item, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <span className="shrink-0 flex items-center justify-center rounded-full w-5 h-5 text-[10px] font-mono font-bold mt-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    {i + 1}
+                  </span>
+                  <p className="text-sm text-slate-200 leading-relaxed">{item}</p>
+                </li>
+              ))}
+            </ul>
           </div>
-          <h2 className="font-display text-2xl font-extrabold text-gray-900 mb-6">
-            7 questions every buyer should ask
-          </h2>
-          <ul className="space-y-3">
-            {BUYERS_CHECKLIST.map((item, i) => (
-              <li key={i} className="flex items-start gap-3">
-                <span className="shrink-0 flex items-center justify-center rounded-full w-5 h-5 text-[10px] font-bold mt-0.5 bg-emerald-100 text-emerald-700">
-                  {i + 1}
-                </span>
-                <p className="text-sm text-gray-600 leading-relaxed">{item}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </section>
+        </section>
 
-      <section className="mx-auto max-w-4xl px-4 pb-12 text-center">
-        <div className="rounded-2xl border border-gray-200 bg-white px-8 py-12 shadow-sm">
-          <h2 className="font-display text-2xl font-extrabold text-gray-900 mb-3">
-            Ready to find the right robot for your operation?
-          </h2>
-          <p className="text-sm text-gray-500 mb-7 max-w-lg mx-auto">
-            Ready For Robots matches buyer requirements to vetted robot vendors
-            — with signal data, not demos. We know which vendors are deploying
-            in your industry right now.
-          </p>
-          <div className="flex flex-wrap items-center justify-center gap-3">
-            <Link
-              href="/pipeline"
-              className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-bold text-white shadow-md shadow-purple-500/25 hover:bg-purple-500"
-            >
-              Build 25 Lead Pipeline <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="/intelligence"
-              className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-6 py-3 text-sm font-bold text-gray-700 hover:bg-gray-50"
-            >
-              View market intelligence
-            </Link>
+        {/* Bottom CTA Block */}
+        <section className="mb-8 text-center">
+          <div className="rounded-2xl border border-slate-700/80 bg-[#0d1b38] px-8 py-10 shadow-2xl">
+            <h2 className="font-display text-2xl font-extrabold text-white mb-3">
+              Ready to find the right robot for your operation?
+            </h2>
+            <p className="text-sm text-slate-300 mb-7 max-w-xl mx-auto">
+              Ready For Robots matches enterprise buyer requirements to vetted robot vendors — backed by signal data and live intent, not pitch decks.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <Link
+                href="/pipeline"
+                className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/30 hover:bg-purple-500 transition-all cursor-pointer"
+              >
+                Build 25 Lead Pipeline <ArrowRight className="h-4 w-4" />
+              </Link>
+              <Link
+                href="/newsletter"
+                className="inline-flex items-center gap-2 rounded-xl border border-emerald-400 text-emerald-400 px-6 py-3 text-sm font-bold hover:bg-emerald-500/10 transition-all"
+              >
+                View Robot Intelligence Brief
+              </Link>
+            </div>
           </div>
-        </div>
 
-        <WorkflowDriveBanner
-          title="Turn RaaS ROI Analysis into 25 Live Deals"
-          subtitle="Match your deployment cost benchmark to 25 verified enterprise buyers currently searching for automation."
-          buttonText="Generate 25 Lead Pipeline"
-        />
-      </section>
+          <WorkflowDriveBanner
+            title="Turn RaaS ROI Analysis into 25 Live Deals"
+            subtitle="Match your deployment cost benchmark to 25 verified enterprise buyers currently searching for automation."
+            buttonText="Generate 25 Lead Pipeline"
+          />
+        </section>
+      </main>
+
       <SiteFooter />
     </div>
   );
