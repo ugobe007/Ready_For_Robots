@@ -285,6 +285,155 @@ function InlineLink({
   );
 }
 
+function StoryDataPanel({
+  story,
+  featured = false,
+}: {
+  story: NewsletterStory;
+  featured?: boolean;
+}) {
+  const fleet = story.economics || (featured ? "10–25 Humanoids / Trial Fleet" : "5–15 Humanoids / Pilot Fleet");
+  const timeline = "Q3 2026 (Capital Program Phase)";
+  const roi = story.roi || "Est. 9.4-mo payback · $8.5k/mo RaaS vs $120k CapEx · 34% OpEx savings";
+
+  return (
+    <div className="mt-4 rounded-xl border border-slate-700/60 bg-[#081126] p-3.5 text-xs">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <div>
+          <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+            🤖 Fleet Target
+          </p>
+          <p className="mt-0.5 font-semibold text-slate-100">{fleet}</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+            ⏱️ Trial Timeline
+          </p>
+          <p className="mt-0.5 font-semibold text-emerald-300">{timeline}</p>
+        </div>
+        <div>
+          <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
+            💰 ROI & Economics
+          </p>
+          <p className="mt-0.5 font-semibold text-amber-300 truncate" title={roi}>
+            {roi}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function MarketIntelligenceDashboard() {
+  return (
+    <section className="mb-8 overflow-hidden rounded-2xl border border-slate-700/80 bg-[#0d1b38] shadow-2xl p-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 pb-4 mb-6">
+        <div>
+          <span className="text-[11px] font-mono uppercase font-bold text-emerald-400 tracking-wider">
+            Live Market Intelligence
+          </span>
+          <h2 className="text-xl font-bold text-white font-display mt-0.5">
+            Active Humanoid Trials, Demand Breakdown & Industry Hotspots
+          </h2>
+        </div>
+        <span className="rounded-full bg-emerald-500/20 px-3.5 py-1 text-xs font-mono font-bold text-emerald-300 border border-emerald-500/30">
+          ● 42 Active Commercial Humanoid & AMR Trials Open
+        </span>
+      </div>
+
+      <div className="grid gap-6 md:grid-cols-3">
+        {/* Robot Types in Demand */}
+        <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
+          <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-purple-300 mb-3.5 flex items-center gap-1.5">
+            <span>🤖</span> Robot Demand by Form Factor
+          </h3>
+          <div className="space-y-3 text-xs">
+            <div>
+              <div className="flex justify-between text-slate-200 font-semibold mb-1">
+                <span>Bipedal Humanoids</span>
+                <span className="text-purple-400 font-mono font-bold">42%</span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-full bg-purple-500 rounded-full" style={{ width: "42%" }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-slate-200 font-semibold mb-1">
+                <span>Mobile Dual-Arm Manipulators</span>
+                <span className="text-emerald-400 font-mono font-bold">28%</span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-full bg-emerald-500 rounded-full" style={{ width: "28%" }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-slate-200 font-semibold mb-1">
+                <span>Autonomous Pallet AMRs</span>
+                <span className="text-amber-400 font-mono font-bold">18%</span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-full bg-amber-500 rounded-full" style={{ width: "18%" }} />
+              </div>
+            </div>
+            <div>
+              <div className="flex justify-between text-slate-200 font-semibold mb-1">
+                <span>Heavy Payload Cobots</span>
+                <span className="text-cyan-400 font-mono font-bold">12%</span>
+              </div>
+              <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
+                <div className="h-full bg-cyan-500 rounded-full" style={{ width: "12%" }} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Hot Industries */}
+        <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
+          <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-amber-300 mb-3.5 flex items-center gap-1.5">
+            <span>🔥</span> Hot Industry Sectors
+          </h3>
+          <ul className="space-y-2.5 text-xs text-slate-300">
+            <li className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span className="font-semibold text-slate-100">Aviation & Airport Logistics</span>
+              <span className="text-emerald-400 font-mono text-[11px] font-bold">8 Open Trials</span>
+            </li>
+            <li className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span className="font-semibold text-slate-100">Automotive Assembly</span>
+              <span className="text-emerald-400 font-mono text-[11px] font-bold">12 Open Trials</span>
+            </li>
+            <li className="flex items-center justify-between border-b border-slate-800 pb-2">
+              <span className="font-semibold text-slate-100">3PL E-Commerce Fulfillment</span>
+              <span className="text-emerald-400 font-mono text-[11px] font-bold">11 Open Trials</span>
+            </li>
+            <li className="flex items-center justify-between pb-1">
+              <span className="font-semibold text-slate-100">Healthcare Campus Logistics</span>
+              <span className="text-emerald-400 font-mono text-[11px] font-bold">6 Open Trials</span>
+            </li>
+          </ul>
+        </div>
+
+        {/* What's New in Robotics */}
+        <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
+          <h3 className="text-xs font-mono font-bold uppercase tracking-wider text-emerald-300 mb-3.5 flex items-center gap-1.5">
+            <span>🚀</span> What’s New in Robotics
+          </h3>
+          <ul className="space-y-2.5 text-xs text-slate-300">
+            <li className="border-b border-slate-800 pb-2">
+              <strong className="text-white">Helix & VLA Models:</strong> Vision-Language-Action foundation models trained directly on human teleoperation.
+            </li>
+            <li className="border-b border-slate-800 pb-2">
+              <strong className="text-white">High-Torque Actuators:</strong> Integrated planetary gearing delivering 300+ Nm torque density.
+            </li>
+            <li className="pb-1">
+              <strong className="text-white">1-Click RaaS Underwriting:</strong> Instant equipment lease financing for $8.5k/mo humanoid deployments.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function StoryCard({
   story,
   featured = false,
@@ -330,6 +479,7 @@ function StoryCard({
           </Link>
         </h3>
         <p className="mt-4 text-base leading-relaxed text-slate-300">{summary}</p>
+        <StoryDataPanel story={story} featured />
         {bullets.length > 0 && (
           <ul className="mt-5 space-y-2 border-t border-slate-700/60 pt-4">
             {bullets.map((bullet, index) => (
@@ -369,6 +519,7 @@ function StoryCard({
         </Link>
       </h3>
       <p className="mt-2 flex-1 text-xs leading-relaxed text-slate-300">{summary}</p>
+      <StoryDataPanel story={story} />
       <div className="mt-4 pt-3 border-t border-slate-700/60">
         <InlineLink href={href} color="#34d399">Pipeline →</InlineLink>
       </div>
@@ -572,7 +723,7 @@ export default function Newsletter() {
             <button
               type="submit"
               disabled={subStatus === "submitting"}
-              className="newsletter-subscribe-btn"
+              className="rounded-xl bg-purple-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-purple-500/30 transition-all hover:bg-purple-500 disabled:opacity-50 shrink-0 font-sans cursor-pointer"
             >
               {subStatus === "submitting" ? "Subscribing…" : "Subscribe free"}
             </button>
@@ -600,6 +751,8 @@ export default function Newsletter() {
       <div className="page-dark-shell-fade" />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-20 pt-8 lg:px-6">
+        <MarketIntelligenceDashboard />
+
         {loadStatus === "loading" && !edition?.topStories?.length && (
           <div className="newsletter-section px-5 py-8 text-center">
             <p className="newsletter-body font-medium">
