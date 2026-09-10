@@ -188,33 +188,23 @@
     "vendor_name": "Agibot (Zhiyuan Robotics)",
     "robots": [
       {
-        "name": "A3 Ultra",
-        "description": "Runtime 8 h.",
-        "display_class": "humanoid"
-      },
-      {
         "name": "Agibot A2",
-        "description": "Payload 20.0 kg. Runtime 2.0 h.",
+        "description": "Agibot A2: General-purpose bipedal humanoid robot for manufacturing, logistics, and service tasks.",
         "display_class": "humanoid"
       },
       {
-        "name": "Agibot G5",
-        "description": null,
+        "name": "Agibot A3",
+        "description": "Agibot A3: Next-gen flagship bipedal humanoid for industrial manipulation and assembly.",
         "display_class": "humanoid"
       },
       {
-        "name": "G2 humanoid robot",
-        "description": null,
+        "name": "Lingxi X2",
+        "description": "Lingxi X2: Compact high-speed bipedal humanoid platform powered by GO-1 embodied AI stack.",
         "display_class": "humanoid"
       },
       {
-        "name": "X2",
-        "description": "AGIBOT X2: Fully intelligent and agile humanoid. Industrial \u00b7 research.",
-        "display_class": "humanoid"
-      },
-      {
-        "name": "AGIBOT G1",
-        "description": "AGIBOT G1: Universal embodied intelligent robot. Industrial \u00b7 research.",
+        "name": "Agibot G1",
+        "description": "Agibot G1: Industrial mobile dual-arm manipulation platform.",
         "display_class": "humanoid"
       }
     ]
@@ -2033,14 +2023,14 @@
     "vendor_name": "Galbot",
     "robots": [
       {
-        "name": "Galbot G1",
-        "description": "Galbot G1: Mobile dual-arm robot with generalizable manipulation.",
-        "display_class": "mobile_manipulator"
+        "name": "Galbot Wheeled Humanoid",
+        "description": "Galbot Wheeled Humanoid: Mobile dual-arm humanoid robot for retail, warehouse picking, and manufacturing logistics.",
+        "display_class": "humanoid"
       },
       {
-        "name": "Galbot S1",
-        "description": "Galbot S1: Heavy-duty dual-arm handling, 50kg payload.",
-        "display_class": "mobile_manipulator"
+        "name": "Galbot G1",
+        "description": "Galbot G1: Autonomous mobile manipulator for industrial logistics.",
+        "display_class": "humanoid"
       }
     ]
   },
@@ -3138,24 +3128,24 @@
     "vendor_name": "LimX Dynamics",
     "robots": [
       {
-        "name": "Luna",
-        "description": "Luna: Full-size interactive humanoid robot.",
+        "name": "LimX CL-1",
+        "description": "LimX CL-1: Full-size bipedal humanoid robot (1.65m, 47kg) with dynamic stair climbing, terrain perception, and agile locomotion.",
         "display_class": "humanoid"
       },
       {
-        "name": "Oli",
-        "description": "Oli: Full-size general-purpose humanoid robot.",
+        "name": "LimX CL-2",
+        "description": "LimX CL-2: Next-generation general-purpose full-size bipedal humanoid robot.",
         "display_class": "humanoid"
       },
       {
         "name": "TRON 1",
-        "description": "TRON 1: The gateway to humanoid RL research.",
+        "description": "TRON 1: Modular bipedal robot with point-foot and parallel leg configurations for AI & locomotion research.",
         "display_class": "humanoid"
       },
       {
-        "name": "TRON 2",
-        "description": "TRON 2: Dual arms and wheeled legs. Multi-form embodied robot.",
-        "display_class": "mobile_manipulator"
+        "name": "W1",
+        "description": "W1: Wheeled-quadrupedal robot for rough-terrain industrial inspection and autonomous manipulation.",
+        "display_class": "amr"
       }
     ]
   },
@@ -5263,9 +5253,14 @@
     "vendor_name": "Sunday Robotics",
     "robots": [
       {
+        "name": "Sunday Home Robot",
+        "description": "Sunday Home Robot: Humanoid home assistant powered by ACT-1 VLA model trained on human demonstrations.",
+        "display_class": "humanoid"
+      },
+      {
         "name": "Memo",
-        "description": "Helpful home robot for kitchen chores \u2014 dishes, dishwasher, espresso \u2014 wheeled home helper, not an office biped.",
-        "display_class": null
+        "description": "Memo: Desktop companion and assistive AI agent.",
+        "display_class": "service"
       }
     ]
   },
