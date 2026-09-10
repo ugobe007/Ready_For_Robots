@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Head from 'next/head';
 import Image from 'next/image';
 import LoginDropdown from '../components/LoginDropdown';
+import SiteHeader from '../components/SiteHeader';
 import HotDealsScoringExplainer from '../components/HotDealsScoringExplainer';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import { companyExternalHref } from '../lib/companyExternalHref';
@@ -570,89 +571,7 @@ export default function Signals() {
       </Head>
 
       <div className="rr-theme min-h-screen">
-        {/* Navigation — docs/design/homepage_design.html */}
-        <div className="rr-navbar w-full">
-          <div className="rr-navbar-inner">
-          <div className="rr-nav-brand">
-            {/* No whitespace inside .rr-brand-logo — avoids stray text nodes / hydration mismatch */}
-            <div className="rr-brand-logo">
-              <Image src="/logo-r.png" alt="" width={36} height={36} className="object-contain p-0.5" priority />
-            </div>
-            <Link href="/" className="rr-brand-name hidden sm:inline">Ready For Robots</Link>
-          </div>
-          <nav className="rr-nav-links">
-            <Link href="/dashboard">Dashboard</Link>
-            <Link href="/dashboard" title="Lead pipeline and sales workspace">
-              Pipeline
-            </Link>
-            <Link href="/crm/" title="CRM workspaces and buyer accounts">
-              CRM
-            </Link>
-            <Link href="/market-insights">Market Insights</Link>
-            <Link href="/about">Signals</Link>
-            <a href="#leads">Browse Leads</a>
-            <Link href="/newsletter">📰 Newsletter</Link>
-            <Link href="/roi-calculator">ROI Calculator</Link>
-          </nav>
-          <div className="rr-nav-right">
-            <div className="hidden md:flex items-center gap-3">
-              <LoginDropdown className="[&_button]:rr-btn-signin" />
-              <Link href="/login" className="rr-btn-signup">
-                Sign Up
-              </Link>
-            </div>
-                <div className="md:hidden relative">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const menu = document.getElementById('mobile-menu');
-                      menu?.classList.toggle('hidden');
-                    }}
-                    className="text-neutral-400 hover:text-white px-3 py-2 text-xl"
-                    aria-expanded="false"
-                    aria-controls="mobile-menu"
-                  >
-                    ☰
-                  </button>
-                  <div id="mobile-menu" className="hidden absolute right-0 top-full mt-2 w-56 border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
-                    <Link href="/dashboard" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
-                      📊 Dashboard
-                    </Link>
-                    <Link href="/dashboard" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
-                      🧭 Pipeline
-                    </Link>
-                    <Link href="/crm/" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
-                      🗂️ CRM
-                    </Link>
-                    <Link href="/market-insights" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900 border-b border-neutral-800">
-                      📈 Market Insights
-                    </Link>
-                    <Link href="/about" className="block px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 border-b border-neutral-800">
-                      ⚡ Signal Intelligence
-                    </Link>
-                    <a href="#leads" className="block px-4 py-3 text-sm text-cyan-400 hover:bg-neutral-900 border-b border-neutral-800">
-                      🔥 Browse Leads
-                    </a>
-                    <Link href="/newsletter" className="block px-4 py-3 text-sm text-cyan-300 hover:bg-neutral-900 border-b border-neutral-800">
-                      📰 Newsletter
-                    </Link>
-                    <Link href="/roi-calculator" className="block px-4 py-3 text-sm text-yellow-400 hover:bg-neutral-900 border-b border-neutral-800">
-                      💰 ROI Calculator
-                    </Link>
-                    <a href="#signals" className="block px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 border-b border-neutral-800">
-                      💡 How It Works
-                    </a>
-                    <Link href="/login" className="block px-4 py-3 text-sm text-neutral-400 hover:bg-neutral-900 border-b border-neutral-800">
-                      🔐 Sign in (Google, GitHub, Email)
-                    </Link>
-                    <Link href="/login" className="block px-4 py-3 text-sm text-emerald-400 hover:bg-neutral-900">
-                      ✨ Sign Up
-                    </Link>
-                  </div>
-                </div>
-          </div>
-          </div>
-        </div>
+        <SiteHeader active="home" />
 
         {/* Hero — outcome first */}
         <div className="max-w-5xl mx-auto px-6 pb-8 pt-6 md:pt-10 text-center">
