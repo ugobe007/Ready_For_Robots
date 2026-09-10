@@ -125,7 +125,7 @@ export default function ExperimentHeader() {
                   Platform Links
                 </div>
                 <a
-                  href="/pipeline"
+                  href={session ? "/pipeline" : "/?visit=jobs"}
                   onClick={() => setExploreOpen(false)}
                   className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-emerald-400 hover:bg-slate-800/60 rounded-lg transition-colors"
                 >

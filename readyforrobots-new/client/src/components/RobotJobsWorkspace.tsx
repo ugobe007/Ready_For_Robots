@@ -3295,19 +3295,47 @@ function JobsPanel({
           />
         )
       ) : (
-        <ol className="mt-6 space-y-3">
-          {visible.map((job, i) => (
-            <JobCard
-              key={`${job.forRobot}:${job.job_key}`}
-              index={i + 1}
-              job={job}
-              selected={expandedJob === job.job_key}
-              checked={checkedJobKeys.includes(job.job_key)}
-              onSelect={() => onSelectJob(job)}
-              onToggle={() => onToggleJob(job)}
-            />
-          ))}
-        </ol>
+        <>
+          {!signedIn && (
+            <div className="mt-6 rounded-xl border border-purple-500/40 bg-gradient-to-r from-purple-950/40 via-slate-900/90 to-purple-900/30 p-5 shadow-xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1.5 max-w-2xl">
+                  <div className="flex items-center gap-2">
+                    <span className="rounded-full bg-purple-600/30 px-2.5 py-0.5 text-[11px] font-mono font-bold uppercase tracking-wider text-purple-300 border border-purple-500/40">
+                      Why Upgrade to Pro Workspace?
+                    </span>
+                    <span className="text-xs text-slate-400 font-mono">Unlock 25 Buyer Leads</span>
+                  </div>
+                  <h3 className="text-base font-bold text-white">
+                    Unlock Full Verified Contact Info & 1-Click Automated AI Applications
+                  </h3>
+                  <p className="text-xs leading-relaxed text-slate-300">
+                    Free pages provide compatibility scoring. Upgrading to a paid workspace unlocks <span className="text-purple-300 font-semibold">direct decision-maker emails</span>, <span className="text-purple-300 font-semibold">automated AI proposal submissions</span>, and full CRM pipeline integration.
+                  </p>
+                </div>
+                <a
+                  href="/signup?next=/pipeline&src=jobs_upgrade_banner"
+                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-purple-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-purple-500/30 hover:bg-purple-500 transition-all uppercase tracking-wider"
+                >
+                  <span>Upgrade Workspace →</span>
+                </a>
+              </div>
+            </div>
+          )}
+          <ol className="mt-6 space-y-3">
+            {visible.map((job, i) => (
+              <JobCard
+                key={`${job.forRobot}:${job.job_key}`}
+                index={i + 1}
+                job={job}
+                selected={expandedJob === job.job_key}
+                checked={checkedJobKeys.includes(job.job_key)}
+                onSelect={() => onSelectJob(job)}
+                onToggle={() => onToggleJob(job)}
+              />
+            ))}
+          </ol>
+        </>
       )}
       {hiddenCount > 0 ? (
         <button

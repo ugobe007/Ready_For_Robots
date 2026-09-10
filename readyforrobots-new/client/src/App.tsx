@@ -47,7 +47,7 @@ import VendorDesignBuilder from "./pages/VendorDesignBuilder";
 import DesignShare from "./pages/DesignShare";
 import IconReview from "./pages/IconReview";
 import Icons from "./pages/Icons";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
 import VisitTracker from "./components/VisitTracker";
@@ -61,6 +61,15 @@ function JobsIndexRedirect() {
 function JourneyHomeRedirect() {
   const search = typeof window !== "undefined" ? window.location.search : "";
   return <Redirect to={`/${search}`} />;
+}
+
+function PipelineRoute() {
+  const { session, loading } = useAuth();
+  if (loading) return null;
+  if (!session) {
+    return <Redirect to="/?visit=jobs" />;
+  }
+  return <Pipeline />;
 }
 
 function Router() {
@@ -79,7 +88,7 @@ function Router() {
       <Route path="/journey/activate" component={JourneyHomeRedirect} />
       <Route path="/results" component={Results} />
       <Route path="/sales/samples" component={SalesSamples} />
-      <Route path="/pipeline" component={Pipeline} />
+      <Route path="/pipeline" component={PipelineRoute} />
       <Route path="/compare" component={Compare} />
       <Route path="/signals" component={Signals} />
       <Route path="/intelligence" component={Newsletter} />
