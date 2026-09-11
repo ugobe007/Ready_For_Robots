@@ -158,7 +158,7 @@ const faqs = [
     a: "Reevo and similar platforms ($80M+ funded) sell one AI-native stack that replaces CRM, engagement, and intelligence—you migrate tools and retrain the team. ReadyForRobots is not a revenue OS. We wedge in for robot sales: live buyer signals, HOT/WARM timing, pipeline_action (what to do next), robot_types_needed (what SKU to pitch), outreach drafts, and HubSpot sync. Keep HubSpot or use our native pipeline—no rip-and-replace. See /compare.",
   },
   {
-    q: "How is this different from Explee, Apollo, or other company search tools?",
+    q: "How is this different from Explee, Hunter.io, or other company search tools?",
     a: "Those tools help you find accounts and export contacts. ReadyForRobots runs Full Stack Sales for robotics: capture qualified buyers with live robot intent, assess alignment to your capabilities, then activate motion through MSD across outreach and CRM. You are not buying another stale list; you are running an ISA platform built for robotics revenue. See our full comparison at /compare.",
   },
   {

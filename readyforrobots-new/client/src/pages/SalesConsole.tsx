@@ -227,13 +227,13 @@ export default function SalesConsole() {
       );
       setProspectMsg(
         result.prospects?.length
-          ? `Apollo found ${result.prospects.length} likely decision-makers for this opportunity.`
-          : "Apollo returned no prospects for this account yet."
+          ? `Hunter.io found ${result.prospects.length} verified decision-makers for this opportunity.`
+          : "Hunter.io returned no prospects for this account yet."
       );
     } catch (e) {
       setProspects([]);
       setProspectMsg(
-        e instanceof Error ? e.message : "Could not search Apollo prospects."
+        e instanceof Error ? e.message : "Could not search Hunter.io prospects."
       );
     } finally {
       setProspectBusy(false);
@@ -660,10 +660,10 @@ export default function SalesConsole() {
                   <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
-                        Apollo prospect search
+                        Hunter.io prospect search
                       </p>
                       <p className="mt-2 text-sm text-gray-600">
-                        Find likely decision-makers for this opportunity and use
+                        Find verified decision-makers for this opportunity and use
                         them to route the next outreach step.
                       </p>
                     </div>
@@ -672,7 +672,7 @@ export default function SalesConsole() {
                       disabled={prospectBusy}
                       className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold text-gray-700 hover:bg-gray-100 disabled:opacity-50"
                     >
-                      {prospectBusy ? "Searching Apollo..." : "Find prospects"}
+                      {prospectBusy ? "Searching Hunter.io..." : "Find prospects"}
                     </button>
                   </div>
                   {prospectTitles.length > 0 && (

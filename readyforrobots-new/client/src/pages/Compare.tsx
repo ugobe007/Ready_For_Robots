@@ -53,7 +53,7 @@ const rows: {
 
 const examples = [
   {
-    tool: "Explee / Apollo-style search",
+    tool: "Explee / Hunter.io-style search",
     query: "CTOs at warehouse companies in Texas",
     result:
       "Hundreds of contacts — no job, no workplace, no proof a robot belongs there",
@@ -98,7 +98,7 @@ export default function Compare() {
             </span>
           </>
         }
-        description="Explee, Apollo, and similar tools sell company and people search. Job boards list work for humans. ReadyForRobots matches a robot URL to specific jobs — employer, workplace, and work the machine can do."
+        description="Explee, Hunter.io, and similar tools sell company and people search. Job boards list work for humans. ReadyForRobots matches a robot URL to specific jobs — employer, workplace, and work the machine can do."
       />
 
       <main className="flex-1 px-6 pb-20">

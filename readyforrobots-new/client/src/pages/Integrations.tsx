@@ -63,12 +63,12 @@ function CrmMark({ label, color }: { label: string; color: string }) {
 
 const upcomingCrms = [
   {
-    id: "apollo",
-    name: "Apollo.io",
-    mark: "AP",
-    color: "#7c3aed",
+    id: "hunter",
+    name: "Hunter.io",
+    mark: "HN",
+    color: "#ff6b00",
     description:
-      "Directly push 25 daily leads with decision-maker emails & phone numbers into automated Apollo email sequences.",
+      "Directly verify decision-maker emails, find executive contact paths, and launch automated Hunter outreach campaigns.",
   },
   {
     id: "outreach",

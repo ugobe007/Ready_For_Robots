@@ -1058,7 +1058,7 @@ export default function Crm() {
                         </div>
                       </div>
                       <div className="mb-2  border border-slate-600 bg-[#081126] p-2">
-                        <p className="sb-kicker">Apollo prospect search</p>
+                        <p className="sb-kicker">Hunter.io prospect search</p>
                         <p className="mt-1 text-xs text-slate-400">
                           Search target:{" "}
                           {selectedAccount.prospect_search
