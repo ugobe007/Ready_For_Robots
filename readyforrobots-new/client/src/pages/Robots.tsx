@@ -16,6 +16,7 @@ import HeirResearchAppendix from "@/components/HeirResearchAppendix";
 import HumanoidIndexSummaryIntro from "@/components/HumanoidIndexSummaryIntro";
 import HumanoidIntelligenceReport from "@/components/HumanoidIntelligenceReport";
 import RobotAvatar from "@/components/RobotAvatar";
+import RequestTrialModal from "@/components/RequestTrialModal";
 import { HEIR_REPORTS } from "@/content/heir2026";
 import {
   fetchWithTimeout,
@@ -787,6 +788,7 @@ export default function Robots() {
     "all" | "available" | "pilot" | "research"
   >("all");
   const [sortDim, setSortDim] = useState<string>("total");
+  const [trialModalOpen, setTrialModalOpen] = useState(false);
   const api = getPublicReadApiBase();
   const {
     report: intelligenceReport,
@@ -894,6 +896,13 @@ export default function Robots() {
         description="HEIR benchmarking, market signals, and live rankings. HEIR measures humanoids by engineering maturity, not demo choreography — scored across mobility, manipulation, cognition, safety, data pipeline, and production readiness."
         actions={
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px]">
+            <button
+              type="button"
+              onClick={() => setTrialModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-md bg-purple-600 px-3.5 py-1.5 font-bold text-white shadow-md shadow-purple-500/30 hover:bg-purple-500 transition-all cursor-pointer"
+            >
+              ⚡ Request 30-Day Robot Trial
+            </button>
             <Link
               href="/robots/report"
               className="inline-flex items-center gap-1 rounded-md bg-emerald-600/90 px-3 py-1.5 font-semibold text-white hover:bg-emerald-500"
@@ -1108,6 +1117,10 @@ export default function Robots() {
           buttonText="Build 25 Lead Pipeline"
         />
       </section>
+      <RequestTrialModal
+        isOpen={trialModalOpen}
+        onClose={() => setTrialModalOpen(false)}
+      />
       <SiteFooter />
     </div>
   );

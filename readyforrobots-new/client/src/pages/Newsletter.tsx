@@ -14,6 +14,7 @@ import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
 import WorkflowDriveBanner from "@/components/WorkflowDriveBanner";
+import BlurredContactCard from "@/components/BlurredContactCard";
 import {
   fetchWithTimeout,
   getApiBase,
@@ -485,6 +486,12 @@ function StoryCard({
         </h3>
         <p className="mt-4 text-base leading-relaxed text-slate-300">{summary}</p>
         <StoryDataPanel story={story} featured />
+        <div className="mt-4">
+          <BlurredContactCard
+            companyName={company}
+            leadId={story.company_id}
+          />
+        </div>
         {bullets.length > 0 && (
           <ul className="mt-5 space-y-2 border-t border-slate-700/60 pt-4">
             {bullets.map((bullet, index) => (
