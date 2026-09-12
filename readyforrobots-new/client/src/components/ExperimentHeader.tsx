@@ -181,6 +181,17 @@ export default function ExperimentHeader() {
                   </div>
                 </a>
                 <a
+                  href="/pricing"
+                  onClick={() => setExploreOpen(false)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-purple-400 hover:bg-slate-800/60 rounded-lg transition-colors"
+                >
+                  <span className="text-base">💳</span>
+                  <div>
+                    <div className="font-semibold text-slate-100">Pricing & Plans</div>
+                    <div className="text-[11px] text-slate-400 font-normal">Pro plans & Cal outreach entitlement</div>
+                  </div>
+                </a>
+                <a
                   href="/market-insights"
                   onClick={() => setExploreOpen(false)}
                   className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-cyan-400 hover:bg-slate-800/60 rounded-lg transition-colors"

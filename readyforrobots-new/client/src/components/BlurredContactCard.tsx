@@ -90,7 +90,7 @@ export default function BlurredContactCard({
           <Sparkles className="h-3.5 w-3.5 text-purple-400" /> Decision Maker Intel
         </span>
         <span className="rounded-full bg-purple-500/20 px-2.5 py-0.5 text-[10px] font-mono font-bold text-purple-200 border border-purple-500/30">
-          🔒 Paid Workspace Required
+          🔒 Upgrade to Pro
         </span>
       </div>
 
@@ -117,7 +117,7 @@ export default function BlurredContactCard({
             className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-lg shadow-purple-500/30 hover:bg-purple-500 transition-all font-sans cursor-pointer"
           >
             <Lock className="h-3.5 w-3.5" />
-            <span>Upgrade to Paid Workspace to Activate Cal Outreach</span>
+            <span>Activate Outreach</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
