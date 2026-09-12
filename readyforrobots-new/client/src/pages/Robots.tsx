@@ -1045,7 +1045,7 @@ export default function Robots() {
             </a>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-purple-500/40 bg-[#081126] p-4.5 shadow-lg">
               <div className="flex items-center justify-between mb-2">
                 <h3 className="font-bold text-slate-100 font-display text-base">Skild AI</h3>
@@ -1056,6 +1056,19 @@ export default function Robots() {
               <p className="text-xs text-purple-300 font-mono font-bold mb-2">Skild Brain · Embodied Foundation Model</p>
               <p className="text-xs leading-relaxed text-slate-300">
                 Scalable general-purpose AI brain for robotics. Enables cross-robot manipulation, locomotion, and rapid task adaptation across diverse physical form factors.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-purple-500/30 bg-[#081126] p-4.5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-slate-100 font-display text-base">Kinetix</h3>
+                <a href="https://kinetix.tech/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+              <p className="text-xs text-cyan-300 font-mono font-bold mb-2">Motion AI · 3D Human Motion Intelligence</p>
+              <p className="text-xs leading-relaxed text-slate-300">
+                Frontier 3D and human motion intelligence. Generative AI for physics-guided 3D movement, motion synthesis, and humanoid teleoperation.
               </p>
             </div>
 

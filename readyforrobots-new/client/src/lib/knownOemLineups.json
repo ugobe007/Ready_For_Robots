@@ -1119,6 +1119,16 @@
       }
     ]
   },
+  "kinetix.tech": {
+    "vendor_name": "Kinetix",
+    "robots": [
+      {
+        "name": "Kinetix Motion AI Engine",
+        "description": "Kinetix Motion AI Engine: Frontier 3D & Human Motion Intelligence platform. Generative AI for physics-guided 3D human movement, motion synthesis, and humanoid robotics teleoperation.",
+        "display_class": "humanoid"
+      }
+    ]
+  },
   "covariant.ai": {
     "vendor_name": "Covariant",
     "robots": [
