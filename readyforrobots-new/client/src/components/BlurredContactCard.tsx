@@ -90,7 +90,7 @@ export default function BlurredContactCard({
           <Sparkles className="h-3.5 w-3.5 text-purple-400" /> Decision Maker Intel
         </span>
         <span className="rounded-full bg-purple-500/20 px-2.5 py-0.5 text-[10px] font-mono font-bold text-purple-200 border border-purple-500/30">
-          🔒 Upgrade to Pro
+          🔒 Paid Plan Required ($19.99/mo)
         </span>
       </div>
 
