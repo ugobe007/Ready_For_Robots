@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, CheckCircle2, Sparkles, Zap, Lock, ArrowRight, X } from "lucide-react";
+import { Mail, CheckCircle2, Sparkles, Lock, ArrowRight, X } from "lucide-react";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { toast } from "sonner";
 
@@ -45,7 +45,7 @@ export default function DailyMatchBriefModal({
             email,
             name: name || "Robot OEM Representative",
             company: company || "Robot OEM / Integrator",
-            useCase: `Daily Top 5 Job Match Brief for ${robotName} (${robotUrl})`,
+            useCase: `Daily Top 5-10 Job Match Brief for ${robotName} (${robotUrl})`,
             website: robotUrl,
             source: "daily_match_brief_modal",
           }),
@@ -86,14 +86,14 @@ export default function DailyMatchBriefModal({
               Daily Brief Activated for {email}
             </h3>
             <p className="mt-2 text-sm text-slate-300 leading-relaxed">
-              We saved <strong className="text-purple-300">{robotName}</strong> to your free profile. You will receive a daily email brief featuring the top 5 buyer job matches every morning.
+              We saved <strong className="text-purple-300">{robotName}</strong> to your free profile. You will receive a daily email brief featuring top buyer job matches & customer intent quotes every morning.
             </p>
 
             {/* Email Preview Snippet Card */}
             <div className="mt-6 rounded-2xl border border-purple-500/20 bg-slate-950/60 p-4 text-left">
               <div className="flex items-center justify-between text-[11px] text-purple-300 font-mono border-b border-white/10 pb-2 mb-3">
                 <span className="flex items-center gap-1.5">
-                  <Mail className="h-3.5 w-3.5 text-purple-400" /> Daily Top 5 Digest Preview
+                  <Mail className="h-3.5 w-3.5 text-purple-400" /> Daily Match Digest Preview
                 </span>
                 <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-emerald-300 font-bold">
                   Active
@@ -103,8 +103,8 @@ export default function DailyMatchBriefModal({
               <div className="space-y-2">
                 <div className="rounded-lg bg-white/[0.04] p-2.5 border border-white/5 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-slate-200">Palletizing & Case Packing Cell</p>
-                    <p className="text-[10px] text-slate-400">Food & Beverage OEM · Ohio</p>
+                    <p className="text-xs font-bold text-slate-200">Hilton Hotels · Room Service & Floor Care</p>
+                    <p className="text-[10px] text-slate-400">&ldquo;Looking for luggage & floor care robots across 40 resorts...&rdquo;</p>
                   </div>
                   <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">
                     98% Match
@@ -113,7 +113,7 @@ export default function DailyMatchBriefModal({
                 <div className="rounded-lg bg-white/[0.04] p-2.5 border border-white/5 flex items-center justify-between">
                   <div>
                     <p className="text-xs font-bold text-slate-200">5-Axis Bin Picking & Sorting</p>
-                    <p className="text-[10px] text-slate-400">Logistics Fulfillment · Texas</p>
+                    <p className="text-[10px] text-slate-400">DHL Supply Chain · Texas</p>
                   </div>
                   <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">
                     95% Match
@@ -144,10 +144,10 @@ export default function DailyMatchBriefModal({
             </div>
 
             <h2 className="text-2xl font-extrabold text-white font-display tracking-tight">
-              Save Your Robot & Get Daily Top 5 Job Matches
+              Save Your Robot & Get Daily Job Matches
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Never miss a high-intent buyer. We analyzed <strong className="text-purple-300">{robotName}</strong>. Save this setup to receive a daily email brief featuring the top 5 buyer postings looking for your specs — 100% free.
+              Never miss a high-intent buyer. Save <strong className="text-purple-300">{robotName}</strong> to receive a daily email brief featuring top buyer job matches and verified customer quotes — 100% free.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -192,15 +192,37 @@ export default function DailyMatchBriefModal({
                 </div>
               </div>
 
+              {/* Gamified Bonus Badge */}
+              <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/15 via-purple-500/10 to-amber-500/10 p-3 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🎰</span>
+                  <div>
+                    <p className="text-xs font-bold text-amber-300 font-display">
+                      Daily Jackpot Match Bonus
+                    </p>
+                    <p className="text-[10px] text-slate-300">
+                      Subscribers randomly unlock <strong>10 job matches</strong> + weekly market intelligence reports.
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-full bg-amber-400/20 border border-amber-400/40 px-2 py-0.5 text-[10px] font-mono font-bold text-amber-200 shrink-0">
+                  🎁 1-in-3 Chance
+                </span>
+              </div>
+
               {/* Value prop list */}
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 space-y-2 text-xs text-slate-300">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" />
-                  <span>Daily automated email brief with top 5 job matches</span>
+                  <span>Daily automated email brief (5–10 buyer job matches)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" />
-                  <span>Payload, reach, and task alignment compatibility scores</span>
+                  <span>Verified customer quotes & automation buyer intent</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" />
+                  <span>Weekly benchmark report & robotics market snippets</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" />
