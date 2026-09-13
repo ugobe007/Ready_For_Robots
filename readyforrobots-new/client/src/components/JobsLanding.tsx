@@ -209,13 +209,13 @@ export default function JobsLanding() {
         </form>
       </section>
 
-      {/* Featured Daily Customer Intent Quotes Banner (Supabase style inline) */}
-      <section className="rfr-landing-quotes py-2 my-2 border-t border-b border-slate-800/80 bg-[#081126]/40" aria-label="Customer Quotes">
+      {/* Featured Daily Customer Intent Quotes (Inline, no box border) */}
+      <section className="rfr-landing-quotes my-2 w-full" aria-label="Customer Quotes">
         <CustomerQuoteBanner />
       </section>
 
-      {/* Action Links placed below customer quotes & above Jobs for Robots */}
-      <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-start gap-4 max-w-5xl mx-auto px-4 my-3">
+      {/* Action Links placed below customer quotes & centered */}
+      <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-center gap-4 max-w-5xl mx-auto px-4 my-3">
         <a
           href={jobsCandidatesHref()}
           className="rfr-landing-employer-link"

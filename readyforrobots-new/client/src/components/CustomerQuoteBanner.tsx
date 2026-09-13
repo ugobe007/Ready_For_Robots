@@ -25,7 +25,7 @@ export default function CustomerQuoteBanner() {
   };
 
   return (
-    <div className="mx-auto max-w-5xl px-4 py-3">
+    <div className="w-full max-w-6xl mx-auto px-4 py-2">
       {/* Supabase-style inline quote beat — zero heavy box padding */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 text-left">
         <div className="flex-1 space-y-1">
