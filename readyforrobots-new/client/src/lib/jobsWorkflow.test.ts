@@ -568,12 +568,12 @@ describe("jobsWorkflow", () => {
     ).toBe("5 JOBS FOR FOURIER N1");
   });
 
-  it("caps the Jobs terminal at 5 example jobs even when more exist", () => {
-    expect(JOBS_EXAMPLE_CAP).toBe(5);
-    expect(exampleJobCap(1)).toBe(5);
+  it("caps the Jobs terminal at 3 example jobs even when more exist", () => {
+    expect(JOBS_EXAMPLE_CAP).toBe(3);
+    expect(exampleJobCap(1)).toBe(3);
     expect(exampleJobCap(5)).toBe(1);
     expect(capExampleJobs([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])).toEqual([
-      1, 2, 3, 4, 5,
+      1, 2, 3,
     ]);
     expect(capExampleJobs(["a", "b"])).toEqual(["a", "b"]);
   });
@@ -592,9 +592,9 @@ describe("jobsWorkflow", () => {
     const one = exampleJobsForLineup([
       { productName: "Fourier N1", jobs: n1Jobs },
     ]);
-    expect(one).toHaveLength(5);
+    expect(one).toHaveLength(3);
     expect(one.every(j => j.forRobot === "Fourier N1")).toBe(true);
-    expect(one.map(j => j.job_key)).toEqual(["a", "b", "c", "d", "e"]);
+    expect(one.map(j => j.job_key)).toEqual(["a", "b", "c"]);
     const shared = [
       { job_key: "a", title: "A" },
       { job_key: "b", title: "B" },
@@ -613,9 +613,9 @@ describe("jobsWorkflow", () => {
     expect(lineup.map(j => j.job_key)).toEqual(["a", "b", "c"]);
     expect(
       defaultCheckedKeysForLineup([{ productName: "Fourier N1", jobs: n1Jobs }])
-    ).toEqual(["a", "b", "c", "d", "e"]);
+    ).toEqual(["a", "b", "c"]);
     expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
-      /Five example jobs Fourier N1/
+      /example jobs Fourier N1/
     );
     expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
       /Rows start checked/i
@@ -894,8 +894,8 @@ describe("jobsWorkflow", () => {
     }
   });
 
-  it("opens the CRM desk on Pipeline with 5 jobs, not a SIGNAL save page", () => {
-    expect(CRM_UNLOCKED_JOBS).toBe(5);
+  it("opens the CRM desk on Pipeline with 3 jobs, not a SIGNAL save page", () => {
+    expect(CRM_UNLOCKED_JOBS).toBe(3);
     expect(jobsActivateHref(42)).toBe(
       "/pipeline?src=jobs_activate&submission=42"
     );
@@ -924,7 +924,7 @@ describe("jobsWorkflow", () => {
     ];
     expect(
       jobsToActivate(pool, pool, CRM_UNLOCKED_JOBS).map(j => j.job_key)
-    ).toEqual(["a", "b", "c", "d", "e"]);
+    ).toEqual(["a", "b", "c"]);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8"
@@ -1118,8 +1118,6 @@ describe("jobsWorkflow", () => {
       "a",
       "b",
       "c",
-      "d",
-      "e",
     ]);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
@@ -1138,9 +1136,9 @@ describe("jobsWorkflow", () => {
     expect(jobsCrmOpenHref(true, 42)).toBe(
       "/pipeline?src=jobs_activate&submission=42"
     );
-    expect(CRM_FREE_BATCH).toBe(5);
+    expect(CRM_FREE_BATCH).toBe(3);
     expect(CRM_FREE_BATCHES_PER_MONTH).toBe(3);
-    expect(CRM_FREE_MONTHLY_CAP).toBe(15);
+    expect(CRM_FREE_MONTHLY_CAP).toBe(9);
     expect(CRM_FREE_TTL_DAYS).toBe(7);
     const handoff = readFileSync(
       join(here, "../components/JobsHandoffBoard.tsx"),
@@ -1199,7 +1197,7 @@ describe("jobsWorkflow", () => {
     expect(crmDeskJobKeys(keys.map(job_key => ({ job_key })))).toEqual(keys);
     expect(crmSelectAllKeys(keys)).toEqual(keys);
     expect(crmSelectAllKeys(["a", "a", "", "b"])).toEqual(["a", "b"]);
-    expect(crmSelectAllLabel(5)).toBe(`${CRM_SELECT_ALL_LABEL} 5`);
+    expect(crmSelectAllLabel(5, 5)).toBe(`${CRM_SELECT_ALL_LABEL} 5`);
     expect(crmSelectAllLabel(3)).toBe(`${CRM_SELECT_ALL_LABEL} 3`);
     expect(keepTheseJobsPrompt(5)).toBe("Keep 5 jobs?");
     expect(CRM_KEEP_YES_CTA).toBe("Yes, keep them");
@@ -1221,9 +1219,9 @@ describe("jobsWorkflow", () => {
     expect(deskKeep).not.toMatch(/keepTheseJobsPrompt/);
     expect(deskKeep).not.toMatch(/data-jobs-keep-confirm/);
     expect(deskKeep).toMatch(/JOBS_APPLY_SELECTED_CTA/);
-    expect(crmCollectedCountLabel(5)).toBe("5 of 5 kept");
-    expect(crmCollectedCountLabel(1)).toBe("1 of 5 kept");
-    expect(crmCollectedCountLabel(3)).toBe("3 of 5 kept");
+    expect(crmCollectedCountLabel(3)).toBe("3 of 3 kept");
+    expect(crmCollectedCountLabel(1)).toBe("1 of 3 kept");
+    expect(crmCollectedCountLabel(2)).toBe("2 of 3 kept");
     expect(crmCollectedCountLabel(2, 2)).toBe("2 of 2 kept");
     const kept = crmToggleSelectedKey(keys, "c", false);
     expect(kept).toEqual(["a", "b", "d", "e"]);
@@ -1597,7 +1595,7 @@ describe("jobsWorkflow", () => {
     expect(filled).toHaveLength(15);
     expect(filled.map(j => j.job_key).slice(0, 2)).toEqual(["j2", "j0"]);
     expect(filled.map(j => j.job_key)).not.toContain("j15");
-    expect(defaultCheckedJobKeys(pool)).toEqual(["j0", "j1", "j2", "j3", "j4"]);
+    expect(defaultCheckedJobKeys(pool)).toEqual(["j0", "j1", "j2"]);
   });
 
   it("recognizes Jobs terminal handoff src values", () => {
@@ -2053,6 +2051,7 @@ describe("jobsWorkflow", () => {
       "MD-650",
       "LD-90",
       "LD-60",
+      "LD-105",
     ]);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),

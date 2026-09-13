@@ -12,7 +12,7 @@ export const OEM_CAL_JOB =
   "Automate your job applications and proposal submissions in one click.";
 export const OEM_CAL_DESK_EYEBROW = "Automate Job Applications";
 export const OEM_CAL_DESK_LEAD =
-  "Automate your job applications and proposal submissions. Review drafts and send.";
+  "Select target jobs below, name your robot model or training plan, and set your monthly quote. We auto-generate tailored outreach proposals for enterprise buyers.";
 export const OEM_CAL_PREPARE_CTA = "Prepare application →";
 export const OEM_CAL_OPERATOR_SENDS =
   "This is a draft proposal. Review it. You send.";

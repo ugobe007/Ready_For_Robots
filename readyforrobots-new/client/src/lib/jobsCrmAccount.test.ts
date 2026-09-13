@@ -474,7 +474,7 @@ describe("CRM desk binds to the FIND robot, not leftover totes", () => {
     expect(workTaskModelListLine({ kind: "self_train" })).toBe(
       "We'll train this"
     );
-    expect(WORK_TASK_MODEL_QUESTION).toBe("Do you have a model for this work?");
+    expect(WORK_TASK_MODEL_QUESTION).toMatch(/Do you have a model for this work\?/);
     expect(WORK_TASK_MODEL_SELF_OPTION).toMatch(
       /We'll train this for the job/i
     );

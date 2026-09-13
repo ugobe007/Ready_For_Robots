@@ -567,23 +567,23 @@ export function searchNamesForSegment(
     .slice(0, cap);
 }
 
-export const JOBS_EXAMPLE_CAP = 25;
+export const JOBS_EXAMPLE_CAP = 3;
 /** Lineup preview: one sample job per robot. Run each SKU for 25 jobs. */
 export const JOBS_LINEUP_JOBS_PER_ROBOT = 1;
-export const BUYER_LEADS_ANON_CAP = 25;
+export const BUYER_LEADS_ANON_CAP = 3;
 /** See All on `/` — 25 verified jobs cap. */
 export const JOBS_PIPELINE_CAP = 25;
 /** Live list after Activate: checked jobs first, then fill to 25 cap. */
 export const JOBS_ACTIVATE_CAP = 25;
-/** Free CRM taste — 25 jobs. */
-export const CRM_UNLOCKED_JOBS = 25;
+/** Free CRM taste — 3 jobs. */
+export const CRM_UNLOCKED_JOBS = 3;
 /** Free FIND dump size. Paid skips the cap. Spec: docs/jobs_crm.md */
 export const CRM_FREE_BATCH = CRM_UNLOCKED_JOBS;
 export const CRM_FREE_BATCHES_PER_MONTH = 3;
 export const CRM_FREE_MONTHLY_CAP = CRM_FREE_BATCH * CRM_FREE_BATCHES_PER_MONTH;
 export const CRM_FREE_TTL_DAYS = 7;
 /** Free / anonymous: search this many SKUs per FIND. Paid unlocks 25. */
-export const JOBS_PRODUCT_CAP_FREE = 5;
+export const JOBS_PRODUCT_CAP_FREE = 3;
 export const JOBS_PRODUCT_CAP_PAID = 25;
 /** FIND shows this many robots per picker page. Not a company roster cap. */
 export const JOBS_LINEUP_DISPLAY_CAP = 3;

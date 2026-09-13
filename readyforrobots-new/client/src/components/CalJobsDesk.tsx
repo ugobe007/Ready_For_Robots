@@ -299,7 +299,7 @@ export default function CalJobsDesk({
             Automate Job Applications
           </h2>
           <p className="mt-1 text-sm leading-relaxed text-slate-300">
-            Automate your job applications and proposal submissions in one click.
+            Select target jobs below, name your robot model or training plan, and set your monthly quote. We auto-generate tailored outreach proposals for enterprise buyers.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -381,11 +381,7 @@ export default function CalJobsDesk({
             ))}
           </ol>
 
-      {focus?.contacts_note ? (
-        <p className="mt-3 text-sm text-slate-400">
-          {JOBS_CONTACTS_EMPTY_NOTE}
-        </p>
-      ) : null}
+
 
       {fact === "task_model" && focus ? (
         <div className="mt-4 space-y-3">

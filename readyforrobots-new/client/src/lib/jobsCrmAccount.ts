@@ -37,8 +37,7 @@ export const JOBS_SEND_DRAFT_HINT =
   "This is a draft. Review it. You send. We do not email the employer until you do.";
 export const JOBS_VIDEO_EMPTY_NOTE =
   "No public YouTube clip of this robot turned up. We left the video empty rather than guess.";
-export const JOBS_CONTACTS_EMPTY_NOTE =
-  "No employer email on this Job Card or stored public page. We will not invent one.";
+export const JOBS_CONTACTS_EMPTY_NOTE = "";
 export const JOBS_NEXT_STEPS_HINT =
   "Pick the model and say what you'll charge. Then we prepare a draft for you to send.";
 export const JOBS_DOCS_HEADING = "Brochures and product specs";
@@ -189,7 +188,7 @@ export type WorkTaskModelAnswer =
   | { kind: "source"; source: string }
   | { kind: "self_train" };
 
-export const WORK_TASK_MODEL_QUESTION = "Do you have a model for this work?";
+export const WORK_TASK_MODEL_QUESTION = "Do you have a model for this work? (e.g. Phoenix v2, Sanctuary AI Biped, Unitree G1).";
 export const WORK_TASK_MODEL_SOURCE_OPTION = "Yes. Name the model source.";
 export const WORK_TASK_MODEL_SOURCE_HINT =
   "Product, vendor, or known policy. Your words. We will not guess a name.";

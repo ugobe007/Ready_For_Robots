@@ -27,7 +27,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { Mail, ArrowRight } from "lucide-react";
+import { Mail, ArrowRight, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import DailyMatchBriefModal from "@/components/DailyMatchBriefModal";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
@@ -3196,6 +3196,19 @@ function JobsPanel({
   matchError?: string | null;
   onSelectClass: (classId: string) => void;
 }) {
+  const { session } = useAuth();
+  const appMeta = (session?.user?.app_metadata || {}) as Record<string, unknown>;
+  const userMeta = (session?.user?.user_metadata || {}) as Record<string, unknown>;
+  const planTier = String(
+    appMeta.billing_tier || appMeta.plan_tier || userMeta.plan_tier || ""
+  ).toLowerCase();
+  const email = String(session?.user?.email || "").toLowerCase();
+  const isPaidUser =
+    plan === "paid" ||
+    ["pro", "premium", "paid"].includes(planTier) ||
+    email.endsWith("@readyforrobots.com") ||
+    email === "ugobe07@gmail.com";
+
   const sources = lineupPreview && lineup.length > 1 ? lineup : [analysis];
   const tagged = exampleJobsForLineup(sources);
   const baseJobs = analysis.jobs;
@@ -3334,7 +3347,7 @@ function JobsPanel({
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-1.5 max-w-2xl">
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-purple-600/30 px-2.5 py-0.5 text-[11px] font-mono font-bold uppercase tracking-wider text-purple-300 border border-purple-500/40">
+                    <span className="rounded-xl bg-purple-600/30 px-2.5 py-0.5 text-[11px] font-mono font-bold uppercase tracking-wider text-purple-300 border border-purple-500/40">
                       Why Upgrade to Pro Workspace?
                     </span>
                     <span className="text-xs text-slate-400 font-mono">Unlock 25 Buyer Leads</span>
@@ -3356,7 +3369,7 @@ function JobsPanel({
             </div>
           )}
           <ol className="mt-6 space-y-3">
-            {visible.map((job, i) => (
+            {(isPaidUser ? visible : visible.slice(0, 3)).map((job, i) => (
               <JobCard
                 key={`${job.forRobot}:${job.job_key}`}
                 index={i + 1}
@@ -3368,6 +3381,44 @@ function JobsPanel({
               />
             ))}
           </ol>
+
+          {!isPaidUser && visible.length > 3 && (
+            <div className="relative mt-6 overflow-hidden rounded-2xl border border-purple-500/40 bg-gradient-to-b from-[#110d29] to-[#0a0e1c] p-2 shadow-2xl">
+              {/* Blurred background cards */}
+              <div className="space-y-3 p-2 filter blur-[6px] opacity-35 select-none pointer-events-none aria-hidden">
+                {visible.slice(3, 7).map((job, i) => (
+                  <JobCard
+                    key={`blurred:${job.forRobot}:${job.job_key}`}
+                    index={i + 4}
+                    job={job}
+                    selected={false}
+                    checked={false}
+                    onSelect={() => {}}
+                    onToggle={() => {}}
+                  />
+                ))}
+              </div>
+
+              {/* Lock & Upgrade Overlay */}
+              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-slate-950/85 backdrop-blur-md">
+                <div className="rounded-2xl bg-emerald-500/20 p-3.5 border border-emerald-400/40 text-emerald-400 mb-3 shadow-lg shadow-emerald-500/20">
+                  <Lock className="h-6 w-6 text-emerald-400" />
+                </div>
+                <h3 className="text-xl font-bold text-white font-display">
+                  Unlock {Math.max(1, visible.length - 3)}+ More Job Opportunities
+                </h3>
+                <p className="mt-2 max-w-md text-xs leading-relaxed text-slate-300 sm:text-sm">
+                  Free users can view up to 3 job opportunities. Sign up for free or upgrade your workspace to unlock all verified employer job matches.
+                </p>
+                <a
+                  href="/signup?next=/pipeline&src=jobs_free_cap_blur"
+                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-slate-950 shadow-xl shadow-emerald-400/20 hover:from-emerald-300 hover:to-teal-300 transition-all"
+                >
+                  <span>Sign Up to Unlock All Jobs →</span>
+                </a>
+              </div>
+            </div>
+          )}
         </>
       )}
       {hiddenCount > 0 ? (

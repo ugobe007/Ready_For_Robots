@@ -71,9 +71,9 @@ describe("jobsHandoffSnapshot", () => {
   });
 
   it("keeps See All above the 5-job example cap on the same page", () => {
-    expect(JOBS_EXAMPLE_CAP).toBe(5);
-    expect(JOBS_PIPELINE_CAP).toBe(15);
-    expect(JOBS_ACTIVATE_CAP).toBe(15);
+    expect(JOBS_EXAMPLE_CAP).toBe(3);
+    expect(JOBS_PIPELINE_CAP).toBe(25);
+    expect(JOBS_ACTIVATE_CAP).toBe(25);
   });
 
   it("stores how many jobs the user checked", () => {
