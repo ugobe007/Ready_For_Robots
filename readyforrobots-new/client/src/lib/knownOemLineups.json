@@ -1678,13 +1678,8 @@
     "vendor_name": "Epson Robots",
     "robots": [
       {
-        "name": "SCARA",
-        "description": "SCARA: assembly. Used in Manufacturing.",
-        "display_class": "industrial_arm"
-      },
-      {
-        "name": "6-axis",
-        "description": "6-axis: assembly. Used in Manufacturing.",
+        "name": "Epson SCARA & 6-Axis Factory Automation Robots",
+        "description": "Epson T-Series / LS-Series SCARA and N-Series / C-Series 6-axis articulated arms for high-speed micro-assembly, packaging, cleanroom, and factory automation.",
         "display_class": "industrial_arm"
       }
     ]

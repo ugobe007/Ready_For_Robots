@@ -972,15 +972,11 @@ export default function RobotJobsWorkspace() {
             description: p.description,
           }))
         );
-        if (lineup.length > 1) {
-          setProducts(lineup);
-          setSelected([]);
-          setStage("select");
-          return;
-        }
-        if (lineup.length === 1) {
-          const name = lineup[0].name;
-          const displayClass = lineup[0].displayClass;
+        if (lineup.length > 0) {
+          const lowerUrl = submitUrl.toLowerCase();
+          const matchedProduct = lineup.find(p => lowerUrl.includes(p.name.toLowerCase())) || lineup[0];
+          const name = matchedProduct.name;
+          const displayClass = matchedProduct.displayClass;
           const cls = configurationClassForLookup(displayClass);
           setResearchPhase("jobs");
           let res: RobotJobSearchResult;
