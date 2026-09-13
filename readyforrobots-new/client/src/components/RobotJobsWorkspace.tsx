@@ -983,14 +983,27 @@ export default function RobotJobsWorkspace() {
           const displayClass = lineup[0].displayClass;
           const cls = configurationClassForLookup(displayClass);
           setResearchPhase("jobs");
-          const res = await fetchRobotJobSearch({
-            url: submitUrl,
-            product: name || undefined,
-            assertedClass: cls || undefined,
-            lookupGrain: "product",
-            signal: ac.signal,
-            timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
-          });
+          let res: RobotJobSearchResult;
+          try {
+            res = await fetchRobotJobSearch({
+              url: submitUrl,
+              product: name || undefined,
+              assertedClass: cls || undefined,
+              lookupGrain: "product",
+              signal: ac.signal,
+              timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+            });
+          } catch (firstErr) {
+            if (!live()) return;
+            // Known OEM live-fetch fallback: if live URL scrape timed out, load jobs for known robot directly
+            res = await fetchRobotJobSearch({
+              product: name || undefined,
+              assertedClass: cls || undefined,
+              lookupGrain: "product",
+              signal: ac.signal,
+              timeoutMs: 5000,
+            });
+          }
           if (!live()) return;
           submissionIdRef.current =
             res.robot_submission_id ?? submissionIdRef.current;
@@ -1031,14 +1044,26 @@ export default function RobotJobsWorkspace() {
             lineup[0]?.displayClass || listing.robots[0]?.display_class;
           const cls = configurationClassForLookup(displayClass);
           setResearchPhase("jobs");
-          const res = await fetchRobotJobSearch({
-            url: submitUrl,
-            product: name || undefined,
-            assertedClass: cls || undefined,
-            lookupGrain: "product",
-            signal: ac.signal,
-            timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
-          });
+          let res: RobotJobSearchResult;
+          try {
+            res = await fetchRobotJobSearch({
+              url: submitUrl,
+              product: name || undefined,
+              assertedClass: cls || undefined,
+              lookupGrain: "product",
+              signal: ac.signal,
+              timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+            });
+          } catch (firstErr) {
+            if (!live()) return;
+            res = await fetchRobotJobSearch({
+              product: name || undefined,
+              assertedClass: cls || undefined,
+              lookupGrain: "product",
+              signal: ac.signal,
+              timeoutMs: 5000,
+            });
+          }
           if (!live()) return;
           submissionIdRef.current =
             res.robot_submission_id ?? submissionIdRef.current;

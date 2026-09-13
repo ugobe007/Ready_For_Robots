@@ -216,4 +216,10 @@ describe("knownOemLineups", () => {
     );
     expect((unix?.robots || []).map(r => r.name)).not.toContain("Wheeled");
   });
+
+  it("instantly matches Sanctuary AI from https://sanctuary.ai/", () => {
+    const sanctuary = lookupKnownOem("https://sanctuary.ai/");
+    expect(sanctuary?.vendor_name).toBe("Sanctuary AI");
+    expect((sanctuary?.robots || []).map(r => r.name)).toContain("Sanctuary Phoenix");
+  });
 });
