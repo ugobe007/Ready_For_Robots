@@ -3369,35 +3369,6 @@ function JobsPanel({
         </p>
       )}
 
-      {/* Free Daily Match Brief Banner */}
-      <div className="mt-4 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-[#170a36] via-[#1a0e3b] to-[#0c1630] p-4 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <div className="rounded-xl border border-purple-400/30 bg-purple-500/20 p-2 text-purple-300">
-            <Mail className="h-5 w-5 text-purple-400" />
-          </div>
-          <div>
-            <h4 className="text-sm font-bold text-white font-display">Get Free Daily Top 5 Job Matches</h4>
-            <p className="text-xs text-slate-300">Save {analysis.productName} to your free profile & receive daily buyer matches.</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={() => setShowBriefModal(true)}
-          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-purple-600/30 hover:bg-purple-500 transition"
-        >
-          <span>Save Robot & Daily Brief</span>
-          <ArrowRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
-
-      <DailyMatchBriefModal
-        isOpen={showBriefModal}
-        onClose={() => setShowBriefModal(false)}
-        robotUrl={robotUrl}
-        robotName={analysis.productName}
-        topMatchesCount={rawBaseJobs.length}
-      />
-
       {matchError ? (
         <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
           {matchError}
@@ -3448,33 +3419,6 @@ function JobsPanel({
         )
       ) : (
         <>
-          {!signedIn && (
-            <div className="mt-6 rounded-xl border border-purple-500/40 bg-gradient-to-r from-purple-950/40 via-slate-900/90 to-purple-900/30 p-5 shadow-xl">
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-1.5 max-w-2xl">
-                  <div className="flex items-center gap-2">
-                    <span className="rounded-xl bg-purple-600/30 px-2.5 py-0.5 text-[11px] font-mono font-bold uppercase tracking-wider text-purple-300 border border-purple-500/40">
-                      Why Upgrade to Pro Workspace?
-                    </span>
-                    <span className="text-xs text-slate-400 font-mono">Unlock 25 Buyer Leads</span>
-                  </div>
-                  <h3 className="text-base font-bold text-white">
-                    Unlock Full Verified Contact Info & 1-Click Automated AI Applications
-                  </h3>
-                  <p className="text-xs leading-relaxed text-slate-300">
-                    Free pages provide compatibility scoring. Upgrading to a paid workspace unlocks <span className="text-purple-300 font-semibold">direct decision-maker emails</span>, <span className="text-purple-300 font-semibold">automated AI proposal submissions</span>, and full CRM pipeline integration.
-                  </p>
-                </div>
-                <a
-                  href="/signup?next=/pipeline&src=jobs_upgrade_banner"
-                  className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-purple-600 px-5 py-2.5 text-xs font-bold text-white shadow-lg shadow-purple-500/30 hover:bg-purple-500 transition-all uppercase tracking-wider"
-                >
-                  <span>Upgrade Workspace →</span>
-                </a>
-              </div>
-            </div>
-          )}
-
           {/* Job Opportunity Status & Filter Bar */}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 pb-3">
             <div className="flex flex-wrap items-center gap-1.5 rounded-lg bg-[#060c1d] p-1 border border-slate-700/80">
