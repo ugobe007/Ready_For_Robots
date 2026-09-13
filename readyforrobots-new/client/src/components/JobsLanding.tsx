@@ -6,6 +6,7 @@ import { useState, type FormEvent } from "react";
 import PixelIcon from "@/components/PixelIcon";
 import SiteIcon from "@/components/SiteIcon";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
+import CustomerQuoteBanner from "@/components/CustomerQuoteBanner";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
@@ -205,7 +206,7 @@ export default function JobsLanding() {
               Find jobs →
             </button>
           </div>
-          <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-center gap-4">
+          <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-start gap-4">
             <a
               href={jobsCandidatesHref()}
               className="rfr-landing-employer-link"
@@ -220,6 +221,11 @@ export default function JobsLanding() {
             </a>
           </div>
         </form>
+      </section>
+
+      {/* Featured Daily Customer Intent Quotes Banner */}
+      <section className="rfr-landing-quotes py-4" aria-label="Customer Quotes">
+        <CustomerQuoteBanner />
       </section>
 
       <section className="rfr-landing-brief" aria-label="Live job feed">

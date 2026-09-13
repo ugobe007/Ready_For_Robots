@@ -116,7 +116,7 @@ describe("landing fork", () => {
     expect(LANDING_EYEBROW).toBe("Ready For Robots");
     expect(LANDING_KICKER_JOBS).toBe("Jobs");
     expect(LANDING_SUBHEAD).toBe(
-      "Paste a robot product page. We’ll match its capabilities to real physical work."
+      "Paste a robot product page. We’ll match its capabilities to real jobs."
     );
     expect(LANDING_INTRO).toBe(
       "Submit your robot URL or your robot job. We put robots to work."
@@ -189,7 +189,7 @@ describe("landing fork", () => {
     const html = readFileSync(join(here, "../../index.html"), "utf8");
     expect(LANDING_HEADLINE).toBe("Put Robots to Work.");
     expect(LANDING_SUBHEAD).toBe(
-      "Paste a robot product page. We’ll match its capabilities to real physical work."
+      "Paste a robot product page. We’ll match its capabilities to real jobs."
     );
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
