@@ -122,7 +122,7 @@ export default function CalJobsDesk({
   const [priceDraft, setPriceDraft] = useState("");
   const [pocDraft, setPocDraft] = useState("");
 
-  const [isCollapsed, setIsCollapsed] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const focus = useMemo(() => {
     const jobs = desk?.jobs || [];
@@ -277,7 +277,6 @@ export default function CalJobsDesk({
 
   const catalog = focus?.catalog_skus || [];
   const draft = focus?.application?.draft;
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
   const toggleCollapse = (e: React.MouseEvent) => {
     e.preventDefault();
