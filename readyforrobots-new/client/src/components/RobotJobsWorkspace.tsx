@@ -41,7 +41,7 @@ import {
   type RobotJobSearchResult,
 } from "@/lib/robotJobSearch";
 import { fetchOemListing, fetchRobotProfile } from "@/lib/robotProfile";
-import { lookupKnownOem } from "@/lib/knownOemLineups";
+import { hostFromOemUrl, lookupKnownOem } from "@/lib/knownOemLineups";
 import {
   I_KNOW_THE_ROBOT_HINT,
   I_KNOW_THE_ROBOT_LABEL,
@@ -1171,13 +1171,63 @@ export default function RobotJobsWorkspace() {
         setStage("find");
         return;
       }
-      setError(
-        lookupFailedMessage(
-          err,
-          "Research failed. Check the URL and try again."
-        )
+      const fallbackMessage = lookupFailedMessage(
+        err,
+        "Research failed. Check the URL and try again."
       );
-      setStage("find");
+
+      // Systemic Resilience Fallback: Never dead-end on network timeouts or scraping failures.
+      const fallbackKnown = lookupKnownOem(submitUrl);
+      if (fallbackKnown && fallbackKnown.robots.length > 0) {
+        setCompanyName(fallbackKnown.vendor_name || "");
+        const lineup = filterJobsLineupProducts(
+          fallbackKnown.robots.map(p => ({
+            name: p.name,
+            displayClass: p.display_class,
+            description: p.description,
+          }))
+        );
+        if (lineup.length > 0) {
+          const name = lineup[0].name;
+          const displayClass = lineup[0].displayClass;
+          const cls = configurationClassForLookup(displayClass);
+          try {
+            const res = await fetchRobotJobSearch({
+              product: name || undefined,
+              assertedClass: cls || undefined,
+              lookupGrain: "product",
+              timeoutMs: 5000,
+            });
+            const analysis = analysisForSelectedSku(res, name, displayClass);
+            openJobsFromAnalyses([analysis], submitUrl, name ? [name] : [], research);
+            return;
+          } catch {
+            /* proceed to class picker fallback */
+          }
+        }
+      }
+
+      // Fallback to Class Picker for the domain name so user can select robot type and view jobs
+      const host = hostFromOemUrl(submitUrl);
+      const rawDomain = host.split(".")[0] || "Robot";
+      const inferredName = rawDomain.charAt(0).toUpperCase() + rawDomain.slice(1);
+      setCompanyName(inferredName);
+      setProducts([]);
+      const fallbackAnalysis: RobotAnalysis = {
+        productName: inferredName,
+        companyName: inferredName,
+        tier: "A",
+        profile: null,
+        matched: true,
+        capabilities: [],
+        jobs: [],
+        jobCount: 0,
+        needsClassChoice: true,
+        zeroReason: null,
+        lookupGrain: "product",
+      };
+      openJobsFromAnalyses([fallbackAnalysis], submitUrl, [inferredName], research);
+      return;
     } finally {
       if (live()) findInFlightRef.current = false;
     }
