@@ -61,4 +61,27 @@ describe("Job Lifecycle & Applicant Scarcity Rules", () => {
     expect(state.subLabel).toContain("8+ Weeks Old");
     expect(state.subLabel).toContain("Paid Access Only");
   });
+
+  it("filters and surfaces top 3 active jobs for free users", () => {
+    const freshDate = new Date().toISOString();
+    const oldDate = new Date(Date.now() - 60 * 86400000).toISOString();
+
+    const jobsList: MatchJob[] = [
+      { job_key: "1", title: "Active 1", industry: "Logistics", path: "/1", applicants_count: 1, posted_at: freshDate },
+      { job_key: "2", title: "Pending 1", industry: "Logistics", path: "/2", applicants_count: 3, posted_at: freshDate },
+      { job_key: "3", title: "Active 2", industry: "Logistics", path: "/3", applicants_count: 0, posted_at: freshDate },
+      { job_key: "4", title: "Archived 1", industry: "Logistics", path: "/4", applicants_count: 0, posted_at: oldDate },
+      { job_key: "5", title: "Active 3", industry: "Logistics", path: "/5", applicants_count: 2, posted_at: freshDate },
+      { job_key: "6", title: "Active 4", industry: "Logistics", path: "/6", applicants_count: 0, posted_at: freshDate },
+    ];
+
+    const activeJobs = jobsList.filter(j => !getJobLifecycleState(j).isArchived && !getJobLifecycleState(j).isPending);
+    expect(activeJobs.length).toBe(4);
+    expect(activeJobs.map(j => j.job_key)).toEqual(["1", "3", "5", "6"]);
+
+    // Free users surface exactly top 3 active jobs
+    const freeActiveSample = activeJobs.slice(0, 3);
+    expect(freeActiveSample.length).toBe(3);
+    expect(freeActiveSample.map(j => j.job_key)).toEqual(["1", "3", "5"]);
+  });
 });

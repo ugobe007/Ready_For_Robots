@@ -3211,18 +3211,6 @@ function JobsPanel({
     email === "ugobe07@gmail.com";
 
   const sources = lineupPreview && lineup.length > 1 ? lineup : [analysis];
-  const tagged = exampleJobsForLineup(sources);
-  const baseJobs = analysis.jobs;
-  const visible =
-    !lineupPreview && showAll
-      ? baseJobs.slice(0, JOBS_PIPELINE_CAP).map(job => ({
-          ...job,
-          forRobot: analysis.productName,
-        }))
-      : tagged;
-  const hiddenCount = lineupPreview
-    ? 0
-    : Math.max(0, Math.min(baseJobs.length, JOBS_PIPELINE_CAP) - tagged.length);
   const heading = jobsHeading({
     productName: analysis.productName,
     companyName: companyName || analysis.companyName,
@@ -3231,25 +3219,53 @@ function JobsPanel({
     robotClass: analysis.robotClass,
   });
   const checkedCount = checkedJobKeys.filter(k =>
-    visible.some(job => job.job_key === k)
+    (analysis.jobs || []).some(job => job.job_key === k)
   ).length;
   const showPicker = shouldQualify(analysis);
   const showCrmCtas = !showPicker && !qualifying;
   const [showBriefModal, setShowBriefModal] = useState(false);
   const [jobFilterTab, setJobFilterTab] = useState<"all" | "pending" | "archived">("all");
 
-  const activeJobsList = visible.filter(j => !getJobLifecycleState(j).isArchived && !getJobLifecycleState(j).isPending);
-  const pendingJobsList = visible.filter(j => getJobLifecycleState(j).isPending);
-  const archivedJobsList = visible.filter(j => getJobLifecycleState(j).isArchived);
+  const rawBaseJobs = (analysis.jobs || []).map(job => ({
+    ...job,
+    forRobot: job.forRobot || analysis.productName,
+  }));
+
+  const allActiveJobs = rawBaseJobs.filter(
+    j => !getJobLifecycleState(j).isArchived && !getJobLifecycleState(j).isPending
+  );
+  const allPendingJobs = rawBaseJobs.filter(j => getJobLifecycleState(j).isPending);
+  const allArchivedJobs = rawBaseJobs.filter(j => getJobLifecycleState(j).isArchived);
+
+  // Surface top 3 active jobs by default (pad with non-archived if active pool has < 3)
+  const defaultActiveJobs =
+    allActiveJobs.length >= 3
+      ? allActiveJobs.slice(0, 3)
+      : [
+          ...allActiveJobs,
+          ...rawBaseJobs.filter(
+            j => !allActiveJobs.includes(j) && !getJobLifecycleState(j).isArchived
+          ),
+        ].slice(0, 3);
+
+  const activeJobsToDisplay =
+    isPaidUser && showAll
+      ? allActiveJobs.slice(0, JOBS_PIPELINE_CAP)
+      : defaultActiveJobs;
 
   const displayedJobs =
     jobFilterTab === "pending"
-      ? pendingJobsList
+      ? allPendingJobs
       : jobFilterTab === "archived"
-        ? archivedJobsList
-        : activeJobsList.length > 0
-          ? activeJobsList
-          : visible;
+        ? allArchivedJobs
+        : activeJobsToDisplay;
+
+  const hiddenCountForPaid =
+    isPaidUser && !showAll && allActiveJobs.length > 3
+      ? allActiveJobs.length - 3
+      : 0;
+
+  const visible = isPaidUser && showAll ? rawBaseJobs : defaultActiveJobs;
 
   return (
     <div id="jobs-list" className="p-6 sm:p-8">
@@ -3257,7 +3273,7 @@ function JobsPanel({
         <h2 className={`${FIND_JOBS_HEADLINE_CLASS} text-white`}>{heading}</h2>
         <span className="font-mono text-base font-bold text-emerald-300">
           {jobsCountEyebrow({
-            visibleCount: visible.length,
+            visibleCount: isPaidUser ? rawBaseJobs.length : Math.min(3, rawBaseJobs.length),
             productName: analysis.productName,
             companyName: companyName || analysis.companyName,
             robotCount,
@@ -3266,7 +3282,7 @@ function JobsPanel({
           })}
         </span>
       </div>
-      {visible.length > 0 && (
+      {rawBaseJobs.length > 0 && (
         <p className="mt-2 text-base leading-relaxed text-slate-300">
           {jobsListHint({
             robotCount,
@@ -3304,7 +3320,7 @@ function JobsPanel({
         onClose={() => setShowBriefModal(false)}
         robotUrl={robotUrl}
         robotName={analysis.productName}
-        topMatchesCount={visible.length}
+        topMatchesCount={rawBaseJobs.length}
       />
 
       {matchError ? (
@@ -3339,7 +3355,7 @@ function JobsPanel({
         </button>
       ) : null}
 
-      {baseJobs.length === 0 && visible.length === 0 ? (
+      {rawBaseJobs.length === 0 ? (
         showPicker ? (
           <ClassPicker
             robotName={analysis.productName}
@@ -3396,7 +3412,7 @@ function JobsPanel({
                     : "text-slate-300 hover:text-white"
                 }`}
               >
-                Active Jobs ({activeJobsList.length || visible.length})
+                Active Jobs ({isPaidUser ? allActiveJobs.length : defaultActiveJobs.length})
               </button>
               <button
                 type="button"
@@ -3407,7 +3423,7 @@ function JobsPanel({
                     : "text-slate-300 hover:text-white"
                 }`}
               >
-                [Pending] Spots Full ({pendingJobsList.length})
+                [Pending] Spots Full ({allPendingJobs.length})
               </button>
               <button
                 type="button"
@@ -3455,17 +3471,22 @@ function JobsPanel({
                   selected={expandedJob === job.job_key}
                   checked={checkedJobKeys.includes(job.job_key)}
                   onSelect={() => onSelectJob(job)}
-                  onToggle={() => onToggleJob(job)}
+                  onToggle={() => {
+                    if (!isPaidUser && !defaultActiveJobs.some(j => j.job_key === job.job_key)) {
+                      return;
+                    }
+                    onToggleJob(job);
+                  }}
                 />
               ))}
             </ol>
           )}
 
-          {!isPaidUser && visible.length > 3 && (
+          {!isPaidUser && rawBaseJobs.length > 3 && (
             <div className="relative mt-6 overflow-hidden rounded-2xl border border-purple-500/40 bg-gradient-to-b from-[#110d29] to-[#0a0e1c] p-2 shadow-2xl">
               {/* Blurred background cards */}
               <div className="space-y-3 p-2 filter blur-[6px] opacity-35 select-none pointer-events-none aria-hidden">
-                {visible.slice(3, 7).map((job, i) => (
+                {rawBaseJobs.slice(3, 7).map((job, i) => (
                   <JobCard
                     key={`blurred:${job.forRobot}:${job.job_key}`}
                     index={i + 4}
@@ -3484,10 +3505,10 @@ function JobsPanel({
                   <Lock className="h-6 w-6 text-emerald-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white font-display">
-                  Unlock {Math.max(1, visible.length - 3)}+ More Job Opportunities
+                  Unlock {Math.max(1, rawBaseJobs.length - 3)}+ More Job Opportunities
                 </h3>
                 <p className="mt-2 max-w-md text-xs leading-relaxed text-slate-300 sm:text-sm">
-                  Free users can view up to 3 job opportunities. Sign up for free or upgrade your workspace to unlock all verified employer job matches.
+                  Free users can view up to 3 active job opportunities. Upgrade your workspace to unlock all verified employer job matches.
                 </p>
                 <a
                   href="/signup?next=/pipeline&src=jobs_free_cap_blur"
@@ -3500,13 +3521,13 @@ function JobsPanel({
           )}
         </>
       )}
-      {hiddenCount > 0 ? (
+      {hiddenCountForPaid > 0 ? (
         <button
           type="button"
           onClick={onSeeAll}
           className="mt-4 font-mono text-sm font-semibold uppercase tracking-[0.08em] text-emerald-400 hover:text-emerald-300"
         >
-          See all {Math.min(baseJobs.length, JOBS_PIPELINE_CAP)} jobs
+          See all {Math.min(allActiveJobs.length, JOBS_PIPELINE_CAP)} jobs
         </button>
       ) : null}
       {showCrmCtas ? (
