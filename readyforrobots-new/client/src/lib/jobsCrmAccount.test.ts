@@ -190,11 +190,10 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(next).toMatch(/applySelectedJobsOnAccount/);
     expect(inbox).toMatch(/Save meeting URL/);
     expect(inbox).toMatch(/scheduling_label/);
-    expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
-    expect(JOBS_APPLY_SELECTED_CTA).toMatch(/Apply to jobs/);
+    expect(JOBS_APPLY_SELECTED_CTA).toMatch(/Automate Job Applications/);
     expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
     expect(JOBS_KEEP_YES_CTA).toBe("Yes, keep them");
-    expect(JOBS_APPLY_NEXT_CTA).toBe("Apply to jobs →");
+    expect(JOBS_APPLY_NEXT_CTA).toBe("Automate Job Applications →");
     expect(JOBS_APPLY_SEQUENCE).toMatch(/Apply to the job/);
     expect(JOBS_APPLY_SEQUENCE).toMatch(/prepare a draft/);
     expect(JOBS_APPLY_SEQUENCE).toMatch(/You review and send/);

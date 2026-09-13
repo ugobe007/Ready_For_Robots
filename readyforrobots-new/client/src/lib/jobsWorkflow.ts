@@ -886,8 +886,8 @@ export function crmEmptyDeskHint(productName?: string | null): string {
 export function crmOfferBlurb(productName?: string | null): string {
   const who = crmSaveJobsRobotLabel(productName);
   return who
-    ? `Here's the offer for ${who}. Pick the model and say what you'll charge.`
-    : "Pick the model and say what you'll charge. Then we prepare a draft for you to send.";
+    ? `Automate job applications for ${who}. Select your model and quote to generate proposals.`
+    : "Automate job applications and proposals. Select your model and quote to generate drafts.";
 }
 
 export const CRM_INSPECT_HINT = crmSaveJobsBlurb();

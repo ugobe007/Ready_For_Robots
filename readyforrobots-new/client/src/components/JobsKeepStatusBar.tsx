@@ -31,15 +31,10 @@ export default function JobsKeepStatusBar({
       <p className="font-mono text-sm font-bold uppercase tracking-[0.08em] text-emerald-300">
         {bar.text}
       </p>
-      {bar.href ? (
+      {!onCrmDesk && bar.href ? (
         <a
           href={bar.href}
-          onClick={onCrmDesk ? onApplyClick : undefined}
-          className={
-            onCrmDesk
-              ? `${JOBS_APPLY_CTA_CLASS} px-3 py-2 font-mono text-xs`
-              : "font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-200 underline decoration-emerald-400/50 underline-offset-2 hover:text-white"
-          }
+          className="font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-200 underline decoration-emerald-400/50 underline-offset-2 hover:text-white"
         >
           {bar.hrefLabel}
         </a>

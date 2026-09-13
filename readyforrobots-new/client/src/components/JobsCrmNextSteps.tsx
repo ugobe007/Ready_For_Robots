@@ -211,15 +211,14 @@ export default function JobsCrmNextSteps({
   return (
     <section
       id="jobs-next-steps"
-      aria-label="Next steps"
+      aria-label="Automate Job Applications"
       className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-6 sm:px-6"
     >
-      <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>Next steps</p>
+      <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>Automate Job Applications</p>
       <h2 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">
-        Offer for{" "}
         {selectedJobs.length > 1
-          ? `${selectedJobs.length} selected jobs`
-          : card.jobTitle}
+          ? `Apply to ${selectedJobs.length} Selected Jobs`
+          : `Apply to ${card.jobTitle}`}
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-slate-300">
         {crmOfferBlurb(robotName)}

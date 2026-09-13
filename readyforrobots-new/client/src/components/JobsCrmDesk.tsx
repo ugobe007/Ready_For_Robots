@@ -354,24 +354,24 @@ export default function JobsCrmDesk({
           </a>
         </p>
       ) : (
-        <div className="mt-6">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <p className={`${eyebrow} text-emerald-400`}>
-              {CRM_LISTING_EYEBROW}
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <a
-                href={jobsCrmOfferHref(signedIn, submissionId)}
-                onClick={openOfferForm}
-                aria-label={JOBS_APPLY_SELECTED_CTA}
-                className={`${JOBS_APPLY_CTA_CLASS} px-3 py-2 font-mono text-xs`}
-              >
-                {JOBS_APPLY_SELECTED_CTA}
-              </a>
-              <p className="basis-full text-sm leading-relaxed text-slate-400">
-                {JOBS_APPLY_SEQUENCE}
+        <div className="mt-8 border-t border-slate-700/60 pt-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className={`${eyebrow} text-emerald-400`}>
+                {CRM_LISTING_EYEBROW}
+              </p>
+              <p className="mt-1 text-sm text-slate-300">
+                Select jobs to include in your automated application batch.
               </p>
             </div>
+            <a
+              href={jobsCrmOfferHref(signedIn, submissionId)}
+              onClick={openOfferForm}
+              aria-label={JOBS_APPLY_SELECTED_CTA}
+              className="inline-flex items-center justify-center bg-emerald-400 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a] transition hover:bg-emerald-300"
+            >
+              {JOBS_APPLY_SELECTED_CTA}
+            </a>
           </div>
           {showNextSteps && offerJob && accessToken ? (
             <JobsCrmNextSteps

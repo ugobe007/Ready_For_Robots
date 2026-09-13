@@ -6,13 +6,13 @@
  * BuyerCal leftover notes stay in app/services/cal_persona.py and stay frozen.
  */
 
-export const OEM_CAL_NAME = "Job Recruiter";
-export const OEM_CAL_TITLE = "Job Recruiter";
+export const OEM_CAL_NAME = "Automate Job Applications";
+export const OEM_CAL_TITLE = "Automate Job Applications";
 export const OEM_CAL_JOB =
-  "Automate your job applications. Let's help you prepare your job proposal.";
-export const OEM_CAL_DESK_EYEBROW = "Ready For Robots · Job Recruiter";
+  "Automate your job applications and proposal submissions in one click.";
+export const OEM_CAL_DESK_EYEBROW = "Automate Job Applications";
 export const OEM_CAL_DESK_LEAD =
-  "Automate your job applications. Let's help you prepare your job proposal. Here are a few jobs for review...";
+  "Automate your job applications and proposal submissions. Review drafts and send.";
 export const OEM_CAL_PREPARE_CTA = "Prepare application →";
 export const OEM_CAL_OPERATOR_SENDS =
   "This is a draft proposal. Review it. You send.";

@@ -1274,8 +1274,8 @@ describe("jobsWorkflow", () => {
       /Nothing saved yet for Aethon TUG/
     );
     expect(crmEmptyDeskHint("Aethon TUG")).not.toMatch(/jobs you kept/i);
-    expect(crmOfferBlurb("TUG")).toMatch(/offer for TUG/i);
-    expect(crmOfferBlurb()).toMatch(/what you'll charge/i);
+    expect(crmOfferBlurb("TUG")).toMatch(/Automate job applications for TUG/i);
+    expect(crmOfferBlurb()).toMatch(/Select your model and quote/i);
     expect(CRM_INSPECT_HINT).toBe(crmSaveJobsBlurb());
     expect(CRM_INSPECT_HINT).not.toMatch(/Inspect a collected egg/i);
     expect(CRM_HOW_TO_STEPS[0]).toBe("Sign in so the jobs you kept stay here.");

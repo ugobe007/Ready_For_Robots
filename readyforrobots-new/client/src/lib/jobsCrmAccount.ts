@@ -26,8 +26,8 @@ import type { MatchJob } from "@/lib/robotJobMatch";
 export const JOBS_KEEP_JOBS_CTA = "Keep jobs";
 export const JOBS_KEEP_YES_CTA = "Yes, keep them";
 export const JOBS_NEXT_STEPS_CTA = "Next steps →";
-export const JOBS_APPLY_NEXT_CTA = JOBS_APPLY_HERO_CTA;
-export const JOBS_APPLY_SELECTED_CTA = JOBS_APPLY_HERO_CTA;
+export const JOBS_APPLY_NEXT_CTA = "Automate Job Applications →";
+export const JOBS_APPLY_SELECTED_CTA = "Automate Job Applications →";
 export const JOBS_NEXT_STEPS_ANCHOR = "jobs-next-steps";
 export const JOBS_APPLY_SEQUENCE =
   "Apply to the job. We prepare a draft. You review and send. Then we help set up the interview.";
