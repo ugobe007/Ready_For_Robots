@@ -29,6 +29,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { Mail, ArrowRight, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { getJobLifecycleState } from "@/lib/jobLifecycle";
 import DailyMatchBriefModal from "@/components/DailyMatchBriefModal";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsPresentationOffer from "@/components/JobsPresentationOffer";
@@ -3235,6 +3236,20 @@ function JobsPanel({
   const showPicker = shouldQualify(analysis);
   const showCrmCtas = !showPicker && !qualifying;
   const [showBriefModal, setShowBriefModal] = useState(false);
+  const [jobFilterTab, setJobFilterTab] = useState<"all" | "pending" | "archived">("all");
+
+  const activeJobsList = visible.filter(j => !getJobLifecycleState(j).isArchived && !getJobLifecycleState(j).isPending);
+  const pendingJobsList = visible.filter(j => getJobLifecycleState(j).isPending);
+  const archivedJobsList = visible.filter(j => getJobLifecycleState(j).isArchived);
+
+  const displayedJobs =
+    jobFilterTab === "pending"
+      ? pendingJobsList
+      : jobFilterTab === "archived"
+        ? archivedJobsList
+        : activeJobsList.length > 0
+          ? activeJobsList
+          : visible;
 
   return (
     <div id="jobs-list" className="p-6 sm:p-8">
@@ -3368,19 +3383,83 @@ function JobsPanel({
               </div>
             </div>
           )}
-          <ol className="mt-6 space-y-3">
-            {(isPaidUser ? visible : visible.slice(0, 3)).map((job, i) => (
-              <JobCard
-                key={`${job.forRobot}:${job.job_key}`}
-                index={i + 1}
-                job={job}
-                selected={expandedJob === job.job_key}
-                checked={checkedJobKeys.includes(job.job_key)}
-                onSelect={() => onSelectJob(job)}
-                onToggle={() => onToggleJob(job)}
-              />
-            ))}
-          </ol>
+
+          {/* Job Opportunity Status & Filter Bar */}
+          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 pb-3">
+            <div className="flex flex-wrap items-center gap-1.5 rounded-lg bg-[#060c1d] p-1 border border-slate-700/80">
+              <button
+                type="button"
+                onClick={() => setJobFilterTab("all")}
+                className={`px-3 py-1.5 text-xs font-mono font-semibold rounded-md transition-all ${
+                  jobFilterTab === "all"
+                    ? "bg-emerald-500 text-slate-950 shadow font-bold"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                Active Jobs ({activeJobsList.length || visible.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setJobFilterTab("pending")}
+                className={`px-3 py-1.5 text-xs font-mono font-semibold rounded-md transition-all ${
+                  jobFilterTab === "pending"
+                    ? "bg-amber-500 text-slate-950 shadow font-bold"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                [Pending] Spots Full ({pendingJobsList.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setJobFilterTab("archived")}
+                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-semibold rounded-md transition-all ${
+                  jobFilterTab === "archived"
+                    ? "bg-purple-600 text-white shadow font-bold"
+                    : "text-purple-300 hover:text-white"
+                }`}
+              >
+                <Lock className="h-3 w-3 text-purple-300" />
+                <span>Job Archive (8+ Wks)</span>
+              </button>
+            </div>
+            <span className="text-xs font-mono text-slate-400">
+              Max 3 Applicants / Job · 8 Wk Archive
+            </span>
+          </div>
+
+          {jobFilterTab === "archived" && !isPaidUser ? (
+            <div className="mt-6 rounded-2xl border border-purple-500/40 bg-gradient-to-b from-[#180d36] via-[#100926] to-[#0a0f1d] p-8 text-center shadow-2xl">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/20 text-purple-300 shadow-lg shadow-purple-500/20">
+                <Lock className="h-6 w-6 text-purple-300" />
+              </div>
+              <h3 className="mt-4 font-display text-xl font-bold text-white sm:text-2xl">
+                Job Archive Access is Reserved for Paid Workspaces
+              </h3>
+              <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-slate-300">
+                Job opportunities automatically age after 2 weeks and move to the Archive after 8 weeks (56 days). Upgrade to a Paid Workspace to access archived postings, historical buyer demand, and direct enterprise contact info.
+              </p>
+              <a
+                href="/signup?next=/pipeline&src=jobs_archive_lock"
+                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-white shadow-xl shadow-purple-600/30 hover:from-purple-500 hover:to-indigo-500 transition-all"
+              >
+                <span>Upgrade Workspace to Access Archive →</span>
+              </a>
+            </div>
+          ) : (
+            <ol className="mt-6 space-y-3">
+              {(isPaidUser ? displayedJobs : displayedJobs.slice(0, 3)).map((job, i) => (
+                <JobCard
+                  key={`${job.forRobot}:${job.job_key}`}
+                  index={i + 1}
+                  job={job}
+                  selected={expandedJob === job.job_key}
+                  checked={checkedJobKeys.includes(job.job_key)}
+                  onSelect={() => onSelectJob(job)}
+                  onToggle={() => onToggleJob(job)}
+                />
+              ))}
+            </ol>
+          )}
 
           {!isPaidUser && visible.length > 3 && (
             <div className="relative mt-6 overflow-hidden rounded-2xl border border-purple-500/40 bg-gradient-to-b from-[#110d29] to-[#0a0e1c] p-2 shadow-2xl">
@@ -3601,32 +3680,44 @@ function JobCard({
   onToggle: () => void;
 }) {
   const card = robotJobCardFromMatch(job);
+  const lifecycle = getJobLifecycleState(job);
   if (!card.employer || !card.workplace) return null;
   const place = [card.employer, card.workplace].filter(Boolean).join(" · ");
   return (
     <li
-      className={`border bg-[#081126] ${
-        checked || selected ? "border-emerald-400/70" : "border-slate-600"
+      className={`border bg-[#081126] transition-all ${
+        lifecycle.isPending
+          ? "border-amber-500/40 bg-amber-950/10"
+          : checked || selected
+            ? "border-emerald-400/70"
+            : "border-slate-600"
       }`}
     >
       <div className="flex items-start">
         <label
-          className="flex shrink-0 cursor-pointer flex-col items-center gap-1 px-3 pt-4"
+          className={`flex shrink-0 flex-col items-center gap-1 px-3 pt-4 ${
+            lifecycle.isPending ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+          }`}
           onClick={e => e.stopPropagation()}
         >
           <input
             type="checkbox"
             checked={checked}
-            onChange={onToggle}
+            disabled={lifecycle.isPending}
+            onChange={lifecycle.isPending ? undefined : onToggle}
             aria-label={`${checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL} ${card.jobTitle} on the CRM desk`}
-            className="h-5 w-5 accent-emerald-400"
+            className="h-5 w-5 accent-emerald-400 disabled:opacity-40"
           />
           <span
             className={`font-mono text-xs font-bold uppercase tracking-[0.08em] ${
-              checked ? "text-emerald-300" : "text-slate-500"
+              lifecycle.isPending
+                ? "text-amber-400/70"
+                : checked
+                  ? "text-emerald-300"
+                  : "text-slate-500"
             }`}
           >
-            {checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL}
+            {lifecycle.isPending ? "FULL" : checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL}
           </span>
         </label>
         <button
@@ -3635,11 +3726,23 @@ function JobCard({
           className="flex min-w-0 flex-1 items-start gap-3 py-4 pr-4 text-left"
         >
           <span className="flex-1">
-            <span className={JOBS_ROBOT_NAME_CLASS}>{card.jobTitle}</span>
+            <div className="flex flex-wrap items-center gap-2 mb-1">
+              <span className={JOBS_ROBOT_NAME_CLASS}>{card.jobTitle}</span>
+              <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-wider border ${lifecycle.badgeClass}`}>
+                {lifecycle.statusLabel}
+              </span>
+            </div>
             {place ? <span className={JOBS_PLACE_CLASS}>{place}</span> : null}
-            <span className={JOBS_META_CLASS}>
-              {jobIndexLabel(index)} · {card.qualificationLabel}
-            </span>
+            <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-xs text-slate-400">
+              <span>{jobIndexLabel(index)}</span>
+              <span>·</span>
+              <span className="text-slate-300">{lifecycle.subLabel}</span>
+            </div>
+            {lifecycle.isPending && (
+              <p className="mt-1.5 text-xs font-medium text-amber-300/90 bg-amber-950/40 border border-amber-500/30 px-2.5 py-1.5 rounded">
+                ⚠️ Applicants under review (3/3 spots filled). No further proposals are currently accepted to avoid spamming the opportunity.
+              </p>
+            )}
             {card.modelContract?.listLine ? (
               <span className={JOBS_PLACE_CLASS}>
                 {card.modelContract.listLine}
