@@ -225,7 +225,7 @@ export default function JobsLanding() {
             href="/newsletter"
             className="inline-flex items-center gap-1 text-sm font-semibold font-mono text-emerald-400 hover:text-emerald-300 underline underline-offset-4 transition-all"
           >
-            <span>📰 Daily Newsletter →</span>
+            <span>Daily Newsletter →</span>
           </a>
         </div>
       </section>

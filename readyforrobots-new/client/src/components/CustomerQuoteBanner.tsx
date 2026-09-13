@@ -40,14 +40,6 @@ export default function CustomerQuoteBanner() {
             <span className="text-slate-400">
               {activeQuote.title}, <strong className="text-slate-200">{activeQuote.company}</strong>
             </span>
-            <span className="text-slate-600">·</span>
-            <Link
-              href="/pricing"
-              className="inline-flex items-center gap-0.5 text-emerald-400 hover:text-emerald-300 font-mono font-bold text-[11px] underline underline-offset-2"
-            >
-              <span>Activate Outreach ($19.99/mo)</span>
-              <ArrowUpRight className="h-3 w-3" />
-            </Link>
           </div>
         </div>
       </div>
