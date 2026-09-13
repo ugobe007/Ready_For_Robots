@@ -213,8 +213,8 @@ export default function JobsLanding() {
           <CustomerQuoteBanner />
         </div>
 
-        {/* Action Links centered */}
-        <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-center gap-4 my-2">
+        {/* Action Links pulled to left margin */}
+        <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-start gap-4 my-2">
           <a
             href={jobsCandidatesHref()}
             className="rfr-landing-employer-link"
@@ -223,7 +223,7 @@ export default function JobsLanding() {
           </a>
           <a
             href="/newsletter"
-            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400 px-4 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-400/10 transition-all"
+            className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300 font-mono underline underline-offset-2 transition-all"
           >
             <span>📰 Read Daily Newsletter →</span>
           </a>

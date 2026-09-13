@@ -50,27 +50,6 @@ export default function CustomerQuoteBanner() {
             </Link>
           </div>
         </div>
-
-        {/* Minimalist Controls */}
-        <div className="flex items-center gap-1.5 shrink-0 self-end md:self-center text-xs font-mono text-slate-500">
-          <button
-            onClick={handlePrev}
-            className="rounded p-1 hover:bg-white/10 hover:text-white transition-colors"
-            title="Previous Quote"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" />
-          </button>
-          <span>
-            {currentIndex + 1}/{FEATURED_BUYER_QUOTES.length}
-          </span>
-          <button
-            onClick={handleNext}
-            className="rounded p-1 hover:bg-white/10 hover:text-white transition-colors"
-            title="Next Quote"
-          >
-            <ChevronRight className="h-3.5 w-3.5" />
-          </button>
-        </div>
       </div>
     </div>
   );
