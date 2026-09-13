@@ -27,7 +27,9 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
+import { Mail, ArrowRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import DailyMatchBriefModal from "@/components/DailyMatchBriefModal";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsPresentationOffer from "@/components/JobsPresentationOffer";
 import { WorkClassIcon } from "@/components/SiteIcon";
@@ -3219,6 +3221,7 @@ function JobsPanel({
   ).length;
   const showPicker = shouldQualify(analysis);
   const showCrmCtas = !showPicker && !qualifying;
+  const [showBriefModal, setShowBriefModal] = useState(false);
 
   return (
     <div id="jobs-list" className="p-6 sm:p-8">
@@ -3246,6 +3249,36 @@ function JobsPanel({
           </span>
         </p>
       )}
+
+      {/* Free Daily Match Brief Banner */}
+      <div className="mt-4 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-[#170a36] via-[#1a0e3b] to-[#0c1630] p-4 shadow-xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="rounded-xl border border-purple-400/30 bg-purple-500/20 p-2 text-purple-300">
+            <Mail className="h-5 w-5 text-purple-400" />
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-white font-display">Get Free Daily Top 5 Job Matches</h4>
+            <p className="text-xs text-slate-300">Save {analysis.productName} to your free profile & receive daily buyer matches.</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setShowBriefModal(true)}
+          className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-purple-600/30 hover:bg-purple-500 transition"
+        >
+          <span>Save Robot & Daily Brief</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </button>
+      </div>
+
+      <DailyMatchBriefModal
+        isOpen={showBriefModal}
+        onClose={() => setShowBriefModal(false)}
+        robotUrl={robotUrl}
+        robotName={analysis.productName}
+        topMatchesCount={visible.length}
+      />
+
       {matchError ? (
         <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
           {matchError}
