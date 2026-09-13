@@ -223,8 +223,8 @@ export default function JobsLanding() {
         </form>
       </section>
 
-      {/* Featured Daily Customer Intent Quotes Banner */}
-      <section className="rfr-landing-quotes py-4" aria-label="Customer Quotes">
+      {/* Featured Daily Customer Intent Quotes Banner (Supabase style inline) */}
+      <section className="rfr-landing-quotes py-2 my-2 border-t border-b border-slate-800/80 bg-[#081126]/40" aria-label="Customer Quotes">
         <CustomerQuoteBanner />
       </section>
 
