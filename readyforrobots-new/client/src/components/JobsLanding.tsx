@@ -207,28 +207,28 @@ export default function JobsLanding() {
             </button>
           </div>
         </form>
-      </section>
 
-      {/* Featured Daily Customer Intent Quotes (Inline, no box border) */}
-      <section className="rfr-landing-quotes my-2 w-full" aria-label="Customer Quotes">
-        <CustomerQuoteBanner />
-      </section>
+        {/* Featured Daily Customer Intent Quotes (Nesting inside hero container) */}
+        <div className="rfr-landing-quotes my-4 w-full" aria-label="Customer Quotes">
+          <CustomerQuoteBanner />
+        </div>
 
-      {/* Action Links placed below customer quotes & centered */}
-      <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-center gap-4 max-w-5xl mx-auto px-4 my-3">
-        <a
-          href={jobsCandidatesHref()}
-          className="rfr-landing-employer-link"
-        >
-          Employers: Find robots for your job →
-        </a>
-        <a
-          href="/newsletter"
-          className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400 px-4 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-400/10 transition-all"
-        >
-          <span>📰 Read Daily Newsletter →</span>
-        </a>
-      </div>
+        {/* Action Links centered */}
+        <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-center gap-4 my-2">
+          <a
+            href={jobsCandidatesHref()}
+            className="rfr-landing-employer-link"
+          >
+            Employers: Find robots for your job →
+          </a>
+          <a
+            href="/newsletter"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-400 px-4 py-1.5 text-xs font-bold text-emerald-400 hover:bg-emerald-400/10 transition-all"
+          >
+            <span>📰 Read Daily Newsletter →</span>
+          </a>
+        </div>
+      </section>
 
       <section className="rfr-landing-brief" aria-label="Live job feed">
         <h2 className="rfr-landing-brief-headline">{LANDING_BRIEF_HEADLINE}</h2>
