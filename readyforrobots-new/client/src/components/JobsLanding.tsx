@@ -208,30 +208,30 @@ export default function JobsLanding() {
           </div>
         </form>
 
-        {/* Featured Daily Customer Intent Quotes (Nesting inside hero container) */}
-        <div className="rfr-landing-quotes my-4 w-full" aria-label="Customer Quotes">
+        {/* Featured Daily Customer Intent Quotes with comfortable top padding */}
+        <div className="rfr-landing-quotes mt-8 mb-5 w-full pt-1" aria-label="Customer Quotes">
           <CustomerQuoteBanner />
         </div>
 
-        {/* Action Links pulled to left margin */}
-        <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-start gap-4 my-2">
+        {/* Action Links pulled to left margin with normalized text-sm font */}
+        <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-start gap-5 my-3">
           <a
             href={jobsCandidatesHref()}
-            className="rfr-landing-employer-link"
+            className="rfr-landing-employer-link inline-flex items-center gap-1 text-sm font-semibold font-mono text-[#d6b15d] hover:text-[#f0cb75] underline underline-offset-4 transition-all"
           >
             Employers: Find robots for your job →
           </a>
           <a
             href="/newsletter"
-            className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-400 hover:text-emerald-300 font-mono underline underline-offset-2 transition-all"
+            className="inline-flex items-center gap-1 text-sm font-semibold font-mono text-emerald-400 hover:text-emerald-300 underline underline-offset-4 transition-all"
           >
-            <span>📰 Read Daily Newsletter →</span>
+            <span>📰 Daily Newsletter →</span>
           </a>
         </div>
       </section>
 
       <section className="rfr-landing-brief" aria-label="Live job feed">
-        <h2 className="rfr-landing-brief-headline">{LANDING_BRIEF_HEADLINE}</h2>
+        <h2 className="rfr-landing-brief-headline">Jobs for <span className="text-emerald-400">robots.</span></h2>
         <p className="rfr-landing-brief-note">{LANDING_BRIEF_NOTE}</p>
         <div className="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-[#081126] shadow-2xl">
           <LiveJobTape

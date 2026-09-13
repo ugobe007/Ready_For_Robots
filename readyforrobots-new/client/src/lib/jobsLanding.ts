@@ -40,7 +40,7 @@ export const LANDING_HEADLINE_AFTER = "";
 export const LANDING_HEADLINE_LEAD = `${LANDING_HEADLINE_BEFORE}${LANDING_HEADLINE_ROBOT}${LANDING_HEADLINE_AFTER}`;
 export const LANDING_HEADLINE_END = "to Work.";
 export const LANDING_SUBHEAD =
-  "Paste a robot product page. We’ll match its capabilities to real jobs.";
+  "Submit your robot URL to find jobs that match your robot.";
 export const LANDING_INTRO =
   "Submit your robot URL or your robot job. We put robots to work.";
 export const LANDING_CTA_ROBOT_WORD = "Robots";
