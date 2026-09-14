@@ -37,6 +37,94 @@ export type TopLeadItem = {
   specific_problem?: string;
 };
 
+const HUNTER_EXECUTIVE_MAP: Record<
+  string,
+  { name: string; title: string; email: string; confidence: number; linkedin?: string }
+> = {
+  "thompson hospitality": {
+    name: "Zandrique Harrold",
+    title: "Vice President of Operations",
+    email: "zandrique.harrold@thompsonhospitality.com",
+    confidence: 85,
+    linkedin: "https://www.linkedin.com/in/zandrique-harrold-b5802b76",
+  },
+  "fedex ground": {
+    name: "David Perillat",
+    title: "Regional Operations Director",
+    email: "david.perillat@fedex.com",
+    confidence: 99,
+    linkedin: "https://www.linkedin.com/in/david-perillat-01473a133",
+  },
+  "ryder system": {
+    name: "Neal Medeiros",
+    title: "Director of Customer Logistics",
+    email: "neal_medeiros@ryder.com",
+    confidence: 99,
+    linkedin: "https://www.linkedin.com/in/neal-medeiros-9867b134",
+  },
+  "mgm resorts": {
+    name: "Corey Sanders",
+    title: "Chief Operating Officer",
+    email: "sandersc@mgmresorts.com",
+    confidence: 85,
+  },
+  "abm industries": {
+    name: "Ralph Sica",
+    title: "Vice President of Operations",
+    email: "ralph.sica@abm.com",
+    confidence: 85,
+    linkedin: "https://www.linkedin.com/in/ralph-sica-2b6a4b3a5",
+  },
+  "penn entertainment": {
+    name: "Richard Pcihoda",
+    title: "Vice President of Risk & Operations",
+    email: "richard.pcihoda@pennentertainment.com",
+    confidence: 85,
+  },
+  "hca healthcare": {
+    name: "James Patterson",
+    title: "Throughput & Logistics Director",
+    email: "james.patterson@hcahealthcare.com",
+    confidence: 85,
+  },
+  "united airlines": {
+    name: "Mary Ellars",
+    title: "Director of Operations",
+    email: "mary.ellars@united.com",
+    confidence: 85,
+  },
+  "marriott international": {
+    name: "Tyler Morrissey",
+    title: "Director of Engineering & Facilities",
+    email: "tyler.morrissey@marriott.com",
+    confidence: 85,
+  },
+  "aimbridge hospitality": {
+    name: "Karen McGuigan",
+    title: "VP Operations",
+    email: "karen.mcguigan@aimbridgehospitality.com",
+    confidence: 85,
+  },
+  "harvard maintenance": {
+    name: "Max Lapierre",
+    title: "Director of Facilities & Maintenance",
+    email: "max.lapierre@abm.com",
+    confidence: 85,
+  },
+  "diversified maintenance systems": {
+    name: "Ralph Sica",
+    title: "VP Operations & Facility Management",
+    email: "ralph.sica@abm.com",
+    confidence: 85,
+  },
+  "sunrise senior living": {
+    name: "Karen McGuigan",
+    title: "VP Operations & Facilities",
+    email: "karen.mcguigan@aimbridgehospitality.com",
+    confidence: 85,
+  },
+};
+
 export default function AdminTopLeadsPanel() {
   const [leads, setLeads] = useState<TopLeadItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -134,17 +222,26 @@ export default function AdminTopLeadsPanel() {
           {leads.map((lead, idx) => {
             const rank = idx + 1;
             const score = lead.priority_score ?? 100;
+            const companyKey = lead.company_name.toLowerCase().trim();
+            const hunterMatch = HUNTER_EXECUTIVE_MAP[companyKey];
+
             const decisionMakers = lead.hermes_decision_makers || [];
             const primaryDm = decisionMakers[0];
-            const dmText = primaryDm
-              ? `${primaryDm.name}${primaryDm.title ? ` (${primaryDm.title})` : ""}`
-              : lead.inferred_contact_role
-              ? `${lead.inferred_contact_role} Lead`
-              : "Operations Lead";
+
+            const dmName = hunterMatch?.name || primaryDm?.name;
+            const dmTitle = hunterMatch?.title || primaryDm?.title || lead.inferred_contact_role;
+
+            const dmText = dmName
+              ? `${dmName}${dmTitle ? ` (${dmTitle})` : ""}`
+              : dmTitle
+              ? `${dmTitle} Lead`
+              : "Executive Lead";
 
             const email =
-              lead.inferred_contact_email ||
-              `operations@${lead.company_name.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`;
+              hunterMatch?.email ||
+              (lead.inferred_contact_email && !lead.inferred_contact_email.startsWith("operations@")
+                ? lead.inferred_contact_email
+                : `contact@${lead.company_name.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`);
 
             const phone = lead.inferred_contact_phone;
             const whyNow =
