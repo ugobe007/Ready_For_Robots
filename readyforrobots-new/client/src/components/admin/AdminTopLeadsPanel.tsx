@@ -163,6 +163,8 @@ As peak operational load rises, operators are increasingly turning to ${robotCat
 
 ReadyForRobots provides vendor-neutral automation feasibility assessments comparing the leading commercial robotics platforms. We evaluate payload, battery cycle times, floor navigation, and net ROI before capital is committed. I have attached our Humanoid Report for review. More information available here: https://readyforrobots.com/robot-ready
 
+My own background—> I led robotics at Panasonic and built 3 robot companies.
+
 Would you be open to a brief 10-minute introduction this week to review our comparative benchmarking report for your automation roadmap?
 
 Best regards,
