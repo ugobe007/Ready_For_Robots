@@ -141,13 +141,40 @@ const HUNTER_EXECUTIVE_MAP: Record<
     email: "ralph.sica@abm.com",
     confidence: 85,
   },
-  "sunrise senior living": {
-    name: "Karen McGuigan",
-    title: "VP Operations & Facilities",
-    email: "karen.mcguigan@aimbridgehospitality.com",
-    confidence: 85,
-  },
 };
+
+export function buildBobExecutiveEmail(opts: {
+  companyName: string;
+  dmName?: string;
+  robotTypes?: string[];
+}): { subject: string; body: string } {
+  const name = opts.dmName ? opts.dmName.split(" ")[0] : "there";
+  const company = opts.companyName;
+  const robotCategories =
+    (opts.robotTypes || []).slice(0, 2).join(" and ") ||
+    "collaborative service robots and mobile manipulators";
+
+  const subject = `Automation Feasibility Assessment for ${company}`;
+  const body = `Dear ${name},
+
+Nice to meet you. I'm reaching out directly regarding ${company}'s operational footprint and current front-line staffing demands across your locations.
+
+As peak operational load rises, operators are increasingly turning to ${robotCategories} to handle repetitive physical movement and facility tasks. This allows on-site teams to focus entirely on core operations while eliminating 30–40% of physical transport strain.
+
+ReadyForRobots provides vendor-neutral automation feasibility assessments comparing the leading commercial robotics platforms. We evaluate payload, battery cycle times, floor navigation, and net ROI before capital is committed. I have attached our Humanoid Report for review. More information available here: https://readyforrobots.com/robot-ready
+
+Would you be open to a brief 10-minute introduction this week to review our comparative benchmarking report for your automation roadmap?
+
+Best regards,
+Bob
+
+Bob Christopher
+President
+ReadyForRobots
+bob@readyforrobots.com`;
+
+  return { subject, body };
+}
 
 export default function AdminTopLeadsPanel() {
   const [leads, setLeads] = useState<TopLeadItem[]>([]);
@@ -183,8 +210,17 @@ export default function AdminTopLeadsPanel() {
   }, [fetchTopLeads]);
 
   const copyPitch = (lead: TopLeadItem) => {
-    const text = `Company: ${lead.company_name}\nContact: ${lead.inferred_contact_email}\nPhone: ${lead.inferred_contact_phone || "N/A"}\nWhy Now: ${lead.cal_seller_brief?.why_now || lead.specific_problem || "Active automation intent"}`;
-    void navigator.clipboard.writeText(text);
+    const companyKey = lead.company_name.toLowerCase().trim();
+    const hunterMatch = HUNTER_EXECUTIVE_MAP[companyKey];
+    const decisionMakers = lead.hermes_decision_makers || [];
+    const dmName = hunterMatch?.name || decisionMakers[0]?.name;
+    const emailData = buildBobExecutiveEmail({
+      companyName: lead.company_name,
+      dmName,
+      robotTypes: lead.robot_types_needed,
+    });
+    const fullText = `Subject: ${emailData.subject}\n\nTo: ${hunterMatch?.email || lead.inferred_contact_email || ""}\n\n${emailData.body}`;
+    void navigator.clipboard.writeText(fullText);
     setCopiedId(lead.id);
     setTimeout(() => setCopiedId(null), 2000);
   };
@@ -392,15 +428,24 @@ export default function AdminTopLeadsPanel() {
                         Call
                       </a>
                     )}
-                    <a
-                      href={`mailto:${email}?subject=Automation%20Feasibility%20Assessment%20for%20${encodeURIComponent(
-                        lead.company_name
-                      )}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 border border-emerald-500 px-3 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500 transition shadow-sm"
-                    >
-                      <Mail className="h-3 w-3" />
-                      Email Lead
-                    </a>
+                    {(() => {
+                      const emailData = buildBobExecutiveEmail({
+                        companyName: lead.company_name,
+                        dmName,
+                        robotTypes: lead.robot_types_needed,
+                      });
+                      return (
+                        <a
+                          href={`mailto:${email}?subject=${encodeURIComponent(
+                            emailData.subject
+                          )}&body=${encodeURIComponent(emailData.body)}`}
+                          className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 border border-emerald-500 px-3 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500 transition shadow-sm"
+                        >
+                          <Mail className="h-3 w-3" />
+                          Email Lead
+                        </a>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
