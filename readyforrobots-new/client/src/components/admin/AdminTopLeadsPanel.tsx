@@ -87,11 +87,35 @@ const HUNTER_EXECUTIVE_MAP: Record<
     email: "james.patterson@hcahealthcare.com",
     confidence: 85,
   },
+  "united": {
+    name: "Holden Shannon",
+    title: "Senior Vice President of Operations",
+    email: "holden.shannon@united.com",
+    confidence: 85,
+  },
   "united airlines": {
     name: "Mary Ellars",
     title: "Director of Operations",
     email: "mary.ellars@united.com",
     confidence: 85,
+  },
+  "tampa bay": {
+    name: "Alicia Pletcher",
+    title: "Director of Operations (Wish Farms AG)",
+    email: "apletcher@wishfarms.com",
+    confidence: 97,
+  },
+  "wish farms": {
+    name: "Alicia Pletcher",
+    title: "Director of Operations",
+    email: "apletcher@wishfarms.com",
+    confidence: 97,
+  },
+  "wish farms (tampa bay ag)": {
+    name: "Joel Whitehead",
+    title: "Director of Grower Relations & Field Automation",
+    email: "jwhitehead@wishfarms.com",
+    confidence: 99,
   },
   "marriott international": {
     name: "Tyler Morrissey",
