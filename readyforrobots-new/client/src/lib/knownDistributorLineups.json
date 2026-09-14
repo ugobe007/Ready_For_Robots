@@ -1,0 +1,239 @@
+{
+  "crossco.com": {
+    "distributor_name": "Cross Company Robotics",
+    "domain": "crossco.com",
+    "territory": "North America (Southeast & Mid-Atlantic)",
+    "supported_brands": [
+      "Universal Robots",
+      "Mobile Industrial Robots (MiR)",
+      "Epson Robots",
+      "Robotiq",
+      "OnRobot"
+    ],
+    "robot_categories": ["cobot", "amr", "scara", "gripper"],
+    "services": ["Automation Integration", "Custom End-Effectors", "Safety Audits", "PLC Programming"],
+    "product_mix": [
+      {
+        "brand": "Universal Robots",
+        "name": "UR3e / UR5e / UR10e / UR20 / UR30",
+        "description": "Collaborative robotic arms for machine tending, palletizing, and assembly (3kg to 30kg payload).",
+        "display_class": "cobot"
+      },
+      {
+        "brand": "Mobile Industrial Robots (MiR)",
+        "name": "MiR250 / MiR600 / MiR1350",
+        "description": "Autonomous Mobile Robots (AMRs) for internal logistics, payload transport, and pallet moving.",
+        "display_class": "amr"
+      },
+      {
+        "brand": "Epson Robots",
+        "name": "Epson T-Series & G-Series SCARA",
+        "description": "High-speed SCARA robots for kitting, pick-and-place, and electronic assembly.",
+        "display_class": "scara"
+      },
+      {
+        "brand": "Robotiq",
+        "name": "Robotiq 2F-85 / 2F-140 & AirPick Vacuum",
+        "description": "Adaptive grippers, vacuum end-effectors, and force torque sensors for cobots.",
+        "display_class": "gripper"
+      }
+    ]
+  },
+  "motion.com": {
+    "distributor_name": "Motion Automation Intelligence",
+    "domain": "motion.com",
+    "territory": "North America Nationwide",
+    "supported_brands": [
+      "FANUC",
+      "Universal Robots",
+      "ABB",
+      "Yaskawa Motoman",
+      "Omron",
+      "MiR"
+    ],
+    "robot_categories": ["6-axis", "cobot", "amr", "scara", "palletizer"],
+    "services": ["Turnkey Automation Systems", "Robot Cell Design", "Vision Guided Robotics", "Sub-System Assembly"],
+    "product_mix": [
+      {
+        "brand": "FANUC",
+        "name": "FANUC LR Mate & M-20iB 6-Axis Series",
+        "description": "Industrial 6-axis robot arms for arc welding, material handling, and high-speed palletizing.",
+        "display_class": "6-axis"
+      },
+      {
+        "brand": "Universal Robots",
+        "name": "UR Cobot Lineup (e-Series & Next-Gen)",
+        "description": "Flexible collaborative arms for human-alongside manufacturing.",
+        "display_class": "cobot"
+      },
+      {
+        "brand": "Omron",
+        "name": "Omron HD-1500 & LD-90 AMRs",
+        "description": "Heavy-duty autonomous mobile robots for warehouse palleted material transfer.",
+        "display_class": "amr"
+      },
+      {
+        "brand": "ABB",
+        "name": "ABB GoFa & YuMi Series",
+        "description": "Dual-arm and single-arm collaborative assembly robots.",
+        "display_class": "cobot"
+      }
+    ]
+  },
+  "gibsonengineering.com": {
+    "distributor_name": "Gibson Engineering",
+    "domain": "gibsonengineering.com",
+    "territory": "North America (Northeast & Mid-Atlantic)",
+    "supported_brands": [
+      "Universal Robots",
+      "Mobile Industrial Robots (MiR)",
+      "Denso Robotics",
+      "Festo",
+      "Robotiq"
+    ],
+    "robot_categories": ["cobot", "amr", "scara", "6-axis"],
+    "services": ["Machine Vision", "Robot Cell Safety", "Motion Control", "System Proof-of-Concept Testing"],
+    "product_mix": [
+      {
+        "brand": "Universal Robots",
+        "name": "UR e-Series Collaborative Arms",
+        "description": "Precision cobots for dispensing, screwdriving, and machine tending.",
+        "display_class": "cobot"
+      },
+      {
+        "brand": "Mobile Industrial Robots (MiR)",
+        "name": "MiR Fleet & Top Modules",
+        "description": "Automated material conveyance AMRs with integrated shelf-carriers.",
+        "display_class": "amr"
+      },
+      {
+        "brand": "Denso Robotics",
+        "name": "Denso VS-Series 6-Axis & HS-Series SCARA",
+        "description": "Compact cleanroom industrial arms for medical device and pharmaceutical manufacturing.",
+        "display_class": "6-axis"
+      }
+    ]
+  },
+  "neffautomation.com": {
+    "distributor_name": "NEFF Automation",
+    "domain": "neffautomation.com",
+    "territory": "North America (Midwest)",
+    "supported_brands": [
+      "Yamaha Robotics",
+      "Universal Robots",
+      "MiR",
+      "80/20 Structural Framing",
+      "Cognex Vision"
+    ],
+    "robot_categories": ["cobot", "amr", "scara", "linear"],
+    "services": ["Industrial Automation", "Pneumatic Control", "Machine Safety", "Vision Inspection"],
+    "product_mix": [
+      {
+        "brand": "Yamaha Robotics",
+        "name": "Yamaha YK-XG SCARA & YRG Linear Modules",
+        "description": "High-speed SCARA and single-axis cartesian robots for high-throughput assembly.",
+        "display_class": "scara"
+      },
+      {
+        "brand": "Universal Robots",
+        "name": "UR Cobots & Palletizing Cells",
+        "description": "Pre-engineered cobot palletizing and machine loading workstations.",
+        "display_class": "cobot"
+      },
+      {
+        "brand": "MiR",
+        "name": "MiR Autonomous Mobile Transport",
+        "description": "Intralogistics AMRs replacing traditional AGVs and manual cart pulling.",
+        "display_class": "amr"
+      }
+    ]
+  },
+  "olympuscontrols.com": {
+    "distributor_name": "Olympus Controls",
+    "domain": "olympuscontrols.com",
+    "territory": "North America (Pacific Northwest & West)",
+    "supported_brands": [
+      "Universal Robots",
+      "MiR",
+      "Epson Robots",
+      "Asyril Flexible Feeders",
+      "Robotiq"
+    ],
+    "robot_categories": ["cobot", "amr", "scara", "feeder"],
+    "services": ["Mechatronics Engineering", "Vision & Robotics Integration", "Proof-of-Concept Lab"],
+    "product_mix": [
+      {
+        "brand": "Universal Robots",
+        "name": "UR Collaborative Robots",
+        "description": "Cobot arms tailored for semiconductor and electronics manufacturing.",
+        "display_class": "cobot"
+      },
+      {
+        "brand": "Epson Robots",
+        "name": "Epson LS & G SCARA Series",
+        "description": "Precision SCARA arms for high-volume part feeding and inspection.",
+        "display_class": "scara"
+      },
+      {
+        "brand": "MiR",
+        "name": "MiR Fleet Logistics Robots",
+        "description": "Autonomous material movement for high-tech cleanroom environments.",
+        "display_class": "amr"
+      }
+    ]
+  },
+  "rg-group.com": {
+    "distributor_name": "RG Group Robotics & Automation",
+    "domain": "rg-group.com",
+    "territory": "North America (Mid-Atlantic)",
+    "supported_brands": [
+      "Doosan Robotics",
+      "MiR",
+      "Festo",
+      "OnRobot"
+    ],
+    "robot_categories": ["cobot", "amr", "gripper"],
+    "services": ["Fluid Power & Motion", "Collaborative Workcells", "Custom Automation Solutions"],
+    "product_mix": [
+      {
+        "brand": "Doosan Robotics",
+        "name": "Doosan M-Series, A-Series & H-Series Cobots",
+        "description": "High-torque collaborative arms with direct force control (up to 25kg payload).",
+        "display_class": "cobot"
+      },
+      {
+        "brand": "MiR",
+        "name": "MiR Autonomous Mobile Transport",
+        "description": "Heavy-duty autonomous mobile robots for industrial material transport.",
+        "display_class": "amr"
+      }
+    ]
+  },
+  "alliedhightech.com": {
+    "distributor_name": "Allied Automation",
+    "domain": "alliedhightech.com",
+    "territory": "North America (Midwest)",
+    "supported_brands": [
+      "Mitsubishi Electric",
+      "Universal Robots",
+      "MiR",
+      "Kawasaki Robotics"
+    ],
+    "robot_categories": ["6-axis", "cobot", "amr", "scara"],
+    "services": ["PLC Programming", "Motion Control Engineering", "Robotic Workcell Integration"],
+    "product_mix": [
+      {
+        "brand": "Mitsubishi Electric",
+        "name": "MELFA RV-Series 6-Axis & RH-Series SCARA",
+        "description": "High-precision industrial arms for semiconductor and automotive part handling.",
+        "display_class": "6-axis"
+      },
+      {
+        "brand": "Kawasaki Robotics",
+        "name": "Kawasaki R-Series & duAaro Dual-Arm Cobot",
+        "description": "Dual-arm collaborative and heavy payload industrial arms.",
+        "display_class": "cobot"
+      }
+    ]
+  }
+}

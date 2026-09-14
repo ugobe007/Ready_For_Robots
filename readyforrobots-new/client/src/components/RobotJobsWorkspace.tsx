@@ -42,6 +42,7 @@ import {
 } from "@/lib/robotJobSearch";
 import { fetchOemListing, fetchRobotProfile } from "@/lib/robotProfile";
 import { hostFromOemUrl, lookupKnownOem } from "@/lib/knownOemLineups";
+import { lookupKnownDistributor } from "@/lib/knownDistributorLineups";
 import {
   I_KNOW_THE_ROBOT_HINT,
   I_KNOW_THE_ROBOT_LABEL,
@@ -961,7 +962,17 @@ export default function RobotJobsWorkspace() {
     });
     const live = () => stillThisSubmit(submitUrl, research);
     try {
-      const known = lookupKnownOem(submitUrl);
+      const knownDist = lookupKnownDistributor(submitUrl);
+      const known = knownDist
+        ? {
+            vendor_name: `${knownDist.distributor_name} (Distributor)`,
+            robots: knownDist.product_mix.map(p => ({
+              name: `${p.brand} ${p.name}`,
+              description: p.description,
+              display_class: p.display_class,
+            })),
+          }
+        : lookupKnownOem(submitUrl);
       if (known && known.robots.length > 0) {
         if (!live()) return;
         setCompanyName(known.vendor_name || "");
@@ -1173,7 +1184,17 @@ export default function RobotJobsWorkspace() {
       );
 
       // Systemic Resilience Fallback: Never dead-end on network timeouts or scraping failures.
-      const fallbackKnown = lookupKnownOem(submitUrl);
+      const fallbackDist = lookupKnownDistributor(submitUrl);
+      const fallbackKnown = fallbackDist
+        ? {
+            vendor_name: `${fallbackDist.distributor_name} (Distributor)`,
+            robots: fallbackDist.product_mix.map(p => ({
+              name: `${p.brand} ${p.name}`,
+              description: p.description,
+              display_class: p.display_class,
+            })),
+          }
+        : lookupKnownOem(submitUrl);
       if (fallbackKnown && fallbackKnown.robots.length > 0) {
         setCompanyName(fallbackKnown.vendor_name || "");
         const lineup = filterJobsLineupProducts(
