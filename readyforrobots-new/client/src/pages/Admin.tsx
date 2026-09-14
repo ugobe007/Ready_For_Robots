@@ -32,6 +32,7 @@ import CalWorkflowPanel, {
 import CalLearningPanel from "@/components/admin/CalLearningPanel";
 import SiteMetricsPanel from "@/components/admin/SiteMetricsPanel";
 import AdminTopLeadsPanel from "@/components/admin/AdminTopLeadsPanel";
+import AdminBenchmarkingReportsPanel from "@/components/admin/AdminBenchmarkingReportsPanel";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAdminSnapshotSync } from "@/hooks/useAdminSnapshotSync";
@@ -3200,6 +3201,8 @@ export default function Admin() {
         </Link>
 
         <AdminTopLeadsPanel />
+
+        <AdminBenchmarkingReportsPanel />
 
         <DailyBriefPanel
           data={dailyBrief}
