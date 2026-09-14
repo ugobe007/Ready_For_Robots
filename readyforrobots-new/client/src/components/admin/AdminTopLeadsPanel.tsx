@@ -126,8 +126,14 @@ const HUNTER_EXECUTIVE_MAP: Record<
   "aimbridge hospitality": {
     name: "Karen McGuigan",
     title: "VP Operations",
-    email: "karen.mcguigan@aimbridgehospitality.com",
+    email: "karen.mcguigan@aimbridge.com",
     confidence: 85,
+  },
+  "aimbridge": {
+    name: "Tim Pruiett",
+    title: "Senior Vice President of Operations",
+    email: "tim.pruiett@aimbridge.com",
+    confidence: 83,
   },
   "harvard maintenance": {
     name: "Max Lapierre",
