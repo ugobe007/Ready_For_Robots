@@ -41,13 +41,41 @@ export default function IndustryBenchmarkingReport() {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const handleDownloadPdf = () => {
+    if (typeof window !== "undefined") {
+      window.print();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#060d1f] text-slate-100 font-sans selection:bg-emerald-500 selection:text-white">
-      <ExperimentHeader />
+      <style>{`
+        @media print {
+          .no-print, header, footer, nav { display: none !important; }
+          body { background: #ffffff !important; color: #000000 !important; }
+          main { padding-top: 0 !important; max-width: 100% !important; }
+          .print-header { display: block !important; margin-bottom: 20px; border-bottom: 2px solid #10b981; pb-3; }
+          .print-border { border: 1px solid #cccccc !important; background: #f8fafc !important; color: #000000 !important; }
+          table { width: 100% !important; border-collapse: collapse !important; color: #000000 !important; }
+          th, td { border: 1px solid #dddddd !important; padding: 8px !important; color: #000000 !important; }
+          th { background: #f1f5f9 !important; color: #000000 !important; font-weight: bold !important; }
+        }
+      `}</style>
+      <div className="no-print">
+        <ExperimentHeader />
+      </div>
 
       <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pt-24 pb-16">
+        {/* Printable Header Banner */}
+        <div className="hidden print-header">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-black text-black">ReadyForRobots</h2>
+            <span className="text-xs font-semibold text-gray-600">Executive Industry Benchmarking Report · 2026</span>
+          </div>
+        </div>
+
         {/* Breadcrumb */}
-        <div className="mb-6 flex items-center gap-2 text-xs text-slate-400">
+        <div className="no-print mb-6 flex items-center gap-2 text-xs text-slate-400">
           <Link href="/pipeline" className="hover:text-emerald-400 transition">
             Workspace
           </Link>
@@ -60,7 +88,7 @@ export default function IndustryBenchmarkingReport() {
         {/* Hero Title & Actions */}
         <div className="mb-8 flex flex-wrap items-start justify-between gap-6 border-b border-slate-800 pb-8">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-950/60 px-3.5 py-1 text-xs font-bold text-emerald-300 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-950/60 px-3.5 py-1 text-xs font-bold text-emerald-300 backdrop-blur-md no-print">
               <Award className="h-3.5 w-3.5 text-amber-400" />
               Comparative Industry Benchmarks · 2026 Edition
             </div>
@@ -72,7 +100,7 @@ export default function IndustryBenchmarkingReport() {
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="no-print flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={copyShareableLink}
@@ -91,20 +119,19 @@ export default function IndustryBenchmarkingReport() {
               )}
             </button>
 
-            <a
-              href="https://readyforrobots.com/robot-ready"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
               className="inline-flex items-center gap-2 rounded-xl border border-emerald-500 bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white transition hover:bg-emerald-500 shadow-lg shadow-emerald-950/50"
             >
               <Download className="h-4 w-4" />
               Download Full Report (PDF)
-            </a>
+            </button>
           </div>
         </div>
 
         {/* Industry Selector Tabs */}
-        <div className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-slate-800 bg-[#0b162c] p-2 shadow-xl">
+        <div className="no-print mb-8 flex flex-wrap gap-2 rounded-2xl border border-slate-800 bg-[#0b162c] p-2 shadow-xl">
           {Object.values(INDUSTRY_BENCHMARKS).map(item => {
             const active = report.id === item.id;
             return (
