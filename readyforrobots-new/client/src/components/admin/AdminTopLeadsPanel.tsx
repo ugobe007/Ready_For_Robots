@@ -230,20 +230,18 @@ export function buildBobExecutiveEmail(opts: {
 }): { subject: string; body: string } {
   const name = opts.dmName ? opts.dmName.split(" ")[0] : "there";
   const company = opts.companyName;
-  const robotCategories =
-    (opts.robotTypes || []).slice(0, 2).join(" and ") ||
-    "collaborative service robots and mobile manipulators";
+  const companyPossessive = company.endsWith("s") ? `${company}’` : `${company}’s`;
 
   const subject = `Robotics feasibility at ${company}?`;
   const body = `Dear ${name},
 
-Hope you’re having a great week.
+Nice to meet you.
 
-I’m reaching out because we’ve been following ${company}’s growth and operational scale. Across commercial robotics today, we see an interesting pattern: market demand for automation is high, but getting from an impressive demonstration to a repeatable, scalable deployment in real facility environments is much harder than vendors acknowledge.
+I am with ReadyForRobots, we provide independent, vendor-neutral feasibility benchmarks comparing leading commercial platforms across duty cycles, floor navigation, and real-world payback targets.
 
-Having spent my career in robotics—leading teams at Panasonic and building 3 robot companies—I founded ReadyForRobots to help enterprise operators evaluate the noise. We provide independent, vendor-neutral feasibility benchmarks comparing leading commercial platforms (${robotCategories}) across duty cycles, floor navigation, and real-world payback targets.
+I’m reaching out because we’ve been following ${companyPossessive} growth and operational scale. In commercial robotics today, we see an interesting pattern: market demand for automation is high, but getting from an impressive demonstration to a scalable deployment in real facility environments is much harder than vendors acknowledge.
 
-If you’re currently evaluating automation options or planning for upcoming operational loads, I’d be glad to share our latest 2-page benchmark report.
+Having spent my career in robotics—leading teams at Panasonic, RichTech Robotics and Anybots—I founded ReadyForRobots to help enterprise operators evaluate the noise. If you’re currently evaluating automation options or planning for upcoming operational loads, I’d be glad to share our latest 2-page benchmark report.
 
 Either way, I’d be curious to hear how your team is thinking about robotics feasibility across your facilities right now.
 
