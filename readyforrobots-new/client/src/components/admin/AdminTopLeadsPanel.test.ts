@@ -6,7 +6,7 @@ describe("AdminTopLeadsPanel component module", () => {
     expect(typeof AdminTopLeadsPanel).toBe("function");
   });
 
-  it("builds un-assuming, curious executive email with Bob's Panasonic authority", () => {
+  it("builds warm greeting & thesis executive email with Bob's Panasonic authority", () => {
     const email = buildBobExecutiveEmail({
       companyName: "FedEx Ground",
       dmName: "David Perillat",
@@ -15,8 +15,9 @@ describe("AdminTopLeadsPanel component module", () => {
 
     expect(email.subject).toBe("Robotics feasibility at FedEx Ground?");
     expect(email.body).toContain("Dear David,");
-    expect(email.body).toContain("I’m reaching out with a simple question regarding FedEx Ground’s operational roadmap");
-    expect(email.body).toContain("Having spent years in commercial robotics—leading teams at Panasonic and building 3 robot companies");
-    expect(email.body).toContain("Either way, I’d be curious to hear where you see the biggest operational bottlenecks");
+    expect(email.body).toContain("Hope you’re having a great week.");
+    expect(email.body).toContain("getting from an impressive demonstration to a repeatable, scalable deployment in real facility environments is much harder than vendors acknowledge");
+    expect(email.body).toContain("Having spent my career in robotics—leading teams at Panasonic and building 3 robot companies");
+    expect(email.body).toContain("Either way, I’d be curious to hear how your team is thinking about robotics feasibility");
   });
 });

@@ -165,15 +165,15 @@ export function buildBobExecutiveEmail(opts: {
   const subject = `Robotics feasibility at ${company}?`;
   const body = `Dear ${name},
 
-I’m reaching out with a simple question regarding ${company}’s operational roadmap: Are you currently evaluating collaborative service robots or AMRs for your facilities this year?
+Hope you’re having a great week.
 
-Having spent years in commercial robotics—leading teams at Panasonic and building 3 robot companies—I founded ReadyForRobots to help enterprise operators navigate a complex market: customer interest in automation is high, but vendor claims on payload, floor navigation, and net ROI vary wildly.
+I’m reaching out because we’ve been following ${company}’s growth and operational scale. Across commercial robotics today, we see an interesting pattern: market demand for automation is high, but getting from an impressive demonstration to a repeatable, scalable deployment in real facility environments is much harder than vendors acknowledge.
 
-We publish independent, vendor-neutral feasibility benchmarks comparing leading commercial platforms (${robotCategories}) across duty cycles, integration friction, and real-world payback targets.
+Having spent my career in robotics—leading teams at Panasonic and building 3 robot companies—I founded ReadyForRobots to help enterprise operators evaluate the noise. We provide independent, vendor-neutral feasibility benchmarks comparing leading commercial platforms (${robotCategories}) across duty cycles, floor navigation, and real-world payback targets.
 
-If you’re currently looking into automation options or planning for upcoming peak operational loads, I’d be glad to share our latest 2-page benchmark report.
+If you’re currently evaluating automation options or planning for upcoming operational loads, I’d be glad to share our latest 2-page benchmark report.
 
-Either way, I’d be curious to hear where you see the biggest operational bottlenecks across your facilities right now.
+Either way, I’d be curious to hear how your team is thinking about robotics feasibility across your facilities right now.
 
 Best regards,
 
