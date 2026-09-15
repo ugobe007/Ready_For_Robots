@@ -160,26 +160,27 @@ export function buildBobExecutiveEmail(opts: {
     (opts.robotTypes || []).slice(0, 2).join(" and ") ||
     "collaborative service robots and mobile manipulators";
 
-  const subject = `Automation Feasibility Assessment for ${company}`;
+  const subject = `Robotics Feasibility & Benchmark Report for ${company}`;
   const body = `Dear ${name},
 
-Nice to meet you. I'm reaching out directly regarding ${company}'s operational footprint and current front-line staffing demands across your locations.
+I’m reaching out because enterprise operators across your sector are actively deploying ${robotCategories} to offset rising front-line staffing pressure and improve facility throughput.
 
-As peak operational load rises, operators are increasingly turning to ${robotCategories} to handle repetitive physical movement and facility tasks. This allows on-site teams to focus entirely on core operations while eliminating 30–40% of physical transport strain.
+Having led robotics at Panasonic and built 3 commercial robot companies, I founded ReadyForRobots to give executive teams unbiased, vendor-neutral feasibility assessments—evaluating payload, battery duty cycles, floor navigation, and net ROI before capital is committed.
 
-ReadyForRobots provides vendor-neutral automation feasibility assessments comparing the leading commercial robotics platforms. We evaluate payload, battery cycle times, floor navigation, and net ROI before capital is committed. I have attached our Humanoid Report for review. More information available here: https://readyforrobots.com/robot-ready
+We recently published our September 2026 Commercial Robotics Intelligence Report, benchmarking top commercial platforms against real-world payback targets (1.1 to 1.4 years).
 
-My own background—> I led robotics at Panasonic and built 3 robot companies.
+I’d be glad to send over a customized 2-page benchmark report specifically tailored to ${company}'s operational footprint.
 
-Would you be open to a brief 10-minute introduction this week to review our comparative benchmarking report for your automation roadmap?
+Would you be open to reviewing the brief, or having a quick 10-minute introduction this week?
 
 Best regards,
+
 Bob
 
 Bob Christopher
-President
-ReadyForRobots
-bob@readyforrobots.com`;
+President | ReadyForRobots
+bob@readyforrobots.com
+https://readyforrobots.com/robot-ready`;
 
   return { subject, body };
 }
