@@ -162,18 +162,18 @@ export function buildBobExecutiveEmail(opts: {
     (opts.robotTypes || []).slice(0, 2).join(" and ") ||
     "collaborative service robots and mobile manipulators";
 
-  const subject = `Robotics Feasibility & Benchmark Report for ${company}`;
+  const subject = `Repeatable robotics deployment vs custom pilots at ${company}`;
   const body = `Dear ${name},
 
-I’m reaching out because enterprise operators across your sector are actively deploying ${robotCategories} to offset rising front-line staffing pressure and improve facility throughput.
+Right now, most enterprise operators have far more demand for robotics than vendors have proven, repeatable capability. It's remarkably easy for a team to fund three impressive pilots that end up being three separate R&D programs rather than one scalable product.
 
-Having led robotics at Panasonic and built 3 commercial robot companies, I founded ReadyForRobots to give executive teams unbiased, vendor-neutral feasibility assessments—evaluating payload, battery duty cycles, floor navigation, and net ROI before capital is committed.
+Having led robotics at Panasonic and built 3 commercial robot companies, I've seen this pattern unfold repeatedly. The real challenge isn't whether automation is coming—it's asking the right question up front: How do you isolate the single, repeatable task at one facility that delivers measured ROI before capital is committed?
 
-We recently published our September 2026 Commercial Robotics Intelligence Report, benchmarking top commercial platforms against real-world payback targets (1.1 to 1.4 years).
+That's why we created ReadyForRobots. We provide independent, vendor-neutral feasibility assessments—evaluating payload, battery duty cycles, floor navigation, and net payback targets (1.1 to 1.4 years) across leading ${robotCategories} platforms.
 
-I’d be glad to send over a customized 2-page benchmark report specifically tailored to ${company}'s operational footprint.
+We've compiled a customized 2-page feasibility benchmark specifically tailored to ${company}'s operational footprint.
 
-Would you be open to reviewing the brief, or having a quick 10-minute introduction this week?
+Are you open to taking a look at the brief, or comparing notes on where you see the biggest friction in your current automation roadmap?
 
 Best regards,
 
