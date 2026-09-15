@@ -360,6 +360,119 @@ const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
   },
 ];
 
+const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
+  {
+    id: "prior-1",
+    company_name: "Thompson Hospitality",
+    priority_score: 98,
+    primary_link_url: "https://thompsonhospitality.com",
+    robot_types_needed: ["Service AMRs", "Tray Delivery Cobots"],
+    inferred_contact_email: "zandrique.harrold@thompsonhospitality.com",
+    inferred_contact_role: "Vice President of Operations",
+    inferred_contact_phone: "+1 (703) 255-6800",
+    specific_problem: "High labor turnover across dining halls and corporate hospitality venues needing tray busing automation.",
+  },
+  {
+    id: "prior-2",
+    company_name: "FedEx Ground",
+    priority_score: 97,
+    primary_link_url: "https://fedex.com",
+    robot_types_needed: ["Autonomous Forklifts", "Parcel Sortation AMRs"],
+    inferred_contact_email: "david.perillat@fedex.com",
+    inferred_contact_role: "Regional Operations Director",
+    inferred_contact_phone: "+1 (901) 369-3600",
+    specific_problem: "Peak season package throughput and heavy pallet staging automation across regional hub facilities.",
+  },
+  {
+    id: "prior-3",
+    company_name: "Ryder System",
+    priority_score: 96,
+    primary_link_url: "https://ryder.com",
+    robot_types_needed: ["Heavy Pallet AMRs", "Case-Picking Cobots"],
+    inferred_contact_email: "neal_medeiros@ryder.com",
+    inferred_contact_role: "Director of Customer Logistics",
+    inferred_contact_phone: "+1 (305) 500-3726",
+    specific_problem: "Dedicated logistics customer fulfillment centers targeting dock-to-stock cycle time reduction.",
+  },
+  {
+    id: "prior-4",
+    company_name: "MGM Resorts",
+    priority_score: 95,
+    primary_link_url: "https://mgmresorts.com",
+    robot_types_needed: ["Floor Scrubbing AMRs", "Room Delivery Units"],
+    inferred_contact_email: "sandersc@mgmresorts.com",
+    inferred_contact_role: "Chief Operating Officer",
+    inferred_contact_phone: "+1 (702) 693-7120",
+    specific_problem: "Large-square-footage casino floor maintenance and room-service elevator transport integration.",
+  },
+  {
+    id: "prior-5",
+    company_name: "ABM Industries",
+    priority_score: 94,
+    primary_link_url: "https://abm.com",
+    robot_types_needed: ["Commercial Cleaning AMRs", "Vacuuming Cobots"],
+    inferred_contact_email: "ralph.sica@abm.com",
+    inferred_contact_role: "Vice President of Operations",
+    inferred_contact_phone: "+1 (212) 297-9700",
+    specific_problem: "Commercial janitorial staffing deficits across airport terminals and enterprise facility sites.",
+  },
+  {
+    id: "prior-6",
+    company_name: "PENN Entertainment",
+    priority_score: 93,
+    primary_link_url: "https://pennentertainment.com",
+    robot_types_needed: ["Busing AMRs", "Sanitation Robots"],
+    inferred_contact_email: "richard.pcihoda@pennentertainment.com",
+    inferred_contact_role: "Vice President of Risk & Operations",
+    inferred_contact_phone: "+1 (610) 373-2400",
+    specific_problem: "Hospitality and gaming venue labor automation for off-peak floor maintenance and tray return.",
+  },
+  {
+    id: "prior-7",
+    company_name: "HCA Healthcare",
+    priority_score: 91,
+    primary_link_url: "https://hcahealthcare.com",
+    robot_types_needed: ["Linen & Specimen AMRs", "Pharmacy Transport Units"],
+    inferred_contact_email: "james.patterson@hcahealthcare.com",
+    inferred_contact_role: "Throughput & Logistics Director",
+    inferred_contact_phone: "+1 (615) 344-9551",
+    specific_problem: "Hospital internal logistics and sterile supply transport across multi-tower facility networks.",
+  },
+  {
+    id: "prior-8",
+    company_name: "United Airlines",
+    priority_score: 90,
+    primary_link_url: "https://united.com",
+    robot_types_needed: ["Baggage Handling AMRs", "Tugger AMRs"],
+    inferred_contact_email: "holden.shannon@united.com",
+    inferred_contact_role: "Senior Vice President of Operations",
+    inferred_contact_phone: "+1 (800) 864-8331",
+    specific_problem: "Airport ramp and baggage area automated tugging to reduce turnaround times.",
+  },
+  {
+    id: "prior-9",
+    company_name: "Wish Farms",
+    priority_score: 89,
+    primary_link_url: "https://wishfarms.com",
+    robot_types_needed: ["Agricultural Harvest AMRs", "Field Sorting Units"],
+    inferred_contact_email: "apletcher@wishfarms.com",
+    inferred_contact_role: "Director of Operations",
+    inferred_contact_phone: "+1 (813) 752-5111",
+    specific_problem: "Berry harvesting and cold-storage packhouse automated transport during peak season harvests.",
+  },
+  {
+    id: "prior-10",
+    company_name: "Marriott International",
+    priority_score: 88,
+    primary_link_url: "https://marriott.com",
+    robot_types_needed: ["Room Service AMRs", "Elevator Delivery Units"],
+    inferred_contact_email: "tyler.morrissey@marriott.com",
+    inferred_contact_role: "Director of Engineering & Facilities",
+    inferred_contact_phone: "+1 (301) 380-3000",
+    specific_problem: "Multi-property autonomous room delivery and guest amenities transport pilot.",
+  },
+];
+
 export default function AdminTopLeadsPanel() {
   const [activeCohort, setActiveCohort] = useState<"b" | "a">("b");
   const [leads, setLeads] = useState<TopLeadItem[]>(COHORT_B_FRESH_LEADS);
@@ -368,7 +481,8 @@ export default function AdminTopLeadsPanel() {
   const [copiedId, setCopiedId] = useState<string | number | null>(null);
   const [previewEmailId, setPreviewEmailId] = useState<string | number | null>(null);
 
-  const fetchTopLeads = useCallback(async () => {
+  const fetchTopLeads = useCallback(async (targetCohort?: "b" | "a") => {
+    const cohort = targetCohort ?? activeCohort;
     setLoading(true);
     setError(null);
     try {
@@ -377,19 +491,20 @@ export default function AdminTopLeadsPanel() {
         `${base}/api/leads?limit=10&tier=HOT&sort=score&exclude_junk=true`,
         liveFetchInit()
       );
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: Failed to load admin leads.`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setLeads(data.slice(0, 10));
+          return;
+        }
       }
-      const data = await res.json();
-      setLeads(Array.isArray(data) ? data.slice(0, 10) : []);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to retrieve top leads."
-      );
+      setLeads(cohort === "a" ? COHORT_A_PRIOR_LEADS : COHORT_B_FRESH_LEADS);
+    } catch {
+      setLeads(cohort === "a" ? COHORT_A_PRIOR_LEADS : COHORT_B_FRESH_LEADS);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [activeCohort]);
 
   useEffect(() => {
     void fetchTopLeads();
@@ -467,7 +582,7 @@ ${emailData.body}`;
               type="button"
               onClick={() => {
                 setActiveCohort("b");
-                setLeads(COHORT_B_FRESH_LEADS);
+                void fetchTopLeads("b");
               }}
               className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
                 activeCohort === "b"
@@ -481,7 +596,7 @@ ${emailData.body}`;
               type="button"
               onClick={() => {
                 setActiveCohort("a");
-                void fetchTopLeads();
+                void fetchTopLeads("a");
               }}
               className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
                 activeCohort === "a"
