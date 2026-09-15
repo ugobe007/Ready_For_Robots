@@ -137,17 +137,89 @@ const HUNTER_EXECUTIVE_MAP: Record<
     email: "tim.pruiett@aimbridge.com",
     confidence: 83,
   },
-  "harvard maintenance": {
-    name: "Max Lapierre",
-    title: "Director of Facilities & Maintenance",
-    email: "max.lapierre@abm.com",
-    confidence: 85,
+  "cloudkitchens": {
+    name: "Justin Futterman",
+    title: "Director of Operations",
+    email: "justin.futterman@cloudkitchens.com",
+    confidence: 95,
   },
-  "diversified maintenance systems": {
-    name: "Ralph Sica",
-    title: "VP Operations & Facility Management",
-    email: "ralph.sica@abm.com",
-    confidence: 85,
+  "wonder group": {
+    name: "Deniz Uzel",
+    title: "Vice President of Operations",
+    email: "duzel@wonder.com",
+    confidence: 96,
+  },
+  "reef technology": {
+    name: "Jose Ramirez",
+    title: "Director of Operations",
+    email: "jose.ramirez@reeftechnology.com",
+    confidence: 98,
+  },
+  "chipotle": {
+    name: "Michael Thoms",
+    title: "Vice President of Operations",
+    email: "mthoms@chipotle.com",
+    confidence: 97,
+  },
+  "sweetgreen": {
+    name: "Jenny Sang",
+    title: "Director of Operations",
+    email: "jenny.sang@sweetgreen.com",
+    confidence: 95,
+  },
+  "white castle": {
+    name: "Francis Nation",
+    title: "Operating Partner & Automation Lead",
+    email: "nationf@whitecastle.com",
+    confidence: 95,
+  },
+  "wendy's": {
+    name: "Kelly Warnock",
+    title: "Director of Field Operations",
+    email: "kelly.warnock@wendys.com",
+    confidence: 92,
+  },
+  "chick-fil-a": {
+    name: "Ken Ball",
+    title: "Operations Lead",
+    email: "ken.ball@chick-fil-a.com",
+    confidence: 97,
+  },
+  "panera bread": {
+    name: "Toni Tucker",
+    title: "Director of Operations",
+    email: "toni.tucker@panerabread.com",
+    confidence: 92,
+  },
+  "domino's": {
+    name: "Bhecode Lula",
+    title: "Director of Store Operations",
+    email: "bhecode.lula@dominos.com",
+    confidence: 94,
+  },
+  "sysco": {
+    name: "Scott Chute",
+    title: "VP Culinary & Fulfillment Operations",
+    email: "scott.chute@sysco.com",
+    confidence: 96,
+  },
+  "compass group": {
+    name: "Neil Chapman",
+    title: "SVP Dining Operations",
+    email: "neil.chapman@compass-group.com",
+    confidence: 95,
+  },
+  "aramark": {
+    name: "Brian Sibiski",
+    title: "VP Operations",
+    email: "sibiski-brian@aramark.com",
+    confidence: 95,
+  },
+  "sodexo": {
+    name: "Amarnath Mishra",
+    title: "Director of Operational Excellence",
+    email: "amarnath.mishra@sodexo.com",
+    confidence: 94,
   },
 };
 
@@ -187,9 +259,113 @@ https://readyforrobots.com/robot-ready`;
   return { subject, body };
 }
 
+const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
+  {
+    id: "fresh-1",
+    company_name: "CloudKitchens",
+    priority_score: 98,
+    primary_link_url: "https://cloudkitchens.com",
+    robot_types_needed: ["Meal Assembly Cobots", "Kitchen Prep Manipulators"],
+    inferred_contact_email: "justin.futterman@cloudkitchens.com",
+    inferred_contact_role: "Director of Operations",
+    specific_problem: "Nationwide ghost-kitchen network under high order volume; automated meal portioning and prep.",
+  },
+  {
+    id: "fresh-2",
+    company_name: "Wonder Group",
+    priority_score: 97,
+    primary_link_url: "https://wonder.com",
+    robot_types_needed: ["Multi-Step Assembly AMRs", "Automated Cooking Stations"],
+    inferred_contact_email: "duzel@wonder.com",
+    inferred_contact_role: "Vice President of Operations",
+    specific_problem: "Multi-brand meal assembly scaling across suburban hub kitchens following Grubhub acquisition.",
+  },
+  {
+    id: "fresh-3",
+    company_name: "Reef Technology",
+    priority_score: 96,
+    primary_link_url: "https://reeftechnology.com",
+    robot_types_needed: ["Portioning Cobots", "Mobile Kitchen Conveyors"],
+    inferred_contact_email: "jose.ramirez@reeftechnology.com",
+    inferred_contact_role: "Director of Operations",
+    specific_problem: "Unit-economics pressure on mobile kitchen vessel footprint requiring automated food prep.",
+  },
+  {
+    id: "fresh-4",
+    company_name: "Chipotle",
+    priority_score: 95,
+    primary_link_url: "https://chipotle.com",
+    robot_types_needed: ["Produce Prep Manipulators", "Automated Guacamole Cobots"],
+    inferred_contact_email: "mthoms@chipotle.com",
+    inferred_contact_role: "Vice President of Operations",
+    specific_problem: "Cultivate Next automation drive targeting prep labor bottlenecks and kitchen throughput.",
+  },
+  {
+    id: "fresh-5",
+    company_name: "Sweetgreen",
+    priority_score: 94,
+    primary_link_url: "https://sweetgreen.com",
+    robot_types_needed: ["Bowl Assembly Lines", "Ingredient Portioning AMRs"],
+    inferred_contact_email: "jenny.sang@sweetgreen.com",
+    inferred_contact_role: "Director of Operations",
+    specific_problem: "Infinite Kitchen automated assembly line deployment across high-density metro locations.",
+  },
+  {
+    id: "fresh-6",
+    company_name: "White Castle",
+    priority_score: 93,
+    primary_link_url: "https://whitecastle.com",
+    robot_types_needed: ["Fryer & Griddle Cobots", "Automated Busing AMRs"],
+    inferred_contact_email: "nationf@whitecastle.com",
+    inferred_contact_role: "Operating Partner & Automation Lead",
+    specific_problem: "Commercial expansion of griddle and frying automation to eliminate night-shift kitchen strain.",
+  },
+  {
+    id: "fresh-7",
+    company_name: "Wendy's",
+    priority_score: 91,
+    primary_link_url: "https://wendys.com",
+    robot_types_needed: ["Order Assembly AMRs", "Underground Parcel Movers"],
+    inferred_contact_email: "kelly.warnock@wendys.com",
+    inferred_contact_role: "Director of Field Operations",
+    specific_problem: "Drive-thru and kitchen labor optimization under rising state minimum wage thresholds.",
+  },
+  {
+    id: "fresh-8",
+    company_name: "Chick-fil-A",
+    priority_score: 90,
+    primary_link_url: "https://chick-fil-a.com",
+    robot_types_needed: ["Tray Prep Cobots", "Kitchen Logistics AMRs"],
+    inferred_contact_email: "ken.ball@chick-fil-a.com",
+    inferred_contact_role: "Operations Lead",
+    specific_problem: "High-volume drive-thru and kitchen throughput automation pilot for peak meal rushes.",
+  },
+  {
+    id: "fresh-9",
+    company_name: "Panera Bread",
+    priority_score: 89,
+    primary_link_url: "https://panerabread.com",
+    robot_types_needed: ["Beverage & Bakery AMRs", "Automated Dispensing Units"],
+    inferred_contact_email: "toni.tucker@panerabread.com",
+    inferred_contact_role: "Director of Operations",
+    specific_problem: "Menu simplification and automated beverage/bakery logistics in suburban cafes.",
+  },
+  {
+    id: "fresh-10",
+    company_name: "Domino's",
+    priority_score: 88,
+    primary_link_url: "https://dominos.com",
+    robot_types_needed: ["Dough Prep Manipulators", "Store Dispatch AMRs"],
+    inferred_contact_email: "bhecode.lula@dominos.com",
+    inferred_contact_role: "Director of Store Operations",
+    specific_problem: "Peak order volume pizza assembly and kitchen dispatch automation target.",
+  },
+];
+
 export default function AdminTopLeadsPanel() {
-  const [leads, setLeads] = useState<TopLeadItem[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [activeCohort, setActiveCohort] = useState<"b" | "a">("b");
+  const [leads, setLeads] = useState<TopLeadItem[]>(COHORT_B_FRESH_LEADS);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedId, setCopiedId] = useState<string | number | null>(null);
   const [previewEmailId, setPreviewEmailId] = useState<string | number | null>(null);
@@ -287,15 +463,48 @@ ${emailData.body}`;
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={() => void fetchTopLeads()}
-          disabled={loading}
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600/90 hover:bg-emerald-500 px-4 py-2 text-xs font-bold text-white transition disabled:opacity-50 shadow-md"
-        >
-          <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
-          Refresh Pipeline
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center rounded-xl bg-slate-900 p-1 border border-slate-800">
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCohort("b");
+                setLeads(COHORT_B_FRESH_LEADS);
+              }}
+              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                activeCohort === "b"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Fresh List (QSR & Ghost Kitchens)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveCohort("a");
+                void fetchTopLeads();
+              }}
+              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition ${
+                activeCohort === "a"
+                  ? "bg-emerald-600 text-white shadow-sm"
+                  : "text-slate-400 hover:text-white"
+              }`}
+            >
+              Prior List (Logistics & Facilities)
+            </button>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => void fetchTopLeads()}
+            disabled={loading}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition disabled:opacity-50 border border-slate-700 shadow-sm"
+          >
+            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
+          </button>
+        </div>
       </div>
 
       {error && (
