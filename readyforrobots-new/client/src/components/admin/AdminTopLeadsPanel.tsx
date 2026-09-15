@@ -162,18 +162,18 @@ export function buildBobExecutiveEmail(opts: {
     (opts.robotTypes || []).slice(0, 2).join(" and ") ||
     "collaborative service robots and mobile manipulators";
 
-  const subject = `Repeatable robotics deployment vs custom pilots at ${company}`;
+  const subject = `Robotics feasibility at ${company}?`;
   const body = `Dear ${name},
 
-Right now, most enterprise operators have far more demand for robotics than vendors have proven, repeatable capability. It's remarkably easy for a team to fund three impressive pilots that end up being three separate R&D programs rather than one scalable product.
+I’m reaching out with a simple question regarding ${company}’s operational roadmap: Are you currently evaluating collaborative service robots or AMRs for your facilities this year?
 
-Having led robotics at Panasonic and built 3 commercial robot companies, I've seen this pattern unfold repeatedly. The real challenge isn't whether automation is coming—it's asking the right question up front: How do you isolate the single, repeatable task at one facility that delivers measured ROI before capital is committed?
+Having spent years in commercial robotics—leading teams at Panasonic and building 3 robot companies—I founded ReadyForRobots to help enterprise operators navigate a complex market: customer interest in automation is high, but vendor claims on payload, floor navigation, and net ROI vary wildly.
 
-That's why we created ReadyForRobots. We provide independent, vendor-neutral feasibility assessments—evaluating payload, battery duty cycles, floor navigation, and net payback targets (1.1 to 1.4 years) across leading ${robotCategories} platforms.
+We publish independent, vendor-neutral feasibility benchmarks comparing leading commercial platforms (${robotCategories}) across duty cycles, integration friction, and real-world payback targets.
 
-We've compiled a customized 2-page feasibility benchmark specifically tailored to ${company}'s operational footprint.
+If you’re currently looking into automation options or planning for upcoming peak operational loads, I’d be glad to share our latest 2-page benchmark report.
 
-Are you open to taking a look at the brief, or comparing notes on where you see the biggest friction in your current automation roadmap?
+Either way, I’d be curious to hear where you see the biggest operational bottlenecks across your facilities right now.
 
 Best regards,
 
