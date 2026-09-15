@@ -485,6 +485,13 @@ export default function AdminTopLeadsPanel() {
     const cohort = targetCohort ?? activeCohort;
     setLoading(true);
     setError(null);
+
+    if (cohort === "b") {
+      setLeads(COHORT_B_FRESH_LEADS);
+      setLoading(false);
+      return;
+    }
+
     try {
       const base = getPublicReadApiBase();
       const res = await fetch(
@@ -498,9 +505,9 @@ export default function AdminTopLeadsPanel() {
           return;
         }
       }
-      setLeads(cohort === "a" ? COHORT_A_PRIOR_LEADS : COHORT_B_FRESH_LEADS);
+      setLeads(COHORT_A_PRIOR_LEADS);
     } catch {
-      setLeads(cohort === "a" ? COHORT_A_PRIOR_LEADS : COHORT_B_FRESH_LEADS);
+      setLeads(COHORT_A_PRIOR_LEADS);
     } finally {
       setLoading(false);
     }
