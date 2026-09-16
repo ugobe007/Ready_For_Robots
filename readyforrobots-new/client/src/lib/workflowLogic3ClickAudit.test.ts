@@ -86,11 +86,11 @@ describe("3-Click Rule & Workflow Logic Audit", () => {
       robotTypes: ["Meal Assembly Cobots", "Kitchen Prep Manipulators"],
     });
 
-    expect(email.subject).toBe("Robotics feasibility at CloudKitchens?");
+    expect(email.subject).toBe("Robotics task matching for CloudKitchens?");
     expect(email.body).toContain("Dear Justin,");
     expect(email.body).toContain("Nice to meet you.");
-    expect(email.body).toContain("I am with ReadyForRobots, we provide independent, vendor-neutral feasibility benchmarks comparing leading commercial platforms across duty cycles, floor navigation, and real-world payback targets.");
-    expect(email.body).toContain("Having spent my career in robotics—leading teams at Panasonic, RichTech Robotics and Anybots");
-    expect(email.body).toContain("Either way, I’d be curious to hear how your team is thinking about robotics feasibility across your facilities right now.");
+    expect(email.body).toContain("We help enterprise operators evaluate commercial robotics—matching specific robot models to your exact job requirements");
+    expect(email.body).toContain("Having spent my career in robotics—leading teams at Panasonic, RichTech Robotics, and Anybots");
+    expect(email.body).toContain("Either way, I’d be curious to hear how your team is thinking about robotics across your facilities right now.");
   });
 });
