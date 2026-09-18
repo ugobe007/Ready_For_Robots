@@ -487,6 +487,38 @@ export default function HumanoidComparisonReport() {
                 </section>
               )}
 
+            {/* LV Robotics Frontier AI & Task Adaptation Matrix */}
+            <section className="rounded-xl border border-purple-500/30 bg-[#0d1730] p-6 sm:p-8">
+              <ReportKicker>Frontier AI & Model Task-Readiness</ReportKicker>
+              <ReportTitle>Foundation Models (VLA) vs. Hardcoded Routines</ReportTitle>
+              <ReportBodyText className="mt-3">
+                Commercial robotics is undergoing a fundamental shift from programming fixed routines to teaching task models. In enterprise facility deployments, understanding whether a robot uses a Vision-Language-Action (VLA) foundation model vs. a rigid controller determines whether the deployment scales across variable environments or fails on the floor.
+              </ReportBodyText>
+              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                <div className="rounded-lg border border-slate-700/60 bg-[#081124] p-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">VLA & Intent Inference</span>
+                  <p className="mt-1 text-xs font-semibold text-white">Language & Vision → Action</p>
+                  <p className="mt-1.5 text-[11px] text-slate-300 leading-relaxed">
+                    Systems interpret high-level task instructions ("pick blue part and place in tray") and dynamically generate trajectories without hardcoded waypoint programming.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-700/60 bg-[#081124] p-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-cyan-400">Closed-Loop Latency</span>
+                  <p className="mt-1 text-xs font-semibold text-white">Real-Time Physical Inference</p>
+                  <p className="mt-1.5 text-[11px] text-slate-300 leading-relaxed">
+                    Evaluates whether physical inference speeds allow immediate recovery when objects shift, avoiding costly safety stops in high-throughput 3-shift environments.
+                  </p>
+                </div>
+                <div className="rounded-lg border border-slate-700/60 bg-[#081124] p-4">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400">Video-to-Action Learning</span>
+                  <p className="mt-1 text-xs font-semibold text-white">Demonstration-Driven Scaling</p>
+                  <p className="mt-1.5 text-[11px] text-slate-300 leading-relaxed">
+                    Teaches new bimanual tasks (folding, parts unbagging, kitting) from video demonstrations rather than months of custom task-level software engineering.
+                  </p>
+                </div>
+              </div>
+            </section>
+
             {/* Methodology + CTA */}
             <section
               className="rounded-xl border p-6 sm:p-8"
