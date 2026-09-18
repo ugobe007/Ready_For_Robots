@@ -517,13 +517,9 @@ export default function Home() {
             {pageMode === "url" && (
               <div className="w-full max-w-3xl text-left">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.36em] text-[#7adfc8] sm:text-[11px]">
-                  READYFORROBOTS SIGNAL · POWERED BY LV ROBOTICS INSIGHTS
+                  READYFORROBOTS SIGNAL
                 </p>
-                <div className="mt-2.5 sm:mt-3 flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 rounded-md border border-emerald-500/30 bg-emerald-950/40 px-2.5 py-1 text-[11px] font-semibold text-emerald-300">
-                    <Sparkles className="h-3.5 w-3.5 text-amber-400" />
-                    LV Robotics Frontier Intelligence: VLA & Task Model Matching
-                  </span>
+                <div className="mt-2.5 sm:mt-3">
                   <HomeMarketPulse />
                 </div>
                 <h1
@@ -534,7 +530,9 @@ export default function Home() {
                 </h1>
                 <div className="mt-5 flex w-full items-start justify-start gap-4 sm:mt-7 sm:gap-7 lg:gap-8">
                   <p className="min-w-0 max-w-[54ch] flex-1 text-left text-[16px] leading-7 text-slate-300 sm:text-[18px] sm:leading-8 lg:text-[19px] lg:leading-9">
-                    Bridging frontier foundation models with real-world facility execution. We evaluate commercial robot capabilities, match specific models to your exact task requirements, and structure vendor PoCs when your timing aligns.
+                    Live buyer intent matched to what your robot can do — who
+                    needs it, why now, and what to pitch — so you sell into
+                    demand, not cold lists.
                   </p>
                   <div className="shrink-0 pt-0.5" aria-hidden="true">
                     <PixelIcon

@@ -548,7 +548,7 @@ ${emailData.body}`;
             Top 10 Executive Customer Opportunities
           </h2>
           <p className="mt-1 text-xs text-slate-300">
-            Enriched with Hunter.io verified decision-makers, direct email, phone, and LV Robotics task-matching pitch scripts.
+            Enriched with Hunter.io verified decision-makers, direct email, phone, and high-converting peer advisory pitch scripts.
           </p>
         </div>
 
