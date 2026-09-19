@@ -235,5 +235,105 @@
         "display_class": "cobot"
       }
     ]
+  },
+  "alpharoboticsai.com": {
+    "distributor_name": "AlphaRobotics",
+    "domain": "alpharoboticsai.com",
+    "territory": "North America Nationwide",
+    "supported_brands": [
+      "AgiBot",
+      "PUDU Robotics",
+      "Gausium",
+      "CenoBot",
+      "Tennant",
+      "Viggo",
+      "iKitBot",
+      "Deep Robotics",
+      "Botinkit",
+      "Keenon Robotics",
+      "Unitree Robotics"
+    ],
+    "robot_categories": ["humanoid", "delivery", "cleaning", "quadruped", "kitchen", "amr"],
+    "services": ["Robot Rental & Leasing", "Fleet Deployment", "Enterprise Integration", "Maintenance & Operator Training"],
+    "product_mix": [
+      {
+        "brand": "AgiBot",
+        "name": "AGIBOT A2 / AGIBOT A3 / AGIBOT D1 / AGIBOT X Series",
+        "description": "Full-size commercial humanoid robots and quadrupedal mobile platforms for commercial inspection, research, and task automation.",
+        "display_class": "humanoid"
+      },
+      {
+        "brand": "PUDU Robotics",
+        "name": "PUDU BellaBot Pro / KettyBot / FlashBot / T600 / CC1 Pro Disc",
+        "description": "Autonomous delivery, tray busing, guest service, and commercial floor scrubbing mobile robots.",
+        "display_class": "delivery"
+      },
+      {
+        "brand": "Gausium",
+        "name": "Gausium Phantas / Vacuum 40 / Scrubber 50 / Scrubber 75 / Marvel",
+        "description": "Enterprise autonomous floor scrubbing, sweeping, and vacuuming robots for commercial facilities.",
+        "display_class": "cleaning"
+      },
+      {
+        "brand": "CenoBot",
+        "name": "CenoBot Spot Cleaning SP50 / Scrubber-Dryer L3 & L4 & L50 / Sweeper S5",
+        "description": "Industrial spot cleaning, floor scrubbing, and automated docking workstation solutions.",
+        "display_class": "cleaning"
+      },
+      {
+        "brand": "Tennant",
+        "name": "Tennant X2 Rover / Tennant R4 Rover",
+        "description": "Heavy-duty autonomous floor scrubbers for large warehouses, airports, and industrial complexes.",
+        "display_class": "cleaning"
+      },
+      {
+        "brand": "Viggo",
+        "name": "Viggo S100-N / SC50 Plus / SC80 Autonomous Floor Scrubber",
+        "description": "Autonomous driving floor scrubbers and heavy-duty logistics transport platforms.",
+        "display_class": "cleaning"
+      },
+      {
+        "brand": "iKitBot",
+        "name": "iKitBot Falcon X2 / One S55 / One S55 Pro with UVC",
+        "description": "UVC disinfection, sanitation, and autonomous service delivery robots.",
+        "display_class": "delivery"
+      }
+    ]
+  },
+  "alpharobotics.com": {
+    "distributor_name": "AlphaRobotics",
+    "domain": "alpharobotics.com",
+    "territory": "North America Nationwide",
+    "supported_brands": [
+      "AgiBot",
+      "PUDU Robotics",
+      "Gausium",
+      "CenoBot",
+      "Tennant",
+      "Viggo",
+      "iKitBot"
+    ],
+    "robot_categories": ["humanoid", "delivery", "cleaning", "quadruped", "amr"],
+    "services": ["Robot Rental & Leasing", "Fleet Deployment", "Enterprise Integration"],
+    "product_mix": [
+      {
+        "brand": "AgiBot",
+        "name": "AGIBOT A2 / AGIBOT A3 Humanoid Series",
+        "description": "Full-size commercial humanoid robots for enterprise task automation.",
+        "display_class": "humanoid"
+      },
+      {
+        "brand": "PUDU Robotics",
+        "name": "PUDU BellaBot Pro & FlashBot Series",
+        "description": "Autonomous delivery and guest service mobile robots.",
+        "display_class": "delivery"
+      },
+      {
+        "brand": "Gausium",
+        "name": "Gausium Phantas & Scrubber 75 Series",
+        "description": "Autonomous commercial floor scrubbing and vacuuming robots.",
+        "display_class": "cleaning"
+      }
+    ]
   }
 }

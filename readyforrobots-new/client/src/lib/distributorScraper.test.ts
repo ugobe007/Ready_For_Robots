@@ -38,4 +38,30 @@ describe("distributorScraper page parser & mix extractor", () => {
     expect(result.confidence).toBeGreaterThan(0.5);
     expect(result.product_mix.length).toBeGreaterThan(0);
   });
+
+  it("scrapes modern commercial & humanoid distributor page (AlphaRobotics)", () => {
+    const sampleHtml = `
+      <html>
+        <head><title>AlphaRobotics | Autonomous Mobile Robots & Humanoid Marketplace</title></head>
+        <body>
+          <h1>AlphaRobotics Commercial & Service Fleet Marketplace</h1>
+          <p>US distributor for AGIBOT A2 & A3 humanoid robots, PUDU BellaBot Pro delivery robots, Gausium Phantas floor scrubbers, CenoBot L50, and Tennant X2 Rover.</p>
+          <p>We provide robot rental, fleet deployment, leasing, and after-sales maintenance support.</p>
+        </body>
+      </html>
+    `;
+
+    const result = scrapeDistributorPage("https://alpharoboticsai.com/marketplace", sampleHtml);
+    expect(result.domain).toBe("alpharoboticsai.com");
+    expect(result.detected_brands).toContain("AgiBot");
+    expect(result.detected_brands).toContain("PUDU Robotics");
+    expect(result.detected_brands).toContain("Gausium");
+    expect(result.detected_brands).toContain("CenoBot");
+    expect(result.detected_brands).toContain("Tennant");
+    expect(result.detected_categories).toContain("humanoid");
+    expect(result.detected_categories).toContain("delivery");
+    expect(result.detected_categories).toContain("cleaning");
+    expect(result.services).toContain("Fleet Deployment & Maintenance");
+    expect(result.confidence).toBeGreaterThan(0.6);
+  });
 });
