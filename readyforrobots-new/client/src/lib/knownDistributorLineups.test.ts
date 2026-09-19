@@ -45,8 +45,21 @@ describe("knownDistributorLineups dataset & lookup engine", () => {
     expect(names).toContain("Gibson Engineering");
   });
 
+  it("resolves AlphaRobotics from exact domain alpharoboticsai.com and subpages", () => {
+    const dist = lookupKnownDistributor("https://alpharoboticsai.com/marketplace/agibot-a2");
+    expect(dist).not.toBeNull();
+    expect(dist?.distributor_name).toBe("AlphaRobotics");
+    expect(dist?.supported_brands).toContain("AgiBot");
+    expect(dist?.supported_brands).toContain("PUDU Robotics");
+    expect(dist?.supported_brands).toContain("Gausium");
+    expect(dist?.robot_categories).toContain("humanoid");
+    expect(dist?.robot_categories).toContain("delivery");
+    expect(dist?.robot_categories).toContain("cleaning");
+    expect(dist?.product_mix.length).toBeGreaterThan(5);
+  });
+
   it("lists all indexed distributors in dataset", () => {
     const all = listKnownDistributors();
-    expect(all.length).toBeGreaterThanOrEqual(7);
+    expect(all.length).toBeGreaterThanOrEqual(8);
   });
 });
