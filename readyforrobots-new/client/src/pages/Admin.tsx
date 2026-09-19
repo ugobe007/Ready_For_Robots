@@ -8,10 +8,12 @@ import {
   Database,
   DownloadCloud,
   ExternalLink,
+  Eye,
   FileText,
   Mail,
   Play,
   RefreshCw,
+  Search,
   Shield,
   UploadCloud,
   Users,
@@ -3153,6 +3155,104 @@ export default function Admin() {
             </span>
           </div>
         </div>
+
+        {/* ── Top Executive User Metrics Dashboard ── */}
+        <section className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* 1. Sign Ups */}
+          <div className="rounded-2xl border border-emerald-500/30 bg-[#0c192e] p-4 shadow-xl border-l-4 border-l-emerald-500 transition-all hover:border-emerald-500/50">
+            <div className="flex items-center justify-between text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
+              <span>Sign Ups</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-400">
+                <Users size={15} />
+              </div>
+            </div>
+            <div className="mt-2.5 flex items-baseline gap-2">
+              <span className="font-mono text-3xl font-black text-white">
+                {formatNumber(
+                  userStats?.total_users ??
+                    userStats?.waitlist_signups ??
+                    analytics?.signup_funnel?.signup_complete ??
+                    0
+                )}
+              </span>
+              <span className="text-xs font-bold text-emerald-400">
+                {userStats?.waitlist_signups
+                  ? `${userStats.waitlist_signups} waitlist`
+                  : "accounts"}
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+              Total registered user accounts &amp; waitlist leads
+            </p>
+          </div>
+
+          {/* 2. Active Users */}
+          <div className="rounded-2xl border border-blue-500/30 bg-[#0c192e] p-4 shadow-xl border-l-4 border-l-blue-500 transition-all hover:border-blue-500/50">
+            <div className="flex items-center justify-between text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
+              <span>Active Users</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-500/10 text-blue-400">
+                <Activity size={15} />
+              </div>
+            </div>
+            <div className="mt-2.5 flex items-baseline gap-2">
+              <span className="font-mono text-3xl font-black text-white">
+                {formatNumber(userStats?.active_users ?? 0)}
+              </span>
+              <span className="text-xs font-bold text-blue-400">
+                7-day active
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+              Active in pipeline, saved lists &amp; report tools
+            </p>
+          </div>
+
+          {/* 3. Site Visitors */}
+          <div className="rounded-2xl border border-indigo-500/30 bg-[#0c192e] p-4 shadow-xl border-l-4 border-l-indigo-500 transition-all hover:border-indigo-500/50">
+            <div className="flex items-center justify-between text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
+              <span>Visitors</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-400">
+                <Eye size={15} />
+              </div>
+            </div>
+            <div className="mt-2.5 flex items-baseline gap-2">
+              <span className="font-mono text-3xl font-black text-white">
+                {formatNumber(analytics?.site_visits ?? 0)}
+              </span>
+              <span className="text-xs font-bold text-indigo-400">
+                {timeRange.toUpperCase()} traffic
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+              Site visits &amp; SCOUT sessions on readyforrobots.com
+            </p>
+          </div>
+
+          {/* 4. Searches & ROI Calculations */}
+          <div className="rounded-2xl border border-amber-500/30 bg-[#0c192e] p-4 shadow-xl border-l-4 border-l-amber-500 transition-all hover:border-amber-500/50">
+            <div className="flex items-center justify-between text-xs font-mono font-semibold uppercase tracking-wider text-slate-400">
+              <span>Searches</span>
+              <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10 text-amber-400">
+                <Search size={15} />
+              </div>
+            </div>
+            <div className="mt-2.5 flex items-baseline gap-2">
+              <span className="font-mono text-3xl font-black text-white">
+                {formatNumber(
+                  analytics?.robot_searches ??
+                    analytics?.total_calculations ??
+                    0
+                )}
+              </span>
+              <span className="text-xs font-bold text-amber-400">
+                queries &amp; runs
+              </span>
+            </div>
+            <p className="mt-1 text-[11px] leading-relaxed text-slate-400">
+              Robot ROI runs, job queries &amp; intake searches
+            </p>
+          </div>
+        </section>
 
         <Link
           href="/admin/special-projects"

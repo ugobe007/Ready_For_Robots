@@ -371,7 +371,7 @@ export default function SalesConsole() {
           <Link
             href="/login?next=/sales-console"
             className="inline-flex mt-6 rounded-xl px-4 py-2 font-bold"
-            style={{ background: "#059669", color: "#111827" }}
+            style={{ background: "#059669", color: "#ffffff" }}
           >
             Sign in
           </Link>
@@ -405,7 +405,7 @@ export default function SalesConsole() {
             <Link
               href="/crm"
               className="rounded-xl px-4 py-2 text-sm font-black"
-              style={{ background: "#059669", color: "#111827" }}
+              style={{ background: "#059669", color: "#ffffff" }}
             >
               Draft buyer email
             </Link>
@@ -530,11 +530,11 @@ export default function SalesConsole() {
                   style={{
                     borderColor:
                       selectedId === row.id
-                        ? "rgba(3,218,197,0.45)"
+                        ? "rgba(5,150,105,0.45)"
                         : "#e5e7eb",
                     background:
                       selectedId === row.id
-                        ? "rgba(3,218,197,0.08)"
+                        ? "rgba(5,150,105,0.08)"
                         : "#ffffff",
                   }}
                 >
@@ -621,7 +621,7 @@ export default function SalesConsole() {
                       onClick={() => void automateNext()}
                       disabled={busy}
                       className="mt-3 w-full rounded-xl px-4 py-2 text-sm font-black disabled:opacity-50"
-                      style={{ background: "#059669", color: "#111827" }}
+                      style={{ background: "#059669", color: "#ffffff" }}
                     >
                       Automate next action
                     </button>
