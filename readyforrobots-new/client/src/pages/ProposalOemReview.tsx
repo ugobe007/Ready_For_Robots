@@ -52,6 +52,11 @@ export type ProposalQuoteData = {
     title: string;
     email: string;
   };
+  oem_contact?: {
+    name: string;
+    title: string;
+    email: string;
+  };
   created_at: string;
   updated_at?: string;
 };
@@ -85,6 +90,11 @@ const SAMPLE_PROPOSAL_QUOTE: ProposalQuoteData = {
     title: "VP of Automation & Distribution Infrastructure",
     email: "m.vance@apexlogistics-demo.com",
   },
+  oem_contact: {
+    name: "KUKA Partner Engineering Team",
+    title: "Application Engineering & Channel Direct",
+    email: "partner-sales@kuka-robotics-demo.com",
+  },
   created_at: new Date().toISOString(),
 };
 
@@ -105,7 +115,7 @@ export default function ProposalOemReview() {
     return { ...SAMPLE_PROPOSAL_QUOTE, id: quoteId };
   });
 
-  const [activeTab, setActiveTab] = useState<"pricing" | "specs" | "email_preview">("pricing");
+  const [activeTab, setActiveTab] = useState<"pricing" | "specs" | "oem_teeup" | "buyer_email">("pricing");
   const [isEditing, setIsEditing] = useState(false);
   const [editedMonthly, setEditedMonthly] = useState(quote.pricing.raas_monthly_rate);
   const [editedHardware, setEditedHardware] = useState(quote.pricing.hardware_cost);
@@ -344,40 +354,50 @@ export default function ProposalOemReview() {
           <div className="lg:col-span-8 space-y-6">
             {/* Tab Controls */}
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setActiveTab("pricing")}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                     activeTab === "pricing"
                       ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30"
                       : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
                   }`}
                 >
-                  <DollarSign className="w-4 h-4" /> Quote Pricing & Terms
+                  <DollarSign className="w-3.5 h-3.5" /> Quote Pricing & Terms
                 </button>
                 <button
                   onClick={() => setActiveTab("specs")}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
+                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                     activeTab === "specs"
                       ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30"
                       : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
                   }`}
                 >
-                  <ShieldCheck className="w-4 h-4" /> OEM Specs & SLA
+                  <ShieldCheck className="w-3.5 h-3.5" /> OEM Specs & SLA
                 </button>
                 <button
-                  onClick={() => setActiveTab("email_preview")}
-                  className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2 ${
-                    activeTab === "email_preview"
+                  onClick={() => setActiveTab("oem_teeup")}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    activeTab === "oem_teeup"
+                      ? "bg-amber-500/10 text-amber-400 border border-amber-500/30"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                  }`}
+                >
+                  <FileText className="w-3.5 h-3.5 text-amber-400" /> OEM Tee-Up Email
+                </button>
+                <button
+                  onClick={() => setActiveTab("buyer_email")}
+                  className={`px-3.5 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                    activeTab === "buyer_email"
                       ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/30"
                       : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
                   }`}
                 >
-                  <Send className="w-4 h-4" /> Cal Draft Email Preview
+                  <Send className="w-3.5 h-3.5 text-cyan-400" /> Buyer Dispatch Email
                 </button>
               </div>
 
-              {!isEditing && quote.status === "awaiting_oem_approval" && activeTab !== "email_preview" && (
+              {!isEditing && quote.status === "awaiting_oem_approval" && activeTab !== "oem_teeup" && activeTab !== "buyer_email" && (
                 <button
                   onClick={() => setIsEditing(true)}
                   className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-xs font-medium text-slate-300 flex items-center gap-1.5 transition-all"
@@ -558,18 +578,97 @@ export default function ProposalOemReview() {
               </div>
             )}
 
-            {/* Tab Content: Cal Draft Email Preview */}
-            {activeTab === "email_preview" && (
+            {/* Tab Content: Cal OEM Tee-Up Email */}
+            {activeTab === "oem_teeup" && (
               <div className="rounded-xl bg-slate-900/80 border border-slate-800 p-6 space-y-6">
                 <div>
                   <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-bold text-white">Cal AI Email Dispatch Preview</h3>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      Cal OEM Tee-Up Email
+                      <span className="text-xs font-mono font-bold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/30">
+                        Supply-Side Partner Outreach
+                      </span>
+                    </h3>
+                    <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">
+                      Recipient: {quote.oem_contact?.email || "partner-sales@kuka-robotics-demo.com"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5">
+                    This is the initial outreach email Cal sends to the Robot Manufacturer / Distributor to tee up the deal before buyer dispatch.
+                  </p>
+                </div>
+
+                <div className="rounded-xl bg-slate-950 border border-slate-800 overflow-hidden text-xs">
+                  <div className="bg-slate-900/90 p-3 border-b border-slate-800 font-mono text-slate-300 space-y-1">
+                    <div><span className="text-slate-500">From:</span> Cal @ Ready For Robots &lt;cal@readyforrobots.com&gt;</div>
+                    <div><span className="text-slate-500">To:</span> {quote.oem_contact?.name || quote.matched_robot.oem_name} &lt;{quote.oem_contact?.email || "partner-sales@kuka-robotics-demo.com"}&gt;</div>
+                    <div><span className="text-slate-500">Subject:</span> New Robot Job Opening: {quote.matched_robot.oem_name} {quote.matched_robot.model_name} for {quote.company_name}</div>
+                  </div>
+
+                  <div className="p-5 font-sans space-y-4 text-slate-200 leading-relaxed">
+                    <p className="text-sm font-semibold text-white">
+                      Hi {quote.matched_robot.oem_name} Partner Team,
+                    </p>
+
+                    <p className="text-sm font-bold text-amber-300">
+                      I find jobs for robot companies.
+                    </p>
+
+                    <p>
+                      Cal identified an active enterprise job opening at <strong>{quote.company_name}</strong> in {quote.location} looking for a robot solution to automate their <strong>{quote.job_title}</strong> role.
+                    </p>
+
+                    <p>
+                      We matched your <strong>{quote.matched_robot.oem_name} {quote.matched_robot.model_name}</strong> as the optimal hardware package for this site. We built an initial commercial proposal quote to present to their VP of Automation ({quote.buyer_contact.name}):
+                    </p>
+
+                    <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 font-mono text-xs">
+                      <div className="text-amber-400 font-bold">Matched Enterprise Opportunity & Proposal Summary:</div>
+                      <div>• Target Enterprise Buyer: {quote.company_name} ({quote.location})</div>
+                      <div>• Matched Hardware Model: {quote.matched_robot.oem_name} {quote.matched_robot.model_name}</div>
+                      <div>• Proposed RaaS Monthly Rate: ${quote.pricing.raas_monthly_rate.toLocaleString()}/mo</div>
+                      <div>• Proposed Turnkey CapEx Buyout: ${quote.pricing.hardware_cost.toLocaleString()}</div>
+                      <div>• Estimated Deployment Lead Time: {quote.pricing.estimated_deployment_weeks} weeks</div>
+                      <div>• Service & SLA Tier: {quote.pricing.sla_tier}</div>
+                    </div>
+
+                    <p>
+                      Please review the proposal quote specs, confirm your equipment lead time window, and click <strong>Approve & Support Proposal</strong> so Cal can dispatch the proposal directly to <strong>{quote.buyer_contact.name}</strong> ({quote.buyer_contact.title}).
+                    </p>
+
+                    <div className="py-2">
+                      <span className="inline-block px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs tracking-wide shadow-md transition-all">
+                        Review & Approve Robot Proposal Quote →
+                      </span>
+                    </div>
+
+                    <p className="text-slate-400 text-[11px] border-t border-slate-800/80 pt-3">
+                      Best regards,<br />
+                      <strong>Cal</strong> | AI Robotics Procurement Specialist<br />
+                      Ready For Robots (readyforrobots.com)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab Content: Cal Buyer Dispatch Email */}
+            {activeTab === "buyer_email" && (
+              <div className="rounded-xl bg-slate-900/80 border border-slate-800 p-6 space-y-6">
+                <div>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      Cal Buyer Dispatch Email
+                      <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/30">
+                        Dispatched Post OEM Sign-Off
+                      </span>
+                    </h3>
                     <span className="text-xs font-mono text-cyan-400 bg-cyan-500/10 px-2.5 py-1 rounded-md border border-cyan-500/20">
                       Recipient: {quote.buyer_contact.email}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    This email will be dispatched immediately upon your approval.
+                    This email is dispatched directly to the enterprise decision-maker once {quote.matched_robot.oem_name} approves the proposal.
                   </p>
                 </div>
 
