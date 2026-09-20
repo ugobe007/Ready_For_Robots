@@ -581,31 +581,32 @@ export default function ProposalOemReview() {
                   </div>
 
                   <div className="p-5 font-sans space-y-4 text-slate-200 leading-relaxed">
-                    <p>Hi {quote.buyer_contact.name.split(" ")[0]},</p>
+                    <p className="text-sm font-semibold text-white">Hi {quote.buyer_contact.name.split(" ")[0]},</p>
 
-                    <p>
-                      Cal here from Ready For Robots. Following up on your active requirement for the <strong>{quote.job_title}</strong> role at {quote.company_name}.
+                    <p className="text-sm font-bold text-cyan-300">
+                      I find jobs for robot companies.
                     </p>
 
                     <p>
-                      We have worked directly with <strong>{quote.matched_robot.oem_name}</strong> to prepare an official proposal and commercial quote tailored to your plant specifications in {quote.location}.
+                      I saw <strong>{quote.company_name}</strong> is actively looking to fill the <strong>{quote.job_title}</strong> role in {quote.location}. We matched your operational requirements with <strong>{quote.matched_robot.oem_name}</strong> and worked directly with their engineering team to structure a pre-approved proposal and commercial quote for your facility.
                     </p>
 
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 font-mono text-xs">
-                      <div className="text-cyan-400 font-bold">Proposal Highlights:</div>
-                      <div>• Matched Hardware: {quote.matched_robot.oem_name} {quote.matched_robot.model_name}</div>
-                      <div>• RaaS Subscription: ${quote.pricing.raas_monthly_rate.toLocaleString()}/mo (Turnkey turnkey buyout ${quote.pricing.hardware_cost.toLocaleString()})</div>
-                      <div>• Projected Annual Net Savings: +${annualSavings.toLocaleString()} / year</div>
-                      <div>• Est. Deployment Timeframe: {quote.pricing.estimated_deployment_weeks} weeks</div>
-                      <div>• SLA Warranty: {quote.pricing.sla_tier}</div>
+                      <div className="text-cyan-400 font-bold">Proposal & Commercial Quote Highlights:</div>
+                      <div>• Matched Hardware: {quote.matched_robot.oem_name} {quote.matched_robot.model_name} ({quote.matched_robot.category})</div>
+                      <div>• RaaS Monthly Subscription: ${quote.pricing.raas_monthly_rate.toLocaleString()}/mo</div>
+                      <div>• Turnkey Hardware Buyout: ${quote.pricing.hardware_cost.toLocaleString()}</div>
+                      <div>• Projected Net Annual Savings: +${annualSavings.toLocaleString()} / year</div>
+                      <div>• Estimated Deployment Lead Time: {quote.pricing.estimated_deployment_weeks} weeks</div>
+                      <div>• SLA Warranty Guarantee: {quote.pricing.sla_tier}</div>
                     </div>
 
                     <p>
-                      {quote.matched_robot.oem_name} has pre-approved this proposal configuration. You can view the full interactive engineering quote and schedule a site assessment directly here:
+                      <strong>{quote.matched_robot.oem_name}</strong> has pre-approved this hardware package and pricing configuration. You can review the complete technical proposal, ROI breakdown, and schedule an on-site deployment assessment here:
                     </p>
 
                     <div className="py-2">
-                      <span className="inline-block px-4 py-2 rounded-lg bg-cyan-500 text-slate-950 font-bold text-xs">
+                      <span className="inline-block px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs tracking-wide shadow-md transition-all">
                         Review Official Robot Proposal & Proposal Deck →
                       </span>
                     </div>
