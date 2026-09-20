@@ -332,6 +332,20 @@ export default function CalProposalQuoteDrawer({
                 </div>
               </div>
 
+              {/* OEM Tee-Up Email Preview Snippet */}
+              <div className="p-4 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-2 text-xs">
+                <div className="flex items-center justify-between text-amber-400 font-mono font-bold text-[11px]">
+                  <span>Cal OEM Tee-Up Email (Supply Side Outreach)</span>
+                  <span className="text-slate-400">To: {currentQuote.matched_robot.oem_name} Partner Engineering</span>
+                </div>
+                <div className="font-mono text-[11px] text-slate-300 bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5 leading-relaxed">
+                  <p className="font-semibold text-white">Hi {currentQuote.matched_robot.oem_name} Team,</p>
+                  <p className="font-bold text-amber-300">I find jobs for robot companies.</p>
+                  <p>Cal identified an active job opening at <strong>{currentQuote.company_name}</strong> in {currentQuote.location} for the <strong>{currentQuote.job_title}</strong> role.</p>
+                  <p className="text-slate-400">Matched Hardware: {currentQuote.matched_robot.oem_name} {currentQuote.matched_robot.model_name} (${currentQuote.pricing.raas_monthly_rate.toLocaleString()}/mo RaaS / ${currentQuote.pricing.hardware_cost.toLocaleString()} buyout)</p>
+                </div>
+              </div>
+
               {/* Technical Notes Summary */}
               <div className="text-xs space-y-1.5">
                 <span className="font-mono text-slate-400 text-[10px] uppercase">OEM Technical Integration Notes:</span>
