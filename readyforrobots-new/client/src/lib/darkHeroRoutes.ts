@@ -13,6 +13,10 @@ const DARK_HERO_PATHS = new Set([
   "/experiment",
   "/jobs",
   "/newsletter",
+  "/sales-console",
+  "/crm",
+  "/supply-pipeline",
+  "/admin",
 ]);
 
 export function isDarkHeroRoute(pathname: string): boolean {
