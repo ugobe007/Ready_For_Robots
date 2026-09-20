@@ -17,6 +17,7 @@ const DARK_HERO_PATHS = new Set([
   "/crm",
   "/supply-pipeline",
   "/admin",
+  "/sales-workflow",
 ]);
 
 export function isDarkHeroRoute(pathname: string): boolean {
