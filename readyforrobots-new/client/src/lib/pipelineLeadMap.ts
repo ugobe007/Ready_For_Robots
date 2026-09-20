@@ -392,7 +392,7 @@ function outreachBody(
   return [
     `Hi ${short} team,`,
     "",
-    "I'm Cal with ReadyForRobots. I research how companies are using robotics and help identify jobs where automation could actually make a difference.",
+    "I find jobs for robot companies.",
     "",
     notice,
     "",
