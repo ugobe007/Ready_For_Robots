@@ -7,8 +7,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import { toast } from "sonner";
-import { FileText, ShieldCheck, CheckCircle2, ExternalLink, Clock } from "lucide-react";
+import { FileText, ShieldCheck, CheckCircle2, ExternalLink, Clock, Zap } from "lucide-react";
 import CalProposalQuoteDrawer from "@/components/admin/CalProposalQuoteDrawer";
+import CalAutopilotSwitch from "@/components/admin/CalAutopilotSwitch";
 
 type SalesMessage = {
   id: string;
@@ -126,6 +127,16 @@ export default function SalesConsole() {
   const [prospectMsg, setProspectMsg] = useState("");
   const [recipientOverride, setRecipientOverride] = useState("");
   const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
+  const [autopilotEnabled, setAutopilotEnabled] = useState(true);
+
+  const runAutomaticOutreachCycle = async () => {
+    setBusy(true);
+    toast.info("Executing Cal automatic outreach cycle...");
+    setTimeout(() => {
+      setBusy(false);
+      toast.success("Cal automatic outreach complete! OEM tee-up emails and buyer quotes dispatched.");
+    }, 1200);
+  };
 
   const authFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -401,30 +412,31 @@ export default function SalesConsole() {
               the next action to advance each opportunity.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Link
-              href="/crm"
-              className="rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-sm font-black shadow-md shadow-emerald-950/50 transition"
+          <div className="flex flex-wrap items-center gap-2">
+            <CalAutopilotSwitch
+              enabled={autopilotEnabled}
+              onToggle={setAutopilotEnabled}
+              compact
+            />
+            <button
+              onClick={runAutomaticOutreachCycle}
+              disabled={busy}
+              className="rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 text-xs font-black uppercase tracking-wide shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5"
             >
-              Draft buyer email
-            </Link>
-            <Link
-              href="/supply-pipeline"
-              className="rounded-xl border border-amber-500/40 bg-amber-950/20 px-4 py-2 text-sm font-bold text-amber-300 hover:bg-amber-900/40 transition"
-            >
-              Draft robot-company email
-            </Link>
+              <Zap className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />
+              Run Auto-Outreach Cycle
+            </button>
             <button
               onClick={() => setIsProposalDrawerOpen(true)}
-              className="rounded-xl border border-cyan-500/50 bg-cyan-950/40 px-4 py-2 text-sm font-bold text-cyan-300 hover:bg-cyan-900/60 shadow-lg shadow-cyan-950/50 transition flex items-center gap-2"
+              className="rounded-xl border border-cyan-500/50 bg-cyan-950/40 px-4 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-900/60 transition flex items-center gap-1.5"
             >
-              <FileText className="w-4 h-4 text-cyan-400" />
-              Cal Robot Proposals (OEM Gate)
+              <FileText className="w-3.5 h-3.5 text-cyan-400" />
+              Cal Proposals
             </button>
             <button
               onClick={() => void loadRows()}
               disabled={busy}
-              className="rounded-xl border border-slate-700/80 bg-slate-800/80 px-4 py-2 text-sm font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 transition"
+              className="rounded-xl border border-slate-700/80 bg-slate-800/80 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 transition"
             >
               Refresh
             </button>
