@@ -615,7 +615,7 @@ export default function ProposalOemReview() {
                     </p>
 
                     <p>
-                      Cal identified an active enterprise job opening at <strong>{quote.company_name}</strong> in {quote.location} looking for a robot solution to automate their <strong>{quote.job_title}</strong> role.
+                      We identified an active enterprise job opening at <strong>{quote.company_name}</strong> in {quote.location} looking for a robot solution to automate their <strong>{quote.job_title}</strong> role.
                     </p>
 
                     <p>
@@ -633,7 +633,7 @@ export default function ProposalOemReview() {
                     </div>
 
                     <p>
-                      Please review the proposal quote specs, confirm your equipment lead time window, and click <strong>Approve & Support Proposal</strong> so Cal can dispatch the proposal directly to <strong>{quote.buyer_contact.name}</strong> ({quote.buyer_contact.title}).
+                      Please review the proposal quote specs, confirm your equipment lead time window, and click <strong>Approve & Support Proposal</strong> so we can dispatch the proposal directly to <strong>{quote.buyer_contact.name}</strong> ({quote.buyer_contact.title}).
                     </p>
 
                     <div className="py-2">
