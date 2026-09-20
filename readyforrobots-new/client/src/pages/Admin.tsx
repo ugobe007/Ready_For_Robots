@@ -35,6 +35,7 @@ import CalLearningPanel from "@/components/admin/CalLearningPanel";
 import SiteMetricsPanel from "@/components/admin/SiteMetricsPanel";
 import AdminTopLeadsPanel from "@/components/admin/AdminTopLeadsPanel";
 import AdminBenchmarkingReportsPanel from "@/components/admin/AdminBenchmarkingReportsPanel";
+import CalProposalQuoteDrawer from "@/components/admin/CalProposalQuoteDrawer";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { useAdminSnapshotSync } from "@/hooks/useAdminSnapshotSync";
@@ -1002,6 +1003,7 @@ export default function Admin() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [activeMetricModal, setActiveMetricModal] = useState<"signups" | "active_users" | "visitors" | "searches" | null>(null);
+  const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
   const [timeRange, setTimeRange] =
     useState<(typeof TIME_RANGES)[number]["value"]>("30d");
   const [urls, setUrls] = useState("");
@@ -3520,6 +3522,37 @@ export default function Admin() {
             </div>
           )}
 
+          {/* Cal Robot Proposal OEM Gate Card */}
+          <div className="mb-4 rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
+                  Cal AI Robot Proposal & Quote Strategy
+                </span>
+                <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+                  Pre-Send OEM Gate
+                </span>
+              </div>
+              <p className="mt-1 text-xs text-slate-300">
+                Cal prepares job quotes and routes to robot OEMs for pricing approval before enterprise buyer outreach.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Link
+                href="/proposal/oem-review?id=PROP-8842-APEX"
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1 transition-all"
+              >
+                Open OEM Portal <ExternalLink className="w-3 h-3 text-cyan-400" />
+              </Link>
+              <button
+                onClick={() => setIsProposalDrawerOpen(true)}
+                className="px-3.5 py-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-bold transition-all shadow-sm"
+              >
+                Inspect Proposals & Links
+              </button>
+            </div>
+          </div>
+
           {calZeroOpenAlert ? (
             <div className="mb-4 rounded-xl border border-rose-500/30 bg-rose-950/30 px-3 py-2.5">
               <p className="text-[10px] font-bold uppercase tracking-wide text-rose-400">
@@ -5707,6 +5740,11 @@ export default function Admin() {
             </div>
           </div>
         )}
+
+        <CalProposalQuoteDrawer
+          isOpen={isProposalDrawerOpen}
+          onClose={() => setIsProposalDrawerOpen(false)}
+        />
       </main>
     </div>
   );

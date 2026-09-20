@@ -39,6 +39,7 @@ import SpecialProjectsAdmin from "./pages/SpecialProjectsAdmin";
 import ProjectPortal from "./pages/ProjectPortal";
 import EmployerDecision from "./pages/EmployerDecision";
 import OemHold from "./pages/OemHold";
+import ProposalOemReview from "./pages/ProposalOemReview";
 import Social from "./pages/Social";
 import Jobs from "./pages/Jobs";
 import ExperimentRedirect from "./pages/ExperimentRedirect";
@@ -159,6 +160,7 @@ function Router() {
       <Route path="/p/:token" component={ProjectPortal} />
       <Route path="/employer/:token" component={EmployerDecision} />
       <Route path="/oem-hold/:token" component={OemHold} />
+      <Route path="/proposal/oem-review" component={ProposalOemReview} />
       <Route path="/readyforrobots/admin/prospects">
         <Redirect to="/pipeline" />
       </Route>

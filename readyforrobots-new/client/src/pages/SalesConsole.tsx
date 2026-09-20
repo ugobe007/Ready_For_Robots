@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import { toast } from "sonner";
+import { FileText, ShieldCheck, CheckCircle2, ExternalLink, Clock } from "lucide-react";
+import CalProposalQuoteDrawer from "@/components/admin/CalProposalQuoteDrawer";
 
 type SalesMessage = {
   id: string;
@@ -123,6 +125,7 @@ export default function SalesConsole() {
   const [msg, setMsg] = useState("");
   const [prospectMsg, setProspectMsg] = useState("");
   const [recipientOverride, setRecipientOverride] = useState("");
+  const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
 
   const authFetch = useCallback(
     async (path: string, init: RequestInit = {}) => {
@@ -412,11 +415,56 @@ export default function SalesConsole() {
               Draft robot-company email
             </Link>
             <button
+              onClick={() => setIsProposalDrawerOpen(true)}
+              className="rounded-xl border border-cyan-500/50 bg-cyan-950/40 px-4 py-2 text-sm font-bold text-cyan-300 hover:bg-cyan-900/60 shadow-lg shadow-cyan-950/50 transition flex items-center gap-2"
+            >
+              <FileText className="w-4 h-4 text-cyan-400" />
+              Cal Robot Proposals (OEM Gate)
+            </button>
+            <button
               onClick={() => void loadRows()}
               disabled={busy}
               className="rounded-xl border border-slate-700/80 bg-slate-800/80 px-4 py-2 text-sm font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 transition"
             >
               Refresh
+            </button>
+          </div>
+        </div>
+
+        {/* Cal Robot Proposals OEM Approval Banner */}
+        <div className="mt-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/40 border border-cyan-500/30 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+              <ShieldCheck className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
+                  Cal AI Robot Proposal & Quote Strategy
+                </span>
+                <span className="text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                  2 Awaiting OEM Approval
+                </span>
+              </div>
+              <p className="text-sm font-semibold text-white mt-1">
+                Pre-Send OEM Gate: Cal prepares quotes & matches robots to job openings for OEM sign-off before buyer dispatch.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Link
+              href="/proposal/oem-review?id=PROP-8842-APEX"
+              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 transition-all"
+            >
+              Open OEM Review Gate <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
+            </Link>
+            <button
+              onClick={() => setIsProposalDrawerOpen(true)}
+              className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 text-xs font-extrabold tracking-wide uppercase transition-all shadow-md shadow-cyan-500/20"
+            >
+              Manage Proposal Quotes
             </button>
           </div>
         </div>
@@ -838,6 +886,11 @@ export default function SalesConsole() {
             )}
           </div>
         </section>
+
+        <CalProposalQuoteDrawer
+          isOpen={isProposalDrawerOpen}
+          onClose={() => setIsProposalDrawerOpen(false)}
+        />
       </main>
     </div>
   );
