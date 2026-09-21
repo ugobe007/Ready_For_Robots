@@ -717,15 +717,21 @@ export default function ProposalOemReview() {
                     </div>
 
                     <p>
-                      We submitted this proposal configuration which aligns with <strong>{quote.matched_robot.oem_name}</strong> specifications and requirements. You can view 3D cell simulations, video proof-of-concept, and schedule a 15-minute engineering feasibility call here:
+                      We submitted this proposal configuration which aligns with <strong>{quote.matched_robot.oem_name}</strong> specifications and requirements. You can review the full interactive engineering quote, 3D cell simulations, and accept the proposal directly online for site deployment here:
                     </p>
 
                     <div className="py-2 flex flex-wrap gap-3">
                       <Link
-                        href={quote.feasibility_metrics?.poc_simulation_url || "/preview"}
+                        href="/employer/demo-token?action=accept"
                         className="inline-block px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs tracking-wide shadow-md transition-all"
                       >
-                        View 3D Cell Simulation & Video Proof-of-Concept →
+                        Review & Accept Proposal Quote →
+                      </Link>
+                      <Link
+                        href={quote.feasibility_metrics?.poc_simulation_url || "/preview"}
+                        className="inline-block px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-cyan-500/30 font-semibold text-xs tracking-wide shadow-md transition-all"
+                      >
+                        View 3D Cell Simulation & Video Proof →
                       </Link>
                     </div>
 
