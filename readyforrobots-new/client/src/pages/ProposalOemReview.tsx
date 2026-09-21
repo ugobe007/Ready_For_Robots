@@ -717,7 +717,7 @@ export default function ProposalOemReview() {
                     </div>
 
                     <p>
-                      We have submitted this proposal configuration to <strong>{quote.matched_robot.oem_name}</strong>'s partner team for priority engineering allocation. You can view 3D cell simulations, video proof-of-concept, and schedule a 15-minute engineering feasibility call here:
+                      We submitted this proposal configuration which aligns with <strong>{quote.matched_robot.oem_name}</strong> specifications and requirements. You can view 3D cell simulations, video proof-of-concept, and schedule a 15-minute engineering feasibility call here:
                     </p>
 
                     <div className="py-2 flex flex-wrap gap-3">
