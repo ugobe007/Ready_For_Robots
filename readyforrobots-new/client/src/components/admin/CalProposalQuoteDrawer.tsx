@@ -183,6 +183,19 @@ export default function CalProposalQuoteDrawer({
     toast.success("Cal Multi-Touch Nurture Engine: Triggered OEM Day-3 Nudges & Buyer Day-4 Follow-ups across all active quotes!");
   };
 
+  const handleSimulateBuyerAcceptance = (id: string) => {
+    const updated = quotes.map(q => {
+      if (q.id === id) {
+        const u = { ...q, status: "buyer_accepted" as const, updated_at: new Date().toISOString() };
+        localStorage.setItem(`cal_proposal_quote_${id}`, JSON.stringify(u));
+        return u;
+      }
+      return q;
+    });
+    setQuotes(updated);
+    toast.success(`🎉 Employer accepted quote ${id}! Cal notified the OEM and prepared site onboarding.`);
+  };
+
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/70 backdrop-blur-sm flex justify-end transition-opacity animate-in fade-in duration-200">
       {/* Drawer Overlay backdrop click */}
@@ -290,6 +303,11 @@ export default function CalProposalQuoteDrawer({
                           <CheckCircle2 className="w-3 h-3" /> OEM Approved
                         </span>
                       )}
+                      {(q.status === "buyer_accepted" || q.status === "oem_notified_buyer_accepted") && (
+                        <span className="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Buyer Accepted (YES!)
+                        </span>
+                      )}
                       <span className="text-xs font-mono font-bold text-slate-200">
                         ${q.pricing.raas_monthly_rate.toLocaleString()}/mo
                       </span>
@@ -348,6 +366,10 @@ export default function CalProposalQuoteDrawer({
                     <span className="text-amber-400 font-semibold font-mono text-[11px]">
                       Pending OEM Sign-Off
                     </span>
+                  ) : currentQuote.status === "buyer_accepted" || currentQuote.status === "oem_notified_buyer_accepted" ? (
+                    <span className="text-emerald-400 font-bold font-mono text-[11px] flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Buyer Accepted (YES!)
+                    </span>
                   ) : (
                     <span className="text-emerald-400 font-semibold font-mono text-[11px]">
                       OEM Signed Off & Dispatched
@@ -373,6 +395,15 @@ export default function CalProposalQuoteDrawer({
                       className="px-3.5 py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5 transition-colors"
                     >
                       <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Override & Mark OEM Approved
+                    </button>
+                  )}
+
+                  {currentQuote.status !== "buyer_accepted" && currentQuote.status !== "oem_notified_buyer_accepted" && (
+                    <button
+                      onClick={() => handleSimulateBuyerAcceptance(currentQuote.id)}
+                      className="px-3.5 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                    >
+                      <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" /> Simulate Employer 'YES'
                     </button>
                   )}
                 </div>

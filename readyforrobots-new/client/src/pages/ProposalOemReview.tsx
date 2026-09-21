@@ -22,6 +22,7 @@ import {
   RefreshCw,
   Check,
   Zap,
+  Calendar,
 } from "lucide-react";
 
 export type ProposalQuoteData = {
@@ -46,7 +47,7 @@ export type ProposalQuoteData = {
     payback_period_months: number;
   };
   oem_technical_notes: string;
-  status: "awaiting_oem_approval" | "oem_approved" | "revisions_requested" | "dispatched_to_buyer";
+  status: "awaiting_oem_approval" | "oem_approved" | "revisions_requested" | "dispatched_to_buyer" | "buyer_accepted" | "oem_notified_buyer_accepted";
   buyer_contact: {
     name: string;
     title: string;
@@ -188,6 +189,38 @@ export default function ProposalOemReview() {
     toast.info("Revision request sent back to Cal AI sales dispatcher.");
   };
 
+  const handleSimulateBuyerAcceptance = () => {
+    const updated: ProposalQuoteData = {
+      ...quote,
+      status: "buyer_accepted",
+      updated_at: new Date().toISOString(),
+    };
+    setQuote(updated);
+    localStorage.setItem(`cal_proposal_quote_${quoteId}`, JSON.stringify(updated));
+    toast.success(
+      `🎉 GREAT NEWS! ${quote.buyer_contact.name} (${quote.company_name}) accepted the proposal! Cal has notified ${quote.matched_robot.oem_name}.`
+    );
+  };
+
+  const handleScheduleOemFollowupCall = () => {
+    toast.info(
+      `Cal has scheduled a 15-minute proposal review call with ${quote.matched_robot.oem_name} & ${quote.company_name}!`
+    );
+  };
+
+  const handleAutoFulfillOpportunity = () => {
+    const updated: ProposalQuoteData = {
+      ...quote,
+      status: "oem_notified_buyer_accepted",
+      updated_at: new Date().toISOString(),
+    };
+    setQuote(updated);
+    localStorage.setItem(`cal_proposal_quote_${quoteId}`, JSON.stringify(updated));
+    toast.success(
+      `⚡ Cal Autopilot is now automatically handling site assessment, SLA agreement delivery, and deployment kickoff!`
+    );
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950">
       <ExperimentHeader />
@@ -206,6 +239,15 @@ export default function ProposalOemReview() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleSimulateBuyerAcceptance}
+              className="px-3 py-1 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm"
+              title="Click to simulate employer Marcus Vance saying YES to the proposal"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              Simulate Employer 'YES'
+            </button>
+
             <span className="text-xs font-mono text-slate-400">Status:</span>
             {quote.status === "awaiting_oem_approval" && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/30">
@@ -225,8 +267,69 @@ export default function ProposalOemReview() {
                 Revisions Requested
               </span>
             )}
+            {quote.status === "buyer_accepted" && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                Employer Accepted (YES!)
+              </span>
+            )}
+            {quote.status === "oem_notified_buyer_accepted" && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
+                <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                Autopilot Active
+              </span>
+            )}
           </div>
         </div>
+
+        {/* Employer Acceptance Alert Banner (Triggered when employer says YES) */}
+        {(quote.status === "buyer_accepted" || quote.status === "oem_notified_buyer_accepted") && (
+          <div className="mt-6 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-cyan-950/90 border border-emerald-500/40 p-6 shadow-2xl space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400">
+                  <CheckCircle2 className="w-7 h-7" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-white">
+                      Employer Accepted Proposal! ({quote.company_name})
+                    </h3>
+                    <span className="text-[10px] font-mono uppercase font-extrabold text-emerald-400 bg-emerald-500/20 px-2.5 py-0.5 rounded-full border border-emerald-500/40">
+                      Buyer Said YES!
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-300 mt-0.5">
+                    {quote.buyer_contact.name} ({quote.buyer_contact.title}) accepted the proposal for {quote.matched_robot.oem_name} {quote.matched_robot.model_name}. Cal has automatically notified {quote.matched_robot.oem_name}!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl bg-slate-950/80 border border-emerald-500/20 text-xs space-y-3">
+              <div className="text-emerald-400 font-mono font-bold uppercase tracking-wider flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-emerald-400" /> Choose Next Step for Opportunity Execution with {quote.matched_robot.oem_name}:
+              </div>
+
+              <div className="flex flex-wrap gap-3 pt-1">
+                <button
+                  onClick={handleScheduleOemFollowupCall}
+                  className="px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs tracking-wide transition-all shadow-md flex items-center gap-2"
+                >
+                  <Calendar className="w-4 h-4" />
+                  Schedule Review Call with {quote.matched_robot.oem_name}
+                </button>
+                <button
+                  onClick={handleAutoFulfillOpportunity}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs tracking-wide uppercase transition-all shadow-md flex items-center gap-2"
+                >
+                  <Sparkles className="w-4 h-4" />
+                  Autopilot: Handle Site Assessment & Fulfillment Automatically
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* OEM Portal Hero Section */}
         <div className="mt-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/50 border border-slate-800 p-6 sm:p-8 relative overflow-hidden shadow-2xl">
@@ -648,13 +751,22 @@ export default function ProposalOemReview() {
                     </div>
 
                     <p>
-                      Please review the proposal quote specs, confirm your equipment lead time window, and click <strong>Approve & Support Proposal</strong> so we can dispatch the proposal directly to <strong>{quote.buyer_contact.name}</strong> ({quote.buyer_contact.title}).
+                      Please review the proposal quote specs, confirm your equipment lead time window, and click <strong>Approve & Support Proposal</strong> so Cal can automatically dispatch the proposal to <strong>{quote.buyer_contact.name}</strong> ({quote.buyer_contact.title}).
                     </p>
 
-                    <div className="py-2">
+                    <div className="py-2 flex flex-wrap gap-3 items-center">
                       <span className="inline-block px-5 py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-extrabold text-xs tracking-wide shadow-md transition-all">
                         Review & Approve Robot Proposal Quote →
                       </span>
+                      <a
+                        href="https://calendar.app.google/demo-cal-advisory"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-500/30 text-xs font-semibold transition-all"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        Schedule 15-Min Prep Call with Cal (Optional)
+                      </a>
                     </div>
 
                     <p className="text-slate-400 text-[11px] border-t border-slate-800/80 pt-3">
@@ -720,7 +832,7 @@ export default function ProposalOemReview() {
                       We submitted this proposal configuration which aligns with <strong>{quote.matched_robot.oem_name}</strong> specifications and requirements. You can review the full interactive engineering quote, 3D cell simulations, and accept the proposal directly online for site deployment here:
                     </p>
 
-                    <div className="py-2 flex flex-wrap gap-3">
+                    <div className="py-2 flex flex-wrap gap-3 items-center">
                       <Link
                         href="/employer/demo-token?action=accept"
                         className="inline-block px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs tracking-wide shadow-md transition-all"
@@ -733,6 +845,15 @@ export default function ProposalOemReview() {
                       >
                         View 3D Cell Simulation & Video Proof →
                       </Link>
+                      <a
+                        href="https://calendar.app.google/demo-cal-advisory"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-700 text-xs font-semibold transition-all"
+                      >
+                        <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+                        Schedule Call with Cal to Discuss (Optional)
+                      </a>
                     </div>
 
                     <p className="text-slate-400 text-[11px] border-t border-slate-800/80 pt-3">
