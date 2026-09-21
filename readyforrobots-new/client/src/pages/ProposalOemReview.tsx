@@ -57,6 +57,13 @@ export type ProposalQuoteData = {
     title: string;
     email: string;
   };
+  feasibility_metrics?: {
+    heir_score: number;
+    active_deployments: number;
+    buyer_qualification_tier: string;
+    oem_allocation_expires_hours: number;
+    poc_simulation_url?: string;
+  };
   created_at: string;
   updated_at?: string;
 };
@@ -94,6 +101,13 @@ const SAMPLE_PROPOSAL_QUOTE: ProposalQuoteData = {
     name: "KUKA Partner Engineering Team",
     title: "Application Engineering & Channel Direct",
     email: "partner-sales@kuka-robotics-demo.com",
+  },
+  feasibility_metrics: {
+    heir_score: 94.2,
+    active_deployments: 482,
+    buyer_qualification_tier: "Enterprise Tier 1 ($100M+ Revenue, 14 Distribution Hubs)",
+    oem_allocation_expires_hours: 48,
+    poc_simulation_url: "/preview",
   },
   created_at: new Date().toISOString(),
 };
@@ -623,13 +637,14 @@ export default function ProposalOemReview() {
                     </p>
 
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 font-mono text-xs">
-                      <div className="text-amber-400 font-bold">Matched Enterprise Opportunity & Proposal Summary:</div>
-                      <div>• Target Enterprise Buyer: {quote.company_name} ({quote.location})</div>
+                      <div className="text-amber-400 font-bold">Matched Enterprise Opportunity & Commercial Summary:</div>
+                      <div>• Target Enterprise Buyer: {quote.company_name} ({quote.feasibility_metrics?.buyer_qualification_tier || "Enterprise Tier 1, $100M+ Revenue"})</div>
                       <div>• Matched Hardware Model: {quote.matched_robot.oem_name} {quote.matched_robot.model_name}</div>
-                      <div>• Proposed RaaS Monthly Rate: ${quote.pricing.raas_monthly_rate.toLocaleString()}/mo</div>
+                      <div>• HEIR Feasibility Benchmark: {quote.feasibility_metrics?.heir_score || 94.2}% Task-Match Score ({quote.feasibility_metrics?.active_deployments || 482} active fleet deployments)</div>
+                      <div>• Proposed RaaS Monthly Rate: ${quote.pricing.raas_monthly_rate.toLocaleString()}/mo (${(quote.pricing.raas_monthly_rate * 12).toLocaleString()}/yr)</div>
                       <div>• Proposed Turnkey CapEx Buyout: ${quote.pricing.hardware_cost.toLocaleString()}</div>
                       <div>• Estimated Deployment Lead Time: {quote.pricing.estimated_deployment_weeks} weeks</div>
-                      <div>• Service & SLA Tier: {quote.pricing.sla_tier}</div>
+                      <div>• OEM Allocation Reservation Window: {quote.feasibility_metrics?.oem_allocation_expires_hours || 48} Hours</div>
                     </div>
 
                     <p>
@@ -693,21 +708,25 @@ export default function ProposalOemReview() {
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 font-mono text-xs">
                       <div className="text-cyan-400 font-bold">Proposal & Commercial Quote Highlights:</div>
                       <div>• Matched Hardware: {quote.matched_robot.oem_name} {quote.matched_robot.model_name} ({quote.matched_robot.category})</div>
+                      <div>• Operational Feasibility: {quote.feasibility_metrics?.heir_score || 94.2}% HEIR Task-Match Score ({quote.feasibility_metrics?.active_deployments || 482} active fleet deployments)</div>
                       <div>• RaaS Monthly Subscription: ${quote.pricing.raas_monthly_rate.toLocaleString()}/mo</div>
                       <div>• Turnkey Hardware Buyout: ${quote.pricing.hardware_cost.toLocaleString()}</div>
-                      <div>• Projected Net Annual Savings: +${annualSavings.toLocaleString()} / year</div>
+                      <div>• EBITDA Financial Impact: Replaces ${quote.pricing.annual_human_labor_cost.toLocaleString()}/yr labor spend for ${(quote.pricing.raas_monthly_rate * 12).toLocaleString()}/yr RaaS = +${annualSavings.toLocaleString()}/yr Net EBITDA Expansion</div>
                       <div>• Estimated Deployment Lead Time: {quote.pricing.estimated_deployment_weeks} weeks</div>
                       <div>• SLA Warranty Guarantee: {quote.pricing.sla_tier}</div>
                     </div>
 
                     <p>
-                      <strong>{quote.matched_robot.oem_name}</strong> has pre-approved this hardware package and pricing configuration. You can review the complete technical proposal, ROI breakdown, and schedule an on-site deployment assessment here:
+                      <strong>{quote.matched_robot.oem_name}</strong> has pre-approved this hardware package and pricing configuration. You can view 3D cell simulations, video proof-of-concept, and schedule a 15-minute engineering feasibility call here:
                     </p>
 
-                    <div className="py-2">
-                      <span className="inline-block px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs tracking-wide shadow-md transition-all">
-                        Review Official Robot Proposal & Proposal Deck →
-                      </span>
+                    <div className="py-2 flex flex-wrap gap-3">
+                      <Link
+                        href={quote.feasibility_metrics?.poc_simulation_url || "/preview"}
+                        className="inline-block px-5 py-2.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-extrabold text-xs tracking-wide shadow-md transition-all"
+                      >
+                        View 3D Cell Simulation & Video Proof-of-Concept →
+                      </Link>
                     </div>
 
                     <p className="text-slate-400 text-[11px] border-t border-slate-800/80 pt-3">
