@@ -13,5 +13,5 @@ export const BUYER_SIGNAL_EXPLANATION =
 export const CAL_TAGLINE = "I find jobs for robot companies.";
 export const CAL_INTRO = "Hi, I find jobs for robot companies.";
 export const CAL_VENDOR_SHERPA_LINE =
-  "Most robot companies are engineer-led. We match target job openings, prepare pre-approved proposal quotes, and handle deployment outreach.";
+  "Most robot companies are engineer-led. We match target job openings, prepare turnkey proposal quotes, and handle deployment outreach.";
 export const CAL_SIGNATURE = ["Cal | AI Robotics Procurement Specialist", "Ready For Robots (readyforrobots.com)"].join("\n");
