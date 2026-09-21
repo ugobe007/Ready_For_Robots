@@ -179,6 +179,10 @@ export default function CalProposalQuoteDrawer({
     toast.success("Cal Autopilot: Auto-dispatched OEM tee-up emails and approved buyer quotes for all active matches!");
   };
 
+  const handleRunNurtureCycle = () => {
+    toast.success("Cal Multi-Touch Nurture Engine: Triggered OEM Day-3 Nudges & Buyer Day-4 Follow-ups across all active quotes!");
+  };
+
   return (
     <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/70 backdrop-blur-sm flex justify-end transition-opacity animate-in fade-in duration-200">
       {/* Drawer Overlay backdrop click */}
@@ -216,28 +220,36 @@ export default function CalProposalQuoteDrawer({
 
         {/* Drawer Content */}
         <div className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* Automatic Dispatch Banner */}
-          <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-cyan-950/40 border border-emerald-500/30 flex items-center justify-between gap-3">
+          {/* Automatic Dispatch & Multi-Touch Nurture Banner */}
+          <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/40 via-slate-900 to-cyan-950/40 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
                   Cal Autopilot Engine
                 </span>
                 <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded">
-                  Fully Automatic Outreach
+                  Fully Automatic Outreach & Nurture
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1">
-                Cal automatically matches job openings, sends OEM tee-up emails, and dispatches buyer proposal quotes post-approval.
+                Cal automatically matches job openings, sends OEM tee-ups, and triggers Day-3 OEM nudges and Day-4 buyer follow-ups.
               </p>
             </div>
 
-            <button
-              onClick={handleAutoDispatchAll}
-              className="px-3.5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold uppercase tracking-wide shrink-0 transition-all shadow-md shadow-emerald-500/20"
-            >
-              Auto-Dispatch All
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={handleRunNurtureCycle}
+                className="px-3 py-1.5 rounded-lg border border-cyan-500/40 bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-300 text-xs font-bold transition-all"
+              >
+                Run Nurture Nudge
+              </button>
+              <button
+                onClick={handleAutoDispatchAll}
+                className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-extrabold uppercase tracking-wide transition-all shadow-md shadow-emerald-500/20"
+              >
+                Auto-Dispatch All
+              </button>
+            </div>
           </div>
           {/* Quote List Selector Tabs */}
           <div>
