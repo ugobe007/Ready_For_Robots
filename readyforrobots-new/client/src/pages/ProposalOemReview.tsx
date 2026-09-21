@@ -702,7 +702,7 @@ export default function ProposalOemReview() {
                     </p>
 
                     <p>
-                      I saw <strong>{quote.company_name}</strong> is actively looking to fill the <strong>{quote.job_title}</strong> role in {quote.location}. We matched your operational requirements with <strong>{quote.matched_robot.oem_name}</strong> and worked directly with their engineering team to structure a pre-approved proposal and commercial quote for your facility.
+                      I saw <strong>{quote.company_name}</strong> is actively looking to fill the <strong>{quote.job_title}</strong> role in {quote.location}. We matched your operational requirements with <strong>{quote.matched_robot.oem_name}</strong> and structured a turnkey engineering proposal and commercial quote tailored to your facility.
                     </p>
 
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 font-mono text-xs">
@@ -717,7 +717,7 @@ export default function ProposalOemReview() {
                     </div>
 
                     <p>
-                      <strong>{quote.matched_robot.oem_name}</strong> has pre-approved this hardware package and pricing configuration. You can view 3D cell simulations, video proof-of-concept, and schedule a 15-minute engineering feasibility call here:
+                      We have submitted this proposal configuration to <strong>{quote.matched_robot.oem_name}</strong>'s partner team for priority engineering allocation. You can view 3D cell simulations, video proof-of-concept, and schedule a 15-minute engineering feasibility call here:
                     </p>
 
                     <div className="py-2 flex flex-wrap gap-3">
