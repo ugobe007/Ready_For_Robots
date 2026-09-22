@@ -225,12 +225,12 @@ export default function JobsLanding() {
         </div>
 
         {/* High-Converting Account Registration Banner (Positioned directly below Customer Quotes) */}
-        <div className="rfr-landing-signup-cta my-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-cyan-950/90 border border-emerald-500/40 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="space-y-1 text-left">
-            <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold">
-              <Sparkles className="w-4 h-4 text-emerald-400" /> Free Enterprise Workspace
+        <div className="rfr-landing-signup-cta my-4 py-3 px-5 sm:py-3.5 sm:px-6 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-cyan-950/90 border border-emerald-500/40 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="space-y-0.5 text-left">
+            <div className="flex items-center gap-2 text-emerald-400 font-mono text-[11px] uppercase tracking-wider font-bold">
+              <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Free Enterprise Workspace
             </div>
-            <h3 className="text-base sm:text-lg font-extrabold text-white">
+            <h3 className="text-sm sm:text-base font-extrabold text-white">
               Unlock Engineering Feasibility & Commercial Proposals
             </h3>
             <p className="text-xs text-slate-300 max-w-xl">
@@ -241,7 +241,7 @@ export default function JobsLanding() {
           <button
             type="button"
             onClick={() => setIsSignupOpen(true)}
-            className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs tracking-wide uppercase transition-all shadow-lg shadow-emerald-400/20 whitespace-nowrap text-center flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-5 py-2.5 sm:py-3 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs tracking-wide uppercase transition-all shadow-lg shadow-emerald-400/20 whitespace-nowrap text-center flex items-center justify-center gap-2 cursor-pointer shrink-0"
           >
             <UserPlus className="w-4 h-4" />
             Create Free Account in 10s →
