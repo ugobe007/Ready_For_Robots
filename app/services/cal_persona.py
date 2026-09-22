@@ -174,13 +174,13 @@ Return JSON only: {{"approved": bool, "confidence": 0-1, "issues": [str], "summa
 
 
 def cal_signature() -> str:
-    """ReadyForRobots Engineering Team sign-off."""
-    return "ReadyForRobots Engineering & Deployment Team\nhttps://readyforrobots.com"
+    """Cal's sales & deployment advisor sign-off."""
+    return f"— {CAL_NAME}\nSales & Deployment Advisor, {CAL_ORG}\nhttps://readyforrobots.com"
 
 
 def cal_buyer_email_signature() -> str:
-    """Executive buyer first-touch close — professional and direct."""
-    return "Best regards,\n\nBob Christopher\nPresident | ReadyForRobots\nbob@readyforrobots.com\nhttps://readyforrobots.com"
+    """Cal's buyer email signature."""
+    return f"Best regards,\n\n{CAL_NAME}\nSales & Deployment Advisor | {CAL_ORG}\ncal@readyforrobots.com\nhttps://readyforrobots.com"
 
 
 def cal_persona_payload() -> dict:

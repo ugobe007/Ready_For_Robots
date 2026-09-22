@@ -10,10 +10,10 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_buyer_emai
 # Honesty and trust over hype. Draws on deep robotics industry experience.
 
 # External outreach constants (used in cal_opening, cal_vendor_opening, sales_agent)
-CAL_INTRO = "I am reaching out from ReadyForRobots. We work with enterprise operations leaders to evaluate physical task feasibility, cell constraints, payload/throughput requirements, and commercial robotics options for industrial facilities."
+CAL_INTRO = "I'm Cal, Sales & Deployment Advisor at ReadyForRobots. We work with enterprise operations leaders to evaluate physical task feasibility, cell constraints, payload/throughput requirements, and commercial robotics options for industrial facilities."
 
 CAL_BUYER_ROLE_LINE = (
-    "We analyze which commercial robot deployments deliver verified ROI in real production environments."
+    "I'm Cal from ReadyForRobots. We analyze which commercial robot deployments deliver verified ROI in real production environments."
 )
 
 CAL_BUYER_REMINDER_LINE = (
@@ -664,7 +664,7 @@ def _greeting_name(name: str) -> str:
 
 def _cal_intro() -> str:
     return (
-        "My name is Bob Christopher with ReadyForRobots. We evaluate physical task feasibility "
+        "I'm Cal, Sales & Deployment Advisor at ReadyForRobots. We evaluate physical task feasibility "
         "and match industrial operations with qualified commercial robotics models before vendor PoCs."
     )
 
