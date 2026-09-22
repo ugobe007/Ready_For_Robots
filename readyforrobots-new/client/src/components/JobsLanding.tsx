@@ -157,7 +157,7 @@ export default function JobsLanding() {
       <QuickSignupModal
         isOpen={isSignupOpen}
         onClose={() => setIsSignupOpen(false)}
-        title="Unlock Complete Task-Feasibility & Cal Proposals"
+        title="Unlock Engineering Feasibility & Commercial Proposals"
         subtitle="Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer signals, and generate turnkey commercial quotes."
         source="jobs_landing_hero"
       />
@@ -219,17 +219,22 @@ export default function JobsLanding() {
           </div>
         </form>
 
-        {/* High-Converting Account Registration Banner */}
-        <div className="rfr-landing-signup-cta mt-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-cyan-950/90 border border-emerald-500/40 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+        {/* Featured Daily Customer Intent Quotes */}
+        <div className="rfr-landing-quotes mt-8 mb-5 w-full pt-1" aria-label="Customer Quotes">
+          <CustomerQuoteBanner />
+        </div>
+
+        {/* High-Converting Account Registration Banner (Positioned directly below Customer Quotes) */}
+        <div className="rfr-landing-signup-cta my-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-cyan-950/90 border border-emerald-500/40 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="space-y-1 text-left">
             <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold">
-              <Sparkles className="w-4 h-4 text-emerald-400" /> Free Platform Access
+              <Sparkles className="w-4 h-4 text-emerald-400" /> Free Enterprise Workspace
             </div>
             <h3 className="text-base sm:text-lg font-extrabold text-white">
-              Unlock Engineering Task-Feasibility & Cal Proposal Quotes
+              Unlock Engineering Feasibility & Commercial Proposals
             </h3>
             <p className="text-xs text-slate-300 max-w-xl">
-              Join 1,200+ robotics leaders. Access verified buyer signals, 3D cell simulations, and 1-click RaaS commercial quotes.
+              Join 1,200+ robotics leaders. Access verified buyer signals, 3D cell simulations, and turnkey RaaS commercial quotes.
             </p>
           </div>
 
@@ -241,11 +246,6 @@ export default function JobsLanding() {
             <UserPlus className="w-4 h-4" />
             Create Free Account in 10s →
           </button>
-        </div>
-
-        {/* Featured Daily Customer Intent Quotes with comfortable top padding */}
-        <div className="rfr-landing-quotes mt-8 mb-5 w-full pt-1" aria-label="Customer Quotes">
-          <CustomerQuoteBanner />
         </div>
 
         {/* Action Links pulled to left margin with normalized text-sm font */}
