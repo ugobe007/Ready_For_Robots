@@ -31,7 +31,7 @@ export default function AuthCallback() {
     const pathname = window.location.pathname;
     const search = window.location.search;
     const explicitNext = readNextParam(search) ?? peekPendingNext();
-    const next = explicitNext ?? postAuthRedirectTarget("/");
+    const next = explicitNext ?? postAuthRedirectTarget("/welcome?registered=1");
     if (explicitNext) markJobsWorkspaceRestoreIfHome(explicitNext);
 
     let done = false;

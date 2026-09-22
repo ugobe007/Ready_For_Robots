@@ -137,6 +137,6 @@ export function resolveSignupWorkflowReturnPath(args: {
   if (nextRaw.startsWith("/pipeline") || nextRaw.startsWith("/pricing"))
     return nextRaw;
   if (args.matchedPipelineReturnPath) return args.matchedPipelineReturnPath;
-  if (!shouldHonorWorkflowResults(nextRaw, args.prefill)) return "/pipeline";
+  if (!shouldHonorWorkflowResults(nextRaw, args.prefill)) return "/welcome?registered=1";
   return workflowResultsPath(args.prefill, nextRaw);
 }

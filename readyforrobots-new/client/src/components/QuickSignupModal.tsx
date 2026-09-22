@@ -56,7 +56,7 @@ export default function QuickSignupModal({
     }
     setOauthLoading(provider);
     try {
-      const redirectTo = supabaseOAuthRedirect(window.location.pathname);
+      const redirectTo = supabaseOAuthRedirect("/welcome?registered=1");
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: { redirectTo },
@@ -108,7 +108,7 @@ export default function QuickSignupModal({
       toast.success("🎉 Account created successfully! Welcome to ReadyForRobots.");
       setIsSubmitting(false);
       onClose();
-      window.location.reload();
+      window.location.href = "/welcome?registered=1";
     } catch (err) {
       toast.error("Failed to create account. Please try again.");
       setIsSubmitting(false);

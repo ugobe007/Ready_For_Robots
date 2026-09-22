@@ -49,6 +49,7 @@ import VendorDesignBuilder from "./pages/VendorDesignBuilder";
 import DesignShare from "./pages/DesignShare";
 import IconReview from "./pages/IconReview";
 import Icons from "./pages/Icons";
+import Welcome from "./pages/Welcome";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
@@ -137,6 +138,7 @@ function Router() {
       <Route path="/icon-review" component={IconReview} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
+      <Route path="/welcome" component={Welcome} />
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/profile" component={Profile} />
       <Route path="/my-robots" component={MyRobots} />
