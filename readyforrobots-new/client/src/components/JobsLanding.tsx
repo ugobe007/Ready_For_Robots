@@ -3,10 +3,12 @@
  * Headline picker A–E is not shipped.
  */
 import { useState, type FormEvent } from "react";
+import { Sparkles, UserPlus, ShieldCheck } from "lucide-react";
 import PixelIcon from "@/components/PixelIcon";
 import SiteIcon from "@/components/SiteIcon";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import CustomerQuoteBanner from "@/components/CustomerQuoteBanner";
+import QuickSignupModal from "@/components/QuickSignupModal";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
@@ -141,6 +143,7 @@ const SAMPLE_ROBOTS = [
 
 export default function JobsLanding() {
   const [heroUrl, setHeroUrl] = useState("");
+  const [isSignupOpen, setIsSignupOpen] = useState(false);
 
   const handleHeroSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -151,6 +154,14 @@ export default function JobsLanding() {
 
   return (
     <div className="rfr-landing">
+      <QuickSignupModal
+        isOpen={isSignupOpen}
+        onClose={() => setIsSignupOpen(false)}
+        title="Unlock Complete Task-Feasibility & Cal Proposals"
+        subtitle="Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer signals, and generate turnkey commercial quotes."
+        source="jobs_landing_hero"
+      />
+
       <section className="rfr-landing-hero">
         <div className="rfr-landing-hero-bg" aria-hidden="true">
           <img
@@ -207,6 +218,30 @@ export default function JobsLanding() {
             </button>
           </div>
         </form>
+
+        {/* High-Converting Account Registration Banner */}
+        <div className="rfr-landing-signup-cta mt-6 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-cyan-950/90 border border-emerald-500/40 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="space-y-1 text-left">
+            <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs uppercase tracking-wider font-bold">
+              <Sparkles className="w-4 h-4 text-emerald-400" /> Free Platform Access
+            </div>
+            <h3 className="text-base sm:text-lg font-extrabold text-white">
+              Unlock Engineering Task-Feasibility & Cal Proposal Quotes
+            </h3>
+            <p className="text-xs text-slate-300 max-w-xl">
+              Join 1,200+ robotics leaders. Access verified buyer signals, 3D cell simulations, and 1-click RaaS commercial quotes.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setIsSignupOpen(true)}
+            className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs tracking-wide uppercase transition-all shadow-lg shadow-emerald-400/20 whitespace-nowrap text-center flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <UserPlus className="w-4 h-4" />
+            Create Free Account in 10s →
+          </button>
+        </div>
 
         {/* Featured Daily Customer Intent Quotes with comfortable top padding */}
         <div className="rfr-landing-quotes mt-8 mb-5 w-full pt-1" aria-label="Customer Quotes">

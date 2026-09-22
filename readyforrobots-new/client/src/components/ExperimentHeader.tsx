@@ -259,10 +259,10 @@ export default function ExperimentHeader() {
                 Sign In
               </a>
               <a
-                href="/signup?next=/&src=robot_jobs"
-                className="rounded-lg bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
+                href="/signup?next=/&src=header_hero_boost"
+                className="rounded-xl bg-emerald-400 hover:bg-emerald-300 px-4 py-2 text-xs font-extrabold text-slate-950 shadow-lg shadow-emerald-400/20 transition-all uppercase tracking-wide flex items-center gap-1.5"
               >
-                Start free workspace
+                Create Free Account →
               </a>
             </>
           )}
