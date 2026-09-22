@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
 import { Check, ExternalLink, Loader2, Plus } from "lucide-react";
+import LeadEmailDisplay from "@/components/LeadEmailDisplay";
 
 type CrmTask = {
   id: string;
@@ -387,7 +388,7 @@ export default function CrmAccountWorkspace({
           <ul className="mt-2 space-y-1">
             {detail.outreach_history.slice(0, 5).map(row => (
               <li key={row.id} className="text-[10px] text-slate-300">
-                <span className="font-semibold">{row.to_email}</span>
+                <LeadEmailDisplay email={row.to_email} variant="inline" />
                 <span className="text-slate-500"> · {row.status}</span>
                 <span className="block truncate text-slate-500">
                   {row.subject}

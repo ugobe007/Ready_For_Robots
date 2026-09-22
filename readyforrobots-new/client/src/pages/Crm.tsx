@@ -4,6 +4,7 @@ import ExperimentHeader from "@/components/ExperimentHeader";
 import AdminNav from "@/components/AdminNav";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
 import CrmAccountWorkspace from "@/components/crm/CrmAccountWorkspace";
+import LeadEmailDisplay from "@/components/LeadEmailDisplay";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { openWorkspaceHref } from "@/lib/adminNavLinks";
@@ -779,8 +780,12 @@ export default function Crm() {
                             <td className="px-3 py-2.5 text-sm text-emerald-300">
                               {a.outreach_stage || "—"}
                             </td>
-                            <td className="px-3 py-2.5 text-sm text-slate-300 truncate max-w-[140px]">
-                              {a.contact_email || "—"}
+                            <td className="px-3 py-2.5 text-sm text-slate-300">
+                              <LeadEmailDisplay
+                                email={a.contact_email}
+                                variant="table"
+                                showUpgradeBtn
+                              />
                             </td>
                           </tr>
                         ))}
@@ -817,14 +822,14 @@ export default function Crm() {
                         <span className="sb-label mb-1 block">
                           Recipient email
                         </span>
-                        <input
-                          value={contactEmail}
-                          onChange={e => {
-                            setContactEmail(e.target.value);
+                        <LeadEmailDisplay
+                          email={contactEmail}
+                          variant="input"
+                          onEmailChange={v => {
+                            setContactEmail(v);
                             setStyleApproved(false);
                           }}
                           placeholder="buyer@example.com"
-                          className="sb-input"
                         />
                       </label>
                       <label className="mb-2 block">

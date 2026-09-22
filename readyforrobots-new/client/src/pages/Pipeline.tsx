@@ -43,6 +43,8 @@ import AdminNav from "@/components/AdminNav";
 import ProposalPdfModal, {
   type ProposalData,
 } from "@/components/ProposalPdfModal";
+import LeadEmailDisplay, { maskEmail } from "@/components/LeadEmailDisplay";
+import { useIsPaidUser } from "@/hooks/useIsPaidUser";
 import { Link, useLocation, useSearch } from "wouter";
 import { openWorkspaceHref } from "@/lib/adminNavLinks";
 import { useAuth } from "@/contexts/AuthContext";
@@ -2035,6 +2037,7 @@ function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
 
 export default function Pipeline() {
   const { session, loading: authLoading } = useAuth();
+  const isPaidUser = useIsPaidUser();
   const isSignedIn = Boolean(session?.access_token);
   const BUILD_PIPELINE_TARGET = isSignedIn
     ? BUILD_PIPELINE_SIGNED_IN
@@ -6399,11 +6402,9 @@ export default function Pipeline() {
                               </span>
                             )}
                             {selected.contact && (
-                              <span className="text-[11px] text-gray-500">
-                                <span className="text-gray-600 font-medium">
-                                  {selected.contact}
-                                </span>{" "}
-                                · {selected.contactTitle}
+                              <span className="text-[11px] text-gray-500 flex items-center gap-1.5">
+                                <LeadEmailDisplay email={selected.contact} variant="inline" />
+                                {selected.contactTitle ? <span>· {selected.contactTitle}</span> : null}
                               </span>
                             )}
                           </div>
@@ -7399,7 +7400,7 @@ export default function Pipeline() {
                                   )}
                                   {sendingLeadId === selected.id
                                     ? "Sending..."
-                                    : `Send outreach to ${selected.contact}`}
+                                    : `Send outreach to ${isPaidUser ? selected.contact : maskEmail(selected.contact)}`}
                                 </button>
                               )}
                             {!selected.contact && selected.outreachBody && (
@@ -7692,7 +7693,9 @@ export default function Pipeline() {
                 <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
                   To
                 </p>
-                <p className="text-xs text-gray-600">{selected.contact}</p>
+                <p className="text-xs text-gray-600">
+                  <LeadEmailDisplay email={selected.contact} variant="inline" />
+                </p>
               </div>
             )}
             <div

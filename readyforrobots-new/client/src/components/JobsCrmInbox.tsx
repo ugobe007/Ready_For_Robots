@@ -27,6 +27,7 @@ import {
   JOBS_EYEBROW_CLASS,
 } from "@/lib/jobsWorkflow";
 import PocVideoWatch from "@/components/PocVideoWatch";
+import LeadEmailDisplay from "@/components/LeadEmailDisplay";
 
 export default function JobsCrmInbox({
   applicationId,
@@ -222,12 +223,14 @@ export default function JobsCrmInbox({
             </p>
           )}
           {(app.contacts || app.draft.contacts || []).length ? (
-            <p className="mt-2 text-sm text-slate-200">
-              Contact:{" "}
-              {(app.contacts || app.draft.contacts || [])
-                .map(c => c.email)
-                .join(", ")}
-            </p>
+            <div className="mt-2 text-sm text-slate-200 flex items-center gap-2">
+              <span>Contact:</span>
+              <div className="flex flex-wrap gap-2">
+                {(app.contacts || app.draft.contacts || []).map((c, idx) => (
+                  <LeadEmailDisplay key={idx} email={c.email} variant="inline" />
+                ))}
+              </div>
+            </div>
           ) : (
             <p className="mt-2 text-sm text-amber-200/90">
               {JOBS_CONTACTS_EMPTY_NOTE}
@@ -278,10 +281,15 @@ export default function JobsCrmInbox({
               key={msg.id}
               className="border border-slate-700 px-3 py-3 text-sm text-slate-200"
             >
-              <p className="font-mono text-xs uppercase tracking-[0.08em] text-slate-500">
-                {msg.direction === "inbound" ? "Employer" : "You"}
-                {msg.from_email ? ` · ${msg.from_email}` : ""}
-              </p>
+              <div className="font-mono text-xs uppercase tracking-[0.08em] text-slate-500 flex items-center gap-1.5">
+                <span>{msg.direction === "inbound" ? "Employer" : "You"}</span>
+                {msg.from_email ? (
+                  <>
+                    <span>·</span>
+                    <LeadEmailDisplay email={msg.from_email} variant="inline" />
+                  </>
+                ) : null}
+              </div>
               <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-200">
                 {msg.body}
               </pre>

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "wouter";
 import { Lock, ShieldCheck, Sparkles, UserCheck, ArrowRight, Bot, PhoneCall, Zap, CheckCircle2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsPaidUser } from "@/hooks/useIsPaidUser";
 import { toast } from "sonner";
 
 type BlurredContactCardProps = {
@@ -23,8 +24,8 @@ export default function BlurredContactCard({
   const [dispatched, setDispatched] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  // Check if session has active paid subscription metadata (if available)
-  const isPaidUser = isPaid || Boolean(session?.user?.user_metadata?.subscription_tier === "paid" || session?.user?.user_metadata?.is_paid);
+  // Check if session has active paid subscription metadata or admin access
+  const isPaidUser = useIsPaidUser(isPaid);
 
   function handleDispatchCal() {
     setBusy(true);
