@@ -185,8 +185,9 @@ export default function Crm() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const accountParam = params.get("account");
-    if (accountParam) setSelectedAccountId(accountParam);
+    const targetParam =
+      params.get("account") || params.get("lead") || params.get("id");
+    if (targetParam) setSelectedAccountId(targetParam);
   }, []);
 
   useEffect(() => {
@@ -268,9 +269,24 @@ export default function Crm() {
         const data = (await authFetch(`/api/crm/accounts?${q}`)) as Account[];
         const rows = Array.isArray(data) ? data : [];
         setAccounts(rows);
-        setSelectedAccountId(prev =>
-          rows.some(a => a.id === prev) ? prev : (rows[0]?.id ?? "")
-        );
+        const params = new URLSearchParams(window.location.search);
+        const coParam = params.get("co") || params.get("company");
+        setSelectedAccountId(prev => {
+          if (prev && rows.some(a => a.id === prev)) return prev;
+          if (prev && rows.some(a => String(a.id) === String(prev))) {
+            const matched = rows.find(a => String(a.id) === String(prev));
+            if (matched) return matched.id;
+          }
+          if (coParam) {
+            const matchedByCo = rows.find(a =>
+              (a.name || "")
+                .toLowerCase()
+                .includes(coParam.toLowerCase())
+            );
+            if (matchedByCo) return matchedByCo.id;
+          }
+          return rows[0]?.id ?? "";
+        });
       } catch (e) {
         setMsg(e instanceof Error ? e.message : "Failed to load accounts");
         setAccounts([]);

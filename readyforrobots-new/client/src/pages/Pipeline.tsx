@@ -1086,12 +1086,19 @@ const PIPELINE_STALE_PAINT_MS = 7 * 24 * 60 * 60 * 1000;
 
 function parsePipelineLeadIdFromSearch(search: string): number | null {
   const params = new URLSearchParams(search);
-  const leadParam = params.get("lead");
+  const leadParam =
+    params.get("lead") || params.get("account") || params.get("id");
   if (leadParam) {
     const id = Number.parseInt(leadParam, 10);
     if (Number.isFinite(id) && id > 0) return id;
   }
   return null;
+}
+
+function parsePipelineCompanyNameFromSearch(search: string): string | null {
+  const params = new URLSearchParams(search);
+  const co = params.get("co") || params.get("company");
+  return co ? co.trim() : null;
 }
 
 /** Newsletter/homepage deep links use ?lead= or legacy #id. */
@@ -2965,6 +2972,18 @@ export default function Pipeline() {
         });
         if (cancelled) return;
         if (!mapped) {
+          const coName = parsePipelineCompanyNameFromSearch(search);
+          if (coName) {
+            const foundByCo = dealsRef.current.find(d =>
+              d.company.toLowerCase().includes(coName.toLowerCase())
+            );
+            if (foundByCo) {
+              setSelectedId(foundByCo.id);
+              deepLinkInflightRef.current = null;
+              setDeepLinkLoadFailed(false);
+              return;
+            }
+          }
           deepLinkInflightRef.current = null;
           setDeepLinkLoadFailed(true);
           return;
@@ -3456,7 +3475,7 @@ export default function Pipeline() {
 
   const pendingDeepLink =
     selectedId != null &&
-    deepLinkLeadId === selectedId &&
+    (deepLinkLeadId === selectedId || deals.some(d => d.id === selectedId)) &&
     !displayedDeals.some(d => d.id === selectedId);
   const effectiveSelectedId =
     selectedId != null &&
@@ -3465,7 +3484,7 @@ export default function Pipeline() {
       : (displayedDeals[0]?.id ?? null);
   const selected =
     displayedDeals.find(d => d.id === effectiveSelectedId) ??
-    (pendingDeepLink && effectiveSelectedId != null
+    (effectiveSelectedId != null
       ? (deals.find(d => d.id === effectiveSelectedId) ?? null)
       : null);
   const selectedActivation =

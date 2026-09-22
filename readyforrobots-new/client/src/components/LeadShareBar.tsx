@@ -54,7 +54,17 @@ export function buildLeadSharePost(lead: LeadShareInput): {
       ? body
       : body.slice(0, Math.max(30, maxBody - 1)).trim() + "…";
   const tweetText = trimmed ? `${headline}\n\n${trimmed}` : headline;
-  const shareUrl = `${SITE_URL}/pipeline${lead.id != null ? `?lead=${lead.id}` : ""}`;
+  const isCrmPath =
+    typeof window !== "undefined" && window.location.pathname.startsWith("/crm");
+  const basePath = isCrmPath ? "/crm" : "/pipeline";
+  const paramName = isCrmPath ? "account" : "lead";
+  const companyQuery = lead.company_name
+    ? `&co=${encodeURIComponent(lead.company_name)}`
+    : "";
+  const shareUrl =
+    lead.id != null
+      ? `${SITE_URL}${basePath}?${paramName}=${encodeURIComponent(String(lead.id))}${companyQuery}`
+      : `${SITE_URL}${basePath}`;
   const robotLines = robotShareLines(lead);
   const tweetWithRobots =
     robotLines.length > 0
