@@ -14,19 +14,28 @@ type LeadEmailDisplayProps = {
   placeholder?: string;
 };
 
-export function maskEmail(email: string): string {
-  if (!email || !email.includes("@")) return "buyer@vault.protected";
-  const [local, domain] = email.split("@");
+export function maskEmail(email?: string | null): string {
+  if (!email || typeof email !== "string" || !email.includes("@")) {
+    return "buyer@vault.protected";
+  }
+  const parts = email.split("@");
+  const local = parts[0] || "";
+  const domain = parts[1] || "";
+  if (!local || !domain) return "buyer@vault.protected";
+
   const maskedLocal =
     local.length <= 2
-      ? local[0] + "***"
+      ? (local[0] || "b") + "***"
       : local.slice(0, 2) + "***" + local.slice(-1);
+
   const domainParts = domain.split(".");
+  const domainName = domainParts[0] || "company";
   const maskedDomain =
-    domainParts[0].length <= 2
-      ? domainParts[0][0] + "***"
-      : domainParts[0].slice(0, 2) + "***";
-  const tld = domainParts.slice(1).join(".");
+    domainName.length <= 2
+      ? (domainName[0] || "c") + "***"
+      : domainName.slice(0, 2) + "***";
+  const tld = domainParts.length > 1 ? domainParts.slice(1).join(".") : "com";
+
   return `${maskedLocal}@${maskedDomain}.${tld}`;
 }
 

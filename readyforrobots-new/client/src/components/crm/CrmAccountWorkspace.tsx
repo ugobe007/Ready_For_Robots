@@ -110,7 +110,15 @@ export default function CrmAccountWorkspace({
       const data = (await authFetch(
         `/api/crm/accounts/${accountId}`
       )) as AccountDetail;
-      setDetail(data);
+      const safeDetail: AccountDetail = {
+        account: data?.account || { id: accountId, name: "Account" },
+        engagement: data?.engagement || null,
+        tasks: Array.isArray(data?.tasks) ? data.tasks : [],
+        notes: Array.isArray(data?.notes) ? data.notes : [],
+        outreach_history: Array.isArray(data?.outreach_history) ? data.outreach_history : [],
+        timeline: Array.isArray(data?.timeline) ? data.timeline : [],
+      };
+      setDetail(safeDetail);
       try {
         const seqPayload = (await authFetch("/api/sales/sequences")) as {
           sequences?: Array<{

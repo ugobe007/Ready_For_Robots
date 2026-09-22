@@ -199,21 +199,23 @@ export default function Crm() {
         setTeamId(prev => prev || (list[0]?.id ?? ""));
         const userSettings = (await authFetch(
           "/api/user/settings"
-        )) as UserSettings;
-        setSettings(userSettings);
-        setCcEmails(userSettings.scout_default_cc || "");
-        setBccEmails(userSettings.scout_default_bcc || "");
-        setStyleInstruction(userSettings.scout_message_style || "");
-        setSelectedTraits(
-          (userSettings.scout_persona_traits || "")
-            .split(",")
-            .map(x => x.trim())
-            .filter(Boolean)
-        );
-        setCollateralPolicy(
-          userSettings.scout_collateral_policy || "selective"
-        );
-        setCollateralLinks(userSettings.scout_collateral_links || "");
+        ).catch(() => null)) as UserSettings | null;
+        if (userSettings) {
+          setSettings(userSettings);
+          setCcEmails(userSettings.scout_default_cc || "");
+          setBccEmails(userSettings.scout_default_bcc || "");
+          setStyleInstruction(userSettings.scout_message_style || "");
+          setSelectedTraits(
+            (userSettings.scout_persona_traits || "")
+              .split(",")
+              .map(x => x.trim())
+              .filter(Boolean)
+          );
+          setCollateralPolicy(
+            userSettings.scout_collateral_policy || "selective"
+          );
+          setCollateralLinks(userSettings.scout_collateral_links || "");
+        }
         try {
           const watchStatus = (await authFetch(
             "/api/crm/jobs-watch"
