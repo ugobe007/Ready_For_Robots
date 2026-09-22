@@ -687,17 +687,6 @@ export default function Crm() {
                 >
                   ← Back to pipeline
                 </Link>
-                {isAdmin && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openWorkspaceHref("/admin#cal-outreach", setLocation)
-                    }
-                    className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-amber-200 hover:text-amber-100"
-                  >
-                    Cal queue — bulk send
-                  </button>
-                )}
                 <Link
                   href="/integrations"
                   className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-slate-300 hover:text-white"

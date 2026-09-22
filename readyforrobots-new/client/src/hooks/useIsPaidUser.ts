@@ -1,17 +1,12 @@
 import { useAuth } from "@/contexts/AuthContext";
 
 /**
- * Checks if a session has paid subscriber status or internal admin credentials.
+ * Checks if a session has active paid subscription metadata.
+ * Free accounts (including signed up users) have lead emails blurred per Vault Contact Protection policy.
  */
 export function isPaidSubscriber(session: any, overrideIsPaid?: boolean): boolean {
   if (overrideIsPaid) return true;
   if (!session?.user) return false;
-
-  const email = String(session.user.email || "").toLowerCase();
-  const isAdminOrInternal =
-    email.endsWith("@readyforrobots.com") || email === "ugobe07@gmail.com";
-
-  if (isAdminOrInternal) return true;
 
   const isPaidMetadata = Boolean(
     session.user.user_metadata?.subscription_tier === "paid" ||
@@ -24,8 +19,8 @@ export function isPaidSubscriber(session: any, overrideIsPaid?: boolean): boolea
 }
 
 /**
- * React hook returning true if the current user has paid subscriber status or internal admin access.
- * Non-paid registered users have lead emails blurred in accordance with Vault Contact Protection policy.
+ * React hook returning true if the current user has an active paid subscription plan ($19.99/mo Basic, Pro, or Premium).
+ * Free registered users have lead emails blurred in accordance with Vault Contact Protection policy.
  */
 export function useIsPaidUser(overrideIsPaid?: boolean): boolean {
   const { session } = useAuth();
