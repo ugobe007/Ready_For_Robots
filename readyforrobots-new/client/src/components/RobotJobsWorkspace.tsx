@@ -61,7 +61,8 @@ import type {
 } from "@/lib/robotJobMatch";
 import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
-import { MARKET_TAPE_JOBS, uniqueTapeJobCount } from "@/lib/jobsTapeCorpus";
+import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
+import { MARKET_TAPE_JOBS, uniqueTapeJobCount, type TapeJob } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
@@ -650,6 +651,7 @@ export default function RobotJobsWorkspace() {
   const [keepSavedCount, setKeepSavedCount] = useState(0);
   const [showAllJobs, setShowAllJobs] = useState(false);
   const [lineupPreview, setLineupPreview] = useState(false);
+  const [selectedTapeModalJob, setSelectedTapeModalJob] = useState<TapeJob | null>(null);
 
   const sessionId = useRef(
     typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -2313,15 +2315,20 @@ export default function RobotJobsWorkspace() {
               </div>
               <LiveJobTape
                 title="Live Robot Jobs"
-                subtitle={null}
+                subtitle="Click any job opportunity to explore specs, ROI, and share direct links"
                 corpus={MARKET_TAPE_JOBS}
                 baseCount={MARKET_FOUND_BASE}
                 running
                 statusLines={[]}
                 revealTarget={null}
                 onRevealComplete={() => undefined}
-                onSelect={() => undefined}
-                selectedKey={null}
+                onSelect={(job) => setSelectedTapeModalJob(job)}
+                selectedKey={selectedTapeModalJob?.key ?? null}
+              />
+              <LiveJobDetailModal
+                job={selectedTapeModalJob}
+                isOpen={Boolean(selectedTapeModalJob)}
+                onClose={() => setSelectedTapeModalJob(null)}
               />
             </div>
           )}

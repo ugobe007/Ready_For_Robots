@@ -2,14 +2,15 @@
  * `/` first beat: sparse System 1 fork, then two doors. Not FIND yet.
  * Headline picker A–E is not shipped.
  */
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import { Sparkles, UserPlus, ShieldCheck } from "lucide-react";
 import PixelIcon from "@/components/PixelIcon";
 import SiteIcon from "@/components/SiteIcon";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
+import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
 import CustomerQuoteBanner from "@/components/CustomerQuoteBanner";
 import QuickSignupModal from "@/components/QuickSignupModal";
-import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
+import { MARKET_TAPE_JOBS, type TapeJob } from "@/lib/jobsTapeCorpus";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
   LANDING_BRIEF_EYEBROW,
@@ -144,6 +145,57 @@ const SAMPLE_ROBOTS = [
 export default function JobsLanding() {
   const [heroUrl, setHeroUrl] = useState("");
   const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [selectedTapeJob, setSelectedTapeJob] = useState<TapeJob | null>(null);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const visit = params.get("visit");
+      const jobKey = params.get("job");
+
+      if (visit === "jobs" || visit === "jobslanding") {
+        const tapeEl = document.querySelector(".rfr-landing-brief");
+        if (tapeEl) {
+          setTimeout(() => {
+            tapeEl.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 200);
+        }
+      }
+
+      if (jobKey) {
+        const matched = MARKET_TAPE_JOBS.find(
+          (j) => j.key.toLowerCase() === jobKey.toLowerCase()
+        );
+        if (matched) {
+          setSelectedTapeJob(matched);
+        }
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
+  }, []);
+
+  const handleSelectJob = (job: TapeJob) => {
+    setSelectedTapeJob(job);
+    try {
+      const newUrl = `${window.location.pathname}?visit=jobs&job=${encodeURIComponent(job.key)}`;
+      window.history.pushState({ jobKey: job.key }, "", newUrl);
+    } catch {
+      // Ignore history push errors
+    }
+  };
+
+  const handleCloseModal = () => {
+    setSelectedTapeJob(null);
+    try {
+      if (window.location.search.includes("job=")) {
+        const newUrl = `${window.location.pathname}?visit=jobs`;
+        window.history.pushState({}, "", newUrl);
+      }
+    } catch {
+      // Ignore history push errors
+    }
+  };
 
   const handleHeroSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -158,7 +210,7 @@ export default function JobsLanding() {
         isOpen={isSignupOpen}
         onClose={() => setIsSignupOpen(false)}
         title="Unlock Engineering Feasibility & Commercial Proposals"
-        subtitle="Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer signals, and generate turnkey commercial quotes."
+        subtitle="Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer demand, and generate turnkey commercial quotes."
         source="jobs_landing_hero"
       />
 
@@ -234,7 +286,7 @@ export default function JobsLanding() {
               Unlock Engineering Feasibility & Commercial Proposals
             </h3>
             <p className="text-xs text-slate-300 max-w-xl">
-              Join 1,200+ robotics leaders. Access verified buyer signals, 3D cell simulations, and turnkey RaaS commercial quotes.
+              Join 1,200+ robotics leaders. Access verified buyer demand, 3D cell simulations, and turnkey RaaS commercial quotes.
             </p>
           </div>
 
@@ -271,13 +323,22 @@ export default function JobsLanding() {
         <div className="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-[#081126] shadow-2xl">
           <LiveJobTape
             title="Verified Physical Work Feed"
-            subtitle="Classified job opportunities highlighting as they reach the top of the feed"
+            subtitle="Click any classified job opportunity to explore specs, ROI breakdown, and share direct links"
             corpus={MARKET_TAPE_JOBS}
             baseCount={MARKET_TAPE_JOBS.length}
             running={true}
+            onSelect={handleSelectJob}
+            selectedKey={selectedTapeJob?.key ?? null}
           />
         </div>
       </section>
+
+      <LiveJobDetailModal
+        job={selectedTapeJob}
+        isOpen={Boolean(selectedTapeJob)}
+        onClose={handleCloseModal}
+        onUnlockSignup={() => setIsSignupOpen(true)}
+      />
 
       <footer className="rfr-landing-footer">
         <div className="rfr-landing-footer-row">
