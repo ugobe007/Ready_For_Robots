@@ -105,6 +105,12 @@ CAL_PERSONALITY_TRAITS = (
 
 # Marketing / AI-slop phrases assembly and LLM review should block in buyer copy.
 CAL_BANNED_PHRASES = (
+    "SIGNAL",
+    "Cal",
+    "FIND",
+    "SIGNAL has matched",
+    "Cal matched",
+    "Hi Operations Team",
     "game-changing",
     "game changing",
     "game changer",
@@ -168,13 +174,13 @@ Return JSON only: {{"approved": bool, "confidence": 0-1, "issues": [str], "summa
 
 
 def cal_signature() -> str:
-    """Cal's sign-off — role reinforces credibility without sounding like sales."""
-    return f"— {CAL_NAME}\n{CAL_TITLE}, {CAL_ORG}"
+    """ReadyForRobots Engineering Team sign-off."""
+    return "ReadyForRobots Engineering & Deployment Team\nhttps://readyforrobots.com"
 
 
 def cal_buyer_email_signature() -> str:
-    """Operator-approved buyer first-touch close — plain and human."""
-    return f"{CAL_NAME}\nReadyForRobots"
+    """Executive buyer first-touch close — professional and direct."""
+    return "Best regards,\n\nBob Christopher\nPresident | ReadyForRobots\nbob@readyforrobots.com\nhttps://readyforrobots.com"
 
 
 def cal_persona_payload() -> dict:
