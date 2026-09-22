@@ -1,42 +1,43 @@
 /**
  * Central Executive Sales Email Generator
  * Standardized across all sales leads, CRM desks, pipeline cards, and admin panels.
+ * Zero internal engine names (no SIGNAL, no Cal, no FIND).
  */
 
 export type ExecutiveEmailOpts = {
   companyName: string;
   dmName?: string;
   robotTypes?: string[];
+  taskType?: string;
 };
 
 export function buildBobExecutiveEmail(opts: ExecutiveEmailOpts): { subject: string; body: string } {
-  const name = opts.dmName ? opts.dmName.split(" ")[0] : "there";
+  const rawName = (opts.dmName || "").trim();
+  const firstName = rawName ? rawName.split(" ")[0] : "";
   const company = opts.companyName.trim();
   const companyPossessive = company.endsWith("s") ? `${company}’` : `${company}’s`;
 
-  const subject = `Robotics task matching for ${company}?`;
-  const body = `Dear ${name},
+  const greeting = firstName ? `Dear ${firstName},` : `Dear ${company} Operations Leadership,`;
+  const subject = `Engineering task feasibility & robotics evaluation for ${company}`;
 
-Nice to meet you.
+  const body = `${greeting}
 
-I am with ReadyForRobots. We help enterprise operators evaluate commercial robotics—matching specific robot models to your exact job requirements, facility constraints, and operational timing, and helping structure vendor PoCs when you're ready.
+My name is Bob Christopher, President of ReadyForRobots. I am reaching out regarding operational task feasibility and commercial robotics evaluation for ${companyPossessive} facilities.
 
-I’m reaching out because we’ve been following ${companyPossessive} growth and operational scale. In commercial robotics today, market demand is high, but finding the right robot model for a specific task—and navigating vendor claims, integration timelines, and PoC requirements—is much harder than vendors acknowledge.
+In commercial robotics, evaluating whether a specific physical task can be reliably automated requires analyzing cell geometry, payload limits, throughput rates, and payback timelines before vendor commitments.
 
-Having spent my career in robotics—leading teams at Panasonic, RichTech Robotics, and Anybots—I founded ReadyForRobots to help operators cut through the noise. Whether you're early in planning, evaluating budget timing, or looking at specific tasks, we help you identify which models match your job requirements and coordinate vendor PoCs when the time is right.
+Rather than relying on vendor brochure claims, ReadyForRobots provides enterprise operators with independent engineering evaluations, 3D feasibility simulations, and turnkey commercial quotes (CapEx and RaaS).
 
-If you’re currently thinking about automation or exploring upcoming facility needs, I’d be glad to share a task-matching evaluation for ${company}.
+We have compiled a preliminary task-feasibility framework tailored for ${companyPossessive} operations. If your team is evaluating upcoming facility automation or considering pilot programs this year, I would be glad to share our analysis.
 
-Either way, I’d be curious to hear how your team is thinking about robotics across your facilities right now.
+Would you be open to reviewing a brief feasibility and ROI summary for your facilities?
 
 Best regards,
-
-Bob
 
 Bob Christopher
 President | ReadyForRobots
 bob@readyforrobots.com
-https://readyforrobots.com/robot-ready`;
+https://readyforrobots.com`;
 
   return { subject, body };
 }
