@@ -37,7 +37,7 @@ type QuickSignupModalProps = {
 export default function QuickSignupModal({
   isOpen,
   onClose,
-  title = "Unlock Full Engineering Feasibility & Cal Proposals",
+  title = "Unlock Engineering Feasibility & Commercial Proposals",
   subtitle = "Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer signals, and generate turnkey commercial quotes.",
   source = "modal_prompt",
 }: QuickSignupModalProps) {
@@ -152,7 +152,7 @@ export default function QuickSignupModal({
           </div>
           <div className="flex items-center gap-2 text-slate-200">
             <CheckCircle2 className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-            <span><strong>1-Click Cal AI Commercial Quotes</strong> & RaaS calculations</span>
+            <span><strong>1-Click Commercial Proposals</strong> & RaaS calculations</span>
           </div>
           <div className="flex items-center gap-2 text-slate-200">
             <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
