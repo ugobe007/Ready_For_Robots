@@ -3,10 +3,10 @@
   "version": "1.1.0",
   "generated_at": "2026-08-31T14:55:00+00:00",
   "source": "docs/reference/readyforrobots_companies_and_robots.xlsx",
-  "rule": "COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES",
+  "rule": "COMPANY \u2192 PRODUCT \u2192 CONFIGURATION \u2192 HARDWARE \u2192 CAPABILITIES",
   "notes": [
     "Named SKUs only. Family blobs skipped.",
-    "Empty specs stay UNKNOWN — do not invent payload, reach, or price.",
+    "Empty specs stay UNKNOWN \u2014 do not invent payload, reach, or price.",
     "Quote required is not a spec.",
     "product_url / lookup_host are set only after a live fetch verifies the page.",
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
@@ -41,7 +41,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid / wheeled manipulator",
           "task": "General-purpose household and service tasks",
-          "setting": "Homes · service environments",
+          "setting": "Homes \u00b7 service environments",
           "status": "Research / pilot",
           "region": "Norway / United States",
           "spreadsheet_sources": [
@@ -67,7 +67,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid / wheeled manipulator",
           "task": "Mobile manipulation and logistics",
-          "setting": "Warehouses · service environments",
+          "setting": "Warehouses \u00b7 service environments",
           "status": "Research / pilot",
           "region": "Norway / United States",
           "spreadsheet_sources": [
@@ -139,7 +139,7 @@
           "category": "Manufacturing",
           "listed_class": "Industrial robot",
           "task": "Small-parts assembly",
-          "setting": "Electronics · light industry",
+          "setting": "Electronics \u00b7 light industry",
           "status": "Deployed",
           "region": "Switzerland / Global",
           "spreadsheet_sources": [
@@ -243,7 +243,7 @@
           "category": "Manufacturing",
           "listed_class": "Industrial robot",
           "task": "Heavy industrial handling",
-          "setting": "Automotive · manufacturing",
+          "setting": "Automotive \u00b7 manufacturing",
           "status": "Deployed",
           "region": "Switzerland / Global",
           "spreadsheet_sources": [
@@ -287,7 +287,7 @@
           "category": "Service",
           "listed_class": "Inspection robot",
           "task": "Autonomous industrial inspection",
-          "setting": "Energy · process industry",
+          "setting": "Energy \u00b7 process industry",
           "status": "Commercial",
           "region": "Switzerland / Global",
           "spreadsheet_sources": [
@@ -505,7 +505,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid mobile manipulator",
           "task": "Tote movement and facility work",
-          "setting": "Warehouses · factories",
+          "setting": "Warehouses \u00b7 factories",
           "status": "Commercially deployed",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -674,7 +674,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid general-purpose",
           "task": "Palletizing and material handling",
-          "setting": "Warehouses · manufacturing",
+          "setting": "Warehouses \u00b7 manufacturing",
           "status": "Pilot / commercial",
           "region": "United States",
           "spreadsheet_sources": [
@@ -721,7 +721,7 @@
           "category": "Commercial",
           "listed_class": "Restaurant serving robot",
           "task": "AI robot waiter assistant. Table service and food delivery.",
-          "setting": "Restaurants · hospitality",
+          "setting": "Restaurants \u00b7 hospitality",
           "status": "Deployed",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -747,7 +747,7 @@
           "category": "Commercial",
           "listed_class": "Restaurant serving robot",
           "task": "High-capacity food delivery",
-          "setting": "Restaurants · hospitality",
+          "setting": "Restaurants \u00b7 hospitality",
           "status": "Deployed",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -773,7 +773,7 @@
           "category": "Commercial",
           "listed_class": "Professional service",
           "task": "Autonomous cart transport",
-          "setting": "Restaurants · hotels",
+          "setting": "Restaurants \u00b7 hotels",
           "status": "Deployed",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -815,7 +815,7 @@
           "primary_class": "cleaning",
           "listed_class": "Commercial floor cleaning robot",
           "task": "Commercial floor cleaning. Vacuuming and scrubbing.",
-          "setting": "Restaurants · hospitality floors",
+          "setting": "Restaurants \u00b7 hospitality floors",
           "lookup_host": "bearrobotics.ai",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -849,7 +849,7 @@
           "primary_class": "serving",
           "listed_class": "Autonomous cart transport",
           "task": "Autonomous cart transport in restaurants and hotels",
-          "setting": "Restaurants · hotels",
+          "setting": "Restaurants \u00b7 hotels",
           "lookup_host": "bearrobotics.ai",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -938,7 +938,7 @@
           "category": "Service",
           "listed_class": "Professional service",
           "task": "Inspection and remote observation",
-          "setting": "Industrial sites · energy",
+          "setting": "Industrial sites \u00b7 energy",
           "status": "Deployed",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -990,7 +990,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid research / industrial",
           "task": "Dynamic handling and manipulation",
-          "setting": "Industrial R&D · factories",
+          "setting": "Industrial R&D \u00b7 factories",
           "status": "Development",
           "region": "United States",
           "spreadsheet_sources": [
@@ -1086,7 +1086,7 @@
           "category": "Service",
           "listed_class": "Cleaning robot",
           "task": "Window cleaning",
-          "setting": "Commercial · residential buildings",
+          "setting": "Commercial \u00b7 residential buildings",
           "status": "Commercial",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -1157,7 +1157,7 @@
           "category": "Healthcare",
           "listed_class": "Rehabilitation robot",
           "task": "Rehabilitation and gait training",
-          "setting": "Clinics · rehabilitation",
+          "setting": "Clinics \u00b7 rehabilitation",
           "status": "Deployed",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -1335,7 +1335,7 @@
           "category": "Manufacturing",
           "listed_class": "Industrial robot",
           "task": "Heavy payload handling",
-          "setting": "Automotive · manufacturing",
+          "setting": "Automotive \u00b7 manufacturing",
           "status": "Deployed",
           "region": "Japan / Global",
           "spreadsheet_sources": [
@@ -1427,7 +1427,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid general-purpose",
           "task": "Material handling and industrial tasks",
-          "setting": "Factories · logistics",
+          "setting": "Factories \u00b7 logistics",
           "status": "Pilot / commercial",
           "region": "United States",
           "spreadsheet_sources": [
@@ -1498,7 +1498,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid research / healthcare",
           "task": "Humanoid mobility and rehabilitation research",
-          "setting": "Healthcare · research",
+          "setting": "Healthcare \u00b7 research",
           "status": "Development",
           "region": "Singapore / Global",
           "spreadsheet_sources": [
@@ -1588,7 +1588,7 @@
           "category": "Commercial",
           "listed_class": "Autonomous cleaning robot",
           "task": "Commercial vacuum cleaning",
-          "setting": "Shopping centers · offices",
+          "setting": "Shopping centers \u00b7 offices",
           "status": "Deployed",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -1682,7 +1682,7 @@
           "primary_class": "cleaning",
           "listed_class": "Heavy-duty autonomous sweeper",
           "task": "Indoor and outdoor autonomous sweeping",
-          "setting": "Indoor · outdoor commercial",
+          "setting": "Indoor \u00b7 outdoor commercial",
           "lookup_host": "gausium.com",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -1986,7 +1986,7 @@
           "category": "Humanoid",
           "listed_class": "Social humanoid",
           "task": "Social interaction and public engagement",
-          "setting": "Events · education · research",
+          "setting": "Events \u00b7 education \u00b7 research",
           "status": "Commercial / research",
           "region": "Hong Kong / Global",
           "spreadsheet_sources": [
@@ -2126,7 +2126,7 @@
           "category": "Manufacturing",
           "listed_class": "Industrial robot",
           "task": "Welding and material handling",
-          "setting": "Automotive · industry",
+          "setting": "Automotive \u00b7 industry",
           "status": "Deployed",
           "region": "Germany / Global",
           "spreadsheet_sources": [
@@ -2295,7 +2295,7 @@
           "category": "Commercial",
           "listed_class": "DINERBOT catering delivery robot",
           "task": "Food and beverage service",
-          "setting": "Restaurants · hotels",
+          "setting": "Restaurants \u00b7 hotels",
           "status": "Commercial",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -2399,7 +2399,7 @@
           "category": "Commercial",
           "listed_class": "Professional service",
           "task": "Delivery and reception",
-          "setting": "Hospitality · retail",
+          "setting": "Hospitality \u00b7 retail",
           "status": "Commercial",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -2667,7 +2667,7 @@
           "category": "Retail",
           "listed_class": "Retail service robot",
           "task": "Wayfinding and information",
-          "setting": "Retail · public spaces",
+          "setting": "Retail \u00b7 public spaces",
           "status": "Commercial",
           "region": "South Korea / Global",
           "spreadsheet_sources": [
@@ -2693,7 +2693,7 @@
           "category": "Retail",
           "listed_class": "Retail service robot",
           "task": "Delivery and service",
-          "setting": "Retail · hospitality",
+          "setting": "Retail \u00b7 hospitality",
           "status": "Commercial",
           "region": "South Korea / Global",
           "spreadsheet_sources": [
@@ -3043,7 +3043,7 @@
           "category": "Retail",
           "listed_class": "Social service robot",
           "task": "Guidance and information",
-          "setting": "Retail · museums · offices",
+          "setting": "Retail \u00b7 museums \u00b7 offices",
           "status": "Commercial",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -3090,7 +3090,7 @@
           "category": "Logistics",
           "listed_class": "AMR",
           "task": "Internal material transport",
-          "setting": "Factories · warehouses",
+          "setting": "Factories \u00b7 warehouses",
           "status": "Deployed",
           "region": "Denmark / Global",
           "spreadsheet_sources": [
@@ -3116,7 +3116,7 @@
           "category": "Logistics",
           "listed_class": "AMR",
           "task": "Pallet transport",
-          "setting": "Factories · warehouses",
+          "setting": "Factories \u00b7 warehouses",
           "status": "Deployed",
           "region": "Denmark / Global",
           "spreadsheet_sources": [
@@ -3168,7 +3168,7 @@
           "category": "Logistics",
           "listed_class": "AMR",
           "task": "Heavy internal transport",
-          "setting": "Factories · logistics",
+          "setting": "Factories \u00b7 logistics",
           "status": "Deployed",
           "region": "Denmark / Global",
           "spreadsheet_sources": [
@@ -3270,7 +3270,7 @@
           "category": "Food",
           "listed_class": "Robotic kitchen",
           "task": "Recipe-based cooking",
-          "setting": "Professional · residential kitchens",
+          "setting": "Professional \u00b7 residential kitchens",
           "status": "Commercial",
           "region": "United Kingdom",
           "spreadsheet_sources": [
@@ -3316,7 +3316,7 @@
           "category": "Food",
           "listed_class": "Kitchen automation",
           "task": "Recipe-based cooking",
-          "setting": "Restaurants · foodservice",
+          "setting": "Restaurants \u00b7 foodservice",
           "status": "Commercial",
           "region": "United States",
           "spreadsheet_sources": [
@@ -3433,7 +3433,7 @@
           "category": "Logistics",
           "listed_class": "AMR",
           "task": "Pallet and cart transport",
-          "setting": "Factories · warehouses",
+          "setting": "Factories \u00b7 warehouses",
           "status": "Deployed",
           "region": "Canada / Global",
           "spreadsheet_sources": [
@@ -3533,7 +3533,7 @@
           "category": "Service",
           "listed_class": "Telepresence robot",
           "task": "Remote presence and teleoperation",
-          "setting": "Healthcare · education",
+          "setting": "Healthcare \u00b7 education",
           "status": "Deployed",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -3580,7 +3580,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid / mobile manipulator",
           "task": "Mobile manipulation and research",
-          "setting": "Research · healthcare",
+          "setting": "Research \u00b7 healthcare",
           "status": "Research / commercial",
           "region": "Spain / Global",
           "spreadsheet_sources": [
@@ -3606,7 +3606,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid / mobile manipulator",
           "task": "Whole-body humanoid research",
-          "setting": "Industrial R&D · research",
+          "setting": "Industrial R&D \u00b7 research",
           "status": "Research / commercial",
           "region": "Spain / Global",
           "spreadsheet_sources": [
@@ -3654,7 +3654,7 @@
           "category": "Healthcare",
           "listed_class": "Therapeutic social robot",
           "task": "Companionship and sensory stimulation",
-          "setting": "Care facilities · therapy",
+          "setting": "Care facilities \u00b7 therapy",
           "status": "Deployed",
           "region": "Japan / Global",
           "spreadsheet_sources": [
@@ -3791,7 +3791,7 @@
           "category": "Food",
           "listed_class": "Food assembly robot",
           "task": "Pizza preparation and topping",
-          "setting": "Pizzerias · foodservice",
+          "setting": "Pizzerias \u00b7 foodservice",
           "status": "Commercial",
           "region": "Norway / Global",
           "spreadsheet_sources": [
@@ -3835,7 +3835,7 @@
           "category": "Commercial",
           "listed_class": "Restaurant serving robot",
           "task": "Tray delivery and guest interaction",
-          "setting": "Restaurants · hotels",
+          "setting": "Restaurants \u00b7 hotels",
           "status": "Deployed",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -3861,7 +3861,7 @@
           "category": "Commercial",
           "listed_class": "Restaurant serving robot",
           "task": "Tray delivery and dish return",
-          "setting": "Restaurants · hospitality",
+          "setting": "Restaurants \u00b7 hospitality",
           "status": "Deployed",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -3887,7 +3887,7 @@
           "category": "Commercial",
           "listed_class": "Restaurant serving robot",
           "task": "Front-of-house delivery and greeting",
-          "setting": "Restaurants · cafés",
+          "setting": "Restaurants \u00b7 caf\u00e9s",
           "status": "Deployed",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -3913,7 +3913,7 @@
           "category": "Commercial",
           "listed_class": "Professional service",
           "task": "Elevator-enabled room delivery",
-          "setting": "Hotels · hospitals",
+          "setting": "Hotels \u00b7 hospitals",
           "status": "Deployed",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -3965,7 +3965,7 @@
           "category": "Commercial",
           "listed_class": "Commercial cleaning robot",
           "task": "Outdoor sweeping and cleaning",
-          "setting": "Campuses · public spaces",
+          "setting": "Campuses \u00b7 public spaces",
           "status": "Deployed",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -3991,7 +3991,7 @@
           "category": "Commercial",
           "listed_class": "Commercial cleaning robot",
           "task": "Commercial floor cleaning",
-          "setting": "Public · commercial floors",
+          "setting": "Public \u00b7 commercial floors",
           "status": "Deployed",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -4145,7 +4145,7 @@
           "category": "Food",
           "listed_class": "Beverage and cocktail robot",
           "task": "Beverage and cocktail preparation",
-          "setting": "Restaurants · bars",
+          "setting": "Restaurants \u00b7 bars",
           "status": "Commercial",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -4215,7 +4215,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid general-purpose",
           "task": "General-purpose dexterous work",
-          "setting": "Factories · warehouses",
+          "setting": "Factories \u00b7 warehouses",
           "status": "Pilot",
           "region": "Canada",
           "spreadsheet_sources": [
@@ -4262,7 +4262,7 @@
           "category": "Service",
           "listed_class": "Delivery robot",
           "task": "Secure indoor item delivery",
-          "setting": "Hotels · hospitals",
+          "setting": "Hotels \u00b7 hospitals",
           "status": "Deployed",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -4306,7 +4306,7 @@
           "category": "Logistics",
           "listed_class": "AMR",
           "task": "Autonomous towing",
-          "setting": "Factories · warehouses",
+          "setting": "Factories \u00b7 warehouses",
           "status": "Deployed",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -4504,7 +4504,7 @@
           "category": "Retail",
           "listed_class": "Inventory robot",
           "task": "Shelf scanning and inventory analytics",
-          "setting": "Grocery · big-box retail",
+          "setting": "Grocery \u00b7 big-box retail",
           "status": "Deployed",
           "region": "United States / Global",
           "spreadsheet_sources": [
@@ -4548,7 +4548,7 @@
           "category": "Humanoid",
           "listed_class": "Social humanoid",
           "task": "Reception, guidance, engagement",
-          "setting": "Retail · events · public spaces",
+          "setting": "Retail \u00b7 events \u00b7 public spaces",
           "status": "Established",
           "region": "Japan / Global",
           "spreadsheet_sources": [
@@ -4592,7 +4592,7 @@
           "category": "Service",
           "listed_class": "Delivery robot",
           "task": "Sidewalk food and parcel delivery",
-          "setting": "Campuses · neighborhoods",
+          "setting": "Campuses \u00b7 neighborhoods",
           "status": "Deployed",
           "region": "Estonia / Global",
           "spreadsheet_sources": [
@@ -4658,7 +4658,7 @@
       ]
     },
     {
-      "name": "Stäubli Robotics",
+      "name": "St\u00e4ubli Robotics",
       "slug": "staubli-robotics",
       "vendor_role": "robot_oem",
       "regions": "Switzerland / Global",
@@ -4676,13 +4676,13 @@
         {
           "name": "TX2-60",
           "slug": "staubli-robotics-tx2-60",
-          "company_name": "Stäubli Robotics",
+          "company_name": "St\u00e4ubli Robotics",
           "company_slug": "staubli-robotics",
           "primary_class": "industrial_arm",
           "category": "Manufacturing",
           "listed_class": "Industrial robot",
           "task": "Precision assembly",
-          "setting": "Factories · labs",
+          "setting": "Factories \u00b7 labs",
           "status": "Deployed",
           "region": "Switzerland / Global",
           "spreadsheet_sources": [
@@ -4702,7 +4702,7 @@
         {
           "name": "TS2-40",
           "slug": "staubli-robotics-ts2-40",
-          "company_name": "Stäubli Robotics",
+          "company_name": "St\u00e4ubli Robotics",
           "company_slug": "staubli-robotics",
           "primary_class": "industrial_arm",
           "category": "Manufacturing",
@@ -4728,13 +4728,13 @@
         {
           "name": "HEM4",
           "slug": "staubli-robotics-hem4",
-          "company_name": "Stäubli Robotics",
+          "company_name": "St\u00e4ubli Robotics",
           "company_slug": "staubli-robotics",
           "primary_class": "industrial_arm",
           "category": "Manufacturing",
           "listed_class": "Industrial robot",
           "task": "Hygienic handling",
-          "setting": "Food · pharma manufacturing",
+          "setting": "Food \u00b7 pharma manufacturing",
           "status": "Deployed",
           "region": "Switzerland / Global",
           "spreadsheet_sources": [
@@ -4852,7 +4852,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid general-purpose",
           "task": "General-purpose manipulation",
-          "setting": "Factories · R&D",
+          "setting": "Factories \u00b7 R&D",
           "status": "Development",
           "region": "United States",
           "spreadsheet_sources": [
@@ -4896,7 +4896,7 @@
           "category": "Service",
           "listed_class": "Social service robot",
           "task": "Reception, guidance, engagement",
-          "setting": "Hotels · public spaces",
+          "setting": "Hotels \u00b7 public spaces",
           "status": "Commercial",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -4947,7 +4947,7 @@
           "primary_class": "humanoid",
           "listed_class": "Humanoid service robot",
           "task": "Bipedal walking, object manipulation, household and office service",
-          "setting": "Homes · offices",
+          "setting": "Homes \u00b7 offices",
           "product_url": "https://www.ubtrobot.com/en/humanoid/products/walker",
           "lookup_host": "ubtrobot.com",
           "url_status": "verified",
@@ -5010,7 +5010,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid research",
           "task": "Bipedal research and manipulation",
-          "setting": "Research · education",
+          "setting": "Research \u00b7 education",
           "status": "Commercial / research",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -5036,7 +5036,7 @@
           "category": "Humanoid",
           "listed_class": "Humanoid research",
           "task": "Bipedal research platform",
-          "setting": "Research · industrial R&D",
+          "setting": "Research \u00b7 industrial R&D",
           "status": "Commercial / research",
           "region": "China / Global",
           "spreadsheet_sources": [
@@ -5383,7 +5383,7 @@
           "category": "Manufacturing",
           "listed_class": "Collaborative robot",
           "task": "Light assembly and handling",
-          "setting": "Factories · labs",
+          "setting": "Factories \u00b7 labs",
           "status": "Deployed",
           "region": "Denmark / Global",
           "spreadsheet_sources": [
@@ -6094,7 +6094,7 @@
           "category": "Service",
           "listed_class": "Telepresence robot",
           "task": "Telepresence and guided interaction",
-          "setting": "Healthcare · education",
+          "setting": "Healthcare \u00b7 education",
           "status": "Deployed",
           "region": "Israel / Global",
           "spreadsheet_sources": [
@@ -6120,7 +6120,7 @@
           "category": "Service",
           "listed_class": "Telepresence robot",
           "task": "Telepresence and service",
-          "setting": "Business · hospitality",
+          "setting": "Business \u00b7 hospitality",
           "status": "Deployed",
           "region": "Israel / Global",
           "spreadsheet_sources": [
@@ -6164,7 +6164,7 @@
           "category": "Agriculture",
           "listed_class": "Agricultural weeding robot",
           "task": "Laser and mechanical weed removal in row crops",
-          "setting": "Fields · row crops · vegetable beds",
+          "setting": "Fields \u00b7 row crops \u00b7 vegetable beds",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -6213,7 +6213,7 @@
           "category": "Agriculture",
           "listed_class": "Autonomous combine",
           "task": "Grain harvest with an X Series combine",
-          "setting": "Fields · grain harvest",
+          "setting": "Fields \u00b7 grain harvest",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -6241,7 +6241,7 @@
           "category": "Agriculture",
           "listed_class": "Autonomous tractor",
           "task": "Autonomous tractor for planting and field work",
-          "setting": "Fields · planting · harvest support",
+          "setting": "Fields \u00b7 planting \u00b7 harvest support",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -6269,7 +6269,7 @@
           "category": "Agriculture",
           "listed_class": "Precision spray implement",
           "task": "See-and-spray implement on a tractor/sprayer host",
-          "setting": "Fields · row crops",
+          "setting": "Fields \u00b7 row crops",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -6321,7 +6321,7 @@
           "category": "Agriculture",
           "listed_class": "Electric autonomous tractor",
           "task": "Electric tractor for planting and field work",
-          "setting": "Vineyards · orchards · fields",
+          "setting": "Vineyards \u00b7 orchards \u00b7 fields",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -6370,7 +6370,7 @@
           "category": "Agriculture",
           "listed_class": "Weeding robot",
           "task": "Mechanical weeding in vegetable rows",
-          "setting": "Fields · vegetable beds",
+          "setting": "Fields \u00b7 vegetable beds",
           "status": "Deployed",
           "region": "France",
           "spreadsheet_sources": [
@@ -6426,7 +6426,7 @@
           "category": "Agriculture",
           "listed_class": "Large-tool weeding robot",
           "task": "Mechanical weeding with larger tools",
-          "setting": "Fields · vegetable beds",
+          "setting": "Fields \u00b7 vegetable beds",
           "status": "Deployed",
           "region": "France",
           "spreadsheet_sources": [
@@ -6454,7 +6454,7 @@
           "category": "Agriculture",
           "listed_class": "Vegetable-crop weeding robot",
           "task": "Mechanical weeding and sowing in vegetable beds",
-          "setting": "Fields · vegetable beds",
+          "setting": "Fields \u00b7 vegetable beds",
           "status": "Deployed",
           "region": "France",
           "spreadsheet_sources": [
@@ -6507,7 +6507,7 @@
           "category": "Agriculture",
           "listed_class": "Precision spray implement",
           "task": "Ultra-high precision spray implement on a tractor host",
-          "setting": "Fields · row crops",
+          "setting": "Fields \u00b7 row crops",
           "status": "Deployed",
           "region": "Switzerland",
           "spreadsheet_sources": [
@@ -6557,7 +6557,7 @@
           "category": "Agriculture",
           "listed_class": "Crop transport robot",
           "task": "Follows crews and hauls harvest totes",
-          "setting": "Fields · orchards · nurseries",
+          "setting": "Fields \u00b7 orchards \u00b7 nurseries",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -6607,7 +6607,7 @@
           "category": "Agriculture",
           "listed_class": "Combine harvester",
           "task": "Grain harvest with a LEXION combine",
-          "setting": "Fields · grain harvest",
+          "setting": "Fields \u00b7 grain harvest",
           "status": "Deployed",
           "region": "Germany",
           "spreadsheet_sources": [
@@ -6657,7 +6657,7 @@
           "category": "Construction",
           "listed_class": "Jobsite layout printer",
           "task": "Prints construction layout on the floor",
-          "setting": "Homes · buildings · jobsites",
+          "setting": "Homes \u00b7 buildings \u00b7 jobsites",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -6707,7 +6707,7 @@
           "category": "Construction",
           "listed_class": "3D home construction printer",
           "task": "3D-prints walls for homes and buildings",
-          "setting": "Residential construction · community build",
+          "setting": "Residential construction \u00b7 community build",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -6856,7 +6856,7 @@
           "category": "Construction",
           "listed_class": "Rebar tying robot",
           "task": "Ties rebar on decks for buildings and civil work",
-          "setting": "Building construction · decks",
+          "setting": "Building construction \u00b7 decks",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -6906,7 +6906,7 @@
           "category": "Avionics",
           "listed_class": "Autonomous inspection drone",
           "task": "Autonomous drone inspection of assets and airframes",
-          "setting": "Outdoor inspection · flight",
+          "setting": "Outdoor inspection \u00b7 flight",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -7205,7 +7205,7 @@
           "category": "Avionics",
           "listed_class": "VTOL drone",
           "task": "Autonomous VTOL drone for inspection and ISR flight",
-          "setting": "Flight · inspection",
+          "setting": "Flight \u00b7 inspection",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -7432,7 +7432,7 @@
           "category": "Aerospace",
           "listed_class": "Space robot arm",
           "task": "In-space work and satellite servicing",
-          "setting": "On orbit · space development",
+          "setting": "On orbit \u00b7 space development",
           "status": "Deployed",
           "region": "Japan / United States",
           "spreadsheet_sources": [
@@ -7481,7 +7481,7 @@
           "category": "Agriculture",
           "listed_class": "Seeding and weeding robot",
           "task": "Solar-powered seeding and mechanical weeding in row crops",
-          "setting": "Fields · row crops",
+          "setting": "Fields \u00b7 row crops",
           "status": "Deployed",
           "region": "Denmark",
           "spreadsheet_sources": [
@@ -7531,7 +7531,7 @@
           "category": "Agriculture",
           "listed_class": "Autonomous tractor robot",
           "task": "Autonomous tractor for planting and field work",
-          "setting": "Fields · planting",
+          "setting": "Fields \u00b7 planting",
           "status": "Deployed",
           "region": "Netherlands",
           "spreadsheet_sources": [
@@ -7581,7 +7581,7 @@
           "category": "Agriculture",
           "listed_class": "Robotic strawberry harvester",
           "task": "Harvests strawberries in the field",
-          "setting": "Fields · berry harvest",
+          "setting": "Fields \u00b7 berry harvest",
           "status": "Deployed",
           "region": "Spain",
           "spreadsheet_sources": [
@@ -7631,7 +7631,7 @@
           "category": "Agriculture",
           "listed_class": "Precision spray implement",
           "task": "See-and-spray implement on a tractor host",
-          "setting": "Fields · row crops",
+          "setting": "Fields \u00b7 row crops",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -8080,7 +8080,7 @@
           "category": "Avionics",
           "listed_class": "Indoor inspection drone",
           "task": "Autonomous drone inspection inside confined assets",
-          "setting": "Indoor inspection · flight",
+          "setting": "Indoor inspection \u00b7 flight",
           "status": "Deployed",
           "region": "Switzerland",
           "spreadsheet_sources": [
@@ -8130,7 +8130,7 @@
           "category": "Avionics",
           "listed_class": "Enterprise inspection drone",
           "task": "Autonomous drone inspection of assets",
-          "setting": "Outdoor inspection · flight",
+          "setting": "Outdoor inspection \u00b7 flight",
           "status": "Deployed",
           "region": "China",
           "spreadsheet_sources": [
@@ -8180,7 +8180,7 @@
           "category": "Avionics",
           "listed_class": "Inspection drone",
           "task": "Autonomous drone inspection of assets",
-          "setting": "Outdoor inspection · flight",
+          "setting": "Outdoor inspection \u00b7 flight",
           "status": "Deployed",
           "region": "France",
           "spreadsheet_sources": [
@@ -8230,7 +8230,7 @@
           "category": "Avionics",
           "listed_class": "Survey mapping drone",
           "task": "Autonomous drone mapping and inspection",
-          "setting": "Survey · flight",
+          "setting": "Survey \u00b7 flight",
           "status": "Deployed",
           "region": "Switzerland",
           "spreadsheet_sources": [
@@ -8280,7 +8280,7 @@
           "category": "Avionics",
           "listed_class": "Enterprise inspection drone",
           "task": "Autonomous drone inspection of assets",
-          "setting": "Outdoor inspection · flight",
+          "setting": "Outdoor inspection \u00b7 flight",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -8330,7 +8330,7 @@
           "category": "Avionics",
           "listed_class": "Fixed-wing mapping drone",
           "task": "Autonomous drone mapping and inspection",
-          "setting": "Survey · flight",
+          "setting": "Survey \u00b7 flight",
           "status": "Deployed",
           "region": "United States",
           "spreadsheet_sources": [
@@ -8380,7 +8380,7 @@
           "category": "Avionics",
           "listed_class": "Aerial inspection drone",
           "task": "Autonomous drone inspection of industrial assets",
-          "setting": "Outdoor inspection · flight",
+          "setting": "Outdoor inspection \u00b7 flight",
           "status": "Deployed",
           "region": "Switzerland",
           "spreadsheet_sources": [
@@ -8430,7 +8430,7 @@
           "category": "Logistics",
           "listed_class": "Industrial AMR",
           "task": "Autonomous indoor material transport",
-          "setting": "Factories · warehouses",
+          "setting": "Factories \u00b7 warehouses",
           "status": "Deployed",
           "region": "Spain",
           "spreadsheet_sources": [
@@ -8480,7 +8480,7 @@
           "category": "Logistics",
           "listed_class": "Industrial AMR",
           "task": "Autonomous indoor material transport",
-          "setting": "Factories · warehouses",
+          "setting": "Factories \u00b7 warehouses",
           "status": "Deployed",
           "region": "Germany",
           "spreadsheet_sources": [
@@ -8630,7 +8630,7 @@
           "category": "Logistics",
           "listed_class": "Industrial AMR",
           "task": "Autonomous indoor material transport",
-          "setting": "Factories · warehouses",
+          "setting": "Factories \u00b7 warehouses",
           "status": "Deployed",
           "region": "Singapore",
           "spreadsheet_sources": [
@@ -8676,7 +8676,7 @@
           "primary_class": "humanoid",
           "listed_class": "Embodied intelligent humanoid",
           "task": "Universal embodied intelligent robot",
-          "setting": "Industrial · research",
+          "setting": "Industrial \u00b7 research",
           "product_url": "https://www.agibot.com/",
           "lookup_host": "agibot.com",
           "url_status": "verified",
@@ -8693,7 +8693,7 @@
           "primary_class": "humanoid",
           "listed_class": "Embodied intelligent humanoid",
           "task": "Fully intelligent and agile humanoid",
-          "setting": "Industrial · research",
+          "setting": "Industrial \u00b7 research",
           "product_url": "https://www.agibot.com/",
           "lookup_host": "agibot.com",
           "url_status": "verified",
@@ -8728,7 +8728,7 @@
           "primary_class": "humanoid",
           "listed_class": "Humanoid robot",
           "task": "Humanoid patrol, inspection, and material delivery",
-          "setting": "Parks · scenic areas",
+          "setting": "Parks \u00b7 scenic areas",
           "product_url": "https://www.magiclab.top/en/x1",
           "lookup_host": "magiclab.top",
           "url_status": "verified",
@@ -8797,7 +8797,7 @@
           "primary_class": "quadruped",
           "listed_class": "Industrial quadruped",
           "task": "Industrial patrol inspection on a quadruped",
-          "setting": "Power · utilities · outdoor industry",
+          "setting": "Power \u00b7 utilities \u00b7 outdoor industry",
           "product_url": "https://www.deeprobotics.cn/en/index/product.html",
           "lookup_host": "deeprobotics.cn",
           "url_status": "verified",
@@ -8814,7 +8814,7 @@
           "primary_class": "quadruped",
           "listed_class": "Industrial quadruped",
           "task": "Industrial inspection and rescue on a quadruped",
-          "setting": "Power stations · factories · emergency",
+          "setting": "Power stations \u00b7 factories \u00b7 emergency",
           "product_url": "https://www.deeprobotics.cn/en/index/product3.html",
           "lookup_host": "deeprobotics.cn",
           "url_status": "verified",
@@ -8900,7 +8900,7 @@
           "primary_class": "serving",
           "listed_class": "Restaurant serving robot",
           "task": "Front-of-house delivery and greeting",
-          "setting": "Restaurants · cafés",
+          "setting": "Restaurants \u00b7 caf\u00e9s",
           "lookup_host": "pringlerobotics.ai",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -8917,7 +8917,7 @@
           "primary_class": "serving",
           "listed_class": "Restaurant serving robot",
           "task": "Tray delivery and dish return",
-          "setting": "Restaurants · hospitality",
+          "setting": "Restaurants \u00b7 hospitality",
           "lookup_host": "pringlerobotics.ai",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9019,7 +9019,7 @@
           "primary_class": "cleaning",
           "listed_class": "Commercial cleaning robot",
           "task": "Commercial floor cleaning",
-          "setting": "Public · commercial floors",
+          "setting": "Public \u00b7 commercial floors",
           "lookup_host": "pringlerobotics.ai",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9036,7 +9036,7 @@
           "primary_class": "cleaning",
           "listed_class": "Commercial cleaning robot",
           "task": "Outdoor sweeping and cleaning",
-          "setting": "Campuses · public spaces",
+          "setting": "Campuses \u00b7 public spaces",
           "lookup_host": "pringlerobotics.ai",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9070,7 +9070,7 @@
           "primary_class": "cleaning",
           "listed_class": "Waterless commercial cleaning robot",
           "task": "3-in-1 mopping, sweeping, and vacuuming on commercial floors",
-          "setting": "Malls · factories · conference halls",
+          "setting": "Malls \u00b7 factories \u00b7 conference halls",
           "lookup_host": "aotingbot.com",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9103,7 +9103,7 @@
       ]
     },
     {
-      "name": "Kärcher",
+      "name": "K\u00e4rcher",
       "slug": "karcher",
       "vendor_role": "robot_oem",
       "domains": [
@@ -9116,7 +9116,7 @@
         {
           "name": "KIRA B 50",
           "slug": "karcher-kira-b-50",
-          "company_name": "Kärcher",
+          "company_name": "K\u00e4rcher",
           "company_slug": "karcher",
           "primary_class": "cleaning",
           "listed_class": "Autonomous floor scrubber",
@@ -9133,7 +9133,7 @@
         {
           "name": "KIRA B 200",
           "slug": "karcher-kira-b-200",
-          "company_name": "Kärcher",
+          "company_name": "K\u00e4rcher",
           "company_slug": "karcher",
           "primary_class": "cleaning",
           "listed_class": "Autonomous floor scrubber",
@@ -9150,7 +9150,7 @@
         {
           "name": "KIRA CV 50",
           "slug": "karcher-kira-cv-50",
-          "company_name": "Kärcher",
+          "company_name": "K\u00e4rcher",
           "company_slug": "karcher",
           "primary_class": "cleaning",
           "listed_class": "Autonomous vacuum",
@@ -9167,7 +9167,7 @@
         {
           "name": "KIRA CV 60/1",
           "slug": "karcher-kira-cv-60-1",
-          "company_name": "Kärcher",
+          "company_name": "K\u00e4rcher",
           "company_slug": "karcher",
           "primary_class": "cleaning",
           "listed_class": "Autonomous vacuum",
@@ -9202,7 +9202,7 @@
           "primary_class": "cleaning",
           "listed_class": "Industrial robotic sweeper",
           "task": "Autonomous industrial floor sweeping",
-          "setting": "Factories · warehouses",
+          "setting": "Factories \u00b7 warehouses",
           "lookup_host": "cenobots.com",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9300,7 +9300,7 @@
           "primary_class": "cleaning_drone",
           "listed_class": "Commercial cleaning drone",
           "task": "Exterior window, facade, and building washing from a cleaning drone. Not a floor scrubber.",
-          "setting": "Building exteriors · windows · facades",
+          "setting": "Building exteriors \u00b7 windows \u00b7 facades",
           "lookup_host": "lucidbots.com",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9351,7 +9351,7 @@
           "primary_class": "cleaning",
           "listed_class": "Commercial robotic floor scrubber",
           "task": "Scrub, sweep, and mop commercial floors",
-          "setting": "Hospitality · malls · offices",
+          "setting": "Hospitality \u00b7 malls \u00b7 offices",
           "lookup_host": "ecovacscommercial.com",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9368,7 +9368,7 @@
           "primary_class": "cleaning",
           "listed_class": "Commercial robot vacuum",
           "task": "Autonomous vacuuming on commercial floors",
-          "setting": "Offices · public buildings",
+          "setting": "Offices \u00b7 public buildings",
           "lookup_host": "ecovacscommercial.com",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9398,7 +9398,7 @@
           "primary_class": "cleaning",
           "listed_class": "Autonomous floor scrubber",
           "task": "Fully autonomous commercial floor scrubbing",
-          "setting": "Airports · warehouses · retail",
+          "setting": "Airports \u00b7 warehouses \u00b7 retail",
           "lookup_host": "avidbots.com",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9462,7 +9462,7 @@
           "primary_class": "cleaning",
           "listed_class": "Industrial waterless sweeping robot",
           "task": "Industrial waterless sweeping and dust control",
-          "setting": "Warehouses · logistics",
+          "setting": "Warehouses \u00b7 logistics",
           "lookup_host": "polarxrobotics.com",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9479,7 +9479,7 @@
           "primary_class": "cleaning",
           "listed_class": "Waterless commercial floor-care robot",
           "task": "Waterless commercial floor care on hard floors",
-          "setting": "Healthcare · retail · hospitality",
+          "setting": "Healthcare \u00b7 retail \u00b7 hospitality",
           "lookup_host": "polarxrobotics.com",
           "source": "mission-2026-08-31-cleaning-oem-catalog",
           "specs": {},
@@ -9737,6 +9737,59 @@
           "product_url": "https://seer-robotics.ai/amr-controllers/SRC-880",
           "url_status": "verified"
         }
+      ]
+    },
+    {
+      "name": "Feather Robotics",
+      "slug": "feather-robotics",
+      "vendor_role": "robot_oem",
+      "regions": "United States",
+      "categories": [
+        "Humanoid"
+      ],
+      "source_urls": [
+        "https://feather.dev"
+      ],
+      "domains": [
+        "feather.dev"
+      ],
+      "price_indication": ",990",
+      "products": [
+        {
+          "name": "Feather",
+          "slug": "feather",
+          "company_name": "Feather Robotics",
+          "company_slug": "feather-robotics",
+          "primary_class": "humanoid",
+          "category": "Humanoid",
+          "listed_class": "Modular wheeled humanoid platform",
+          "task": "Mobile manipulation, manufacturing, food service, research",
+          "setting": "Structured environments \u00b7 manufacturing \u00b7 kitchens \u00b7 labs",
+          "status": "Commercial / available",
+          "region": "United States",
+          "product_url": "https://feather.dev",
+          "lookup_host": "feather.dev",
+          "url_status": "verified",
+          "specs": {
+            "price_usd": 29990,
+            "height_cm": 180,
+            "weight_kg": 105,
+            "payload_kg": 13.6,
+            "top_speed_mps": 1.3,
+            "total_dof": 23,
+            "finger_count": 6,
+            "battery_life_h": 10.0,
+            "hot_swap_battery": true,
+            "has_dexterous_hands": true,
+            "has_sdk": true
+          },
+          "capability_confidence": "EXPLICIT",
+          "flags": [],
+          "source": "verified_oem"
+        }
+      ],
+      "verified_urls": [
+        "https://feather.dev"
       ]
     }
   ],

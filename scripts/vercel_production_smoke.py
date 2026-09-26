@@ -42,6 +42,21 @@ def extract_deploy_url(log: str) -> str | None:
     return matches[-1] if matches else None
 
 
+def _get_ssl_context() -> ssl.SSLContext | None:
+    try:
+        import ssl
+        try:
+            import certifi
+            return ssl.create_default_context(cafile=certifi.where())
+        except Exception:
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            return ctx
+    except Exception:
+        return None
+
+
 def http_get(url: str, timeout: float = 30.0) -> tuple[int, bytes]:
     req = urllib.request.Request(
         url,
@@ -53,8 +68,9 @@ def http_get(url: str, timeout: float = 30.0) -> tuple[int, bytes]:
         },
         method="GET",
     )
+    context = _get_ssl_context()
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
             return int(resp.status), resp.read()
     except urllib.error.HTTPError as err:
         try:

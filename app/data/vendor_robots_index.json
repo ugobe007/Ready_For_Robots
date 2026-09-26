@@ -2,7 +2,7 @@
   "generated_at": "2026-08-21T17:06:00+00:00",
   "source": "https://ready-2-robot.fly.dev/api/humanoid/robots",
   "list_category": "humanoid",
-  "vendor_count": 74,
+  "vendor_count": 75,
   "robot_count": 129,
   "skipped": [],
   "vendors": [
@@ -8163,6 +8163,107 @@
                 "url": "https://www.xpeng.com",
                 "source_type": "product",
                 "title": "XPeng PX5",
+                "publisher_role": "manufacturer"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "vendor_name": "Feather Robotics",
+      "domains": [
+        "feather.dev"
+      ],
+      "vendor_url": "https://feather.dev",
+      "list_category": "humanoid",
+      "robots": [
+        {
+          "name": "Feather",
+          "model_slug": "feather",
+          "product_url": "https://feather.dev",
+          "vendor_url": "https://feather.dev",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": "USA",
+          "image_url": null,
+          "specs": {
+            "price_usd": 29990,
+            "payload_kg": 13.6,
+            "battery_life_h": 10.0,
+            "height_cm": 180,
+            "weight_kg": 105,
+            "top_speed_mps": 1.3,
+            "finger_count": 6,
+            "total_dof": 23,
+            "hot_swap_battery": true,
+            "has_dexterous_hands": true,
+            "has_sdk": true
+          },
+          "profile": {
+            "profile_confidence": "B",
+            "coverage_rate": 0.7,
+            "coverage_level": "medium",
+            "source": "vendor_robots_index",
+            "notes": [
+              "Indexed from readyforrobots.com/robots for Feather Robotics.",
+              "Specs come from the public humanoid index, not a live OEM crawl."
+            ],
+            "facts": [
+              {
+                "predicate": "product_class",
+                "value": "humanoid",
+                "units": null,
+                "epistemic": "explicit"
+              },
+              {
+                "predicate": "payload",
+                "value": 13.6,
+                "units": "kg",
+                "epistemic": "explicit"
+              },
+              {
+                "predicate": "runtime",
+                "value": 10.0,
+                "units": "h",
+                "epistemic": "explicit"
+              },
+              {
+                "predicate": "reach_or_workspace",
+                "value": 180,
+                "units": "cm",
+                "epistemic": "explicit"
+              },
+              {
+                "predicate": "weight",
+                "value": 105,
+                "units": "kg",
+                "epistemic": "explicit"
+              },
+              {
+                "predicate": "mobility",
+                "value": 1.3,
+                "units": "m/s",
+                "epistemic": "explicit"
+              },
+              {
+                "predicate": "arm_count",
+                "value": 23,
+                "units": null,
+                "epistemic": "explicit"
+              },
+              {
+                "predicate": "has_dexterous_hands",
+                "value": true,
+                "units": null,
+                "epistemic": "explicit"
+              }
+            ],
+            "sources": [
+              {
+                "url": "https://feather.dev",
+                "source_type": "product",
+                "title": "Feather",
                 "publisher_role": "manufacturer"
               }
             ]
