@@ -53,7 +53,7 @@ export default function CustomerQuoteBanner() {
             href={activeQuote.opportunityHref}
             className="inline-flex items-center gap-0.5 text-emerald-400 hover:text-emerald-300 font-mono font-bold text-[11px] underline underline-offset-2 transition-colors"
           >
-            <span>View {activeQuote.company} Job Opportunity ({activeQuote.matchedJobTitle})</span>
+            <span>Job Opportunity</span>
             <ArrowUpRight className="h-3 w-3 shrink-0" />
           </Link>
 
