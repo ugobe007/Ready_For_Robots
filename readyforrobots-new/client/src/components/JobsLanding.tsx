@@ -276,16 +276,13 @@ export default function JobsLanding() {
           <CustomerQuoteBanner />
         </div>
 
-        {/* High-Converting Account Registration Banner (Positioned directly below Customer Quotes) */}
-        <div className="rfr-landing-signup-cta my-4 py-3 px-5 sm:py-3.5 sm:px-6 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-cyan-950/90 border border-emerald-500/40 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div className="space-y-0.5 text-left">
-            <div className="flex items-center gap-2 text-emerald-400 font-mono text-[11px] uppercase tracking-wider font-bold">
-              <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Free Enterprise Workspace
-            </div>
-            <h3 className="text-sm sm:text-base font-extrabold text-white">
+        {/* Account Registration Banner (Supabase Stroke-Only Style) */}
+        <div className="rfr-landing-signup-cta my-4 py-3 px-4 sm:px-5 rounded-xl border border-slate-800/80 bg-slate-950/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
+          <div className="space-y-1">
+            <h3 className="text-sm sm:text-base font-bold text-slate-100">
               Unlock Engineering Feasibility & Commercial Proposals
             </h3>
-            <p className="text-xs text-slate-300 max-w-xl">
+            <p className="text-xs text-slate-400 max-w-xl">
               Join 1,200+ robotics leaders. Access verified buyer demand, 3D cell simulations, and turnkey RaaS commercial quotes.
             </p>
           </div>
@@ -293,10 +290,9 @@ export default function JobsLanding() {
           <button
             type="button"
             onClick={() => setIsSignupOpen(true)}
-            className="w-full sm:w-auto px-5 py-2.5 sm:py-3 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs tracking-wide uppercase transition-all shadow-lg shadow-emerald-400/20 whitespace-nowrap text-center flex items-center justify-center gap-2 cursor-pointer shrink-0"
+            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-transparent border border-emerald-400/60 text-emerald-400 hover:text-emerald-300 hover:border-emerald-300 font-mono text-xs font-bold transition-all text-center shrink-0 cursor-pointer"
           >
-            <UserPlus className="w-4 h-4" />
-            Create Free Account in 10s →
+            Free Sign Up →
           </button>
         </div>
 
