@@ -2205,21 +2205,6 @@ export default function Pipeline() {
     useState<QualityBandFilter>("all");
   const [qualitySort, setQualitySort] = useState<QualitySort>("default");
   const [selectedId, setSelectedId] = useState<number | null>(null);
-
-  useEffect(() => {
-    const target = (companyNameFromQuery || searchQueryFromQuery || "").trim().toLowerCase();
-    if (!target) return;
-    const pool = [...serverSearchDeals, ...deals];
-    if (pool.length === 0) return;
-    const found = pool.find(d =>
-      d.company.toLowerCase().includes(target) ||
-      (d.share_summary || "").toLowerCase().includes(target) ||
-      (d.core_need || "").toLowerCase().includes(target)
-    );
-    if (found && selectedId !== found.id) {
-      setSelectedId(found.id);
-    }
-  }, [companyNameFromQuery, searchQueryFromQuery, deals, serverSearchDeals, selectedId]);
   const [selectedActivationId, setSelectedActivationId] = useState<
     number | null
   >(null);
@@ -2237,6 +2222,21 @@ export default function Pipeline() {
   const [cadenceNote, setCadenceNote] = useState("");
   const [loadErr, setLoadErr] = useState("");
   const [serverSearchDeals, setServerSearchDeals] = useState<Deal[]>([]);
+
+  useEffect(() => {
+    const target = (companyNameFromQuery || searchQueryFromQuery || "").trim().toLowerCase();
+    if (!target) return;
+    const pool = [...serverSearchDeals, ...deals];
+    if (pool.length === 0) return;
+    const found = pool.find(d =>
+      d.company.toLowerCase().includes(target) ||
+      (d.share_summary || "").toLowerCase().includes(target) ||
+      (d.core_need || "").toLowerCase().includes(target)
+    );
+    if (found && selectedId !== found.id) {
+      setSelectedId(found.id);
+    }
+  }, [companyNameFromQuery, searchQueryFromQuery, deals, serverSearchDeals, selectedId]);
   const [serverSearchLoading, setServerSearchLoading] = useState(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activationErr, setActivationErr] = useState("");
