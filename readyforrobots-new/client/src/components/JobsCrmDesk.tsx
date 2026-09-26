@@ -161,6 +161,23 @@ export default function JobsCrmDesk({
     const pool = allKeySig ? allKeySig.split("\0") : [];
     setSelectedKeys(prev => crmSyncSelectedKeys(prev, pool));
   }, [allKeySig]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const target = (params.get("co") || params.get("q") || params.get("company") || "").trim().toLowerCase();
+    if (!target || !jobs.length) return;
+
+    const found = jobs.find(j =>
+      (j.company_name || "").toLowerCase().includes(target) ||
+      j.job_key.toLowerCase().includes(target) ||
+      j.title.toLowerCase().includes(target) ||
+      j.industry.toLowerCase().includes(target)
+    );
+    if (found && expandedKey !== found.job_key) {
+      setExpandedKey(found.job_key);
+    }
+  }, [jobs, expandedKey]);
   const stats = placementBoardStats(jobs);
   const selected = selectedKeys.filter(key => allKeys.includes(key));
   const expanded = jobs.find(j => j.job_key === expandedKey) || null;

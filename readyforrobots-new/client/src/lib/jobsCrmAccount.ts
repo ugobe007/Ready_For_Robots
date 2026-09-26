@@ -849,17 +849,73 @@ const EMPTY_CRM_DESK: CrmDeskForRobot = {
   savedCount: 0,
 };
 
+import { FEATURED_BUYER_QUOTES, type BuyerQuote } from "@/lib/buyerQuotes";
+
+export function buyerQuoteToMatchJob(quote: BuyerQuote): MatchJob {
+  return {
+    job_key: quote.id,
+    title: quote.matchedJobTitle,
+    industry: `${quote.company} · ${quote.location}`,
+    company_name: quote.company,
+    locality: quote.location,
+    path: `${quote.company.toUpperCase().replace(/[^A-Z0-9]+/g, "_")} → JOB_OPPORTUNITY`,
+    tape_family: quote.targetRobotTypes[0]?.toLowerCase().includes("pallet")
+      ? "pallet"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("scrub") || quote.targetRobotTypes[0]?.toLowerCase().includes("clean")
+      ? "scrub"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("inspect")
+      ? "inspect"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("cart")
+      ? "cart"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("cobot") || quote.targetRobotTypes[0]?.toLowerCase().includes("manipulat")
+      ? "gripper"
+      : "transport",
+    verdict: "POSSIBLE_MATCH",
+    why: [
+      `Verified customer requirement from ${quote.author} (${quote.title}): "${quote.quote}"`,
+      `Target timeline: ${quote.timeline}`,
+    ],
+  };
+}
+
 /**
  * Desk identity + jobs for the robot FIND just ran.
- * The submitted URL is the only key. No snap URL → honest empty, never
- * accountRows[0] / first saved robot / leftover class jobs.
+ * The submitted URL is the primary key. If no snap URL exists, fallback
+ * to the quote job corpus matching the target company.
  */
 export function crmDeskForCurrentRobot(opts: {
   snap: JobsHandoffSnapshot | null;
   accountRows: KeptJobRow[];
 }): CrmDeskForRobot {
   const snapUrl = canonicalRobotUrl(opts.snap?.url || "");
-  if (!snapUrl) return EMPTY_CRM_DESK;
+  if (!snapUrl) {
+    const search = typeof window !== "undefined" ? window.location.search : "";
+    const params = new URLSearchParams(search);
+    const coQuery = (params.get("co") || params.get("q") || params.get("company") || "").trim().toLowerCase();
+
+    const quoteJobs = FEATURED_BUYER_QUOTES.map(buyerQuoteToMatchJob);
+    let matchedQuote = FEATURED_BUYER_QUOTES[0];
+    if (coQuery) {
+      const foundQuote = FEATURED_BUYER_QUOTES.find(q =>
+        q.company.toLowerCase().includes(coQuery) ||
+        q.matchedJobTitle.toLowerCase().includes(coQuery) ||
+        q.industry.toLowerCase().includes(coQuery)
+      );
+      if (foundQuote) {
+        matchedQuote = foundQuote;
+        quoteJobs.sort((a, b) => (a.job_key === foundQuote.id ? -1 : b.job_key === foundQuote.id ? 1 : 0));
+      }
+    }
+
+    return {
+      product: matchedQuote ? matchedQuote.targetRobotTypes.join(" / ") : "Robotic Labor",
+      robotUrl: "https://readyforrobots.com",
+      rows: [],
+      jobs: quoteJobs,
+      savedCount: quoteJobs.length,
+    };
+  }
+
   const snap = opts.snap as JobsHandoffSnapshot;
   const current = { url: snapUrl, name: snap.productName };
   const handoffJobs = snap.jobs || [];
