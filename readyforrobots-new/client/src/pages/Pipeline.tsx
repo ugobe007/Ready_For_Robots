@@ -2161,6 +2161,14 @@ export default function Pipeline() {
         .trim();
     }
   }, [submittedUrl]);
+  const companyNameFromQuery = useMemo(
+    () => parsePipelineCompanyNameFromSearch(search),
+    [search]
+  );
+  const searchQueryFromQuery = useMemo(() => {
+    const params = new URLSearchParams(search);
+    return (params.get("q") || params.get("search") || "").trim();
+  }, [search]);
   const [scopeToSubmittedUrl, setScopeToSubmittedUrl] = useState(false);
   const [submittedUrlMatches, setSubmittedUrlMatches] = useState<ApiLead[]>([]);
   const [submittedUrlMatchLoading, setSubmittedUrlMatchLoading] = useState(() =>
@@ -2182,11 +2190,36 @@ export default function Pipeline() {
   );
   const [activations, setActivations] = useState<ScoutActivation[]>([]);
   const [filter, setFilter] = useState<string>("All");
-  const [industryQuery, setIndustryQuery] = useState("");
+  const [industryQuery, setIndustryQuery] = useState(
+    () => companyNameFromQuery || searchQueryFromQuery || ""
+  );
+
+  useEffect(() => {
+    const target = companyNameFromQuery || searchQueryFromQuery || "";
+    if (target) {
+      setIndustryQuery(target);
+    }
+  }, [companyNameFromQuery, searchQueryFromQuery]);
+
   const [qualityBandFilter, setQualityBandFilter] =
     useState<QualityBandFilter>("all");
   const [qualitySort, setQualitySort] = useState<QualitySort>("default");
   const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  useEffect(() => {
+    const target = (companyNameFromQuery || searchQueryFromQuery || "").trim().toLowerCase();
+    if (!target) return;
+    const pool = [...serverSearchDeals, ...deals];
+    if (pool.length === 0) return;
+    const found = pool.find(d =>
+      d.company.toLowerCase().includes(target) ||
+      (d.share_summary || "").toLowerCase().includes(target) ||
+      (d.core_need || "").toLowerCase().includes(target)
+    );
+    if (found && selectedId !== found.id) {
+      setSelectedId(found.id);
+    }
+  }, [companyNameFromQuery, searchQueryFromQuery, deals, serverSearchDeals, selectedId]);
   const [selectedActivationId, setSelectedActivationId] = useState<
     number | null
   >(null);
