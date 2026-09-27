@@ -132,10 +132,42 @@ export default function SalesConsole() {
   const runAutomaticOutreachCycle = async () => {
     setBusy(true);
     toast.info("Executing Cal automatic outreach cycle...");
-    setTimeout(() => {
+    try {
+      const res = await authFetch("/api/admin/cal/autonomy-run", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dry_run: false }),
+      });
+      toast.success(
+        `Cal automatic outreach complete! Drafted: ${res?.drafted ?? 0}, Refreshed: ${res?.refreshed ?? 0}, Sent: ${res?.sent ?? 0}.`
+      );
+      await loadRows();
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : "Could not execute automatic outreach cycle."
+      );
+    } finally {
       setBusy(false);
-      toast.success("Cal automatic outreach complete! OEM tee-up emails and buyer quotes dispatched.");
-    }, 1200);
+    }
+  };
+
+  const handleToggleAutopilot = async (nextEnabled: boolean) => {
+    setBusy(true);
+    try {
+      const res = await authFetch("/api/admin/cal/autonomy-toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled: nextEnabled }),
+      });
+      setAutopilotEnabled(Boolean(res?.enabled));
+      toast.success(`Cal autopilot turned ${res?.enabled ? "ON" : "OFF"}.`);
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : "Could not toggle Cal autopilot."
+      );
+    } finally {
+      setBusy(false);
+    }
   };
 
   const authFetch = useCallback(
@@ -197,6 +229,14 @@ export default function SalesConsole() {
         setLearningReport(data);
       } catch {
         setLearningReport(null);
+      }
+      try {
+        const status = await authFetch("/api/admin/cal/autonomy-status");
+        if (status && typeof status.enabled === "boolean") {
+          setAutopilotEnabled(status.enabled);
+        }
+      } catch {
+        /* fallback to default */
       }
     })();
   }, [authFetch, session?.access_token]);
@@ -415,7 +455,8 @@ export default function SalesConsole() {
           <div className="flex flex-wrap items-center gap-2">
             <CalAutopilotSwitch
               enabled={autopilotEnabled}
-              onToggle={setAutopilotEnabled}
+              onToggle={handleToggleAutopilot}
+              busy={busy}
               compact
             />
             <button

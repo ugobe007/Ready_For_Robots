@@ -841,7 +841,7 @@ def run_cal_autonomy_cycle(
 
     use_apollo = (os.getenv("CAL_USE_APOLLO") or "0").strip().lower() in ("1", "true", "yes")
 
-    buyer_sales = cal_buyer_sales_enabled()
+    buyer_sales = cal_buyer_sales_enabled() or manual
     draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
     send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
     if not buyer_sales:

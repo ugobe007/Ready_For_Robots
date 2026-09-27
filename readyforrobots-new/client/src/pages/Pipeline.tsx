@@ -2230,8 +2230,8 @@ export default function Pipeline() {
     if (pool.length === 0) return;
     const found = pool.find(d =>
       d.company.toLowerCase().includes(target) ||
-      (d.share_summary || "").toLowerCase().includes(target) ||
-      (d.core_need || "").toLowerCase().includes(target)
+      (d.shareSummary || "").toLowerCase().includes(target) ||
+      (d.shareBlurb || "").toLowerCase().includes(target)
     );
     if (found && selectedId !== found.id) {
       setSelectedId(found.id);

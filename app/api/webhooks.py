@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import APIRouter, Header, HTTPException, Request
+from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
@@ -645,10 +646,34 @@ async def resend_inbound_webhook(
     data = _fetch_received_if_needed(data)
     to_addresses = _extract_addresses(data.get("to") or data.get("recipients"))
     token = _token_from_addresses(to_addresses)
-    if not token:
-        return {"ok": True, "ignored": "no_reply_token"}
 
     db = SessionLocal()
+    try:
+        # Fallback: if +reply_token alias was stripped by recipient email client, match by sender email
+        if not token:
+            from_addresses = _extract_addresses(data.get("from"))
+            if from_addresses:
+                sender_email = from_addresses[0].lower()
+                recent_crm = (
+                    db.query(OutreachMessage)
+                    .filter(func.lower(OutreachMessage.to_email) == sender_email)
+                    .order_by(desc(OutreachMessage.sent_at))
+                    .first()
+                )
+                if recent_crm and recent_crm.reply_token:
+                    token = recent_crm.reply_token
+                else:
+                    recent_supply = (
+                        db.query(SupplyOutreachMessage)
+                        .filter(SupplyOutreachMessage.to_emails.contains([sender_email]))
+                        .order_by(desc(SupplyOutreachMessage.sent_at))
+                        .first()
+                    )
+                    if recent_supply and recent_supply.reply_token:
+                        token = recent_supply.reply_token
+
+        if not token:
+            return {"ok": True, "ignored": "no_reply_token"}
     try:
         # Idempotency: use svix_id (unique per Resend delivery attempt) stored in
         # raw_payload to reject duplicate webhook deliveries on Resend retries.
