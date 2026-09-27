@@ -243,6 +243,104 @@ def list_sales_opportunities(
     return [_serialize_opportunity(db, row) for row in rows]
 
 
+class ContactConfirmIn(BaseModel):
+    contact_email: str = Field(..., max_length=320)
+    contact_name: Optional[str] = Field(None, max_length=160)
+    contact_title: Optional[str] = Field(None, max_length=160)
+
+
+@router.post("/opportunities/seed")
+def seed_sales_opportunities(
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    """Seed or sync open pipeline accounts into SalesOpportunity records when the queue is empty."""
+    uid = _uid_uuid(user)
+    team_ids = _team_ids_for_user(db, uid)
+    if not team_ids:
+        from app.api.admin_extended import _admin_team
+        team = _admin_team(db, uid, user.get("email") or "")
+        team_id = team.id
+    else:
+        team_id = team_ids[0]
+
+    existing_crm_ids = [
+        r[0] for r in db.query(SalesOpportunity.crm_account_id).filter(
+            SalesOpportunity.team_id == team_id,
+            SalesOpportunity.crm_account_id.isnot(None)
+        ).all()
+    ]
+    query = db.query(CrmAccount).filter(CrmAccount.team_id == team_id)
+    if existing_crm_ids:
+        query = query.filter(~CrmAccount.id.in_(existing_crm_ids))
+    accounts = query.order_by(desc(CrmAccount.created_at)).limit(25).all()
+
+    created_count = 0
+    for acct in accounts:
+        opp = SalesOpportunity(
+            id=_db_uuid(db, uuid.uuid4()),
+            team_id=team_id,
+            crm_account_id=acct.id,
+            company_id=acct.company_id,
+            owner_user_id=uid,
+            title=acct.name or "Target Opportunity",
+            opportunity_type="buyer_outreach",
+            current_stage="contact_qualification" if not acct.contact_email else "ready_for_draft",
+            status="open",
+            automation_level="auto",
+            next_best_action={
+                "recommendation": "Confirm OEM/Vendor email contact" if not acct.contact_email else "Execute CAL auto-outreach cycle",
+                "stage_after": "intro_sent",
+            },
+        )
+        db.add(opp)
+        created_count += 1
+    db.commit()
+    return {"created_count": created_count, "team_id": str(team_id)}
+
+
+@router.post("/opportunities/{opportunity_id}/confirm-contact")
+def confirm_sales_opportunity_contact(
+    opportunity_id: str,
+    payload: ContactConfirmIn,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    """Inspect and confirm decision-maker contact email for OEM/Vendor opportunities."""
+    opportunity = _opportunity_or_404(db, opportunity_id, _team_ids_for_user(db, _uid_uuid(user)))
+    if not opportunity.crm_account_id:
+        raise HTTPException(status_code=400, detail="Opportunity has no linked CRM account")
+    account = db.query(CrmAccount).filter(CrmAccount.id == opportunity.crm_account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="CRM account not found")
+
+    email = payload.contact_email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="Valid email address is required")
+
+    account.contact_email = email
+    if payload.contact_name:
+        account.contact_name = payload.contact_name.strip()
+    if payload.contact_title:
+        account.contact_title = payload.contact_title.strip()
+
+    meta = dict(account.crm_metadata or {}) if isinstance(account.crm_metadata, dict) else {}
+    meta["outreach_email"] = email
+    meta["outreach_email_source"] = "human_verified"
+    meta["contact_verified_at"] = datetime.now(timezone.utc).isoformat()
+    account.crm_metadata = meta
+
+    if opportunity.current_stage == "contact_qualification":
+        opportunity.current_stage = "ready_for_draft"
+    opportunity.next_best_action = {
+        "recommendation": "Execute CAL auto-outreach cycle to send proposal & quote",
+        "stage_after": "intro_sent",
+    }
+    db.commit()
+    db.refresh(opportunity)
+    return _serialize_opportunity(db, opportunity, include_details=True)
+
+
 @router.get("/inbox")
 def list_sales_inbox(
     team_id: Optional[str] = Query(None),

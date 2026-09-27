@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import AdminNav from "@/components/AdminNav";
@@ -128,6 +128,23 @@ export default function SalesConsole() {
   const [recipientOverride, setRecipientOverride] = useState("");
   const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
   const [autopilotEnabled, setAutopilotEnabled] = useState(true);
+  const [stageFilter, setStageFilter] = useState("all");
+
+  const filteredRows = useMemo(() => {
+    return rows.filter(r => {
+      if (stageFilter === "all") return true;
+      if (stageFilter === "contact_qualification") return r.current_stage === "contact_qualification" || !r.latest_message?.to_email;
+      if (stageFilter === "ready_for_draft") return r.current_stage === "ready_for_draft";
+      if (stageFilter === "intro_sent") return r.current_stage === "intro_sent" || r.last_inbound_at != null;
+      if (stageFilter === "placement") return r.current_stage === "placement";
+      return true;
+    });
+  }, [rows, stageFilter]);
+
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [confirmName, setConfirmName] = useState("");
+  const [confirmTitle, setConfirmTitle] = useState("");
+  const [confirmingContact, setConfirmingContact] = useState(false);
 
   const runAutomaticOutreachCycle = async () => {
     setBusy(true);
@@ -167,6 +184,51 @@ export default function SalesConsole() {
       );
     } finally {
       setBusy(false);
+    }
+  };
+
+  const seedOpportunitiesFromPipeline = async () => {
+    setBusy(true);
+    try {
+      const res = await authFetch("/api/sales/opportunities/seed", {
+        method: "POST",
+      });
+      toast.success(`Imported ${res?.created_count ?? 0} pipeline accounts into queue!`);
+      await loadRows();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not seed opportunities.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const saveConfirmedContact = async () => {
+    if (!selected || !confirmEmail) {
+      toast.error("Please enter a valid OEM/Vendor email address.");
+      return;
+    }
+    setConfirmingContact(true);
+    try {
+      const updated = (await authFetch(
+        `/api/sales/opportunities/${selected.id}/confirm-contact`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contact_email: confirmEmail,
+            contact_name: confirmName || undefined,
+            contact_title: confirmTitle || undefined,
+          }),
+        }
+      )) as SalesOpportunity;
+      setSelected(updated);
+      setRecipientOverride(confirmEmail);
+      toast.success(`Confirmed OEM/Vendor email: ${confirmEmail}`);
+      await loadRows();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not confirm contact email.");
+    } finally {
+      setConfirmingContact(false);
     }
   };
 
@@ -253,11 +315,11 @@ export default function SalesConsole() {
           `/api/sales/opportunities/${selectedId}`
         )) as SalesOpportunity;
         setSelected(detail);
-        setRecipientOverride(
-          detail.latest_message?.direction === "inbound"
-            ? detail.latest_message.from_email || ""
-            : ""
-        );
+        const latestFrom = detail.latest_message?.direction === "inbound" ? detail.latest_message.from_email : "";
+        setRecipientOverride(latestFrom || "");
+        setConfirmEmail(latestFrom || "");
+        setConfirmName("");
+        setConfirmTitle("");
       } catch (e) {
         setMsg(e instanceof Error ? e.message : "Could not load opportunity");
       } finally {
@@ -484,6 +546,39 @@ export default function SalesConsole() {
           </div>
         </div>
 
+        {/* Visual Stick Diagram — Sales & Placement Workflow */}
+        <div className="mt-6 rounded-2xl border border-slate-700/60 bg-[#0c192e] p-5 shadow-xl">
+          <div className="flex items-center justify-between flex-wrap gap-2 mb-3">
+            <span className="text-xs font-extrabold uppercase tracking-wider text-emerald-400">
+              Outreach & Placement Workflow Map
+            </span>
+            <span className="text-xs text-slate-400">
+              Click a stage to filter active opportunities
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
+            {[
+              { key: "all", step: "1", title: "DISCOVER", count: rows.length, color: "border-cyan-500/40 bg-cyan-950/40 text-cyan-300" },
+              { key: "contact_qualification", step: "2", title: "CONFIRM EMAIL", count: rows.filter(r => r.current_stage === "contact_qualification" || !r.latest_message?.to_email).length, color: "border-amber-500/40 bg-amber-950/40 text-amber-300" },
+              { key: "ready_for_draft", step: "3", title: "CAL AUTO-DRAFT", count: rows.filter(r => r.current_stage === "ready_for_draft").length, color: "border-purple-500/40 bg-purple-950/40 text-purple-300" },
+              { key: "intro_sent", step: "4", title: "OUTREACH & REPLIES", count: rows.filter(r => r.current_stage === "intro_sent" || r.last_inbound_at).length, color: "border-emerald-500/40 bg-emerald-950/40 text-emerald-300" },
+              { key: "placement", step: "5", title: "PLACEMENT", count: rows.filter(r => r.current_stage === "placement").length, color: "border-indigo-500/40 bg-indigo-950/40 text-indigo-300" },
+            ].map((st, idx) => (
+              <button
+                key={st.key}
+                onClick={() => setStageFilter(st.key)}
+                className={`relative rounded-xl border p-3 text-left transition flex flex-col justify-between ${st.color} ${stageFilter === st.key ? "ring-2 ring-emerald-400" : "opacity-85 hover:opacity-100"}`}
+              >
+                <div className="flex items-center justify-between text-[10px] font-mono uppercase font-bold">
+                  <span>Step {st.step}</span>
+                  <span className="rounded-full bg-slate-900/80 px-2 py-0.5 border border-slate-700">{st.count}</span>
+                </div>
+                <p className="mt-2 text-xs font-black tracking-tight leading-snug">{st.title}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
         {/* Cal Robot Proposals OEM Approval Banner */}
         <div className="mt-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/40 border border-cyan-500/30 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
           <div className="flex items-center gap-4">
@@ -602,62 +697,73 @@ export default function SalesConsole() {
           </div>
         </section>
 
+        {/* Opportunities List + Detail Panel */}
         <section className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
-          <div className="rounded-3xl border border-slate-700/60 bg-[#0c192e] shadow-xl p-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">
-                Opportunities
-              </h2>
-              <span className="text-xs text-slate-500">
-                {rows.length} active
-              </span>
-            </div>
-            <div className="mt-4 space-y-3">
-              {rows.map(row => (
-                <button
-                  key={row.id}
-                  onClick={() => setSelectedId(row.id)}
-                  className="w-full rounded-2xl border p-4 text-left transition"
-                  style={{
-                    borderColor:
-                      selectedId === row.id
-                        ? "rgba(52, 211, 153, 0.6)"
-                        : "rgba(51, 65, 85, 0.6)",
-                    background:
-                      selectedId === row.id
-                        ? "rgba(6, 78, 59, 0.35)"
-                        : "rgba(15, 23, 42, 0.6)",
-                  }}
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="font-bold text-white">{row.title}</p>
-                    <span className="rounded-full border border-slate-700 bg-slate-800/80 px-2 py-1 text-[10px] uppercase text-slate-300">
-                      {row.opportunity_type}
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs text-slate-400">
-                    Stage: {row.current_stage}
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Intent:{" "}
-                    {row.next_best_action?.intent ||
-                      row.latest_message?.detected_intent ||
-                      "unknown"}
-                  </p>
-                </button>
-              ))}
-              {!rows.length && !busy && (
-                <div className="rounded-2xl border border-slate-700/60 bg-slate-900/50 p-5 text-sm text-slate-400">
-                  No sales opportunities yet. They appear here when SIGNAL
-                  captures inbound replies.
+              <div className="rounded-3xl border border-slate-700/60 bg-[#0c192e] shadow-xl p-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">
+                    Opportunities
+                  </h2>
+                  <span className="text-xs text-slate-500">
+                    {filteredRows.length} active
+                  </span>
                 </div>
-              )}
-            </div>
-          </div>
+                <div className="mt-4 space-y-3">
+                  {filteredRows.map(row => (
+                    <button
+                      key={row.id}
+                      onClick={() => setSelectedId(row.id)}
+                      className="w-full rounded-2xl border p-4 text-left transition"
+                      style={{
+                        borderColor:
+                          selectedId === row.id
+                            ? "rgba(52, 211, 153, 0.6)"
+                            : "rgba(51, 65, 85, 0.6)",
+                        background:
+                          selectedId === row.id
+                            ? "rgba(6, 78, 59, 0.35)"
+                            : "rgba(15, 23, 42, 0.6)",
+                      }}
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-bold text-white">{row.title}</p>
+                        <span className="rounded-full border border-slate-700 bg-slate-800/80 px-2 py-1 text-[10px] uppercase text-slate-300">
+                          {row.opportunity_type}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs text-slate-400">
+                        Stage: {row.current_stage}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Intent:{" "}
+                        {row.next_best_action?.intent ||
+                          row.latest_message?.detected_intent ||
+                          "unknown"}
+                      </p>
+                    </button>
+                  ))}
+                  {!filteredRows.length && !busy && (
+                    <div className="rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-950/20 p-5 text-center shadow-inner">
+                      <p className="text-sm font-bold text-white">No opportunities in queue</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Populate your console with open leads from your pipeline.
+                      </p>
+                      <button
+                        onClick={seedOpportunitiesFromPipeline}
+                        disabled={busy}
+                        className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3 py-1.5 text-xs font-black uppercase tracking-wider transition"
+                      >
+                        <Zap className="w-3.5 h-3.5 fill-slate-950" />
+                        Populate Queue from Pipeline
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
 
           <div className="rounded-3xl border border-slate-700/60 bg-[#0c192e] shadow-xl p-5">
             {selected ? (
-              <>
+              <React.Fragment>
                 <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                   <div>
                     <p className="text-xs uppercase tracking-[0.25em] text-slate-400">
@@ -714,6 +820,69 @@ export default function SalesConsole() {
                       className="mt-3 w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-4 py-2 text-sm font-black disabled:opacity-50 transition shadow-md shadow-emerald-950/40"
                     >
                       Automate next action
+                    </button>
+                  </div>
+                </div>
+
+                {/* OEM & Vendor Contact Email Confirmation Panel */}
+                <div className="mt-6 rounded-2xl border border-amber-500/40 bg-amber-950/20 p-5 shadow-lg">
+                  <div className="flex items-center justify-between flex-wrap gap-2">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+                      <span className="text-xs font-mono font-extrabold uppercase tracking-wider text-amber-400">
+                        OEM / Vendor Email Confirmation
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono bg-slate-900/90 px-2 py-1 rounded border border-slate-700 text-slate-300">
+                      {confirmEmail ? "Email Set" : "Action Required: Missing Email"}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-300">
+                    Confirm decision-maker contact email for <strong>{selected.title}</strong> before CAL dispatches quotes.
+                  </p>
+                  <div className="mt-4 grid gap-3 md:grid-cols-3">
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400">OEM / Vendor Email *</label>
+                      <input
+                        value={confirmEmail}
+                        onChange={e => setConfirmEmail(e.target.value)}
+                        placeholder="decision.maker@oem.com"
+                        className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900/90 px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400">Contact Name</label>
+                      <input
+                        value={confirmName}
+                        onChange={e => setConfirmName(e.target.value)}
+                        placeholder="e.g. Jane Doe"
+                        className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900/90 px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase text-slate-400">Title / Role</label>
+                      <input
+                        value={confirmTitle}
+                        onChange={e => setConfirmTitle(e.target.value)}
+                        placeholder="e.g. VP of Automation"
+                        className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-900/90 px-3 py-2 text-xs text-white outline-none focus:border-amber-400"
+                      />
+                    </div>
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      onClick={saveConfirmedContact}
+                      disabled={confirmingContact || !confirmEmail}
+                      className="rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2 text-xs font-black uppercase tracking-wider shadow-md disabled:opacity-50 transition"
+                    >
+                      {confirmingContact ? "Saving..." : "Save & Confirm Contact Email"}
+                    </button>
+                    <button
+                      onClick={() => void loadProspects()}
+                      disabled={prospectBusy}
+                      className="rounded-xl border border-slate-700 bg-slate-800 px-3 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700 hover:text-white transition"
+                    >
+                      Search Hunter.io Contacts
                     </button>
                   </div>
                 </div>
@@ -931,7 +1100,7 @@ export default function SalesConsole() {
                     </div>
                   </section>
                 </div>
-              </>
+              </React.Fragment>
             ) : (
               <div className="rounded-2xl border border-slate-700/60 bg-slate-900/50 p-8 text-slate-400">
                 Select an opportunity to inspect SIGNAL activity.
