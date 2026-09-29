@@ -1,6 +1,6 @@
 /**
  * Central Sales Email Generator for ReadyForRobots.
- * Powered by Phelan — AI Robotics Placement Specialist at ReadyForRobots.
+ * Powered by Phelan — Robot Job Analyst at ReadyForRobots.
  * Explains recruitment and placement infrastructure for robotic labor before pitching.
  */
 
@@ -16,29 +16,31 @@ export function buildPhelanExecutiveEmail(opts: ExecutiveEmailOpts): { subject: 
   const rawName = (opts.dmName || "").trim();
   const firstName = rawName ? rawName.split(" ")[0] : "";
   const company = opts.companyName.trim();
-  const companyPossessive = company.endsWith("s") ? `${company}’` : `${company}’s`;
+  const robotJob = opts.taskType || opts.robotTypes?.[0] || "facility automation";
 
-  const greeting = firstName ? `Hi ${firstName},` : `Dear ${company} Operations Leadership,`;
-  const subject = `Robotic labor placement & task feasibility evaluation for ${company}`;
+  const greeting = firstName ? `Hi ${firstName},` : `Hi Operations Team,`;
+  const subject = `Robot job match & qualified labor review for ${company}`;
 
   const body = `${greeting}
 
-I'm Phelan, AI Robotics Placement Specialist at ReadyForRobots. ReadyForRobots is recruitment and placement infrastructure for robotic labor. We evaluate physical task feasibility, operating cell constraints, payload/throughput requirements, and hardware capabilities to match qualified robotic labor directly to real, verified job openings at enterprise and industrial facilities.
+I’m Phelan, a Robot Job Analyst at ReadyForRobots.
 
-When evaluating automation for ${companyPossessive} facilities, the critical first step isn't picking a robot—it's verifying whether the specific physical task is ready for automation and matching physical task requirements with qualified hardware.
+We match robots to jobs—and jobs to robots.
 
-Rather than relying on vendor brochure claims, ReadyForRobots provides enterprise operators with independent engineering task-feasibility evaluations, 3D cell simulations, and turnkey commercial proposals (CapEx and RaaS financing) with verified Robot Job Cards.
+We’ve identified work within ${company} that may be a good fit for robotic labor.
 
-We have compiled a preliminary task-feasibility evaluation and qualified robot job cards tailored for ${companyPossessive} operations. If your team is evaluating upcoming facility automation options this year, I would be glad to share our analysis.
+ReadyForRobots qualifies and matches robots to specific jobs based on the physical requirements of the task, robot capabilities, operating environment, and the models and training required to perform the work.
 
-Would you be open to reviewing a brief task feasibility and robotic labor placement summary for your facilities?
+For your **${robotJob}** job, we’ve identified a shortlist of qualified robot matches for your review.
+
+Once you’ve had a chance to review the matches, let’s schedule a short call to discuss your job requirements in more detail and determine which robots are best suited for the work.
 
 Best regards,
 
 Phelan
-AI Robotics Placement Specialist | ReadyForRobots
+Robot Job Analyst | ReadyForRobots
 phelan@readyforrobots.com
-https://readyforrobots.com`;
+readyforrobots.com`;
 
   return { subject, body };
 }

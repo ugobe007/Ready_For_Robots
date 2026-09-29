@@ -9,22 +9,25 @@ describe("executiveEmailGenerator", () => {
       robotTypes: ["Autonomous Forklifts", "Parcel Sortation AMRs"],
     });
 
-    expect(email.subject).toBe("Robotic labor placement & task feasibility evaluation for FedEx Ground");
+    expect(email.subject).toBe("Robot job match & qualified labor review for FedEx Ground");
     expect(email.body).toContain("Hi David,");
-    expect(email.body).toContain("I'm Phelan, AI Robotics Placement Specialist at ReadyForRobots.");
-    expect(email.body).toContain("ReadyForRobots is recruitment and placement infrastructure for robotic labor.");
-    expect(email.body).toContain("independent engineering task-feasibility evaluations, 3D cell simulations, and turnkey commercial proposals");
+    expect(email.body).toContain("I’m Phelan, a Robot Job Analyst at ReadyForRobots.");
+    expect(email.body).toContain("We match robots to jobs—and jobs to robots.");
+    expect(email.body).toContain("We’ve identified work within FedEx Ground that may be a good fit for robotic labor.");
+    expect(email.body).toContain("For your **Autonomous Forklifts** job, we’ve identified a shortlist of qualified robot matches for your review.");
     expect(email.body).toContain("phelan@readyforrobots.com");
     expect(email.body).not.toContain("Bob Christopher");
     expect(email.body).not.toContain("Cal");
   });
 
-  it("handles possessive grammar for company names ending in s", () => {
+  it("handles company names cleanly in the email template", () => {
     const email = buildPhelanExecutiveEmail({
       companyName: "CloudKitchens",
       dmName: "Justin Futterman",
+      taskType: "Meal Assembly",
     });
 
-    expect(email.body).toContain("CloudKitchens’ operations");
+    expect(email.body).toContain("We’ve identified work within CloudKitchens that may be a good fit for robotic labor.");
+    expect(email.body).toContain("For your **Meal Assembly** job");
   });
 });
