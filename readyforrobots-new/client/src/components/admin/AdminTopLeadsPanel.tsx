@@ -223,8 +223,8 @@ const HUNTER_EXECUTIVE_MAP: Record<
   },
 };
 
-import { buildBobExecutiveEmail } from "@/lib/executiveEmailGenerator";
-export { buildBobExecutiveEmail };
+import { buildPhelanExecutiveEmail, buildPhelanExecutiveEmail as buildBobExecutiveEmail } from "@/lib/executiveEmailGenerator";
+export { buildPhelanExecutiveEmail, buildBobExecutiveEmail };
 
 const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
   {

@@ -11,13 +11,13 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_buyer_emai
 
 # External outreach constants (used in cal_opening, cal_vendor_opening, sales_agent)
 CAL_INTRO = (
-    "I am the ReadyForRobots AI Sales Advisor. ReadyForRobots is recruitment and placement infrastructure for robotic labor. "
+    "I'm Phelan, AI Robotics Placement Specialist at ReadyForRobots. ReadyForRobots is recruitment and placement infrastructure for robotic labor. "
     "We evaluate physical task feasibility, cell constraints, payload/throughput requirements, and hardware capabilities "
     "to match qualified robotic labor directly to real, verified job openings at enterprise and industrial facilities."
 )
 
 CAL_BUYER_ROLE_LINE = (
-    "I am the ReadyForRobots AI Sales Advisor. ReadyForRobots provides recruitment and placement infrastructure for robotic labor, "
+    "I'm Phelan, AI Robotics Placement Specialist at ReadyForRobots. ReadyForRobots provides recruitment and placement infrastructure for robotic labor, "
     "evaluating physical task feasibility to match qualified hardware with real production workflows."
 )
 

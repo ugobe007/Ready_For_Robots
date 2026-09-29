@@ -11,8 +11,8 @@ Persona is job + tools + loop, not a warmer name.
 """
 from __future__ import annotations
 
-CAL_NAME = "Cal"
-CAL_TITLE = "Jobs Recruiter"
+CAL_NAME = "Phelan"
+CAL_TITLE = "AI Robotics Placement Specialist"
 CAL_ORG = "Ready For Robots"
 CAL_ROLE = f"{CAL_ORG} {CAL_TITLE.lower()}"
 CAL_SURFACE = "/pipeline?src=jobs_activate"
@@ -179,8 +179,8 @@ def cal_signature() -> str:
 
 
 def cal_buyer_email_signature() -> str:
-    """Cal's buyer email signature."""
-    return f"Best regards,\n\n{CAL_NAME}\nSales & Deployment Advisor | {CAL_ORG}\ncal@readyforrobots.com\nhttps://readyforrobots.com"
+    """Phelan's buyer email signature."""
+    return f"Best regards,\n\n{CAL_NAME}\n{CAL_TITLE} | {CAL_ORG}\nphelan@readyforrobots.com\nhttps://readyforrobots.com"
 
 
 def cal_persona_payload() -> dict:

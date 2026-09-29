@@ -1,6 +1,6 @@
 /**
  * Central Sales Email Generator for ReadyForRobots.
- * Powered by ReadyForRobots AI Sales Advisor.
+ * Powered by Phelan — AI Robotics Placement Specialist at ReadyForRobots.
  * Explains recruitment and placement infrastructure for robotic labor before pitching.
  */
 
@@ -9,10 +9,10 @@ export type ExecutiveEmailOpts = {
   dmName?: string;
   robotTypes?: string[];
   taskType?: string;
-  senderMode?: "cal" | "bob" | "ai";
+  senderMode?: "cal" | "bob" | "ai" | "phelan";
 };
 
-export function buildSalesAiExecutiveEmail(opts: ExecutiveEmailOpts): { subject: string; body: string } {
+export function buildPhelanExecutiveEmail(opts: ExecutiveEmailOpts): { subject: string; body: string } {
   const rawName = (opts.dmName || "").trim();
   const firstName = rawName ? rawName.split(" ")[0] : "";
   const company = opts.companyName.trim();
@@ -23,7 +23,7 @@ export function buildSalesAiExecutiveEmail(opts: ExecutiveEmailOpts): { subject:
 
   const body = `${greeting}
 
-I am the ReadyForRobots AI Sales Advisor. ReadyForRobots is recruitment and placement infrastructure for robotic labor. We evaluate physical task feasibility, cell constraints, payload/throughput requirements, and hardware capabilities to match qualified robotic labor directly to real, verified job openings at enterprise and industrial facilities.
+I'm Phelan, AI Robotics Placement Specialist at ReadyForRobots. ReadyForRobots is recruitment and placement infrastructure for robotic labor. We evaluate physical task feasibility, operating cell constraints, payload/throughput requirements, and hardware capabilities to match qualified robotic labor directly to real, verified job openings at enterprise and industrial facilities.
 
 When evaluating automation for ${companyPossessive} facilities, the critical first step isn't picking a robot—it's verifying whether the specific physical task is ready for automation and matching physical task requirements with qualified hardware.
 
@@ -35,19 +35,23 @@ Would you be open to reviewing a brief task feasibility and robotic labor placem
 
 Best regards,
 
-ReadyForRobots AI Sales Advisor
-Robotic Labor Recruitment & Placement Infrastructure
-outreach@readyforrobots.com
+Phelan
+AI Robotics Placement Specialist | ReadyForRobots
+phelan@readyforrobots.com
 https://readyforrobots.com`;
 
   return { subject, body };
 }
 
+export function buildSalesAiExecutiveEmail(opts: ExecutiveEmailOpts): { subject: string; body: string } {
+  return buildPhelanExecutiveEmail(opts);
+}
+
 export function buildCalSalesEmail(opts: ExecutiveEmailOpts): { subject: string; body: string } {
-  return buildSalesAiExecutiveEmail(opts);
+  return buildPhelanExecutiveEmail(opts);
 }
 
 export function buildBobExecutiveEmail(opts: ExecutiveEmailOpts): { subject: string; body: string } {
-  return buildSalesAiExecutiveEmail(opts);
+  return buildPhelanExecutiveEmail(opts);
 }
 
