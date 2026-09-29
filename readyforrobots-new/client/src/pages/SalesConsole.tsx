@@ -157,7 +157,7 @@ export default function SalesConsole() {
 
   const runAutomaticOutreachCycle = async () => {
     setBusy(true);
-    toast.info("Executing Cal automatic outreach cycle...");
+    toast.info("Executing Phelan automatic outreach cycle...");
     try {
       const res = await authFetch("/api/admin/cal/autonomy-run", {
         method: "POST",
@@ -165,7 +165,7 @@ export default function SalesConsole() {
         body: JSON.stringify({ dry_run: false }),
       });
       toast.success(
-        `Cal automatic outreach complete! Drafted: ${res?.drafted ?? 0}, Refreshed: ${res?.refreshed ?? 0}, Sent: ${res?.sent ?? 0}.`
+        `Phelan automatic outreach complete! Drafted: ${res?.drafted ?? 0}, Refreshed: ${res?.refreshed ?? 0}, Sent: ${res?.sent ?? 0}.`
       );
       await loadRows();
     } catch (e) {
@@ -186,10 +186,10 @@ export default function SalesConsole() {
         body: JSON.stringify({ enabled: nextEnabled }),
       });
       setAutopilotEnabled(Boolean(res?.enabled));
-      toast.success(`Cal autopilot turned ${res?.enabled ? "ON" : "OFF"}.`);
+      toast.success(`Phelan autopilot turned ${res?.enabled ? "ON" : "OFF"}.`);
     } catch (e) {
       toast.error(
-        e instanceof Error ? e.message : "Could not toggle Cal autopilot."
+        e instanceof Error ? e.message : "Could not toggle Phelan autopilot."
       );
     } finally {
       setBusy(false);
@@ -543,7 +543,7 @@ export default function SalesConsole() {
               className="rounded-xl border border-cyan-500/50 bg-cyan-950/40 px-4 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-900/60 transition flex items-center gap-1.5"
             >
               <FileText className="w-3.5 h-3.5 text-cyan-400" />
-              Cal Proposals
+              Phelan Proposals
             </button>
             <button
               onClick={() =>
@@ -585,7 +585,7 @@ export default function SalesConsole() {
             {[
               { key: "all", step: "1", title: "DISCOVER", count: rows.length, color: "border-cyan-500/40 bg-cyan-950/40 text-cyan-300" },
               { key: "contact_qualification", step: "2", title: "CONFIRM EMAIL", count: rows.filter(r => r.current_stage === "contact_qualification" || !r.latest_message?.to_email).length, color: "border-amber-500/40 bg-amber-950/40 text-amber-300" },
-              { key: "ready_for_draft", step: "3", title: "CAL AUTO-DRAFT", count: rows.filter(r => r.current_stage === "ready_for_draft").length, color: "border-purple-500/40 bg-purple-950/40 text-purple-300" },
+              { key: "ready_for_draft", step: "3", title: "PHELAN AUTO-DRAFT", count: rows.filter(r => r.current_stage === "ready_for_draft").length, color: "border-purple-500/40 bg-purple-950/40 text-purple-300" },
               { key: "intro_sent", step: "4", title: "OUTREACH & REPLIES", count: rows.filter(r => r.current_stage === "intro_sent" || r.last_inbound_at).length, color: "border-emerald-500/40 bg-emerald-950/40 text-emerald-300" },
               { key: "placement", step: "5", title: "PLACEMENT", count: rows.filter(r => r.current_stage === "placement").length, color: "border-indigo-500/40 bg-indigo-950/40 text-indigo-300" },
             ].map((st, idx) => (
@@ -604,7 +604,7 @@ export default function SalesConsole() {
           </div>
         </div>
 
-        {/* Cal Robot Proposals OEM Approval Banner */}
+        {/* Phelan Robot Proposals OEM Approval Banner */}
         <div className="mt-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/40 border border-cyan-500/30 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
@@ -613,7 +613,7 @@ export default function SalesConsole() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
-                  Cal AI Robot Proposal & Quote Strategy
+                  Phelan AI Robot Proposal & Quote Strategy
                 </span>
                 <span className="text-[10px] font-mono bg-amber-500/10 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
@@ -621,7 +621,7 @@ export default function SalesConsole() {
                 </span>
               </div>
               <p className="text-sm font-semibold text-white mt-1">
-                Pre-Send OEM Gate: Cal prepares quotes & matches robots to job openings for OEM sign-off before buyer dispatch.
+                Pre-Send OEM Gate: Phelan prepares quotes & matches robots to job openings for OEM sign-off before buyer dispatch.
               </p>
             </div>
           </div>

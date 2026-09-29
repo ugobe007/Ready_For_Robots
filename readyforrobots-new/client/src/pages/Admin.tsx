@@ -3396,7 +3396,7 @@ export default function Admin() {
               <Mail className="h-4 w-4 shrink-0 text-emerald-400" />
               <div className="min-w-0">
                 <h2 className="text-base font-extrabold text-slate-100 truncate">
-                  Cal outreach queue
+                  Phelan outreach queue
                 </h2>
                 <p className="text-[11px] text-slate-400">
                   HOT/WARM scored companies only — draft, edit, send (not the
@@ -3486,7 +3486,7 @@ export default function Admin() {
             Number(calMetrics.needs_approval ?? 0) > 0) && (
             <div className="mb-4 rounded-xl border border-amber-500/30 bg-amber-950/30 px-3 py-2.5">
               <p className="text-[10px] font-bold uppercase tracking-wide text-amber-400">
-                Why Cal looks stuck
+                Why Phelan looks stuck
               </p>
               <p className="mt-1 text-[11px] text-amber-200/90">
                 {Number(calMetrics.pending_draft ?? 0) > 0
@@ -3522,19 +3522,19 @@ export default function Admin() {
             </div>
           )}
 
-          {/* Cal Robot Proposal OEM Gate Card */}
+          {/* Phelan Robot Proposal OEM Gate Card */}
           <div className="mb-4 rounded-xl border border-cyan-500/30 bg-cyan-950/20 p-4 flex flex-wrap items-center justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
-                  Cal AI Robot Proposal & Quote Strategy
+                  Phelan AI Robot Proposal & Quote Strategy
                 </span>
                 <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                   Pre-Send OEM Gate
                 </span>
               </div>
               <p className="mt-1 text-xs text-slate-300">
-                Cal prepares job quotes and routes to robot OEMs for pricing approval before enterprise buyer outreach.
+                Phelan prepares job quotes and routes to robot OEMs for pricing approval before enterprise buyer outreach.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -3559,7 +3559,7 @@ export default function Admin() {
                 Alert: sends with zero opens
               </p>
               <p className="mt-1 text-[11px] text-rose-200/90">
-                Cal sent {formatNumber(calSentCount)} emails in this window with
+                Phelan sent {formatNumber(calSentCount)} emails in this window with
                 open rate {pct(calOpenRate)} and reply rate {pct(calReplyRate)}.
                 This usually means deliverability friction, webhook gaps, or
                 open tracking misconfiguration.
@@ -3640,10 +3640,10 @@ export default function Admin() {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
                 <p className="text-[10px] font-bold uppercase tracking-wide text-sky-400">
-                  Received emails (Cal replies)
+                  Received emails (Phelan replies)
                 </p>
                 <p className="mt-1 text-[11px] text-sky-200/90">
-                  Latest inbound responses from prospects Cal contacted.
+                  Latest inbound responses from prospects Phelan contacted.
                 </p>
               </div>
               <div className="flex items-center gap-2 text-[11px]">
@@ -3709,7 +3709,7 @@ export default function Admin() {
                 <div className="rounded-lg border border-slate-700/60 bg-[#060c1c] px-2.5 py-3 text-[11px] text-slate-400 md:col-span-2">
                   {calInboxLoading
                     ? "Loading replies..."
-                    : "No received emails yet. Cal replies will appear here as prospects respond."}
+                    : "No received emails yet. Phelan replies will appear here as prospects respond."}
                 </div>
               )}
             </div>
@@ -3722,7 +3722,7 @@ export default function Admin() {
             HOT/WARM leads ({formatNumber(calBuyerCount)} buyers ·{" "}
             {formatNumber(calVendorCount)} vendors). Use the workflow above —
             each step shows one count and one action. Select a lead below to
-            preview or edit Cal&apos;s draft.
+            preview or edit Phelan&apos;s draft.
           </p>
 
           {/* Queue list + CRM sample panel */}
@@ -3735,7 +3735,7 @@ export default function Admin() {
                 <p className="py-6 text-center text-xs text-slate-400">
                   {syncingSection === "cal"
                     ? "Loading prospect draft status…"
-                    : "No Cal outreach data yet."}
+                    : "No Phelan outreach data yet."}
                 </p>
               ) : calFilteredProspects.length === 0 ? (
                 <p className="py-6 text-center text-xs text-slate-400">
@@ -3811,11 +3811,11 @@ export default function Admin() {
 
             <div className="lg:sticky lg:top-24 max-h-[560px] overflow-y-auto rounded-xl border border-slate-700/60 bg-[#060c1c] p-4 shadow-xl">
               <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">
-                CRM sample · Cal draft
+                CRM sample · Phelan draft
               </p>
               {!calSelectedProspect ? (
                 <p className="mt-6 text-sm text-slate-400">
-                  Select a lead from the queue to preview and edit Cal&apos;s
+                  Select a lead from the queue to preview and edit Phelan&apos;s
                   email.
                 </p>
               ) : (
@@ -4166,14 +4166,14 @@ export default function Admin() {
             Other agent work
             <span className="ml-2 text-xs font-normal text-slate-400">
               {formatNumber(workflowCounts?.total)} tasks ·{" "}
-              {formatNumber(workflowCounts?.queued)} queued · not Cal email
+              {formatNumber(workflowCounts?.queued)} queued · not Phelan email
               queue
             </span>
           </summary>
           <p className="mt-3 text-xs text-slate-400">
             <strong className="text-slate-200">Workflow ({formatNumber(workflowCounts?.total)})</strong> =
             sales agent actions, research updates, SIGNAL drafts, supply
-            outreach — separate from Cal&apos;s HOT/WARM queue (
+            outreach — separate from Phelan&apos;s HOT/WARM queue (
             {formatNumber(calMetrics.total)}).
             <strong className="text-slate-200">
               {" "}
@@ -4190,7 +4190,7 @@ export default function Admin() {
               {" "}
               Need approve ({formatNumber(workflowCounts?.needs_approval)})
             </strong>{" "}
-            = items waiting for you in those other queues (Cal uses autopilot;
+            = items waiting for you in those other queues (Phelan uses autopilot;
             pending draft ≠ approval).
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
@@ -4272,7 +4272,7 @@ export default function Admin() {
 
         <details className="mb-4 rounded-xl border border-emerald-500/30 bg-emerald-950/20 px-4 py-3 text-slate-100 group shadow-xl">
           <summary className="cursor-pointer list-none text-[11px] font-bold text-emerald-400 marker:content-none">
-            Cal autonomy
+            Phelan autonomy
             <span className="ml-2 font-normal text-emerald-300/80">
               scheduled worker cycles · daily digest to ADMIN_EMAIL
             </span>
@@ -4322,7 +4322,7 @@ export default function Admin() {
                   onClick={() => void runCalAutonomy(false)}
                   busy={actionBusy === "cal-run"}
                 >
-                  Run Cal now
+                  Run Phelan now
                 </SupabaseInlineLink>
               </div>
             </div>

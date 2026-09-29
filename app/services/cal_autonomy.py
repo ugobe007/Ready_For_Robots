@@ -507,7 +507,7 @@ Reply to this email if you want Cal outreach paused or the tone adjusted.
             to_email=to_email,
             subject=subject,
             body_text=body,
-            from_display_name="Ready For Robots · Cal ops",
+            from_display_name="Ready For Robots · Phelan ops",
             idempotency_key=f"cal-format-review-{new_fingerprint}",
         )
         return True

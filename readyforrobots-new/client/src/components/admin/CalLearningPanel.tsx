@@ -109,7 +109,7 @@ export default function CalLearningPanel({
           <BarChart3 className="h-4 w-4 text-violet-400" />
           <div>
             <h2 className="text-base font-extrabold text-slate-100">
-              Cal learning — which voice earns replies
+              Phelan learning — which voice earns replies
             </h2>
             <p className="text-[11px] text-slate-400">
               Per-angle reply rates from tagged sends. Directional signal, not a

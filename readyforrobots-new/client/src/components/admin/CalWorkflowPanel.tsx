@@ -68,7 +68,7 @@ const STEPS: StepDef[] = [
     num: "2",
     label: "Draft",
     count: m => n(m.pending_draft),
-    hint: "HOT/WARM leads with no Cal email yet",
+    hint: "HOT/WARM leads with no Phelan email yet",
   },
   {
     id: "redraft",
@@ -166,7 +166,7 @@ function buildDoNow(
         step,
         tone: "go",
         title: "Write first drafts",
-        detail: `${pending.toLocaleString()} HOT/WARM lead${pending === 1 ? "" : "s"} still need alignment-ready Cal intros.`,
+        detail: `${pending.toLocaleString()} HOT/WARM lead${pending === 1 ? "" : "s"} still need alignment-ready Phelan intros.`,
         actionLabel: `Draft ${pending.toLocaleString()} pending`,
         onAction: handlers.onDraftAll,
         disabled: pending === 0,
@@ -179,7 +179,7 @@ function buildDoNow(
         title: "Redraft before you send",
         detail:
           `${sent.toLocaleString()} intros out with ${replied} repl${replied === 1 ? "y" : "ies"}. ` +
-          `Refresh ${unsent.toLocaleString()} unsent draft${unsent === 1 ? "" : "s"} to the current Cal voice before review.`,
+          `Refresh ${unsent.toLocaleString()} unsent draft${unsent === 1 ? "" : "s"} to the current Phelan voice before review.`,
         actionLabel: `Redraft ${unsent.toLocaleString()}`,
         onAction: handlers.onRedraft,
         disabled: unsent === 0,
@@ -216,7 +216,7 @@ function buildDoNow(
         title: replied > 0 ? "Work the inbox" : "Queue is caught up",
         detail:
           replied > 0
-            ? `${replied.toLocaleString()} repl${replied === 1 ? "y" : "ies"} waiting — Cal pauses automation when someone writes back.`
+            ? `${replied.toLocaleString()} repl${replied === 1 ? "y" : "ies"} waiting — Phelan pauses automation when someone writes back.`
             : "Autopilot handles the next draft/send cycle. Check replies once a day.",
         actionLabel:
           replied > 0

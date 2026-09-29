@@ -20,11 +20,11 @@ export default function CalEmailPreview({ bodyText, companyName }: Props) {
       </div>
       <div className="mt-3 border-t border-slate-800 pt-3">
         <p className="mb-1.5 text-[10px] font-bold text-emerald-400">
-          Cal · pipeline preview · 6-sec loop
+          Phelan · pipeline preview · 6-sec loop
         </p>
         <img
           src="/marketing/cal-pipeline-demo.gif"
-          alt="Cal pipeline preview animation"
+          alt="Phelan pipeline preview animation"
           className="max-w-[280px] rounded-md border border-slate-700/60"
           width={280}
           height={95}

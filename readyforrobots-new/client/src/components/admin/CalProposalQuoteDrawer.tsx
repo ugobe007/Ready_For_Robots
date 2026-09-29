@@ -211,7 +211,7 @@ export default function CalProposalQuoteDrawer({
             </div>
             <div>
               <h2 className="text-lg font-extrabold text-white flex items-center gap-2">
-                Cal Robot Proposal & OEM Quotes
+                Phelan Robot Proposal & OEM Quotes
                 <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-full uppercase flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                   Autopilot Active
@@ -238,14 +238,14 @@ export default function CalProposalQuoteDrawer({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider">
-                  Cal Autopilot Engine
+                  Phelan Autopilot Engine
                 </span>
                 <span className="text-[10px] font-mono bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded">
                   Fully Automatic Outreach & Nurture
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1">
-                Cal automatically matches job openings, sends OEM tee-ups, and triggers Day-3 OEM nudges and Day-4 buyer follow-ups.
+                Phelan automatically matches job openings, sends OEM tee-ups, and triggers Day-3 OEM nudges and Day-4 buyer follow-ups.
               </p>
             </div>
 

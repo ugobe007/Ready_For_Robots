@@ -30,13 +30,13 @@ export default function CalAutopilotSwitch({
         disabled
           ? "Autopilot toggle unavailable — check server logs"
           : enabled
-            ? `Cal runs draft/send cycles every ${everyHours}h (up to ${sendLimit} sends)`
-            : "Cal will not auto-draft or auto-send until you turn this on"
+            ? `Phelan runs draft/send cycles every ${everyHours}h (up to ${sendLimit} sends)`
+            : "Phelan will not auto-draft or auto-send until you turn this on"
       }
     >
       <div className="min-w-0">
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">
-          Cal autopilot
+          Phelan autopilot
         </p>
         {!compact ? (
           <p className="text-[11px] text-slate-400">
@@ -56,7 +56,7 @@ export default function CalAutopilotSwitch({
           checked={enabled}
           disabled={disabled || busy}
           onCheckedChange={checked => onToggle(checked)}
-          aria-label="Cal autopilot"
+          aria-label="Phelan autopilot"
         />
       </div>
     </div>
