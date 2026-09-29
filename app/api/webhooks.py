@@ -674,7 +674,7 @@ async def resend_inbound_webhook(
 
         if not token:
             return {"ok": True, "ignored": "no_reply_token"}
-    try:
+
         # Idempotency: use svix_id (unique per Resend delivery attempt) stored in
         # raw_payload to reject duplicate webhook deliveries on Resend retries.
         if svix_id:
