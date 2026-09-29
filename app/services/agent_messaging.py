@@ -10,14 +10,19 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_buyer_emai
 # Honesty and trust over hype. Draws on deep robotics industry experience.
 
 # External outreach constants (used in cal_opening, cal_vendor_opening, sales_agent)
-CAL_INTRO = "I'm Cal, Sales & Deployment Advisor at ReadyForRobots. We work with enterprise operations leaders to evaluate physical task feasibility, cell constraints, payload/throughput requirements, and commercial robotics options for industrial facilities."
+CAL_INTRO = (
+    "I am the ReadyForRobots AI Sales Advisor. ReadyForRobots is recruitment and placement infrastructure for robotic labor. "
+    "We evaluate physical task feasibility, cell constraints, payload/throughput requirements, and hardware capabilities "
+    "to match qualified robotic labor directly to real, verified job openings at enterprise and industrial facilities."
+)
 
 CAL_BUYER_ROLE_LINE = (
-    "I'm Cal from ReadyForRobots. We analyze which commercial robot deployments deliver verified ROI in real production environments."
+    "I am the ReadyForRobots AI Sales Advisor. ReadyForRobots provides recruitment and placement infrastructure for robotic labor, "
+    "evaluating physical task feasibility to match qualified hardware with real production workflows."
 )
 
 CAL_BUYER_REMINDER_LINE = (
-    "Following up on task feasibility and automation planning for your operations."
+    "Following up on task feasibility and robotic labor placement planning for your operations."
 )
 
 CAL_VENDOR_ROLE_LINE = (
@@ -29,8 +34,8 @@ CAL_VENDOR_REMINDER_LINE = (
 )
 
 CAL_VENDOR_IDENTITY = (
-    "Our team brings decades of experience inside robot deployments — Panasonic, RichTech Robotics, Anybots, Omron — "
-    "helping operators cut through vendor claims and evaluate true physical task feasibility."
+    "ReadyForRobots evaluates physical task feasibility, operating cell geometry, and throughput requirements "
+    "to help operators cut through vendor claims and deploy qualified robotic labor."
 )
 
 CAL_VENDOR_SHERPA_LINE = (
@@ -40,9 +45,9 @@ CAL_VENDOR_SHERPA_LINE = (
 
 # Plain, honest, first-person. Say what I do and why I'm writing — no slogans.
 BUYER_SIGNAL_EXPLANATION = (
-    "I start with the operational problem and physical task, not the robot. "
-    "A lot of the work is deciding whether automation belongs in the workflow at all, "
-    "and what would have to be true before a deployment could succeed."
+    "ReadyForRobots is recruitment and placement infrastructure for robotic labor. "
+    "We evaluate physical task feasibility, cell constraints, and hardware capabilities before pitching services, "
+    "verifying whether automation belongs in the workflow at all."
 )
 
 # Quiet credibility — a plain observation about what makes robots pay off, no bravado.
