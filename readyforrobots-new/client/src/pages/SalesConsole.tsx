@@ -7,9 +7,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import { toast } from "sonner";
-import { FileText, ShieldCheck, CheckCircle2, ExternalLink, Clock, Zap } from "lucide-react";
+import { FileText, ShieldCheck, CheckCircle2, ExternalLink, Clock, Zap, Mail } from "lucide-react";
 import CalProposalQuoteDrawer from "@/components/admin/CalProposalQuoteDrawer";
 import CalAutopilotSwitch from "@/components/admin/CalAutopilotSwitch";
+import ResendEmailModal from "@/components/ResendEmailModal";
 
 type SalesMessage = {
   id: string;
@@ -129,6 +130,14 @@ export default function SalesConsole() {
   const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
   const [autopilotEnabled, setAutopilotEnabled] = useState(true);
   const [stageFilter, setStageFilter] = useState("all");
+  const [resendModal, setResendModal] = useState<{
+    isOpen: boolean;
+    to: string;
+    subject: string;
+    body: string;
+    companyName: string;
+    crmAccountId?: string;
+  } | null>(null);
 
   const filteredRows = useMemo(() => {
     return rows.filter(r => {
@@ -537,6 +546,22 @@ export default function SalesConsole() {
               Cal Proposals
             </button>
             <button
+              onClick={() =>
+                setResendModal({
+                  isOpen: true,
+                  to: confirmEmail || recipientOverride || selected?.latest_message?.from_email || "",
+                  subject: `Robotic Labor Placement — ${selected?.title || "ReadyForRobots"}`,
+                  body: "",
+                  companyName: selected?.title || "",
+                  crmAccountId: selected?.crm_account_id || undefined,
+                })
+              }
+              className="rounded-xl border border-emerald-500/50 bg-emerald-950/40 px-4 py-2 text-xs font-extrabold text-emerald-300 hover:bg-emerald-900/60 transition flex items-center gap-1.5"
+            >
+              <Mail className="w-3.5 h-3.5 text-emerald-400" />
+              Send Email via Resend
+            </button>
+            <button
               onClick={() => void loadRows()}
               disabled={busy}
               className="rounded-xl border border-slate-700/80 bg-slate-800/80 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 transition"
@@ -896,6 +921,22 @@ export default function SalesConsole() {
                       "SIGNAL will generate the next action from the latest conversation context."}
                   </p>
                   <div className="mt-4 flex flex-wrap gap-2">
+                    <button
+                      onClick={() =>
+                        setResendModal({
+                          isOpen: true,
+                          to: confirmEmail || recipientOverride || selected.latest_message?.from_email || "",
+                          subject: `Robotic Labor Placement — ${selected.title}`,
+                          body: "",
+                          companyName: selected.title,
+                          crmAccountId: selected.crm_account_id || undefined,
+                        })
+                      }
+                      className="rounded-lg bg-emerald-600 border border-emerald-500 px-3 py-2 text-xs font-extrabold text-white hover:bg-emerald-500 transition shadow-md flex items-center gap-1.5"
+                    >
+                      <Mail className="w-3.5 h-3.5 text-white" />
+                      Send Email via Resend
+                    </button>
                     {selected.crm_account_id && (
                       <Link
                         href="/crm"
@@ -1113,6 +1154,19 @@ export default function SalesConsole() {
           isOpen={isProposalDrawerOpen}
           onClose={() => setIsProposalDrawerOpen(false)}
         />
+
+        {resendModal && (
+          <ResendEmailModal
+            isOpen={resendModal.isOpen}
+            onClose={() => setResendModal(null)}
+            defaultTo={resendModal.to}
+            defaultSubject={resendModal.subject}
+            defaultBody={resendModal.body}
+            companyName={resendModal.companyName}
+            crmAccountId={resendModal.crmAccountId}
+            onSent={() => void loadRows()}
+          />
+        )}
       </main>
     </div>
   );

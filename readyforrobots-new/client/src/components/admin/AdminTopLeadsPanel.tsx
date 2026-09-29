@@ -14,6 +14,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
+import { ResendEmailModal } from "@/components/ResendEmailModal";
 
 export type TopLeadItem = {
   id: string | number;
@@ -447,8 +448,15 @@ export default function AdminTopLeadsPanel() {
   const [leads, setLeads] = useState<TopLeadItem[]>(COHORT_B_FRESH_LEADS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [copiedId, setCopiedId] = useState<string | number | null>(null);
   const [previewEmailId, setPreviewEmailId] = useState<string | number | null>(null);
+  const [copiedId, setCopiedId] = useState<string | number | null>(null);
+  const [emailModal, setEmailModal] = useState<{
+    isOpen: boolean;
+    to: string;
+    subject: string;
+    body: string;
+    companyName: string;
+  } | null>(null);
 
   const fetchTopLeads = useCallback(async (targetCohort?: "b" | "a") => {
     const cohort = targetCohort ?? activeCohort;
@@ -709,13 +717,22 @@ ${emailData.body}`;
                     </div>
 
                     <div className="flex flex-wrap items-center gap-3 text-[11px] text-slate-300">
-                      <a
-                        href={`mailto:${email}`}
-                        className="inline-flex items-center gap-1 font-mono text-emerald-300 hover:underline font-semibold"
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setEmailModal({
+                            isOpen: true,
+                            to: email,
+                            subject: emailData.subject,
+                            body: emailData.body,
+                            companyName: lead.company_name,
+                          })
+                        }
+                        className="inline-flex items-center gap-1 font-mono text-emerald-300 hover:underline font-semibold text-left"
                       >
                         <Mail className="h-3 w-3" />
                         {email}
-                      </a>
+                      </button>
 
                       {phone && (
                         <a
@@ -831,21 +848,39 @@ ${emailData.body}`;
                       </a>
                     )}
 
-                    <a
-                      href={`mailto:${email}?subject=${encodeURIComponent(
-                        emailData.subject
-                      )}&body=${encodeURIComponent(emailData.body)}`}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setEmailModal({
+                          isOpen: true,
+                          to: email,
+                          subject: emailData.subject,
+                          body: emailData.body,
+                          companyName: lead.company_name,
+                        })
+                      }
                       className="inline-flex items-center gap-1 rounded-lg bg-emerald-600 border border-emerald-500 px-3 py-1 text-[11px] font-semibold text-white hover:bg-emerald-500 transition shadow-sm"
                     >
                       <Mail className="h-3 w-3" />
-                      Email Lead
-                    </a>
+                      Email Lead via Resend
+                    </button>
                   </div>
                 </div>
               </div>
             );
           })}
         </div>
+      )}
+
+      {emailModal && (
+        <ResendEmailModal
+          isOpen={emailModal.isOpen}
+          onClose={() => setEmailModal(null)}
+          defaultTo={emailModal.to}
+          defaultSubject={emailModal.subject}
+          defaultBody={emailModal.body}
+          companyName={emailModal.companyName}
+        />
       )}
     </section>
   );

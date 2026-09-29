@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
+import { Mail } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
+import ResendEmailModal from "@/components/ResendEmailModal";
 
 type InboxItem = {
   id: string;
@@ -46,6 +48,7 @@ export default function Inbox() {
   const [selectedId, setSelectedId] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [replyModalOpen, setReplyModalOpen] = useState(false);
 
   const loadInbox = useCallback(async () => {
     if (!session?.access_token) return;
@@ -227,6 +230,14 @@ export default function Inbox() {
                         Approve &amp; send reply
                       </button>
                     ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setReplyModalOpen(true)}
+                      className="rounded-lg bg-emerald-600 border border-emerald-500 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition flex items-center gap-1.5"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      Reply via Resend
+                    </button>
                     <Link
                       href={scheduleHref(selected)}
                       className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black text-[#111827]"
@@ -260,6 +271,22 @@ export default function Inbox() {
                     </pre>
                   )}
                 </div>
+
+                {selected && (
+                  <ResendEmailModal
+                    isOpen={replyModalOpen}
+                    onClose={() => setReplyModalOpen(false)}
+                    defaultTo={selected.from_email || ""}
+                    defaultSubject={
+                      selected.subject?.toLowerCase().startsWith("re:")
+                        ? selected.subject
+                        : `Re: ${selected.subject || selected.title}`
+                    }
+                    defaultBody={selected.latest_action?.draft_body || ""}
+                    companyName={selected.title}
+                    onSent={() => void loadInbox()}
+                  />
+                )}
               </>
             ) : (
               <p className="text-sm text-gray-500">Select a reply to review.</p>

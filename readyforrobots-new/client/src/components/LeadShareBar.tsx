@@ -3,6 +3,7 @@
  */
 import { useState } from "react";
 import { Link2, Mail, Share2 } from "lucide-react";
+import { ResendEmailModal } from "@/components/ResendEmailModal";
 
 const SITE_URL =
   typeof import.meta !== "undefined" && import.meta.env?.VITE_SITE_URL
@@ -178,6 +179,7 @@ export default function LeadShareBar({
 }: Props) {
   const v = VARIANT_STYLES[variant];
   const [copied, setCopied] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
   const { tweetText, shareUrl, fullSummary } = buildLeadSharePost(lead);
   const canNativeShare =
     typeof navigator !== "undefined" && typeof navigator.share === "function";
@@ -241,13 +243,14 @@ export default function LeadShareBar({
         >
           <LinkedInIcon className="h-3.5 w-3.5" />
         </a>
-        <a
-          href={mailtoUrl}
-          title="Email to colleague"
+        <button
+          type="button"
+          onClick={() => setEmailModalOpen(true)}
+          title="Email to colleague via Resend"
           className={`rounded p-1 transition-colors ${v.iconMail}`}
         >
           <Mail className="h-3.5 w-3.5" />
-        </a>
+        </button>
         <a
           href={whatsappUrl}
           target="_blank"
@@ -306,13 +309,14 @@ export default function LeadShareBar({
             <LinkedInIcon className="h-3.5 w-3.5" />
             LinkedIn
           </a>
-          <a
-            href={mailtoUrl}
+          <button
+            type="button"
+            onClick={() => setEmailModalOpen(true)}
             className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${v.chipMail}`}
           >
             <Mail className="h-3.5 w-3.5" />
-            Email colleague
-          </a>
+            Email via Resend
+          </button>
           <a
             href={whatsappUrl}
             target="_blank"
@@ -372,12 +376,13 @@ export default function LeadShareBar({
         >
           LinkedIn
         </a>
-        <a
-          href={mailtoUrl}
+        <button
+          type="button"
+          onClick={() => setEmailModalOpen(true)}
           className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 text-[10px] font-medium transition-colors ${v.chipMail}`}
         >
-          Email
-        </a>
+          Email via Resend
+        </button>
         <a
           href={whatsappUrl}
           target="_blank"
@@ -395,6 +400,14 @@ export default function LeadShareBar({
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
+
+      <ResendEmailModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        defaultSubject={decodeURIComponent(mailSubject)}
+        defaultBody={decodeURIComponent(mailBody)}
+        companyName={lead.company_name}
+      />
     </div>
   );
 }
