@@ -23,17 +23,11 @@ export function buildPhelanExecutiveEmail(opts: ExecutiveEmailOpts): { subject: 
 
   const body = `${greeting}
 
-I’m Phelan, a Robot Job Analyst at ReadyForRobots.
+I’m Phelan, a Robot Job Analyst at ReadyForRobots. We evaluate physical task requirements to match robots to operational jobs.
 
-We match robots to jobs—and jobs to robots.
+We identified potential robotic labor fits within ${company}, specifically around **${robotJob}**.
 
-We’ve identified work within ${company} that may be a good fit for robotic labor.
-
-ReadyForRobots qualifies and matches robots to specific jobs based on the physical requirements of the task, robot capabilities, operating environment, and the models and training required to perform the work.
-
-For your **${robotJob}** job, we’ve identified a shortlist of qualified robot matches for your review.
-
-Once you’ve had a chance to review the matches, let’s schedule a short call to discuss your job requirements in more detail and determine which robots are best suited for the work.
+If helpful, I can send over our shortlist of qualified robot options for your team to review.
 
 Best regards,
 
