@@ -9,12 +9,12 @@ describe("executiveEmailGenerator", () => {
       robotTypes: ["Autonomous Forklifts", "Parcel Sortation AMRs"],
     });
 
-    expect(email.subject).toBe("Robot job match & qualified labor review for FedEx Ground");
+    expect(email.subject).toBe("Robot job matches & feasibility review for FedEx Ground");
     expect(email.body).toContain("Hi David,");
     expect(email.body).toContain("I’m Phelan, a Robot Job Analyst at ReadyForRobots.");
-    expect(email.body).toContain("We evaluate physical task requirements to match robots to operational jobs.");
-    expect(email.body).toContain("We identified potential robotic labor fits within FedEx Ground");
-    expect(email.body).toContain("Autonomous Forklifts");
+    expect(email.body).toContain("matching payload capacity, cell reach, operating environment, and pre-trained task models.");
+    expect(email.body).toContain("https://readyforrobots.com/pipeline?company=FedEx%20Ground");
+    expect(email.body).toContain("3D cell-feasibility simulation to verify physical fit");
     expect(email.body).toContain("phelan@readyforrobots.com");
     expect(email.body).not.toContain("Bob Christopher");
     expect(email.body).not.toContain("Cal");
@@ -27,7 +27,7 @@ describe("executiveEmailGenerator", () => {
       taskType: "Meal Assembly",
     });
 
-    expect(email.body).toContain("We identified potential robotic labor fits within CloudKitchens");
-    expect(email.body).toContain("Meal Assembly");
+    expect(email.body).toContain("For CloudKitchens's **Meal Assembly** job");
+    expect(email.body).toContain("https://readyforrobots.com/pipeline?company=CloudKitchens");
   });
 });

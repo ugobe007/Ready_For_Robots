@@ -17,17 +17,22 @@ export function buildPhelanExecutiveEmail(opts: ExecutiveEmailOpts): { subject: 
   const firstName = rawName ? rawName.split(" ")[0] : "";
   const company = opts.companyName.trim();
   const robotJob = opts.taskType || opts.robotTypes?.[0] || "facility automation";
+  const shortlistUrl = `https://readyforrobots.com/pipeline?company=${encodeURIComponent(company)}`;
 
   const greeting = firstName ? `Hi ${firstName},` : `Hi Operations Team,`;
-  const subject = `Robot job match & qualified labor review for ${company}`;
+  const subject = `Robot job matches & feasibility review for ${company}`;
 
   const body = `${greeting}
 
-I’m Phelan, a Robot Job Analyst at ReadyForRobots. We evaluate physical task requirements to match robots to operational jobs.
+I’m Phelan, a Robot Job Analyst at ReadyForRobots. We evaluate physical task requirements to match qualified robots to operational jobs.
 
-We identified potential robotic labor fits within ${company}, specifically around **${robotJob}**.
+For ${company}'s **${robotJob}** job, we identified a shortlist of qualified robot matches based on physical task requirements—matching payload capacity, cell reach, operating environment, and pre-trained task models.
 
-If helpful, I can send over our shortlist of qualified robot options for your team to review.
+You can review your shortlisted robot matches here:
+${shortlistUrl}
+
+**Next Steps:**
+Once you've reviewed the matches, we can run a 3D cell-feasibility simulation to verify physical fit and provide a turnkey pilot proposal.
 
 Best regards,
 
