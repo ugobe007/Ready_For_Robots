@@ -199,13 +199,13 @@ NIMO_SENDER = "Cal, NIMO Technology"
 
 
 def _nimo_greeting(contact_name: str | None, company: str) -> str:
-    """A greeting that never opens with the weak, impersonal 'Hi there,'."""
+    """A greeting that never opens with weak or generic expressions."""
     name = (contact_name or "").strip()
-    if name:
+    if name and not any(j in name.lower() for j in ["decision maker", "unknown", "leadership"]):
         return f"Hi {name.split()[0]},"
     if company and company != "your team":
-        return f"Hi {company} team,"
-    return "Hello,"
+        return f"Hi {company.strip()} Leadership Team,"
+    return "Hi,"
 
 
 def _nimo_draft(t: SpecialProjectTarget) -> tuple[str, str]:

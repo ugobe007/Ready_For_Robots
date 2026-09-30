@@ -11,12 +11,12 @@ from typing import Dict, Optional
 
 
 def _format_greeting(contact_name: Optional[str], company_name: str) -> str:
-    if contact_name and contact_name.strip() and contact_name.lower() != "decision maker":
+    if contact_name and contact_name.strip() and not any(j in contact_name.lower() for j in ["decision maker", "unknown", "leadership"]):
         first_name = contact_name.strip().split()[0]
         return f"Hi {first_name},"
     if company_name and company_name.strip():
-        return f"Hi {company_name} Operations Team,"
-    return "Hello,"
+        return f"Hi {company_name.strip()} Leadership Team,"
+    return "Hi,"
 
 
 def generate_raas_economics_email(

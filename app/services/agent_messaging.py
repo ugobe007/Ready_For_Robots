@@ -578,8 +578,9 @@ def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
             f"No right answer — what comes to mind for {n} usually points at where a robot "
             "would earn its keep. Curious what you would say."
         )
+    greeting = f"Hi {n} Leadership Team," if n and n != "your team" else "Hi,"
     return "\n".join([
-        f"Dear {n} Operations Leadership,",
+        greeting,
         "",
         CAL_BUYER_REMINDER_LINE,
         "",
