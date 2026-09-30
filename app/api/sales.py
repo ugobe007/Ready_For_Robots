@@ -200,12 +200,15 @@ def _serialize_opportunity(db: Session, row: SalesOpportunity, include_details: 
 
 
 def _serialize_inbox_item(db: Session, message: SalesMessage, opportunity: SalesOpportunity) -> dict[str, Any]:
+    from app.services.inbox_classifier import classify_inbox_folder
+
     action = (
         db.query(SalesAgentAction)
         .filter(SalesAgentAction.sales_opportunity_id == opportunity.id)
         .order_by(desc(SalesAgentAction.created_at))
         .first()
     )
+    folder = classify_inbox_folder(message.from_email, message.subject, message.body_text)
     return {
         "id": str(message.id),
         "thread_id": str(opportunity.id),
@@ -221,6 +224,7 @@ def _serialize_inbox_item(db: Session, message: SalesMessage, opportunity: Sales
         "received_at": message.created_at.isoformat() if message.created_at else None,
         "source_type": message.source_type,
         "source_id": message.source_id,
+        "folder": folder,
         "crm_account_id": str(opportunity.crm_account_id) if opportunity.crm_account_id else None,
         "robot_company_id": opportunity.robot_company_id,
         "next_best_action": opportunity.next_best_action or {},
@@ -376,6 +380,7 @@ def confirm_sales_opportunity_contact(
 @router.get("/inbox")
 def list_sales_inbox(
     team_id: Optional[str] = Query(None),
+    folder: Optional[str] = Query("main"),
     db: Session = Depends(get_db),
     user: dict = Depends(_require_user),
 ):
@@ -393,7 +398,10 @@ def list_sales_inbox(
             raise HTTPException(status_code=404, detail="Team not found or access denied")
         query = query.filter(SalesOpportunity.team_id == requested)
     rows = query.order_by(desc(SalesMessage.created_at)).limit(100).all()
-    return [_serialize_inbox_item(db, message, opportunity) for message, opportunity in rows]
+    items = [_serialize_inbox_item(db, message, opportunity) for message, opportunity in rows]
+    if folder and folder in ("main", "test"):
+        items = [item for item in items if item.get("folder") == folder]
+    return items
 
 
 @router.get("/learning")

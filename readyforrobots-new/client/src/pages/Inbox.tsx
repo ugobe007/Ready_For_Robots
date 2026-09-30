@@ -49,6 +49,7 @@ export default function Inbox() {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [replyModalOpen, setReplyModalOpen] = useState(false);
+  const [folderTab, setFolderTab] = useState<"main" | "test">("main");
 
   const loadInbox = useCallback(async () => {
     if (!session?.access_token) return;
@@ -56,7 +57,7 @@ export default function Inbox() {
     setErr("");
     try {
       const response = await fetch(
-        `${getApiBase()}/api/sales/inbox`,
+        `${getApiBase()}/api/sales/inbox?folder=${folderTab}`,
         liveFetchInit({ headers: authHeader(session.access_token) })
       );
       if (!response.ok) throw new Error(await response.text());
@@ -71,7 +72,7 @@ export default function Inbox() {
     } finally {
       setBusy(false);
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, folderTab]);
 
   useEffect(() => {
     void loadInbox();
@@ -157,6 +158,32 @@ export default function Inbox() {
                 Inbound replies
               </p>
               <span className="text-xs text-gray-400">{items.length}</span>
+            </div>
+
+            {/* Folder Tabs */}
+            <div className="mt-3 flex items-center rounded-xl bg-gray-100 p-1">
+              <button
+                type="button"
+                onClick={() => setFolderTab("main")}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
+                  folderTab === "main"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                Customer Inbox
+              </button>
+              <button
+                type="button"
+                onClick={() => setFolderTab("test")}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
+                  folderTab === "test"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                System &amp; Test
+              </button>
             </div>
             <div className="mt-4 space-y-2">
               {items.map(item => (
