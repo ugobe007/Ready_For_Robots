@@ -1987,12 +1987,20 @@ export default function Admin() {
           industry: triggerIndustry || undefined,
         }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.detail || "Scraper trigger failed.");
+      const rawText = await res.text();
+      let data: Record<string, any> = {};
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        if (!res.ok) {
+          throw new Error(`Scraper API returned HTTP ${res.status} ${res.statusText}. Please verify admin access.`);
+        }
+      }
+      if (!res.ok) throw new Error(data?.detail || `Scraper trigger failed (${res.status}).`);
       setMessage(
-        data.status === "queued"
-          ? `${triggerScraper} scraper queued.`
-          : data.reason || "Scraper request accepted."
+        data.status === "queued" || data.status === "started"
+          ? `${triggerScraper} scraper ${data.status || "queued"}.`
+          : data.reason || data.message || "Scraper request accepted."
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Scraper trigger failed.");
