@@ -178,7 +178,7 @@ Reply to this email if you want supply autonomy paused or the tone adjusted.
             to_email=to_email,
             subject=subject,
             body_text=body,
-            from_display_name="Ready For Robots · Cal ops",
+            from_display_name="Ready For Robots · Phelan ops",
             idempotency_key=f"supply-format-review-{new_fingerprint}",
         )
         return True
@@ -257,7 +257,7 @@ def _send_supply_email(
             to_email=to_emails,
             subject=subject,
             body_text=body,
-            from_display_name="Cal",
+            from_display_name="Phelan",
             reply_to=reply_to,
             idempotency_key=f"supply-auto/{company.id}/{'-'.join(to_emails)[:120]}",
             include_demo=True,
@@ -281,7 +281,7 @@ def _send_supply_email(
                 to_email=to_emails,
                 subject=subject,
                 body_text=body,
-                from_display_name="Cal",
+                from_display_name="Phelan",
                 reply_to=None,
                 idempotency_key=f"supply-auto/{company.id}/{'-'.join(to_emails)[:120]}/no-inbound",
                 include_demo=True,

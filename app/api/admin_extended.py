@@ -2522,7 +2522,7 @@ def scout_bulk_send_all(
                 to_email=to_email,
                 subject=subject,
                 body_text=draft_body_text,
-                from_display_name="Cal · Ready For Robots",
+                from_display_name="Phelan · ReadyForRobots",
                 cc=[cc_email] if cc_email else None,
                 idempotency_key=f"scout-send-{activation.id}",
             )

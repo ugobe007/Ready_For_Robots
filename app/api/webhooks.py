@@ -334,7 +334,7 @@ def _handle_crm_delivery_problem(
                 to_email=alternate,
                 subject=crm_msg.subject,
                 body_text=crm_msg.body_text,
-                from_display_name="Cal",
+                from_display_name="Phelan",
                 reply_to=reply_to,
                 idempotency_key=f"crm-bounce-resend/{crm_msg.id}/{alternate}",
             )
@@ -398,7 +398,7 @@ def _handle_supply_delivery_problem(
                 to_email=alternate,
                 subject=supply_msg.subject,
                 body_text=supply_msg.body_text,
-                from_display_name="Cal",
+                from_display_name="Phelan",
                 reply_to=supply_msg.reply_to,
                 idempotency_key=f"supply-bounce-resend/{supply_msg.id}/{alternate}",
             )
@@ -522,7 +522,7 @@ def _notify_and_forward(db: Session, msg: OutreachMessage, reply: OutreachReply,
                     "Use the admin workflow queue to decide the next step.\n\n"
                     f"{reply.body_text or ''}"
                 ),
-                from_display_name="Cal",
+                from_display_name="Phelan",
                 idempotency_key=f"scout-reply-forward/{reply.id}",
             )
         except Exception:
@@ -572,7 +572,7 @@ def _notify_supply_and_forward(
                     "Use the ReadyForRobots Inbox or Sales Console to decide the next step.\n\n"
                     f"{reply.body_text or ''}"
                 ),
-                from_display_name="Cal",
+                from_display_name="Phelan",
                 idempotency_key=f"supply-reply-forward/{reply.id}",
             )
         except Exception:

@@ -494,7 +494,7 @@ def process_due_enrollments(
                 to_email=account.contact_email,
                 subject=subject,
                 body_text=body,
-                from_display_name="Cal",
+                from_display_name="Phelan",
                 reply_to=_reply_address(reply_token),
                 idempotency_key=f"sequence/{enrollment.id}/{enrollment.current_step}",
             )
