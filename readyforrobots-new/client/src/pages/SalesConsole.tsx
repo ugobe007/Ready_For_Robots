@@ -863,7 +863,7 @@ export default function SalesConsole() {
                     </span>
                   </div>
                   <p className="mt-2 text-xs text-slate-300">
-                    Confirm decision-maker contact email for <strong>{selected.title}</strong> before CAL dispatches quotes.
+                    Confirm decision-maker contact email for <strong>{selected.title}</strong> before Phelan dispatches quotes.
                   </p>
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
                     <div>

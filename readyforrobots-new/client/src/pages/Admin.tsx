@@ -3122,7 +3122,7 @@ export default function Admin() {
               Command center
             </h1>
             <p className="mt-0.5 text-[11px] text-slate-400">
-              Cal · Ready For Robots · deployment advisor — buyers, OEMs,
+              Phelan · Ready For Robots · Robot Job Analyst — buyers, OEMs,
               integrators
             </p>
           </div>
@@ -4373,7 +4373,7 @@ export default function Admin() {
           <summary className="cursor-pointer list-none text-[11px] font-bold text-slate-400 marker:content-none">
             Reply notification email
             <span className="ml-2 font-normal text-slate-500">
-              optional · forwards Cal replies
+              optional · forwards Phelan replies
             </span>
           </summary>
           <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
