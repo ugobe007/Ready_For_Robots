@@ -94,24 +94,33 @@ export default function Intelligence() {
     };
   }, []);
 
+  const [newsletterErrorMsg, setNewsletterErrorMsg] = useState("");
+
   async function subscribe(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!email.trim()) return;
+    const cleanEmail = email.trim();
+    if (!cleanEmail) return;
     setNewsletterStatus("submitting");
+    setNewsletterErrorMsg("");
     try {
       const res = await fetch(
         `${getApiBase()}/api/newsletter/subscribe`,
         liveFetchInit({
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, source: "intelligence_page" }),
+          body: JSON.stringify({ email: cleanEmail, source: "intelligence_page" }),
         })
       );
-      if (!res.ok) throw new Error("Subscribe failed");
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+        throw new Error(data?.detail || "Subscribe failed");
+      }
       setNewsletterStatus("success");
       setEmail("");
-    } catch {
+    } catch (err: unknown) {
       setNewsletterStatus("error");
+      const msg = err instanceof Error ? err.message : "Could not subscribe. Try again.";
+      setNewsletterErrorMsg(msg);
     }
   }
 
@@ -553,8 +562,8 @@ export default function Intelligence() {
                     </p>
                   )}
                   {newsletterStatus === "error" && (
-                    <p className="mt-2 text-xs text-rose-400">
-                      Could not subscribe. Try again.
+                    <p className="mt-2 text-xs text-rose-400 font-medium">
+                      {newsletterErrorMsg || "Could not subscribe. Try again."}
                     </p>
                   )}
                 </div>

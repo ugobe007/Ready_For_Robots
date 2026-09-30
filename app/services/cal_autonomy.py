@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 _REDIS_FP_KEY = "cal:outreach:template_fingerprint"
 _REDIS_AUTONOMY_KEY = "cal:autonomy:runtime_enabled"
+_IN_MEMORY_AUTONOMY_OVERRIDE: Optional[bool] = None
 
 
 def get_cal_review_email() -> Optional[str]:
@@ -32,28 +33,28 @@ def get_cal_review_email() -> Optional[str]:
 
 
 def get_cal_autonomy_runtime_override() -> Optional[bool]:
-    """Operator toggle stored in Redis; None = use env default."""
+    """Operator toggle stored in Redis (with in-memory fallback); None = use env default."""
     client = _redis_client()
-    if not client:
-        return None
-    try:
-        raw = client.get(_REDIS_AUTONOMY_KEY)
-        if raw is None:
-            return None
-        return str(raw).strip().lower() in ("1", "true", "yes")
-    except Exception:
-        return None
+    if client:
+        try:
+            raw = client.get(_REDIS_AUTONOMY_KEY)
+            if raw is not None:
+                return str(raw).strip().lower() in ("1", "true", "yes")
+        except Exception:
+            pass
+    return _IN_MEMORY_AUTONOMY_OVERRIDE
 
 
 def set_cal_autonomy_runtime_override(enabled: bool) -> bool:
+    global _IN_MEMORY_AUTONOMY_OVERRIDE
+    _IN_MEMORY_AUTONOMY_OVERRIDE = enabled
     client = _redis_client()
-    if not client:
-        return False
-    try:
-        client.set(_REDIS_AUTONOMY_KEY, "1" if enabled else "0")
-        return True
-    except Exception:
-        return False
+    if client:
+        try:
+            client.set(_REDIS_AUTONOMY_KEY, "1" if enabled else "0")
+        except Exception:
+            pass
+    return True
 
 
 def _cal_autonomy_env_default() -> bool:
@@ -65,17 +66,19 @@ def _cal_autonomy_env_default() -> bool:
 
 
 def cal_autonomy_enabled() -> bool:
-    if os.getenv("CAL_AUTONOMY_ENABLED", "").strip().lower() in ("0", "false", "no"):
-        return False
     override = get_cal_autonomy_runtime_override()
     if override is not None:
         return override
+    if os.getenv("CAL_AUTONOMY_ENABLED", "").strip().lower() in ("0", "false", "no"):
+        return False
     return _cal_autonomy_env_default()
 
 
 def cal_buyer_sales_enabled() -> bool:
-    """Robot-sales intros to operating companies. Default off — Cal places jobs."""
-    return os.getenv("CAL_BUYER_SALES_ENABLED", "0").strip().lower() in ("1", "true", "yes")
+    """Robot-sales intros to operating companies. Default off — Phelan places jobs."""
+    if os.getenv("CAL_BUYER_SALES_ENABLED", "").strip().lower() in ("1", "true", "yes"):
+        return True
+    return cal_autonomy_enabled()
 
 
 def cal_scheduled_sales_work_enabled() -> bool:
@@ -1250,7 +1253,7 @@ def get_cal_autonomy_status() -> dict[str, Any]:
         "buyer_sales_enabled": cal_buyer_sales_enabled(),
         "env_enabled": _cal_autonomy_env_default(),
         "runtime_override": get_cal_autonomy_runtime_override(),
-        "runtime_toggle_available": _redis_client() is not None,
+        "runtime_toggle_available": True,
         "scheduled_on_worker": os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "1").strip().lower()
         not in ("0", "false", "no"),
         "review_email": get_cal_review_email(),

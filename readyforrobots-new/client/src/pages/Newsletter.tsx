@@ -549,6 +549,7 @@ export default function Newsletter() {
   const [subStatus, setSubStatus] = useState<
     "idle" | "submitting" | "success" | "error"
   >("idle");
+  const [subErrorMessage, setSubErrorMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -611,22 +612,29 @@ export default function Newsletter() {
 
   async function subscribe(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!email.trim()) return;
+    const cleanEmail = email.trim();
+    if (!cleanEmail) return;
     setSubStatus("submitting");
+    setSubErrorMessage("");
     try {
       const res = await fetch(
         `${getApiBase()}/api/newsletter/subscribe`,
         liveFetchInit({
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, source: "newsletter_page" }),
+          body: JSON.stringify({ email: cleanEmail, source: "newsletter_page" }),
         })
       );
-      if (!res.ok) throw new Error("Subscribe failed");
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+        throw new Error(data?.detail || "Subscribe failed");
+      }
       setSubStatus("success");
       setEmail("");
-    } catch {
+    } catch (err: unknown) {
       setSubStatus("error");
+      const msg = err instanceof Error ? err.message : "Could not subscribe. Try again in a moment.";
+      setSubErrorMessage(msg);
     }
   }
 
@@ -755,7 +763,7 @@ export default function Newsletter() {
         )}
         {subStatus === "error" && (
           <p className="mt-3 text-sm font-medium text-red-300">
-            Could not subscribe. Try again in a moment.
+            {subErrorMessage || "Could not subscribe. Try again in a moment."}
           </p>
         )}
       </PageHeroDark>
