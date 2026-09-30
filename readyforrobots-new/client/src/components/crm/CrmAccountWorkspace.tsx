@@ -1,7 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Check, ExternalLink, Loader2, Plus } from "lucide-react";
+import { Check, ExternalLink, Loader2, Plus, Mail, Box, FileText, Sparkles } from "lucide-react";
 import LeadEmailDisplay from "@/components/LeadEmailDisplay";
+import ResendEmailModal from "@/components/ResendEmailModal";
+import FeasibilitySimulationModal from "@/components/FeasibilitySimulationModal";
+import ProposalPdfModal from "@/components/ProposalPdfModal";
+import { buildPhelanExecutiveEmail } from "@/lib/executiveEmailGenerator";
 
 type CrmTask = {
   id: string;
@@ -101,6 +105,9 @@ export default function CrmAccountWorkspace({
   const [sequenceName, setSequenceName] = useState<string | null>(null);
   const [sequenceSteps, setSequenceSteps] = useState<number>(0);
   const [enrollmentStatus, setEnrollmentStatus] = useState<string | null>(null);
+  const [showResendModal, setShowResendModal] = useState(false);
+  const [showFeasibilityModal, setShowFeasibilityModal] = useState(false);
+  const [showProposalModal, setShowProposalModal] = useState(false);
 
   const reload = useCallback(async () => {
     if (!accountId) return;
@@ -281,6 +288,36 @@ export default function CrmAccountWorkspace({
             </select>
           </label>
         ) : null}
+
+        {/* Phelan Tools & Placement Workflow Action Bar */}
+        <div className="mt-3 border-t border-slate-700/60 pt-2.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1 mb-2">
+            <Sparkles className="h-3 w-3" /> Phelan Placement Tools
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setShowResendModal(true)}
+              className="inline-flex items-center gap-1 rounded bg-emerald-600/90 border border-emerald-500 px-2 py-1 text-[11px] font-bold text-white hover:bg-emerald-500 transition"
+            >
+              <Mail className="h-3 w-3" /> Send Next Steps Email
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowFeasibilityModal(true)}
+              className="inline-flex items-center gap-1 rounded bg-slate-800 border border-slate-700 px-2 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-700 hover:text-white transition"
+            >
+              <Box className="h-3 w-3 text-emerald-400" /> 3D Feasibility Simulation
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowProposalModal(true)}
+              className="inline-flex items-center gap-1 rounded bg-slate-800 border border-slate-700 px-2 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-700 hover:text-white transition"
+            >
+              <FileText className="h-3 w-3 text-amber-400" /> Turnkey Proposal
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className=" border border-slate-600 bg-[#0b162f] p-2.5">
@@ -426,6 +463,45 @@ export default function CrmAccountWorkspace({
       </div>
 
       {error ? <p className="text-[11px] text-amber-800">{error}</p> : null}
+
+      {/* Modals for Phelan Placement Tools */}
+      {showResendModal && (
+        <ResendEmailModal
+          isOpen={showResendModal}
+          onClose={() => setShowResendModal(false)}
+          defaultTo=""
+          defaultSubject={buildPhelanExecutiveEmail({ companyName: detail.account.name }).subject}
+          defaultBody={buildPhelanExecutiveEmail({ companyName: detail.account.name }).body}
+          companyName={detail.account.name}
+          crmAccountId={detail.account.id}
+          onSent={() => reload()}
+        />
+      )}
+
+      {showFeasibilityModal && (
+        <FeasibilitySimulationModal
+          isOpen={showFeasibilityModal}
+          onClose={() => setShowFeasibilityModal(false)}
+          companyName={detail.account.name}
+          onOpenProposalModal={() => setShowProposalModal(true)}
+        />
+      )}
+
+      {showProposalModal && (
+        <ProposalPdfModal
+          open={showProposalModal}
+          onClose={() => setShowProposalModal(false)}
+          accessToken=""
+          data={{
+            company_name: detail.account.name,
+            proposal: `Turnkey RaaS Commercial Proposal & 3D Cell-Feasibility Audit for ${detail.account.name}.\n\nShortlisted Models:\n- Universal Robots UR10e\n- FANUC CRX-20iA\n- ABB GoFa CRB 15000\n\nRaaS Monthly Rate: $3,200/month\nDeployment Timeline: 4 weeks`,
+            sender_company: "ReadyForRobots",
+            sender_name: "Phelan",
+            sender_title: "Robot Job Analyst",
+            generated_at: Date.now(),
+          }}
+        />
+      )}
     </div>
   );
 }
