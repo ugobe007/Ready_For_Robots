@@ -37,7 +37,7 @@ import AdminTopLeadsPanel from "@/components/admin/AdminTopLeadsPanel";
 import AdminBenchmarkingReportsPanel from "@/components/admin/AdminBenchmarkingReportsPanel";
 import CalProposalQuoteDrawer from "@/components/admin/CalProposalQuoteDrawer";
 import { useAuth } from "@/contexts/AuthContext";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { getApiBase, liveFetchInit, parseJsonResponse } from "@/lib/apiBase";
 import { useAdminSnapshotSync } from "@/hooks/useAdminSnapshotSync";
 import {
   readLocalAdminSnapshot,
@@ -1932,8 +1932,9 @@ export default function Admin() {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.detail || "URL import failed.");
+      const parsed = await parseJsonResponse<{ added?: number; skipped?: number }>(res);
+      if (!parsed.ok) throw new Error(parsed.error || "URL import failed.");
+      const data = parsed.data || {};
       setMessage(
         `Imported ${data.added || 0} URLs; skipped ${data.skipped || 0}.`
       );
@@ -1957,8 +1958,9 @@ export default function Admin() {
         method: "POST",
         body: JSON.stringify({ companies }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data?.detail || "Company import failed.");
+      const parsed = await parseJsonResponse<{ added?: number; skipped?: number }>(res);
+      if (!parsed.ok) throw new Error(parsed.error || "Company import failed.");
+      const data = parsed.data || {};
       setMessage(
         `Imported ${data.added || 0} companies; skipped ${data.skipped || 0}.`
       );
@@ -1987,16 +1989,9 @@ export default function Admin() {
           industry: triggerIndustry || undefined,
         }),
       });
-      const rawText = await res.text();
-      let data: Record<string, any> = {};
-      try {
-        data = JSON.parse(rawText);
-      } catch {
-        if (!res.ok) {
-          throw new Error(`Scraper API returned HTTP ${res.status} ${res.statusText}. Please verify admin access.`);
-        }
-      }
-      if (!res.ok) throw new Error(data?.detail || `Scraper trigger failed (${res.status}).`);
+      const parsed = await parseJsonResponse<{ status?: string; reason?: string; message?: string }>(res);
+      if (!parsed.ok) throw new Error(parsed.error || `Scraper trigger failed (${res.status}).`);
+      const data = parsed.data || {};
       setMessage(
         data.status === "queued" || data.status === "started"
           ? `${triggerScraper} scraper ${data.status || "queued"}.`
@@ -2021,18 +2016,14 @@ export default function Admin() {
             ? "/api/admin/system/cleanup-junk-leads"
             : "/api/admin/system/reindex";
       const res = await adminFetch(path, { method: "POST" });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok)
-        throw new Error(
-          (data as { detail?: string; message?: string })?.detail ||
-            (data as { detail?: string; message?: string })?.message ||
-            `${kind} action failed.`
-        );
+      const parsed = await parseJsonResponse<{ task_id?: string; detail?: string; message?: string }>(res);
+      if (!parsed.ok) throw new Error(parsed.error || `${kind} action failed.`);
+      const data = parsed.data || {};
       setMessage(
         kind === "cache"
           ? "Cache cleared."
           : kind === "cleanup"
-            ? `Junk-lead cleanup queued (task ${((data as { task_id?: string }).task_id ?? "").slice(0, 8)}...).`
+            ? `Junk-lead cleanup queued (task ${(data.task_id ?? "").slice(0, 8)}...).`
             : "Database reindex queued."
       );
     } catch (err) {

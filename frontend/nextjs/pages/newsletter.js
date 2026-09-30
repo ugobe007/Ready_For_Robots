@@ -570,12 +570,23 @@ export default function Newsletter() {
     setExpandedStories(prev => ({ ...prev, [idx]: !prev[idx] }));
   };
 
-  const handleSubscribe = (e) => {
+  const handleSubscribe = async (e) => {
     e.preventDefault();
+    const cleanEmail = (email || '').trim();
+    if (!cleanEmail) return;
+    try {
+      await fetch(`${API_BASE}/api/newsletter/subscribe`, liveFetchInit({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanEmail, source: 'nextjs_newsletter_page' }),
+      }));
+    } catch (err) {
+      console.error('Newsletter subscribe failed:', err);
+    }
     localStorage.setItem('newsletter_subscribed', 'true');
     setIsSubscribed(true);
     setShowPreview(false);
-    alert(`✅ Subscribed! Welcome to the Robot Intelligence Brief.\n\nYou'll receive:\n• Daily automation leads\n• ROI benchmarking data\n• Hot deals with actionable signals (share to X, LinkedIn)\n• Deployment roundups & vendor insights`);
+    alert(`✅ Subscribed! Welcome to the Robot Intelligence Brief.\n\nYou'll receive:\n• Daily automation leads\n• ROI benchmarking data\n• Hot deals with actionable signals\n• Deployment roundups & vendor insights`);
   };
 
   const latestEdition = edition;
