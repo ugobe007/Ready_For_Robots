@@ -59,6 +59,37 @@ def test_robot_ready_match_tool(mcp_app):
     assert "Acme" in result
 
 
+def test_match_robot_jobs_mcp_tool(mcp_app):
+    sample = {"status": "success", "matched_job_count": 1, "jobs": [{"title": "Material Handler"}]}
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=sample)
+
+    with patch("app.mcp.server.get_client", return_value=mock_client):
+        tool = next(t for t in asyncio.run(mcp_app.list_tools()) if t.name == "match_robot_jobs")
+        result = asyncio.run(tool.fn(url="https://alpharoboticsai.com", robot_name="UR10e"))
+
+    mock_client.post.assert_awaited_once()
+    call = mock_client.post.await_args
+    assert call.args[0] == "/api/v1/gpt-actions/match-jobs"
+    assert call.kwargs["json_body"]["robot_name"] == "UR10e"
+    assert "Material Handler" in result
+
+
+def test_calculate_robot_payback_mcp_tool(mcp_app):
+    sample = {"payback_period_months": 4.6, "annual_roi_percent": 253.3}
+    mock_client = AsyncMock()
+    mock_client.post = AsyncMock(return_value=sample)
+
+    with patch("app.mcp.server.get_client", return_value=mock_client):
+        tool = next(t for t in asyncio.run(mcp_app.list_tools()) if t.name == "calculate_robot_payback")
+        result = asyncio.run(tool.fn(robot_cost=45000.0, hourly_labor_rate=28.5))
+
+    mock_client.post.assert_awaited_once()
+    call = mock_client.post.await_args
+    assert call.args[0] == "/api/v1/gpt-actions/calculate-payback"
+    assert "4.6" in result
+
+
 def test_r4r_client_adds_partner_key_header():
     client = R4RClient(base_url="https://api.test", api_key="partner-key-123")
     headers = client._headers()

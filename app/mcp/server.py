@@ -227,6 +227,39 @@ def create_mcp_app() -> FastMCP:
         except Exception as exc:
             return _err(exc)
 
+    @mcp.tool()
+    async def match_robot_jobs(
+        url: str,
+        robot_name: str = "",
+    ) -> str:
+        """Match any robot manufacturer or product URL to active commercial Robot Job Cards."""
+        try:
+            body: dict[str, Any] = {"url": url}
+            if robot_name.strip():
+                body["robot_name"] = robot_name.strip()
+            data = await get_client().post("/api/v1/gpt-actions/match-jobs", json_body=body)
+            return format_json(data)
+        except Exception as exc:
+            return _err(exc)
+
+    @mcp.tool()
+    async def calculate_robot_payback(
+        robot_cost: float = 45000.0,
+        hourly_labor_rate: float = 28.50,
+        shift_hours_per_day: float = 16.0,
+    ) -> str:
+        """Calculate labor payback period (months) and annual ROI % for replacing human labor with a robot."""
+        try:
+            body: dict[str, Any] = {
+                "robot_cost": robot_cost,
+                "hourly_labor_rate": hourly_labor_rate,
+                "shift_hours_per_day": shift_hours_per_day,
+            }
+            data = await get_client().post("/api/v1/gpt-actions/calculate-payback", json_body=body)
+            return format_json(data)
+        except Exception as exc:
+            return _err(exc)
+
     # ── Reference data ───────────────────────────────────────────────────────
 
     @mcp.tool()
