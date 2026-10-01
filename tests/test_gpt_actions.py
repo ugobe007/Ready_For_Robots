@@ -58,3 +58,28 @@ def test_gpt_match_jobs(monkeypatch):
     assert data["matched_job_count"] == 1
     assert data["jobs"][0]["company_name"] == "Apex Mfg"
     assert "https://readyforrobots.com/pipeline?src=chatgpt" in data["activation_url"]
+
+
+def test_gpt_search_opportunities():
+    res = client.post(
+        "/api/v1/gpt-actions/search-opportunities",
+        json={"query": "machine tending", "industry": "Manufacturing"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    assert "opportunity_count" in data
+    assert "activation_url" in data
+
+
+def test_gpt_recommend_robots():
+    res = client.post(
+        "/api/v1/gpt-actions/recommend-robots",
+        json={"task_description": "moving 500lb pallets in warehouse"},
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["status"] == "success"
+    assert len(data["recommended_robot_types"]) > 0
+    assert "AMR" in data["recommended_robot_types"][0]["category"]
+

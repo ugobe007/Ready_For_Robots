@@ -6,7 +6,7 @@ from typing import Any, Optional
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-from app.services.robot_job_capability_match import match_robot_url
+from app.services.robot_job_capability_match import match_from_chip, match_robot_url
 
 router = APIRouter(prefix="/api/v1/gpt-actions", tags=["gpt-actions"])
 
@@ -21,6 +21,18 @@ class GptPaybackIn(BaseModel):
     robot_cost: float = Field(default=45000.0, description="Total robot purchase or deployment cost in USD")
     hourly_labor_rate: float = Field(default=28.50, description="Replaced human labor wage rate per hour in USD")
     shift_hours_per_day: float = Field(default=16.0, description="Daily operational hours (e.g. 16h for 2 shifts)")
+
+
+class GptOpportunitySearchIn(BaseModel):
+    query: Optional[str] = Field(default=None, description="Search term, task, or concept, e.g. machine tending, floor cleaning, Ohio")
+    industry: Optional[str] = Field(default=None, description="Industry sector filter, e.g. Manufacturing, Logistics, Healthcare")
+    location: Optional[str] = Field(default=None, description="State or region filter, e.g. Ohio, CA, Midwest")
+
+
+class GptRobotRecommendIn(BaseModel):
+    task_description: str = Field(description="Description of the physical work task to automate, e.g. moving 500lb pallets in warehouse or picking 5kg parts for machine tending")
+    payload_capacity_kg: Optional[float] = Field(default=None, description="Required payload capacity in kg")
+    environment: Optional[str] = Field(default="indoor", description="Operating environment: indoor, warehouse, factory, outdoor, cleanroom")
 
 
 @router.post("/match-jobs")
@@ -69,6 +81,91 @@ def gpt_calculate_payback(payload: GptPaybackIn):
     }
 
 
+@router.post("/search-opportunities")
+def gpt_search_opportunities(payload: GptOpportunitySearchIn):
+    """Find active commercial companies and job opportunities needing robot automation (buyer intent radar)."""
+    chip = "moves_materials"
+    q = (payload.query or "").lower()
+    if "clean" in q or "scrub" in q:
+        chip = "cleans"
+    elif "inspect" in q or "scan" in q:
+        chip = "inspects"
+    elif "tend" in q or "pick" in q or "weld" in q or "assembly" in q:
+        chip = "manipulates"
+
+    res = match_from_chip(chip)
+    jobs = res.get("jobs", [])
+    if payload.industry:
+        jobs = [j for j in jobs if payload.industry.lower() in (j.get("industry") or "").lower()]
+    if payload.location:
+        jobs = [j for j in jobs if payload.location.lower() in (j.get("location") or "").lower()]
+
+    formatted = []
+    for j in jobs[:6]:
+        formatted.append({
+            "title": j.get("title"),
+            "company_name": j.get("company_name"),
+            "location": j.get("location"),
+            "industry": j.get("industry"),
+            "hourly_wage": j.get("hourly_wage"),
+            "task_model_required": j.get("task_model_required"),
+            "decision_maker_role": j.get("decision_maker_role") or "VP of Operations / Plant Manager",
+            "crm_desk_url": "https://readyforrobots.com/pipeline?src=chatgpt_search"
+        })
+
+    return {
+        "status": "success",
+        "opportunity_count": len(formatted),
+        "opportunities": formatted,
+        "summary": f"Found {len(formatted)} commercial opportunities seeking robot automation for {payload.query or 'physical tasks'}.",
+        "activation_url": "https://readyforrobots.com/pipeline?src=chatgpt_search"
+    }
+
+
+@router.post("/recommend-robots")
+def gpt_recommend_robots(payload: GptRobotRecommendIn):
+    """Recommend qualified robot hardware classes and vendor SKUs for a specific task description."""
+    desc = payload.task_description.lower()
+    recommendations = []
+
+    if "pallet" in desc or "move" in desc or "transport" in desc or "tug" in desc:
+        recommendations.append({
+            "category": "Autonomous Mobile Robot (AMR) / Heavy Pallet Transport",
+            "suggested_models": ["MiR 1350", "OTTO 1500", "Fetch Robotics Heavy Pallet"],
+            "key_capabilities": ["autonomous navigation", "slam", "1000kg+ payload"],
+            "typical_task_model": "pallet_transport_v1"
+        })
+    if "clean" in desc or "scrub" in desc or "floor" in desc:
+        recommendations.append({
+            "category": "Autonomous Commercial Floor Scrubber",
+            "suggested_models": ["Tennant T7AMR", "Avidbots Neo 2", "Brain Corp Scrub"],
+            "key_capabilities": ["autonomous scrubbing", "water recycling", "obstacle avoidance"],
+            "typical_task_model": "commercial_floor_clean_v1"
+        })
+    if "tend" in desc or "pick" in desc or "weld" in desc or "assembly" in desc or "cnc" in desc:
+        recommendations.append({
+            "category": "Collaborative Robot Arm (Cobot)",
+            "suggested_models": ["Universal Robots UR10e / UR20", "FANUC CRX-25iA", "Doosan H2017"],
+            "key_capabilities": ["force sensing", "precision trajectory", "flexible end-effector"],
+            "typical_task_model": "machine_tending_v1"
+        })
+    if "tote" in desc or "humanoid" in desc or "general" in desc or not recommendations:
+        recommendations.append({
+            "category": "General Purpose Humanoid / Mobile Manipulator",
+            "suggested_models": ["Unitree G1", "Figure 02", "Boston Dynamics Atlas / Stretch"],
+            "key_capabilities": ["bipedal/wheeled mobility", "dual dexterous arms", "vla policy"],
+            "typical_task_model": "open_world_tote_pick_v1"
+        })
+
+    return {
+        "status": "success",
+        "task_analyzed": payload.task_description,
+        "recommended_robot_types": recommendations,
+        "summary": f"Identified {len(recommendations)} optimal robot hardware classes for: '{payload.task_description}'.",
+        "match_jobs_url": "https://readyforrobots.com/pipeline?src=chatgpt_recommend"
+    }
+
+
 @router.get("/openapi.json")
 def gpt_openapi_schema():
     """Custom OpenAPI 3.0 specification for ChatGPT Actions."""
@@ -76,7 +173,7 @@ def gpt_openapi_schema():
         "openapi": "3.0.1",
         "info": {
             "title": "ReadyForRobots Placement & Payback API",
-            "description": "API for matching physical robots to active commercial job openings and calculating labor ROI payback.",
+            "description": "API for matching physical robots to active commercial job openings, searching automation opportunities, recommending robot SKUs, and calculating labor ROI payback.",
             "version": "v1.0"
         },
         "servers": [{"url": "https://ready-2-robot.fly.dev"}],
@@ -122,6 +219,50 @@ def gpt_openapi_schema():
                         }
                     },
                     "responses": {"200": {"description": "Payback calculation result"}}
+                }
+            },
+            "/api/v1/gpt-actions/search-opportunities": {
+                "post": {
+                    "operationId": "searchOpportunities",
+                    "summary": "Find companies and opportunities seeking robot automation ('who needs robot automation')",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "query": {"type": "string", "example": "machine tending"},
+                                        "industry": {"type": "string", "example": "Manufacturing"},
+                                        "location": {"type": "string", "example": "Ohio"}
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "responses": {"200": {"description": "Automation opportunity search results"}}
+                }
+            },
+            "/api/v1/gpt-actions/recommend-robots": {
+                "post": {
+                    "operationId": "recommendRobots",
+                    "summary": "Recommend robot hardware SKUs and categories for a task description ('what type of robot should I use')",
+                    "requestBody": {
+                        "required": True,
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "task_description": {"type": "string", "example": "moving 500lb pallets in warehouse"},
+                                        "payload_capacity_kg": {"type": "number", "example": 250}
+                                    },
+                                    "required": ["task_description"]
+                                }
+                            }
+                        }
+                    },
+                    "responses": {"200": {"description": "Robot hardware recommendations"}}
                 }
             }
         }
