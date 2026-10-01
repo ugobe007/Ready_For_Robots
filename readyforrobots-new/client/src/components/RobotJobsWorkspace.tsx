@@ -205,7 +205,7 @@ const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
 const eyebrow = JOBS_EYEBROW_CLASS;
 const ctaClass =
-  "rfr-bevel inline-flex items-center justify-center gap-2 bg-emerald-400 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-45";
+  "rfr-bevel inline-flex items-center justify-center gap-2 bg-purple-600 px-5 py-3 text-sm font-extrabold uppercase tracking-[0.06em] text-white transition hover:bg-purple-500 disabled:cursor-not-allowed disabled:opacity-45 shadow-md shadow-purple-600/30 rounded-lg";
 
 function FaceCue({
   scale = 2,
@@ -220,7 +220,7 @@ function FaceCue({
     <PixelIcon
       map={KARE_FACE}
       scale={scale}
-      fill={onEmerald ? "#04122a" : FACE_EMERALD}
+      fill={onEmerald ? "#04122a" : "#ffffff"}
       background="transparent"
       className={`shrink-0 ${className}`.trim()}
     />
@@ -304,7 +304,7 @@ function JobsProcessNav({
           onClick={onAction}
           className={`rfr-jobs-process-action m-2 shrink-0 ${
             actionClassName ||
-            "rfr-bevel inline-flex items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
+            "rfr-bevel inline-flex items-center justify-center bg-purple-600 px-4 py-2 text-sm font-extrabold uppercase tracking-[0.06em] text-white transition hover:bg-purple-500 shadow-md shadow-purple-600/30 rounded-lg"
           }`}
         >
           {actionLabel}
