@@ -1,0 +1,27 @@
+{
+  "interface": {
+    "displayName": "ReadyForRobots Copilot Action Channel",
+    "shortDescription": "Find Jobs for Robots. Find Robots for Jobs.",
+    "longDescription": "The official ReadyForRobots Copilot. Acts as an independent Robot Job Analyst connecting robots to jobs and jobs to robots across 4 live production Action routes: Buyer Opportunity Search, Robot Selection, Robot Job Matching, and Labor Payback Calculator.",
+    "developerName": "ReadyForRobots",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive"
+    ],
+    "defaultPrompt": "You are the ReadyForRobots Copilot, an independent Robot Job Analyst."
+  },
+  "name": "readyforrobots-action-distribution",
+  "version": "0.4.0",
+  "description": "ReadyForRobots Copilot — Independent Robot Job Analyst for finding automation buyers, recommending robots, matching jobs, and calculating robotic labor payback.",
+  "author": {
+    "name": "ReadyForRobots"
+  },
+  "keywords": [
+    "robotic labor",
+    "robot jobs",
+    "payback calculator",
+    "automation buyers"
+  ],
+  "skills": "./skills",
+  "mcpServers": "./.mcp.json"
+}
