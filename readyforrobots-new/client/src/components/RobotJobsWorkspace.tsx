@@ -205,7 +205,22 @@ const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
 const eyebrow = JOBS_EYEBROW_CLASS;
 const ctaClass =
-  "rfr-bevel inline-flex items-center justify-center gap-2 bg-transparent border-2 border-purple-500 px-5 py-3 text-sm font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 disabled:cursor-not-allowed disabled:opacity-45 rounded-lg";
+  "rfr-bevel inline-flex items-center justify-center gap-2.5 bg-transparent border-2 border-purple-500 px-6 py-3.5 text-base sm:text-lg font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 disabled:cursor-not-allowed disabled:opacity-45 rounded-lg";
+
+function FindJobsCtaLabel({ text }: { text: string }) {
+  if (!text) return null;
+  if (text.includes("→")) {
+    const parts = text.split("→");
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <span>{parts[0].trim()}</span>
+        <span className="text-emerald-400 font-extrabold text-base sm:text-lg">→</span>
+        {parts.slice(1).join("→")}
+      </span>
+    );
+  }
+  return <span>{text}</span>;
+}
 
 function FaceCue({
   scale = 2,
@@ -292,7 +307,7 @@ function JobsProcessNav({
               <span
                 className={isCurrent ? "text-emerald-400/80" : "text-slate-500"}
               >
-                {step.linkLabel}
+                <FindJobsCtaLabel text={step.linkLabel} />
               </span>
             ) : null}
           </button>
@@ -304,10 +319,10 @@ function JobsProcessNav({
           onClick={onAction}
           className={`rfr-jobs-process-action m-2 shrink-0 ${
             actionClassName ||
-            "rfr-bevel inline-flex items-center justify-center bg-transparent border-2 border-purple-500 px-4 py-2 text-sm font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 rounded-lg"
+            "rfr-bevel inline-flex items-center justify-center gap-2.5 bg-transparent border-2 border-purple-500 px-5 py-2.5 text-base sm:text-lg font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 rounded-lg"
           }`}
         >
-          {actionLabel}
+          <FindJobsCtaLabel text={actionLabel} />
         </button>
       ) : null}
     </nav>
@@ -2382,8 +2397,8 @@ export default function RobotJobsWorkspace() {
                   onClick={startJobs}
                   className={`${ctaClass} w-full sm:w-auto`}
                 >
-                  <FaceCue scale={2} onEmerald />
-                  {FIND_JOBS_CTA}
+                  <FaceCue scale={2} onEmerald={false} />
+                  <FindJobsCtaLabel text={FIND_JOBS_CTA} />
                 </button>
                 <p className="mt-2 text-[12px] text-slate-400">
                   Paste a robot URL on the left, then find jobs.
@@ -2595,7 +2610,7 @@ function FindRail({
           disabled={stage === "select" || !url.trim() || sameSubmit}
           className={`${ctaClass} mt-3 w-full`}
         >
-          {researching ? "Researching…" : FIND_JOBS_CTA}
+          <FindJobsCtaLabel text={researching ? "Researching…" : FIND_JOBS_CTA} />
         </button>
       </form>
 
@@ -2654,7 +2669,7 @@ function FindRail({
             }
             className={`${ctaClass} mt-3 w-full`}
           >
-            {FIND_JOBS_CTA}
+            <FindJobsCtaLabel text={FIND_JOBS_CTA} />
           </button>
         </div>
       ) : null}
@@ -2943,7 +2958,7 @@ function SelectPanel({
                     onClick={() => onConfirm(names)}
                     className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-300 transition hover:text-emerald-200"
                   >
-                    Find jobs for {seg.title} →
+                    <FindJobsCtaLabel text={`Find jobs for ${seg.title} →`} />
                   </button>
                 </div>
               </div>
@@ -3020,7 +3035,7 @@ function SelectPanel({
               onClick={() => setLineupPage(p => Math.min(pageCount - 1, p + 1))}
               className="font-mono text-[11px] font-semibold uppercase tracking-[0.12em] text-emerald-300 transition hover:text-emerald-200 disabled:cursor-not-allowed disabled:opacity-40"
             >
-              Next 3 →
+              <FindJobsCtaLabel text="Next 3 →" />
             </button>
           </div>
         </div>
@@ -3038,16 +3053,20 @@ function SelectPanel({
           }
           className={ctaClass}
         >
-          <FaceCue scale={2} onEmerald />
-          {selected.length === 1
-            ? `Find jobs for ${selected[0]} →`
-            : grouped && selected.length === 0 && segments[0]
-              ? `Find jobs for ${segments[0].title} →`
-              : startNames.length === 1
-                ? `Find jobs for ${startNames[0]} →`
-                : products.length <= productCap && selected.length === 0
-                  ? `Find jobs for all ${products.length} robots →`
-                  : `Find jobs for ${startNames.length} robots →`}
+          <FaceCue scale={2} onEmerald={false} />
+          <FindJobsCtaLabel
+            text={
+              selected.length === 1
+                ? `Find jobs for ${selected[0]} →`
+                : grouped && selected.length === 0 && segments[0]
+                  ? `Find jobs for ${segments[0].title} →`
+                  : startNames.length === 1
+                    ? `Find jobs for ${startNames[0]} →`
+                    : products.length <= productCap && selected.length === 0
+                      ? `Find jobs for all ${products.length} robots →`
+                      : `Find jobs for ${startNames.length} robots →`
+            }
+          />
         </button>
         {!grouped &&
         selected.length > 0 &&
@@ -3122,7 +3141,7 @@ function PortfolioPanel({
                 onClick={() => onView(idx)}
                 className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300 hover:text-emerald-200"
               >
-                {a.matched ? "View matches →" : "Find jobs for this robot →"}
+                <FindJobsCtaLabel text={a.matched ? "View matches →" : "Find jobs for this robot →"} />
               </button>
               <button
                 type="button"
@@ -3137,15 +3156,15 @@ function PortfolioPanel({
       </div>
       <div className="mt-6 flex flex-wrap gap-3">
         <button type="button" onClick={onSeeJobs} className={ctaClass}>
-          <FaceCue scale={2} onEmerald />
-          {JOBS_SEE_JOBS_CTA}
+          <FaceCue scale={2} onEmerald={false} />
+          <FindJobsCtaLabel text={JOBS_SEE_JOBS_CTA} />
         </button>
         <button
           type="button"
           onClick={onActivate}
           className="inline-flex items-center justify-center gap-2 border border-emerald-500/50 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-emerald-300 transition hover:border-emerald-400"
         >
-          {JOBS_NEXT_CTA}
+          <FindJobsCtaLabel text={JOBS_NEXT_CTA} />
         </button>
       </div>
     </div>
@@ -3319,7 +3338,7 @@ function ReviewPanel({
           disabled={matching}
           className={ctaClass}
         >
-          {matching ? "Matching…" : `Find jobs for ${analysis.productName} →`}
+          <FindJobsCtaLabel text={matching ? "Matching…" : `Find jobs for ${analysis.productName} →`} />
         </button>
         <p className="mt-2 text-[11px] text-slate-500">
           Confirm we understood {analysis.productName} — then we match jobs
@@ -3359,8 +3378,8 @@ function JobsActivateBar({
         onClick={onActivate}
         className={`${ctaClass} w-full sm:w-auto`}
       >
-        <FaceCue scale={2} onEmerald />
-        {JOBS_NEXT_CTA}
+        <FaceCue scale={2} onEmerald={false} />
+        <FindJobsCtaLabel text={JOBS_NEXT_CTA} />
       </button>
       <p className="mt-2 text-sm leading-snug text-slate-300">
         {checkedCount} selected. {JOBS_NEXT_HINT}.

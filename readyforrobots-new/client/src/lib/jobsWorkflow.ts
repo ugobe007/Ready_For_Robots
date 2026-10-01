@@ -1103,7 +1103,7 @@ export const FIND_JOBS_CTA = "Find jobs →";
 /** Apply on the CRM desk. Violet, not neon green. Not a sibling of Open CRM on FIND. */
 export const JOBS_APPLY_HERO_CTA = "Apply to jobs →";
 export const JOBS_FIND_CTA_CLASS =
-  "rfr-bevel inline-flex items-center justify-center bg-transparent border-2 border-purple-500 px-4 py-2 text-sm font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 rounded-lg";
+  "rfr-bevel inline-flex items-center justify-center gap-2.5 bg-transparent border-2 border-purple-500 px-6 py-3.5 text-base sm:text-lg font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 rounded-lg";
 export const JOBS_APPLY_CTA_CLASS =
   "rfr-bevel rfr-jobs-apply-cta inline-flex items-center justify-center px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-white transition hover:bg-violet-700";
 export const JOBS_APPLY_CTA_BUTTON_CLASS =
