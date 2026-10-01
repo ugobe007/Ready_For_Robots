@@ -2600,14 +2600,14 @@ function FindRail({
       </form>
 
       {stage === "find" && onPickClass ? (
-        <div className="mt-8 border-2 border-purple-500 bg-purple-950/40 p-4 shadow-[0_0_28px_rgba(168,85,247,0.35)] rounded-xl">
+        <div className="mt-8 border border-slate-700 bg-transparent p-4 rounded-xl">
           <label
             htmlFor="job-definition"
-            className="font-display text-xl font-bold tracking-tight text-purple-200 sm:text-2xl flex items-center gap-2"
+            className="font-display text-xl font-bold tracking-tight text-slate-100 sm:text-2xl flex items-center gap-2"
           >
-            <span className="text-purple-400">✦</span> Job Definition / Industry
+            Job Definition / Industry
           </label>
-          <p className="mt-2 text-[13px] leading-snug text-purple-200/80">
+          <p className="mt-2 text-[13px] leading-snug text-slate-400">
             Select a standard job definition (10 available) or enter a custom industry to find matching robot job opportunities.
           </p>
           <select
@@ -2620,7 +2620,7 @@ function FindRail({
                 setCustomIndustry("");
               }
             }}
-            className="mt-3 w-full border border-purple-500/50 bg-[#081126] px-3 py-3 text-[13px] text-slate-100 outline-none focus:border-purple-300 rounded-lg font-mono"
+            className="mt-3 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-[13px] text-slate-100 outline-none focus:border-emerald-500 rounded-lg font-mono"
           >
             <option value="">Select a Job Definition (10 options)</option>
             {TEN_JOB_DEFINITIONS.map(opt => (
@@ -2637,7 +2637,7 @@ function FindRail({
               value={customIndustry}
               onChange={e => setCustomIndustry(e.target.value)}
               placeholder="Enter custom industry (e.g. Textile, Mining, Solar)"
-              className="mt-3 w-full border border-purple-500/50 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-purple-300 rounded-lg"
+              className="mt-3 w-full border border-slate-600 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-500 rounded-lg"
             />
           )}
 
@@ -2652,7 +2652,7 @@ function FindRail({
                 catalogClass === "custom" ? customIndustry.trim() : catalogClass
               )
             }
-            className="mt-3 w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 text-sm font-extrabold uppercase tracking-[0.06em] text-white transition hover:from-purple-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-45 shadow-lg shadow-purple-600/30 rounded-lg"
+            className={`${ctaClass} mt-3 w-full`}
           >
             {FIND_JOBS_CTA}
           </button>
