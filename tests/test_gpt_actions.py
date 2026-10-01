@@ -9,7 +9,7 @@ def test_gpt_openapi_schema():
     res = client.get("/api/v1/gpt-actions/openapi.json")
     assert res.status_code == 200
     data = res.json()
-    assert data["openapi"] == "3.0.1"
+    assert data["openapi"] == "3.1.0"
     assert "/api/v1/gpt-actions/match-jobs" in data["paths"]
     assert "/api/v1/gpt-actions/calculate-payback" in data["paths"]
 

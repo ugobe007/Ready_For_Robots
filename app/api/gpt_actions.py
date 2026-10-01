@@ -170,7 +170,7 @@ def gpt_recommend_robots(payload: GptRobotRecommendIn):
 def gpt_openapi_schema():
     """Custom OpenAPI 3.0 specification for ChatGPT Actions."""
     return {
-        "openapi": "3.0.1",
+        "openapi": "3.1.0",
         "info": {
             "title": "ReadyForRobots Placement & Payback API",
             "description": "API for matching physical robots to active commercial job openings, searching automation opportunities, recommending robot SKUs, and calculating labor ROI payback.",
