@@ -63,6 +63,7 @@ import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import RobotJobCardUnit from "@/components/pipeline/RobotJobCardUnit";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
+import JobQueryModal from "@/components/jobs/JobQueryModal";
 import { MARKET_TAPE_JOBS, uniqueTapeJobCount, type TapeJob } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
@@ -103,6 +104,7 @@ import {
   JOBS_RAIL_LINK_CLASS,
   JOBS_ROBOT_NAME_CLASS,
   jobsCrmOpenHref,
+  jobsQueryHref,
   jobsCountEyebrow,
   jobsDumpedToCrm,
   jobsForCrmDesk,
@@ -742,6 +744,31 @@ export default function RobotJobsWorkspace() {
   const [showAllJobs, setShowAllJobs] = useState(false);
   const [lineupPreview, setLineupPreview] = useState(false);
   const [selectedTapeModalJob, setSelectedTapeModalJob] = useState<TapeJob | null>(null);
+  const [showJobQueryModal, setShowJobQueryModal] = useState(false);
+
+  function handleJobQuerySubmit({
+    jobType,
+    customQuery,
+  }: {
+    jobType: string;
+    customQuery: string;
+  }) {
+    setShowJobQueryModal(false);
+    const activeText =
+      jobType === "custom"
+        ? customQuery.trim()
+        : jobType
+          ? customQuery.trim() || jobType
+          : customQuery.trim();
+
+    if (!activeText) return;
+
+    const targetHref = jobsQueryHref(activeText, submissionIdRef.current);
+    setLocation(targetHref);
+    if (typeof window !== "undefined") {
+      window.location.assign(targetHref);
+    }
+  }
 
   const sessionId = useRef(
     typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -2489,10 +2516,19 @@ export default function RobotJobsWorkspace() {
               qualifying={matching}
               matchError={matchError}
               onSelectClass={id => void qualifyActive(id)}
+              onOpenQueryModal={() => setShowJobQueryModal(true)}
             />
           )}
         </section>
       </div>
+
+      <JobQueryModal
+        isOpen={showJobQueryModal}
+        onClose={() => setShowJobQueryModal(false)}
+        onSubmitQuery={handleJobQuerySubmit}
+        currentRobotName={active?.productName}
+      />
+
       <div className="relative z-[60] mt-6">
         <JobsPstackProtocol />
       </div>
@@ -3460,6 +3496,7 @@ function JobsPanel({
   qualifying = false,
   matchError = null,
   onSelectClass,
+  onOpenQueryModal,
 }: {
   analysis: RobotAnalysis;
   lineup: RobotAnalysis[];
@@ -3483,6 +3520,7 @@ function JobsPanel({
   qualifying?: boolean;
   matchError?: string | null;
   onSelectClass: (classId: string) => void;
+  onOpenQueryModal?: () => void;
 }) {
   const { session } = useAuth();
   const appMeta = (session?.user?.app_metadata || {}) as Record<string, unknown>;
@@ -3582,6 +3620,20 @@ function JobsPanel({
           })}
         </span>
       </div>
+
+      {/* Query Specific Job Types Button */}
+      {onOpenQueryModal && (
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={onOpenQueryModal}
+            className={`${ctaClass} text-xs sm:text-sm px-4 py-2.5 font-mono font-bold uppercase tracking-wider`}
+          >
+            <FaceCue onEmerald={false} />
+            <FindJobsCtaLabel text="Query Specific Job Types →" />
+          </button>
+        </div>
+      )}
 
       {/* Left Panel Explanation Box */}
       <div className="mt-4 mb-3 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-[#09152e] to-[#0a1836] p-4 text-slate-100 shadow-xl space-y-1">

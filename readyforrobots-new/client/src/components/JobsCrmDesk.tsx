@@ -31,6 +31,7 @@ import {
 } from "@/lib/jobsWorkflow";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import JobsProcessChrome from "@/components/JobsProcessChrome";
+import { jobsFindHref } from "@/lib/jobsLanding";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
@@ -312,12 +313,39 @@ export default function JobsCrmDesk({
     );
   }
 
+  const queryParam =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("query") || ""
+      : "";
+  const isQueryDesk =
+    typeof window !== "undefined" &&
+    new URLSearchParams(window.location.search).get("src") === "jobs_query";
+
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
       <div className="mb-6">{process}</div>
 
+      {(isQueryDesk || queryParam) && (
+        <div className="mb-6 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-[#09152e] to-[#0a1836] p-4 text-slate-100 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+          <div>
+            <p className="font-mono text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+              <span>✦</span> Job Query Results: <span className="text-white underline">{queryParam || "Queried Jobs"}</span>
+            </p>
+            <p className="mt-1 text-xs text-slate-300">
+              Showing matching opportunities for your queried job type. Select rows to keep on your CRM desk.
+            </p>
+          </div>
+          <a
+            href={jobsFindHref()}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-600 bg-[#040914] px-4 py-2.5 font-mono text-xs font-bold text-slate-200 transition hover:border-emerald-400 hover:text-white"
+          >
+            <span>← Return to Find Jobs</span>
+          </a>
+        </div>
+      )}
+
       <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-        CRM
+        {isQueryDesk || queryParam ? `Queried Jobs: ${queryParam || "Results"}` : "CRM"}
       </h1>
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
         {jobs.length === 0

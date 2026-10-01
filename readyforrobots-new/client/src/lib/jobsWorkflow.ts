@@ -1337,6 +1337,8 @@ export function isPlaceSrc(src: string | null | undefined): boolean {
   return (src || "").trim() === JOBS_PLACE_SRC;
 }
 
+export const JOBS_QUERY_SRC = "jobs_query";
+
 export function isJobsActivateSrc(src: string | null | undefined): boolean {
   return (src || "").trim() === JOBS_ACTIVATE_SRC;
 }
@@ -1345,10 +1347,24 @@ export function isJobsAutomateSrc(src: string | null | undefined): boolean {
   return (src || "").trim() === JOBS_AUTOMATE_SRC;
 }
 
+export function isJobsQuerySrc(src: string | null | undefined): boolean {
+  return (src || "").trim() === JOBS_QUERY_SRC;
+}
+
 /** CRM desk lives on Pipeline with Jobs src — never SIGNAL buyers, never the OEM as `url=`. */
 export function jobsActivateHref(submissionId?: number | null): string {
   const params = new URLSearchParams();
   params.set("src", JOBS_ACTIVATE_SRC);
+  if (submissionId && submissionId > 0)
+    params.set("submission", String(submissionId));
+  return `/pipeline?${params.toString()}`;
+}
+
+/** Queried jobs desk on Pipeline with query parameter and Return to Find jobs link. */
+export function jobsQueryHref(query: string, submissionId?: number | null): string {
+  const params = new URLSearchParams();
+  params.set("src", JOBS_QUERY_SRC);
+  if (query) params.set("query", query);
   if (submissionId && submissionId > 0)
     params.set("submission", String(submissionId));
   return `/pipeline?${params.toString()}`;
