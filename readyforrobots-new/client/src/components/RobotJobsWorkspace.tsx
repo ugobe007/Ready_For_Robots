@@ -212,18 +212,18 @@ function FindJobsCtaLabel({ text }: { text: string }) {
   if (text.includes("→")) {
     const parts = text.split("→");
     return (
-      <span className="inline-flex items-center gap-1.5">
-        <span>{parts[0].trim()}</span>
-        <span className="text-emerald-400 font-extrabold text-base sm:text-lg">→</span>
+      <span className="inline-flex items-center gap-1.5 leading-none">
+        <span className="leading-none">{parts[0].trim()}</span>
+        <span className="text-emerald-400 font-extrabold text-base sm:text-lg leading-none">→</span>
         {parts.slice(1).join("→")}
       </span>
     );
   }
-  return <span>{text}</span>;
+  return <span className="leading-none">{text}</span>;
 }
 
 function FaceCue({
-  scale = 2,
+  scale = 2.4,
   onEmerald = false,
   className = "",
 }: {
@@ -237,7 +237,7 @@ function FaceCue({
       scale={scale}
       fill={onEmerald ? "#04122a" : "#c084fc"}
       background="transparent"
-      className={`shrink-0 ${className}`.trim()}
+      className={`shrink-0 inline-flex items-center justify-center self-center ${className}`.trim()}
     />
   );
 }
@@ -2397,7 +2397,7 @@ export default function RobotJobsWorkspace() {
                   onClick={startJobs}
                   className={`${ctaClass} w-full sm:w-auto`}
                 >
-                  <FaceCue scale={2} onEmerald={false} />
+                  <FaceCue scale={2.4} onEmerald={false} />
                   <FindJobsCtaLabel text={FIND_JOBS_CTA} />
                 </button>
                 <p className="mt-2 text-[12px] text-slate-400">
@@ -3053,7 +3053,7 @@ function SelectPanel({
           }
           className={ctaClass}
         >
-          <FaceCue scale={2} onEmerald={false} />
+          <FaceCue onEmerald={false} />
           <FindJobsCtaLabel
             text={
               selected.length === 1
@@ -3156,7 +3156,7 @@ function PortfolioPanel({
       </div>
       <div className="mt-6 flex flex-wrap gap-3">
         <button type="button" onClick={onSeeJobs} className={ctaClass}>
-          <FaceCue scale={2} onEmerald={false} />
+          <FaceCue onEmerald={false} />
           <FindJobsCtaLabel text={JOBS_SEE_JOBS_CTA} />
         </button>
         <button
@@ -3378,7 +3378,7 @@ function JobsActivateBar({
         onClick={onActivate}
         className={`${ctaClass} w-full sm:w-auto`}
       >
-        <FaceCue scale={2} onEmerald={false} />
+        <FaceCue onEmerald={false} />
         <FindJobsCtaLabel text={JOBS_NEXT_CTA} />
       </button>
       <p className="mt-2 text-sm leading-snug text-slate-300">

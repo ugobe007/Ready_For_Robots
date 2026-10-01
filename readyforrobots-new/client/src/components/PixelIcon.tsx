@@ -44,7 +44,7 @@ export default function PixelIcon({
   );
 
   return (
-    <div className={className}>
+    <div className={`inline-flex items-center justify-center ${className}`.trim()}>
       {label ? (
         <p className="mb-2 font-mono text-[11px] uppercase tracking-[0.16em] text-slate-500">
           {label}
@@ -53,7 +53,7 @@ export default function PixelIcon({
       <div
         role="img"
         aria-label={label || "pixel icon"}
-        className="relative inline-block"
+        className="relative inline-flex items-center justify-center"
         style={{
           width: size,
           height: size,
