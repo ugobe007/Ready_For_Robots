@@ -276,26 +276,6 @@ export default function JobsLanding() {
           <CustomerQuoteBanner />
         </div>
 
-        {/* Account Registration Banner (Supabase Stroke-Only Style) */}
-        <div className="rfr-landing-signup-cta my-4 py-3 px-4 sm:px-5 rounded-xl border border-slate-800/80 bg-slate-950/30 flex flex-col sm:flex-row items-center justify-between gap-3 text-left">
-          <div className="space-y-1">
-            <h3 className="text-sm sm:text-base font-bold text-slate-100">
-              Unlock Engineering Feasibility & Commercial Proposals
-            </h3>
-            <p className="text-xs text-slate-400 max-w-xl">
-              Join 1,200+ robotics leaders. Access verified buyer demand, 3D cell simulations, and turnkey RaaS commercial quotes.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => setIsSignupOpen(true)}
-            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-transparent border border-emerald-400/60 text-emerald-400 hover:text-emerald-300 hover:border-emerald-300 font-mono text-xs font-bold transition-all text-center shrink-0 cursor-pointer"
-          >
-            Free Sign Up →
-          </button>
-        </div>
-
         {/* Action Links pulled to left margin with normalized text-sm font */}
         <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-start gap-5 my-3">
           <a

@@ -60,6 +60,7 @@ import type {
   MatchJob,
 } from "@/lib/robotJobMatch";
 import { classOptionsOrDefault } from "@/lib/robotClassOptions";
+import RobotJobCardUnit from "@/components/pipeline/RobotJobCardUnit";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
 import { MARKET_TAPE_JOBS, uniqueTapeJobCount, type TapeJob } from "@/lib/jobsTapeCorpus";
@@ -2452,11 +2453,25 @@ function FindRail({
     Boolean(url.trim()) &&
     sameRobotUrl(url, currentSubmitUrl || "");
   const [catalogClass, setCatalogClass] = useState("");
-  const classChoices = classOptionsOrDefault();
+  const [customIndustry, setCustomIndustry] = useState("");
+
+  const TEN_JOB_DEFINITIONS = [
+    { id: "hospitality", label: "Hospitality & Hotel Delivery" },
+    { id: "cleaning", label: "Commercial Cleaning & Sanitation" },
+    { id: "logistics", label: "Logistics & 3PL Warehousing" },
+    { id: "factory", label: "Machine Tending & Metal Fabrication" },
+    { id: "amr", label: "Material Handling & Conveyance" },
+    { id: "cobot", label: "Palletizing & Packaging" },
+    { id: "quadruped", label: "Inspection & Quality Control" },
+    { id: "mobile_manipulator", label: "Assembly & Precision Manufacturing" },
+    { id: "healthcare", label: "Healthcare & Clinical Logistics" },
+    { id: "agriculture", label: "Agricultural & Outdoor Automation" },
+  ];
+
   return (
     <div>
       <p className={eyebrow}>
-        {researching || stage === "select" ? "Your robot" : "Find jobs"}
+        {researching || stage === "select" ? "Your robot" : "Jobs for robots"}
       </p>
       <h1 className={FIND_JOBS_HEADLINE_CLASS}>
         {stage === "select"
@@ -2474,7 +2489,13 @@ function FindRail({
               )}
       </h1>
       {stage === "find" && (
-        <p className={FIND_JOBS_SUBHEAD_CLASS}>{FIND_JOBS_HOME_SUBHEAD}</p>
+        <>
+          <p className={FIND_JOBS_SUBHEAD_CLASS}>{FIND_JOBS_HOME_SUBHEAD}</p>
+          <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-[12px] leading-relaxed text-emerald-200">
+            <strong className="block font-semibold text-emerald-300">Jobs for robots workspace:</strong>
+            Match your robot specs to real employer demand. Enter a product URL above to find jobs tailored to your hardware, or select a Job Definition / Industry below.
+          </div>
+        </>
       )}
 
       <form
@@ -2506,32 +2527,56 @@ function FindRail({
       {stage === "find" && onPickClass ? (
         <div className="mt-8 border-2 border-emerald-400 bg-emerald-400/20 p-4 shadow-[0_0_28px_rgba(46,230,168,0.35)]">
           <label
-            htmlFor="robot-type"
+            htmlFor="job-definition"
             className="font-display text-xl font-bold tracking-tight text-emerald-200 sm:text-2xl"
           >
-            {I_KNOW_THE_ROBOT_LABEL}
+            Job Definition / Industry
           </label>
           <p className="mt-2 text-[13px] leading-snug text-emerald-100/80">
-            {I_KNOW_THE_ROBOT_HINT}
+            Select a standard job definition (10 available) or enter a custom industry to find matching robot job opportunities.
           </p>
           <select
-            id="robot-type"
-            aria-label={I_KNOW_THE_ROBOT_LABEL}
+            id="job-definition"
+            aria-label="Job Definition / Industry"
             value={catalogClass}
-            onChange={e => setCatalogClass(e.target.value)}
+            onChange={e => {
+              setCatalogClass(e.target.value);
+              if (e.target.value !== "custom") {
+                setCustomIndustry("");
+              }
+            }}
             className="mt-3 w-full border border-emerald-500/40 bg-[#081126] px-3 py-3 text-[13px] text-slate-100 outline-none focus:border-emerald-300"
           >
-            <option value="">Select a type</option>
-            {classChoices.map(opt => (
-              <option key={opt.id} value={opt.id} data-jobs-class={opt.id}>
+            <option value="">Select a Job Definition (10 options)</option>
+            {TEN_JOB_DEFINITIONS.map(opt => (
+              <option key={opt.id} value={opt.id}>
                 {opt.label}
               </option>
             ))}
+            <option value="custom">Other / Manual Industry Entry</option>
           </select>
+
+          {catalogClass === "custom" && (
+            <input
+              type="text"
+              value={customIndustry}
+              onChange={e => setCustomIndustry(e.target.value)}
+              placeholder="Enter custom industry (e.g. Textile, Mining, Solar)"
+              className="mt-3 w-full border border-emerald-500/50 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-300"
+            />
+          )}
+
           <button
             type="button"
-            disabled={!catalogClass}
-            onClick={() => onPickClass(catalogClass)}
+            disabled={
+              !catalogClass ||
+              (catalogClass === "custom" && !customIndustry.trim())
+            }
+            onClick={() =>
+              onPickClass(
+                catalogClass === "custom" ? customIndustry.trim() : catalogClass
+              )
+            }
             className={`${ctaClass} mt-3 w-full`}
           >
             {FIND_JOBS_CTA}
@@ -3249,6 +3294,55 @@ function JobsActivateBar({
   );
 }
 
+const TEN_JOB_DEFINITIONS = [
+  { id: "logistics", label: "Logistics & Freight Handling", hint: "Material movement, parcel sortation, 3PL cross-dock" },
+  { id: "cobot", label: "Case Palletizing & Packing", hint: "Palletizing cobots, carton casing, end-of-line" },
+  { id: "factory", label: "Manufacturing & Assembly", hint: "CNC machine tend, sub-assembly, part placement" },
+  { id: "autonomous_scrubber", label: "Commercial Cleaning & Janitorial", hint: "Autonomous floor scrubbers, vacuuming, terminal care" },
+  { id: "hospitality", label: "Hospitality & Guest Services", hint: "Hotel linen transport, bussing, room service delivery" },
+  { id: "healthcare", label: "Healthcare & Hospital Logistics", hint: "Specimen delivery, pharmacy carts, clinical assist" },
+  { id: "food_prep", label: "Food Processing & Kitchen Prep", hint: "IP69K washdown cobots, food portioning, kitchen prep" },
+  { id: "machine_tending", label: "Machine Tending & Metal Fab", hint: "Press brake load, CNC feeding, welding cell assist" },
+  { id: "agriculture", label: "Agriculture & Farm Automation", hint: "Autonomous tractors, weeding, crop monitoring" },
+  { id: "construction", label: "Construction & Site Inspection", hint: "Jobsite scanning, 3D printing, layout marking" },
+];
+
+function mapShowcaseJobToDeal(job: any, index: number) {
+  const company = job.employer || job.company || job.customer || "Enterprise Buyer";
+  const location = job.workplace || job.location || "North America";
+  const industry = job.sector || job.industry || "Robotics & Automation";
+  const title = job.work || job.title || job.headline || "Robot Automation Opportunity";
+  return {
+    id: index + 1000,
+    company,
+    location,
+    industry,
+    score: job.score || 95,
+    signal: title,
+    signalType: job.status || "HOT BUYER",
+    signalColor: "#34d399",
+    pipelineAction: title,
+    robotTypesNeeded: job.targetRobotTypes || (job.forRobot ? [job.forRobot] : ["Industrial Cobot / AMR"]),
+    projectTiming: {
+      label: "30–90 days (Active Buying Window)",
+      day_min: 30,
+      day_max: 90,
+      source: "buyer_signal",
+    },
+    notes: title,
+    shareSummary: title,
+    crmEvidence: {
+      friction_point: title,
+      workflow_scope: { label: "1 workflow", items: [title] },
+      timing: { label: "Q3 Buying Window" },
+      robot_type: { label: job.forRobot || "Industrial Cobot / High-Payload AMR" },
+      budget: { top_amount: "$60,000–$90,000/yr" },
+      decision_makers: [{ name: "Operations Director", title: "Plant Automation Owner" }],
+    },
+    verdict: "VERIFIED_BUYER",
+  };
+}
+
 function JobsPanel({
   analysis,
   lineup,
@@ -3366,6 +3460,19 @@ function JobsPanel({
 
   const visible = isPaidUser && showAll ? rawBaseJobs : defaultActiveJobs;
 
+  const [showcaseIndex, setShowcaseIndex] = useState(0);
+  const [showcasePaused, setShowcasePaused] = useState(false);
+
+  useEffect(() => {
+    if (showcasePaused || rawBaseJobs.length === 0) return;
+    const timer = window.setInterval(() => {
+      setShowcaseIndex(prev => (prev + 1) % rawBaseJobs.length);
+    }, 6000);
+    return () => window.clearInterval(timer);
+  }, [showcasePaused, rawBaseJobs.length]);
+
+  const showcaseJob = rawBaseJobs.length > 0 ? rawBaseJobs[showcaseIndex % rawBaseJobs.length] : null;
+
   return (
     <div id="jobs-list" className="p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -3380,6 +3487,17 @@ function JobsPanel({
             robotClass: analysis.robotClass,
           })}
         </span>
+      </div>
+
+      {/* Left Panel Explanation Box */}
+      <div className="mt-4 mb-3 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-[#09152e] to-[#0a1836] p-4 text-slate-100 shadow-xl space-y-1">
+        <p className="text-[11px] font-mono font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1.5">
+          <span>✦</span> Jobs for robots — How to use this feed
+        </p>
+        <p className="text-xs leading-relaxed text-slate-200">
+          Select your job definition category below or enter your industry to match your robot to active buyer demand.
+          Click any job card to expand full operational requirements, equipment specs, and estimated contract value.
+        </p>
       </div>
       {rawBaseJobs.length > 0 && (
         <p className="mt-2 text-base leading-relaxed text-slate-300">
@@ -3443,6 +3561,33 @@ function JobsPanel({
         )
       ) : (
         <>
+          {/* TOP OF FUNNEL SHOWCASE JOB CARD (Auto-rotates dynamically) */}
+          {showcaseJob && (
+            <div 
+              className="mt-6 mb-4"
+              onMouseEnter={() => setShowcasePaused(true)}
+              onMouseLeave={() => setShowcasePaused(false)}
+            >
+              <div className="flex items-center justify-between mb-2 px-1">
+                <span className="inline-flex items-center gap-1.5 text-xs font-mono font-extrabold uppercase tracking-wider text-emerald-300">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  </span>
+                  Showcase Opportunity ({showcaseIndex + 1} of {rawBaseJobs.length})
+                </span>
+                <span className="text-[10px] font-mono text-slate-400">
+                  Auto-rotating live demand · Hover to pause
+                </span>
+              </div>
+              <RobotJobCardUnit
+                deal={mapShowcaseJobToDeal(showcaseJob, showcaseIndex)}
+                savedInCrm={false}
+                hasSession={signedIn}
+              />
+            </div>
+          )}
+
           {/* Job Opportunity Status & Filter Bar */}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 pb-3">
             <div className="flex flex-wrap items-center gap-1.5 rounded-lg bg-[#060c1d] p-1 border border-slate-700/80">

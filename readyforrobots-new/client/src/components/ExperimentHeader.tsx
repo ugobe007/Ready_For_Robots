@@ -109,7 +109,14 @@ export default function ExperimentHeader() {
             <a
               href={jobsHref}
               className={`inline-flex items-center gap-1.5 ${jobsActive ? navActive : navIdle}`}
-              onClick={jobsClickIntercepts}
+              onClick={(e) => {
+                if (jobsClickIntercepts) {
+                  jobsClickIntercepts(e);
+                }
+                if (typeof window !== "undefined") {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
             >
               {jobsActive ? (
                 <span className="rfr-led" aria-hidden="true" />

@@ -67,25 +67,6 @@ function JourneyHomeRedirect() {
 }
 
 function PipelineRoute() {
-  const { session, loading } = useAuth();
-  if (loading) return null;
-  if (!session) {
-    return <Redirect to="/?visit=jobs" />;
-  }
-  const appMeta = (session?.user?.app_metadata || {}) as Record<string, unknown>;
-  const userMeta = (session?.user?.user_metadata || {}) as Record<string, unknown>;
-  const planTier = String(
-    appMeta.billing_tier || appMeta.plan_tier || userMeta.plan_tier || ""
-  ).toLowerCase();
-  const email = String(session?.user?.email || "").toLowerCase();
-  const isAdminOrPaid =
-    ["pro", "premium", "paid"].includes(planTier) ||
-    email.endsWith("@readyforrobots.com") ||
-    email === "ugobe07@gmail.com";
-
-  if (!isAdminOrPaid) {
-    return <Redirect to="/?visit=jobs" />;
-  }
   return <Pipeline />;
 }
 
