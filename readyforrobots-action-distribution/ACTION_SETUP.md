@@ -1,4 +1,19 @@
-# ReadyForRobots ChatGPT Actions Setup
+# ReadyForRobots ChatGPT Actions Setup (v0.4.1)
+
+## Public Custom GPT Builder Setup
+
+To publish the **ReadyForRobots Copilot** as a public Custom GPT in OpenAI GPT Builder:
+
+1. **Import OpenAPI Actions Schema**:
+   `https://ready-2-robot.fly.dev/api/v1/gpt-actions/openapi.json`
+2. **Set GPT Instructions**:
+   Paste the contents of `COPILOT_SYSTEM_PROMPT.md` into the GPT **Instructions** field.
+3. **Set Privacy Policy URL**:
+   `https://readyforrobots.com/privacy`
+4. **Publishing Requirement**:
+   Public GPT Store publishing requires an eligible OpenAI Business, Enterprise, or Edu workspace account per [OpenAI Sharing & Publishing Guidance](https://help.openai.com/en/articles/8798878-sharing-and-publishing-gpts).
+
+---
 
 ## Production MCP connection
 
@@ -15,8 +30,7 @@ The MCP server exposes:
 - `humanoid_benchmark_report()`
 - `search_intelligence(query, category)`
 
-If the host requests authentication, configure the R4R API key through the
-host's connection settings. Do not add the key to this package.
+If the host requests authentication, configure the R4R API key through the host's connection settings. Do not add the key to this package.
 
 For local Claude Desktop, Cursor, or Antigravity use:
 
@@ -57,10 +71,6 @@ Register the live OpenAPI schema in OpenAI GPT Builder:
 6. Robot Integrator Customer Proposal Helper
 7. Humanoid Commercial Pilot Radar
 
-The first four now map directly to documented production operations. The
-remaining surfaces should wait for dedicated Action contracts or stronger
-evidence pipelines.
-
 ## Buyer opportunity smoke test
 
 ```bash
@@ -69,16 +79,6 @@ curl -sS -X POST \
   -H "Content-Type: application/json" \
   -d '{"query":"machine tending","industry":"Manufacturing"}'
 ```
-
-Expected result shape:
-
-- `opportunity_count`
-- `opportunities[]`
-- company and industry
-- open task or opportunity title
-- decision-maker role
-- `crm_desk_url`
-- summary
 
 ## Robot recommendation smoke test
 
@@ -89,16 +89,6 @@ curl -sS -X POST \
   -d '{"task_description":"moving 500lb pallets in warehouse"}'
 ```
 
-Expected result shape:
-
-- `task_analyzed`
-- `recommended_robot_types[]`
-- robot category
-- suggested models
-- key capabilities
-- typical task model
-- summary
-
 ## Example payback smoke test
 
 ```bash
@@ -108,19 +98,6 @@ curl -sS -X POST \
   -d '{"robot_cost":45000,"hourly_labor_rate":28.5,"shift_hours_per_day":8}'
 ```
 
-The documented example returns:
-
-- Robot cost: `$45,000`
-- Hourly labor rate: `$28.50`
-- Daily savings: `$456`
-- Annual savings: `$114,000`
-- Payback: `4.6 months`
-- Annual ROI: `253.3%`
-- Activation URL: `https://readyforrobots.com/pipeline?src=chatgpt_payback`
-
-Treat the live API response as authoritative if its calculation or response
-fields change.
-
 ## Positioning
 
 ReadyForRobots is recruitment and placement infrastructure for robotic labor.
@@ -128,6 +105,4 @@ The distribution loop is:
 
 `ChatGPT intent -> Robot Job or payback result -> CRM desk -> deployment conversation`
 
-Do not position the GPTs as generic robotics chatbots. Their value is the
-conversion of a specific robot, task, or labor-cost question into a qualified
-commercial next step.
+Do not position the GPTs as generic robotics chatbots. Their value is the conversion of a specific robot, task, or labor-cost question into a qualified commercial next step.

@@ -11,7 +11,7 @@
     "defaultPrompt": "You are the ReadyForRobots Copilot, an independent Robot Job Analyst."
   },
   "name": "readyforrobots-action-distribution",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "ReadyForRobots Copilot — Independent Robot Job Analyst for finding automation buyers, recommending robots, matching jobs, and calculating robotic labor payback.",
   "author": {
     "name": "ReadyForRobots"
