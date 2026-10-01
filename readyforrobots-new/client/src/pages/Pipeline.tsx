@@ -13,6 +13,7 @@ import {
   type SetStateAction,
 } from "react";
 import {
+  X,
   AlertTriangle,
   MapPin,
   Filter,
@@ -2199,6 +2200,16 @@ export default function Pipeline() {
   const [industryQuery, setIndustryQuery] = useState(
     () => companyNameFromQuery || searchQueryFromQuery || ""
   );
+
+  const [deepLinkModalOpen, setDeepLinkModalOpen] = useState(() =>
+    Boolean(deepLinkLeadId || companyNameFromQuery)
+  );
+
+  useEffect(() => {
+    if (deepLinkLeadId || companyNameFromQuery) {
+      setDeepLinkModalOpen(true);
+    }
+  }, [deepLinkLeadId, companyNameFromQuery]);
 
   useEffect(() => {
     const target = companyNameFromQuery || searchQueryFromQuery || "";
@@ -7926,6 +7937,77 @@ export default function Pipeline() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Shared Job Card Deep-Link Modal Overlay */}
+      {deepLinkModalOpen && (deepLinkLeadId != null || Boolean(companyNameFromQuery)) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl rounded-2xl border-2 border-emerald-400 bg-[#081126] p-4 sm:p-6 shadow-2xl space-y-4 text-slate-100 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-700/80 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-400/10 px-3 py-1 font-mono text-xs font-extrabold uppercase tracking-wider text-emerald-300">
+                  ✦ SHARED ROBOT JOB CARD
+                </span>
+                <span className="text-xs text-slate-400">
+                  Direct Lead Review
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeepLinkModalOpen(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+                aria-label="Close Job Card Modal"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {selected ? (
+              <div className="space-y-4">
+                <RobotJobCardUnit
+                  deal={{
+                    ...selected,
+                    projectTiming: selected.projectTiming
+                      ? {
+                          label:
+                            selected.projectTiming.label ||
+                            selected.projectTiming.display_phrase,
+                          day_min: selected.projectTiming.day_min,
+                          day_max: selected.projectTiming.day_max,
+                          source: selected.projectTiming.source,
+                        }
+                      : undefined,
+                  }}
+                  savedInCrm={Boolean(crmAccountIdByCompanyId[selected.id])}
+                  hasSession={Boolean(session?.access_token)}
+                  advancing={advancingLeadId === selected.id}
+                  onSaveLead={
+                    canSaveSelected ? () => void handleSaveLead(selected) : undefined
+                  }
+                  onCopyDraft={copyDraft}
+                  copiedDraft={copied}
+                />
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setDeepLinkModalOpen(false)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-slate-200 hover:bg-slate-700 hover:text-white transition-all"
+                  >
+                    <span>Close & Explore Full Pipeline ({displayedDeals.length} Jobs) →</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 text-center space-y-3">
+                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
+                <p className="font-mono text-sm font-semibold text-emerald-300">
+                  Loading shared job card details…
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
