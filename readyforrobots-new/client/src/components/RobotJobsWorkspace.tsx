@@ -591,6 +591,75 @@ function pickSelectedJobKey(
   return jobs[0]?.job_key ?? null;
 }
 
+function FindShowcaseSection() {
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const jobs = MARKET_TAPE_JOBS;
+
+  useEffect(() => {
+    if (paused || jobs.length === 0) return;
+    const timer = window.setInterval(() => {
+      setIndex(prev => (prev + 1) % jobs.length);
+    }, 6000);
+    return () => window.clearInterval(timer);
+  }, [paused, jobs.length]);
+
+  const currentJob = jobs[index % jobs.length];
+  if (!currentJob) return null;
+
+  const deal = {
+    id: index + 5000,
+    company: currentJob.customer,
+    location: currentJob.location,
+    industry: currentJob.industry || "Robotics & Automation",
+    score: 95,
+    signal: currentJob.title,
+    signalType: "HOT BUYER",
+    signalColor: "#34d399",
+    pipelineAction: currentJob.title,
+    robotTypesNeeded: [currentJob.robotClass || "Industrial Cobot / AMR"],
+    projectTiming: {
+      label: "30–90 days (Active Buying Window)",
+      day_min: 30,
+      day_max: 90,
+      source: "buyer_signal",
+    },
+    notes: currentJob.headline || currentJob.title,
+    shareSummary: currentJob.headline || currentJob.title,
+    crmEvidence: {
+      friction_point: currentJob.title,
+      workflow_scope: { label: "1 workflow", items: [currentJob.title] },
+      timing: { label: "Active Q3 Window" },
+      robot_type: { label: currentJob.robotClass || "Industrial Cobot" },
+      budget: { top_amount: currentJob.valueText || "$60,000–$90,000/yr" },
+      decision_makers: [{ name: "Operations Lead", title: "Automation Director" }],
+    },
+    verdict: "VERIFIED_BUYER",
+  };
+
+  return (
+    <div
+      className="p-4 sm:p-6 border-b border-slate-700/80 bg-[#070f22]"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      <div className="flex items-center justify-between mb-3 px-1">
+        <span className="inline-flex items-center gap-2 text-xs font-mono font-extrabold uppercase tracking-wider text-purple-300">
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-purple-500"></span>
+          </span>
+          Showcase Opportunity ({index + 1} of {jobs.length})
+        </span>
+        <span className="text-[11px] font-mono text-slate-400">
+          Auto-rotating live buyer demand · Hover to pause
+        </span>
+      </div>
+      <RobotJobCardUnit deal={deal} savedInCrm={false} hasSession={false} />
+    </div>
+  );
+}
+
 /* ------------------------------------------------------------------ */
 /* Component                                                           */
 /* ------------------------------------------------------------------ */
@@ -2301,6 +2370,7 @@ export default function RobotJobsWorkspace() {
         <section className="rfr-find-pane min-w-0">
           {stage === "find" && (
             <div>
+              <FindShowcaseSection />
               <div className="rfr-jobs-start-bar border-b border-slate-600 px-6 py-4">
                 <button
                   type="button"
@@ -2525,14 +2595,14 @@ function FindRail({
       </form>
 
       {stage === "find" && onPickClass ? (
-        <div className="mt-8 border-2 border-emerald-400 bg-emerald-400/20 p-4 shadow-[0_0_28px_rgba(46,230,168,0.35)]">
+        <div className="mt-8 border-2 border-purple-500 bg-purple-950/40 p-4 shadow-[0_0_28px_rgba(168,85,247,0.35)] rounded-xl">
           <label
             htmlFor="job-definition"
-            className="font-display text-xl font-bold tracking-tight text-emerald-200 sm:text-2xl"
+            className="font-display text-xl font-bold tracking-tight text-purple-200 sm:text-2xl flex items-center gap-2"
           >
-            Job Definition / Industry
+            <span className="text-purple-400">✦</span> Job Definition / Industry
           </label>
-          <p className="mt-2 text-[13px] leading-snug text-emerald-100/80">
+          <p className="mt-2 text-[13px] leading-snug text-purple-200/80">
             Select a standard job definition (10 available) or enter a custom industry to find matching robot job opportunities.
           </p>
           <select
@@ -2545,7 +2615,7 @@ function FindRail({
                 setCustomIndustry("");
               }
             }}
-            className="mt-3 w-full border border-emerald-500/40 bg-[#081126] px-3 py-3 text-[13px] text-slate-100 outline-none focus:border-emerald-300"
+            className="mt-3 w-full border border-purple-500/50 bg-[#081126] px-3 py-3 text-[13px] text-slate-100 outline-none focus:border-purple-300 rounded-lg font-mono"
           >
             <option value="">Select a Job Definition (10 options)</option>
             {TEN_JOB_DEFINITIONS.map(opt => (
@@ -2562,7 +2632,7 @@ function FindRail({
               value={customIndustry}
               onChange={e => setCustomIndustry(e.target.value)}
               placeholder="Enter custom industry (e.g. Textile, Mining, Solar)"
-              className="mt-3 w-full border border-emerald-500/50 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-emerald-300"
+              className="mt-3 w-full border border-purple-500/50 bg-[#081126] px-3 py-2 text-sm text-slate-100 placeholder-slate-500 outline-none focus:border-purple-300 rounded-lg"
             />
           )}
 
@@ -2577,7 +2647,7 @@ function FindRail({
                 catalogClass === "custom" ? customIndustry.trim() : catalogClass
               )
             }
-            className={`${ctaClass} mt-3 w-full`}
+            className="mt-3 w-full inline-flex items-center justify-center gap-2 bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-3 text-sm font-extrabold uppercase tracking-[0.06em] text-white transition hover:from-purple-500 hover:to-indigo-500 disabled:cursor-not-allowed disabled:opacity-45 shadow-lg shadow-purple-600/30 rounded-lg"
           >
             {FIND_JOBS_CTA}
           </button>
