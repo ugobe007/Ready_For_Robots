@@ -1175,7 +1175,7 @@ export const JOBS_WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 export const JOBS_RESTORE_ONCE_KEY = "rfr_jobs_restore_once";
 
 export function jobsFreshHomeHref(): string {
-  return `/?${JOBS_FRESH_QUERY}=1`;
+  return "/";
 }
 
 export function isJobsFreshQuery(search: string | null | undefined): boolean {
