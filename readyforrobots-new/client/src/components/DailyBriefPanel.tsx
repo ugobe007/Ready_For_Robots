@@ -165,7 +165,7 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                         tone="amber"
                         onClick={calActions.onFixEmails}
                       >
-                        Fix {calNoEmail} Cal contact emails
+                        Fix {calNoEmail} Phelan contact emails
                       </SupabaseInlineLink>
                     ),
                   });
@@ -179,7 +179,7 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                         onClick={calActions.onDraftAll}
                         busy={calActions.draftBusy}
                       >
-                        Draft {calPending} Cal leads
+                        Draft {calPending} Phelan leads
                       </SupabaseInlineLink>
                     ),
                   });
@@ -205,7 +205,7 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                     key: "cal-open",
                     node: (
                       <SupabaseInlineLink tone="blue" onClick={openQueue}>
-                        Review Cal queue
+                        Review Phelan queue
                       </SupabaseInlineLink>
                     ),
                   });
@@ -220,7 +220,7 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                         busy={calActions.sendBusy}
                         tone="amber"
                       >
-                        Send {calSendable} Cal emails
+                        Send {calSendable} Phelan emails
                       </SupabaseInlineLink>
                     ),
                   });
@@ -256,7 +256,7 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
           </div>
 
           <div className="text-sm text-slate-300">
-            <span className="font-semibold text-slate-100">Cal queue:</span>{" "}
+            <span className="font-semibold text-slate-100">Phelan queue:</span>{" "}
             {calTotal} leads · {calPending} need draft · {calUnsent} unsent ·{" "}
             {calSendable} sendable
             {(m?.scout_drafted ?? 0) > 0 ? (
