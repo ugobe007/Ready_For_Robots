@@ -1087,7 +1087,12 @@ const PIPELINE_STALE_PAINT_MS = 7 * 24 * 60 * 60 * 1000;
 function parsePipelineLeadIdFromSearch(search: string): number | null {
   const params = new URLSearchParams(search);
   const leadParam =
-    params.get("lead") || params.get("account") || params.get("id");
+    params.get("lead") ||
+    params.get("job") ||
+    params.get("account") ||
+    params.get("id") ||
+    params.get("lead_id") ||
+    params.get("job_id");
   if (leadParam) {
     const id = Number.parseInt(leadParam, 10);
     if (Number.isFinite(id) && id > 0) return id;
@@ -2317,8 +2322,10 @@ export default function Pipeline() {
 
   // Always land at the top of the pipeline page — never mid-page or restored scroll.
   // Production previously scrolled to #pipeline-step3-guide; keep forcing top until layout settles.
+  // Skip jumpTop if user arrived via a shared lead deep link so the Job Card can be viewed.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (deepLinkLeadId != null) return;
     try {
       if ("scrollRestoration" in window.history) {
         window.history.scrollRestoration = "manual";
@@ -2355,7 +2362,7 @@ export default function Pipeline() {
       timers.forEach(t => window.clearTimeout(t));
       window.removeEventListener("load", onLoad);
     };
-  }, [search, step3Intro, build25Started]);
+  }, [search, step3Intro, build25Started, deepLinkLeadId]);
 
   const pipelineLeadsLoading =
     loadingLeads || serverSearchLoading || submittedUrlMatchLoading;
@@ -3520,6 +3527,27 @@ export default function Pipeline() {
     (effectiveSelectedId != null
       ? (deals.find(d => d.id === effectiveSelectedId) ?? null)
       : null);
+
+  // Auto-scroll directly to the Job Card detail panel when a shared deep link resolves.
+  const deepLinkAutoScrolledRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (
+      !deepLinkLeadId ||
+      deepLinkAutoScrolledRef.current === deepLinkLeadId ||
+      typeof window === "undefined"
+    )
+      return;
+    if (selected && selected.id === deepLinkLeadId) {
+      deepLinkAutoScrolledRef.current = deepLinkLeadId;
+      const timer = window.setTimeout(() => {
+        const el = document.getElementById("pipeline-detail");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 150);
+      return () => window.clearTimeout(timer);
+    }
+  }, [deepLinkLeadId, selected]);
   const selectedActivation =
     activations.find(a => a.id === selectedActivationId) ??
     activations[0] ??
@@ -3692,6 +3720,14 @@ export default function Pipeline() {
   const selectLead = (id: number) => {
     setRotationPaused(true);
     setSelectedId(id);
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      window.setTimeout(() => {
+        document.getElementById("pipeline-detail")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 50);
+    }
   };
 
   const moveStage = (id: number, direction: 1 | -1) => {
@@ -6367,7 +6403,10 @@ export default function Pipeline() {
                 </div>
 
                 {/* RIGHT: selected lead detail */}
-                <div className="pipeline-detail-shell flex min-h-[36rem] w-full shrink-0 flex-col lg:min-h-[calc(100vh-5rem)] lg:w-[440px] xl:w-[480px]">
+                <div
+                  id="pipeline-detail"
+                  className="pipeline-detail-shell flex min-h-[36rem] w-full shrink-0 flex-col lg:min-h-[calc(100vh-5rem)] lg:w-[440px] xl:w-[480px]"
+                >
                   {selected ? (
                     <div className="flex min-h-0 flex-1 flex-col">
                       {/* Detail header */}
@@ -6647,17 +6686,17 @@ export default function Pipeline() {
                               >
                                 {selected.signalType}
                               </p>
-                              <p className="break-words text-[12px] leading-relaxed text-gray-800">
+                              <p className="break-words text-[12px] leading-relaxed text-slate-200">
                                 {selected.signal}
                               </p>
                             </div>
                           </div>
                           {(selected.projectTiming?.label ||
                             selected.projectTiming?.day_min != null) && (
-                            <div className="mt-1.5 flex items-center gap-2 text-[11px] text-gray-600">
-                              <Clock className="h-3 w-3 shrink-0 text-emerald-600/90" />
+                            <div className="mt-1.5 flex items-center gap-2 text-[11px] text-slate-300">
+                              <Clock className="h-3 w-3 shrink-0 text-emerald-400" />
                               <span>
-                                <span className="font-semibold text-gray-700">
+                                <span className="font-semibold text-slate-200">
                                   Project window:{" "}
                                 </span>
                                 {selected.projectTiming?.day_min != null &&
@@ -6666,7 +6705,7 @@ export default function Pipeline() {
                                   : selected.projectTiming?.label}
                                 {selected.projectTiming?.source ===
                                   "estimated" && (
-                                  <span className="text-gray-500">
+                                  <span className="text-slate-400">
                                     {" "}
                                     · estimated from signals
                                   </span>
@@ -6693,32 +6732,32 @@ export default function Pipeline() {
                               }) ||
                               "This is the work — inspect the station, shift, and robot fit.";
                             return (
-                              <div className="rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/70 p-2.5 shadow-[0_1px_0_rgba(16,185,129,0.06)]">
+                              <div className="rounded-xl border border-emerald-500/30 bg-[#0d1e3d] p-3 shadow-md">
                                 <div className="flex items-start justify-between gap-2">
                                   <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-300">
                                       The job
                                     </p>
-                                    <p className="mt-0.5 text-[11px] leading-snug text-slate-600">
+                                    <p className="mt-0.5 text-[11px] leading-snug text-slate-300">
                                       What the robot would do here.
                                     </p>
                                   </div>
                                   <div className="flex flex-wrap items-center justify-end gap-1.5">
                                     {gapCount > 0 && (
-                                      <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-800">
+                                      <span className="inline-flex items-center rounded-full border border-amber-300/40 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-300">
                                         {gapCount} gap
                                         {gapCount === 1 ? "" : "s"}
                                       </span>
                                     )}
                                     {evidence.researchState ===
                                       "researching" && (
-                                      <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800">
+                                      <span className="inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
                                         AI researching gaps
                                       </span>
                                     )}
                                   </div>
                                 </div>
-                                <p className="mt-2 text-[12px] leading-relaxed text-slate-700">
+                                <p className="mt-2 text-[12px] leading-relaxed text-slate-100">
                                   {summary}
                                 </p>
                               </div>
@@ -6730,8 +6769,8 @@ export default function Pipeline() {
                               !isSalesPlaceholder(
                                 selected.leadHighlights.specific_problem
                               ) && (
-                                <p className="break-words text-[12px] leading-relaxed text-gray-800">
-                                  <span className="font-semibold text-gray-900">
+                                <p className="break-words text-[12px] leading-relaxed text-slate-200">
+                                  <span className="font-semibold text-slate-100">
                                     Problem:{" "}
                                   </span>
                                   {cleanAndClampText(
@@ -6742,7 +6781,7 @@ export default function Pipeline() {
                               )}
                             {(selected.leadHighlights?.why_lead || []).length >
                               0 && (
-                              <ul className="list-disc pl-4 text-[11px] leading-relaxed text-gray-600 space-y-1">
+                              <ul className="list-disc pl-4 text-[11px] leading-relaxed text-slate-300 space-y-1">
                                 {(selected.leadHighlights?.why_lead || [])
                                   .slice(0, panelPlan === "anonymous" ? 2 : 3)
                                   .map((line, i) => (
@@ -6786,10 +6825,10 @@ export default function Pipeline() {
                                       : "Missing";
                                 const tone =
                                   state === "researching"
-                                    ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                                    ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
                                     : state === "monitoring"
-                                      ? "border-slate-300 bg-slate-100 text-slate-700"
-                                      : "border-amber-300 bg-amber-50 text-amber-800";
+                                      ? "border-slate-500 bg-slate-800 text-slate-300"
+                                      : "border-amber-400/40 bg-amber-400/10 text-amber-300";
                                 return (
                                   <span
                                     className={`ml-1.5 inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${tone}`}
@@ -6805,18 +6844,18 @@ export default function Pipeline() {
                                     The job
                                     {evidence.researchState ===
                                     "researching" ? (
-                                      <span className="ml-2 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800">
+                                      <span className="ml-2 inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
                                         AI researching gaps
                                       </span>
                                     ) : null}
                                   </p>
                                   <div className="mt-2 grid gap-2">
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Friction point
                                         {missingTag("friction_point")}
                                       </p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                      <p className="mt-1 text-[12px] leading-relaxed text-slate-200">
                                         {cleanAndClampText(
                                           evidence.frictionPoint ||
                                             "Not yet summarized",
@@ -6824,13 +6863,13 @@ export default function Pipeline() {
                                         )}
                                       </p>
                                     </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Workflow scope
                                         {missingTag("workflow_scope")}
                                       </p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
-                                        <span className="font-semibold text-slate-900">
+                                      <p className="mt-1 text-[12px] leading-relaxed text-slate-200">
+                                        <span className="font-semibold text-slate-100">
                                           {evidence.workflowLabel}:
                                         </span>{" "}
                                         {evidence.workflowItems.length > 0
@@ -6841,14 +6880,14 @@ export default function Pipeline() {
                                           : "workflow not yet identified"}
                                       </p>
                                     </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Timing and robot fit
                                         {missingTag("timing")}
                                         {missingTag("robot_type")}
                                       </p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
-                                        <span className="font-semibold text-slate-900">
+                                      <p className="mt-1 text-[12px] leading-relaxed text-slate-200">
+                                        <span className="font-semibold text-slate-100">
                                           Timing:
                                         </span>{" "}
                                         {cleanAndClampText(
@@ -6856,10 +6895,10 @@ export default function Pipeline() {
                                             "not yet clear",
                                           80
                                         )}
-                                        <span className="mx-1 text-gray-400">
+                                        <span className="mx-1 text-slate-500">
                                           ·
                                         </span>
-                                        <span className="font-semibold text-slate-900">
+                                        <span className="font-semibold text-slate-100">
                                           Robots:
                                         </span>{" "}
                                         {cleanAndClampText(
@@ -6869,14 +6908,14 @@ export default function Pipeline() {
                                         )}
                                       </p>
                                     </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Budget{missingTag("budget")}
                                       </p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                      <p className="mt-1 text-[12px] leading-relaxed text-slate-200">
                                         {evidence.budgetTopAmount ? (
                                           <>
-                                            <span className="font-semibold text-slate-900">
+                                            <span className="font-semibold text-slate-100">
                                               {evidence.budgetTopAmount}
                                             </span>{" "}
                                             appears in the evidence set.
@@ -6886,7 +6925,7 @@ export default function Pipeline() {
                                         )}
                                       </p>
                                       {evidence.budgetSignals.length > 0 && (
-                                        <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-gray-600">
+                                        <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-slate-300">
                                           {evidence.budgetSignals
                                             .slice(0, 2)
                                             .map((signal, index) => (
@@ -6902,25 +6941,25 @@ export default function Pipeline() {
                                         </ul>
                                       )}
                                     </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Decision makers
                                         {missingTag("decision_makers")}
                                       </p>
                                       {evidence.decisionMakers.length > 0 ? (
-                                        <ul className="mt-1 space-y-1 text-[12px] leading-relaxed text-gray-800">
+                                        <ul className="mt-1 space-y-1 text-[12px] leading-relaxed text-slate-200">
                                           {evidence.decisionMakers
                                             .slice(0, 3)
                                             .map((person, index) => (
                                               <li key={index}>
-                                                <span className="font-semibold text-slate-900">
+                                                <span className="font-semibold text-slate-100">
                                                   {cleanAndClampText(
                                                     person.name || "Unknown",
                                                     60
                                                   )}
                                                 </span>
                                                 {person.title ? (
-                                                  <span className="text-gray-500">
+                                                  <span className="text-slate-400">
                                                     {" "}
                                                     ·{" "}
                                                     {cleanAndClampText(
@@ -6933,36 +6972,36 @@ export default function Pipeline() {
                                             ))}
                                         </ul>
                                       ) : (
-                                        <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                        <p className="mt-1 text-[12px] leading-relaxed text-slate-300">
                                           Decision owner not identified yet. Ask
                                           who signs off on operations
                                           automation.
                                         </p>
                                       )}
                                     </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Similar deployments
                                         {missingTag("similar_deployments")}
                                       </p>
                                       {evidence.deploymentExamples.length >
                                       0 ? (
-                                        <ul className="mt-1 space-y-2 text-[12px] leading-relaxed text-gray-800">
+                                        <ul className="mt-1 space-y-2 text-[12px] leading-relaxed text-slate-200">
                                           {evidence.deploymentExamples
                                             .slice(0, 3)
                                             .map((example, index) => (
                                               <li
                                                 key={index}
-                                                className="rounded-md bg-slate-50 px-2 py-1.5"
+                                                className="rounded-md bg-[#0d1e3d] p-2"
                                               >
-                                                <p className="font-semibold text-slate-900">
+                                                <p className="font-semibold text-slate-100">
                                                   {cleanAndClampText(
                                                     example.title ||
                                                       "Deployment example",
                                                     120
                                                   )}
                                                 </p>
-                                                <p className="text-[11px] text-gray-600">
+                                                <p className="text-[11px] text-slate-300">
                                                   {cleanAndClampText(
                                                     example.summary || "",
                                                     150
@@ -6972,7 +7011,7 @@ export default function Pipeline() {
                                             ))}
                                         </ul>
                                       ) : (
-                                        <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                        <p className="mt-1 text-[12px] leading-relaxed text-slate-300">
                                           No matched deployment example yet.
                                           SIGNAL will add one as new evidence is
                                           published.
@@ -6984,7 +7023,7 @@ export default function Pipeline() {
                               );
                             })()}
                             {(selected.notes || selected.shareSummary) && (
-                              <p className="break-words text-[12px] leading-relaxed text-gray-700">
+                              <p className="break-words text-[12px] leading-relaxed text-slate-200">
                                 {cleanAndClampText(
                                   selected.notes || selected.shareSummary,
                                   panelPlan === "anonymous" ? 240 : 360
@@ -6997,7 +7036,7 @@ export default function Pipeline() {
                               !selected.notes &&
                               !selected.shareSummary &&
                               !selected.crmEvidence && (
-                                <p className="text-[11px] leading-relaxed text-gray-500">
+                                <p className="text-[11px] leading-relaxed text-slate-400">
                                   SIGNAL is monitoring this account and will
                                   surface friction, workflow scope, timing, and
                                   robot fit as new evidence arrives.

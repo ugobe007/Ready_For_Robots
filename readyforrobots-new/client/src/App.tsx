@@ -120,6 +120,8 @@ function Router() {
       </Route>
       <Route path="/preview" component={Preview} />
       <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Privacy} />
+      <Route path="/support" component={Privacy} />
       <Route path="/vendor/design" component={VendorDesignBuilder} />
       <Route path="/design/:shareId" component={DesignShare} />
       <Route path="/benchmark" component={Benchmark} />
