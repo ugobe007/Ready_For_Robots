@@ -7,6 +7,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
 from app.services.robot_job_capability_match import match_from_chip, match_robot_url
+from app.services.robot_recommendation_engine import recommend_robots_for_task
 
 router = APIRouter(prefix="/api/v1/gpt-actions", tags=["gpt-actions"])
 
@@ -126,37 +127,11 @@ def gpt_search_opportunities(payload: GptOpportunitySearchIn):
 @router.post("/recommend-robots")
 def gpt_recommend_robots(payload: GptRobotRecommendIn):
     """Recommend qualified robot hardware classes and vendor SKUs for a specific task description."""
-    desc = payload.task_description.lower()
-    recommendations = []
-
-    if "pallet" in desc or "move" in desc or "transport" in desc or "tug" in desc:
-        recommendations.append({
-            "category": "Autonomous Mobile Robot (AMR) / Heavy Pallet Transport",
-            "suggested_models": ["MiR 1350", "OTTO 1500", "Fetch Robotics Heavy Pallet"],
-            "key_capabilities": ["autonomous navigation", "slam", "1000kg+ payload"],
-            "typical_task_model": "pallet_transport_v1"
-        })
-    if "clean" in desc or "scrub" in desc or "floor" in desc:
-        recommendations.append({
-            "category": "Autonomous Commercial Floor Scrubber",
-            "suggested_models": ["Tennant T7AMR", "Avidbots Neo 2", "Brain Corp Scrub"],
-            "key_capabilities": ["autonomous scrubbing", "water recycling", "obstacle avoidance"],
-            "typical_task_model": "commercial_floor_clean_v1"
-        })
-    if "tend" in desc or "pick" in desc or "weld" in desc or "assembly" in desc or "cnc" in desc:
-        recommendations.append({
-            "category": "Collaborative Robot Arm (Cobot)",
-            "suggested_models": ["Universal Robots UR10e / UR20", "FANUC CRX-25iA", "Doosan H2017"],
-            "key_capabilities": ["force sensing", "precision trajectory", "flexible end-effector"],
-            "typical_task_model": "machine_tending_v1"
-        })
-    if "tote" in desc or "humanoid" in desc or "general" in desc or not recommendations:
-        recommendations.append({
-            "category": "General Purpose Humanoid / Mobile Manipulator",
-            "suggested_models": ["Unitree G1", "Figure 02", "Boston Dynamics Atlas / Stretch"],
-            "key_capabilities": ["bipedal/wheeled mobility", "dual dexterous arms", "vla policy"],
-            "typical_task_model": "open_world_tote_pick_v1"
-        })
+    recommendations = recommend_robots_for_task(
+        task_description=payload.task_description,
+        payload_capacity_kg=payload.payload_capacity_kg,
+        environment=payload.environment
+    )
 
     return {
         "status": "success",
