@@ -89,9 +89,8 @@ export default function ExperimentHeader() {
       <header className="fixed inset-x-0 top-0 z-50 border-b border-slate-700/80 bg-[#0b162f]/98 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-[1200px] items-center justify-between gap-3 px-3 sm:px-4">
           <a
-            href={jobsFreshHomeHref()}
-            className="flex items-center gap-2.5 shrink-0"
-            onClick={onJobsFreshHomeClick}
+            href="/"
+            className="flex items-center gap-2.5 shrink-0 hover:opacity-90 transition-opacity"
           >
             <PixelIcon
               map={KARE_FACE}
@@ -107,14 +106,8 @@ export default function ExperimentHeader() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-4 lg:gap-5 font-sans text-sm sm:text-base font-medium">
             <a
-              href="/"
+              href="/?visit=jobs"
               className={`inline-flex items-center gap-1.5 ${jobsActive ? navActive : navIdle}`}
-              onClick={(e) => {
-                onJobsFreshHomeClick(e);
-                if (typeof window !== "undefined") {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }
-              }}
             >
               {jobsActive ? (
                 <span className="rfr-led" aria-hidden="true" />

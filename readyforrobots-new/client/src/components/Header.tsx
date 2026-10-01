@@ -271,9 +271,8 @@ export default function Header() {
         <div className="container">
           <div className="flex items-center justify-between h-16 gap-4">
             <a
-              href={jobsFreshHomeHref()}
-              onClick={onJobsFreshHomeClick}
-              className="flex items-center gap-2.5 shrink-0"
+              href="/"
+              className="flex items-center gap-2.5 shrink-0 hover:opacity-90 transition-opacity"
             >
               <img
                 src="/logo-r.png"
