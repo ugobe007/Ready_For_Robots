@@ -207,14 +207,22 @@ export default function JobsCrmDesk({
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
-    const target = (params.get("co") || params.get("q") || params.get("company") || "").trim().toLowerCase();
+    const target = (
+      params.get("co") ||
+      params.get("q") ||
+      params.get("company") ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
     if (!target || !jobs.length) return;
 
-    const found = jobs.find(j =>
-      (j.company_name || "").toLowerCase().includes(target) ||
-      j.job_key.toLowerCase().includes(target) ||
-      j.title.toLowerCase().includes(target) ||
-      j.industry.toLowerCase().includes(target)
+    const found = jobs.find(
+      j =>
+        (j.company_name || "").toLowerCase().includes(target) ||
+        j.job_key.toLowerCase().includes(target) ||
+        j.title.toLowerCase().includes(target) ||
+        j.industry.toLowerCase().includes(target)
     );
     if (found && expandedKey !== found.job_key) {
       setExpandedKey(found.job_key);
@@ -330,6 +338,8 @@ export default function JobsCrmDesk({
       signedIn={signedIn}
       submissionId={submissionId}
       jobCount={jobCount}
+      queryParam={queryParam}
+      isQueryDesk={isQueryDesk}
     />
   );
 
@@ -381,7 +391,9 @@ export default function JobsCrmDesk({
       />
 
       <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-        {isQueryDesk || queryParam ? `Queried Jobs: ${queryParam || "Results"}` : "CRM"}
+        {isQueryDesk || queryParam
+          ? `Queried Jobs: ${queryParam || "Results"}`
+          : "CRM"}
       </h1>
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
         {jobs.length === 0
