@@ -224,6 +224,26 @@ function FindJobsCtaLabel({ text }: { text: string }) {
   return <span className="leading-none">{text}</span>;
 }
 
+function QueryJobTypesButton({
+  onClick,
+  className = "",
+}: {
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <button
+      type="button"
+      data-open-job-query="1"
+      onClick={onClick}
+      className={`${ctaClass} ${className}`.trim()}
+    >
+      <FaceCue onEmerald={false} />
+      <FindJobsCtaLabel text="Query specific job types →" />
+    </button>
+  );
+}
+
 function FaceCue({
   scale = 2.4,
   onEmerald = false,
@@ -747,20 +767,14 @@ export default function RobotJobsWorkspace() {
   const [showJobQueryModal, setShowJobQueryModal] = useState(false);
 
   function handleJobQuerySubmit({
-    jobType,
-    customQuery,
+    label,
   }: {
     jobType: string;
     customQuery: string;
+    label: string;
   }) {
     setShowJobQueryModal(false);
-    const activeText =
-      jobType === "custom"
-        ? customQuery.trim()
-        : jobType
-          ? customQuery.trim() || jobType
-          : customQuery.trim();
-
+    const activeText = label.trim();
     if (!activeText) return;
 
     const targetHref = jobsQueryHref(activeText, submissionIdRef.current);
@@ -2372,6 +2386,7 @@ export default function RobotJobsWorkspace() {
               currentSubmitUrl={submittedUrlRef.current}
               onCancel={stage === "select" ? newRobot : undefined}
               onPickClass={id => void submitClassFind(id)}
+              onOpenQueryModal={() => setShowJobQueryModal(true)}
             />
           ) : stage === "portfolio" ? (
             <PortfolioRail
@@ -2419,16 +2434,22 @@ export default function RobotJobsWorkspace() {
             <div>
               <FindShowcaseSection onSelectJob={job => setSelectedTapeModalJob(job)} />
               <div className="rfr-jobs-start-bar border-b border-slate-600 px-6 py-4">
-                <button
-                  type="button"
-                  onClick={startJobs}
-                  className={`${ctaClass} w-full sm:w-auto`}
-                >
-                  <FaceCue scale={2.4} onEmerald={false} />
-                  <FindJobsCtaLabel text={FIND_JOBS_CTA} />
-                </button>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={startJobs}
+                    className={`${ctaClass} w-full sm:w-auto`}
+                  >
+                    <FaceCue scale={2.4} onEmerald={false} />
+                    <FindJobsCtaLabel text={FIND_JOBS_CTA} />
+                  </button>
+                  <QueryJobTypesButton
+                    onClick={() => setShowJobQueryModal(true)}
+                    className="w-full sm:w-auto"
+                  />
+                </div>
                 <p className="mt-2 text-[12px] text-slate-400">
-                  Paste a robot URL on the left, then find jobs.
+                  Paste a robot URL on the left, then find jobs. Or query a job type.
                 </p>
               </div>
               <LiveJobTape
@@ -2562,6 +2583,7 @@ function FindRail({
   currentSubmitUrl,
   onCancel,
   onPickClass,
+  onOpenQueryModal,
 }: {
   stage: Stage;
   url: string;
@@ -2572,6 +2594,7 @@ function FindRail({
   currentSubmitUrl?: string;
   onCancel?: () => void;
   onPickClass?: (classId: string) => void;
+  onOpenQueryModal?: () => void;
 }) {
   const researching = stage === "research";
   const sameSubmit =
@@ -2652,6 +2675,12 @@ function FindRail({
 
       {stage === "find" && onPickClass ? (
         <div className="mt-8 border border-slate-700 bg-transparent p-4 rounded-xl">
+          {onOpenQueryModal ? (
+            <QueryJobTypesButton
+              onClick={onOpenQueryModal}
+              className="mb-4 w-full text-xs sm:text-sm"
+            />
+          ) : null}
           <label
             htmlFor="job-definition"
             className="font-display text-xl font-bold tracking-tight text-slate-100 sm:text-2xl flex items-center gap-2"
@@ -3621,19 +3650,14 @@ function JobsPanel({
         </span>
       </div>
 
-      {/* Query Specific Job Types Button */}
-      {onOpenQueryModal && (
+      {onOpenQueryModal ? (
         <div className="mt-3">
-          <button
-            type="button"
+          <QueryJobTypesButton
             onClick={onOpenQueryModal}
-            className={`${ctaClass} text-xs sm:text-sm px-4 py-2.5 font-mono font-bold uppercase tracking-wider`}
-          >
-            <FaceCue onEmerald={false} />
-            <FindJobsCtaLabel text="Query Specific Job Types →" />
-          </button>
+            className="text-xs sm:text-sm"
+          />
         </div>
-      )}
+      ) : null}
 
       {/* Left Panel Explanation Box */}
       <div className="mt-4 mb-3 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-[#09152e] to-[#0a1836] p-4 text-slate-100 shadow-xl space-y-1">

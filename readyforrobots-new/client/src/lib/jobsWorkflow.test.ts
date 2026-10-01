@@ -59,6 +59,8 @@ import {
   isJobsHandoffSrc,
   isJobsChromePath,
   isJobsAutomateSrc,
+  isJobsQuerySrc,
+  jobsQueryHref,
   isPlaceSrc,
   jobsActivateHref,
   jobsAutomateHref,
@@ -900,6 +902,14 @@ describe("jobsWorkflow", () => {
       "/pipeline?src=jobs_activate&submission=42"
     );
     expect(jobsActivateHref()).toBe("/pipeline?src=jobs_activate");
+    expect(isJobsQuerySrc("jobs_query")).toBe(true);
+    expect(isJobsQuerySrc("jobs_activate")).toBe(false);
+    expect(jobsQueryHref("Hospitality & Guest Services")).toBe(
+      "/pipeline?src=jobs_query&query=Hospitality+%26+Guest+Services"
+    );
+    expect(jobsQueryHref("Hospitality & Guest Services", 7)).toBe(
+      "/pipeline?src=jobs_query&query=Hospitality+%26+Guest+Services&submission=7"
+    );
     expect(jobsActivateHref(42)).not.toContain("url=");
     expect(jobsActivateHref()).toContain("/pipeline?src=jobs_activate");
     expect(jobsAutomateHref(12)).toBe(
@@ -962,6 +972,10 @@ describe("jobsWorkflow", () => {
     expect(desk).not.toMatch(/JobsPstackProtocol/);
     expect(desk).toMatch(/<JobsProcessChrome/);
     expect(desk).toMatch(/CRM_SIGNUP_NEXT_CTA/);
+    expect(desk).toMatch(/isJobsQuerySrc\(src\)/);
+    expect(desk).toMatch(/Job Query Results/);
+    expect(workspace).toMatch(/data-open-job-query/);
+    expect(workspace).toMatch(/QueryJobTypesButton/);
     expect(desk).toMatch(/aria-label="CRM next"/);
     const processChrome = readFileSync(
       join(here, "../components/JobsProcessChrome.tsx"),

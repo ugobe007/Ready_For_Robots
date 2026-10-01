@@ -20,10 +20,13 @@ import {
   crmSelectAllKeys,
   crmSyncSelectedKeys,
   crmToggleSelectedKey,
+  isJobsQuerySrc,
   jobsCrmLeaveHref,
   jobsCrmLeaveLabel,
   jobsCrmNextHref,
   jobsCrmOpenHref,
+  jobsQueryHref,
+  jobsSignupHref,
   onJobsFreshHomeClick,
   pipelineActivityForJob,
   recordPipelineActivity,
@@ -88,6 +91,38 @@ import {
 
 const eyebrow = JOBS_EYEBROW_CLASS;
 
+function JobQueryResultsBanner({
+  queryParam,
+  isQueryDesk,
+}: {
+  queryParam: string;
+  isQueryDesk: boolean;
+}) {
+  if (!isQueryDesk && !queryParam) return null;
+  return (
+    <div className="mb-6 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-[#09152e] to-[#0a1836] p-4 text-slate-100 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+      <div>
+        <p className="font-mono text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+          <span>✦</span> Job Query Results:{" "}
+          <span className="text-white underline">
+            {queryParam || "Queried Jobs"}
+          </span>
+        </p>
+        <p className="mt-1 text-xs text-slate-300">
+          Showing matching opportunities for your queried job type. Select rows
+          to keep on your CRM desk.
+        </p>
+      </div>
+      <a
+        href={jobsFindHref()}
+        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-600 bg-[#040914] px-4 py-2.5 font-mono text-xs font-bold text-slate-200 transition hover:border-emerald-400 hover:text-white"
+      >
+        <span>← Return to Find Jobs</span>
+      </a>
+    </div>
+  );
+}
+
 export default function JobsCrmDesk({
   signedIn = false,
   authReady = true,
@@ -102,6 +137,12 @@ export default function JobsCrmDesk({
   const [, setLocation] = useLocation();
   useEffect(() => {
     if (!authReady || signedIn) return;
+    // A job-type query stays on this wall so the query banner can show.
+    // Activate still leaves for the signup wall. Do not drop src=jobs_query.
+    if (typeof window !== "undefined") {
+      const src = new URLSearchParams(window.location.search).get("src");
+      if (isJobsQuerySrc(src)) return;
+    }
     const dest = jobsCrmOpenHref(false, submissionId);
     setLocation(dest);
     if (typeof window !== "undefined") {
@@ -272,7 +313,18 @@ export default function JobsCrmDesk({
   }
   const leaveHref = jobsCrmLeaveHref({ submissionId, jobCount });
   const leaveLabel = jobsCrmLeaveLabel({ submissionId, jobCount });
-  const wallHref = jobsCrmNextHref(false, submissionId, jobCount);
+  const querySearch =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+  const queryParam = querySearch.get("query") || "";
+  const isQueryDesk = isJobsQuerySrc(querySearch.get("src"));
+  const wallHref = isQueryDesk
+    ? jobsSignupHref(
+        jobsQueryHref(queryParam, submissionId),
+        querySearch.get("src") || "jobs_query"
+      )
+    : jobsCrmNextHref(false, submissionId, jobCount);
   const process = (
     <JobsProcessChrome
       signedIn={signedIn}
@@ -285,8 +337,14 @@ export default function JobsCrmDesk({
     return (
       <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
         <div className="mb-6">{process}</div>
+        <JobQueryResultsBanner
+          queryParam={queryParam}
+          isQueryDesk={isQueryDesk}
+        />
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-          CRM
+          {isQueryDesk || queryParam
+            ? `Queried Jobs: ${queryParam || "Results"}`
+            : "CRM"}
         </h1>
         <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
           {authReady ? CRM_WALL_LEAD : "Opening CRM…"}
@@ -313,36 +371,14 @@ export default function JobsCrmDesk({
     );
   }
 
-  const queryParam =
-    typeof window !== "undefined"
-      ? new URLSearchParams(window.location.search).get("query") || ""
-      : "";
-  const isQueryDesk =
-    typeof window !== "undefined" &&
-    new URLSearchParams(window.location.search).get("src") === "jobs_query";
-
   return (
     <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
       <div className="mb-6">{process}</div>
 
-      {(isQueryDesk || queryParam) && (
-        <div className="mb-6 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-[#09152e] to-[#0a1836] p-4 text-slate-100 flex flex-wrap items-center justify-between gap-3 shadow-xl">
-          <div>
-            <p className="font-mono text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
-              <span>✦</span> Job Query Results: <span className="text-white underline">{queryParam || "Queried Jobs"}</span>
-            </p>
-            <p className="mt-1 text-xs text-slate-300">
-              Showing matching opportunities for your queried job type. Select rows to keep on your CRM desk.
-            </p>
-          </div>
-          <a
-            href={jobsFindHref()}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-600 bg-[#040914] px-4 py-2.5 font-mono text-xs font-bold text-slate-200 transition hover:border-emerald-400 hover:text-white"
-          >
-            <span>← Return to Find Jobs</span>
-          </a>
-        </div>
-      )}
+      <JobQueryResultsBanner
+        queryParam={queryParam}
+        isQueryDesk={isQueryDesk}
+      />
 
       <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
         {isQueryDesk || queryParam ? `Queried Jobs: ${queryParam || "Results"}` : "CRM"}

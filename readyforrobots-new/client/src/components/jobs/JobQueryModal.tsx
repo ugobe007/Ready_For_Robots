@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { X, Search, Sparkles, Filter, Briefcase } from "lucide-react";
-import PixelIcon from "@/components/PixelIcon";
-import { KARE_FACE } from "@/lib/kareIcons";
+import { createPortal } from "react-dom";
+import { X, Search, Sparkles } from "lucide-react";
 
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  onSubmitQuery: (selection: { jobType: string; customQuery: string }) => void;
+  onSubmitQuery: (selection: {
+    jobType: string;
+    customQuery: string;
+    label: string;
+  }) => void;
   currentRobotName?: string;
 };
 
@@ -54,26 +57,30 @@ export default function JobQueryModal({
           ? (JOB_DEFINITION_OPTIONS.find(o => o.id === selectedCategory)?.label || selectedCategory)
           : customQuery.trim();
 
-    if (!activeText && !selectedCategory) return;
+    if (!activeText) return;
 
     onSubmitQuery({
       jobType: selectedCategory,
       customQuery: customQuery.trim(),
+      label: activeText,
     });
   };
 
   const selectedHint = JOB_DEFINITION_OPTIONS.find(o => o.id === selectedCategory)?.hint;
 
-  return (
+  const dialog = (
     <div
       aria-modal="true"
       role="dialog"
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm overflow-y-auto"
-      onClick={onClose}
+      aria-labelledby="job-query-title"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-sm overflow-y-auto"
+      onMouseDown={event => {
+        if (event.target === event.currentTarget) onClose();
+      }}
     >
       <div
         className="relative w-full max-w-2xl rounded-2xl border border-purple-500/50 bg-[#081126] p-6 shadow-2xl sm:p-8 text-slate-100"
-        onClick={e => e.stopPropagation()}
+        onMouseDown={event => event.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-start justify-between gap-4 border-b border-slate-700/80 pb-5">
@@ -82,7 +89,10 @@ export default function JobQueryModal({
               <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
               <span>Job Opportunity Query</span>
             </div>
-            <h2 className="mt-3 font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
+            <h2
+              id="job-query-title"
+              className="mt-3 font-display text-2xl font-bold tracking-tight text-white sm:text-3xl"
+            >
               What type of jobs are you looking for?
             </h2>
             <p className="mt-1.5 text-sm text-slate-300">
@@ -190,4 +200,7 @@ export default function JobQueryModal({
       </div>
     </div>
   );
+
+  if (typeof document === "undefined") return dialog;
+  return createPortal(dialog, document.body);
 }
