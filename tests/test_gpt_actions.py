@@ -59,6 +59,16 @@ def test_gpt_match_jobs(monkeypatch):
     assert data["jobs"][0]["company_name"] == "Apex Mfg"
     assert "https://readyforrobots.com/pipeline?src=chatgpt" in data["activation_url"]
 
+    # Test robot_name only without url
+    res_name_only = client.post(
+        "/api/v1/gpt-actions/match-jobs",
+        json={"robot_name": "UR10e"},
+    )
+    assert res_name_only.status_code == 200
+    data_name_only = res_name_only.json()
+    assert data_name_only["status"] == "success"
+    assert data_name_only["matched_job_count"] == 1
+
 
 def test_gpt_search_opportunities():
     res = client.post(

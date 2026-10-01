@@ -12,8 +12,8 @@ router = APIRouter(prefix="/api/v1/gpt-actions", tags=["gpt-actions"])
 
 
 class GptJobMatchIn(BaseModel):
-    url: str = Field(description="URL of the robot product page or manufacturer website, e.g. https://alpharoboticsai.com")
-    robot_name: Optional[str] = Field(default=None, description="Name of the robot model or brand, e.g. UR10e or Figure 02")
+    url: Optional[str] = Field(default=None, description="Public URL containing specifications or information about the robot.")
+    robot_name: Optional[str] = Field(default=None, description="Robot manufacturer/model name, such as UR10e.")
     location: Optional[str] = Field(default=None, description="Target geographic state or region, e.g. Ohio, Midwest, US")
 
 
@@ -38,7 +38,8 @@ class GptRobotRecommendIn(BaseModel):
 @router.post("/match-jobs")
 def gpt_match_jobs(payload: GptJobMatchIn):
     """Match a robot model or manufacturer URL to real available Robot Jobs."""
-    res = match_robot_url(payload.url, robot_name=payload.robot_name)
+    effective_url = payload.url or f"https://readyforrobots.com/robots/{payload.robot_name or 'UR10e'}"
+    res = match_robot_url(effective_url, robot_name=payload.robot_name)
     jobs = res.get("jobs", [])
     formatted_jobs = []
     for j in jobs[:5]:
@@ -49,15 +50,15 @@ def gpt_match_jobs(payload: GptJobMatchIn):
             "industry": j.get("industry"),
             "hourly_wage": j.get("hourly_wage"),
             "task_model_required": j.get("task_model_required"),
-            "crm_desk_url": f"https://readyforrobots.com/pipeline?src=chatgpt&url={payload.url}"
+            "crm_desk_url": f"https://readyforrobots.com/pipeline?src=chatgpt&url={effective_url}"
         })
     return {
         "status": "success",
         "robot_name": res.get("robot_name", payload.robot_name or "Robot"),
         "matched_job_count": len(jobs),
         "jobs": formatted_jobs,
-        "summary": f"Found {len(jobs)} active job placements qualified for {res.get('robot_name', 'this robot')}.",
-        "activation_url": f"https://readyforrobots.com/pipeline?src=chatgpt&url={payload.url}"
+        "summary": f"Found {len(jobs)} active job placements qualified for {res.get('robot_name', payload.robot_name or 'this robot')}.",
+        "activation_url": f"https://readyforrobots.com/pipeline?src=chatgpt&url={effective_url}"
     }
 
 
@@ -189,10 +190,20 @@ def gpt_openapi_schema():
                                 "schema": {
                                     "type": "object",
                                     "properties": {
-                                        "url": {"type": "string", "example": "https://alpharoboticsai.com"},
-                                        "robot_name": {"type": "string", "example": "UR10e"}
+                                        "url": {
+                                            "type": "string",
+                                            "format": "uri",
+                                            "description": "Public URL containing specifications or information about the robot."
+                                        },
+                                        "robot_name": {
+                                            "type": "string",
+                                            "description": "Robot manufacturer/model name, such as UR10e."
+                                        }
                                     },
-                                    "required": ["url"]
+                                    "anyOf": [
+                                        {"required": ["url"]},
+                                        {"required": ["robot_name"]}
+                                    ]
                                 }
                             }
                         }

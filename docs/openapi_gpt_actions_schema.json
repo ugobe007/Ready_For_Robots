@@ -24,15 +24,25 @@
                 "properties": {
                   "url": {
                     "type": "string",
-                    "example": "https://alpharoboticsai.com"
+                    "format": "uri",
+                    "description": "Public URL containing specifications or information about the robot."
                   },
                   "robot_name": {
                     "type": "string",
-                    "example": "UR10e"
+                    "description": "Robot manufacturer/model name, such as UR10e."
                   }
                 },
-                "required": [
-                  "url"
+                "anyOf": [
+                  {
+                    "required": [
+                      "url"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "robot_name"
+                    ]
+                  }
                 ]
               }
             }
