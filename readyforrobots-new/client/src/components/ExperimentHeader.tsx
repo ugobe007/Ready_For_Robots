@@ -107,12 +107,10 @@ export default function ExperimentHeader() {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-4 lg:gap-5 font-sans text-sm sm:text-base font-medium">
             <a
-              href={jobsHref}
+              href="/"
               className={`inline-flex items-center gap-1.5 ${jobsActive ? navActive : navIdle}`}
               onClick={(e) => {
-                if (jobsClickIntercepts) {
-                  jobsClickIntercepts(e);
-                }
+                onJobsFreshHomeClick(e);
                 if (typeof window !== "undefined") {
                   window.scrollTo({ top: 0, behavior: "smooth" });
                 }
@@ -142,7 +140,7 @@ export default function ExperimentHeader() {
                     Platform Links
                   </div>
                   <a
-                    href={session ? "/pipeline" : "/?visit=jobs"}
+                    href="/pipeline"
                     onClick={() => setExploreOpen(false)}
                     className="flex items-center gap-2.5 px-3 py-2 text-xs text-slate-200 hover:text-emerald-400 hover:bg-slate-800/60 rounded-lg transition-colors"
                   >
@@ -334,15 +332,21 @@ export default function ExperimentHeader() {
               Core Pages
             </p>
             <a
-              href={jobsHref}
-              onClick={() => setMobileMenuOpen(false)}
+              href="/"
+              onClick={(e) => {
+                setMobileMenuOpen(false);
+                onJobsFreshHomeClick(e);
+                if (typeof window !== "undefined") {
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
               className="flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/80"
             >
               <span>Jobs</span>
               {jobsActive ? <span className="rfr-led" /> : null}
             </a>
             <a
-              href={session ? "/pipeline" : "/?visit=jobs"}
+              href="/pipeline"
               onClick={() => setMobileMenuOpen(false)}
               className="block rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/80"
             >

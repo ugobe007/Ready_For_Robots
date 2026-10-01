@@ -81,8 +81,14 @@ export default function RobotJobCardUnit({
 }: Props) {
   const pay = jobCardPayEstimate();
 
-  // [1] Customer
-  const customerName = deal.company || "Unnamed Customer";
+  // [1] Customer & Workplace
+  const rawCo = (deal.company || "").trim();
+  const customerName =
+    rawCo && rawCo !== "Unnamed Customer"
+      ? rawCo
+      : deal.industry
+        ? `${deal.industry} Automation Facility`
+        : "Enterprise Automation Site";
   const workplace = [deal.location, deal.industry].filter(Boolean).join(" · ") || "Site pending";
 
   // [2] Name of Robot Job & Description
@@ -144,7 +150,7 @@ export default function RobotJobCardUnit({
           compact
           lead={{
             id: deal.id,
-            company_name: deal.company,
+            company_name: customerName,
             priority_tier: deal.stage || "HOT",
             share_summary: deal.shareSummary || deal.signal,
             pipeline_action: deal.pipelineAction,
@@ -153,18 +159,16 @@ export default function RobotJobCardUnit({
         />
       </div>
 
-      {/* [1] NAME OF CUSTOMER */}
-      <div>
-        <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400">
-          [1] Customer & Workplace
-        </p>
-        <h2 className="mt-1 font-display text-xl font-extrabold text-white tracking-tight sm:text-2xl">
+      {/* [1] CUSTOMER & WORKPLACE (Collapsed inline, no padding) */}
+      <div className="flex flex-wrap items-baseline gap-2 text-sm text-slate-200">
+        <span className="font-display font-extrabold text-white text-base sm:text-lg">
           {customerName}
-        </h2>
-        <div className="mt-1 flex items-center gap-1.5 text-xs text-slate-300">
+        </span>
+        <span className="text-slate-400">·</span>
+        <span className="flex items-center gap-1 text-xs text-slate-300">
           <MapPin className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
           <span>{workplace}</span>
-        </div>
+        </span>
       </div>
 
       {/* [2] NAME OF ROBOT JOB AND DESCRIPTION */}

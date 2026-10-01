@@ -591,7 +591,7 @@ function pickSelectedJobKey(
   return jobs[0]?.job_key ?? null;
 }
 
-function FindShowcaseSection() {
+function FindShowcaseSection({ onSelectJob }: { onSelectJob?: (job: TapeJob) => void }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const jobs = MARKET_TAPE_JOBS;
@@ -607,55 +607,60 @@ function FindShowcaseSection() {
   const currentJob = jobs[index % jobs.length];
   if (!currentJob) return null;
 
-  const deal = {
-    id: index + 5000,
-    company: currentJob.customer,
-    location: currentJob.location,
-    industry: currentJob.industry || "Robotics & Automation",
-    score: 95,
-    signal: currentJob.title,
-    signalType: "HOT BUYER",
-    signalColor: "#34d399",
-    pipelineAction: currentJob.title,
-    robotTypesNeeded: [currentJob.robotClass || "Industrial Cobot / AMR"],
-    projectTiming: {
-      label: "30–90 days (Active Buying Window)",
-      day_min: 30,
-      day_max: 90,
-      source: "buyer_signal",
-    },
-    notes: currentJob.headline || currentJob.title,
-    shareSummary: currentJob.headline || currentJob.title,
-    crmEvidence: {
-      friction_point: currentJob.title,
-      workflow_scope: { label: "1 workflow", items: [currentJob.title] },
-      timing: { label: "Active Q3 Window" },
-      robot_type: { label: currentJob.robotClass || "Industrial Cobot" },
-      budget: { top_amount: currentJob.valueText || "$60,000–$90,000/yr" },
-      decision_makers: [{ name: "Operations Lead", title: "Automation Director" }],
-    },
-    verdict: "VERIFIED_BUYER",
-  };
+  const parts = (currentJob.industry || "").split(" · ");
+  const customer = currentJob.customer || parts[0] || "Enterprise Buyer";
+  const location = currentJob.location || parts[1] || "Automation Facility";
+  const robotClass = currentJob.robotClass || "Industrial Cobot / AMR";
+  const valueText = currentJob.valueText || "$60,000–$90,000/yr";
 
   return (
     <div
-      className="p-4 sm:p-6 border-b border-slate-700/80 bg-[#070f22]"
+      className="p-4 sm:p-5 border-b border-slate-700/80 bg-[#070f22] transition-colors hover:bg-[#09142d]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      <div className="flex items-center justify-between mb-3 px-1">
-        <span className="inline-flex items-center gap-2 text-xs font-mono font-extrabold uppercase tracking-wider text-purple-300">
-          <span className="relative flex h-2.5 w-2.5">
+      <div className="flex items-center justify-between mb-2.5 px-0.5">
+        <span className="inline-flex items-center gap-2 text-[11px] font-mono font-extrabold uppercase tracking-wider text-purple-300">
+          <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-purple-500"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
           </span>
           Showcase Opportunity ({index + 1} of {jobs.length})
         </span>
-        <span className="text-[11px] font-mono text-slate-400">
+        <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
           Auto-rotating live buyer demand · Hover to pause
         </span>
       </div>
-      <RobotJobCardUnit deal={deal} savedInCrm={false} hasSession={false} />
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg border border-slate-800 bg-[#09152e]/90 shadow-sm">
+        <div className="min-w-0 flex-1 space-y-1">
+          <div className="flex items-center gap-2 text-[12px] font-mono text-emerald-400 font-semibold truncate">
+            <span>{customer}</span>
+            <span className="text-slate-600">•</span>
+            <span className="text-slate-300 font-normal">{location}</span>
+          </div>
+          <h4 className="text-sm sm:text-base font-bold text-slate-100 truncate">
+            {currentJob.title}
+          </h4>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 pt-0.5">
+            <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono bg-slate-800 text-slate-200 border border-slate-700">
+              {robotClass}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 font-semibold">
+              {valueText}
+            </span>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onSelectJob?.(currentJob)}
+          className="self-start sm:self-center shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-emerald-600 text-slate-950 text-xs font-mono font-bold hover:bg-emerald-400 transition-colors shadow-sm"
+        >
+          <span>Inspect Job</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </button>
+      </div>
     </div>
   );
 }
@@ -2370,7 +2375,7 @@ export default function RobotJobsWorkspace() {
         <section className="rfr-find-pane min-w-0">
           {stage === "find" && (
             <div>
-              <FindShowcaseSection />
+              <FindShowcaseSection onSelectJob={job => setSelectedTapeModalJob(job)} />
               <div className="rfr-jobs-start-bar border-b border-slate-600 px-6 py-4">
                 <button
                   type="button"
