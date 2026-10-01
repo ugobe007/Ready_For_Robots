@@ -260,6 +260,45 @@ def create_mcp_app() -> FastMCP:
         except Exception as exc:
             return _err(exc)
 
+    @mcp.tool()
+    async def recommend_robots(
+        task_description: str,
+        payload_capacity_kg: Optional[float] = None,
+        environment: str = "indoor",
+    ) -> str:
+        """Recommend robot hardware categories, vendor models, and capabilities for a physical task (pallet transport, machine tending, welding, palletizing, assembly, inspection, floor scrubbing, humanoid multitask)."""
+        try:
+            body: dict[str, Any] = {
+                "task_description": task_description,
+                "environment": environment,
+            }
+            if payload_capacity_kg is not None:
+                body["payload_capacity_kg"] = payload_capacity_kg
+            data = await get_client().post("/api/v1/gpt-actions/recommend-robots", json_body=body)
+            return format_json(data)
+        except Exception as exc:
+            return _err(exc)
+
+    @mcp.tool()
+    async def search_opportunities(
+        query: str = "",
+        industry: str = "",
+        location: str = "",
+    ) -> str:
+        """Find commercial buyer opportunities and plant manager automation needs."""
+        try:
+            body: dict[str, Any] = {}
+            if query.strip():
+                body["query"] = query.strip()
+            if industry.strip():
+                body["industry"] = industry.strip()
+            if location.strip():
+                body["location"] = location.strip()
+            data = await get_client().post("/api/v1/gpt-actions/search-opportunities", json_body=body)
+            return format_json(data)
+        except Exception as exc:
+            return _err(exc)
+
     # ── Reference data ───────────────────────────────────────────────────────
 
     @mcp.tool()
