@@ -5,10 +5,15 @@ import { useState } from "react";
 import { Link2, Mail, Share2 } from "lucide-react";
 import { ResendEmailModal } from "@/components/ResendEmailModal";
 
-const SITE_URL =
-  typeof import.meta !== "undefined" && import.meta.env?.VITE_SITE_URL
-    ? String(import.meta.env.VITE_SITE_URL)
-    : "https://readyforrobots.com";
+function getShareBaseUrl(): string {
+  if (typeof window !== "undefined" && window.location.origin) {
+    return window.location.origin;
+  }
+  if (typeof import.meta !== "undefined" && import.meta.env?.VITE_SITE_URL) {
+    return String(import.meta.env.VITE_SITE_URL);
+  }
+  return "https://readyforrobots.com";
+}
 
 export type LeadShareInput = {
   id?: number | string;
@@ -62,10 +67,11 @@ export function buildLeadSharePost(lead: LeadShareInput): {
   const companyQuery = lead.company_name
     ? `&co=${encodeURIComponent(lead.company_name)}`
     : "";
+  const baseUrl = getShareBaseUrl();
   const shareUrl =
     lead.id != null
-      ? `${SITE_URL}${basePath}?${paramName}=${encodeURIComponent(String(lead.id))}${companyQuery}`
-      : `${SITE_URL}${basePath}`;
+      ? `${baseUrl}${basePath}?${paramName}=${encodeURIComponent(String(lead.id))}${companyQuery}`
+      : `${baseUrl}${basePath}`;
   const robotLines = robotShareLines(lead);
   const tweetWithRobots =
     robotLines.length > 0
@@ -184,14 +190,46 @@ export default function LeadShareBar({
   const canNativeShare =
     typeof navigator !== "undefined" && typeof navigator.share === "function";
 
+  const fallbackCopyText = (text: string): boolean => {
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return successful;
+    } catch {
+      return false;
+    }
+  };
+
   const copyPost = (e: React.MouseEvent) => {
     e.stopPropagation();
-    void navigator.clipboard
-      ?.writeText(`${tweetText}\n\n${shareUrl}`)
-      .then(() => {
+    const textToCopy = `${tweetText}\n\n${shareUrl}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      void navigator.clipboard.writeText(textToCopy).then(
+        () => {
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 1800);
+        },
+        () => {
+          if (fallbackCopyText(textToCopy)) {
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1800);
+          }
+        }
+      );
+    } else {
+      if (fallbackCopyText(textToCopy)) {
         setCopied(true);
         window.setTimeout(() => setCopied(false), 1800);
-      });
+      }
+    }
   };
 
   const nativeShare = (e: React.MouseEvent) => {
@@ -204,10 +242,7 @@ export default function LeadShareBar({
   };
 
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
-  const liTitle = encodeURIComponent(
-    `${lead.company_name || "Lead"} — ${lead.priority_tier || "Lead"} | Ready For Robots`
-  );
-  const linkedInUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${liTitle}&summary=${encodeURIComponent(fullSummary.slice(0, 700))}&source=readyforrobots.com`;
+  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
   const mailSubject = encodeURIComponent(
     `${lead.company_name || "Lead"} — robot-ready buyer signal`
   );

@@ -88,6 +88,7 @@ import {
 } from "@/lib/robotWorkspaceProfile";
 import { trackFirstSave, trackMarketingEvent } from "@/lib/siteAnalytics";
 import LeadShareBar from "@/components/LeadShareBar";
+import RobotJobCardUnit from "@/components/pipeline/RobotJobCardUnit";
 import PipelineCrmMotion from "@/components/pipeline/PipelineCrmMotion";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
@@ -6408,7 +6409,31 @@ export default function Pipeline() {
                   className="pipeline-detail-shell flex min-h-[36rem] w-full shrink-0 flex-col lg:min-h-[calc(100vh-5rem)] lg:w-[440px] xl:w-[480px]"
                 >
                   {selected ? (
-                    <div className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex min-h-0 flex-1 flex-col space-y-4">
+                      {/* Explicit 7-Point Robot Job Card Unit */}
+                      <RobotJobCardUnit
+                        deal={{
+                          ...selected,
+                          projectTiming: selected.projectTiming
+                            ? {
+                                label:
+                                  selected.projectTiming.label ||
+                                  selected.projectTiming.display_phrase,
+                                day_min: selected.projectTiming.day_min,
+                                day_max: selected.projectTiming.day_max,
+                                source: selected.projectTiming.source,
+                              }
+                            : undefined,
+                        }}
+                        savedInCrm={Boolean(crmAccountIdByCompanyId[selected.id])}
+                        hasSession={Boolean(session?.access_token)}
+                        advancing={advancingLeadId === selected.id}
+                        onSaveLead={
+                          canSaveSelected ? () => void handleSaveLead(selected) : undefined
+                        }
+                        onCopyDraft={copyDraft}
+                        copiedDraft={copied}
+                      />
                       {/* Detail header */}
                       <div className="pipeline-detail-header">
                         <div className="pipeline-detail-header-inner">
