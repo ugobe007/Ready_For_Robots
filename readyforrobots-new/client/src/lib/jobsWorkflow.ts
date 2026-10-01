@@ -1010,14 +1010,8 @@ export const JOBS_SKIP_LABEL = "Skip";
 /** Jobs / results `src` values that continue the Jobs terminal. */
 export function isJobsHandoffSrc(src: string | null | undefined): boolean {
   const value = (src || "").trim();
-  if (typeof window !== "undefined") {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get("co") || params.get("company") || params.get("q")) {
-      return true;
-    }
-  }
+  if (!value) return false;
   return (
-    !value ||
     value.startsWith("jobs_") ||
     value.startsWith("robot_jobs") ||
     value.startsWith("quote_") ||
