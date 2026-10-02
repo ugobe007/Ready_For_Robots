@@ -17,6 +17,16 @@ def mcp_app():
     return create_mcp_app()
 
 
+def test_scanner_without_credential_is_allowed():
+    from types import SimpleNamespace
+
+    from app.mcp.auth import authenticate_mcp_request
+
+    ok, partner = authenticate_mcp_request(SimpleNamespace(headers={}))
+    assert ok is True
+    assert partner is None
+
+
 def test_public_tool_names_registered(mcp_app):
     tools = asyncio.run(mcp_app.list_tools())
     names = {t.name for t in tools}
