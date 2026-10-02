@@ -18,6 +18,7 @@ def test_pack_static_output_copies_index_and_routes(tmp_path):
     assert (packed / "static" / "assets" / "index-abc123.js").is_file()
     config = json.loads((packed / "config.json").read_text())
     assert config["version"] == 3
+    assert config["cleanUrls"] is True
     dests = [r.get("dest") for r in config["routes"] if "dest" in r]
     assert "https://ready-2-robot.fly.dev/api/$1" in dests
     assert dests.index("/legal/privacy.html") < dests.index("/index.html")
