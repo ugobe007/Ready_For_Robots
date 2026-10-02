@@ -18,8 +18,17 @@ def mcp_app():
 
 
 def test_public_tool_names_registered(mcp_app):
-    tools = {t.name for t in asyncio.run(mcp_app.list_tools())}
-    assert PUBLIC_READ_TOOLS.issubset(tools)
+    tools = asyncio.run(mcp_app.list_tools())
+    names = {t.name for t in tools}
+    assert PUBLIC_READ_TOOLS.issubset(names)
+    for tool in tools:
+        ann = tool.annotations
+        assert ann is not None, tool.name
+        assert isinstance(ann.readOnlyHint, bool), tool.name
+        assert isinstance(ann.openWorldHint, bool), tool.name
+        assert isinstance(ann.destructiveHint, bool), tool.name
+        if ann.readOnlyHint:
+            assert ann.destructiveHint is False
 
 
 def test_format_json_truncates_large_payloads():
@@ -82,7 +91,9 @@ def test_calculate_robot_payback_mcp_tool(mcp_app):
 
     with patch("app.mcp.server.get_client", return_value=mock_client):
         tool = next(t for t in asyncio.run(mcp_app.list_tools()) if t.name == "calculate_robot_payback")
-        result = asyncio.run(tool.fn(robot_cost=45000.0, hourly_labor_rate=28.5))
+        result = asyncio.run(
+            tool.fn(robot_cost=45000.0, hourly_labor_rate=28.5, shift_hours_per_day=8.0)
+        )
 
     mock_client.post.assert_awaited_once()
     call = mock_client.post.await_args
