@@ -21,6 +21,9 @@ ROUTES = [
     {"src": "^/health$", "dest": f"{API}/health"},
     {"src": "^/health(?:/(.*))$", "dest": f"{API}/health/$1"},
     {"handle": "filesystem"},
+    {"src": "^/privacy/?$", "dest": "/legal/privacy.html"},
+    {"src": "^/terms/?$", "dest": "/legal/terms.html"},
+    {"src": "^/support/?$", "dest": "/legal/support.html"},
     {"src": "/(.*)", "dest": "/index.html"},
 ]
 
