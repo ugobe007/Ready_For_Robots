@@ -35,6 +35,8 @@ const COMPANY_LINKS = [
   { label: "Find Robots", href: "/find-robots" },
   { label: "Job site sketch", href: "/vendor/design" },
   { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+  { label: "Support", href: "/support" },
 ];
 
 function jobsProductLinks(signedIn: boolean) {
@@ -217,6 +219,18 @@ export default function SiteFooter({
               className="text-slate-500 text-xs hover:text-white transition-colors"
             >
               Privacy
+            </Link>
+            <Link
+              href="/terms"
+              className="text-slate-500 text-xs hover:text-white transition-colors"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/support"
+              className="text-slate-500 text-xs hover:text-white transition-colors"
+            >
+              Support
             </Link>
             <Link
               href="/login"

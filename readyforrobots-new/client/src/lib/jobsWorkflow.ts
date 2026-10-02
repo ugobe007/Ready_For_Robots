@@ -1086,6 +1086,8 @@ export function showJobsSiteChrome(opts: {
     path === "/vendor/design" ||
     path === "/pricing" ||
     path === "/privacy" ||
+    path === "/terms" ||
+    path === "/support" ||
     path === "/icons"
   )
     return true;

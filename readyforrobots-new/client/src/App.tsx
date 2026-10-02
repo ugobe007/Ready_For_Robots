@@ -45,6 +45,8 @@ import Jobs from "./pages/Jobs";
 import ExperimentRedirect from "./pages/ExperimentRedirect";
 import Preview from "./pages/Preview";
 import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Support from "./pages/Support";
 import VendorDesignBuilder from "./pages/VendorDesignBuilder";
 import DesignShare from "./pages/DesignShare";
 import IconReview from "./pages/IconReview";
@@ -101,8 +103,8 @@ function Router() {
       </Route>
       <Route path="/preview" component={Preview} />
       <Route path="/privacy" component={Privacy} />
-      <Route path="/terms" component={Privacy} />
-      <Route path="/support" component={Privacy} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/support" component={Support} />
       <Route path="/vendor/design" component={VendorDesignBuilder} />
       <Route path="/design/:shareId" component={DesignShare} />
       <Route path="/benchmark" component={Benchmark} />

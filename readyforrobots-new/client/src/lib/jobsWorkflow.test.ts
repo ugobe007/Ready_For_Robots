@@ -712,6 +712,8 @@ describe("jobsWorkflow", () => {
     expect(showJobsSiteChrome({ pathname: "/jobs/acme" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/pricing" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/privacy" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/terms" })).toBe(true);
+    expect(showJobsSiteChrome({ pathname: "/support" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/intelligence" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/compare" })).toBe(true);
     expect(showJobsSiteChrome({ pathname: "/vendor/design" })).toBe(true);

@@ -1,15 +1,7 @@
 /**
  * /privacy — Privacy Policy (required for social sharing and compliance).
  */
-import ExperimentHeader from "@/components/ExperimentHeader";
-import SiteFooter from "@/components/layout/SiteFooter";
-import PageHeroDark from "@/components/layout/PageHeroDark";
-import { Link } from "wouter";
-import {
-  JOBS_HEADER_OFFSET_CLASS,
-  jobsFreshHomeHref,
-} from "@/lib/jobsWorkflow";
-import { jobsFindHref } from "@/lib/jobsLanding";
+import LegalDocument from "./LegalDocument";
 
 const SECTIONS: { title: string; body: string[] }[] = [
   {
@@ -107,56 +99,12 @@ const SECTIONS: { title: string; body: string[] }[] = [
 
 export default function Privacy() {
   return (
-    <div className={`min-h-screen bg-gray-50 ${JOBS_HEADER_OFFSET_CLASS}`}>
-      <ExperimentHeader />
-      <PageHeroDark
-        eyebrow="Legal"
-        title="Privacy Policy"
-        description="How ReadyForRobots collects, uses, and protects your information."
-      />
-
-      <main className="max-w-2xl mx-auto px-4 sm:px-6 pb-16 -mt-4 relative z-10">
-        <article className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-10 shadow-sm">
-          <p className="text-sm text-gray-500 mb-8">
-            Effective date: June 16, 2026
-          </p>
-
-          {SECTIONS.map(section => (
-            <section key={section.title} className="mb-8 last:mb-0">
-              <h2 className="text-lg font-bold text-gray-900 mb-3">
-                {section.title}
-              </h2>
-              <div className="space-y-3">
-                {section.body.map(para => (
-                  <p
-                    key={para.slice(0, 40)}
-                    className="text-sm leading-relaxed text-gray-700"
-                  >
-                    {para}
-                  </p>
-                ))}
-              </div>
-            </section>
-          ))}
-
-          <p className="mt-10 pt-6 border-t border-gray-100 text-sm text-gray-600">
-            <Link
-              href={jobsFindHref()}
-              className="font-semibold text-emerald-700 hover:underline"
-            >
-              Find jobs
-            </Link>
-            {" · "}
-            <Link
-              href={jobsFreshHomeHref()}
-              className="font-semibold text-emerald-700 hover:underline"
-            >
-              Home
-            </Link>
-          </p>
-        </article>
-      </main>
-      <SiteFooter />
-    </div>
+    <LegalDocument
+      eyebrow="Legal"
+      title="Privacy Policy"
+      description="How ReadyForRobots collects, uses, and protects your information."
+      effectiveDate="June 16, 2026"
+      sections={SECTIONS}
+    />
   );
 }
