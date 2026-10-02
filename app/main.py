@@ -11,7 +11,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from app.api import leads, companies, scoring
 from app.api.analyze import router as analyze_router
 from app.api.scraper_health import router as scraper_health_router
@@ -492,6 +492,7 @@ async def rate_limit_and_block_probes(request: Request, call_next):
         and not path.startswith("/_next/")
         and path != "/health"
         and path != "/"
+        and not path.startswith("/.well-known/")
     ):
         ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -584,6 +585,15 @@ if _mcp_asgi is not None:
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/.well-known/openai-apps-challenge", include_in_schema=False)
+def openai_apps_challenge():
+    """Plain-text domain challenge for the plugin scanner. Body is only the token."""
+    token = (os.getenv("OPENAI_APPS_CHALLENGE_TOKEN") or "").strip()
+    if not token:
+        return PlainTextResponse("", status_code=404)
+    return PlainTextResponse(token)
 
 
 @app.get("/health/db")
