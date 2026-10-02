@@ -476,6 +476,12 @@ _RATE_MAX = 300   # requests per window per IP (generous for real users)
 @app.middleware("http")
 async def rate_limit_and_block_probes(request: Request, call_next):
     path = request.url.path
+    # The plugin lists https://ready-2-robot.fly.dev/mcp. The mount only
+    # receives /mcp/, and the SPA catch-all would otherwise answer GET /mcp.
+    if path == "/mcp":
+        request.scope["path"] = "/mcp/"
+        request.scope["raw_path"] = b"/mcp/"
+        path = "/mcp/"
     # 404 immediately for obvious scanner probes
     if _PROBE_PATTERNS.search(path):
         return JSONResponse(status_code=404, content={"detail": "Not found"})
