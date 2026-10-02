@@ -355,15 +355,28 @@ describe("landing fork", () => {
       "Post the job",
     ]);
     expect(EMPLOYER_EMPTY_MATCH).toMatch(/Post the job so OEMs can find it/);
-    expect(EMPLOYER_WORK_TILE_IDS).toContain("serving");
-    expect(EMPLOYER_WORK_TILE_IDS).toContain("cleaning");
-    expect(EMPLOYER_WORK_TILE_IDS).toContain("warehouse");
-    expect(EMPLOYER_WORK_TILE_IDS).toContain("healthcare");
-    expect(EMPLOYER_WORK_TILE_IDS).toContain("food_prep");
+    expect(EMPLOYER_WORK_TILE_IDS).toEqual([
+      "pallets",
+      "pick_pack",
+      "delivery",
+      "assembly",
+      "amr",
+      "serving",
+      "cleaning",
+      "healthcare",
+      "industrial",
+    ]);
     const employer = readFileSync(
       join(here, "../components/EmployerMatchWorkspace.tsx"),
       "utf8"
     );
+    expect(employer).toMatch(/id="job-type"/);
+    expect(employer).toMatch(/id="load-lb"/);
+    expect(employer).toMatch(/id="hours-per-day"/);
+    expect(employer).toMatch(/Robot Job Card/);
+    expect(employer).toMatch(/Evidence limit/);
+    const spec = readFileSync(join(here, "workSpec.ts"), "utf8");
+    expect(spec).toMatch(/site survey/);
     expect(employer).toMatch(/aria-label="Look for robot candidates"/);
     expect(employer).toMatch(/aria-label="Employer process"/);
     expect(employer).toMatch(/fetchEmployerRobotMatch/);

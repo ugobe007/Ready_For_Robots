@@ -268,19 +268,17 @@ export const EMPLOYER_PROCESS_STEPS = [
 export type EmployerProcessStepId =
   (typeof EMPLOYER_PROCESS_STEPS)[number]["id"];
 
-/** Work-language tiles for employer MATCH. Morphology tiles stay on FIND. */
+/** Work tiles on employer MATCH. Catalog class lives in workSpec. FIND keeps robot types. */
 export const EMPLOYER_WORK_TILE_IDS = [
+  "pallets",
+  "pick_pack",
+  "delivery",
+  "assembly",
+  "amr",
   "serving",
   "cleaning",
-  "warehouse",
   "healthcare",
-  "food_prep",
-  "hospitality",
-  "logistics",
-  "factory",
-  "agriculture",
-  "mining",
-  "construction",
+  "industrial",
 ] as const;
 
 export function jobsFindHref(url?: string): string {
