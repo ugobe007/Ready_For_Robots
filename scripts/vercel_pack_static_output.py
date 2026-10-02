@@ -36,7 +36,11 @@ def pack_static_output(*, dist: Path = DIST, output: Path = OUTPUT) -> Path:
     static = output / "static"
     shutil.copytree(dist, static)
     (output / "config.json").write_text(
-        json.dumps({"version": 3, "routes": ROUTES}, indent=2) + "\n",
+        json.dumps(
+            {"version": 3, "cleanUrls": True, "routes": ROUTES},
+            indent=2,
+        )
+        + "\n",
         encoding="utf-8",
     )
     return output
