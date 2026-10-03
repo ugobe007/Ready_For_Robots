@@ -1,4 +1,4 @@
-# ReadyForRobots ChatGPT Actions Setup (v0.4.1)
+# ReadyForRobots ChatGPT Actions Setup (v0.5.0)
 
 ## Public Custom GPT Builder Setup
 
