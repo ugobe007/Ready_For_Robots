@@ -16,6 +16,25 @@ OUTPUT = _root / ".vercel" / "output"
 
 API = "https://ready-2-robot.fly.dev"
 
+# Hard-nav Jobs paths that are wouter routes, not static HTML. Vercel
+# `cleanUrls` maps /pipeline → /pipeline.html; that file does not exist, so
+# the edge 404s before the SPA catch-all. Do not set cleanUrls on this pack.
+SPA_SHELL_PATHS = (
+    "/pipeline",
+    "/pipeline?src=jobs_activate",
+    "/signup",
+    "/login",
+    "/pricing",
+    "/intelligence",
+    "/icons",
+)
+
+LEGAL_HTML_PATHS = (
+    "/privacy",
+    "/terms",
+    "/support",
+)
+
 ROUTES = [
     {"src": "^/api(?:/(.*))$", "dest": f"{API}/api/$1"},
     {"src": "^/health$", "dest": f"{API}/health"},
@@ -36,11 +55,7 @@ def pack_static_output(*, dist: Path = DIST, output: Path = OUTPUT) -> Path:
     static = output / "static"
     shutil.copytree(dist, static)
     (output / "config.json").write_text(
-        json.dumps(
-            {"version": 3, "cleanUrls": True, "routes": ROUTES},
-            indent=2,
-        )
-        + "\n",
+        json.dumps({"version": 3, "routes": ROUTES}, indent=2) + "\n",
         encoding="utf-8",
     )
     return output
