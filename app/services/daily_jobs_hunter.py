@@ -106,11 +106,83 @@ _GENERIC_EMPLOYER_TOKENS = frozenset(
         "usa",
         "united",
         "states",
+        "regional",
+        "national",
     }
 )
-_US_LOCALITY_RE = re.compile(
-    r",\s*[A-Z]{2}\b|united states|\b(AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV)\b",
-    re.I,
+_US_STATE_ABBR = frozenset(
+    {
+        "AL",
+        "AK",
+        "AZ",
+        "AR",
+        "CA",
+        "CO",
+        "CT",
+        "DC",
+        "DE",
+        "FL",
+        "GA",
+        "HI",
+        "IA",
+        "ID",
+        "IL",
+        "IN",
+        "KS",
+        "KY",
+        "LA",
+        "MA",
+        "MD",
+        "ME",
+        "MI",
+        "MN",
+        "MO",
+        "MS",
+        "MT",
+        "NC",
+        "ND",
+        "NE",
+        "NH",
+        "NJ",
+        "NM",
+        "NV",
+        "NY",
+        "OH",
+        "OK",
+        "OR",
+        "PA",
+        "RI",
+        "SC",
+        "SD",
+        "TN",
+        "TX",
+        "UT",
+        "VA",
+        "VT",
+        "WA",
+        "WI",
+        "WV",
+        "WY",
+    }
+)
+_ATS_HOSTS = frozenset(
+    {
+        "greenhouse.io",
+        "lever.co",
+        "workday.com",
+        "myworkdayjobs.com",
+        "smartrecruiters.com",
+        "icims.com",
+        "ultipro.com",
+        "paycomonline.net",
+        "breezy.hr",
+        "bamboohr.com",
+        "jobvite.com",
+        "taleo.net",
+        "successfactors.com",
+        "workable.com",
+        "fountain.com",
+    }
 )
 _FOREIGN_TLDS = (
     ".com.au",
@@ -140,6 +212,8 @@ def _host(url: str | None) -> Optional[str]:
         raw = "https://" + raw
     host = (urlparse(raw).hostname or "").lower().removeprefix("www.")
     if not host or _is_board_host(host):
+        return None
+    if any(host == d or host.endswith("." + d) for d in _ATS_HOSTS):
         return None
     return host
 
@@ -189,22 +263,32 @@ def _host_core(email: str) -> str:
     return labels[-2] if len(labels) >= 2 else (labels[0] if labels else "")
 
 
+def _is_us_locality(place: str) -> bool:
+    """US workplace labels only. Do not treat 'Sydney, AU' or the word 'in' as US."""
+    raw = (place or "").strip()
+    if re.search(r"united states|\bUSA\b|\bU\.S\.A?\.?\b", raw, re.I):
+        return True
+    match = re.search(r",\s*([A-Z]{2})\b", raw)
+    return bool(match and match.group(1) in _US_STATE_ABBR)
+
+
 def _email_fits_employer(email: str, employer: str, locality: str = "") -> bool:
     """Reject Marin General for Mercy, NAPA Australia for a PA DC, Unical for Unifi."""
     raw = (email or "").strip().lower()
     if "@" not in raw:
         return False
     host = raw.split("@", 1)[1].lower()
-    place = locality or ""
-    if _US_LOCALITY_RE.search(place) and any(host.endswith(tld) for tld in _FOREIGN_TLDS):
+    if _is_us_locality(locality) and any(host.endswith(tld) for tld in _FOREIGN_TLDS):
         return False
     core = re.sub(r"[^a-z0-9]", "", _host_core(raw))
     emp_slug = re.sub(r"[^a-z0-9]", "", employer.lower())
-    if core and emp_slug and (core in emp_slug or emp_slug in core):
+    if core and emp_slug and core == emp_slug:
         return True
     tokens = _employer_tokens(employer)
-    if any(len(tok) >= 4 and tok in core for tok in tokens):
-        return True
+    if tokens:
+        longest = max(tokens, key=len)
+        if len(longest) >= 4 and (longest in core or core.startswith(longest)):
+            return True
     acronym = "".join(
         tok[0]
         for tok in re.findall(r"[a-z0-9]+", employer.lower())
@@ -297,26 +381,27 @@ def _domain_people(
     cache: dict[str, list[dict[str, Any]]],
 ) -> list[dict[str, Any]]:
     key = f"{(domain or employer).strip().lower()}|{departments}"
-    if key in cache:
-        return cache[key]
-    try:
-        search = client.domain_search(
-            domain=domain,
-            company=employer,
-            department=departments,
-        )
-    except (HunterAPIError, HunterConfigError) as exc:
-        logger.warning("Hunter domain search failed for %r: %s", employer, exc)
-        cache[key] = []
-        return []
-    emails = [
+    if key not in cache:
+        try:
+            search = client.domain_search(
+                domain=domain,
+                company=employer,
+                department=departments,
+            )
+        except (HunterAPIError, HunterConfigError) as exc:
+            logger.warning("Hunter domain search failed for %r: %s", employer, exc)
+            cache[key] = []
+            return []
+        cache[key] = [
+            person
+            for person in (search.get("emails") or [])
+            if isinstance(person, dict)
+        ]
+    return [
         person
-        for person in (search.get("emails") or [])
-        if isinstance(person, dict)
-        and _usable_hunter_row(person, employer, locality)
+        for person in cache[key]
+        if _usable_hunter_row(person, employer, locality)
     ]
-    cache[key] = emails
-    return emails
 
 
 def _apollo_people(

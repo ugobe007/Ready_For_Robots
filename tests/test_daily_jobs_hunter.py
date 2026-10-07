@@ -290,6 +290,41 @@ def test_email_must_belong_to_the_named_employer():
         "Industrial Metal Supply",
         "Riverside, CA",
     ) is True
+    assert _email_fits_employer(
+        "ops@regionalhealth.org",
+        "Rochester Regional Health",
+        "Rochester, NY",
+    ) is False
+    assert _email_fits_employer(
+        "rswanson@mallofamerica.com",
+        "Mall of America",
+        "Bloomington, MN",
+    ) is True
+    assert _email_fits_employer(
+        "pjurisic@napaparts.com.au",
+        "NAPA Auto Parts",
+        "Sydney, AU",
+    ) is True
+    assert _email_fits_employer(
+        "dock@geodis.com",
+        "GEODIS",
+        "Plainfield, IN",
+    ) is True
+
+
+def test_ats_apply_url_is_not_the_hunter_domain():
+    from types import SimpleNamespace
+
+    from app.services.daily_jobs_hunter import domain_for_job
+
+    row = SimpleNamespace(
+        contact_url="",
+        apply_url="https://boards.greenhouse.io/geodis/jobs/123",
+        company_id=None,
+    )
+    assert domain_for_job(row, db=None) is None
+    row.apply_url = "https://jobs.geodis.com/trailer-unload"
+    assert domain_for_job(row, db=None) == "jobs.geodis.com"
 
 
 def test_finder_search_does_not_import_hunter():
