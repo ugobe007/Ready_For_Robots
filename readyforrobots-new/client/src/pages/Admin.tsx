@@ -3186,7 +3186,7 @@ export default function Admin() {
               Command center
             </h1>
             <p className="mt-0.5 text-[11px] text-slate-400">
-              Top 25 robot jobs · Phelan · Ready For Robots
+              Top 25 robot job sales cards · Phelan · Ready For Robots
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
