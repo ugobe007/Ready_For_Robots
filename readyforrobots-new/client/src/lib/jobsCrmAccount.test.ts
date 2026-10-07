@@ -28,6 +28,7 @@ import {
   keepJobsStatusBar,
   crmDeskForCurrentRobot,
   jobsWatchCheckedLabel,
+  jobsWatchProductName,
   keptRowMatchesRobot,
   parseWorkTaskModel,
   normalizeWorkTaskModel,
@@ -525,9 +526,18 @@ describe("CRM desk binds to the FIND robot, not leftover totes", () => {
     expect(jobsWatchCheckedLabel("2026-10-07T12:00:00Z")).toBe(
       "Last check 7 Oct"
     );
+    expect(jobsWatchProductName("your robot", "Relay")).toBe("Relay");
+    expect(jobsWatchProductName("TUG", "Relay")).toBe("TUG");
+    expect(jobsWatchProductName("your robot", "")).toBeUndefined();
     const account = readFileSync(join(here, "./jobsCrmAccount.ts"), "utf8");
     expect(account).toMatch(/\/api\/crm\/jobs-watch/);
     expect(account).toMatch(/export async function fetchJobsWatch/);
     expect(account).toMatch(/export async function putJobsWatch/);
+    const desk = readFileSync(
+      join(here, "../components/JobsCrmDesk.tsx"),
+      "utf8"
+    );
+    expect(desk).toMatch(/jobsWatchProductName\(product, watch\?\.product_name\)/);
+    expect(desk).toMatch(/watchReady=\{watchReady\}/);
   });
 });

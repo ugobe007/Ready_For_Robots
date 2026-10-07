@@ -1839,6 +1839,8 @@ describe("jobsWorkflow", () => {
     expect(watchReport).toMatch(/CRM_EMPLOYER_NAME_CLASS/);
     expect(watchReport).toMatch(/jobsFindHref/);
     expect(watchReport).toMatch(/FIND_JOBS_CTA/);
+    expect(watchReport).toMatch(/watchReady/);
+    expect(watchReport).toMatch(/!watchReady/);
     expect(watchReport).not.toMatch(/\/crm["'`]/);
     expect(watchReport).not.toMatch(/98%|Hilton|Jackpot|Vault/i);
     expect(hero).toMatch(/tasteJobs/);

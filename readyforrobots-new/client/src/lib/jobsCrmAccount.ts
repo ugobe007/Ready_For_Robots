@@ -7,6 +7,7 @@ import { authHeader } from "@/lib/supabase";
 import {
   JOBS_ACTIVATE_SRC,
   JOBS_APPLY_HERO_CTA,
+  crmSaveJobsRobotLabel,
   jobsActivateHref,
   jobsCrmOpenHref,
   jobsSignupHref,
@@ -472,6 +473,18 @@ export function jobsWatchCheckedLabel(iso?: string | null): string {
   const day = d.getUTCDate();
   const month = d.toLocaleString("en-GB", { month: "short", timeZone: "UTC" });
   return `Last check ${day} ${month}`;
+}
+
+/** Desk placeholder "your robot" must not overwrite a stored SKU on the watch. */
+export function jobsWatchProductName(
+  deskProduct?: string | null,
+  storedProduct?: string | null
+): string | undefined {
+  return (
+    crmSaveJobsRobotLabel(deskProduct) ||
+    crmSaveJobsRobotLabel(storedProduct) ||
+    undefined
+  );
 }
 
 async function jobsCrmFetch<T>(

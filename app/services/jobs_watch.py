@@ -41,6 +41,13 @@ def jobs_watch_limits(plan: str) -> dict[str, Any]:
     }
 
 
+def usable_watch_product_name(name: Optional[str]) -> Optional[str]:
+    raw = str(name or "").strip()
+    if not raw or raw.lower() == "your robot":
+        return None
+    return raw[:240]
+
+
 def can_email_watch(watch: JobsWatch, plan: str) -> bool:
     if not watch.opted_in:
         return False
@@ -249,10 +256,11 @@ def upsert_watch(
     if opted_in and cap is not None and existing is not None and not existing.opted_in and active_count >= cap:
         raise PermissionError("Free watches 1 robot. Pro keeps every SKU on the cron.")
 
+    sku = usable_watch_product_name(product_name)
     submission = record_robot_submission(
         db,
         url=safe,
-        product_name=product_name,
+        product_name=sku,
         source="jobs_watch",
     )
     if existing is None:
@@ -261,7 +269,7 @@ def upsert_watch(
             email=email,
             robot_url=safe,
             website_domain=domain,
-            product_name=(product_name or "")[:240] or None,
+            product_name=sku,
             robot_submission_id=submission.id if submission else None,
             opted_in=opted_in,
             last_job_keys=[],
@@ -272,7 +280,8 @@ def upsert_watch(
     else:
         existing.email = email
         existing.robot_url = safe
-        existing.product_name = (product_name or existing.product_name or "")[:240] or None
+        if sku:
+            existing.product_name = sku
         existing.opted_in = opted_in
         if submission is not None:
             existing.robot_submission_id = submission.id

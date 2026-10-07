@@ -17,6 +17,7 @@ from app.services.jobs_watch import (
     build_watch_email,
     run_jobs_watch_cycle,
     upsert_watch,
+    usable_watch_product_name,
     watch_status,
 )
 from app.services.plan_entitlements import PLAN_FREE, PLAN_PAID
@@ -223,6 +224,28 @@ def test_watch_status_locks_extra_free_events(db_session):
     assert len(unlocked) == 3
     assert len(locked) == 2
     assert locked[0]["title"] == "New work for your robot"
+
+
+def test_upsert_keeps_sku_when_desk_sends_placeholder(db_session):
+    user = _user()
+    first = upsert_watch(
+        db_session,
+        user=user,
+        robot_url="https://robot.example/sku",
+        product_name="Relay",
+        opted_in=True,
+    )
+    assert first.product_name == "Relay"
+    again = upsert_watch(
+        db_session,
+        user=user,
+        robot_url="https://robot.example/sku",
+        product_name="your robot",
+        opted_in=True,
+    )
+    assert again.product_name == "Relay"
+    assert usable_watch_product_name("your robot") is None
+    assert usable_watch_product_name("TUG") == "TUG"
 
 
 def test_build_watch_email_mentions_upgrade_for_free():

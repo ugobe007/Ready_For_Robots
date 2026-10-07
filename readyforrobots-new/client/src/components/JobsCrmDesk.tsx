@@ -59,6 +59,7 @@ import {
   workTaskModelListLine,
   crmDeskForCurrentRobot,
   fetchJobsWatch,
+  jobsWatchProductName,
   postJobsCrmActivity,
   putJobsWatch,
   type JobsCrmApplication,
@@ -124,6 +125,7 @@ export default function JobsCrmDesk({
     Record<string, JobsCrmApplication>
   >({});
   const [watch, setWatch] = useState<JobsWatchStatus | null>(null);
+  const [watchReady, setWatchReady] = useState(!accessToken);
   const [watchBusy, setWatchBusy] = useState(false);
   const [watchError, setWatchError] = useState<string | null>(null);
   useEffect(() => {
@@ -152,14 +154,21 @@ export default function JobsCrmDesk({
     };
   }, [accessToken]);
   useEffect(() => {
-    if (!accessToken) return;
+    if (!accessToken) {
+      setWatchReady(true);
+      return;
+    }
     let cancelled = false;
+    setWatchReady(false);
     fetchJobsWatch(accessToken)
       .then(status => {
         if (!cancelled) setWatch(status);
       })
       .catch(() => {
         if (!cancelled) setWatch(null);
+      })
+      .finally(() => {
+        if (!cancelled) setWatchReady(true);
       });
     return () => {
       cancelled = true;
@@ -202,7 +211,7 @@ export default function JobsCrmDesk({
       const next = await putJobsWatch(accessToken, {
         opted_in: optedIn,
         robot_url: robotUrl || undefined,
-        product_name: product || undefined,
+        product_name: jobsWatchProductName(product, watch?.product_name),
         seed_jobs: jobs.slice(0, CRM_UNLOCKED_JOBS).map(job => ({
           job_key: job.job_key,
           title: job.title,
@@ -378,6 +387,7 @@ export default function JobsCrmDesk({
       <JobsWatchReport
         signedIn={signedIn}
         watch={watch}
+        watchReady={watchReady}
         watchBusy={watchBusy}
         watchError={watchError}
         onOptIn={optInWatch}

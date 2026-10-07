@@ -25,6 +25,7 @@ export type { JobsWatchStatus };
 type Props = {
   signedIn?: boolean;
   watch?: JobsWatchStatus | null;
+  watchReady?: boolean;
   watchBusy?: boolean;
   watchError?: string | null;
   onOptIn?: (optedIn: boolean) => void;
@@ -33,6 +34,7 @@ type Props = {
 export default function JobsWatchReport({
   signedIn = false,
   watch,
+  watchReady = true,
   watchBusy,
   watchError,
   onOptIn,
@@ -53,7 +55,7 @@ export default function JobsWatchReport({
           type="checkbox"
           className="mt-1 h-5 w-5 accent-emerald-400"
           checked={optedIn}
-          disabled={!signedIn || watchBusy}
+          disabled={!signedIn || !watchReady || watchBusy}
           onChange={e => onOptIn?.(e.target.checked)}
         />
         <span>
