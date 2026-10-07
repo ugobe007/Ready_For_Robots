@@ -164,6 +164,58 @@ _BAD_NAME = frozenset(
         "Programs",
     }
 )
+_PLACE_OR_ORG = frozenset(
+    {
+        "North",
+        "South",
+        "East",
+        "West",
+        "Northeast",
+        "Northwest",
+        "Southeast",
+        "Southwest",
+        "America",
+        "American",
+        "Europe",
+        "European",
+        "Asia",
+        "Asian",
+        "Pacific",
+        "Atlantic",
+        "Africa",
+        "African",
+        "Region",
+        "Regional",
+        "Global",
+        "International",
+        "Corporate",
+        "Group",
+        "Chain",
+        "Supply",
+        "Distribution",
+        "Logistics",
+        "Manufacturing",
+        "Quality",
+        "Safety",
+        "Clinical",
+        "Community",
+        "United",
+        "States",
+        "National",
+        "Central",
+        "District",
+        "Campus",
+        "Site",
+        "Plant",
+        "Warehouse",
+        "Fulfillment",
+        "Worldwide",
+        "Holdings",
+        "Limited",
+        "Midwest",
+        "Midatlantic",
+    }
+)
 _MAX_FETCHES = 4
 _MAX_PAGES = 1
 _MAX_HTML = 220_000
@@ -303,14 +355,15 @@ def discover_leadership_urls(homepage_html: str, origin: str) -> list[str]:
     return ranked_leadership_urls(origin, homepage_html)
 
 
-def parse_person_name(text: str) -> Optional[tuple[str, str]]:
+def parse_person_name(text: str, *, allow_middle: bool = True) -> Optional[tuple[str, str]]:
     raw = (text or "").replace("\u200b", "").replace("\xa0", " ")
     raw = re.sub(r"\s+", " ", raw).strip(" \t.,;|")
     raw = _CREDENTIAL.sub(" ", raw)
     raw = re.sub(r"\s+", " ", raw).strip(" ,;")
     if not raw or len(raw) > 80:
         return None
-    if any(tok[:1].isupper() and tok in _BAD_NAME for tok in re.findall(r"[A-Za-z]+", raw)):
+    blocked = _BAD_NAME | _PLACE_OR_ORG
+    if any(tok[:1].isupper() and tok in blocked for tok in re.findall(r"[A-Za-z]+", raw)):
         return None
     match = re.fullmatch(r"([A-Z])\.\s+([A-Z][a-z]+)\s+([A-Z][a-z]+)", raw)
     if match:
@@ -319,7 +372,7 @@ def parse_person_name(text: str) -> Optional[tuple[str, str]]:
     if match:
         return match.group(1), match.group(3)
     match = re.fullmatch(r"([A-Z][a-z]+)\s+([A-Z][a-z]+)\s+([A-Z][a-z]+)", raw)
-    if match:
+    if match and allow_middle:
         return match.group(1), match.group(3)
     match = re.fullmatch(r"([A-Z][a-z]+)\s+([A-Z][a-z]+)", raw)
     if match:
@@ -552,18 +605,21 @@ def _split_name_title(line: str) -> Optional[tuple[tuple[str, str], str]]:
         return None
     if "," in raw:
         left, right = [p.strip() for p in raw.split(",", 1)]
-        name = parse_person_name(left)
+        name = parse_person_name(left, allow_middle=False)
         if name and _TITLE.search(right) and not parse_person_name(right):
             return name, right
-        name = parse_person_name(right)
+        name = parse_person_name(right, allow_middle=False)
         if name and _TITLE.search(left) and not parse_person_name(left):
             return name, left
     title_match = _TITLE.search(raw)
     if not title_match:
         return None
-    leftover = f"{raw[: title_match.start()]} {raw[title_match.end() :]}".strip(" ,;-")
-    leftover = re.sub(r"\s+", " ", leftover)
-    name = parse_person_name(leftover)
+    prefix = raw[: title_match.start()].strip(" ,;-")
+    suffix = raw[title_match.end() :].strip(" ,;-")
+    if prefix and suffix:
+        return None
+    leftover = prefix or suffix
+    name = parse_person_name(leftover, allow_middle=False)
     title = title_match.group(0).strip(" ,;-")
     if name and title and not parse_person_name(title):
         return name, title

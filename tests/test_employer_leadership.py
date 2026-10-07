@@ -131,6 +131,25 @@ def test_people_from_html_rejects_department_after_title():
     assert "Legal" in sara["title"]
 
 
+def test_people_from_html_rejects_place_and_org_leftovers():
+    html = """
+    <html><body>
+      <p>Director of Operations, North America</p>
+      <p>Vice President, Supply Chain</p>
+      <p>Plant Manager Midwest Region</p>
+      <p>Priya Shah Pharmacy Operations Manager</p>
+      <p>Director of Pharmacy, Maya Chen</p>
+    </body></html>
+    """
+    people = people_from_html(html, "https://geodis.com/leadership")
+    names = [p["name"] for p in people]
+    assert "North America" not in names
+    assert "Supply Chain" not in names
+    assert "Midwest Region" not in names
+    assert "Priya Shah" in names
+    assert "Maya Chen" in names
+
+
 def test_people_from_html_reads_json_ld_person():
     html = """
     <script type="application/ld+json">
