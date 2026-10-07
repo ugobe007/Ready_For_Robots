@@ -439,12 +439,13 @@ def _apollo_people(
         if not isinstance(person, dict):
             continue
         email = str(person.get("email") or "").strip().lower()
-        if "email_not_unlocked" in email:
+        email_locked = "email_not_unlocked" in email
+        if email and not _email_fits_employer(email, employer, locality):
+            continue
+        if email_locked:
             person = dict(person)
             person["email"] = ""
             email = ""
-        if email and not _email_fits_employer(email, employer, locality):
-            continue
         if not (person.get("name") and (person.get("title") or email)):
             continue
         people.append(person)
