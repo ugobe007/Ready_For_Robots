@@ -105,7 +105,7 @@ _GENERIC_EMPLOYER_TOKENS = frozenset(
     }
 )
 _US_LOCALITY_RE = re.compile(
-    r",\s*[A-Z]{2}\b|united states|\b(AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV)\b",
+    r"united states|\b(AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV)\b",
     re.I,
 )
 _FOREIGN_TLDS = (
@@ -122,6 +122,25 @@ _FOREIGN_TLDS = (
     ".nl",
     ".in",
 )
+_ATS_HOSTS = frozenset(
+    {
+        "greenhouse.io",
+        "lever.co",
+        "workday.com",
+        "myworkdayjobs.com",
+        "smartrecruiters.com",
+        "icims.com",
+        "ultipro.com",
+        "paycomonline.net",
+        "breezy.hr",
+        "bamboohr.com",
+        "jobvite.com",
+        "taleo.net",
+        "successfactors.com",
+        "workable.com",
+        "fountain.com",
+    }
+)
 
 
 def _today() -> str:
@@ -136,6 +155,8 @@ def _host(url: str | None) -> Optional[str]:
         raw = "https://" + raw
     host = (urlparse(raw).hostname or "").lower().removeprefix("www.")
     if not host or _is_board_host(host):
+        return None
+    if any(host == d or host.endswith("." + d) for d in _ATS_HOSTS):
         return None
     return host
 
@@ -196,9 +217,12 @@ def _email_fits_employer(email: str, employer: str, locality: str = "") -> bool:
         return False
     core = re.sub(r"[^a-z0-9]", "", _host_core(raw))
     emp_slug = re.sub(r"[^a-z0-9]", "", employer.lower())
-    if core and emp_slug and (core in emp_slug or emp_slug in core):
-        return True
     tokens = _employer_tokens(employer)
+    if core and emp_slug and (core in emp_slug or emp_slug in core):
+        if any(tok in core for tok in _GENERIC_EMPLOYER_TOKENS):
+            pass
+        else:
+            return True
     if any(len(tok) >= 4 and tok in core for tok in tokens):
         return True
     acronym = "".join(
@@ -273,7 +297,12 @@ def _lookup(
 ) -> Optional[dict[str, Any]]:
     key = (domain or employer).strip().lower()
     if key in cache:
-        return cache[key]
+        cached = cache[key]
+        if cached and not _email_fits_employer(
+            str(cached.get("email") or ""), employer, locality
+        ):
+            return None
+        return cached
     try:
         search = client.domain_search(domain=domain, company=employer)
     except (HunterAPIError, HunterConfigError) as exc:
