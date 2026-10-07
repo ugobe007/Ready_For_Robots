@@ -214,6 +214,23 @@ _PLACE_OR_ORG = frozenset(
         "Limited",
         "Midwest",
         "Midatlantic",
+        "New",
+        "York",
+        "City",
+        "Care",
+        "Services",
+        "Patient",
+        "Area",
+        "Unit",
+        "Floor",
+        "Center",
+        "Centre",
+        "Park",
+        "Lake",
+        "Bay",
+        "Valley",
+        "View",
+        "River",
     }
 )
 _MAX_FETCHES = 4
@@ -355,6 +372,13 @@ def discover_leadership_urls(homepage_html: str, origin: str) -> list[str]:
     return ranked_leadership_urls(origin, homepage_html)
 
 
+def _plausible_middle(tok: str) -> bool:
+    """Ann/Marie yes. York/Care/City no — those are leftover phrases, not people."""
+    if not tok or tok in _BAD_NAME | _PLACE_OR_ORG:
+        return False
+    return 2 <= len(tok) <= 12 and tok.isalpha() and tok[0].isupper() and tok[1:].islower()
+
+
 def parse_person_name(text: str, *, allow_middle: bool = True) -> Optional[tuple[str, str]]:
     raw = (text or "").replace("\u200b", "").replace("\xa0", " ")
     raw = re.sub(r"\s+", " ", raw).strip(" \t.,;|")
@@ -372,7 +396,7 @@ def parse_person_name(text: str, *, allow_middle: bool = True) -> Optional[tuple
     if match:
         return match.group(1), match.group(3)
     match = re.fullmatch(r"([A-Z][a-z]+)\s+([A-Z][a-z]+)\s+([A-Z][a-z]+)", raw)
-    if match and allow_middle:
+    if match and allow_middle and _plausible_middle(match.group(2)):
         return match.group(1), match.group(3)
     match = re.fullmatch(r"([A-Z][a-z]+)\s+([A-Z][a-z]+)", raw)
     if match:

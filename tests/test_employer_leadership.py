@@ -165,6 +165,21 @@ def test_people_from_html_reads_three_word_name_before_title():
     assert "Harris Attorney" not in names
 
 
+def test_people_from_html_rejects_three_word_place_leftovers():
+    html = """
+    <html><body>
+      <p>New York City, Director of Operations</p>
+      <p>Patient Care Services Manager</p>
+      <p>Mary Ann Smith, Site Operations Manager</p>
+    </body></html>
+    """
+    people = people_from_html(html, "https://geodis.com/leadership")
+    names = [p["name"] for p in people]
+    assert "New City" not in names
+    assert "Patient Services" not in names
+    assert "Mary Smith" in names
+
+
 def test_people_from_html_reads_json_ld_person():
     html = """
     <script type="application/ld+json">
