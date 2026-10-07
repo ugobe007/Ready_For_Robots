@@ -3174,8 +3174,7 @@ export default function Admin() {
               Command center
             </h1>
             <p className="mt-0.5 text-[11px] text-gray-600">
-              Cal · Ready For Robots · deployment advisor — buyers, OEMs,
-              integrators
+              Top 25 robot jobs · Cal · Ready For Robots
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -3219,6 +3218,14 @@ export default function Admin() {
             </span>
           </div>
         </div>
+
+        <AdminDailyJobsReport
+          data={jobsReport}
+          loading={jobsReportLoading}
+          sending={jobsReportSending}
+          sendError={jobsReportSendError}
+          onSend={() => void sendJobsReport()}
+        />
 
         <Link
           href="/admin/special-projects"
@@ -3265,14 +3272,6 @@ export default function Admin() {
             Open →
           </span>
         </Link>
-
-        <AdminDailyJobsReport
-          data={jobsReport}
-          loading={jobsReportLoading}
-          sending={jobsReportSending}
-          sendError={jobsReportSendError}
-          onSend={() => void sendJobsReport()}
-        />
 
         <DailyBriefPanel
           data={dailyBrief}
