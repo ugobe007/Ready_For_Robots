@@ -1046,12 +1046,25 @@ def _scheduled_daily_jobs_report_loop():
     from app.database import SessionLocal
     from app.services.daily_jobs_report import (
         daily_jobs_report_enabled,
+        maybe_send_missed_daily_jobs_report,
         next_report_run_utc,
         send_daily_jobs_report,
     )
 
     hour = int(os.getenv("DAILY_JOBS_REPORT_HOUR_UTC", "14") or "14")
     minute = int(os.getenv("DAILY_JOBS_REPORT_MINUTE_UTC", "0") or "0")
+    try:
+        if daily_jobs_report_enabled():
+            with SessionLocal() as db:
+                catch_up = maybe_send_missed_daily_jobs_report(db)
+            logger.info(
+                "Daily jobs report catch-up: sent=%s reason=%s count=%s",
+                catch_up.get("sent"),
+                catch_up.get("reason"),
+                catch_up.get("count"),
+            )
+    except Exception as exc:
+        logger.exception("Daily jobs report catch-up failed: %s", exc)
     first = next_report_run_utc(hour=hour, minute=minute)
     delay = max(60, int((first - datetime.now(timezone.utc)).total_seconds()))
     time.sleep(delay)

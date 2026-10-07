@@ -59,7 +59,7 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
       {
         label: "Top 25 robot jobs",
         href: "/admin#daily-jobs-report",
-        shortLabel: "Named employers emailed daily",
+        shortLabel: "Sales cards emailed daily",
         adminOnly: true,
       },
       {
@@ -190,7 +190,7 @@ export const ADMIN_QUICK_ACTIONS: AdminNavLink[] = [
   {
     label: "Top 25 robot jobs",
     href: "/admin#daily-jobs-report",
-    shortLabel: "Daily jobs email",
+    shortLabel: "Sales cards emailed daily",
   },
   {
     label: "Agent queue",

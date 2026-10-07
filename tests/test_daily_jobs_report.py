@@ -16,6 +16,7 @@ from app.services.daily_jobs_report import (
     _claim_report_day,
     compose_daily_jobs_report,
     get_daily_jobs_report_recipients,
+    maybe_send_missed_daily_jobs_report,
     render_daily_jobs_report_html,
     render_daily_jobs_report_text,
     send_daily_jobs_report,
@@ -97,7 +98,57 @@ def test_compose_keeps_named_employers_drops_boards(db_session):
     assert employers == ["Rochester Regional Health"]
     assert report["jobs"][0]["title"] == "Pharmacy delivery"
     assert report["jobs"][0]["locality"] == "Rochester, NY"
+    assert report["jobs"][0]["job_type"] == "Delivery"
+    assert report["jobs"][0]["decision_maker"] == "Not named on the posting"
+    assert "will not invent" in report["jobs"][0]["contact"]
+    assert "First seen" in report["jobs"][0]["timing"]
     assert report["limit"] == TOP_N or report["limit"] == 25
+
+
+def test_compose_sales_card_uses_page_contact_not_invented(db_session):
+    db_session.add(
+        _job(
+            job_key="page-contact",
+            company_name="GEODIS",
+            locality="Plainfield, IN",
+            action="pallet_move",
+            robot_compatible_task="Pallet move",
+            observed_workflow="Unload inbound trailers and stage pallets at the dock.",
+            why_job="Dock labor is short on the night shift.",
+            employer_email="dock.ops@geodis.com",
+            apply_url="https://geodis.com/careers/dock",
+            provenance={
+                "contact_name": "Priya Shah",
+                "contact_title": "Site operations manager",
+            },
+        )
+    )
+    db_session.add(
+        _job(
+            job_key="invented-ops",
+            company_name="Chipotle",
+            locality="Newport Beach, CA",
+            action="assembly",
+            robot_compatible_task="Bowl assembly",
+            employer_email="operations@chipotle.com",
+            provenance={
+                "contact_name": "Operational Lead (Vice President of Restaurant & Dining Operations)",
+                "contact_title": "Vice President of Restaurant & Dining Operations",
+            },
+        )
+    )
+    db_session.commit()
+    report = compose_daily_jobs_report(db_session, limit=25)
+    by_key = {j["job_key"]: j for j in report["jobs"]}
+    real = by_key["page-contact"]
+    assert real["job_type"] == "Pallet Move"
+    assert "Unload inbound trailers" in real["description"]
+    assert real["decision_maker"] == "Priya Shah · Site operations manager"
+    assert "dock.ops@geodis.com" in real["contact"]
+    fake = by_key["invented-ops"]
+    assert fake["decision_maker"] == "Not named on the posting"
+    assert "operations@chipotle.com" not in fake["contact"]
+    assert "will not invent" in fake["contact"]
 
 
 def test_compose_ranks_yes_ahead_of_weak(db_session):
@@ -127,46 +178,51 @@ def test_compose_ranks_yes_ahead_of_weak(db_session):
 
 
 def test_render_email_is_jobs_not_signal():
+    card = {
+        "rank": 1,
+        "employer": "Rochester Regional Health",
+        "title": "Pharmacy delivery",
+        "locality": "Rochester, NY",
+        "job_type": "Delivery",
+        "description": "Pharmacy delivery between units and central pharmacy.",
+        "decision_maker": "Not named on the posting",
+        "timing": "First seen 2026-10-07 · new this week",
+        "contact": "No page email or apply URL. We will not invent one.",
+    }
     text = render_daily_jobs_report_text(
         {
             "date": "2026-10-07",
             "limit": 25,
-            "jobs": [
-                {
-                    "rank": 1,
-                    "employer": "Rochester Regional Health",
-                    "title": "Pharmacy delivery",
-                    "locality": "Rochester, NY",
-                }
-            ],
+            "jobs": [card],
             "find_href": "https://readyforrobots.com/?visit=jobs",
             "admin_href": "https://readyforrobots.com/admin#daily-jobs-report",
         }
     )
-    assert "Top 25 robot jobs — 2026-10-07" in text
-    assert "Rochester Regional Health — Pharmacy delivery" in text
+    assert "Top 25 robot job sales cards — 2026-10-07" in text
+    assert "Rochester Regional Health" in text
+    assert "[1] Job type and description" in text
+    assert "[2] Decision maker" in text
+    assert "[3] Timing" in text
+    assert "[4] Contact information" in text
+    assert "Pharmacy delivery between units" in text
     assert "/?visit=jobs" in text
     assert "admin#daily-jobs-report" in text
     assert "HOT" not in text
-    assert "SIGNAL" in text  # "not SIGNAL buyers"
+    assert "Marcus Vance" not in text
+    assert "operations@" not in text
     assert "/pipeline?co=" not in text
     html_body = render_daily_jobs_report_html(
         {
             "date": "2026-10-07",
             "limit": 25,
-            "jobs": [
-                {
-                    "rank": 1,
-                    "employer": "Rochester Regional Health",
-                    "title": "Pharmacy delivery",
-                    "locality": "Rochester, NY",
-                }
-            ],
+            "jobs": [card],
             "find_href": "https://readyforrobots.com/?visit=jobs",
             "admin_href": "https://readyforrobots.com/admin#daily-jobs-report",
         }
     )
     assert "Rochester Regional Health" in html_body
+    assert "[1] Job type and description" in html_body
+    assert "[4] Contact information" in html_body
     assert "/?visit=jobs" in html_body
     assert "/pipeline?co=" not in html_body
 
@@ -254,6 +310,40 @@ def test_send_emails_operator(monkeypatch, db_session):
     assert result["sent"] is True
     assert result["count"] == 1
     assert sent[0]["to_email"] == ["ugobe07@gmail.com"]
-    assert sent[0]["subject"].startswith("Top 25 robot jobs")
+    assert sent[0]["subject"].startswith("Top 25 robot job sales cards")
     assert "Rochester Regional Health" in sent[0]["body_text"]
+    assert "[1] Job type and description" in sent[0]["body_text"]
     assert "Rochester Regional Health" in (sent[0].get("body_html") or "")
+    assert (sent[0].get("idempotency_key") or "").startswith(
+        "daily-jobs-report-"
+    )
+    assert "force" in (sent[0].get("idempotency_key") or "")
+
+
+def test_missed_send_runs_once_when_not_sent_today(monkeypatch, db_session):
+    db_session.add(_job(job_key="missed"))
+    db_session.commit()
+    sent = []
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report.last_sent_day", lambda: None
+    )
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report._claim_report_day", lambda day: True
+    )
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report._mark_report_sent", lambda *a, **k: None
+    )
+    monkeypatch.setattr(
+        "app.services.resend_email.send_email_via_resend",
+        lambda **kwargs: sent.append(kwargs) or {"resend_id": "re_missed"},
+    )
+    result = maybe_send_missed_daily_jobs_report(db_session)
+    assert result["sent"] is True
+    assert sent
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report.last_sent_day",
+        lambda: result["date"],
+    )
+    again = maybe_send_missed_daily_jobs_report(db_session)
+    assert again["sent"] is False
+    assert again["reason"] == "Already sent today"
