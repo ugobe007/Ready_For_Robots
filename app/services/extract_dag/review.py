@@ -92,7 +92,35 @@ class AstReviewer:
                     return Review(False, "must not invent operations@ mailboxes")
         if "invent" in source.lower() and "never" not in source.lower():
             return Review(False, "function comments suggest invention")
-        return Review(True, "matches deps and stays offline")
+        return _goal_matches(node, source)
+
+
+def _goal_matches(node: Compute, source: str) -> Review:
+    """Second-pass: the function must do what the node goal says."""
+    goal = (node.goal or "").lower()
+    output = (node.output or "").lower()
+    src = source.lower()
+    person_out = "person" in output
+    if person_out and any(
+        p in goal for p in ("never invent", "do not invent", "nobody fits", "named nobody")
+    ):
+        if "none" not in src:
+            return Review(False, "goal requires None when nobody is on the page or in Hunter")
+    if "empty list is invalid" in goal:
+        if "plan_for_job" not in src and "default" not in src and "operations" not in src:
+            return Review(False, "goal requires operations defaults when titles are empty")
+    if "from the posting" in goal:
+        if "page_name" not in src:
+            return Review(False, "goal is a posting value; function ignores page_name")
+    if "prefer a posting" in goal or "posting-named" in goal:
+        if "page_person" not in src:
+            return Review(False, "goal prefers the posting person; function ignores page_person")
+        if "pick_candidate" not in src and "score_candidate" not in src:
+            return Review(False, "goal is pick a title-matched person")
+    elif "pick" in goal and "title" in goal:
+        if "pick_candidate" not in src and "score_candidate" not in src:
+            return Review(False, "goal is pick a title-matched person")
+    return Review(True, "matches goal, deps, and stays offline")
 
 
 def _function_def(tree: ast.AST, name: str) -> ast.FunctionDef | None:

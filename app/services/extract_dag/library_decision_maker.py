@@ -23,14 +23,38 @@ def compute_departments(*, job_function):
     return hunter_departments_for_function(job_function or "operations")
 '''
 
+PAGE_PERSON_SRC = '''
+def compute_page_person(*, page_name, page_title):
+    name = (page_name or "").strip()
+    if not name:
+        return None
+    return {
+        "name": name,
+        "title": (page_title or "").strip(),
+        "source": "page",
+        "confidence": 99,
+    }
+'''
+
 DECISION_MAKER_SRC = '''
-def compute_decision_maker(*, target_titles, hunter_people, locality, job_function, job_text):
-    from app.services.job_decision_maker_agent import pick_candidate, plan_for_job
-    people = hunter_people if isinstance(hunter_people, list) else []
+def compute_decision_maker(*, target_titles, hunter_people, page_person, locality, job_function, job_text):
+    from app.services.job_decision_maker_agent import pick_candidate, plan_for_job, score_candidate
     plan = plan_for_job({"action": job_function or "", "robot_compatible_task": job_text or ""})
     if target_titles:
         plan.titles = list(target_titles)
+    if isinstance(page_person, dict) and page_person.get("name"):
+        ranked = score_candidate(plan, page_person, locality=locality or "")
+        if ranked:
+            picked = dict(page_person)
+            picked["match_score"] = ranked[0]
+            picked["match_why"] = ranked[1]
+            picked["target_titles"] = list(plan.titles)
+            picked["job_function"] = plan.function
+            return picked
+    people = hunter_people if isinstance(hunter_people, list) else []
     picked = pick_candidate(plan, people, locality=locality or "")
+    if not picked:
+        return None
     return picked
 '''
 
@@ -38,5 +62,6 @@ LIBRARY = {
     "job_function": JOB_FUNCTION_SRC,
     "target_titles": TARGET_TITLES_SRC,
     "departments": DEPARTMENTS_SRC,
+    "page_person": PAGE_PERSON_SRC,
     "decision_maker": DECISION_MAKER_SRC,
 }

@@ -26,12 +26,12 @@ DECISION_MAKER_GRAPH = ExtractGraph(
         Leaf("action", extractor="record.action", goal="Stored job function or verb"),
         Leaf("locality", extractor="record.locality", goal="Workplace label"),
         Leaf("domain", extractor="record.employer_domain", goal="Employer web domain, not ATS"),
-        Leaf("page_name", extractor="record.page_name", goal="Name on the posting if any"),
-        Leaf("page_title", extractor="record.page_title", goal="Title on the posting if any"),
+        Leaf("page_name", extractor="record.page_name", goal="Name extracted from the posting"),
+        Leaf("page_title", extractor="record.page_title", goal="Title extracted from the posting"),
         Compute(
             "job_function",
             deps=("job_text", "action"),
-            goal="Classify the work into a title family (pharmacy, EVS, warehouse, plant). Never invent a person.",
+            goal="Classify the work into a title family (pharmacy, EVS, warehouse, plant).",
             output="function key",
         ),
         Compute(
@@ -46,6 +46,12 @@ DECISION_MAKER_GRAPH = ExtractGraph(
             goal="Hunter department filter for that work family.",
             output="department string",
         ),
+        Compute(
+            "page_person",
+            deps=("page_name", "page_title"),
+            goal="Name and title from the posting. None if the posting named nobody. Do not invent.",
+            output="person dict or None",
+        ),
         Fetch(
             "hunter_people",
             deps=("employer", "domain", "departments", "locality"),
@@ -54,8 +60,8 @@ DECISION_MAKER_GRAPH = ExtractGraph(
         ),
         Compute(
             "decision_maker",
-            deps=("target_titles", "hunter_people", "locality", "job_function", "job_text"),
-            goal="Pick the Hunter person whose title matches the work. None if nobody fits. Do not invent a name or mailbox.",
+            deps=("target_titles", "hunter_people", "page_person", "locality", "job_function", "job_text"),
+            goal="Prefer a posting-named person whose title owns this work. Else pick a Hunter person whose title matches. None if nobody fits. Do not invent a name or mailbox.",
             output="person dict or None",
         ),
     ),
@@ -71,27 +77,48 @@ def compiled_decision_maker() -> CompiledScript:
     )
 
 
-def job_leaves(row: Any, *, domain: Optional[str] = None) -> dict[str, Any]:
-    from app.services.daily_jobs_report import _page_name_title
-
-    name, title = _page_name_title(row)
+def _record_get(row: Any, *names: str) -> str:
     if isinstance(row, dict):
-        employer = str(row.get("company_name") or row.get("employer") or "").strip()
-        action = str(row.get("action") or "").strip()
-        locality = str(row.get("locality") or "").strip()
-    else:
-        employer = str(getattr(row, "company_name", "") or "").strip()
-        action = str(getattr(row, "action", "") or "").strip()
-        locality = str(getattr(row, "locality", "") or "").strip()
-    return {
-        "employer": employer,
-        "job_text": job_text_of(row),
-        "action": action,
-        "locality": locality,
-        "domain": domain,
-        "page_name": name,
-        "page_title": title,
-    }
+        for name in names:
+            val = row.get(name)
+            if val:
+                return str(val).strip()
+        return ""
+    for name in names:
+        val = getattr(row, name, None)
+        if val:
+            return str(val).strip()
+    return ""
+
+
+def extract_leaf(node: Leaf, row: Any, extra: Optional[dict[str, Any]] = None) -> Any:
+    """Read a leaf from a record or document. The graph names the extractor; code reads it."""
+    extra = extra or {}
+    if node.id in extra and extra[node.id] is not None:
+        return extra[node.id]
+    path = node.extractor or ""
+    field = path.split(".", 1)[1] if path.startswith("record.") else node.id
+    if field == "job_text":
+        return job_text_of(row)
+    if field in {"page_name", "page_title"}:
+        from app.services.daily_jobs_report import _page_name_title
+
+        name, title = _page_name_title(row)
+        return name if field == "page_name" else title
+    if field in {"company_name", "employer"}:
+        return _record_get(row, "company_name", "employer")
+    if field == "employer_domain":
+        return extra.get("domain")
+    return _record_get(row, field)
+
+
+def job_leaves(row: Any, *, domain: Optional[str] = None) -> dict[str, Any]:
+    extra = {"domain": domain}
+    out: dict[str, Any] = {}
+    for node in DECISION_MAKER_GRAPH.nodes:
+        if isinstance(node, Leaf):
+            out[node.id] = extract_leaf(node, row, extra)
+    return out
 
 
 def run_decision_maker_dag(

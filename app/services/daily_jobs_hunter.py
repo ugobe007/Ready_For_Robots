@@ -543,6 +543,23 @@ def enrich_daily_jobs_with_hunter(
 
     rows = select_daily_report_rows(db, limit=limit)
     cache: dict[str, list[dict[str, Any]]] = {}
+
+    def _fetch_hunter_people(
+        *,
+        employer: str,
+        domain: Optional[str],
+        departments: str,
+        locality: str,
+    ) -> list[dict[str, Any]]:
+        return _domain_people(
+            hunter,
+            employer=employer,
+            domain=domain,
+            departments=departments,
+            locality=locality,
+            cache=cache,
+        )
+
     filled = 0
     missed = 0
     skipped = 0
@@ -559,22 +576,6 @@ def enrich_daily_jobs_with_hunter(
         plan = plan_for_job(row)
         domain = domain_for_job(row, db)
         locality = str(getattr(row, "locality", "") or "").strip()
-
-        def _fetch_hunter_people(
-            *,
-            employer: str,
-            domain: Optional[str],
-            departments: str,
-            locality: str,
-        ) -> list[dict[str, Any]]:
-            return _domain_people(
-                hunter,
-                employer=employer,
-                domain=domain,
-                departments=departments,
-                locality=locality,
-                cache=cache,
-            )
 
         prospect = None
         try:

@@ -7,13 +7,16 @@ The graph compiles to one executable script.
 """
 from app.services.extract_dag.compile import CompiledScript, compile_graph
 from app.services.extract_dag.graph import Compute, ExtractGraph, Fetch, Leaf, topo_sort
+from app.services.extract_dag.review import AstReviewer, Review
 
 __all__ = [
+    "AstReviewer",
     "CompiledScript",
     "Compute",
     "ExtractGraph",
     "Fetch",
     "Leaf",
+    "Review",
     "compile_graph",
     "topo_sort",
 ]

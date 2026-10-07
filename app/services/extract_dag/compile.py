@@ -107,6 +107,9 @@ def emit_script(
     ]
     for nid in order:
         if nid in functions:
+            node = known[nid]
+            if isinstance(node, Compute) and node.goal:
+                parts.append(f"# goal: {node.goal}\n")
             parts.append(functions[nid].rstrip() + "\n")
     parts.append("\ndef run(leaves: dict[str, Any], fetchers: dict[str, Callable[..., Any]] | None = None) -> dict[str, Any]:\n")
     parts.append("    fetchers = fetchers or {}\n")

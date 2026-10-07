@@ -64,14 +64,20 @@ def topo_sort(graph: ExtractGraph) -> list[str]:
         for dep in deps:
             if dep not in known:
                 raise GraphError(f"{node.id} depends on missing {dep}")
-            if isinstance(known[dep], Compute) is False and not isinstance(
-                known[dep], (Leaf, Fetch, Compute)
-            ):
-                raise GraphError(f"{node.id} has bad dep {dep}")
+            if dep == node.id:
+                raise GraphError(f"{node.id} depends on itself")
             indeg[node.id] += 1
             outgoing[dep].append(node.id)
+    def _ready_key(nid: str) -> tuple[int, str]:
+        node = known[nid]
+        if isinstance(node, Leaf):
+            return (0, nid)
+        if isinstance(node, Compute):
+            return (1, nid)
+        return (2, nid)
+
     ready = [nid for nid, d in indeg.items() if d == 0]
-    ready.sort()
+    ready.sort(key=_ready_key)
     ordered: list[str] = []
     while ready:
         nid = ready.pop(0)
@@ -80,7 +86,7 @@ def topo_sort(graph: ExtractGraph) -> list[str]:
             indeg[nxt] -= 1
             if indeg[nxt] == 0:
                 ready.append(nxt)
-                ready.sort()
+                ready.sort(key=_ready_key)
     if len(ordered) != len(graph.nodes):
         stuck = [nid for nid, d in indeg.items() if d]
         raise GraphError(f"cycle involving {stuck}")

@@ -173,8 +173,12 @@ def _timing(row: Any) -> str:
 def _page_name_title(row: Any) -> tuple[str, str]:
     """Page-sourced name/title only. Skip matcher-invented Operational Lead rows."""
     blob: dict[str, Any] = {}
-    blob.update(_as_map(getattr(row, "requirements", None)))
-    blob.update(_as_map(getattr(row, "provenance", None)))
+    if isinstance(row, dict):
+        blob.update(_as_map(row.get("requirements")))
+        blob.update(_as_map(row.get("provenance")))
+    else:
+        blob.update(_as_map(getattr(row, "requirements", None)))
+        blob.update(_as_map(getattr(row, "provenance", None)))
     name = _clean(
         blob.get("contact_name")
         or blob.get("decision_maker_name")
