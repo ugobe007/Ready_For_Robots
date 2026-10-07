@@ -529,7 +529,9 @@ def send_daily_jobs_report(
     try:
         from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
 
-        hunter = enrich_daily_jobs_with_hunter(db, limit=limit)
+        hunter = enrich_daily_jobs_with_hunter(
+            db, limit=limit, scrape_pages=True
+        )
     except Exception:
         logger.warning("Hunter.io daily-jobs enrich skipped", exc_info=True)
         hunter = {"ok": False, "reason": "hunter_enrich_failed"}

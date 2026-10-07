@@ -229,7 +229,9 @@ def daily_jobs_report(db: Session = Depends(get_db)):
 
     hunter: dict = {}
     try:
-        hunter = enrich_daily_jobs_with_hunter(db, limit=25, force=False)
+        hunter = enrich_daily_jobs_with_hunter(
+            db, limit=25, force=False, scrape_pages=False
+        )
     except Exception:
         hunter = {"ok": False, "reason": "hunter_enrich_failed"}
     report = compose_daily_jobs_report(db, limit=25)
@@ -256,7 +258,9 @@ def daily_jobs_report_enrich(
     from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
     from app.services.daily_jobs_report import compose_daily_jobs_report
 
-    hunter = enrich_daily_jobs_with_hunter(db, limit=25, force=True)
+    hunter = enrich_daily_jobs_with_hunter(
+        db, limit=25, force=True, scrape_pages=True
+    )
     report = compose_daily_jobs_report(db, limit=25)
     report["hunter"] = hunter
     return report

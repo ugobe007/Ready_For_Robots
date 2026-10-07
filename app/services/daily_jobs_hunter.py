@@ -521,6 +521,7 @@ def enrich_daily_jobs_with_hunter(
     limit: int = TOP_N,
     client: HunterClient | None = None,
     force: bool = False,
+    scrape_pages: bool = False,
 ) -> dict[str, Any]:
     """Look up the employer on Hunter.io, pick the title that owns this job, find email."""
     out: dict[str, Any] = {
@@ -532,13 +533,16 @@ def enrich_daily_jobs_with_hunter(
         "reason": None,
         "enabled": hunter_contact_enabled(),
     }
-    if not hunter_contact_enabled():
+    hunter: HunterClient | None = None
+    if hunter_contact_enabled():
+        try:
+            hunter = client or HunterClient()
+        except HunterConfigError as exc:
+            if not scrape_pages:
+                out["reason"] = str(exc)
+                return out
+    elif not scrape_pages:
         out["reason"] = "hunter_disabled"
-        return out
-    try:
-        hunter = client or HunterClient()
-    except HunterConfigError as exc:
-        out["reason"] = str(exc)
         return out
 
     rows = select_daily_report_rows(db, limit=limit)
@@ -552,6 +556,8 @@ def enrich_daily_jobs_with_hunter(
         locality: str,
         leadership_person: Any = None,
     ) -> list[dict[str, Any]]:
+        if hunter is None:
+            return []
         if isinstance(leadership_person, dict) and leadership_person.get("name"):
             return []
         return _domain_people(
@@ -570,6 +576,8 @@ def enrich_daily_jobs_with_hunter(
         employer: str,
         domain: Optional[str],
     ) -> list[dict[str, Any]]:
+        if not scrape_pages:
+            return []
         from app.services.employer_leadership import fetch_leadership_pages
 
         key = (domain or employer or "").strip().lower()
@@ -627,7 +635,7 @@ def enrich_daily_jobs_with_hunter(
                 _fetch_leadership_pages(employer=employer, domain=domain)
             )
             prospect = pick_candidate(plan, leaders + people, locality=locality)
-        if prospect:
+        if prospect and hunter is not None:
             prospect = _fill_email_via_finder(
                 hunter,
                 prospect,
@@ -639,7 +647,7 @@ def enrich_daily_jobs_with_hunter(
             prospect and _usable_hunter_row(prospect, employer, locality)
         )
         known_name, known_title = _page_name_title(row)
-        if not has_mail:
+        if not has_mail and hunter is not None:
             bits = known_name.split()
             if len(bits) >= 2 and score_candidate(
                 plan, {"title": known_title or known_name}, locality=locality

@@ -146,6 +146,37 @@ def test_cnc_job_looks_for_plant_titles():
     assert "Plant Manager" in plan.titles
 
 
+def test_warehouse_job_accepts_coo_over_cdo():
+    plan = plan_for_job(
+        {
+            "action": "picking",
+            "robot_compatible_task": "Case pick to pallet in the DC",
+        }
+    )
+    picked = pick_candidate(
+        plan,
+        [
+            {
+                "email": "kelli@geodis.com",
+                "name": "Kelli Fondren",
+                "title": "Chief Development Officer",
+                "confidence": 99,
+            },
+            {
+                "email": "louis.smith@harrishealth.org",
+                "name": "Louis Smith",
+                "title": "Sr. Executive Vice President and Chief Operating Officer",
+                "confidence": 90,
+                "source": "leadership_page",
+            },
+        ],
+        locality="Houston, TX",
+    )
+    assert picked is not None
+    assert picked["name"] == "Louis Smith"
+    assert "coo" in (picked.get("match_why") or "").lower()
+
+
 def test_stored_lifecycle_function_is_the_plan_key():
     picking = plan_for_job(
         {

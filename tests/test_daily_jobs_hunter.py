@@ -220,7 +220,7 @@ def test_enrich_does_not_overwrite_page_name(monkeypatch):
             {
                 "email": "other.person@geodis.com",
                 "name": "Other Person",
-                "title": "COO",
+                "title": "Chief Development Officer",
                 "confidence": 99,
                 "department": "executive",
                 "verification_status": "valid",
@@ -668,7 +668,9 @@ def test_enrich_assigns_leadership_name_then_hunter_finder(monkeypatch):
             "source": "hunter_finder",
         },
     )
-    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    result = enrich_daily_jobs_with_hunter(
+        db, limit=25, client=hunter, scrape_pages=True
+    )
     assert result["filled"] == 1
     assert hunter.finder_calls
     assert hunter.finder_calls[0]["first_name"] == "Priya"

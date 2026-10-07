@@ -381,6 +381,17 @@ def score_candidate(
         if city and city in person_place:
             score += 12
             why_bits.append(f"same city as {city.title()}")
+    if plan.function in {
+        "operations",
+        "material_handling",
+        "picking",
+        "packing",
+        "shipping",
+        "receiving",
+        "palletizing",
+    } and ("chief operating" in title or re.search(r"\bcoo\b", title)):
+        score += 40
+        why_bits.append("title is COO")
     if not senior and score < STRONG_TITLE_SCORE:
         return None
     if score < MIN_ACCEPT_SCORE:
