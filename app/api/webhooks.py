@@ -649,28 +649,43 @@ async def resend_inbound_webhook(
 
     db = SessionLocal()
     try:
-        # Fallback: if +reply_token alias was stripped by recipient email client, match by sender email
+        # Fallback: if +reply_token alias was stripped by recipient email client, match by sender email and subject
         if not token:
             from_addresses = _extract_addresses(data.get("from"))
-            if from_addresses:
+            subject = (data.get("subject") or "").strip()
+            if from_addresses and subject:
                 sender_email = from_addresses[0].lower()
+                from datetime import datetime, timezone, timedelta
+                recent_cutoff = datetime.now(timezone.utc) - timedelta(days=30)
                 recent_crm = (
                     db.query(OutreachMessage)
-                    .filter(func.lower(OutreachMessage.to_email) == sender_email)
+                    .filter(
+                        func.lower(OutreachMessage.to_email) == sender_email,
+                        OutreachMessage.sent_at >= recent_cutoff,
+                        OutreachMessage.reply_token.isnot(None)
+                    )
                     .order_by(desc(OutreachMessage.sent_at))
                     .first()
                 )
-                if recent_crm and recent_crm.reply_token:
-                    token = recent_crm.reply_token
-                else:
+                if recent_crm and recent_crm.reply_token and recent_crm.subject:
+                    subject_match = subject.lower().startswith("re:") and recent_crm.subject.lower() in subject.lower()
+                    if subject_match:
+                        token = recent_crm.reply_token
+                if not token:
                     recent_supply = (
                         db.query(SupplyOutreachMessage)
-                        .filter(SupplyOutreachMessage.to_emails.contains([sender_email]))
+                        .filter(
+                            SupplyOutreachMessage.to_emails.contains([sender_email]),
+                            SupplyOutreachMessage.sent_at >= recent_cutoff,
+                            SupplyOutreachMessage.reply_token.isnot(None)
+                        )
                         .order_by(desc(SupplyOutreachMessage.sent_at))
                         .first()
                     )
-                    if recent_supply and recent_supply.reply_token:
-                        token = recent_supply.reply_token
+                    if recent_supply and recent_supply.reply_token and recent_supply.subject:
+                        subject_match = subject.lower().startswith("re:") and recent_supply.subject.lower() in subject.lower()
+                        if subject_match:
+                            token = recent_supply.reply_token
 
         if not token:
             return {"ok": True, "ignored": "no_reply_token"}

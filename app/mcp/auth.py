@@ -19,10 +19,8 @@ def extract_mcp_credential(request: Request) -> str:
 
 def authenticate_mcp_request(request: Request) -> tuple[bool, Optional[PartnerApiKeyContext]]:
     credential = extract_mcp_credential(request)
-    # The plugin scanner connects with an empty header map. Catalog tools are
-    # already exposed on the public API. A supplied key must still match.
     if not credential:
-        return True, None
+        return False, None
 
     required = mcp_bearer_token()
     if required and credential == required:

@@ -76,9 +76,7 @@ def cal_autonomy_enabled() -> bool:
 
 def cal_buyer_sales_enabled() -> bool:
     """Robot-sales intros to operating companies. Default off — Phelan places jobs."""
-    if os.getenv("CAL_BUYER_SALES_ENABLED", "").strip().lower() in ("1", "true", "yes"):
-        return True
-    return cal_autonomy_enabled()
+    return os.getenv("CAL_BUYER_SALES_ENABLED", "").strip().lower() in ("1", "true", "yes")
 
 
 def cal_scheduled_sales_work_enabled() -> bool:
@@ -844,7 +842,7 @@ def run_cal_autonomy_cycle(
 
     use_apollo = (os.getenv("CAL_USE_APOLLO") or "0").strip().lower() in ("1", "true", "yes")
 
-    buyer_sales = cal_buyer_sales_enabled() or manual
+    buyer_sales = cal_buyer_sales_enabled()
     draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
     send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
     if not buyer_sales:

@@ -73,16 +73,14 @@ def _crm_uuid(value: uuid.UUID | str | None) -> uuid.UUID | None:
 def _team_ids_for_user(db: Session, uid: uuid.UUID) -> list[Any]:
     rows = db.query(TeamMember.team_id).filter(TeamMember.user_id == uid).all()
     tids = [_db_uuid(db, row[0]) for row in rows if row[0] is not None]
-    from app.models.crm import Team
-    admin_team = db.query(Team).filter(or_(Team.name == "Cal Outreach (Admin)", Team.name.ilike("%admin%"))).first()
-    if admin_team and admin_team.id not in tids:
-        tids.append(_db_uuid(db, admin_team.id))
     return tids
 
 
 def _opportunity_or_404(db: Session, opportunity_id: str, team_ids: list[Any]) -> SalesOpportunity:
     row = db.query(SalesOpportunity).filter(SalesOpportunity.id == _db_uuid(db, opportunity_id)).first()
     if not row:
+        raise HTTPException(status_code=404, detail="Sales opportunity not found")
+    if row.team_id and row.team_id not in team_ids:
         raise HTTPException(status_code=404, detail="Sales opportunity not found")
     return row
 
@@ -260,19 +258,6 @@ def list_sales_opportunities(
 
     rows = query.order_by(desc(SalesOpportunity.updated_at)).limit(100).all()
 
-    if not rows:
-        seed_sales_opportunities(db=db, user=user)
-        if is_admin_user and not team_id:
-            query = db.query(SalesOpportunity)
-        elif team_ids:
-            query = db.query(SalesOpportunity).filter(
-                or_(
-                    SalesOpportunity.team_id.in_(team_ids),
-                    SalesOpportunity.team_id.is_(None)
-                )
-            )
-        rows = query.order_by(desc(SalesOpportunity.updated_at)).limit(100).all()
-
     return [_serialize_opportunity(db, row) for row in rows]
 
 
@@ -302,7 +287,7 @@ def seed_sales_opportunities(
             SalesOpportunity.crm_account_id.isnot(None)
         ).all()
     ]
-    query = db.query(CrmAccount)
+    query = db.query(CrmAccount).filter(CrmAccount.team_id == team_id)
     if existing_crm_ids:
         query = query.filter(~CrmAccount.id.in_(existing_crm_ids))
 

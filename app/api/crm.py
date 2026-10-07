@@ -1816,11 +1816,12 @@ def send_custom_email(
         now = datetime.now(timezone.utc)
         try:
             team = _ensure_default_team(db, uid, str(user.get("email") or "admin@readyforrobots.com"))
+            team_ids = [row[0] for row in db.query(TeamMember.team_id).filter(TeamMember.user_id == uid).all() if row[0] is not None]
             acct = None
             if aid:
-                acct = db.query(CrmAccount).filter(CrmAccount.id == aid).first()
+                acct = db.query(CrmAccount).filter(CrmAccount.id == aid, CrmAccount.team_id.in_(team_ids) if team_ids else CrmAccount.team_id == team.id).first()
             if not acct:
-                acct = db.query(CrmAccount).filter(func.lower(CrmAccount.contact_email) == to_email.lower()).first()
+                acct = db.query(CrmAccount).filter(func.lower(CrmAccount.contact_email) == to_email.lower(), CrmAccount.team_id.in_(team_ids) if team_ids else CrmAccount.team_id == team.id).first()
 
             if not acct:
                 company_label = (body.company_name or "").strip() or to_email.split("@")[0].capitalize()
