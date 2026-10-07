@@ -63,7 +63,17 @@ def _claim_report_day(day: str) -> bool:
     if not client:
         return True
     try:
-        return bool(client.set(_REDIS_SENT_KEY, day, nx=True, ex=60 * 60 * 48))
+        # Try to claim with NX first (key doesn't exist)
+        if client.set(_REDIS_SENT_KEY, day, nx=True, ex=60 * 60 * 48):
+            return True
+        # Key exists; check if it's a stale day
+        current = str(client.get(_REDIS_SENT_KEY) or "")
+        if current != day:
+            # Stale day; claim the new day
+            client.set(_REDIS_SENT_KEY, day, ex=60 * 60 * 48)
+            return True
+        # Already sent for this day
+        return False
     except Exception:
         return True
 
