@@ -3,8 +3,6 @@ import {
   JOBS_APPLY_OFFER_CTA,
   JOBS_APPLY_SEQUENCE,
   JOBS_CONTACTS_EMPTY_NOTE,
-  JOBS_DOCS_HEADING,
-  JOBS_DOCS_HINT,
   JOBS_MODEL_SELECT_HINT,
   JOBS_MODEL_SELECT_LABEL,
   JOBS_PROPOSED_PRICE_HINT,
@@ -18,13 +16,11 @@ import {
   companyHintFromRobotUrl,
   fetchApplyPrep,
   fetchCatalogSkus,
-  fetchRobotDocuments,
   sendPreparedApplication,
-  uploadRobotDocument,
   type CatalogSku,
   type JobsCrmApplication,
-  type RobotDocument,
 } from "@/lib/jobsCrmAccount";
+import RobotSalesMaterial from "@/components/RobotSalesMaterial";
 import { JOBS_APPLY_CTA_BUTTON_CLASS } from "@/lib/jobsWorkflow";
 import { JOBS_POC_PREFER_HINT, JOBS_POC_SKIP_CTA } from "@/lib/jobsApply";
 import {
@@ -68,8 +64,8 @@ export default function JobsCrmNextSteps({
   const [videoNote, setVideoNote] = useState("");
   const [videoSearchUrl, setVideoSearchUrl] = useState("");
   const [drafts, setDrafts] = useState<JobsCrmApplication[]>([]);
-  const [docs, setDocs] = useState<RobotDocument[]>([]);
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [docsReady, setDocsReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const videoIssue = pocVideoUrlIssue(pocVideoUrl);
@@ -88,6 +84,10 @@ export default function JobsCrmNextSteps({
     }) && !videoIssue;
 
   useEffect(() => {
+    setDocsReady(false);
+  }, [robotUrl]);
+
+  useEffect(() => {
     let cancelled = false;
     fetchCatalogSkus(token, {
       url: robotUrl,
@@ -98,13 +98,6 @@ export default function JobsCrmNextSteps({
       })
       .catch(() => {
         if (!cancelled) setSkus([]);
-      });
-    fetchRobotDocuments(token)
-      .then(rows => {
-        if (!cancelled) setDocs(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setDocs([]);
       });
     fetchApplyPrep(token, {
       robot: robotName,
@@ -178,6 +171,8 @@ export default function JobsCrmNextSteps({
           why,
           companyName: oemCompany,
           documentIds: selectedDocs,
+          documentsSelected: docsReady,
+          robotUrl,
         });
         for (const app of result.applied) onApplied(app);
         setDrafts(result.applied);
@@ -197,6 +192,8 @@ export default function JobsCrmNextSteps({
           companyName: oemCompany,
           job,
           documentIds: selectedDocs,
+          documentsSelected: docsReady,
+          robotUrl,
         });
         onApplied(app);
         setDrafts([app]);
@@ -353,70 +350,13 @@ export default function JobsCrmNextSteps({
         </p>
       ) : null}
 
-      <fieldset className="mt-6">
-        <legend className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
-          {JOBS_DOCS_HEADING}
-        </legend>
-        <p className="mt-1 text-sm text-slate-400">{JOBS_DOCS_HINT}</p>
-        <input
-          type="file"
-          accept="application/pdf,image/jpeg,image/png,image/webp,image/gif"
-          aria-label="Upload brochure or product spec"
-          className="mt-3 block w-full text-sm text-slate-300"
-          onChange={event => {
-            const file = event.target.files?.[0];
-            if (!file || busy) return;
-            setBusy(true);
-            setError(null);
-            void uploadRobotDocument(token, file, "spec")
-              .then(doc => {
-                setDocs(prev => [doc, ...prev]);
-                setSelectedDocs(prev =>
-                  prev.includes(doc.id) ? prev : [...prev, doc.id]
-                );
-              })
-              .catch(err => {
-                setError(
-                  err instanceof Error ? err.message : "Could not upload spec."
-                );
-              })
-              .finally(() => setBusy(false));
-            event.target.value = "";
-          }}
-        />
-        {docs.length ? (
-          <ul className="mt-3 space-y-2">
-            {docs.map(doc => (
-              <li key={doc.id}>
-                <label className="flex items-center gap-2 text-sm text-slate-200">
-                  <input
-                    type="checkbox"
-                    checked={selectedDocs.includes(doc.id)}
-                    onChange={e =>
-                      setSelectedDocs(prev =>
-                        e.target.checked
-                          ? [...prev, doc.id]
-                          : prev.filter(id => id !== doc.id)
-                      )
-                    }
-                    className="h-4 w-4 accent-emerald-400"
-                  />
-                  {doc.filename}
-                  {doc.kind ? (
-                    <span className="font-mono text-xs uppercase text-slate-500">
-                      {doc.kind}
-                    </span>
-                  ) : null}
-                </label>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-3 text-sm text-slate-500">
-            No specs on this account yet.
-          </p>
-        )}
-      </fieldset>
+      <RobotSalesMaterial
+        token={token}
+        robotUrl={robotUrl}
+        robotName={robotName}
+        onIncludedIds={setSelectedDocs}
+        onReady={() => setDocsReady(true)}
+      />
 
       <label className="mt-6 block">
         <span className="block font-display text-xl font-bold text-white">

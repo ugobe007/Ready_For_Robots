@@ -477,6 +477,8 @@ def apply_to_job(
     poc_skipped: bool = False,
     job: dict[str, Any] | None = None,
     document_ids: list[str] | None = None,
+    documents_selected: bool = False,
+    robot_url: str | None = None,
     send: bool = True,
     why: str = "",
     company_name: str | None = None,
@@ -560,12 +562,21 @@ def apply_to_job(
         oem_email_for_user,
         notify_oem_status,
         resend_attachments_for,
+        resolve_submission_document_ids,
         STATUS_APPLIED,
         STATUS_PREPARED,
     )
 
     oem_email = oem_email_for_user(user, db)
-    snapshot["document_ids"] = [str(x) for x in (document_ids or []) if str(x).strip()]
+    sheet_robot_url = (robot_url or (kept.robot_url if kept else "") or "").strip() or None
+    chosen_document_ids = resolve_submission_document_ids(
+        db,
+        user,
+        sheet_robot_url,
+        document_ids,
+        documents_selected=documents_selected,
+    )
+    snapshot["document_ids"] = chosen_document_ids
     snapshot["employer_token"] = employer_token
     decision = employer_decision_url(employer_token)
     application = JobApplication(
@@ -593,7 +604,9 @@ def apply_to_job(
     )
     db.add(application)
     db.flush()
-    attached = attach_documents_to_application(db, user, application, document_ids)
+    attached = attach_documents_to_application(
+        db, user, application, chosen_document_ids, robot_url=sheet_robot_url
+    )
     snapshot = {
         **snapshot,
         "documents": [
@@ -713,6 +726,8 @@ def apply_selected_jobs(
     poc_video_url: str = "",
     poc_skipped: bool = False,
     document_ids: list[str] | None = None,
+    documents_selected: bool = False,
+    robot_url: str | None = None,
     send: bool = False,
     why: str = "",
     company_name: str | None = None,
@@ -739,6 +754,8 @@ def apply_selected_jobs(
                     poc_skipped=poc_skipped,
                     job=job,
                     document_ids=document_ids,
+                    documents_selected=documents_selected,
+                    robot_url=robot_url,
                     send=send,
                     why=why,
                     company_name=company_name,

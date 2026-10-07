@@ -40,6 +40,7 @@ import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
+import RobotSalesMaterial from "@/components/RobotSalesMaterial";
 import JobsCrmInbox from "@/components/JobsCrmInbox";
 import CalJobsDesk from "@/components/CalJobsDesk";
 import {
@@ -422,6 +423,13 @@ export default function JobsCrmDesk({
           onApplyClick={openOfferForm}
         />
       </div>
+      {accessToken && robotUrl && !(showNextSteps && offerJob) ? (
+        <RobotSalesMaterial
+          token={accessToken}
+          robotUrl={robotUrl}
+          robotName={product}
+        />
+      ) : null}
       {accessToken && jobs.length > 0 ? (
         <CalJobsDesk
           token={accessToken}

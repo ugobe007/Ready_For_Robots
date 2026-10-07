@@ -40,9 +40,16 @@ export const JOBS_VIDEO_EMPTY_NOTE =
 export const JOBS_CONTACTS_EMPTY_NOTE = "";
 export const JOBS_NEXT_STEPS_HINT =
   "Pick the model and say what you'll charge. Then we prepare a draft for you to send.";
-export const JOBS_DOCS_HEADING = "Brochures and product specs";
+export const JOBS_DOCS_HEADING = "Sales material";
 export const JOBS_DOCS_HINT =
-  "Upload a PDF or image spec for this robot. We attach what you select to the application — not a public dump.";
+  "Upload a spec sheet, brochure, or certificate for this robot. Files you include go to the employer with each job submission. They stay your material and do not change the job qualification.";
+export const JOBS_DOCS_INCLUDE_LABEL = "Include with each job submission";
+export const JOBS_DOCS_EMPTY = "No sales material for this robot yet.";
+export const JOBS_DOC_KINDS = [
+  { id: "spec", label: "Spec sheet" },
+  { id: "brochure", label: "Brochure" },
+  { id: "certificate", label: "Certificate" },
+] as const;
 export const JOBS_EMPLOYER_ACCEPT_CTA = "Accept";
 export const JOBS_EMPLOYER_DECLINE_CTA = "Decline";
 export const JOBS_EMPLOYER_INTERVIEW_CTA = "Set up interview";
@@ -146,8 +153,15 @@ export type RobotDocument = {
   mime_type?: string;
   size_bytes?: number;
   kind?: string;
+  robot_url?: string | null;
+  robot_name?: string | null;
+  include_with_submissions?: boolean;
   created_at?: string | null;
 };
+
+export function robotDocumentKindLabel(kind?: string | null): string {
+  return JOBS_DOC_KINDS.find(row => row.id === kind)?.label || "File";
+}
 
 export type JobsCrmMessage = {
   id: string;
@@ -553,6 +567,8 @@ export async function applyJobOnAccount(
     companyName?: string;
     job?: MatchJob;
     documentIds?: string[];
+    documentsSelected?: boolean;
+    robotUrl?: string;
   }
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>("/api/jobs-crm/apply", token, {
@@ -569,6 +585,8 @@ export async function applyJobOnAccount(
       company_name: body.companyName || "",
       job: body.job || null,
       document_ids: body.documentIds || [],
+      documents_selected: Boolean(body.documentsSelected),
+      robot_url: body.robotUrl || "",
     }),
   });
 }
@@ -586,6 +604,8 @@ export async function applySelectedJobsOnAccount(
     why?: string;
     companyName?: string;
     documentIds?: string[];
+    documentsSelected?: boolean;
+    robotUrl?: string;
   }
 ): Promise<{
   applied: JobsCrmApplication[];
@@ -605,6 +625,8 @@ export async function applySelectedJobsOnAccount(
       why: body.why || "",
       company_name: body.companyName || "",
       document_ids: body.documentIds || [],
+      documents_selected: Boolean(body.documentsSelected),
+      robot_url: body.robotUrl || "",
     }),
   });
 }
@@ -652,10 +674,14 @@ export async function saveApplicationMeetingUrl(
 }
 
 export async function fetchRobotDocuments(
-  token: string
+  token: string,
+  robotUrl?: string
 ): Promise<RobotDocument[]> {
+  const q = new URLSearchParams();
+  if (robotUrl) q.set("robot_url", robotUrl);
+  const suffix = q.toString() ? `?${q.toString()}` : "";
   const data = await jobsCrmFetch<{ documents: RobotDocument[] }>(
-    "/api/jobs-crm/documents",
+    `/api/jobs-crm/documents${suffix}`,
     token
   );
   return data.documents || [];
@@ -664,11 +690,20 @@ export async function fetchRobotDocuments(
 export async function uploadRobotDocument(
   token: string,
   file: File,
-  kind = "spec"
+  kind = "spec",
+  opts?: {
+    robotUrl?: string;
+    robotName?: string;
+    includeWithSubmissions?: boolean;
+  }
 ): Promise<RobotDocument> {
   const base = getApiBase();
   const form = new FormData();
+  const include = opts?.includeWithSubmissions ?? Boolean(opts?.robotUrl);
   form.append("kind", kind);
+  form.append("robot_url", opts?.robotUrl || "");
+  form.append("robot_name", opts?.robotName || "");
+  form.append("include_with_submissions", include ? "true" : "false");
   form.append("file", file);
   const res = await fetch(
     `${base}/api/jobs-crm/documents`,
@@ -692,6 +727,33 @@ export async function uploadRobotDocument(
     throw new Error(detail);
   }
   return (await res.json()) as RobotDocument;
+}
+
+export async function updateRobotDocument(
+  token: string,
+  documentId: string,
+  body: { includeWithSubmissions?: boolean; kind?: string }
+): Promise<RobotDocument> {
+  return jobsCrmFetch<RobotDocument>(
+    `/api/jobs-crm/documents/${documentId}`,
+    token,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        include_with_submissions: body.includeWithSubmissions,
+        kind: body.kind,
+      }),
+    }
+  );
+}
+
+export async function deleteRobotDocument(
+  token: string,
+  documentId: string
+): Promise<void> {
+  await jobsCrmFetch(`/api/jobs-crm/documents/${documentId}`, token, {
+    method: "DELETE",
+  });
 }
 
 export async function confirmInterviewOnAccount(

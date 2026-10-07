@@ -171,9 +171,16 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(next).toMatch(/canSubmitNextStepsOffer/);
     expect(next).toMatch(/JOBS_APPLY_OFFER_CTA/);
     expect(next).toMatch(/disabled=\{!ready/);
-    expect(next).toMatch(/JOBS_DOCS_HEADING/);
-    expect(next).toMatch(/uploadRobotDocument/);
+    const material = readFileSync(
+      join(here, "../components/RobotSalesMaterial.tsx"),
+      "utf8"
+    );
+    expect(material).toMatch(/JOBS_DOCS_HEADING/);
+    expect(material).toMatch(/uploadRobotDocument/);
+    expect(material).toMatch(/JOBS_DOCS_INCLUDE_LABEL/);
+    expect(next).toMatch(/RobotSalesMaterial/);
     expect(next).toMatch(/documentIds: selectedDocs/);
+    expect(desk).toMatch(/RobotSalesMaterial/);
     expect(next).toMatch(/id="jobs-next-steps"/);
     expect(inbox).toMatch(/JOBS_INBOX_HEADING/);
     expect(inbox).toMatch(/Paste employer reply/);

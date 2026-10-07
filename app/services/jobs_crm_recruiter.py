@@ -99,6 +99,13 @@ ALLOWED_DOC_EXT = {
 MAX_DOC_BYTES = 8 * 1024 * 1024
 MAX_DOCS_PER_USER = 20
 RESEND_ATTACH_BUDGET = 3 * 1024 * 1024
+DOC_KINDS = frozenset({"spec", "brochure", "certificate", "other"})
+DOC_KIND_LABELS = {
+    "spec": "Spec sheet",
+    "brochure": "Brochure",
+    "certificate": "Certificate",
+    "other": "File",
+}
 
 
 def public_site_base() -> str:
@@ -226,6 +233,33 @@ def infer_doc_mime(filename: str, declared: str | None) -> Optional[str]:
     return ALLOWED_DOC_EXT.get(ext)
 
 
+def _clean_doc_kind(kind: str | None) -> str:
+    kind_clean = (kind or "spec").strip().lower()
+    if kind_clean not in DOC_KINDS:
+        raise ValueError("Label the file as a spec sheet, brochure, or certificate.")
+    return kind_clean
+
+
+def _robot_sheet_key(robot_url: str | None, *, strict: bool = False) -> str | None:
+    from app.services.robot_url_safety import canonical_robot_url
+
+    raw = (robot_url or "").strip()
+    if not raw:
+        return None
+    key = canonical_robot_url(raw)
+    if not key:
+        if strict:
+            raise ValueError("Use the robot product URL for this file.")
+        return None
+    return key
+
+
+def _parse_include_flag(value: bool | str | None) -> bool:
+    if isinstance(value, bool):
+        return value
+    return str(value or "").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def document_payload(row: UserRobotDocument) -> dict[str, Any]:
     return {
         "id": str(row.id),
@@ -233,17 +267,21 @@ def document_payload(row: UserRobotDocument) -> dict[str, Any]:
         "mime_type": row.mime_type,
         "size_bytes": int(row.size_bytes or 0),
         "kind": row.kind,
+        "robot_url": row.robot_url,
+        "robot_name": row.robot_name,
+        "include_with_submissions": bool(row.include_with_submissions),
         "created_at": row.created_at.isoformat() if row.created_at else None,
     }
 
 
-def list_user_documents(db: Session, user: dict) -> list[dict[str, Any]]:
-    rows = (
-        db.query(UserRobotDocument)
-        .filter(UserRobotDocument.user_id == _uid(user))
-        .order_by(UserRobotDocument.created_at.desc())
-        .all()
-    )
+def list_user_documents(
+    db: Session, user: dict, robot_url: str | None = None
+) -> list[dict[str, Any]]:
+    key = _robot_sheet_key(robot_url, strict=True) if (robot_url or "").strip() else None
+    query = db.query(UserRobotDocument).filter(UserRobotDocument.user_id == _uid(user))
+    if key:
+        query = query.filter(UserRobotDocument.robot_url == key)
+    rows = query.order_by(UserRobotDocument.created_at.desc()).all()
     return [document_payload(row) for row in rows]
 
 
@@ -255,11 +293,14 @@ def store_user_document(
     content: bytes,
     mime_type: str | None,
     kind: str = "spec",
+    robot_url: str | None = None,
+    robot_name: str | None = None,
+    include_with_submissions: bool | str | None = False,
 ) -> dict[str, Any]:
     if not content:
-        raise ValueError("Upload a brochure or product spec file.")
+        raise ValueError("Upload a spec sheet, brochure, or certificate.")
     if len(content) > MAX_DOC_BYTES:
-        raise ValueError("File is too large. Cap is 8 MB per brochure or spec.")
+        raise ValueError("File is too large. Cap is 8 MB per file.")
     mime = infer_doc_mime(filename, mime_type)
     if not mime:
         raise ValueError("Upload a PDF or image spec (PDF, JPEG, PNG, WebP, GIF).")
@@ -269,9 +310,12 @@ def store_user_document(
     )
     if existing >= MAX_DOCS_PER_USER:
         raise ValueError(f"Account document cap is {MAX_DOCS_PER_USER}. Remove one to upload another.")
-    kind_clean = (kind or "spec").strip().lower()
-    if kind_clean not in {"brochure", "spec", "other"}:
-        kind_clean = "spec"
+    kind_clean = _clean_doc_kind(kind)
+    robot_key = _robot_sheet_key(robot_url, strict=True)
+    include = _parse_include_flag(include_with_submissions)
+    if include and not robot_key:
+        raise ValueError("A sales file has to belong to one robot before it goes out with a submission.")
+    name = (robot_name or "").strip()[:240] or None
     doc_id = secrets.token_hex(8)
     safe = _safe_filename(filename)
     folder = upload_root() / str(uid)
@@ -287,11 +331,56 @@ def store_user_document(
         size_bytes=len(content),
         storage_path=str(path),
         kind=kind_clean,
+        robot_url=robot_key,
+        robot_name=name,
+        include_with_submissions=include,
     )
     db.add(row)
     db.commit()
     db.refresh(row)
     return document_payload(row)
+
+
+def update_user_document(
+    db: Session,
+    user: dict,
+    document_id: str,
+    *,
+    include_with_submissions: bool | None = None,
+    kind: str | None = None,
+) -> dict[str, Any]:
+    row = get_user_document(db, user, document_id)
+    if kind is not None:
+        row.kind = _clean_doc_kind(kind)
+    if include_with_submissions is not None:
+        include = bool(include_with_submissions)
+        if include and not row.robot_url:
+            raise ValueError("A sales file has to belong to one robot before it goes out with a submission.")
+        row.include_with_submissions = include
+    db.commit()
+    db.refresh(row)
+    return document_payload(row)
+
+
+def delete_user_document(db: Session, user: dict, document_id: str) -> None:
+    row = get_user_document(db, user, document_id)
+    used = (
+        db.query(ApplicationDocument)
+        .filter(ApplicationDocument.document_id == row.id)
+        .count()
+    )
+    if used:
+        raise ValueError(
+            "This file is already on a job submission. Turn off include for future submissions."
+        )
+    path = Path(row.storage_path)
+    db.delete(row)
+    db.commit()
+    try:
+        if path.is_file():
+            path.unlink()
+    except OSError:
+        pass
 
 
 def get_user_document(db: Session, user: dict, document_id: str) -> UserRobotDocument:
@@ -305,11 +394,67 @@ def get_user_document(db: Session, user: dict, document_id: str) -> UserRobotDoc
     return row
 
 
+def _sheet_matches_robot(doc: UserRobotDocument, robot_url: str | None) -> bool:
+    if not doc.robot_url:
+        return True
+    job_key = _robot_sheet_key(robot_url)
+    if not job_key:
+        return False
+    return doc.robot_url == job_key
+
+
+def documents_included_for_robot(
+    db: Session, user: dict, robot_url: str | None
+) -> list[UserRobotDocument]:
+    key = _robot_sheet_key(robot_url)
+    if not key:
+        return []
+    return (
+        db.query(UserRobotDocument)
+        .filter(
+            UserRobotDocument.user_id == _uid(user),
+            UserRobotDocument.robot_url == key,
+            UserRobotDocument.include_with_submissions.is_(True),
+        )
+        .order_by(UserRobotDocument.created_at.asc())
+        .all()
+    )
+
+
+def resolve_submission_document_ids(
+    db: Session,
+    user: dict,
+    robot_url: str | None,
+    document_ids: list[str] | None,
+    *,
+    documents_selected: bool = False,
+) -> list[str]:
+    """Profile sheets travel with each submission unless this send names its own set."""
+    explicit: list[str] = []
+    seen: set[str] = set()
+    for raw in document_ids or []:
+        key = str(raw or "").strip()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        explicit.append(key)
+    if documents_selected:
+        return explicit
+    for doc in documents_included_for_robot(db, user, robot_url):
+        sid = str(doc.id)
+        if sid in seen:
+            continue
+        seen.add(sid)
+        explicit.append(sid)
+    return explicit
+
+
 def attach_documents_to_application(
     db: Session,
     user: dict,
     application: JobApplication,
     document_ids: list[str] | None,
+    robot_url: str | None = None,
 ) -> list[UserRobotDocument]:
     attached: list[UserRobotDocument] = []
     seen: set[str] = set()
@@ -321,6 +466,8 @@ def attach_documents_to_application(
         try:
             doc = get_user_document(db, user, key)
         except (KeyError, ValueError):
+            continue
+        if not _sheet_matches_robot(doc, robot_url):
             continue
         db.add(ApplicationDocument(application_id=application.id, document_id=doc.id))
         attached.append(doc)
@@ -362,9 +509,13 @@ def resend_attachments_for(docs: list[UserRobotDocument]) -> list[dict[str, Any]
 def document_lines_for_email(token: str, docs: list[UserRobotDocument]) -> list[str]:
     if not docs:
         return []
-    lines = ["Specs / brochures attached to this application:"]
+    lines = [
+        "Material from the robot company (their file, not a change to the job qualification):"
+    ]
     for doc in docs:
-        lines.append(f"- {doc.original_name or doc.filename}: {employer_doc_url(token, str(doc.id))}")
+        label = DOC_KIND_LABELS.get((doc.kind or "").strip().lower(), "File")
+        name = doc.original_name or doc.filename
+        lines.append(f"- {label}: {name}: {employer_doc_url(token, str(doc.id))}")
     return lines
 
 
