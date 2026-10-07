@@ -5,9 +5,11 @@ Names are read from the page. None are invented. Hunter looks up emails later.
 """
 from __future__ import annotations
 
+import ipaddress
 import json
 import logging
 import re
+import time
 from typing import Any, Callable, Optional
 from urllib.parse import urljoin, urlparse
 
@@ -15,6 +17,7 @@ import requests
 from bs4 import BeautifulSoup
 
 from app.services.robot_job_extract import _is_board_host
+from app.services.robot_url_safety import UrlSafetyError, assert_public_http_url
 
 logger = logging.getLogger(__name__)
 
@@ -142,17 +145,31 @@ _BAD_NAME = frozenset(
         "Nursing",
     }
 )
-_MAX_FETCHES = 8
-_MAX_PAGES = 3
+_MAX_FETCHES = 4
+_MAX_PAGES = 1
 _MAX_HTML = 220_000
-_TIMEOUT = 5.0
+_TIMEOUT = 3.0
+_DEADLINE = 12.0
+
+
+def _blocked_host(host: str) -> bool:
+    raw = (host or "").strip().lower().rstrip(".")
+    if not raw or raw in {"localhost", "metadata.google.internal"}:
+        return True
+    if raw.endswith(".internal") or raw.endswith(".localhost"):
+        return True
+    try:
+        ipaddress.ip_address(raw)
+        return True
+    except ValueError:
+        return False
 
 
 def origin_for_domain(domain: Optional[str]) -> Optional[str]:
     host = (domain or "").strip().lower().removeprefix("www.")
     if not host or "." not in host or _is_board_host(host):
         return None
-    if "/" in host or " " in host:
+    if "/" in host or " " in host or _blocked_host(host):
         return None
     if any(host == d or host.endswith("." + d) for d in _ATS_HOSTS):
         return None
@@ -328,7 +345,12 @@ def fetch_leadership_pages(
     getter = get_html or _http_get
     origin = origins[0]
     home: Optional[str] = None
+    fetches = 0
+    deadline = time.monotonic() + _DEADLINE
     for candidate in origins:
+        if fetches >= _MAX_FETCHES or time.monotonic() >= deadline:
+            break
+        fetches += 1
         html = getter(candidate)
         if html:
             origin = candidate
@@ -337,13 +359,12 @@ def fetch_leadership_pages(
     ranked = ranked_leadership_urls(origin, home or "")
     pages: list[dict[str, Any]] = []
     seen: set[str] = set()
-    fetches = 0
     for url in ranked:
         key = url.rstrip("/").lower()
         if key in seen:
             continue
         seen.add(key)
-        if fetches >= _MAX_FETCHES or len(pages) >= _MAX_PAGES:
+        if fetches >= _MAX_FETCHES or len(pages) >= _MAX_PAGES or time.monotonic() >= deadline:
             break
         fetches += 1
         html = getter(url)
@@ -373,25 +394,47 @@ def _http_get(url: str) -> Optional[str]:
     if path.endswith((".pdf", ".doc", ".docx", ".zip", ".xls", ".xlsx")):
         return None
     try:
+        safe = assert_public_http_url(url)
+    except (UrlSafetyError, ValueError):
+        return None
+    response = None
+    try:
         response = requests.get(
-            url,
+            safe,
             headers={"User-Agent": "ReadyForRobots/1.0 (employer leadership)"},
             timeout=_TIMEOUT,
             allow_redirects=True,
+            stream=True,
         )
+        if response.status_code >= 400:
+            return None
+        try:
+            assert_public_http_url(response.url)
+        except (UrlSafetyError, ValueError):
+            return None
+        content_type = (response.headers.get("content-type") or "").lower()
+        if content_type and "html" not in content_type and "xhtml" not in content_type:
+            return None
+        requested = (urlparse(url).path or "/").rstrip("/") or "/"
+        landed = (urlparse(response.url).path or "/").rstrip("/") or "/"
+        if requested not in {"/"} and landed in {"/"}:
+            return None
+        chunks: list[bytes] = []
+        size = 0
+        for chunk in response.iter_content(8192):
+            if not chunk:
+                continue
+            size += len(chunk)
+            if size > _MAX_HTML:
+                break
+            chunks.append(chunk)
+        return b"".join(chunks).decode("utf-8", errors="replace")[:_MAX_HTML]
     except requests.RequestException as exc:
         logger.info("leadership fetch failed %s: %s", url, exc)
         return None
-    if response.status_code >= 400:
-        return None
-    content_type = (response.headers.get("content-type") or "").lower()
-    if content_type and "html" not in content_type and "xhtml" not in content_type:
-        return None
-    requested = (urlparse(url).path or "/").rstrip("/") or "/"
-    landed = (urlparse(response.url).path or "/").rstrip("/") or "/"
-    if requested not in {"/"} and landed in {"/"}:
-        return None
-    return response.text[:_MAX_HTML]
+    finally:
+        if response is not None:
+            response.close()
 
 
 def _looks_like_name(first: str, last: str) -> bool:

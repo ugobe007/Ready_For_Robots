@@ -18,6 +18,11 @@ def test_origin_skips_ats_and_junk():
     ]
     assert origin_for_domain("boards.greenhouse.io") is None
     assert origin_for_domain("") is None
+    assert origin_for_domain("127.0.0.1") is None
+    assert origin_for_domain("169.254.169.254") is None
+    assert origin_for_domain("10.0.0.8") is None
+    assert origin_for_domain("localhost") is None
+    assert origin_for_domain("metadata.google.internal") is None
 
 
 def test_discover_leadership_urls_same_host_only():
@@ -167,3 +172,42 @@ def test_fetch_uses_www_when_apex_drops_path():
     assert pages
     assert pages[0]["url"] == "https://www.harrishealth.org/about-us-hh/leadership"
     assert people_from_pages(pages)[0]["name"] == "Esmaeil Porsa"
+
+
+def test_http_get_does_not_request_unsafe_urls(monkeypatch):
+    from app.services import employer_leadership as el
+    from app.services.robot_url_safety import UrlSafetyError
+
+    def boom(url):
+        raise UrlSafetyError("blocked")
+
+    monkeypatch.setattr(el, "assert_public_http_url", boom)
+    called = []
+    monkeypatch.setattr(
+        el.requests, "get", lambda *a, **k: called.append((a, k)) or None
+    )
+    assert el._http_get("https://127.0.0.1/leadership") is None
+    assert called == []
+
+
+def test_fetch_stops_after_first_named_page():
+    calls: list[str] = []
+    home = '<a href="/about-us-hh/board">Board</a>'
+    nested = (
+        "<h2>Esmaeil Porsa, MD</h2><p>President and Chief Executive Officer</p>"
+    )
+
+    def get_html(url):
+        calls.append(url)
+        if url.rstrip("/") == "https://www.harrishealth.org":
+            return home
+        if "leadership" in url:
+            return nested
+        return "<html><body>nav</body></html>"
+
+    pages = fetch_leadership_pages(
+        domain="harrishealth.org", employer="Harris Health", get_html=get_html
+    )
+    assert people_from_pages(pages)[0]["name"] == "Esmaeil Porsa"
+    assert len(calls) <= 4
+    assert sum(1 for u in calls if "leadership" in u) == 1
