@@ -251,16 +251,24 @@ def domain_for_job(row: Any, db: Session) -> Optional[str]:
     return _host(str(getattr(company, "website", "") or ""))
 
 
+def _page_contact_complete(row: Any) -> bool:
+    name, _title = _page_name_title(row)
+    contact = _contact_fields(row)
+    source = str(_as_map(getattr(row, "provenance", None)).get("contact_source") or "")
+    if not name or not contact.get("email"):
+        return False
+    if source.startswith("hunter") or source == "decision_maker_agent":
+        return False
+    return True
+
+
 def _job_needs_hunter(row: Any, *, force: bool = False) -> bool:
+    if _page_contact_complete(row):
+        return False
     name, _title = _page_name_title(row)
     contact = _contact_fields(row)
     blob = _as_map(getattr(row, "provenance", None))
-    source = str(blob.get("contact_source") or "")
-    if name and contact.get("email") and source.startswith("hunter"):
-        return False
     if name and contact.get("email") and not force:
-        return False
-    if not force and source in {"hunter_domain", "hunter_finder", "decision_maker_agent"}:
         return False
     if not force and str(blob.get("hunter_checked_at") or "") == _today():
         return False
@@ -372,13 +380,27 @@ def _stamp_hit(
     name = str(prospect.get("name") or "").strip()
     title = str(prospect.get("title") or prospect.get("position") or "").strip()
     employer = str(getattr(row, "company_name", "") or "").strip()
+    existing_name, _existing_title = _page_name_title(row)
     existing_email = str(getattr(row, "employer_email", "") or "").strip()
     if existing_email and _is_invented_ops_email(existing_email, employer):
         existing_email = ""
         row.employer_email = None
-    if email:
-        row.employer_email = email
     prov = dict(_as_map(getattr(row, "provenance", None)))
+    existing_source = str(prov.get("contact_source") or "")
+    page_owned = bool(
+        existing_name
+        and existing_email
+        and not existing_source.startswith("hunter")
+        and existing_source != "decision_maker_agent"
+    )
+    if page_owned:
+        _stamp_plan(prov, plan)
+        prov["hunter_checked_at"] = _today()
+        row.provenance = prov
+        flag_modified(row, "provenance")
+        return
+    if email and _usable_hunter_row(prospect, employer, str(getattr(row, "locality", "") or "")):
+        row.employer_email = email
     if name:
         prov["contact_name"] = name
     if title:
@@ -453,8 +475,6 @@ def _domain_people(
                     continue
                 seen.add(marker)
                 people.append(person)
-            if any(_rankable_hunter_person(p, employer, locality) for p in people):
-                break
         cache[key] = people
     return [
         person
@@ -477,7 +497,7 @@ def _fill_email_via_finder(
         return merged
     first, last = _name_bits(merged)
     if not first or not last:
-        return None
+        return merged if merged.get("name") else None
     try:
         found = client.find_email(
             domain=domain,
@@ -488,11 +508,11 @@ def _fill_email_via_finder(
     except (HunterAPIError, HunterConfigError) as exc:
         logger.warning("Hunter finder failed for %r %s %s: %s", employer, first, last, exc)
         return None
-    if not found or not _usable_hunter_row(found, employer, locality):
-        return None
-    merged.update({k: v for k, v in found.items() if v})
-    merged["source"] = found.get("source") or "hunter_finder"
-    return merged
+    if found and _usable_hunter_row(found, employer, locality):
+        merged.update({k: v for k, v in found.items() if v})
+        merged["source"] = found.get("source") or "hunter_finder"
+        return merged
+    return merged if merged.get("name") else None
 
 
 def enrich_daily_jobs_with_hunter(
@@ -574,7 +594,7 @@ def enrich_daily_jobs_with_hunter(
                     found = None
                 if found and _usable_hunter_row(found, employer, locality):
                     prospect = found
-        if prospect and _usable_hunter_row(prospect, employer, locality):
+        if prospect and prospect.get("name"):
             _stamp_hit(row, prospect, plan=plan)
             filled += 1
         else:

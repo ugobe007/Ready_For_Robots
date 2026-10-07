@@ -85,7 +85,7 @@ class HunterClient:
         domain: str | None = None,
         company: str | None = None,
         department: str | None = "operations,management,executive",
-        seniority: str | None = "executive,senior",
+        seniority: str | None = None,
         limit: int = 10,
     ) -> dict[str, Any]:
         clean_domain = _clean_domain(domain)

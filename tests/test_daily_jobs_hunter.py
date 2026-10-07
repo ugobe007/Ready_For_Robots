@@ -38,9 +38,10 @@ def _job(**extra):
 
 
 class _FakeHunter:
-    def __init__(self, emails, finder=None):
+    def __init__(self, emails, finder=None, by_query=None):
         self.emails = emails
         self.finder_result = finder
+        self.by_query = by_query
         self.domain_calls = []
         self.finder_calls = []
 
@@ -50,6 +51,10 @@ class _FakeHunter:
 
     def domain_search(self, **kwargs):
         self.domain_calls.append(kwargs)
+        if self.by_query is not None:
+            if kwargs.get("domain"):
+                return {"emails": self.by_query.get("domain") or []}
+            return {"emails": self.by_query.get("company") or []}
         return {"emails": self.emails}
 
 
@@ -379,6 +384,145 @@ def test_finder_fills_email_after_company_title_match(monkeypatch):
     report = compose_daily_jobs_report(db, limit=25)
     assert "Priya Shah" in report["jobs"][0]["decision_maker"]
     assert "priya.shah@geodis.com" in report["jobs"][0]["contact"]
+
+
+def test_domain_cdo_does_not_block_company_title_match(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(
+        _job(
+            job_key="both-queries",
+            apply_url="https://www.geodis.com/careers",
+        )
+    )
+    db.commit()
+    hunter = _FakeHunter(
+        [],
+        by_query={
+            "domain": [
+                {
+                    "email": "kelli@geodis.com",
+                    "name": "Kelli Fondren",
+                    "title": "Chief Development Officer",
+                    "confidence": 99,
+                    "department": "executive",
+                    "verification_status": "valid",
+                }
+            ],
+            "company": [
+                {
+                    "email": "priya.shah@geodis.com",
+                    "name": "Priya Shah",
+                    "title": "Site Operations Manager",
+                    "confidence": 88,
+                    "department": "operations",
+                    "verification_status": "valid",
+                }
+            ],
+        },
+    )
+    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    assert any(call.get("domain") == "geodis.com" for call in hunter.domain_calls)
+    assert any(call.get("company") == "GEODIS" for call in hunter.domain_calls)
+    assert result["filled"] == 1
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Priya Shah" in report["jobs"][0]["decision_maker"]
+    assert "Kelli Fondren" not in report["jobs"][0]["decision_maker"]
+
+
+def test_force_replaces_wrong_hunter_person(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(
+        _job(
+            job_key="retry",
+            employer_email="kelli@geodis.com",
+            provenance={
+                "contact_name": "Kelli Fondren",
+                "contact_title": "Chief Development Officer",
+                "contact_source": "hunter_domain",
+                "hunter_checked_at": datetime.now(timezone.utc).date().isoformat(),
+            },
+        )
+    )
+    db.commit()
+    hunter = _FakeHunter(
+        [
+            {
+                "email": "priya.shah@geodis.com",
+                "name": "Priya Shah",
+                "title": "Site Operations Manager",
+                "confidence": 88,
+                "department": "operations",
+                "verification_status": "valid",
+            }
+        ]
+    )
+    skipped = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter, force=False)
+    assert skipped["skipped"] == 1
+    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter, force=True)
+    assert result["filled"] == 1
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Priya Shah" in report["jobs"][0]["decision_maker"]
+
+
+def test_force_does_not_overwrite_page_name_and_email(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(
+        _job(
+            job_key="page-complete",
+            employer_email="maya.chen@geodis.com",
+            provenance={
+                "contact_name": "Maya Chen",
+                "contact_title": "Pharmacy ops",
+            },
+        )
+    )
+    db.commit()
+    hunter = _FakeHunter(
+        [
+            {
+                "email": "priya.shah@geodis.com",
+                "name": "Priya Shah",
+                "title": "Site Operations Manager",
+                "confidence": 99,
+                "department": "operations",
+                "verification_status": "valid",
+            }
+        ]
+    )
+    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter, force=True)
+    assert result["skipped"] == 1
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Maya Chen" in report["jobs"][0]["decision_maker"]
+    assert "maya.chen@geodis.com" in report["jobs"][0]["contact"]
+
+
+def test_title_match_is_kept_when_finder_has_no_email(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(_job(job_key="name-only"))
+    db.commit()
+    hunter = _FakeHunter(
+        [
+            {
+                "email": "",
+                "name": "Priya Shah",
+                "first_name": "Priya",
+                "last_name": "Shah",
+                "title": "Site Operations Manager",
+                "confidence": 90,
+                "department": "operations",
+                "verification_status": "valid",
+            }
+        ]
+    )
+    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    assert result["filled"] == 1
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Priya Shah" in report["jobs"][0]["decision_maker"]
+    assert "Site Operations Manager" in report["jobs"][0]["decision_maker"]
 
 
 def test_low_confidence_hunter_email_is_not_used(monkeypatch):
