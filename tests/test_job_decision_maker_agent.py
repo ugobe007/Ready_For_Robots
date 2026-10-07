@@ -144,3 +144,81 @@ def test_cnc_job_looks_for_plant_titles():
     )
     assert plan.function == "machine_tending"
     assert "Plant Manager" in plan.titles
+
+
+def test_stored_lifecycle_function_is_the_plan_key():
+    picking = plan_for_job(
+        {
+            "action": "picking",
+            "robot_compatible_task": "Case pick to pallet",
+        }
+    )
+    assert picking.function == "picking"
+    assert "Fulfillment Operations Manager" in picking.titles
+
+    housekeeping = plan_for_job(
+        {
+            "action": "housekeeping",
+            "robot_compatible_task": "Guest room turnover",
+        }
+    )
+    assert housekeeping.function == "housekeeping"
+    assert "Director of Housekeeping" in housekeeping.titles
+
+    tending = plan_for_job(
+        {
+            "action": "machine_tending",
+            "robot_compatible_task": "Tend the production cell",
+        }
+    )
+    assert tending.function == "machine_tending"
+    assert "Plant Manager" in tending.titles
+
+
+def test_agent_rejects_junior_titles_even_when_the_word_matches():
+    plan = plan_for_job(
+        {
+            "action": "delivery",
+            "robot_compatible_task": "Pharmacy cart loop",
+            "observed_workflow": "Move filled carts from pharmacy to nursing units",
+        }
+    )
+    assert (
+        score_candidate(
+            plan,
+            {
+                "email": "tech@harrishealth.org",
+                "name": "Alex Tech",
+                "title": "Pharmacy Technician",
+                "confidence": 99,
+            },
+        )
+        is None
+    )
+    evs = plan_for_job(
+        {
+            "action": "scrub",
+            "robot_compatible_task": "Overnight terminal floor scrubbing",
+        }
+    )
+    assert (
+        score_candidate(
+            evs,
+            {
+                "email": "asst@mallofamerica.com",
+                "name": "Pat Asst",
+                "title": "Facilities Assistant",
+                "confidence": 99,
+            },
+        )
+        is None
+    )
+    assert score_candidate(
+        plan,
+        {
+            "email": "maya@harrishealth.org",
+            "name": "Maya Chen",
+            "title": "Director of Pharmacy",
+            "confidence": 82,
+        },
+    )

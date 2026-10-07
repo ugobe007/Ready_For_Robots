@@ -124,6 +124,8 @@ ACTION_TO_FUNCTION = {
     "inspect": "machine_tending",
     "transport": "material_handling",
     "unload": "material_handling",
+    "replenishment": "material_handling",
+    "warewash": "food_prep",
 }
 
 KEYWORD_FUNCTION = (
@@ -202,8 +204,31 @@ PENALTY_TOKENS = (
     "board member",
     "security",
 )
+JUNIOR_TOKENS = (
+    "technician",
+    "assistant",
+    "intern",
+    "clerk",
+    "aide",
+    "trainee",
+    "student",
+    "associate",
+    "coordinator",
+    "specialist",
+)
+SENIORITY_TOKENS = (
+    "director",
+    "vp",
+    "vice president",
+    "manager",
+    "head",
+    "chief",
+    "supervisor",
+    "lead",
+)
 
 MIN_ACCEPT_SCORE = 24
+STRONG_TITLE_SCORE = 36
 
 
 @dataclass
@@ -250,10 +275,14 @@ def function_for_job(row: Any) -> str:
     for needle, function in KEYWORD_FUNCTION:
         if needle in blob:
             return function
-    from_title = job_function_from_title(blob)
-    if from_title:
-        return from_title
     action = _get(row, "action").lower().replace(" ", "_")
+    if action in TITLES_BY_FUNCTION:
+        return action
+    from_title = job_function_from_title(blob)
+    if from_title and from_title in TITLES_BY_FUNCTION:
+        return from_title
+    if from_title and from_title in ACTION_TO_FUNCTION:
+        return ACTION_TO_FUNCTION[from_title]
     if action in ACTION_TO_FUNCTION:
         return ACTION_TO_FUNCTION[action]
     return "operations"
@@ -310,6 +339,9 @@ def score_candidate(
         return None
     if any(tok in title for tok in PENALTY_TOKENS):
         return None
+    senior = any(tok in title for tok in SENIORITY_TOKENS)
+    if not senior and any(tok in title for tok in JUNIOR_TOKENS):
+        return None
     score = 0
     why_bits: list[str] = []
     for target in plan.titles:
@@ -318,7 +350,11 @@ def score_candidate(
             score += 48
             why_bits.append(f"title is {target}")
             break
-        words = [w for w in re.findall(r"[a-z]{4,}", target_l) if w not in {"director", "manager", "head", "chief", "vice"}]
+        words = [
+            w
+            for w in re.findall(r"[a-z]{4,}", target_l)
+            if w not in {"director", "manager", "head", "chief", "vice"}
+        ]
         hits = [w for w in words if w in title]
         if len(hits) >= 2:
             score += 36
@@ -327,6 +363,7 @@ def score_candidate(
         if len(hits) == 1 and hits[0] not in {"operations"}:
             score += 18
             why_bits.append(f"title has {hits[0]}")
+            break
     token_hits = [tok for tok in plan.tokens if tok in title]
     if token_hits:
         score += 16 * min(2, len(token_hits))
@@ -344,6 +381,8 @@ def score_candidate(
         if city and city in person_place:
             score += 12
             why_bits.append(f"same city as {city.title()}")
+    if not senior and score < STRONG_TITLE_SCORE:
+        return None
     if score < MIN_ACCEPT_SCORE:
         return None
     work = plan.function.replace("_", " ")

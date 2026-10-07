@@ -23,6 +23,7 @@ from app.services.daily_jobs_report import (
     select_daily_report_rows,
 )
 from app.services.hunter_client import (
+    MIN_DOMAIN_CONFIDENCE,
     HunterAPIError,
     HunterClient,
     HunterConfigError,
@@ -314,6 +315,12 @@ def _usable_hunter_row(
     if local in _ROLE_LOCALS:
         return False
     if (row.get("verification_status") or "").lower() == "invalid":
+        return False
+    try:
+        confidence = int(row.get("confidence") or 0)
+    except (TypeError, ValueError):
+        confidence = 0
+    if confidence < MIN_DOMAIN_CONFIDENCE:
         return False
     if not name and "." not in local:
         return False

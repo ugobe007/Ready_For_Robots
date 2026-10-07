@@ -312,6 +312,29 @@ def test_email_must_belong_to_the_named_employer():
     ) is True
 
 
+def test_low_confidence_hunter_email_is_not_used(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(_job(job_key="guess"))
+    db.commit()
+    hunter = _FakeHunter(
+        [
+            {
+                "email": "guess.pattern@geodis.com",
+                "name": "Guess Pattern",
+                "title": "Site Operations Manager",
+                "confidence": 51,
+                "department": "operations",
+                "verification_status": "valid",
+            }
+        ]
+    )
+    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    assert result["filled"] == 0
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "guess.pattern@geodis.com" not in (report["jobs"][0]["contact"] or "")
+
+
 def test_ats_apply_url_is_not_the_hunter_domain():
     from types import SimpleNamespace
 
