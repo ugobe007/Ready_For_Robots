@@ -435,6 +435,45 @@ export function isJobsCrmOfferQuery(
   }
 }
 
+export type JobsWatchEventRow = {
+  id?: number;
+  kind?: string;
+  title?: string;
+  company_name?: string | null;
+  locked?: boolean;
+};
+
+export type JobsWatchStatus = {
+  opted_in: boolean;
+  plan?: string;
+  robot_url?: string | null;
+  product_name?: string | null;
+  last_checked_at?: string | null;
+  robots_used?: number;
+  robots_limit?: number | null;
+  alerts_sent?: number;
+  alerts_limit?: number | null;
+  events?: JobsWatchEventRow[];
+  upgrade_url?: string;
+  free_taste?: boolean;
+};
+
+export type JobsWatchSeedJob = {
+  job_key?: string;
+  title?: string;
+  company_name?: string | null;
+};
+
+export function jobsWatchCheckedLabel(iso?: string | null): string {
+  const raw = String(iso || "").trim();
+  if (!raw) return "First check runs on the daily cron";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return "Last check recorded";
+  const day = d.getUTCDate();
+  const month = d.toLocaleString("en-GB", { month: "short", timeZone: "UTC" });
+  return `Last check ${day} ${month}`;
+}
+
 async function jobsCrmFetch<T>(
   path: string,
   token: string,
@@ -462,6 +501,29 @@ async function jobsCrmFetch<T>(
     throw new Error(detail);
   }
   return (await res.json()) as T;
+}
+
+export async function fetchJobsWatch(token: string): Promise<JobsWatchStatus> {
+  return jobsCrmFetch<JobsWatchStatus>("/api/crm/jobs-watch", token);
+}
+
+export async function putJobsWatch(
+  token: string,
+  body: {
+    opted_in: boolean;
+    robot_url?: string;
+    product_name?: string;
+    seed_jobs?: JobsWatchSeedJob[];
+  }
+): Promise<JobsWatchStatus> {
+  const payload: Record<string, unknown> = { opted_in: body.opted_in };
+  if (body.robot_url) payload.robot_url = body.robot_url;
+  if (body.product_name) payload.product_name = body.product_name;
+  if (body.seed_jobs?.length) payload.seed_jobs = body.seed_jobs;
+  return jobsCrmFetch<JobsWatchStatus>("/api/crm/jobs-watch", token, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function keepJobsOnAccount(

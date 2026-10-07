@@ -58,12 +58,16 @@ import {
   saveWorkTaskModelOnAccount,
   workTaskModelListLine,
   crmDeskForCurrentRobot,
+  fetchJobsWatch,
   postJobsCrmActivity,
+  putJobsWatch,
   type JobsCrmApplication,
+  type JobsWatchStatus,
   type KeptJobRow,
   type WorkTaskModelAnswer,
   type WorkTaskModelKind,
 } from "@/lib/jobsCrmAccount";
+import JobsWatchReport from "@/components/crm/JobsWatchReport";
 import {
   JOBS_APPLY_CTA,
   JOBS_POC_PREFER_HINT,
@@ -119,6 +123,9 @@ export default function JobsCrmDesk({
   const [applications, setApplications] = useState<
     Record<string, JobsCrmApplication>
   >({});
+  const [watch, setWatch] = useState<JobsWatchStatus | null>(null);
+  const [watchBusy, setWatchBusy] = useState(false);
+  const [watchError, setWatchError] = useState<string | null>(null);
   useEffect(() => {
     if (!showNextSteps) return;
     const timer = window.setTimeout(() => openJobsCrmNextStepsForm(), 40);
@@ -139,6 +146,20 @@ export default function JobsCrmDesk({
       })
       .catch(() => {
         /* handoff still paints */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
+  useEffect(() => {
+    if (!accessToken) return;
+    let cancelled = false;
+    fetchJobsWatch(accessToken)
+      .then(status => {
+        if (!cancelled) setWatch(status);
+      })
+      .catch(() => {
+        if (!cancelled) setWatch(null);
       });
     return () => {
       cancelled = true;
@@ -172,6 +193,31 @@ export default function JobsCrmDesk({
     for (const row of desk.rows) map.set(row.job_key, row);
     return map;
   }, [desk.rows]);
+
+  async function optInWatch(optedIn: boolean) {
+    if (!accessToken) return;
+    setWatchBusy(true);
+    setWatchError(null);
+    try {
+      const next = await putJobsWatch(accessToken, {
+        opted_in: optedIn,
+        robot_url: robotUrl || undefined,
+        product_name: product || undefined,
+        seed_jobs: jobs.slice(0, CRM_UNLOCKED_JOBS).map(job => ({
+          job_key: job.job_key,
+          title: job.title,
+          company_name: job.company_name,
+        })),
+      });
+      setWatch(next);
+    } catch (e) {
+      setWatchError(
+        e instanceof Error ? e.message : "Could not update job watch."
+      );
+    } finally {
+      setWatchBusy(false);
+    }
+  }
 
   function mergeKeptRow(row: KeptJobRow) {
     setAccountRows(prev => {
@@ -329,6 +375,13 @@ export default function JobsCrmDesk({
           onApplyClick={openOfferForm}
         />
       </div>
+      <JobsWatchReport
+        signedIn={signedIn}
+        watch={watch}
+        watchBusy={watchBusy}
+        watchError={watchError}
+        onOptIn={optInWatch}
+      />
       {accessToken && jobs.length > 0 ? (
         <CalJobsDesk
           token={accessToken}

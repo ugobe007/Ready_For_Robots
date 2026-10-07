@@ -18,6 +18,9 @@ JOBS_WATCH_FREE_ROBOTS = 1
 JOBS_WATCH_FREE_ALERTS = 2
 JOBS_WATCH_FREE_VISIBLE_EVENTS = 3
 _SITE = (os.getenv("PUBLIC_SITE_URL") or "https://readyforrobots.com").rstrip("/")
+# Customer report links stay on Jobs CRM / FIND. Never SIGNAL /crm.
+JOBS_WATCH_CRM_PATH = "/pipeline?src=jobs_activate"
+JOBS_WATCH_FIND_PATH = "/?visit=jobs"
 
 
 def jobs_watch_limits(plan: str) -> dict[str, Any]:
@@ -284,17 +287,24 @@ def build_watch_email(watch: JobsWatch, events: list[JobsWatchEvent], *, plan: s
     product = watch.product_name or watch.website_domain
     subject = f"New jobs for {product}"
     lines = [
-        f"We checked {product} and found new work.",
+        f"New jobs for {product}. Named employers and the work:",
         "",
     ]
     show = events[: 3 if plan == PLAN_PAID else 1]
     for event in show:
-        place = f" — {event.company_name}" if event.company_name else ""
-        lines.append(f"• {event.title}{place}")
+        employer = (event.company_name or "").strip()
+        title = (event.title or "").strip() or "New work"
+        if employer:
+            lines.append(f"• {employer} — {title}")
+        else:
+            lines.append(f"• {title}")
+    hidden = max(0, len(events) - len(show))
+    if hidden:
+        lines.append(f"• {hidden} more on the CRM desk")
     lines += [
         "",
-        f"Open CRM: {_SITE}/crm",
-        f"Open jobs: {_SITE}/",
+        f"Open CRM: {_SITE}{JOBS_WATCH_CRM_PATH}",
+        f"Find jobs: {_SITE}{JOBS_WATCH_FIND_PATH}",
     ]
     if plan != PLAN_PAID:
         lines += [

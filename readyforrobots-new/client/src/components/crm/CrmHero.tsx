@@ -5,15 +5,13 @@ import { type ReactNode } from "react";
 import { Link } from "wouter";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
+import JobsWatchReport from "@/components/crm/JobsWatchReport";
 import {
   CRM_HEADLINE_CLASS,
   CRM_HOW_TO_STEPS,
   CRM_PAGE_HEADLINE,
   CRM_PAGE_NEXT,
   CRM_SUBHEAD_CLASS,
-  CRM_WATCH_FREE_HINT,
-  CRM_WATCH_OPT_IN_LABEL,
-  CRM_WATCH_SIGNED_OUT,
   CRM_UNLOCKED_JOBS,
   JOBS_ACTIVATE_JOBS_CTA,
   JOBS_EYEBROW_CLASS,
@@ -22,27 +20,9 @@ import {
 } from "@/lib/jobsWorkflow";
 import { jobModelListLine } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
+import type { JobsWatchStatus } from "@/lib/jobsCrmAccount";
 
-export type JobsWatchStatus = {
-  opted_in: boolean;
-  plan?: string;
-  robot_url?: string | null;
-  product_name?: string | null;
-  last_checked_at?: string | null;
-  robots_used?: number;
-  robots_limit?: number | null;
-  alerts_sent?: number;
-  alerts_limit?: number | null;
-  events?: Array<{
-    id?: number;
-    kind?: string;
-    title?: string;
-    company_name?: string | null;
-    locked?: boolean;
-  }>;
-  upgrade_url?: string;
-  free_taste?: boolean;
-};
+export type { JobsWatchStatus };
 
 export type CrmTasteJob = Pick<
   MatchJob,
@@ -84,8 +64,6 @@ export default function CrmHero({
       {JOBS_ACTIVATE_JOBS_CTA}
     </Link>
   ) : null;
-  const optedIn = Boolean(watch?.opted_in);
-  const events = watch?.events || [];
   const unlocked = tasteJobs.slice(0, CRM_UNLOCKED_JOBS);
   return (
     <div className="mb-5 border border-slate-600 bg-[#0b162f] px-5 py-5 sm:px-6">
@@ -147,58 +125,13 @@ export default function CrmHero({
         </div>
       ) : null}
 
-      <div className="mt-5 border border-emerald-500/30 bg-emerald-400/5 px-4 py-4">
-        <label className="flex cursor-pointer items-start gap-3">
-          <input
-            type="checkbox"
-            className="mt-1 h-5 w-5 accent-emerald-400"
-            checked={optedIn}
-            disabled={!signedIn || watchBusy}
-            onChange={e => onOptIn?.(e.target.checked)}
-          />
-          <span>
-            <span className="block text-base font-semibold text-white">
-              {CRM_WATCH_OPT_IN_LABEL}
-            </span>
-            <span className="mt-1 block text-sm leading-relaxed text-slate-300">
-              {signedIn ? CRM_WATCH_FREE_HINT : CRM_WATCH_SIGNED_OUT}
-            </span>
-          </span>
-        </label>
-        {watchError ? (
-          <p className="mt-3 text-sm text-amber-200">{watchError}</p>
-        ) : null}
-        {optedIn && watch?.robot_url ? (
-          <p className="mt-3 font-mono text-sm text-emerald-300">
-            Watching {watch.product_name || watch.robot_url}
-            {watch.last_checked_at
-              ? " · last check recorded"
-              : " · first check runs on the daily cron"}
-          </p>
-        ) : null}
-        {events.length > 0 ? (
-          <ul className="mt-3 space-y-1.5">
-            {events.slice(0, 5).map((event, i) => (
-              <li
-                key={event.id ?? i}
-                className={`text-sm ${event.locked ? "text-slate-500" : "text-slate-200"}`}
-              >
-                {event.locked
-                  ? "Pro sees this new job — upgrade to keep the feed."
-                  : `• ${event.title}${event.company_name ? ` · ${event.company_name}` : ""}`}
-              </li>
-            ))}
-          </ul>
-        ) : null}
-        {watch?.free_taste && optedIn ? (
-          <Link
-            href={watch.upgrade_url || "/pricing"}
-            className="mt-3 inline-block font-mono text-sm font-semibold uppercase tracking-[0.08em] text-emerald-400 hover:text-emerald-300"
-          >
-            Keep watching with Pro →
-          </Link>
-        ) : null}
-      </div>
+      <JobsWatchReport
+        signedIn={signedIn}
+        watch={watch}
+        watchBusy={watchBusy}
+        watchError={watchError}
+        onOptIn={onOptIn}
+      />
 
       {actions ? (
         <div className="mt-4 flex flex-wrap gap-3">{actions}</div>

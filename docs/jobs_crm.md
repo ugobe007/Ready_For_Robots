@@ -205,6 +205,10 @@ Hunt on FIND. Keep jobs on the CRM listing. Apply when the user is ready.
 
 After Open CRM, **Cal** is the Jobs recruiter on `/pipeline?src=jobs_activate`. He reads kept Job Cards, asks missing apply facts (task-model source vs self-train, catalogued SKU, monthly rental, skippable PoC), and prepares the existing violet apply draft. The operator reviews and sends. Tools: `GET/POST /api/jobs-crm/cal/desk`. Production `CAL_AUTONOMY_ENABLED=0`. Not FIND. Not buyer/SIGNAL mail. Not a second home.
 
+### F19 — Jobs watch report on the desk (ship)
+
+The customer pipeline report is **new jobs for this robot**, not Cal `/preview` and not SIGNAL HOT buyers. After Open CRM, the desk shows the watch: named employer + work, last check, email opt-in (`GET/PUT /api/crm/jobs-watch`). Alert email opens `/pipeline?src=jobs_activate` and FIND `/?visit=jobs`. Do not invent match percentages, jackpots, or buyer quotes. Do not link the OEM to `/crm` without `src=jobs_activate`.
+
 ---
 
 ## Agent rules (stop the rewire)

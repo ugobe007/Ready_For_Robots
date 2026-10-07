@@ -27,6 +27,7 @@ import {
   keepJobsSavedLabel,
   keepJobsStatusBar,
   crmDeskForCurrentRobot,
+  jobsWatchCheckedLabel,
   keptRowMatchesRobot,
   parseWorkTaskModel,
   normalizeWorkTaskModel,
@@ -517,5 +518,16 @@ describe("CRM desk binds to the FIND robot, not leftover totes", () => {
     expect(copy).toMatch(/Jobs recruiter/);
     expect(copy).not.toMatch(/Cal matched/);
     expect(copy).not.toMatch(/unlock 15 sales leads for your robot/);
+  });
+
+  it("jobs watch report dates and CRM links stay on Jobs", () => {
+    expect(jobsWatchCheckedLabel(null)).toMatch(/first check/i);
+    expect(jobsWatchCheckedLabel("2026-10-07T12:00:00Z")).toBe(
+      "Last check 7 Oct"
+    );
+    const account = readFileSync(join(here, "./jobsCrmAccount.ts"), "utf8");
+    expect(account).toMatch(/\/api\/crm\/jobs-watch/);
+    expect(account).toMatch(/export async function fetchJobsWatch/);
+    expect(account).toMatch(/export async function putJobsWatch/);
   });
 });

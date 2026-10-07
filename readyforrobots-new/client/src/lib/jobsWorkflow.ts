@@ -922,6 +922,9 @@ export const CRM_WATCH_FREE_HINT =
   "Free watches one robot and sends two alerts. Pro watches every SKU.";
 export const CRM_WATCH_SIGNED_OUT =
   "Sign in to opt in. We watch the robot URL you ran on Jobs.";
+export const CRM_WATCH_REPORT_EYEBROW = "Jobs for this robot";
+export const CRM_WATCH_LOCKED_HINT = "Pro keeps this job on the feed.";
+export const CRM_WATCH_UPGRADE_CTA = "Keep watching with Pro →";
 export const CRM_HEADLINE_CLASS =
   "font-display text-3xl font-bold tracking-tight text-emerald-400 sm:text-4xl";
 export const PIPELINE_PAGE_HEADLINE = "Pipeline";

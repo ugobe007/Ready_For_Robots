@@ -38,7 +38,9 @@ import {
   CRM_PAGE_NEXT,
   CRM_SUBHEAD_CLASS,
   CRM_WATCH_FREE_HINT,
+  CRM_WATCH_LOCKED_HINT,
   CRM_WATCH_OPT_IN_LABEL,
+  CRM_WATCH_REPORT_EYEBROW,
   CRM_UNLOCKED_JOBS,
   CRM_FREE_BATCH,
   CRM_FREE_BATCHES_PER_MONTH,
@@ -994,6 +996,9 @@ describe("jobsWorkflow", () => {
     );
     expect(desk).not.toMatch(/JOBS_KEEP_JOBS_CTA/);
     expect(desk).toMatch(/JobsKeepStatusBar/);
+    expect(desk).toMatch(/JobsWatchReport/);
+    expect(desk).toMatch(/fetchJobsWatch/);
+    expect(desk).toMatch(/putJobsWatch/);
     expect(desk).toMatch(/JobsCrmNextSteps/);
     expect(desk).toMatch(/JobsCrmInbox/);
     expect(desk).toMatch(/aria-label=\{CRM_LISTING_EYEBROW\}/);
@@ -1758,6 +1763,9 @@ describe("jobsWorkflow", () => {
     expect(CRM_HOW_TO_STEPS[2]).toMatch(/apply/i);
     expect(CRM_WATCH_OPT_IN_LABEL).toMatch(/email me when these jobs change/i);
     expect(CRM_WATCH_FREE_HINT).toMatch(/free watches one robot/i);
+    expect(CRM_WATCH_REPORT_EYEBROW).toMatch(/jobs for this robot/i);
+    expect(CRM_WATCH_LOCKED_HINT).toMatch(/pro keeps this job/i);
+    expect(CRM_WATCH_LOCKED_HINT).not.toMatch(/jackpot|98%|hilton/i);
 
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
@@ -1820,8 +1828,19 @@ describe("jobsWorkflow", () => {
     expect(hero).toMatch(/CRM_HEADLINE_CLASS/);
     expect(hero).toMatch(/CRM_SUBHEAD_CLASS/);
     expect(hero).toMatch(/JOBS_ACTIVATE_JOBS_CTA/);
-    expect(hero).toMatch(/CRM_WATCH_OPT_IN_LABEL/);
+    expect(hero).toMatch(/JobsWatchReport/);
     expect(hero).toMatch(/CRM_HOW_TO_STEPS/);
+    const watchReport = readFileSync(
+      join(here, "../components/crm/JobsWatchReport.tsx"),
+      "utf8"
+    );
+    expect(watchReport).toMatch(/CRM_WATCH_OPT_IN_LABEL/);
+    expect(watchReport).toMatch(/CRM_WATCH_REPORT_EYEBROW/);
+    expect(watchReport).toMatch(/CRM_EMPLOYER_NAME_CLASS/);
+    expect(watchReport).toMatch(/jobsFindHref/);
+    expect(watchReport).toMatch(/FIND_JOBS_CTA/);
+    expect(watchReport).not.toMatch(/\/crm["'`]/);
+    expect(watchReport).not.toMatch(/98%|Hilton|Jackpot|Vault/i);
     expect(hero).toMatch(/tasteJobs/);
     expect(hero).toMatch(/CRM_UNLOCKED_JOBS/);
     expect(hero).toMatch(/jobModelListLine/);
