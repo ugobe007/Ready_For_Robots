@@ -48,6 +48,8 @@ import {
   landingHeadlineParts,
   landingVisitFromSearch,
 } from "./jobsLanding";
+import { FEATURED_BUYER_QUOTES } from "./buyerQuotes";
+import { FIND_JOBS_CTA } from "./jobsWorkflow";
 import { catalogSkusForClass, listKnownOemCatalog } from "./knownOemCatalog";
 import {
   FIND_JOBS_HOME_HEADLINE,
@@ -492,5 +494,39 @@ describe("landing chrome hrefs cannot swap visits", () => {
     expect(privacy).toMatch(/ExperimentHeader/);
     expect(privacy).toMatch(/jobsFindHref/);
     expect(privacy).not.toMatch(/href="\/preview"/);
+  });
+
+  it("landing employer quotes are named 2024–2026 work, linked to FIND", () => {
+    expect(FEATURED_BUYER_QUOTES.length).toBeGreaterThanOrEqual(4);
+    const companies = FEATURED_BUYER_QUOTES.map((q) => q.company).join(" ");
+    expect(companies).toMatch(/Rochester Regional Health/);
+    expect(companies).toMatch(/GEODIS/);
+    expect(companies).toMatch(/DHL Supply Chain/);
+    expect(companies).toMatch(/Chipotle/);
+    expect(companies).toMatch(/Marriott International/);
+    for (const quote of FEATURED_BUYER_QUOTES) {
+      expect(quote.author.trim().length).toBeGreaterThan(2);
+      expect(quote.quote.trim().length).toBeGreaterThan(40);
+      expect(quote.sourceUrl).toMatch(/^https:\/\//);
+      expect(quote.opportunityHref).toBe(jobsFindHref());
+      expect(quote.opportunityHref).not.toMatch(/\/pipeline/);
+      expect(quote.date).not.toMatch(/Today|Yesterday/i);
+      expect(quote.heatTier).not.toBe("HOT");
+    }
+    const banner = readFileSync(
+      join(here, "../components/CustomerQuoteBanner.tsx"),
+      "utf8"
+    );
+    expect(banner).toMatch(/jobsFindHref\(\)/);
+    expect(banner).toMatch(/FIND_JOBS_CTA/);
+    expect(banner).not.toMatch(/Job Opportunity/);
+    expect(banner).not.toMatch(/\/pipeline\?co=/);
+    const landing = readFileSync(
+      join(here, "../components/JobsLanding.tsx"),
+      "utf8"
+    );
+    expect(landing).toMatch(/CustomerQuoteBanner/);
+    expect(landing).toMatch(/aria-label="Employer quotes"/);
+    expect(FIND_JOBS_CTA).toBe("Find jobs →");
   });
 });
