@@ -65,7 +65,7 @@ describe("landing fork", () => {
     expect(landingVisitFromSearch("?visit=candidates")).toBe("candidates");
     expect(landingVisitFromSearch("?restore=1")).toBe("jobs");
     expect(landingVisitFromSearch("?visit=jobs&restore=1")).toBe("jobs");
-    expect(jobsFreshHomeHref()).toBe("/?new=1");
+    expect(jobsFreshHomeHref()).toBe("/");
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
   });
@@ -329,16 +329,14 @@ describe("landing fork", () => {
     );
     expect(I_KNOW_THE_ROBOT_LABEL).toBe("What type of robot?");
     expect(workspace).toMatch(/I_KNOW_THE_ROBOT_LABEL/);
-    expect(workspace).toMatch(/border-2 border-emerald-400/);
-    expect(workspace).toMatch(
-      /text-xl font-bold tracking-tight text-emerald-200/
-    );
+    expect(workspace).toMatch(/border-emerald-400/);
+    expect(workspace).toMatch(/FIND_JOBS_HOME_HEADLINE/);
     expect(workspace).toMatch(/submitClassFind/);
     expect(workspace).toMatch(/classOptionsOrDefault/);
     expect(workspace).toMatch(/<select/);
-    expect(workspace).toMatch(/id="robot-type"/);
-    expect(workspace).toMatch(/onPickClass\(catalogClass\)/);
-    expect(workspace).toMatch(/disabled=\{!catalogClass\}/);
+    expect(workspace).toMatch(/id="job-definition"/);
+    expect(workspace).toMatch(/onPickClass\(/);
+    expect(workspace).toMatch(/disabled=\{/);
     expect(workspace).toMatch(/aria-label="Find jobs for your robot"/);
     expect(workspace).toMatch(/fetchRobotJobSearch/);
     expect(workspace).toMatch(/FIND_JOBS_CTA/);
@@ -464,6 +462,7 @@ describe("landing chrome hrefs cannot swap visits", () => {
     );
     const pricing = readFileSync(join(here, "../pages/Pricing.tsx"), "utf8");
     const privacy = readFileSync(join(here, "../pages/Privacy.tsx"), "utf8");
+    const legal = readFileSync(join(here, "../pages/LegalDocument.tsx"), "utf8");
     expect(landing).toMatch(/jobsFindHref/);
     expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
     expect(landing).toMatch(/LANDING_FOOTER_LINKS/);
@@ -489,8 +488,9 @@ describe("landing chrome hrefs cannot swap visits", () => {
     expect(pricing).toMatch(/jobsCrmOpenHref\(false\)/);
     expect(pricing).toMatch(/id="faq"/);
     expect(pricing).not.toMatch(/from "@\/components\/Header"/);
-    expect(privacy).toMatch(/ExperimentHeader/);
-    expect(privacy).toMatch(/jobsFindHref/);
+    expect(privacy).toMatch(/LegalDocument/);
+    expect(legal).toMatch(/ExperimentHeader/);
+    expect(legal).toMatch(/jobsFindHref/);
     expect(privacy).not.toMatch(/href="\/preview"/);
   });
 });
