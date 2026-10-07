@@ -605,7 +605,9 @@ def _split_name_title(line: str) -> Optional[tuple[tuple[str, str], str]]:
         return None
     if "," in raw:
         left, right = [p.strip() for p in raw.split(",", 1)]
-        name = parse_person_name(left, allow_middle=False)
+        # Name first may be first-middle-last. Title-first leftovers stay two-word
+        # so "Harris County Attorney" cannot become a person.
+        name = parse_person_name(left, allow_middle=True)
         if name and _TITLE.search(right) and not parse_person_name(right):
             return name, right
         name = parse_person_name(right, allow_middle=False)
@@ -619,7 +621,7 @@ def _split_name_title(line: str) -> Optional[tuple[tuple[str, str], str]]:
     if prefix and suffix:
         return None
     leftover = prefix or suffix
-    name = parse_person_name(leftover, allow_middle=False)
+    name = parse_person_name(leftover, allow_middle=bool(prefix))
     title = title_match.group(0).strip(" ,;-")
     if name and title and not parse_person_name(title):
         return name, title

@@ -150,6 +150,21 @@ def test_people_from_html_rejects_place_and_org_leftovers():
     assert "Maya Chen" in names
 
 
+def test_people_from_html_reads_three_word_name_before_title():
+    html = """
+    <html><body>
+      <p>Mary Ann Smith, Site Operations Manager</p>
+      <p>Louis G. Smith Jr. Chief Operating Officer</p>
+      <p>Division Director, Harris County Attorney</p>
+    </body></html>
+    """
+    people = people_from_html(html, "https://geodis.com/leadership")
+    names = [p["name"] for p in people]
+    assert "Mary Smith" in names
+    assert "Louis Smith" in names
+    assert "Harris Attorney" not in names
+
+
 def test_people_from_html_reads_json_ld_person():
     html = """
     <script type="application/ld+json">
