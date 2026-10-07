@@ -20,6 +20,8 @@ export type DailyJobsReportJob = {
   contact_url?: string | null;
   apply_url?: string | null;
   contact_source?: string | null;
+  target_titles?: string[];
+  match_why?: string | null;
 };
 
 export type DailyJobsReportHunter = {
@@ -104,7 +106,7 @@ export default function AdminDailyJobsReport({
             disabled={sending || enriching || loading}
             className="inline-flex items-center justify-center border border-emerald-500/60 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-50"
           >
-            {enriching ? "Looking up…" : "Look up missing contacts"}
+            {enriching ? "Finding people…" : "Find decision makers"}
           </button>
           <button
             type="button"
@@ -152,7 +154,17 @@ export default function AdminDailyJobsReport({
                   <Field label="[1] Job type and description" value={typeBlock} />
                   <Field
                     label="[2] Decision maker"
-                    value={job.decision_maker || "Not named on the posting"}
+                    value={
+                      [
+                        job.decision_maker || "Not named on the posting",
+                        job.target_titles?.length
+                          ? `Looked for: ${job.target_titles.slice(0, 3).join(", ")}`
+                          : "",
+                        job.match_why || "",
+                      ]
+                        .filter(Boolean)
+                        .join("\n")
+                    }
                   />
                   <Field
                     label="[3] Timing"
@@ -183,9 +195,10 @@ export default function AdminDailyJobsReport({
         </p>
       ) : null}
       <p className="mt-2 text-[11px] text-slate-500">
-        Missing names and emails come from Hunter.io domain search. We do not
-        invent people. Daily email at 14:00 UTC to ugobe07@gmail.com. FIND stays{" "}
-        <code>/?visit=jobs</code>.
+        A decision-maker agent maps each job to the titles that own that work,
+        then scores real Hunter.io (and Apollo, when enabled) people against
+        those titles. We do not invent people. Daily email at 14:00 UTC to
+        ugobe07@gmail.com. FIND stays <code>/?visit=jobs</code>.
       </p>
     </section>
   );

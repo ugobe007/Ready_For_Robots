@@ -27,7 +27,11 @@ from app.services.hunter_client import (
     HunterClient,
     HunterConfigError,
     hunter_contact_enabled,
-    pick_best_domain_email,
+)
+from app.services.job_decision_maker_agent import (
+    DecisionMakerPlan,
+    pick_candidate,
+    plan_for_job,
 )
 from app.services.robot_job_extract import _is_board_host
 
@@ -232,17 +236,31 @@ def _usable_hunter_row(
     return True
 
 
-def _stamp_miss(row: Any) -> None:
+def _stamp_plan(prov: dict[str, Any], plan: DecisionMakerPlan | None) -> None:
+    if not plan:
+        return
+    prov["dm_target_titles"] = list(plan.titles)
+    prov["dm_job_function"] = plan.function
+
+
+def _stamp_miss(row: Any, plan: DecisionMakerPlan | None = None) -> None:
     prov = dict(_as_map(getattr(row, "provenance", None)))
     prov["hunter_checked_at"] = _today()
+    _stamp_plan(prov, plan)
     row.provenance = prov
     flag_modified(row, "provenance")
 
 
-def _stamp_hit(row: Any, prospect: dict[str, Any]) -> None:
+def _stamp_hit(
+    row: Any,
+    prospect: dict[str, Any],
+    plan: DecisionMakerPlan | None = None,
+) -> None:
     email = str(prospect.get("email") or "").strip().lower()
+    if "email_not_unlocked" in email:
+        email = ""
     name = str(prospect.get("name") or "").strip()
-    title = str(prospect.get("title") or "").strip()
+    title = str(prospect.get("title") or prospect.get("position") or "").strip()
     employer = str(getattr(row, "company_name", "") or "").strip()
     existing_email = str(getattr(row, "employer_email", "") or "").strip()
     if existing_email and _is_invented_ops_email(existing_email, employer):
@@ -255,41 +273,90 @@ def _stamp_hit(row: Any, prospect: dict[str, Any]) -> None:
         prov["contact_name"] = name
     if title and not existing_title:
         prov["contact_title"] = title
-    prov["contact_source"] = "hunter_domain"
+    source = str(prospect.get("source") or "").strip() or "decision_maker_agent"
+    prov["contact_source"] = source
     prov["hunter_checked_at"] = _today()
     if prospect.get("confidence") is not None:
         prov["hunter_confidence"] = prospect.get("confidence")
+    if prospect.get("match_why"):
+        prov["dm_match_why"] = prospect.get("match_why")
+    _stamp_plan(prov, plan)
+    if prospect.get("target_titles") and not plan:
+        prov["dm_target_titles"] = list(prospect.get("target_titles") or [])
     row.provenance = prov
     flag_modified(row, "provenance")
 
 
-def _lookup(
+def _domain_people(
     client: HunterClient,
     *,
     employer: str,
     domain: Optional[str],
-    cache: dict[str, Optional[dict[str, Any]]],
-    locality: str = "",
-) -> Optional[dict[str, Any]]:
-    key = (domain or employer).strip().lower()
+    departments: str,
+    locality: str,
+    cache: dict[str, list[dict[str, Any]]],
+) -> list[dict[str, Any]]:
+    key = f"{(domain or employer).strip().lower()}|{departments}"
     if key in cache:
         return cache[key]
     try:
-        search = client.domain_search(domain=domain, company=employer)
+        search = client.domain_search(
+            domain=domain,
+            company=employer,
+            department=departments,
+        )
     except (HunterAPIError, HunterConfigError) as exc:
         logger.warning("Hunter domain search failed for %r: %s", employer, exc)
-        cache[key] = None
-        return None
+        cache[key] = []
+        return []
     emails = [
-        row
-        for row in (search.get("emails") or [])
-        if isinstance(row, dict) and _usable_hunter_row(row, employer, locality)
+        person
+        for person in (search.get("emails") or [])
+        if isinstance(person, dict)
+        and _usable_hunter_row(person, employer, locality)
     ]
-    best = pick_best_domain_email(emails)
-    if best and not _usable_hunter_row(best, employer, locality):
-        best = None
-    cache[key] = best
-    return best
+    cache[key] = emails
+    return emails
+
+
+def _apollo_people(
+    *,
+    employer: str,
+    domain: Optional[str],
+    plan: DecisionMakerPlan,
+    locality: str,
+) -> list[dict[str, Any]]:
+    from app.services.contact_free_sources import apollo_contact_enabled
+    from app.services.apollo_client import ApolloAPIError, ApolloProspectClient
+
+    if not apollo_contact_enabled():
+        return []
+    try:
+        result = ApolloProspectClient().search_people(
+            organization_name=employer,
+            organization_domain=domain,
+            titles=plan.titles[:4],
+            locations=[locality] if locality else None,
+            per_page=10,
+        )
+    except (ApolloAPIError, Exception) as exc:
+        logger.warning("Apollo people search failed for %r: %s", employer, exc)
+        return []
+    people: list[dict[str, Any]] = []
+    for person in result.get("prospects") or []:
+        if not isinstance(person, dict):
+            continue
+        email = str(person.get("email") or "").strip().lower()
+        if "email_not_unlocked" in email:
+            person = dict(person)
+            person["email"] = ""
+            email = ""
+        if email and not _email_fits_employer(email, employer, locality):
+            continue
+        if not (person.get("name") and (person.get("title") or email)):
+            continue
+        people.append(person)
+    return people
 
 
 def enrich_daily_jobs_with_hunter(
@@ -298,7 +365,7 @@ def enrich_daily_jobs_with_hunter(
     limit: int = TOP_N,
     client: HunterClient | None = None,
 ) -> dict[str, Any]:
-    """Fill missing names/emails on the top-N cards via Hunter domain search."""
+    """Fill missing names/emails using the job-title decision-maker agent."""
     out: dict[str, Any] = {
         "ok": False,
         "looked_up": 0,
@@ -318,7 +385,7 @@ def enrich_daily_jobs_with_hunter(
         return out
 
     rows = select_daily_report_rows(db, limit=limit)
-    cache: dict[str, Optional[dict[str, Any]]] = {}
+    cache: dict[str, list[dict[str, Any]]] = {}
     filled = 0
     missed = 0
     skipped = 0
@@ -332,6 +399,7 @@ def enrich_daily_jobs_with_hunter(
             skipped += 1
             continue
         looked += 1
+        plan = plan_for_job(row)
         domain = domain_for_job(row, db)
         locality = str(getattr(row, "locality", "") or "").strip()
         prospect = None
@@ -349,19 +417,29 @@ def enrich_daily_jobs_with_hunter(
                     prospect = found
             except (HunterAPIError, HunterConfigError) as exc:
                 logger.warning("Hunter finder failed for %r: %s", employer, exc)
-        if not prospect:
-            prospect = _lookup(
+        elif not prospect:
+            people = _domain_people(
                 hunter,
                 employer=employer,
                 domain=domain,
-                cache=cache,
+                departments=plan.departments,
                 locality=locality,
+                cache=cache,
             )
-        if prospect and prospect.get("email"):
-            _stamp_hit(row, prospect)
+            people.extend(
+                _apollo_people(
+                    employer=employer,
+                    domain=domain,
+                    plan=plan,
+                    locality=locality,
+                )
+            )
+            prospect = pick_candidate(plan, people, locality=locality)
+        if prospect and (prospect.get("email") or prospect.get("name")):
+            _stamp_hit(row, prospect, plan=plan)
             filled += 1
         else:
-            _stamp_miss(row)
+            _stamp_miss(row, plan=plan)
             missed += 1
     if looked:
         db.commit()

@@ -235,6 +235,16 @@ def _contact_source(row: Any) -> Optional[str]:
     return src or None
 
 
+def _dm_agent_fields(row: Any) -> tuple[list[str], Optional[str]]:
+    blob: dict[str, Any] = {}
+    blob.update(_as_map(getattr(row, "requirements", None)))
+    blob.update(_as_map(getattr(row, "provenance", None)))
+    titles_raw = blob.get("dm_target_titles") or []
+    titles = [str(t).strip() for t in titles_raw if str(t).strip()][:6]
+    why = _clean(blob.get("dm_match_why"), limit=200) or None
+    return titles, why
+
+
 def _decision_maker_line(name: str, title: str, *, hunter_checked: bool = False) -> str:
     if name and title:
         return f"{name} · {title}"
@@ -271,6 +281,7 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
     name, dm_title = _page_name_title(row)
     contact = _contact_fields(row)
     hunter_checked = _hunter_checked(row)
+    target_titles, match_why = _dm_agent_fields(row)
     return {
         "rank": rank,
         "job_key": str(getattr(row, "job_key", "") or ""),
@@ -291,6 +302,8 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
         "contact_url": contact.get("contact_url"),
         "apply_url": contact.get("apply_url"),
         "contact_source": _contact_source(row),
+        "target_titles": target_titles,
+        "match_why": match_why,
         "investigate_status": str(getattr(row, "investigate_status", "") or ""),
         "created_at": created.isoformat() if created else None,
     }
@@ -389,6 +402,12 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
             lines.append(f"        {desc}")
         lines.append("    [2] Decision maker")
         lines.append(f"        {job.get('decision_maker') or DECISION_MAKER_EMPTY}")
+        titles = [str(t).strip() for t in (job.get("target_titles") or []) if str(t).strip()]
+        if titles:
+            lines.append(f"        Looked for: {', '.join(titles[:3])}")
+        why = str(job.get("match_why") or "").strip()
+        if why:
+            lines.append(f"        {why}")
         lines.append("    [3] Timing")
         lines.append(f"        {job.get('timing') or TIMING_EMPTY}")
         lines.append("    [4] Contact information")
@@ -401,6 +420,17 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
         "You receive this once per day. Email now on Admin sends a catch-up.",
     ]
     return "\n".join(lines)
+
+
+def _decision_maker_html(job: dict[str, Any]) -> str:
+    parts = [str(job.get("decision_maker") or DECISION_MAKER_EMPTY)]
+    titles = [str(t).strip() for t in (job.get("target_titles") or []) if str(t).strip()]
+    if titles:
+        parts.append("Looked for: " + ", ".join(titles[:3]))
+    why = str(job.get("match_why") or "").strip()
+    if why:
+        parts.append(why)
+    return "\n".join(parts)
 
 
 def _card_field(label: str, value: str) -> str:
@@ -443,7 +473,7 @@ def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
             f"<div style=\"font-size:18px;font-weight:700;color:#047857\">{employer}</div>"
             f"{place}"
             f"{_card_field('[1] Job type and description', type_block)}"
-            f"{_card_field('[2] Decision maker', str(job.get('decision_maker') or DECISION_MAKER_EMPTY))}"
+            f"{_card_field('[2] Decision maker', _decision_maker_html(job))}"
             f"{_card_field('[3] Timing', str(job.get('timing') or TIMING_EMPTY))}"
             f"{_card_field('[4] Contact information', str(job.get('contact') or CONTACT_EMPTY))}"
             "</div>"

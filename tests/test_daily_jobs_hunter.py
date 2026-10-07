@@ -78,7 +78,8 @@ def test_enrich_fills_missing_name_and_email(monkeypatch):
     card = report["jobs"][0]
     assert card["decision_maker"] == "Priya Shah · Site operations manager"
     assert "priya.shah@geodis.com" in card["contact"]
-    assert card["contact_source"] == "hunter_domain"
+    assert card["contact_source"] == "decision_maker_agent"
+    assert "Warehouse Operations Manager" in (card.get("target_titles") or [])
 
 
 def test_enrich_rejects_role_and_invented_ops_mailboxes(monkeypatch):
@@ -136,6 +137,48 @@ def test_enrich_skips_cards_that_already_have_page_contact(monkeypatch):
     assert "dock.ops@geodis.com" in report["jobs"][0]["contact"]
 
 
+def test_enrich_picks_job_title_not_generic_executive(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(
+        _job(
+            job_key="pharm",
+            company_name="Harris Health",
+            locality="Houston, TX",
+            action="delivery",
+            robot_compatible_task="Pharmacy cart loop",
+            observed_workflow="Move filled carts from pharmacy to nursing units",
+        )
+    )
+    db.commit()
+    hunter = _FakeHunter(
+        [
+            {
+                "email": "kelli.fondren@harrishealth.org",
+                "name": "Kelli Fondren",
+                "title": "Chief Development Officer",
+                "confidence": 99,
+                "department": "executive",
+                "verification_status": "valid",
+            },
+            {
+                "email": "maya.chen@harrishealth.org",
+                "name": "Maya Chen",
+                "title": "Director of Pharmacy",
+                "confidence": 82,
+                "department": "health",
+                "verification_status": "valid",
+            },
+        ]
+    )
+    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    assert result["filled"] == 1
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Maya Chen" in report["jobs"][0]["decision_maker"]
+    assert "maya.chen@harrishealth.org" in report["jobs"][0]["contact"]
+    assert "Kelli Fondren" not in report["jobs"][0]["decision_maker"]
+
+
 def test_enrich_disabled_without_key(monkeypatch):
     monkeypatch.delenv("HUNTER_API_KEY", raising=False)
     db = _session()
@@ -169,10 +212,12 @@ def test_enrich_does_not_overwrite_page_name(monkeypatch):
         ]
     )
     result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
-    assert result["filled"] == 1
+    assert result["filled"] == 0
+    assert result["missed"] == 1
+    assert hunter.domain_calls == []
     report = compose_daily_jobs_report(db, limit=25)
     assert "Maya Chen" in report["jobs"][0]["decision_maker"]
-    assert "other.person@geodis.com" in report["jobs"][0]["contact"]
+    assert "other.person@geodis.com" not in report["jobs"][0]["contact"]
 
 
 def test_send_runs_hunter_before_email(monkeypatch):
@@ -256,4 +301,6 @@ def test_finder_search_does_not_import_hunter():
     )
     assert "daily_jobs_hunter" not in search
     assert "HunterClient" not in search
+    assert "job_decision_maker_agent" not in search
     assert "daily_jobs_hunter" not in matcher
+    assert "job_decision_maker_agent" not in matcher
