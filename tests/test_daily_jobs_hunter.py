@@ -217,6 +217,36 @@ def test_send_runs_hunter_before_email(monkeypatch):
     assert "Priya Shah" in sent[0]["body_text"]
 
 
+def test_email_must_belong_to_the_named_employer():
+    from app.services.daily_jobs_hunter import _email_fits_employer
+
+    assert _email_fits_employer(
+        "thomasr@maringeneral.org",
+        "Mercy General Hospital",
+        "Columbus, OH",
+    ) is False
+    assert _email_fits_employer(
+        "pjurisic@napaparts.com.au",
+        "NAPA Auto Parts",
+        "Duncansville, PA",
+    ) is False
+    assert _email_fits_employer(
+        "jurias@unical.com",
+        "Unifi (airport floor tech)",
+        "ATL — Atlanta, GA",
+    ) is False
+    assert _email_fits_employer(
+        "paul.spurzem@jhu.edu",
+        "Johns Hopkins University",
+        "Baltimore, MD",
+    ) is True
+    assert _email_fits_employer(
+        "jcostella@industrialmetalsupply.com",
+        "Industrial Metal Supply",
+        "Riverside, CA",
+    ) is True
+
+
 def test_finder_search_does_not_import_hunter():
     from pathlib import Path
 

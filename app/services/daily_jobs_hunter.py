@@ -6,6 +6,7 @@ Verified domain-search people only — never invent a name or mailbox.
 from __future__ import annotations
 
 import logging
+import re
 from datetime import datetime, timezone
 from typing import Any, Optional
 from urllib.parse import urlparse
@@ -49,6 +50,77 @@ _ROLE_LOCALS = frozenset(
         "team",
         "operations",
     }
+)
+_GENERIC_EMPLOYER_TOKENS = frozenset(
+    {
+        "hospital",
+        "health",
+        "medical",
+        "center",
+        "centre",
+        "company",
+        "companies",
+        "technologies",
+        "technology",
+        "partners",
+        "partner",
+        "distribution",
+        "auto",
+        "parts",
+        "metal",
+        "supply",
+        "candy",
+        "university",
+        "america",
+        "mall",
+        "energy",
+        "group",
+        "services",
+        "service",
+        "international",
+        "global",
+        "industries",
+        "industry",
+        "hygiene",
+        "aviation",
+        "airport",
+        "floor",
+        "tech",
+        "general",
+        "systems",
+        "solutions",
+        "incorporated",
+        "inc",
+        "llc",
+        "ltd",
+        "corp",
+        "corporation",
+        "the",
+        "and",
+        "for",
+        "sd",
+        "usa",
+        "united",
+        "states",
+    }
+)
+_US_LOCALITY_RE = re.compile(
+    r",\s*[A-Z]{2}\b|united states|\b(AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV)\b",
+    re.I,
+)
+_FOREIGN_TLDS = (
+    ".com.au",
+    ".co.uk",
+    ".co.nz",
+    ".com.br",
+    ".co.za",
+    ".co.jp",
+    ".de",
+    ".fr",
+    ".it",
+    ".es",
+    ".nl",
+    ".in",
 )
 
 
@@ -97,12 +169,58 @@ def _job_needs_hunter(row: Any) -> bool:
     return True
 
 
-def _usable_hunter_row(row: dict[str, Any], employer: str) -> bool:
+def _employer_tokens(employer: str) -> list[str]:
+    return [
+        tok
+        for tok in re.findall(r"[a-z0-9]{3,}", (employer or "").lower())
+        if tok not in _GENERIC_EMPLOYER_TOKENS
+    ]
+
+
+def _host_core(email: str) -> str:
+    host = email.split("@", 1)[1].lower().removeprefix("www.")
+    labels = [p for p in host.split(".") if p]
+    if len(labels) >= 3 and labels[-1] in {"au", "uk", "nz", "br", "za", "jp"}:
+        return labels[-3]
+    return labels[-2] if len(labels) >= 2 else (labels[0] if labels else "")
+
+
+def _email_fits_employer(email: str, employer: str, locality: str = "") -> bool:
+    """Reject Marin General for Mercy, NAPA Australia for a PA DC, Unical for Unifi."""
+    raw = (email or "").strip().lower()
+    if "@" not in raw:
+        return False
+    host = raw.split("@", 1)[1].lower()
+    place = locality or ""
+    if _US_LOCALITY_RE.search(place) and any(host.endswith(tld) for tld in _FOREIGN_TLDS):
+        return False
+    core = re.sub(r"[^a-z0-9]", "", _host_core(raw))
+    emp_slug = re.sub(r"[^a-z0-9]", "", employer.lower())
+    if core and emp_slug and (core in emp_slug or emp_slug in core):
+        return True
+    tokens = _employer_tokens(employer)
+    if any(len(tok) >= 4 and tok in core for tok in tokens):
+        return True
+    acronym = "".join(
+        tok[0]
+        for tok in re.findall(r"[a-z0-9]+", employer.lower())
+        if tok not in {"the", "and", "of", "for", "a", "an", "via"}
+    )
+    if len(acronym) >= 3 and acronym == core:
+        return True
+    return False
+
+
+def _usable_hunter_row(
+    row: dict[str, Any], employer: str, locality: str = ""
+) -> bool:
     email = str(row.get("email") or "").strip().lower()
     name = str(row.get("name") or "").strip()
     if not email or "@" not in email:
         return False
     if _is_invented_ops_email(email, employer):
+        return False
+    if not _email_fits_employer(email, employer, locality):
         return False
     local = email.split("@", 1)[0]
     if local in _ROLE_LOCALS:
@@ -151,6 +269,7 @@ def _lookup(
     employer: str,
     domain: Optional[str],
     cache: dict[str, Optional[dict[str, Any]]],
+    locality: str = "",
 ) -> Optional[dict[str, Any]]:
     key = (domain or employer).strip().lower()
     if key in cache:
@@ -164,10 +283,10 @@ def _lookup(
     emails = [
         row
         for row in (search.get("emails") or [])
-        if isinstance(row, dict) and _usable_hunter_row(row, employer)
+        if isinstance(row, dict) and _usable_hunter_row(row, employer, locality)
     ]
     best = pick_best_domain_email(emails)
-    if best and not _usable_hunter_row(best, employer):
+    if best and not _usable_hunter_row(best, employer, locality):
         best = None
     cache[key] = best
     return best
@@ -214,6 +333,7 @@ def enrich_daily_jobs_with_hunter(
             continue
         looked += 1
         domain = domain_for_job(row, db)
+        locality = str(getattr(row, "locality", "") or "").strip()
         prospect = None
         known_name, _ = _page_name_title(row)
         bits = known_name.split()
@@ -225,12 +345,18 @@ def enrich_daily_jobs_with_hunter(
                     first_name=bits[0],
                     last_name=bits[-1],
                 )
-                if found and _usable_hunter_row(found, employer):
+                if found and _usable_hunter_row(found, employer, locality):
                     prospect = found
             except (HunterAPIError, HunterConfigError) as exc:
                 logger.warning("Hunter finder failed for %r: %s", employer, exc)
         if not prospect:
-            prospect = _lookup(hunter, employer=employer, domain=domain, cache=cache)
+            prospect = _lookup(
+                hunter,
+                employer=employer,
+                domain=domain,
+                cache=cache,
+                locality=locality,
+            )
         if prospect and prospect.get("email"):
             _stamp_hit(row, prospect)
             filled += 1

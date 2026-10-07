@@ -1207,13 +1207,9 @@ export default function Admin() {
         method: "POST",
         body: JSON.stringify({ force: true, limit: 25 }),
       });
-      const payload = (await res.json().catch(() => ({}))) as {
+      const payload = (await res.json().catch(() => ({}))) as DailyJobsReportData & {
         sent?: boolean;
         reason?: string;
-        jobs?: DailyJobsReportData["jobs"];
-        date?: string;
-        recipients?: string[];
-        count?: number;
       };
       if (!res.ok || payload.sent === false) {
         throw new Error(payload.reason || `send failed ${res.status}`);
@@ -1225,6 +1221,7 @@ export default function Admin() {
         jobs: payload.jobs || prev?.jobs,
         recipients: payload.recipients || prev?.recipients,
         last_sent_date: payload.date || prev?.last_sent_date,
+        hunter: payload.hunter || prev?.hunter,
       }));
     } catch (e) {
       setJobsReportSendError(
