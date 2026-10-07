@@ -5,14 +5,12 @@
  */
 import { useMemo, useState } from "react";
 import { WorkClassIcon } from "@/components/SiteIcon";
-import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import { iconForWorkClass } from "@/lib/siteIcons";
 import {
   EMPLOYER_EMPTY_MATCH,
   EMPLOYER_MATCH_CTA,
   EMPLOYER_POST_JOB_CTA,
   EMPLOYER_PROCESS_STEPS,
-  EMPLOYER_WORK_TILE_IDS,
   jobsFindHref,
   type EmployerProcessStepId,
 } from "@/lib/jobsLanding";
@@ -35,14 +33,24 @@ import {
   listEmployerPostings,
   type EmployerPosting,
 } from "@/lib/employerCrm";
-
-const WORK_TILES = classOptionsOrDefault().filter(opt =>
-  (EMPLOYER_WORK_TILE_IDS as readonly string[]).includes(opt.id)
-);
+import {
+  WORKFLOWS,
+  formatUsd,
+  parseWorkSpec,
+  qualifyWork,
+  type QualifiedWork,
+} from "@/lib/workSpec";
 
 export default function EmployerMatchWorkspace() {
   const [step, setStep] = useState<EmployerProcessStepId>("work");
   const [workClass, setWorkClass] = useState("");
+  const [jobType, setJobType] = useState("");
+  const [loadLb, setLoadLb] = useState("");
+  const [hoursPerDay, setHoursPerDay] = useState("");
+  const [alongsideHumans, setAlongsideHumans] = useState<"" | "yes" | "no">("");
+  const [robotCost, setRobotCost] = useState("");
+  const [laborRate, setLaborRate] = useState("");
+  const [qualified, setQualified] = useState<QualifiedWork | null>(null);
   const [description, setDescription] = useState("");
   const [jobUrl, setJobUrl] = useState("");
   const [matching, setMatching] = useState(false);
@@ -60,18 +68,31 @@ export default function EmployerMatchWorkspace() {
   const saved = useMemo(() => listEmployerPostings(), [posting]);
 
   async function matchRobots() {
-    if (!workClass) {
-      setError("Pick the kind of work.");
+    const parsed = parseWorkSpec({
+      workflowId: workClass,
+      jobType,
+      loadLb,
+      hoursPerDay,
+      alongsideHumans,
+      robotCost,
+      laborRate,
+    });
+    if (!parsed.ok) {
+      setError(parsed.error);
       return;
     }
+    const card = qualifyWork(parsed.spec);
     setMatching(true);
     setError(null);
     try {
       const res = await fetchEmployerRobotMatch({
-        workClass,
-        description,
+        workClass: card.catalogClass,
+        description: [card.matchDescription, description.trim()]
+          .filter(Boolean)
+          .join(". "),
         jobUrl,
       });
+      setQualified(card);
       setRobots(res.robots || []);
       setEmptyCopy(
         res.empty_copy || (res.robot_count ? null : EMPLOYER_EMPTY_MATCH)
@@ -87,7 +108,8 @@ export default function EmployerMatchWorkspace() {
 
   async function postJob() {
     const shop = employer.trim();
-    const workTitle = title.trim() || description.trim().slice(0, 120);
+    const workTitle =
+      title.trim() || qualified?.title || description.trim().slice(0, 120);
     if (!shop || !workTitle) {
       setPostingError(
         "Name the employer and the work. We will not invent either."
@@ -104,8 +126,11 @@ export default function EmployerMatchWorkspace() {
       employer: shop,
       title: workTitle,
       workplace: workplace.trim() || undefined,
-      description: description.trim() || jd?.text || undefined,
-      work_class: workClass || undefined,
+      description:
+        [qualified?.summary, description.trim() || jd?.text]
+          .filter(Boolean)
+          .join("\n") || undefined,
+      work_class: qualified?.catalogClass || workClass || undefined,
       job_url: jobUrl.trim() || undefined,
       jd_filename: jd?.filename,
       jd_text: jd?.text || undefined,
@@ -123,8 +148,8 @@ export default function EmployerMatchWorkspace() {
         employer: shop,
         title: workTitle,
         workplace: workplace.trim(),
-        description: description.trim() || jd?.text || undefined,
-        workClass,
+        description: local.description,
+        workClass: qualified?.catalogClass || workClass,
         jobUrl: jobUrl.trim(),
         jdFilename: jd?.filename,
         jdText: jd?.text || description.trim() || undefined,
@@ -229,9 +254,9 @@ export default function EmployerMatchWorkspace() {
                 void matchRobots();
               }}
             >
-              <p className={JOBS_EYEBROW_CLASS}>Work</p>
+              <p className={JOBS_EYEBROW_CLASS}>Workflow</p>
               <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                {WORK_TILES.map(opt => (
+                {WORKFLOWS.map(opt => (
                   <button
                     key={opt.id}
                     type="button"
@@ -259,6 +284,109 @@ export default function EmployerMatchWorkspace() {
                     </span>
                   </button>
                 ))}
+              </div>
+              <label
+                className={`${JOBS_EYEBROW_CLASS} mt-6 block`}
+                htmlFor="job-type"
+              >
+                Job type
+              </label>
+              <input
+                id="job-type"
+                value={jobType}
+                onChange={e => setJobType(e.target.value)}
+                placeholder="Moving pallets in a warehouse"
+                className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
+              />
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className={JOBS_EYEBROW_CLASS} htmlFor="load-lb">
+                    Load capacity (lb)
+                  </label>
+                  <input
+                    id="load-lb"
+                    inputMode="decimal"
+                    value={loadLb}
+                    onChange={e => setLoadLb(e.target.value)}
+                    placeholder="500"
+                    className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className={JOBS_EYEBROW_CLASS} htmlFor="hours-per-day">
+                    Hours per day
+                  </label>
+                  <input
+                    id="hours-per-day"
+                    inputMode="decimal"
+                    value={hoursPerDay}
+                    onChange={e => setHoursPerDay(e.target.value)}
+                    placeholder="8"
+                    className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+              <fieldset className="mt-4">
+                <legend className={JOBS_EYEBROW_CLASS}>
+                  People beside the robot
+                </legend>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                  {(
+                    [
+                      ["yes", "Yes. It has to avoid hitting them."],
+                      ["no", "No. People stay out of the path."],
+                    ] as const
+                  ).map(([value, label]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      aria-pressed={alongsideHumans === value}
+                      onClick={() => setAlongsideHumans(value)}
+                      className={`border px-3 py-3 text-left text-sm text-slate-100 ${
+                        alongsideHumans === value
+                          ? "border-emerald-400 bg-emerald-400/10"
+                          : "border-slate-600 bg-[#081126] hover:border-emerald-400/60"
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </fieldset>
+              <p className={`${JOBS_EYEBROW_CLASS} mt-6`}>
+                Payback example (optional)
+              </p>
+              <p className="mt-2 text-[12px] leading-snug text-slate-500">
+                Enter a robot price and a wage if you want payback and annual
+                ROI. Blank fields stay blank. We do not invent either number.
+              </p>
+              <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className={JOBS_EYEBROW_CLASS} htmlFor="robot-cost">
+                    Robot price (USD)
+                  </label>
+                  <input
+                    id="robot-cost"
+                    inputMode="decimal"
+                    value={robotCost}
+                    onChange={e => setRobotCost(e.target.value)}
+                    placeholder="45000"
+                    className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className={JOBS_EYEBROW_CLASS} htmlFor="labor-rate">
+                    Labor rate (USD/hour)
+                  </label>
+                  <input
+                    id="labor-rate"
+                    inputMode="decimal"
+                    value={laborRate}
+                    onChange={e => setLaborRate(e.target.value)}
+                    placeholder="28.50"
+                    className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
+                  />
+                </div>
               </div>
               <label
                 className={`${JOBS_EYEBROW_CLASS} mt-6 block`}
@@ -338,11 +466,17 @@ export default function EmployerMatchWorkspace() {
 
           {step === "robots" ? (
             <div>
-              <p className={JOBS_EYEBROW_CLASS}>
+              {qualified ? <WorkQualification card={qualified} /> : null}
+              <p className={`${JOBS_EYEBROW_CLASS} mt-8`}>
                 {robots.length
                   ? `${robots.length} named catalog robots`
                   : "No catalog robots yet"}
               </p>
+              {qualified ? (
+                <p className="mt-2 text-sm leading-snug text-slate-300">
+                  {qualified.tradeoff}
+                </p>
+              ) : null}
               {robots.length === 0 ? (
                 <div className="mt-4 border border-slate-600 bg-[#081126] p-5">
                   <h2 className="font-display text-lg font-bold text-slate-100">
@@ -563,5 +697,72 @@ export default function EmployerMatchWorkspace() {
         </section>
       </div>
     </div>
+  );
+}
+
+function WorkQualification({ card }: { card: QualifiedWork }) {
+  return (
+    <article className="border border-slate-600 bg-[#081126] p-5">
+      <p className={JOBS_EYEBROW_CLASS}>Robot Job Card</p>
+      <h2 className="mt-2 font-display text-xl font-bold text-slate-100">
+        {card.title}
+      </h2>
+      <dl className="mt-4 space-y-2 text-sm">
+        {card.requirements.map(row => (
+          <div key={row.label} className="grid grid-cols-[9rem_minmax(0,1fr)] gap-3">
+            <dt className="text-slate-500">{row.label}</dt>
+            <dd className="text-slate-100">{row.value}</dd>
+          </div>
+        ))}
+        <div className="grid grid-cols-[9rem_minmax(0,1fr)] gap-3">
+          <dt className="text-slate-500">Qualification</dt>
+          <dd className="font-bold text-emerald-300" data-qualification="Conditional">
+            Conditional
+          </dd>
+        </div>
+      </dl>
+      <h3 className="mt-5 font-display text-sm font-bold text-slate-100">
+        Open questions
+      </h3>
+      <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-slate-300">
+        {card.openQuestions.map(question => (
+          <li key={question}>{question}</li>
+        ))}
+      </ul>
+      {card.economics ? (
+        <div className="mt-5 border border-emerald-500/30 bg-emerald-400/5 p-4">
+          <h3 className="font-display text-sm font-bold text-slate-100">
+            Payback example
+          </h3>
+          <p className="mt-2 text-sm text-slate-100">
+            {formatUsd(card.economics.robotCostUsd)} robot,{" "}
+            {card.economics.hoursPerDay} hours/day at{" "}
+            {formatUsd(card.economics.laborRateUsd)}/hour.
+          </p>
+          <p className="mt-2 font-display text-lg font-bold text-emerald-300">
+            {card.economics.paybackMonths} months payback ·{" "}
+            {card.economics.annualRoiPercent}% annual ROI
+          </p>
+          <p className="mt-1 text-sm text-slate-300">
+            About {formatUsd(card.economics.annualSavingsUsd)} labor savings a
+            year before omitted costs.
+          </p>
+          <ul className="mt-3 list-disc space-y-1 pl-5 text-[12px] leading-snug text-slate-400">
+            {card.economics.assumptions.map(line => (
+              <li key={line}>{line}</li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="mt-5 text-sm text-slate-400">
+          No payback example. Enter a robot price and a wage on the work step
+          if you want one.
+        </p>
+      )}
+      <h3 className="mt-5 font-display text-sm font-bold text-slate-100">
+        Evidence limit
+      </h3>
+      <p className="mt-2 text-sm leading-snug text-slate-300">{card.evidence}</p>
+    </article>
   );
 }

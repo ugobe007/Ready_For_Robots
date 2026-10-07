@@ -3,6 +3,7 @@ from unittest.mock import patch
 from scripts.vercel_production_smoke import (
     STALE_JS,
     check_origin,
+    check_spa_shells,
     extract_deploy_url,
     js_path_from_html,
     main,
@@ -10,7 +11,7 @@ from scripts.vercel_production_smoke import (
 )
 
 FRESH_JS = "/assets/index-CoF0C_UB.js"
-HTML = f'<script type="module" src="{FRESH_JS}"></script>'
+HTML = f'<html><script type="module" src="{FRESH_JS}"></script></html>'
 STALE_HTML = f'<script type="module" src="{STALE_JS}"></script>'
 JS_BODY = (
     "x" * 120_000 + "Find Jobs for your robot lmoyydlhlgdyqbxkmkuz.supabase.co"
@@ -115,6 +116,8 @@ def test_smoke_ignores_deploy_url_404_when_domain_is_fresh():
             return 200, HTML.encode()
         if url.startswith(f"{domain}{FRESH_JS}"):
             return 200, JS_BODY
+        if url.startswith(domain) and "<script" not in url:
+            return 200, HTML.encode()
         return 500, b"unexpected"
 
     result = smoke_custom_domain(
@@ -131,6 +134,27 @@ def test_smoke_ignores_deploy_url_404_when_domain_is_fresh():
     with patch("scripts.vercel_production_smoke.http_get", get):
         rc = main(["--domain", domain, "--deploy-url", deploy, "--attempts", "1", "--sleep", "0"])
     assert rc == 0
+
+
+def test_check_spa_shells_rejects_vercel_json_404():
+    origin = "https://readyforrobots.com"
+    payload = b'{"error": {"code": "404", "message": "The page could not be found"}}'
+
+    def get(url: str) -> tuple[int, bytes]:
+        if "/pipeline" in url or "/signup" in url:
+            return 404, payload
+        return 200, HTML.encode()
+
+    results = check_spa_shells(origin, get=get)
+    assert any(not r.ok for r in results)
+    assert any("404" in r.reason for r in results)
+
+
+def test_check_spa_shells_accepts_app_html():
+    origin = "https://readyforrobots.com"
+    results = check_spa_shells(origin, get=lambda url: (200, HTML.encode()))
+    assert results
+    assert all(r.ok for r in results)
 
 
 def test_smoke_retries_then_fails_if_domain_stays_stale():

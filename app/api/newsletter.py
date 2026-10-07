@@ -97,8 +97,10 @@ def _try_send_welcome(email: str) -> dict:
             ),
         )
         return {"sent": True, **result}
-    except ResendEmailError as exc:
+    except Exception as exc:
+        _log.warning("Newsletter welcome email failed for %s: %s", email, exc)
         return {"sent": False, "reason": str(exc)}
+
 
 
 def _install_seed_if_empty() -> None:

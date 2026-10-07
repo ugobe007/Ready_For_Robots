@@ -19,6 +19,18 @@
       "destination": "https://ready-2-robot.fly.dev/health"
     },
     {
+      "source": "/privacy",
+      "destination": "/legal/privacy.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/legal/terms.html"
+    },
+    {
+      "source": "/support",
+      "destination": "/legal/support.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

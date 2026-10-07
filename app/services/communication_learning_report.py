@@ -296,7 +296,7 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
     sent_n = t.get("sent", 0)
 
     lines = [
-        f"Cal communication learning report — last {days}d",
+        f"Phelan communication learning report — last {days}d",
         "",
         "How to read this: directional signal, not statistical proof. At our send "
         "volume, treat these as hints about which angle earns trust — not a verdict. "
@@ -408,10 +408,10 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
     lines.extend([
         "",
         "Links",
-        f"  • Admin (Cal control): {_SITE}/admin",
+        f"  • Admin (Phelan control): {_SITE}/admin",
         f"  • Replies inbox: {_SITE}/inbox",
         "",
-        "Weekly. Reply to adjust which angles Cal keeps rotating.",
+        "Weekly. Reply to adjust which angles Phelan keeps rotating.",
     ])
     return "\n".join(lines)
 
@@ -448,9 +448,9 @@ def send_communication_learning_report(
     try:
         result = send_email_via_resend(
             to_email=recipients,
-            subject=f"Cal learning report — last {days}d ({report['totals']['positive']} positive replies)",
+            subject=f"Phelan learning report — last {days}d ({report['totals']['positive']} positive replies)",
             body_text=body,
-            from_display_name="Ready For Robots · Cal ops",
+            from_display_name="Ready For Robots · Phelan ops",
             idempotency_key=f"cal-comm-learning-{today}",
         )
     except ResendEmailError as exc:

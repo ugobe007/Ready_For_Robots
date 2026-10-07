@@ -263,3 +263,60 @@ export async function fetchWithTimeoutRetry(
   }
   throw lastErr;
 }
+
+/**
+ * Safely parse JSON from a fetch Response, guarding against non-200 status codes
+ * and HTML responses (e.g. 404/502 gateway timeouts or Vercel fallbacks).
+ */
+export async function parseJsonResponse<T = any>(res: Response): Promise<{
+  ok: boolean;
+  status: number;
+  data: T | null;
+  error?: string;
+}> {
+  const text = await res.text();
+  const trimmed = text.trim();
+  const isHtml = trimmed.startsWith("<") || trimmed.toLowerCase().startsWith("<!doctype");
+
+  if (isHtml) {
+    return {
+      ok: false,
+      status: res.status,
+      data: null,
+      error: `Server returned HTML (${res.status} ${res.statusText || "OK"}). Please verify admin authorization and API access.`,
+    };
+  }
+
+  let data: any = null;
+  try {
+    data = trimmed ? JSON.parse(trimmed) : null;
+  } catch {
+    return {
+      ok: false,
+      status: res.status,
+      data: null,
+      error: `Failed to parse response JSON (${res.status}).`,
+    };
+  }
+
+  if (!res.ok) {
+    return {
+      ok: false,
+      status: res.status,
+      data,
+      error:
+        data?.detail ||
+        data?.message ||
+        data?.reason ||
+        data?.error ||
+        `Request failed with status ${res.status}.`,
+    };
+  }
+
+  return {
+    ok: true,
+    status: res.status,
+    data,
+  };
+}
+

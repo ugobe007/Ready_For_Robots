@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "wouter";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import AdminNav from "@/components/AdminNav";
+import { JOBS_HEADER_OFFSET_CLASS } from "@/lib/jobsWorkflow";
 import ActivityFeed from "@/components/ActivityFeed";
 import NextBestActions from "@/components/NextBestActions";
 import WhileYouWereAway from "@/components/WhileYouWereAway";
@@ -234,15 +235,22 @@ export default function SalesWorkflow() {
   );
 
   if (authLoading) {
-    return <div className="min-h-screen bg-neutral-50" />;
+    return <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`} />;
   }
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-neutral-50">
-        <Header />
-        <main className="max-w-3xl mx-auto px-4 py-16 text-center text-neutral-600">
-          Sign in to view your sales workflow dashboard.
+      <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+        <ExperimentHeader />
+        <main className="max-w-3xl mx-auto px-4 py-32 text-center text-slate-400">
+          <h1 className="text-2xl font-bold text-white mb-2">Sales Workflow Dashboard</h1>
+          <p className="mb-6 text-sm text-slate-400">Sign in to view your live sales workflow and activity feed.</p>
+          <Link
+            href="/login?next=/sales-workflow"
+            className="inline-flex rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 text-sm font-bold shadow-lg transition"
+          >
+            Sign in
+          </Link>
         </main>
       </div>
     );
@@ -252,20 +260,22 @@ export default function SalesWorkflow() {
     !loading && actions.length === 0 && activities.length === 0;
 
   return (
-    <div className="admin-workspace min-h-screen bg-neutral-50">
-      <Header />
-      <main className="max-w-6xl mx-auto px-4 pt-28 pb-8">
-        <AdminNav />
+    <div className={`admin-workspace min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <ExperimentHeader />
+      <main className="max-w-6xl mx-auto px-4 pt-8 pb-12">
+        <AdminNav variant="dark" />
         <div className="workspace-page-header mb-6">
           <div className="workspace-page-header-inner flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="workspace-kicker">Activity feed</p>
-              <h1>What happened</h1>
-              <p>
+              <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-emerald-400">
+                Activity feed
+              </p>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-white">What happened</h1>
+              <p className="mt-2 text-sm text-slate-400 max-w-xl">
                 Live progress across your pipeline — drafts, sends, and replies.{" "}
                 <Link
                   href="/pipeline"
-                  className="font-semibold text-emerald-200 underline underline-offset-2 hover:text-white"
+                  className="font-bold text-emerald-400 underline underline-offset-2 hover:text-emerald-300"
                 >
                   Run the pipeline
                 </Link>{" "}
@@ -280,14 +290,15 @@ export default function SalesWorkflow() {
 
         {loading ? (
           <div className="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-6 animate-pulse">
-            <div className="h-96 rounded-2xl bg-neutral-200/70" />
-            <div className="h-72 rounded-2xl bg-neutral-200/70" />
+            <div className="h-96 rounded-2xl bg-slate-800/60 border border-slate-700/60" />
+            <div className="h-72 rounded-2xl bg-slate-800/60 border border-slate-700/60" />
           </div>
         ) : showEmptyState ? (
-          <p className="text-sm text-neutral-500">
-            No workflow activity yet — save leads to CRM or run SCOUT to
-            populate this view.
-          </p>
+          <div className="rounded-2xl border border-slate-700/60 bg-[#0c192e] p-8 text-center text-slate-400">
+            <p className="text-sm">
+              No workflow activity yet — save leads to CRM or run SCOUT to populate this view.
+            </p>
+          </div>
         ) : (
           <div className="space-y-6">
             <WorkflowFunnelPanel funnel={funnel} />

@@ -615,7 +615,11 @@ def extract_job_contacts(
 
 def format_robot_job_signal(job: dict[str, Any]) -> str:
     title = job.get("job_title") or "Untitled work"
-    function = job.get("job_function") or "unknown_function"
+    fn = (job.get("job_function") or "").strip()
+    if not fn or fn == "unknown_function":
+        function = "Operational Task"
+    else:
+        function = fn.replace("_", " ").title()
     pay = job.get("compensation") or {}
     wage = "pay unknown"
     if pay.get("wage_min") is not None:
@@ -638,7 +642,8 @@ def format_robot_job_signal(job: dict[str, Any]) -> str:
         bits.append(str(specs["shift"]))
     spec_s = ", ".join(bits) if bits else "specs unknown"
     status = job.get("status") or "open"
-    employer = job.get("employer") or "unknown employer"
+    raw_employer = (job.get("employer") or "").strip()
+    employer = raw_employer if raw_employer and raw_employer != "unknown employer" else "Hiring Employer"
     return (
-        f"ROBOT_JOB | {title} | {function} | {wage} | {spec_s} | {status} | {employer}"
+        f"ROBOT TASK SIGNAL | {title} | {function} | {wage} | {spec_s} | {status} | {employer}"
     )

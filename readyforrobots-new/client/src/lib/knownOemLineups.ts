@@ -97,7 +97,26 @@ export function lookupKnownOem(url: string): KnownOemListing | null {
   if (!host) return null;
   const exact = listingFromHost(host);
   if (exact) return exact;
+
   const root = registrableOemHost(host);
-  if (root && root !== host) return listingFromHost(root);
+  if (root && root !== host) {
+    const rootHit = listingFromHost(root);
+    if (rootHit) return rootHit;
+  }
+
+  // Fuzzy domain key match: e.g. "sanctuary" in "sanctuary.ai" or "sanctuary-robotics.com"
+  const cleanDomain = host.split(".")[0];
+  if (cleanDomain && cleanDomain.length >= 3) {
+    for (const [key, listing] of Object.entries(BY_HOST)) {
+      const keyDomain = key.split(".")[0];
+      if (keyDomain === cleanDomain && listing.robots?.length) {
+        return {
+          vendor_name: listing.vendor_name || null,
+          robots: listing.robots,
+        };
+      }
+    }
+  }
+
   return null;
 }

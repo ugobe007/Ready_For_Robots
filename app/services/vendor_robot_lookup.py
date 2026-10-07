@@ -109,6 +109,9 @@ OEM_SKU_REPLACES_INDEX_HOSTS = frozenset(
 )
 
 VENDOR_HOME_FALLBACK = {
+    "feather robotics": "https://feather.dev",
+    "feather": "https://feather.dev",
+    "feather.dev": "https://feather.dev",
     "keenon robotics": "https://www.keenonrobot.com",
     "keenon": "https://www.keenonrobot.com",
     "ubtech / uworld": "https://www.ubtrobot.com",

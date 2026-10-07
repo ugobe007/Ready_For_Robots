@@ -10,6 +10,9 @@ export function decodeBasicHtmlEntities(raw: string): string {
 
 export function cleanScrapedText(raw: string | null | undefined): string {
   return decodeBasicHtmlEntities(raw || "")
+    .replace(/ROBOT_JOB\s*\|\s*/gi, "")
+    .replace(/\bunknown_function\b/gi, "Operational Task")
+    .replace(/\bunknown employer\b/gi, "Hiring Employer")
     .replace(/<\s*a\s*href\s*=\s*["'][^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1")
     .replace(/<\s*ahref\s*=\s*["'][^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1")
     .replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, "$1")

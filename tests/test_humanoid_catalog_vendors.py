@@ -4,12 +4,12 @@ from app.services.humanoid_vendor_catalog import catalog_entries
 VENDOR_URLS = {
     "dexmate-vega": "https://www.dexmate.ai/product/vega",
     "eden-robotics": "https://edenrobotics.ai",
-    "astribot-s1": "https://www.astribot.com/en",
+    "astribot-s1": "https://www.astribot.com/en/product",
     "limx-tron1": "https://www.limxdynamics.com/en",
     "limx-luna": "https://www.limxdynamics.com/en",
     "matrix-3": "https://matrixrobotics.ai",
     "kepler-k2": "https://www.gotokepler.com/home",
-    "booster-t1": "https://booster.tech",
+    "booster-t1": "https://www.booster.tech",
     "persona-ai-gen1": "https://persona.ai",
     "noble-machines": "https://www.noblemachines.ai",
     "fourier-gr1": "https://www.fftai.com/products-gr1",
@@ -19,6 +19,7 @@ VENDOR_URLS = {
     "deep-robotics-dr02": "https://www.deeprobotics.cn/en/index/dr02.html",
     "robotera-star1": "https://www.robotera.com",
     "sanctuary-phoenix": "https://www.sanctuary.ai",
+    "feather": "https://feather.dev",
 }
 
 
@@ -44,7 +45,7 @@ def test_limx_multiple_models():
 def test_fourier_gr3_baseline_specs():
     by_slug = {e["model_slug"]: e for e in catalog_entries()}
     gr3 = by_slug["fourier-gr3"]
-    assert gr3["vendor"] == "Fourier Robotics"
+    assert gr3["vendor"] == "Fourier Intelligence"
     assert gr3["specs"]["height_cm"] == 165
     assert gr3["specs"]["hot_swap_battery"] is True
     assert gr3["specs"]["has_sdk"] is True
@@ -55,3 +56,14 @@ def test_fourier_gr3c_and_deep_dr02_in_catalog():
     assert by_slug["fourier-gr3c"]["name"] == "Fourier GR-3C Cosmo"
     assert by_slug["deep-robotics-dr02"]["status"] == "pilot"
     assert by_slug["robotera-star2"]["product_url"] == "https://www.robotera.com"
+
+
+def test_feather_baseline_specs():
+    by_slug = {e["model_slug"]: e for e in catalog_entries()}
+    feather = by_slug["feather"]
+    assert feather["vendor"] == "Feather Robotics"
+    assert feather["product_url"] == "https://feather.dev"
+    assert feather["specs"]["price_usd"] == 29990
+    assert feather["specs"]["height_cm"] == 180
+    assert feather["specs"]["has_sdk"] is True
+

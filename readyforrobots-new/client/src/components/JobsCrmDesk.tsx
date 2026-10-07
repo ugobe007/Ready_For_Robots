@@ -20,10 +20,13 @@ import {
   crmSelectAllKeys,
   crmSyncSelectedKeys,
   crmToggleSelectedKey,
+  isJobsQuerySrc,
   jobsCrmLeaveHref,
   jobsCrmLeaveLabel,
   jobsCrmNextHref,
   jobsCrmOpenHref,
+  jobsQueryHref,
+  jobsSignupHref,
   onJobsFreshHomeClick,
   pipelineActivityForJob,
   recordPipelineActivity,
@@ -31,11 +34,13 @@ import {
 } from "@/lib/jobsWorkflow";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import JobsProcessChrome from "@/components/JobsProcessChrome";
+import { jobsFindHref } from "@/lib/jobsLanding";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
+import RobotSalesMaterial from "@/components/RobotSalesMaterial";
 import JobsCrmInbox from "@/components/JobsCrmInbox";
 import CalJobsDesk from "@/components/CalJobsDesk";
 import {
@@ -87,6 +92,38 @@ import {
 
 const eyebrow = JOBS_EYEBROW_CLASS;
 
+function JobQueryResultsBanner({
+  queryParam,
+  isQueryDesk,
+}: {
+  queryParam: string;
+  isQueryDesk: boolean;
+}) {
+  if (!isQueryDesk && !queryParam) return null;
+  return (
+    <div className="mb-6 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-[#09152e] to-[#0a1836] p-4 text-slate-100 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+      <div>
+        <p className="font-mono text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+          <span>✦</span> Job Query Results:{" "}
+          <span className="text-white underline">
+            {queryParam || "Queried Jobs"}
+          </span>
+        </p>
+        <p className="mt-1 text-xs text-slate-300">
+          Showing matching opportunities for your queried job type. Select rows
+          to keep on your CRM desk.
+        </p>
+      </div>
+      <a
+        href={jobsFindHref()}
+        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-600 bg-[#040914] px-4 py-2.5 font-mono text-xs font-bold text-slate-200 transition hover:border-emerald-400 hover:text-white"
+      >
+        <span>← Return to Find Jobs</span>
+      </a>
+    </div>
+  );
+}
+
 export default function JobsCrmDesk({
   signedIn = false,
   authReady = true,
@@ -101,6 +138,12 @@ export default function JobsCrmDesk({
   const [, setLocation] = useLocation();
   useEffect(() => {
     if (!authReady || signedIn) return;
+    // A job-type query stays on this wall so the query banner can show.
+    // Activate still leaves for the signup wall. Do not drop src=jobs_query.
+    if (typeof window !== "undefined") {
+      const src = new URLSearchParams(window.location.search).get("src");
+      if (isJobsQuerySrc(src)) return;
+    }
     const dest = jobsCrmOpenHref(false, submissionId);
     setLocation(dest);
     if (typeof window !== "undefined") {
@@ -161,6 +204,31 @@ export default function JobsCrmDesk({
     const pool = allKeySig ? allKeySig.split("\0") : [];
     setSelectedKeys(prev => crmSyncSelectedKeys(prev, pool));
   }, [allKeySig]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const target = (
+      params.get("co") ||
+      params.get("q") ||
+      params.get("company") ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+    if (!target || !jobs.length) return;
+
+    const found = jobs.find(
+      j =>
+        (j.company_name || "").toLowerCase().includes(target) ||
+        j.job_key.toLowerCase().includes(target) ||
+        j.title.toLowerCase().includes(target) ||
+        j.industry.toLowerCase().includes(target)
+    );
+    if (found && expandedKey !== found.job_key) {
+      setExpandedKey(found.job_key);
+    }
+  }, [jobs, expandedKey]);
   const stats = placementBoardStats(jobs);
   const selected = selectedKeys.filter(key => allKeys.includes(key));
   const expanded = jobs.find(j => j.job_key === expandedKey) || null;
@@ -254,12 +322,25 @@ export default function JobsCrmDesk({
   }
   const leaveHref = jobsCrmLeaveHref({ submissionId, jobCount });
   const leaveLabel = jobsCrmLeaveLabel({ submissionId, jobCount });
-  const wallHref = jobsCrmNextHref(false, submissionId, jobCount);
+  const querySearch =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+  const queryParam = querySearch.get("query") || "";
+  const isQueryDesk = isJobsQuerySrc(querySearch.get("src"));
+  const wallHref = isQueryDesk
+    ? jobsSignupHref(
+        jobsQueryHref(queryParam, submissionId),
+        querySearch.get("src") || "jobs_query"
+      )
+    : jobsCrmNextHref(false, submissionId, jobCount);
   const process = (
     <JobsProcessChrome
       signedIn={signedIn}
       submissionId={submissionId}
       jobCount={jobCount}
+      queryParam={queryParam}
+      isQueryDesk={isQueryDesk}
     />
   );
 
@@ -267,8 +348,14 @@ export default function JobsCrmDesk({
     return (
       <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
         <div className="mb-6">{process}</div>
+        <JobQueryResultsBanner
+          queryParam={queryParam}
+          isQueryDesk={isQueryDesk}
+        />
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-          CRM
+          {isQueryDesk || queryParam
+            ? `Queried Jobs: ${queryParam || "Results"}`
+            : "CRM"}
         </h1>
         <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
           {authReady ? CRM_WALL_LEAD : "Opening CRM…"}
@@ -299,8 +386,15 @@ export default function JobsCrmDesk({
     <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
       <div className="mb-6">{process}</div>
 
+      <JobQueryResultsBanner
+        queryParam={queryParam}
+        isQueryDesk={isQueryDesk}
+      />
+
       <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-        CRM
+        {isQueryDesk || queryParam
+          ? `Queried Jobs: ${queryParam || "Results"}`
+          : "CRM"}
       </h1>
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
         {jobs.length === 0
@@ -329,6 +423,13 @@ export default function JobsCrmDesk({
           onApplyClick={openOfferForm}
         />
       </div>
+      {accessToken && robotUrl && !(showNextSteps && offerJob) ? (
+        <RobotSalesMaterial
+          token={accessToken}
+          robotUrl={robotUrl}
+          robotName={product}
+        />
+      ) : null}
       {accessToken && jobs.length > 0 ? (
         <CalJobsDesk
           token={accessToken}
@@ -354,24 +455,24 @@ export default function JobsCrmDesk({
           </a>
         </p>
       ) : (
-        <div className="mt-6">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <p className={`${eyebrow} text-emerald-400`}>
-              {CRM_LISTING_EYEBROW}
-            </p>
-            <div className="flex flex-wrap items-center gap-2">
-              <a
-                href={jobsCrmOfferHref(signedIn, submissionId)}
-                onClick={openOfferForm}
-                aria-label={JOBS_APPLY_SELECTED_CTA}
-                className={`${JOBS_APPLY_CTA_CLASS} px-3 py-2 font-mono text-xs`}
-              >
-                {JOBS_APPLY_SELECTED_CTA}
-              </a>
-              <p className="basis-full text-sm leading-relaxed text-slate-400">
-                {JOBS_APPLY_SEQUENCE}
+        <div className="mt-8 border-t border-slate-700/60 pt-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className={`${eyebrow} text-emerald-400`}>
+                {CRM_LISTING_EYEBROW}
+              </p>
+              <p className="mt-1 text-sm text-slate-300">
+                Select jobs to include in your automated application batch.
               </p>
             </div>
+            <a
+              href={jobsCrmOfferHref(signedIn, submissionId)}
+              onClick={openOfferForm}
+              aria-label={JOBS_APPLY_SELECTED_CTA}
+              className="inline-flex items-center justify-center bg-emerald-400 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a] transition hover:bg-emerald-300"
+            >
+              {JOBS_APPLY_SELECTED_CTA}
+            </a>
           </div>
           {showNextSteps && offerJob && accessToken ? (
             <JobsCrmNextSteps

@@ -271,9 +271,8 @@ export default function Header() {
         <div className="container">
           <div className="flex items-center justify-between h-16 gap-4">
             <a
-              href={jobsFreshHomeHref()}
-              onClick={onJobsFreshHomeClick}
-              className="flex items-center gap-2.5 shrink-0"
+              href="/"
+              className="flex items-center gap-2.5 shrink-0 hover:opacity-90 transition-opacity"
             >
               <img
                 src="/logo-r.png"
@@ -391,7 +390,7 @@ export default function Header() {
                   </Link>
                   <Link
                     href="/signup?next=/&src=robot_jobs"
-                    className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg transition-all active:scale-[0.97]"
+                    className="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold rounded-lg transition-all shadow-md shadow-purple-500/25 active:scale-[0.97]"
                   >
                     <Zap size={14} />
                     Start free workspace

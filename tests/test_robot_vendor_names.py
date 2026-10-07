@@ -20,6 +20,7 @@ from app.services.robot_vendor_names import is_known_robotics_vendor_name, vendo
         "AgiBot",
         "Serve Robotics",
         "CloudMinds",
+        "Feather Robotics",
     ],
 )
 def test_new_oem_names_flagged_as_vendor(name):

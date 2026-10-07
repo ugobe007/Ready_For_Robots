@@ -204,18 +204,24 @@ export default function EmployerDecision() {
               </p>
             ) : null}
             {data.documents?.length ? (
-              <ul className="mt-4 space-y-1 text-sm text-slate-300">
-                {data.documents.map(doc => (
-                  <li key={doc.id}>
-                    <a
-                      href={`${api}/api/jobs-crm/employer/${token}/documents/${doc.id}/file`}
-                      className="text-emerald-300 underline decoration-emerald-400/50 underline-offset-2"
-                    >
-                      {doc.filename}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+              <div className="mt-4">
+                <p className="text-sm text-slate-300">
+                  Material from the robot company. These files do not change
+                  the job qualification.
+                </p>
+                <ul className="mt-2 space-y-1 text-sm text-slate-300">
+                  {data.documents.map(doc => (
+                    <li key={doc.id}>
+                      <a
+                        href={`${api}/api/jobs-crm/employer/${token}/documents/${doc.id}/file`}
+                        className="text-emerald-300 underline decoration-emerald-400/50 underline-offset-2"
+                      >
+                        {doc.filename}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             ) : null}
             <div className="mt-8 flex flex-wrap gap-3">
               {data.can_accept ? (

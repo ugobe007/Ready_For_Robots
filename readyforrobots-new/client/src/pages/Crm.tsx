@@ -4,6 +4,7 @@ import ExperimentHeader from "@/components/ExperimentHeader";
 import AdminNav from "@/components/AdminNav";
 import CrmPathFork from "@/components/pipeline/CrmPathFork";
 import CrmAccountWorkspace from "@/components/crm/CrmAccountWorkspace";
+import LeadEmailDisplay from "@/components/LeadEmailDisplay";
 import { useAuth } from "@/contexts/AuthContext";
 import { useIsAdmin } from "@/hooks/useIsAdmin";
 import { openWorkspaceHref } from "@/lib/adminNavLinks";
@@ -184,8 +185,9 @@ export default function Crm() {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const accountParam = params.get("account");
-    if (accountParam) setSelectedAccountId(accountParam);
+    const targetParam =
+      params.get("account") || params.get("lead") || params.get("id");
+    if (targetParam) setSelectedAccountId(targetParam);
   }, []);
 
   useEffect(() => {
@@ -198,21 +200,23 @@ export default function Crm() {
         setTeamId(prev => prev || (list[0]?.id ?? ""));
         const userSettings = (await authFetch(
           "/api/user/settings"
-        )) as UserSettings;
-        setSettings(userSettings);
-        setCcEmails(userSettings.scout_default_cc || "");
-        setBccEmails(userSettings.scout_default_bcc || "");
-        setStyleInstruction(userSettings.scout_message_style || "");
-        setSelectedTraits(
-          (userSettings.scout_persona_traits || "")
-            .split(",")
-            .map(x => x.trim())
-            .filter(Boolean)
-        );
-        setCollateralPolicy(
-          userSettings.scout_collateral_policy || "selective"
-        );
-        setCollateralLinks(userSettings.scout_collateral_links || "");
+        ).catch(() => null)) as UserSettings | null;
+        if (userSettings) {
+          setSettings(userSettings);
+          setCcEmails(userSettings.scout_default_cc || "");
+          setBccEmails(userSettings.scout_default_bcc || "");
+          setStyleInstruction(userSettings.scout_message_style || "");
+          setSelectedTraits(
+            (userSettings.scout_persona_traits || "")
+              .split(",")
+              .map(x => x.trim())
+              .filter(Boolean)
+          );
+          setCollateralPolicy(
+            userSettings.scout_collateral_policy || "selective"
+          );
+          setCollateralLinks(userSettings.scout_collateral_links || "");
+        }
         try {
           const watchStatus = (await authFetch(
             "/api/crm/jobs-watch"
@@ -265,9 +269,24 @@ export default function Crm() {
         const data = (await authFetch(`/api/crm/accounts?${q}`)) as Account[];
         const rows = Array.isArray(data) ? data : [];
         setAccounts(rows);
-        setSelectedAccountId(prev =>
-          rows.some(a => a.id === prev) ? prev : (rows[0]?.id ?? "")
-        );
+        const params = new URLSearchParams(window.location.search);
+        const coParam = params.get("co") || params.get("company");
+        setSelectedAccountId(prev => {
+          if (prev && rows.some(a => a.id === prev)) return prev;
+          if (prev && rows.some(a => String(a.id) === String(prev))) {
+            const matched = rows.find(a => String(a.id) === String(prev));
+            if (matched) return matched.id;
+          }
+          if (coParam) {
+            const matchedByCo = rows.find(a =>
+              (a.name || "")
+                .toLowerCase()
+                .includes(coParam.toLowerCase())
+            );
+            if (matchedByCo) return matchedByCo.id;
+          }
+          return rows[0]?.id ?? "";
+        });
       } catch (e) {
         setMsg(e instanceof Error ? e.message : "Failed to load accounts");
         setAccounts([]);
@@ -686,17 +705,6 @@ export default function Crm() {
                 >
                   ← Back to pipeline
                 </Link>
-                {isAdmin && (
-                  <button
-                    type="button"
-                    onClick={() =>
-                      openWorkspaceHref("/admin#cal-outreach", setLocation)
-                    }
-                    className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-amber-200 hover:text-amber-100"
-                  >
-                    Cal queue — bulk send
-                  </button>
-                )}
                 <Link
                   href="/integrations"
                   className="font-mono text-sm font-semibold uppercase tracking-[0.08em] text-slate-300 hover:text-white"
@@ -779,8 +787,12 @@ export default function Crm() {
                             <td className="px-3 py-2.5 text-sm text-emerald-300">
                               {a.outreach_stage || "—"}
                             </td>
-                            <td className="px-3 py-2.5 text-sm text-slate-300 truncate max-w-[140px]">
-                              {a.contact_email || "—"}
+                            <td className="px-3 py-2.5 text-sm text-slate-300">
+                              <LeadEmailDisplay
+                                email={a.contact_email}
+                                variant="table"
+                                showUpgradeBtn
+                              />
                             </td>
                           </tr>
                         ))}
@@ -817,14 +829,14 @@ export default function Crm() {
                         <span className="sb-label mb-1 block">
                           Recipient email
                         </span>
-                        <input
-                          value={contactEmail}
-                          onChange={e => {
-                            setContactEmail(e.target.value);
+                        <LeadEmailDisplay
+                          email={contactEmail}
+                          variant="input"
+                          onEmailChange={v => {
+                            setContactEmail(v);
                             setStyleApproved(false);
                           }}
                           placeholder="buyer@example.com"
-                          className="sb-input"
                         />
                       </label>
                       <label className="mb-2 block">
@@ -1058,7 +1070,7 @@ export default function Crm() {
                         </div>
                       </div>
                       <div className="mb-2  border border-slate-600 bg-[#081126] p-2">
-                        <p className="sb-kicker">Apollo prospect search</p>
+                        <p className="sb-kicker">Hunter.io prospect search</p>
                         <p className="mt-1 text-xs text-slate-400">
                           Search target:{" "}
                           {selectedAccount.prospect_search

@@ -7,14 +7,16 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import SiteFooter from "@/components/layout/SiteFooter";
 import PageHeroDark from "@/components/layout/PageHeroDark";
+import WorkflowDriveBanner from "@/components/WorkflowDriveBanner";
 import RobotsLeaderCards from "@/components/robots/RobotsLeaderCards";
 import HeirResearchAppendix from "@/components/HeirResearchAppendix";
 import HumanoidIndexSummaryIntro from "@/components/HumanoidIndexSummaryIntro";
 import HumanoidIntelligenceReport from "@/components/HumanoidIntelligenceReport";
 import RobotAvatar from "@/components/RobotAvatar";
+import RequestTrialModal from "@/components/RequestTrialModal";
 import { HEIR_REPORTS } from "@/content/heir2026";
 import {
   fetchWithTimeout,
@@ -362,7 +364,7 @@ function ConfidenceChip({ robot }: { robot: RobotRow }) {
 function RobotNameLink({ name, url }: { name: string; url?: string }) {
   if (!url) {
     return (
-      <p className="font-bold text-gray-900 text-base leading-tight">{name}</p>
+      <p className="font-bold text-slate-100 text-base leading-tight">{name}</p>
     );
   }
   return (
@@ -371,7 +373,7 @@ function RobotNameLink({ name, url }: { name: string; url?: string }) {
       target="_blank"
       rel="noopener noreferrer"
       onClick={e => e.stopPropagation()}
-      className="font-bold text-gray-900 text-base leading-tight transition-colors hover:text-emerald-700 underline-offset-2 hover:underline"
+      className="font-bold text-slate-100 text-base leading-tight transition-colors hover:text-emerald-400 underline-offset-2 hover:underline"
     >
       {name}
     </a>
@@ -393,36 +395,36 @@ function AiStackPanel({ stack }: { stack: AiStack }) {
     ? (MODEL_FAMILY_LABELS[stack.model_family] ?? stack.model_family)
     : null;
   return (
-    <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-emerald-500/20 bg-emerald-600/[0.06] px-4 py-3">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-600/80 mb-2">
+    <div className="sm:col-span-2 lg:col-span-3 rounded-xl border border-emerald-500/30 bg-emerald-950/20 px-4 py-3">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400 mb-2">
         AI stack
       </p>
-      <p className="text-sm font-semibold text-gray-900">
+      <p className="text-sm font-semibold text-slate-100">
         {stack.primary_model}
       </p>
       {family ? (
-        <p className="text-[11px] text-gray-500 mt-0.5">{family}</p>
+        <p className="text-[11px] text-slate-300 mt-0.5">{family}</p>
       ) : null}
       {stack.stack_layers && stack.stack_layers.length > 0 ? (
-        <p className="text-[11px] text-gray-500 mt-2">
-          <span className="text-gray-400">Layers: </span>
+        <p className="text-[11px] text-slate-400 mt-2">
+          <span className="text-slate-400 font-medium">Layers: </span>
           {stack.stack_layers.join(" → ")}
         </p>
       ) : null}
       {stack.compute ? (
-        <p className="text-[11px] text-gray-500 mt-1">
-          <span className="text-gray-400">Compute: </span>
+        <p className="text-[11px] text-slate-400 mt-1">
+          <span className="text-slate-400 font-medium">Compute: </span>
           {stack.compute}
         </p>
       ) : null}
       {stack.third_party && stack.third_party.length > 0 ? (
-        <p className="text-[11px] text-gray-500 mt-1">
-          <span className="text-gray-400">Partners / platform: </span>
+        <p className="text-[11px] text-slate-400 mt-1">
+          <span className="text-slate-400 font-medium">Partners / platform: </span>
           {stack.third_party.join(", ")}
         </p>
       ) : null}
       {stack.unique_claim ? (
-        <p className="text-[11px] text-gray-600 mt-2 leading-relaxed border-t border-gray-100 pt-2">
+        <p className="text-[11px] text-slate-300 mt-2 leading-relaxed border-t border-slate-800 pt-2">
           {stack.unique_claim}
         </p>
       ) : null}
@@ -488,7 +490,7 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
         className="w-full grid gap-4 px-5 py-4 text-left items-center"
         style={{ gridTemplateColumns: "2rem 2.25rem 1fr 4.5rem 4.5rem 3rem" }}
       >
-        <span className="text-xl font-black text-gray-900 tabular-nums">
+        <span className="text-xl font-black text-slate-100 tabular-nums">
           #{rank}
         </span>
         <RobotAvatar
@@ -531,10 +533,10 @@ function RobotCard({ robot, rank }: { robot: RobotRow; rank: number }) {
               </span>
             ) : null}
           </div>
-          <p className="text-[11px] text-gray-600 mt-0.5">{robot.vendor}</p>
+          <p className="text-[11px] text-slate-400 mt-0.5">{robot.vendor}</p>
           {aiStack?.primary_model ? (
             <p
-              className="text-[10px] text-emerald-600/70 mt-1 truncate max-w-md"
+              className="text-[10px] text-emerald-400 mt-1 truncate max-w-md"
               title={aiStack.primary_model}
             >
               {aiStack.primary_model}
@@ -786,6 +788,7 @@ export default function Robots() {
     "all" | "available" | "pilot" | "research"
   >("all");
   const [sortDim, setSortDim] = useState<string>("total");
+  const [trialModalOpen, setTrialModalOpen] = useState(false);
   const api = getPublicReadApiBase();
   const {
     report: intelligenceReport,
@@ -873,8 +876,8 @@ export default function Robots() {
     : null;
 
   return (
-    <div className="robots-page min-h-screen flex flex-col">
-      <Header />
+    <div className="robots-page min-h-screen flex flex-col bg-[#081126] text-slate-100 font-sans">
+      <ExperimentHeader />
 
       <PageHeroDark
         maxWidthClass="max-w-5xl"
@@ -893,6 +896,13 @@ export default function Robots() {
         description="HEIR benchmarking, market signals, and live rankings. HEIR measures humanoids by engineering maturity, not demo choreography — scored across mobility, manipulation, cognition, safety, data pipeline, and production readiness."
         actions={
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-[12px]">
+            <button
+              type="button"
+              onClick={() => setTrialModalOpen(true)}
+              className="inline-flex items-center gap-1.5 rounded-md bg-purple-600 px-3.5 py-1.5 font-bold text-white shadow-md shadow-purple-500/30 hover:bg-purple-500 transition-all cursor-pointer"
+            >
+              ⚡ Request 30-Day Robot Trial
+            </button>
             <Link
               href="/robots/report"
               className="inline-flex items-center gap-1 rounded-md bg-emerald-600/90 px-3 py-1.5 font-semibold text-white hover:bg-emerald-500"
@@ -1013,6 +1023,80 @@ export default function Robots() {
         />
       </section>
 
+      {/* Robot AI Modeling & Foundation Model Training Section */}
+      <section className="mx-auto max-w-5xl px-4 pb-12">
+        <div className="rounded-2xl border border-slate-700/80 bg-[#0d1b38] p-6 shadow-2xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 pb-4 mb-6">
+            <div>
+              <span className="text-[11px] font-mono uppercase font-bold text-purple-400 tracking-wider">
+                Embodied AI & Model Training Platform
+              </span>
+              <h2 className="text-xl font-bold text-white font-display mt-0.5">
+                Robot Foundation Models & General-Purpose AI Intelligence
+              </h2>
+            </div>
+            <a
+              href="https://www.skild.ai/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-3.5 py-1 text-xs font-mono font-bold text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-colors"
+            >
+              Featured Partner: Skild AI <ExternalLink className="h-3.5 w-3.5" />
+            </a>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="rounded-xl border border-purple-500/40 bg-[#081126] p-4.5 shadow-lg">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-slate-100 font-display text-base">Skild AI</h3>
+                <a href="https://www.skild.ai/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+              <p className="text-xs text-purple-300 font-mono font-bold mb-2">Skild Brain · Embodied Foundation Model</p>
+              <p className="text-xs leading-relaxed text-slate-300">
+                Scalable general-purpose AI brain for robotics. Enables cross-robot manipulation, locomotion, and rapid task adaptation across diverse physical form factors.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-purple-500/30 bg-[#081126] p-4.5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-slate-100 font-display text-base">Kinetix</h3>
+                <a href="https://kinetix.tech/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">
+                  <ExternalLink className="h-4 w-4" />
+                </a>
+              </div>
+              <p className="text-xs text-cyan-300 font-mono font-bold mb-2">Motion AI · 3D Human Motion Intelligence</p>
+              <p className="text-xs leading-relaxed text-slate-300">
+                Frontier 3D and human motion intelligence. Generative AI for physics-guided 3D movement, motion synthesis, and humanoid teleoperation.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-slate-100 font-display text-base">Physical Intelligence</h3>
+                <span className="text-xs font-mono text-slate-400">Universal Control</span>
+              </div>
+              <p className="text-xs text-emerald-300 font-mono font-bold mb-2">pi0 · Foundation Model</p>
+              <p className="text-xs leading-relaxed text-slate-300">
+                Brings high-level reasoning and physical dexterity to general-purpose hardware through large multimodal physical models.
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-bold text-slate-100 font-display text-base">Covariant</h3>
+                <span className="text-xs font-mono text-slate-400">Logistics RFM</span>
+              </div>
+              <p className="text-xs text-amber-300 font-mono font-bold mb-2">RFM-1 · Robotics Foundation Model</p>
+              <p className="text-xs leading-relaxed text-slate-300">
+                Language-guided manipulation intelligence designed for autonomous bin picking, sorting, and warehouse fulfillment automation.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Footer CTA — inline, no panel */}
       <section className="mx-auto max-w-5xl px-4 pb-16 text-sm text-gray-500">
         <p>
@@ -1039,7 +1123,17 @@ export default function Robots() {
           </Link>
           <ArrowRight className="inline h-3.5 w-3.5 ml-1 opacity-40" />
         </p>
+
+        <WorkflowDriveBanner
+          title="Scan Your Robot URL & Find 25 Active Jobs"
+          subtitle="Match any humanoid, AMR, or industrial robot product page against 25 live enterprise buyer leads."
+          buttonText="Build 25 Lead Pipeline"
+        />
       </section>
+      <RequestTrialModal
+        isOpen={trialModalOpen}
+        onClose={() => setTrialModalOpen(false)}
+      />
       <SiteFooter />
     </div>
   );

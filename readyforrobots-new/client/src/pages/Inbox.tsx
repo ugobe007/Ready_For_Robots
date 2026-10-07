@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
+import { Mail } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
+import ResendEmailModal from "@/components/ResendEmailModal";
 
 type InboxItem = {
   id: string;
@@ -46,6 +48,8 @@ export default function Inbox() {
   const [selectedId, setSelectedId] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [replyModalOpen, setReplyModalOpen] = useState(false);
+  const [folderTab, setFolderTab] = useState<"main" | "test">("main");
 
   const loadInbox = useCallback(async () => {
     if (!session?.access_token) return;
@@ -53,7 +57,7 @@ export default function Inbox() {
     setErr("");
     try {
       const response = await fetch(
-        `${getApiBase()}/api/sales/inbox`,
+        `${getApiBase()}/api/sales/inbox?folder=${folderTab}`,
         liveFetchInit({ headers: authHeader(session.access_token) })
       );
       if (!response.ok) throw new Error(await response.text());
@@ -68,7 +72,7 @@ export default function Inbox() {
     } finally {
       setBusy(false);
     }
-  }, [session?.access_token]);
+  }, [session?.access_token, folderTab]);
 
   useEffect(() => {
     void loadInbox();
@@ -155,6 +159,32 @@ export default function Inbox() {
               </p>
               <span className="text-xs text-gray-400">{items.length}</span>
             </div>
+
+            {/* Folder Tabs */}
+            <div className="mt-3 flex items-center rounded-xl bg-gray-100 p-1">
+              <button
+                type="button"
+                onClick={() => setFolderTab("main")}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
+                  folderTab === "main"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                Customer Inbox
+              </button>
+              <button
+                type="button"
+                onClick={() => setFolderTab("test")}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
+                  folderTab === "test"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                System &amp; Test
+              </button>
+            </div>
             <div className="mt-4 space-y-2">
               {items.map(item => (
                 <button
@@ -227,6 +257,14 @@ export default function Inbox() {
                         Approve &amp; send reply
                       </button>
                     ) : null}
+                    <button
+                      type="button"
+                      onClick={() => setReplyModalOpen(true)}
+                      className="rounded-lg bg-emerald-600 border border-emerald-500 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition flex items-center gap-1.5"
+                    >
+                      <Mail className="w-3.5 h-3.5" />
+                      Reply via Resend
+                    </button>
                     <Link
                       href={scheduleHref(selected)}
                       className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black text-[#111827]"
@@ -260,6 +298,22 @@ export default function Inbox() {
                     </pre>
                   )}
                 </div>
+
+                {selected && (
+                  <ResendEmailModal
+                    isOpen={replyModalOpen}
+                    onClose={() => setReplyModalOpen(false)}
+                    defaultTo={selected.from_email || ""}
+                    defaultSubject={
+                      selected.subject?.toLowerCase().startsWith("re:")
+                        ? selected.subject
+                        : `Re: ${selected.subject || selected.title}`
+                    }
+                    defaultBody={selected.latest_action?.draft_body || ""}
+                    companyName={selected.title}
+                    onSent={() => void loadInbox()}
+                  />
+                )}
               </>
             ) : (
               <p className="text-sm text-gray-500">Select a reply to review.</p>

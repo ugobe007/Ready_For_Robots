@@ -10,39 +10,44 @@ from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_buyer_emai
 # Honesty and trust over hype. Draws on deep robotics industry experience.
 
 # External outreach constants (used in cal_opening, cal_vendor_opening, sales_agent)
-CAL_INTRO = "Hi, I am Cal. I work at ReadyForRobots as a deployment advisor. I focus on robot deployments and their metrics, to help companies improve ROI."
+CAL_INTRO = (
+    "I'm Phelan, Robot Job Analyst at ReadyForRobots. ReadyForRobots is recruitment and placement infrastructure for robotic labor. "
+    "We evaluate physical task feasibility, cell constraints, payload/throughput requirements, and hardware capabilities "
+    "to match qualified robotic labor directly to real, verified job openings at enterprise and industrial facilities."
+)
 
 CAL_BUYER_ROLE_LINE = (
-    "This is Cal from Ready For Robots. I track which deployments still work months later, not just in demo week."
+    "I'm Phelan, Robot Job Analyst at ReadyForRobots. ReadyForRobots provides recruitment and placement infrastructure for robotic labor, "
+    "evaluating physical task feasibility to match qualified hardware with real production workflows."
 )
 
 CAL_BUYER_REMINDER_LINE = (
-    "One practical note, then one question."
+    "Following up on task feasibility and robotic labor placement planning for your operations."
 )
 
 CAL_VENDOR_ROLE_LINE = (
-    "My job is to help robot companies capture qualified buyers, assess alignment, and activate real sales motion instead of noisy list traffic."
+    "Our platform matches enterprise buyer demand with verified robot specifications and turnkey commercial proposals."
 )
 
 CAL_VENDOR_REMINDER_LINE = (
-    "Quick reminder: I'm Cal at Ready For Robots — I help robot companies qualify buyers, assess fit early, and activate the right next sales step."
+    "Quick note from ReadyForRobots regarding qualified enterprise buyer matches for your robot lineup."
 )
 
 CAL_VENDOR_IDENTITY = (
-    "I've spent years inside robot deployments — Anybots, Omron, Panasonic, Mitsubishi, Locus Robotics — "
-    "and I've seen the same pattern: great hardware, hard PoCs, harder conversions to paying accounts."
+    "ReadyForRobots evaluates physical task feasibility, operating cell geometry, and throughput requirements "
+    "to help operators cut through vendor claims and deploy qualified robotic labor."
 )
 
 CAL_VENDOR_SHERPA_LINE = (
-    "Most robot companies are engineer-led, not sales-led. I act as a guide through trials and deployments — "
-    "honest readouts, no theater."
+    "We provide independent engineering evaluations and turnkey commercial quotes — "
+    "honest readouts and 3D feasibility simulations, zero sales theater."
 )
 
 # Plain, honest, first-person. Say what I do and why I'm writing — no slogans.
 BUYER_SIGNAL_EXPLANATION = (
-    "I start with the operational problem and physical task, not the robot. "
-    "A lot of the work is deciding whether automation belongs in the workflow at all, "
-    "and what would have to be true before a deployment could succeed."
+    "ReadyForRobots is recruitment and placement infrastructure for robotic labor. "
+    "We evaluate physical task feasibility, cell constraints, and hardware capabilities before pitching services, "
+    "verifying whether automation belongs in the workflow at all."
 )
 
 # Quiet credibility — a plain observation about what makes robots pay off, no bravado.
@@ -573,8 +578,9 @@ def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
             f"No right answer — what comes to mind for {n} usually points at where a robot "
             "would earn its keep. Curious what you would say."
         )
+    greeting = f"Hi {n} Leadership Team," if n and n != "your team" else "Hi,"
     return "\n".join([
-        f"Hi {n}, this is Cal again.",
+        greeting,
         "",
         CAL_BUYER_REMINDER_LINE,
         "",
@@ -582,7 +588,7 @@ def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
         "",
         close,
         "",
-        cal_signature(),
+        cal_buyer_email_signature(),
     ])
 
 
@@ -664,8 +670,8 @@ def _greeting_name(name: str) -> str:
 
 def _cal_intro() -> str:
     return (
-        "I'm Cal with ReadyForRobots. I research how companies are using robotics and help "
-        "identify jobs where automation could actually make a difference."
+        "I'm Phelan, Robot Job Analyst at ReadyForRobots. We evaluate physical task feasibility "
+        "and match industrial operations with qualified commercial robotics models before vendor PoCs."
     )
 
 

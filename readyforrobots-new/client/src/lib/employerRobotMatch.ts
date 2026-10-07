@@ -4,6 +4,22 @@
  */
 import { fetchWithTimeout, getPublicReadApiBase } from "@/lib/apiBase";
 
+const PRODUCTION_MATCH_API = "https://ready-2-robot.fly.dev";
+
+/** Localhost has no API process. Catalog match is a production read. */
+function matchApiBase(): string {
+  const base = getPublicReadApiBase();
+  if (typeof window === "undefined") return base;
+  const host = window.location.hostname;
+  if (
+    (host === "localhost" || host === "127.0.0.1") &&
+    base.startsWith("http://127.0.0.1:8000")
+  ) {
+    return PRODUCTION_MATCH_API;
+  }
+  return base;
+}
+
 export const EMPLOYER_MATCH_TIMEOUT_MS = 2_500;
 export const EMPLOYER_JD_ACCEPT =
   ".pdf,.doc,.docx,.txt,application/pdf,text/plain";
@@ -62,7 +78,7 @@ export async function fetchEmployerRobotMatch(opts: {
   jobUrl?: string;
   signal?: AbortSignal;
 }): Promise<EmployerRobotMatchResult> {
-  const base = getPublicReadApiBase();
+  const base = matchApiBase();
   const res = await fetchWithTimeout(
     `${base}/api/employer-robot-match`,
     {
