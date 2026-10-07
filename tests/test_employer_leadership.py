@@ -90,6 +90,47 @@ def test_people_from_html_reads_credentials_and_rejects_title_as_name():
     assert "Operating" in coo["title"]
 
 
+def test_people_from_html_reads_same_line_name_and_title():
+    html = """
+    <html><body>
+      <p>Priya Shah Pharmacy Operations Manager</p>
+      <p>Director of Pharmacy, Maya Chen</p>
+      <p>Alex Rivera, Site Operations Manager</p>
+      <p>Chief Medical Executive</p>
+    </body></html>
+    """
+    people = people_from_html(html, "https://geodis.com/leadership")
+    by_name = {p["name"]: p["title"] for p in people}
+    assert "Pharmacy" in by_name["Priya Shah"]
+    assert "Director" in by_name["Maya Chen"]
+    assert "Operations Manager" in by_name["Alex Rivera"]
+    assert "Chief Medical" not in by_name
+    assert "Public Policy" not in by_name
+    assert "Harris Health" not in by_name
+
+
+def test_people_from_html_rejects_department_after_title():
+    html = """
+    <html><body>
+      <p>Robert Hillier</p>
+      <p>Senior Vice President, Public Policy</p>
+      <p>L. Sara Thomas, JD, LLM</p>
+      <p>Chief Legal Officer, Harris Health</p>
+      <p>Division Director, Harris County Attorney</p>
+      <p>Harris Health</p>
+    </body></html>
+    """
+    people = people_from_html(html, "https://www.harrishealth.org/about-us-hh/leadership")
+    names = [p["name"] for p in people]
+    assert "Robert Hillier" in names
+    assert "Sara Thomas" in names
+    assert "Public Policy" not in names
+    assert "Harris Health" not in names
+    assert "Harris Attorney" not in names
+    sara = next(p for p in people if p["name"] == "Sara Thomas")
+    assert "Legal" in sara["title"]
+
+
 def test_people_from_html_reads_json_ld_person():
     html = """
     <script type="application/ld+json">
@@ -172,6 +213,22 @@ def test_fetch_uses_www_when_apex_drops_path():
     assert pages
     assert pages[0]["url"] == "https://www.harrishealth.org/about-us-hh/leadership"
     assert people_from_pages(pages)[0]["name"] == "Esmaeil Porsa"
+
+
+def test_fetch_keeps_small_named_pages(monkeypatch):
+    tiny = "<h2>Priya Shah</h2><p>Pharmacy Operations Manager</p>"
+    assert len(tiny) < 8000
+
+    def fake_get(url):
+        if url.rstrip("/") in {"https://www.geodis.com", "https://geodis.com"}:
+            return '<a href="/leadership">Leadership</a>'
+        if url.rstrip("/").endswith("/leadership"):
+            return tiny
+        return None
+
+    monkeypatch.setattr("app.services.employer_leadership._http_get", fake_get)
+    pages = fetch_leadership_pages(domain="geodis.com", employer="GEODIS")
+    assert people_from_pages(pages)[0]["name"] == "Priya Shah"
 
 
 def test_http_get_does_not_request_unsafe_urls(monkeypatch):

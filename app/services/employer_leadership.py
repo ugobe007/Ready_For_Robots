@@ -143,6 +143,25 @@ _BAD_NAME = frozenset(
         "Officer",
         "Pharmacy",
         "Nursing",
+        "Health",
+        "Policy",
+        "Public",
+        "Attorney",
+        "County",
+        "Division",
+        "Department",
+        "Hospital",
+        "System",
+        "Affairs",
+        "Relations",
+        "Communications",
+        "Foundation",
+        "Locations",
+        "History",
+        "Media",
+        "Office",
+        "Program",
+        "Programs",
     }
 )
 _MAX_FETCHES = 4
@@ -370,9 +389,6 @@ def fetch_leadership_pages(
         html = getter(url)
         if not html:
             continue
-        # Live HTTP only: thin 200s are 404 templates. Injected fixtures stay.
-        if get_html is None and len(html) < 8000:
-            continue
         if re.search(r"<title>[^<]{0,80}404", html, re.I):
             continue
         # Soft-404 / chrome shells have HTML but no named people. Keep going.
@@ -529,23 +545,48 @@ def _card_people(soup: BeautifulSoup, source_url: str) -> list[dict[str, Any]]:
     return people
 
 
+def _split_name_title(line: str) -> Optional[tuple[tuple[str, str], str]]:
+    """Same-line `Name Title`, `Name, Title`, or `Title, Name`. No invented people."""
+    raw = re.sub(r"\s+", " ", (line or "").strip())
+    if not raw or len(raw) > 160:
+        return None
+    if "," in raw:
+        left, right = [p.strip() for p in raw.split(",", 1)]
+        name = parse_person_name(left)
+        if name and _TITLE.search(right) and not parse_person_name(right):
+            return name, right
+        name = parse_person_name(right)
+        if name and _TITLE.search(left) and not parse_person_name(left):
+            return name, left
+    title_match = _TITLE.search(raw)
+    if not title_match:
+        return None
+    leftover = f"{raw[: title_match.start()]} {raw[title_match.end() :]}".strip(" ,;-")
+    leftover = re.sub(r"\s+", " ", leftover)
+    name = parse_person_name(leftover)
+    title = title_match.group(0).strip(" ,;-")
+    if name and title and not parse_person_name(title):
+        return name, title
+    return None
+
+
 def _text_people(text: str, source_url: str) -> list[dict[str, Any]]:
     people: list[dict[str, Any]] = []
     lines = [re.sub(r"\s+", " ", ln).strip() for ln in (text or "").splitlines() if ln.strip()]
     for i, line in enumerate(lines):
-        name_bits = parse_person_name(line)
-        if not name_bits:
-            continue
         title = ""
-        if i + 1 < len(lines) and _TITLE.search(lines[i + 1]) and not parse_person_name(lines[i + 1]):
-            title = lines[i + 1]
-            if i + 2 < len(lines) and _TITLE.search(lines[i + 2]) and len(lines[i + 2]) < 60:
-                if lines[i + 1].lower().endswith("and") or len(lines[i + 1]) < 28:
-                    title = f"{lines[i + 1]} {lines[i + 2]}"
-        if not title and "," in line:
-            left, right = [p.strip() for p in line.split(",", 1)]
-            if parse_person_name(left) and _TITLE.search(right):
-                title = right
+        name_bits = parse_person_name(line)
+        if name_bits:
+            if i + 1 < len(lines) and _TITLE.search(lines[i + 1]) and not parse_person_name(lines[i + 1]):
+                title = lines[i + 1]
+                if i + 2 < len(lines) and _TITLE.search(lines[i + 2]) and len(lines[i + 2]) < 60:
+                    if lines[i + 1].lower().endswith("and") or len(lines[i + 1]) < 28:
+                        title = f"{lines[i + 1]} {lines[i + 2]}"
+        else:
+            split = _split_name_title(line)
+            if not split:
+                continue
+            name_bits, title = split
         row = _person(name_bits[0], name_bits[1], title, source_url)
         if row:
             people.append(row)
