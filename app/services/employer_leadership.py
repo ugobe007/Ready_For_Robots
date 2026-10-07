@@ -270,6 +270,15 @@ _LAST_ORG = frozenset(
         "Quality",
         "Safety",
         "District",
+        "Asia",
+        "Asian",
+        "Pacific",
+        "Europe",
+        "European",
+        "American",
+        "Africa",
+        "African",
+        "Atlantic",
     }
 )
 _MAX_FETCHES = 4
@@ -422,6 +431,8 @@ def _ok_person(first: str, last: str, middle: Optional[str] = None) -> bool:
     if first in _BAD_NAME or last in _BAD_NAME or first in _PLACE_FIRST:
         return False
     if last in _LAST_ORG:
+        return False
+    if first in _PLACE_MIDDLE and last in _PLACE_MIDDLE:
         return False
     if middle is not None and not _plausible_middle(middle):
         return False

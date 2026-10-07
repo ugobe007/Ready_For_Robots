@@ -200,6 +200,24 @@ def test_people_from_html_keeps_surnames_park_york_lake():
     assert "New City" not in names
 
 
+def test_people_from_html_rejects_region_leftovers():
+    html = """
+    <html><body>
+      <p>Asia Pacific</p>
+      <p>Director of Operations</p>
+      <p>Europe Africa</p>
+      <p>Vice President</p>
+      <p>Michael York</p>
+      <p>Site Operations Manager</p>
+    </body></html>
+    """
+    people = people_from_html(html, "https://geodis.com/leadership")
+    names = [p["name"] for p in people]
+    assert "Asia Pacific" not in names
+    assert "Europe Africa" not in names
+    assert "Michael York" in names
+
+
 def test_people_from_html_reads_json_ld_person():
     html = """
     <script type="application/ld+json">
