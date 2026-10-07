@@ -96,6 +96,7 @@ export default function AdminDailyJobsReport({
                 ? ` · last emailed ${data.last_sent_date}`
                 : " · not emailed yet today"}
               {data?.recipients?.[0] ? ` · ${data.recipients[0]}` : ""}
+              {" · Hunter.io company lookup"}
             </p>
           </div>
         </div>
@@ -106,7 +107,7 @@ export default function AdminDailyJobsReport({
             disabled={sending || enriching || loading}
             className="inline-flex items-center justify-center border border-emerald-500/60 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-50"
           >
-            {enriching ? "Finding people…" : "Find decision makers"}
+            {enriching ? "Looking up companies…" : "Look up companies on Hunter.io"}
           </button>
           <button
             type="button"

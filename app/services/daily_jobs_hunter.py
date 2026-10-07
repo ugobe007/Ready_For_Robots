@@ -1,7 +1,8 @@
-"""Hunter.io fill for operator daily-job sales cards.
+"""Hunter.io company lookup for operator daily-job sales cards.
 
-FIND does not call Hunter. This is the Admin / daily-email path only.
-Verified domain-search people only — never invent a name or mailbox.
+Look up the employer, pick the title that owns this job, then find that
+person's email. FIND does not call Hunter. Apollo is not used here.
+Never invent a name or mailbox.
 """
 from __future__ import annotations
 
@@ -33,6 +34,7 @@ from app.services.job_decision_maker_agent import (
     DecisionMakerPlan,
     pick_candidate,
     plan_for_job,
+    score_candidate,
 )
 from app.services.robot_job_extract import _is_board_host
 
@@ -166,6 +168,17 @@ _US_STATE_ABBR = frozenset(
         "WY",
     }
 )
+_CAREER_HOST_LABELS = frozenset(
+    {
+        "jobs",
+        "careers",
+        "career",
+        "apply",
+        "hiring",
+        "recruiting",
+        "talent",
+    }
+)
 _ATS_HOSTS = frozenset(
     {
         "greenhouse.io",
@@ -216,6 +229,9 @@ def _host(url: str | None) -> Optional[str]:
         return None
     if any(host == d or host.endswith("." + d) for d in _ATS_HOSTS):
         return None
+    label = host.split(".", 1)[0]
+    if label in _CAREER_HOST_LABELS:
+        return None
     return host
 
 
@@ -235,15 +251,18 @@ def domain_for_job(row: Any, db: Session) -> Optional[str]:
     return _host(str(getattr(company, "website", "") or ""))
 
 
-def _job_needs_hunter(row: Any) -> bool:
+def _job_needs_hunter(row: Any, *, force: bool = False) -> bool:
     name, _title = _page_name_title(row)
     contact = _contact_fields(row)
-    if name and contact.get("email"):
-        return False
     blob = _as_map(getattr(row, "provenance", None))
-    if blob.get("contact_source") == "hunter_domain":
+    source = str(blob.get("contact_source") or "")
+    if name and contact.get("email") and source.startswith("hunter"):
         return False
-    if str(blob.get("hunter_checked_at") or "") == _today():
+    if name and contact.get("email") and not force:
+        return False
+    if not force and source in {"hunter_domain", "hunter_finder", "decision_maker_agent"}:
+        return False
+    if not force and str(blob.get("hunter_checked_at") or "") == _today():
         return False
     return True
 
@@ -356,15 +375,15 @@ def _stamp_hit(
     existing_email = str(getattr(row, "employer_email", "") or "").strip()
     if existing_email and _is_invented_ops_email(existing_email, employer):
         existing_email = ""
-    existing_name, existing_title = _page_name_title(row)
-    if email and not existing_email:
+        row.employer_email = None
+    if email:
         row.employer_email = email
     prov = dict(_as_map(getattr(row, "provenance", None)))
-    if name and not existing_name:
+    if name:
         prov["contact_name"] = name
-    if title and not existing_title:
+    if title:
         prov["contact_title"] = title
-    source = str(prospect.get("source") or "").strip() or "decision_maker_agent"
+    source = str(prospect.get("source") or "").strip() or "hunter_domain"
     prov["contact_source"] = source
     prov["hunter_checked_at"] = _today()
     if prospect.get("confidence") is not None:
@@ -378,6 +397,30 @@ def _stamp_hit(
     flag_modified(row, "provenance")
 
 
+def _name_bits(person: dict[str, Any]) -> tuple[str, str]:
+    first = str(person.get("first_name") or "").strip()
+    last = str(person.get("last_name") or "").strip()
+    if first and last:
+        return first, last
+    parts = str(person.get("name") or "").split()
+    if len(parts) >= 2:
+        return parts[0], parts[-1]
+    return "", ""
+
+
+def _rankable_hunter_person(
+    row: dict[str, Any], employer: str, locality: str = ""
+) -> bool:
+    name = str(row.get("name") or "").strip()
+    title = str(row.get("title") or row.get("position") or "").strip()
+    if not name or not title:
+        return False
+    email = str(row.get("email") or "").strip().lower()
+    if email and "@" in email:
+        return _usable_hunter_row(row, employer, locality)
+    return True
+
+
 def _domain_people(
     client: HunterClient,
     *,
@@ -387,68 +430,69 @@ def _domain_people(
     locality: str,
     cache: dict[str, list[dict[str, Any]]],
 ) -> list[dict[str, Any]]:
-    key = f"{(domain or employer).strip().lower()}|{departments}"
+    key = f"{(domain or '').strip().lower()}|{employer.strip().lower()}|{departments}"
     if key not in cache:
-        try:
-            search = client.domain_search(
-                domain=domain,
-                company=employer,
-                department=departments,
-            )
-        except (HunterAPIError, HunterConfigError) as exc:
-            logger.warning("Hunter domain search failed for %r: %s", employer, exc)
-            cache[key] = []
-            return []
-        cache[key] = [
-            person
-            for person in (search.get("emails") or [])
-            if isinstance(person, dict)
-        ]
+        people: list[dict[str, Any]] = []
+        queries: list[dict[str, Any]] = []
+        if domain:
+            queries.append({"domain": domain, "department": departments})
+        queries.append({"company": employer, "department": departments})
+        seen: set[str] = set()
+        for query in queries:
+            try:
+                search = client.domain_search(**query)
+            except (HunterAPIError, HunterConfigError) as exc:
+                logger.warning("Hunter domain search failed for %r: %s", employer, exc)
+                continue
+            for person in search.get("emails") or []:
+                if not isinstance(person, dict):
+                    continue
+                email = str(person.get("email") or "").strip().lower()
+                marker = email or str(person.get("name") or "").strip().lower()
+                if not marker or marker in seen:
+                    continue
+                seen.add(marker)
+                people.append(person)
+            if any(_rankable_hunter_person(p, employer, locality) for p in people):
+                break
+        cache[key] = people
     return [
         person
         for person in cache[key]
-        if _usable_hunter_row(person, employer, locality)
+        if _rankable_hunter_person(person, employer, locality)
     ]
 
 
-def _apollo_people(
+def _fill_email_via_finder(
+    client: HunterClient,
+    prospect: dict[str, Any],
     *,
     employer: str,
     domain: Optional[str],
-    plan: DecisionMakerPlan,
     locality: str,
-) -> list[dict[str, Any]]:
-    from app.services.contact_free_sources import apollo_contact_enabled
-    from app.services.apollo_client import ApolloAPIError, ApolloProspectClient
-
-    if not apollo_contact_enabled():
-        return []
+) -> dict[str, Any] | None:
+    merged = dict(prospect)
+    email = str(merged.get("email") or "").strip().lower()
+    if email and _usable_hunter_row(merged, employer, locality):
+        return merged
+    first, last = _name_bits(merged)
+    if not first or not last:
+        return None
     try:
-        result = ApolloProspectClient().search_people(
-            organization_name=employer,
-            organization_domain=domain,
-            titles=plan.titles[:4],
-            locations=[locality] if locality else None,
-            per_page=10,
+        found = client.find_email(
+            domain=domain,
+            company=employer,
+            first_name=first,
+            last_name=last,
         )
-    except (ApolloAPIError, Exception) as exc:
-        logger.warning("Apollo people search failed for %r: %s", employer, exc)
-        return []
-    people: list[dict[str, Any]] = []
-    for person in result.get("prospects") or []:
-        if not isinstance(person, dict):
-            continue
-        email = str(person.get("email") or "").strip().lower()
-        if "email_not_unlocked" in email:
-            person = dict(person)
-            person["email"] = ""
-            email = ""
-        if email and not _email_fits_employer(email, employer, locality):
-            continue
-        if not (person.get("name") and (person.get("title") or email)):
-            continue
-        people.append(person)
-    return people
+    except (HunterAPIError, HunterConfigError) as exc:
+        logger.warning("Hunter finder failed for %r %s %s: %s", employer, first, last, exc)
+        return None
+    if not found or not _usable_hunter_row(found, employer, locality):
+        return None
+    merged.update({k: v for k, v in found.items() if v})
+    merged["source"] = found.get("source") or "hunter_finder"
+    return merged
 
 
 def enrich_daily_jobs_with_hunter(
@@ -456,8 +500,9 @@ def enrich_daily_jobs_with_hunter(
     *,
     limit: int = TOP_N,
     client: HunterClient | None = None,
+    force: bool = False,
 ) -> dict[str, Any]:
-    """Fill missing names/emails using the job-title decision-maker agent."""
+    """Look up the employer on Hunter.io, pick the title that owns this job, find email."""
     out: dict[str, Any] = {
         "ok": False,
         "looked_up": 0,
@@ -483,7 +528,7 @@ def enrich_daily_jobs_with_hunter(
     skipped = 0
     looked = 0
     for row in rows:
-        if not _job_needs_hunter(row):
+        if not _job_needs_hunter(row, force=force):
             skipped += 1
             continue
         employer = str(getattr(row, "company_name", "") or "").strip()
@@ -494,40 +539,42 @@ def enrich_daily_jobs_with_hunter(
         plan = plan_for_job(row)
         domain = domain_for_job(row, db)
         locality = str(getattr(row, "locality", "") or "").strip()
-        prospect = None
-        known_name, _ = _page_name_title(row)
-        bits = known_name.split()
-        if len(bits) >= 2:
-            try:
-                found = hunter.find_email(
-                    domain=domain,
-                    company=employer,
-                    first_name=bits[0],
-                    last_name=bits[-1],
-                )
-                if found and _usable_hunter_row(found, employer, locality):
-                    prospect = found
-            except (HunterAPIError, HunterConfigError) as exc:
-                logger.warning("Hunter finder failed for %r: %s", employer, exc)
-        elif not prospect:
-            people = _domain_people(
+        people = _domain_people(
+            hunter,
+            employer=employer,
+            domain=domain,
+            departments=plan.departments,
+            locality=locality,
+            cache=cache,
+        )
+        prospect = pick_candidate(plan, people, locality=locality)
+        if prospect:
+            prospect = _fill_email_via_finder(
                 hunter,
+                prospect,
                 employer=employer,
                 domain=domain,
-                departments=plan.departments,
                 locality=locality,
-                cache=cache,
             )
-            people.extend(
-                _apollo_people(
-                    employer=employer,
-                    domain=domain,
-                    plan=plan,
-                    locality=locality,
-                )
-            )
-            prospect = pick_candidate(plan, people, locality=locality)
-        if prospect and (prospect.get("email") or prospect.get("name")):
+        if not prospect:
+            known_name, known_title = _page_name_title(row)
+            bits = known_name.split()
+            if len(bits) >= 2 and score_candidate(
+                plan, {"title": known_title or known_name}, locality=locality
+            ):
+                try:
+                    found = hunter.find_email(
+                        domain=domain,
+                        company=employer,
+                        first_name=bits[0],
+                        last_name=bits[-1],
+                    )
+                except (HunterAPIError, HunterConfigError) as exc:
+                    logger.warning("Hunter finder failed for %r: %s", employer, exc)
+                    found = None
+                if found and _usable_hunter_row(found, employer, locality):
+                    prospect = found
+        if prospect and _usable_hunter_row(prospect, employer, locality):
             _stamp_hit(row, prospect, plan=plan)
             filled += 1
         else:

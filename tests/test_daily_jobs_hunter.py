@@ -38,14 +38,15 @@ def _job(**extra):
 
 
 class _FakeHunter:
-    def __init__(self, emails):
+    def __init__(self, emails, finder=None):
         self.emails = emails
+        self.finder_result = finder
         self.domain_calls = []
         self.finder_calls = []
 
     def find_email(self, **kwargs):
         self.finder_calls.append(kwargs)
-        return None
+        return self.finder_result
 
     def domain_search(self, **kwargs):
         self.domain_calls.append(kwargs)
@@ -78,7 +79,7 @@ def test_enrich_fills_missing_name_and_email(monkeypatch):
     card = report["jobs"][0]
     assert card["decision_maker"] == "Priya Shah · Site operations manager"
     assert "priya.shah@geodis.com" in card["contact"]
-    assert card["contact_source"] == "decision_maker_agent"
+    assert card["contact_source"] == "hunter_domain"
     assert "Warehouse Operations Manager" in (card.get("target_titles") or [])
 
 
@@ -214,7 +215,7 @@ def test_enrich_does_not_overwrite_page_name(monkeypatch):
     result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
     assert result["filled"] == 0
     assert result["missed"] == 1
-    assert hunter.domain_calls == []
+    assert hunter.domain_calls
     report = compose_daily_jobs_report(db, limit=25)
     assert "Maya Chen" in report["jobs"][0]["decision_maker"]
     assert "other.person@geodis.com" not in report["jobs"][0]["contact"]
@@ -312,6 +313,74 @@ def test_email_must_belong_to_the_named_employer():
     ) is True
 
 
+def test_company_lookup_fills_empty_posting_via_hunter(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(
+        _job(
+            job_key="empty-post",
+            apply_url="https://boards.greenhouse.io/geodis/jobs/1",
+        )
+    )
+    db.commit()
+    hunter = _FakeHunter(
+        [
+            {
+                "email": "priya.shah@geodis.com",
+                "name": "Priya Shah",
+                "first_name": "Priya",
+                "last_name": "Shah",
+                "title": "Site Operations Manager",
+                "confidence": 92,
+                "department": "operations",
+                "verification_status": "valid",
+            }
+        ]
+    )
+    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    assert result["filled"] == 1
+    assert any(call.get("company") == "GEODIS" for call in hunter.domain_calls)
+    assert not any(call.get("domain") for call in hunter.domain_calls)
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Priya Shah" in report["jobs"][0]["decision_maker"]
+    assert "priya.shah@geodis.com" in report["jobs"][0]["contact"]
+
+
+def test_finder_fills_email_after_company_title_match(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(_job(job_key="named-no-mail"))
+    db.commit()
+    hunter = _FakeHunter(
+        [
+            {
+                "email": "",
+                "name": "Priya Shah",
+                "first_name": "Priya",
+                "last_name": "Shah",
+                "title": "Site Operations Manager",
+                "confidence": 90,
+                "department": "operations",
+                "verification_status": "valid",
+            }
+        ],
+        finder={
+            "email": "priya.shah@geodis.com",
+            "name": "Priya Shah",
+            "title": "Site Operations Manager",
+            "confidence": 91,
+            "verification_status": "valid",
+            "source": "hunter_finder",
+        },
+    )
+    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    assert result["filled"] == 1
+    assert hunter.finder_calls
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Priya Shah" in report["jobs"][0]["decision_maker"]
+    assert "priya.shah@geodis.com" in report["jobs"][0]["contact"]
+
+
 def test_low_confidence_hunter_email_is_not_used(monkeypatch):
     monkeypatch.setenv("HUNTER_API_KEY", "test-key")
     db = _session()
@@ -347,7 +416,9 @@ def test_ats_apply_url_is_not_the_hunter_domain():
     )
     assert domain_for_job(row, db=None) is None
     row.apply_url = "https://jobs.geodis.com/trailer-unload"
-    assert domain_for_job(row, db=None) == "jobs.geodis.com"
+    assert domain_for_job(row, db=None) is None
+    row.apply_url = "https://www.geodis.com/about"
+    assert domain_for_job(row, db=None) == "geodis.com"
 
 
 def test_finder_search_does_not_import_hunter():
@@ -360,5 +431,8 @@ def test_finder_search_does_not_import_hunter():
     assert "daily_jobs_hunter" not in search
     assert "HunterClient" not in search
     assert "job_decision_maker_agent" not in search
+    hunter_mod = Path("app/services/daily_jobs_hunter.py").read_text(encoding="utf-8")
+    assert "ApolloProspectClient" not in hunter_mod
+    assert "apollo_contact_enabled" not in hunter_mod
     assert "daily_jobs_hunter" not in matcher
     assert "job_decision_maker_agent" not in matcher

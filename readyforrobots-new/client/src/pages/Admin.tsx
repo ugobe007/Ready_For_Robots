@@ -1157,7 +1157,15 @@ export default function Admin() {
     try {
       const res = await adminFetch("/api/admin/daily-jobs-report");
       if (!res.ok) throw new Error(`jobs report ${res.status}`);
-      setJobsReport((await res.json()) as DailyJobsReportData);
+      const payload = (await res.json()) as DailyJobsReportData & {
+        hunter?: { reason?: string | null };
+      };
+      setJobsReport(payload);
+      if (payload.hunter?.reason === "hunter_disabled") {
+        setJobsReportSendError(
+          "Hunter.io is not enabled on this server (missing HUNTER_API_KEY)."
+        );
+      }
     } catch {
       setJobsReport(null);
     } finally {

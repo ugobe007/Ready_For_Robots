@@ -85,6 +85,7 @@ class HunterClient:
         domain: str | None = None,
         company: str | None = None,
         department: str | None = "operations,management,executive",
+        seniority: str | None = "executive,senior",
         limit: int = 10,
     ) -> dict[str, Any]:
         clean_domain = _clean_domain(domain)
@@ -97,6 +98,8 @@ class HunterClient:
             raise HunterConfigError("domain or company is required for domain search")
         if department:
             params["department"] = department
+        if seniority:
+            params["seniority"] = seniority
 
         data = self._get(HUNTER_DOMAIN_SEARCH_PATH, params)
         emails = []
