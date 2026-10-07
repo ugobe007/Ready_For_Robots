@@ -214,6 +214,14 @@ _PLACE_OR_ORG = frozenset(
         "Limited",
         "Midwest",
         "Midatlantic",
+        "City",
+        "Services",
+        "Care",
+        "Center",
+        "Centre",
+        "York",
+        "Patient",
+        "New",
     }
 )
 _MAX_FETCHES = 4
