@@ -239,6 +239,29 @@ _PLACE_MIDDLE = frozenset(
         "Safety",
     }
 )
+# Geographic/regional terms that are never surnames. Subset of _PLACE_MIDDLE.
+_NEVER_SURNAME = frozenset(
+    {
+        "America",
+        "American",
+        "Europe",
+        "European",
+        "Asia",
+        "Asian",
+        "Pacific",
+        "Atlantic",
+        "Africa",
+        "African",
+        "East",
+        "West",
+        "North",
+        "South",
+        "Northeast",
+        "Northwest",
+        "Southeast",
+        "Southwest",
+    }
+)
 # Last-token org nouns that are not common surnames.
 _LAST_ORG = frozenset(
     {
@@ -422,6 +445,8 @@ def _ok_person(first: str, last: str, middle: Optional[str] = None) -> bool:
     if first in _BAD_NAME or last in _BAD_NAME or first in _PLACE_FIRST:
         return False
     if last in _LAST_ORG:
+        return False
+    if first in _NEVER_SURNAME or last in _NEVER_SURNAME:
         return False
     if middle is not None and not _plausible_middle(middle):
         return False
