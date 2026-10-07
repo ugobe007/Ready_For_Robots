@@ -215,7 +215,6 @@ _PLACE_OR_ORG = frozenset(
         "Midwest",
         "Midatlantic",
         "New",
-        "York",
         "City",
         "Care",
         "Services",
@@ -225,12 +224,7 @@ _PLACE_OR_ORG = frozenset(
         "Floor",
         "Center",
         "Centre",
-        "Park",
-        "Lake",
-        "Bay",
         "Valley",
-        "View",
-        "River",
     }
 )
 _MAX_FETCHES = 4
