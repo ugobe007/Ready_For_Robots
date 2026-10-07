@@ -71,3 +71,29 @@ def test_fetch_leadership_pages_uses_injected_getter():
     people = people_from_pages(pages)
     assert people[0]["name"] == "Alex Rivera"
     assert "Operations Manager" in people[0]["title"]
+
+
+def test_http_get_rejects_ssrf_targets():
+    """SSRF protection: _http_get must reject localhost and metadata endpoints."""
+    from app.services.employer_leadership import _http_get
+
+    assert _http_get("http://localhost/team") is None
+    assert _http_get("http://127.0.0.1/leadership") is None
+    assert _http_get("http://169.254.169.254/latest/meta-data") is None
+    assert _http_get("http://metadata.google.internal/") is None
+
+
+def test_fetch_leadership_pages_caps_failed_attempts():
+    """Performance: failed/timeout requests count toward _MAX_ATTEMPTS to prevent stalls."""
+    from app.services.employer_leadership import _MAX_ATTEMPTS
+
+    call_count = 0
+
+    def slow_getter(url):
+        nonlocal call_count
+        call_count += 1
+        return None  # Always fail
+
+    pages = fetch_leadership_pages(domain="example.com", get_html=slow_getter)
+    assert pages == []
+    assert call_count <= _MAX_ATTEMPTS  # Should stop at the attempts limit

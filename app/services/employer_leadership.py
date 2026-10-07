@@ -129,6 +129,7 @@ _BAD_NAME = frozenset(
     }
 )
 _MAX_PAGES = 5
+_MAX_ATTEMPTS = 10
 _MAX_HTML = 220_000
 _TIMEOUT = 6.0
 
@@ -212,12 +213,15 @@ def fetch_leadership_pages(
     getter = get_html or _http_get
     pages: list[dict[str, Any]] = []
     seen: set[str] = set()
+    attempts = 0
 
     def _add(url: str) -> Optional[str]:
+        nonlocal attempts
         key = url.rstrip("/").lower()
-        if key in seen or len(pages) >= _MAX_PAGES:
+        if key in seen or len(pages) >= _MAX_PAGES or attempts >= _MAX_ATTEMPTS:
             return None
         seen.add(key)
+        attempts += 1
         html = getter(url)
         if not html:
             return None
@@ -227,11 +231,11 @@ def fetch_leadership_pages(
     home = _add(origin)
     if home:
         for href in discover_leadership_urls(home, origin):
-            if len(pages) >= _MAX_PAGES:
+            if len(pages) >= _MAX_PAGES or attempts >= _MAX_ATTEMPTS:
                 break
             _add(href)
     for path in LEADERSHIP_PATHS:
-        if len(pages) >= _MAX_PAGES:
+        if len(pages) >= _MAX_PAGES or attempts >= _MAX_ATTEMPTS:
             break
         _add(origin + path)
     if pages:
@@ -245,12 +249,19 @@ def fetch_leadership_pages(
 
 
 def _http_get(url: str) -> Optional[str]:
+    from app.services.robot_url_safety import UrlSafetyError, assert_public_http_url
+
+    try:
+        safe = assert_public_http_url(url)
+    except (UrlSafetyError, ValueError) as exc:
+        logger.info("leadership URL rejected (SSRF check): %s: %s", url, exc)
+        return None
     try:
         response = requests.get(
-            url,
+            safe,
             headers={"User-Agent": "ReadyForRobots/1.0 (employer leadership)"},
             timeout=_TIMEOUT,
-            allow_redirects=True,
+            allow_redirects=False,
         )
     except requests.RequestException as exc:
         logger.info("leadership fetch failed %s: %s", url, exc)
