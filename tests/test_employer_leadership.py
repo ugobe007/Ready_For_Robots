@@ -180,6 +180,26 @@ def test_people_from_html_rejects_three_word_place_leftovers():
     assert "Mary Smith" in names
 
 
+def test_people_from_html_keeps_surnames_park_york_lake():
+    html = """
+    <html><body>
+      <p>Rosa Park</p>
+      <p>Pharmacy Operations Manager</p>
+      <p>Michael York</p>
+      <p>Site Operations Manager</p>
+      <p>Chris Lake</p>
+      <p>Director of Pharmacy</p>
+      <p>New York City, Director of Operations</p>
+    </body></html>
+    """
+    people = people_from_html(html, "https://geodis.com/leadership")
+    names = [p["name"] for p in people]
+    assert "Rosa Park" in names
+    assert "Michael York" in names
+    assert "Chris Lake" in names
+    assert "New City" not in names
+
+
 def test_people_from_html_reads_json_ld_person():
     html = """
     <script type="application/ld+json">

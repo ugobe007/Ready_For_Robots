@@ -164,7 +164,8 @@ _BAD_NAME = frozenset(
         "Programs",
     }
 )
-_PLACE_OR_ORG = frozenset(
+# First-token only. Last names like Park/York/Lake/Bay/River still parse.
+_PLACE_FIRST = frozenset(
     {
         "North",
         "South",
@@ -174,6 +175,29 @@ _PLACE_OR_ORG = frozenset(
         "Northwest",
         "Southeast",
         "Southwest",
+        "New",
+        "Global",
+        "International",
+        "Regional",
+        "Corporate",
+        "National",
+        "Central",
+        "United",
+        "Midwest",
+        "Midatlantic",
+        "Patient",
+        "Supply",
+        "Clinical",
+        "Community",
+    }
+)
+# Middle-token only. Not applied to last names.
+_PLACE_MIDDLE = frozenset(
+    {
+        "York",
+        "City",
+        "Care",
+        "Services",
         "America",
         "American",
         "Europe",
@@ -185,52 +209,67 @@ _PLACE_OR_ORG = frozenset(
         "Africa",
         "African",
         "Region",
-        "Regional",
-        "Global",
-        "International",
-        "Corporate",
-        "Group",
         "Chain",
-        "Supply",
-        "Distribution",
-        "Logistics",
-        "Manufacturing",
-        "Quality",
-        "Safety",
-        "Clinical",
-        "Community",
-        "United",
-        "States",
-        "National",
-        "Central",
-        "District",
-        "Campus",
-        "Site",
-        "Plant",
-        "Warehouse",
-        "Fulfillment",
-        "Worldwide",
-        "Holdings",
-        "Limited",
-        "Midwest",
-        "Midatlantic",
-        "New",
-        "York",
-        "City",
-        "Care",
-        "Services",
-        "Patient",
-        "Area",
-        "Unit",
-        "Floor",
-        "Center",
-        "Centre",
+        "Group",
         "Park",
         "Lake",
         "Bay",
         "Valley",
         "View",
         "River",
+        "Area",
+        "Unit",
+        "Floor",
+        "Center",
+        "Centre",
+        "Campus",
+        "Site",
+        "Plant",
+        "Warehouse",
+        "District",
+        "States",
+        "Holdings",
+        "Limited",
+        "Worldwide",
+        "Fulfillment",
+        "Distribution",
+        "Logistics",
+        "Manufacturing",
+        "Quality",
+        "Safety",
+    }
+)
+# Last-token org nouns that are not common surnames.
+_LAST_ORG = frozenset(
+    {
+        "City",
+        "Care",
+        "Services",
+        "America",
+        "Region",
+        "Chain",
+        "Group",
+        "Holdings",
+        "Limited",
+        "Distribution",
+        "Logistics",
+        "Manufacturing",
+        "Fulfillment",
+        "Worldwide",
+        "States",
+        "Campus",
+        "Site",
+        "Plant",
+        "Warehouse",
+        "Center",
+        "Centre",
+        "Floor",
+        "Area",
+        "Unit",
+        "Community",
+        "Quality",
+        "Safety",
+        "District",
     }
 )
 _MAX_FETCHES = 4
@@ -374,9 +413,19 @@ def discover_leadership_urls(homepage_html: str, origin: str) -> list[str]:
 
 def _plausible_middle(tok: str) -> bool:
     """Ann/Marie yes. York/Care/City no — those are leftover phrases, not people."""
-    if not tok or tok in _BAD_NAME | _PLACE_OR_ORG:
+    if not tok or tok in _BAD_NAME | _PLACE_MIDDLE:
         return False
     return 2 <= len(tok) <= 12 and tok.isalpha() and tok[0].isupper() and tok[1:].islower()
+
+
+def _ok_person(first: str, last: str, middle: Optional[str] = None) -> bool:
+    if first in _BAD_NAME or last in _BAD_NAME or first in _PLACE_FIRST:
+        return False
+    if last in _LAST_ORG:
+        return False
+    if middle is not None and not _plausible_middle(middle):
+        return False
+    return True
 
 
 def parse_person_name(text: str, *, allow_middle: bool = True) -> Optional[tuple[str, str]]:
@@ -386,20 +435,19 @@ def parse_person_name(text: str, *, allow_middle: bool = True) -> Optional[tuple
     raw = re.sub(r"\s+", " ", raw).strip(" ,;")
     if not raw or len(raw) > 80:
         return None
-    blocked = _BAD_NAME | _PLACE_OR_ORG
-    if any(tok[:1].isupper() and tok in blocked for tok in re.findall(r"[A-Za-z]+", raw)):
+    if any(tok[:1].isupper() and tok in _BAD_NAME for tok in re.findall(r"[A-Za-z]+", raw)):
         return None
     match = re.fullmatch(r"([A-Z])\.\s+([A-Z][a-z]+)\s+([A-Z][a-z]+)", raw)
-    if match:
+    if match and _ok_person(match.group(2), match.group(3)):
         return match.group(2), match.group(3)
     match = re.fullmatch(r"([A-Z][a-z]+)\s+([A-Z])\.\s+([A-Z][a-z]+)", raw)
-    if match:
+    if match and _ok_person(match.group(1), match.group(3)):
         return match.group(1), match.group(3)
     match = re.fullmatch(r"([A-Z][a-z]+)\s+([A-Z][a-z]+)\s+([A-Z][a-z]+)", raw)
-    if match and allow_middle and _plausible_middle(match.group(2)):
+    if match and allow_middle and _ok_person(match.group(1), match.group(3), match.group(2)):
         return match.group(1), match.group(3)
     match = re.fullmatch(r"([A-Z][a-z]+)\s+([A-Z][a-z]+)", raw)
-    if match:
+    if match and _ok_person(match.group(1), match.group(2)):
         return match.group(1), match.group(2)
     return None
 
