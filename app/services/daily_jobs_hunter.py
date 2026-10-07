@@ -105,7 +105,7 @@ _GENERIC_EMPLOYER_TOKENS = frozenset(
     }
 )
 _US_LOCALITY_RE = re.compile(
-    r"united states|\b(AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV)\b",
+    r"united states|\b(AL|AK|AZ|AR|CA|CO|CT|DC|DE|FL|GA|HI|IA|ID|IL|IN|KS|KY|LA|MA|MD|ME|MI|MN|MO|MS|MT|NC|ND|NE|NH|NJ|NM|NV|NY|OH|OK|OR|PA|RI|SC|SD|TN|TX|UT|VA|VT|WA|WI|WV)\b",
     re.I,
 )
 _FOREIGN_TLDS = (
@@ -219,7 +219,7 @@ def _email_fits_employer(email: str, employer: str, locality: str = "") -> bool:
     emp_slug = re.sub(r"[^a-z0-9]", "", employer.lower())
     tokens = _employer_tokens(employer)
     if core and emp_slug and (core in emp_slug or emp_slug in core):
-        if any(tok in core for tok in _GENERIC_EMPLOYER_TOKENS):
+        if core in _GENERIC_EMPLOYER_TOKENS:
             pass
         else:
             return True
