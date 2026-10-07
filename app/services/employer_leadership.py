@@ -370,9 +370,6 @@ def fetch_leadership_pages(
         html = getter(url)
         if not html:
             continue
-        # Live HTTP only: thin 200s are 404 templates. Injected fixtures stay.
-        if get_html is None and len(html) < 8000:
-            continue
         if re.search(r"<title>[^<]{0,80}404", html, re.I):
             continue
         # Soft-404 / chrome shells have HTML but no named people. Keep going.
@@ -534,18 +531,49 @@ def _text_people(text: str, source_url: str) -> list[dict[str, Any]]:
     lines = [re.sub(r"\s+", " ", ln).strip() for ln in (text or "").splitlines() if ln.strip()]
     for i, line in enumerate(lines):
         name_bits = parse_person_name(line)
+        title = ""
+        
+        # If the line is not just a name, try to split it
+        if not name_bits and "," in line:
+            left, right = [p.strip() for p in line.split(",", 1)]
+            # Try Name, Title format
+            if parse_person_name(left) and _TITLE.search(right):
+                name_bits = parse_person_name(left)
+                title = right
+            # Try Title, Name format
+            elif parse_person_name(right) and _TITLE.search(left):
+                name_bits = parse_person_name(right)
+                title = left
+        
+        # Try same-line without comma: find title pattern and split
+        if not name_bits:
+            title_match = _TITLE.search(line)
+            if title_match:
+                title_start = title_match.start()
+                name_part = line[:title_start].strip()
+                title_part = line[title_start:].strip()
+                name_check = parse_person_name(name_part)
+                if name_check and not parse_person_name(title_part):
+                    name_bits = name_check
+                    title = title_part
+        
+        # Continue if still no name found
         if not name_bits:
             continue
-        title = ""
-        if i + 1 < len(lines) and _TITLE.search(lines[i + 1]) and not parse_person_name(lines[i + 1]):
+        
+        # Look for title on next line if not already found
+        if not title and i + 1 < len(lines) and _TITLE.search(lines[i + 1]) and not parse_person_name(lines[i + 1]):
             title = lines[i + 1]
             if i + 2 < len(lines) and _TITLE.search(lines[i + 2]) and len(lines[i + 2]) < 60:
                 if lines[i + 1].lower().endswith("and") or len(lines[i + 1]) < 28:
                     title = f"{lines[i + 1]} {lines[i + 2]}"
+        
+        # Try comma format if line matches a name and still no title
         if not title and "," in line:
             left, right = [p.strip() for p in line.split(",", 1)]
             if parse_person_name(left) and _TITLE.search(right):
                 title = right
+        
         row = _person(name_bits[0], name_bits[1], title, source_url)
         if row:
             people.append(row)
