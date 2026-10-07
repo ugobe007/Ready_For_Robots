@@ -588,6 +588,27 @@ def market_graph_daily_digest_send(
     return result
 
 
+class DailyJobsReportSendBody(BaseModel):
+    force: bool = False
+    limit: int = Field(25, ge=1, le=50)
+
+
+@router.post("/daily-jobs-report-send")
+def market_graph_daily_jobs_report_send(
+    body: DailyJobsReportSendBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Send the operator top-25 Robot Jobs email via Resend. No paid LLM."""
+    from app.services.daily_jobs_report import send_daily_jobs_report
+
+    result = send_daily_jobs_report(db, force=body.force, limit=body.limit)
+    result["engine"] = "local_inference"
+    result["paid_llm"] = False
+    result["auth"] = _auth.get("auth")
+    return result
+
+
 @router.post("/contacts/ingest")
 def market_graph_contacts_ingest(
     body: ContactsIngestBody,

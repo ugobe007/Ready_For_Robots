@@ -57,6 +57,12 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
         adminOnly: true,
       },
       {
+        label: "Top 25 robot jobs",
+        href: "/admin#daily-jobs-report",
+        shortLabel: "Named employers emailed daily",
+        adminOnly: true,
+      },
+      {
         label: "Agent queue",
         href: "/admin#workflow",
         shortLabel: "Agent actions",
@@ -181,6 +187,11 @@ export function openWorkspaceHref(
 
 export const ADMIN_QUICK_ACTIONS: AdminNavLink[] = [
   { label: "Command center", href: "/admin", shortLabel: "Cal queue" },
+  {
+    label: "Top 25 robot jobs",
+    href: "/admin#daily-jobs-report",
+    shortLabel: "Daily jobs email",
+  },
   {
     label: "Agent queue",
     href: "/admin#workflow",

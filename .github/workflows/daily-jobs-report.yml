@@ -1,0 +1,54 @@
+name: Daily jobs report
+
+# Fly worker + Celery Beat own the 14:00 UTC send. This Action is the backup.
+# Hermes is retired. Do not draft this email with an LLM.
+
+on:
+  schedule:
+    - cron: "5 14 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: daily-jobs-report
+  cancel-in-progress: false
+
+jobs:
+  send:
+    name: POST daily-jobs-report-send
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Send top-25 jobs report via Fly (no LLM)
+        env:
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          SCRAPER_CRON_TOKEN: ${{ secrets.SCRAPER_CRON_TOKEN }}
+        run: |
+          set -euo pipefail
+          URL="https://ready-2-robot.fly.dev/api/v1/market-graph/daily-jobs-report-send"
+          BODY='{"force": false, "limit": 25}'
+          post() {
+            local extra=("$@")
+            local tmp
+            tmp="$(mktemp)"
+            local code
+            code="$(curl -sS -o "$tmp" -w "%{http_code}" -X POST "$URL" \
+              -H "Content-Type: application/json" \
+              "${extra[@]}" \
+              -d "$BODY" || true)"
+            echo "HTTP $code"
+            cat "$tmp"
+            echo
+            if [ "$code" != "200" ]; then
+              echo "::error::daily-jobs-report-send failed HTTP $code. If the body mentions a 16-character hex fingerprint, GitHub ADMIN_KEY is the fly secrets list digest — set the real ADMIN_KEY (same value as Fly), not the fingerprint."
+              exit 1
+            fi
+          }
+          if [ -n "${ADMIN_KEY:-}" ]; then
+            post -H "X-Admin-Key: ${ADMIN_KEY}"
+          elif [ -n "${SCRAPER_CRON_TOKEN:-}" ]; then
+            URL="${URL}?token=${SCRAPER_CRON_TOKEN}"
+            post
+          else
+            echo "No ADMIN_KEY or SCRAPER_CRON_TOKEN in Actions. Fly worker still owns the send."
+            exit 0
+          fi
