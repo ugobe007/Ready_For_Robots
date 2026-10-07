@@ -951,30 +951,46 @@ export function crmDeskForCurrentRobot(opts: {
 }): CrmDeskForRobot {
   const snapUrl = canonicalRobotUrl(opts.snap?.url || "");
   if (!snapUrl) {
-    const search = typeof window !== "undefined" ? window.location.search : "";
+    const search =
+      typeof window !== "undefined" ? window.location?.search || "" : "";
     const params = new URLSearchParams(search);
-    const coQuery = (params.get("co") || params.get("q") || params.get("company") || "").trim().toLowerCase();
+    const coQuery = (
+      params.get("co") ||
+      params.get("q") ||
+      params.get("company") ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
 
-    const quoteJobs = FEATURED_BUYER_QUOTES.map(buyerQuoteToMatchJob);
-    let matchedQuote = FEATURED_BUYER_QUOTES[0];
     if (coQuery) {
-      const foundQuote = FEATURED_BUYER_QUOTES.find(q =>
-        q.company.toLowerCase().includes(coQuery) ||
-        q.matchedJobTitle.toLowerCase().includes(coQuery) ||
-        q.industry.toLowerCase().includes(coQuery)
+      const quoteJobs = FEATURED_BUYER_QUOTES.map(buyerQuoteToMatchJob);
+      const foundQuote = FEATURED_BUYER_QUOTES.find(
+        q =>
+          q.company.toLowerCase().includes(coQuery) ||
+          q.matchedJobTitle.toLowerCase().includes(coQuery) ||
+          q.industry.toLowerCase().includes(coQuery)
       );
       if (foundQuote) {
-        matchedQuote = foundQuote;
-        quoteJobs.sort((a, b) => (a.job_key === foundQuote.id ? -1 : b.job_key === foundQuote.id ? 1 : 0));
+        quoteJobs.sort((a, b) =>
+          a.job_key === foundQuote.id ? -1 : b.job_key === foundQuote.id ? 1 : 0
+        );
+        return {
+          product: foundQuote.targetRobotTypes.join(" / ") || "your robot",
+          robotUrl: "",
+          rows: [],
+          jobs: quoteJobs,
+          savedCount: quoteJobs.length,
+        };
       }
     }
 
     return {
-      product: matchedQuote ? matchedQuote.targetRobotTypes.join(" / ") : "Robotic Labor",
-      robotUrl: "https://readyforrobots.com",
+      product: "your robot",
+      robotUrl: "",
       rows: [],
-      jobs: quoteJobs,
-      savedCount: quoteJobs.length,
+      jobs: [],
+      savedCount: 0,
     };
   }
 
