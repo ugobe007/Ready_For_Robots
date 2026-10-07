@@ -240,6 +240,20 @@ def daily_jobs_report_send(
     return send_daily_jobs_report(db, force=body.force, limit=body.limit)
 
 
+@router.post("/daily-jobs-report/enrich")
+def daily_jobs_report_enrich(
+    db: Session = Depends(get_db),
+):
+    """Hunter.io lookup for missing names/emails on the top-25 cards."""
+    from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
+    from app.services.daily_jobs_report import compose_daily_jobs_report
+
+    hunter = enrich_daily_jobs_with_hunter(db, limit=25)
+    report = compose_daily_jobs_report(db, limit=25)
+    report["hunter"] = hunter
+    return report
+
+
 # ── Daily brief ───────────────────────────────────────────────────────────────
 
 @router.get("/daily-brief")

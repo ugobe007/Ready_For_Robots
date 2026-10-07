@@ -1075,6 +1075,7 @@ export default function Admin() {
   );
   const [jobsReportLoading, setJobsReportLoading] = useState(true);
   const [jobsReportSending, setJobsReportSending] = useState(false);
+  const [jobsReportEnriching, setJobsReportEnriching] = useState(false);
   const [jobsReportSendError, setJobsReportSendError] = useState<string | null>(
     null
   );
@@ -1167,6 +1168,36 @@ export default function Admin() {
   useEffect(() => {
     void loadJobsReport();
   }, [loadJobsReport]);
+
+  const enrichJobsReport = useCallback(async () => {
+    setJobsReportEnriching(true);
+    setJobsReportSendError(null);
+    try {
+      const res = await adminFetch("/api/admin/daily-jobs-report/enrich", {
+        method: "POST",
+      });
+      const payload = (await res.json().catch(() => ({}))) as DailyJobsReportData & {
+        hunter?: { reason?: string | null; filled?: number };
+        detail?: string;
+      };
+      if (!res.ok) {
+        throw new Error(payload.detail || `enrich failed ${res.status}`);
+      }
+      setJobsReport(payload);
+      const hunter = payload.hunter;
+      if (hunter?.reason === "hunter_disabled") {
+        setJobsReportSendError(
+          "Hunter.io is not enabled on this server (missing HUNTER_API_KEY)."
+        );
+      }
+    } catch (e) {
+      setJobsReportSendError(
+        e instanceof Error ? e.message : "Could not look up Hunter.io contacts."
+      );
+    } finally {
+      setJobsReportEnriching(false);
+    }
+  }, [adminFetch]);
 
   const sendJobsReport = useCallback(async () => {
     setJobsReportSending(true);
@@ -3235,8 +3266,10 @@ export default function Admin() {
           data={jobsReport}
           loading={jobsReportLoading}
           sending={jobsReportSending}
+          enriching={jobsReportEnriching}
           sendError={jobsReportSendError}
           onSend={() => void sendJobsReport()}
+          onEnrich={() => void enrichJobsReport()}
         />
 
         {/* ── Top Executive User Metrics Dashboard ── */}

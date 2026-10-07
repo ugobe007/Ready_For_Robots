@@ -19,6 +19,17 @@ export type DailyJobsReportJob = {
   employer_email?: string | null;
   contact_url?: string | null;
   apply_url?: string | null;
+  contact_source?: string | null;
+};
+
+export type DailyJobsReportHunter = {
+  ok?: boolean;
+  looked_up?: number;
+  filled?: number;
+  skipped?: number;
+  missed?: number;
+  reason?: string | null;
+  enabled?: boolean;
 };
 
 export type DailyJobsReportData = {
@@ -29,14 +40,17 @@ export type DailyJobsReportData = {
   recipients?: string[];
   last_sent_date?: string | null;
   find_href?: string;
+  hunter?: DailyJobsReportHunter;
 };
 
 type Props = {
   data: DailyJobsReportData | null;
   loading?: boolean;
   sending?: boolean;
+  enriching?: boolean;
   sendError?: string | null;
   onSend?: () => void;
+  onEnrich?: () => void;
 };
 
 function Field({ label, value }: { label: string; value: string }) {
@@ -54,11 +68,14 @@ export default function AdminDailyJobsReport({
   data,
   loading,
   sending,
+  enriching,
   sendError,
   onSend,
+  onEnrich,
 }: Props) {
   const jobs = data?.jobs || [];
   const today = data?.date ?? new Date().toISOString().slice(0, 10);
+  const hunter = data?.hunter;
   return (
     <section
       id="daily-jobs-report"
@@ -80,14 +97,24 @@ export default function AdminDailyJobsReport({
             </p>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onSend}
-          disabled={sending || loading}
-          className="inline-flex items-center justify-center bg-emerald-500 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#090d16] hover:bg-emerald-400 disabled:opacity-50"
-        >
-          {sending ? "Sending…" : "Email the 25 cards now"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={onEnrich}
+            disabled={sending || enriching || loading}
+            className="inline-flex items-center justify-center border border-emerald-500/60 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-50"
+          >
+            {enriching ? "Looking up…" : "Look up missing contacts"}
+          </button>
+          <button
+            type="button"
+            onClick={onSend}
+            disabled={sending || enriching || loading}
+            className="inline-flex items-center justify-center bg-emerald-500 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#090d16] hover:bg-emerald-400 disabled:opacity-50"
+          >
+            {sending ? "Sending…" : "Email the 25 cards now"}
+          </button>
+        </div>
       </div>
       {sendError ? (
         <p className="mb-3 text-sm text-red-300">{sendError}</p>
@@ -144,9 +171,21 @@ export default function AdminDailyJobsReport({
           })}
         </ol>
       )}
-      <p className="mt-3 text-[11px] text-slate-500">
-        Page-sourced contacts only. Daily email at 14:00 UTC to
-        ugobe07@gmail.com. FIND stays <code>/?visit=jobs</code>.
+      {hunter ? (
+        <p className="mt-3 text-[11px] text-slate-400">
+          Hunter.io
+          {typeof hunter.filled === "number" ? ` filled ${hunter.filled}` : ""}
+          {typeof hunter.missed === "number" ? ` · missed ${hunter.missed}` : ""}
+          {typeof hunter.skipped === "number"
+            ? ` · already had ${hunter.skipped}`
+            : ""}
+          {hunter.reason ? ` · ${hunter.reason}` : ""}
+        </p>
+      ) : null}
+      <p className="mt-2 text-[11px] text-slate-500">
+        Missing names and emails come from Hunter.io domain search. We do not
+        invent people. Daily email at 14:00 UTC to ugobe07@gmail.com. FIND stays{" "}
+        <code>/?visit=jobs</code>.
       </p>
     </section>
   );
