@@ -512,7 +512,7 @@ def _fill_email_via_finder(
         merged.update({k: v for k, v in found.items() if v})
         merged["source"] = found.get("source") or "hunter_finder"
         return merged
-    return merged if merged.get("name") else None
+    return None
 
 
 def enrich_daily_jobs_with_hunter(

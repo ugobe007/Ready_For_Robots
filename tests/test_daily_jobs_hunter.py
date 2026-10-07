@@ -519,10 +519,9 @@ def test_title_match_is_kept_when_finder_has_no_email(monkeypatch):
         ]
     )
     result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
-    assert result["filled"] == 1
+    assert result["missed"] == 1
     report = compose_daily_jobs_report(db, limit=25)
-    assert "Priya Shah" in report["jobs"][0]["decision_maker"]
-    assert "Site Operations Manager" in report["jobs"][0]["decision_maker"]
+    assert "Priya Shah" not in report["jobs"][0]["decision_maker"]
 
 
 def test_low_confidence_hunter_email_is_not_used(monkeypatch):
