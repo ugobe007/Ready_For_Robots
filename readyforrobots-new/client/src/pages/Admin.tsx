@@ -20,6 +20,9 @@ import { Link, useLocation } from "wouter";
 import DailyBriefPanel, {
   type DailyBriefData,
 } from "@/components/DailyBriefPanel";
+import AdminDailyJobsReport, {
+  type DailyJobsReportData,
+} from "@/components/admin/AdminDailyJobsReport";
 import CalEmailPreview from "@/components/admin/CalEmailPreview";
 import SupabaseInlineLink from "@/components/admin/SupabaseInlineLink";
 import Header from "@/components/Header";
@@ -1063,6 +1066,14 @@ export default function Admin() {
   const [dailyBriefLoading, setDailyBriefLoading] = useState(
     !initialApplied.dailyBrief
   );
+  const [jobsReport, setJobsReport] = useState<DailyJobsReportData | null>(
+    null
+  );
+  const [jobsReportLoading, setJobsReportLoading] = useState(true);
+  const [jobsReportSending, setJobsReportSending] = useState(false);
+  const [jobsReportSendError, setJobsReportSendError] = useState<string | null>(
+    null
+  );
   const [draftBodies, setDraftBodies] = useState<Record<string, string>>({});
   const [draftBodyLoading, setDraftBodyLoading] = useState<string | null>(null);
   const [draftLoadErrors, setDraftLoadErrors] = useState<
@@ -1134,6 +1145,60 @@ export default function Admin() {
     },
     [api, session?.access_token]
   );
+
+  const loadJobsReport = useCallback(async () => {
+    if (!me?.is_admin) return;
+    setJobsReportLoading(true);
+    try {
+      const res = await adminFetch("/api/admin/daily-jobs-report");
+      if (!res.ok) throw new Error(`jobs report ${res.status}`);
+      setJobsReport((await res.json()) as DailyJobsReportData);
+    } catch {
+      setJobsReport(null);
+    } finally {
+      setJobsReportLoading(false);
+    }
+  }, [adminFetch, me?.is_admin]);
+
+  useEffect(() => {
+    void loadJobsReport();
+  }, [loadJobsReport]);
+
+  const sendJobsReport = useCallback(async () => {
+    setJobsReportSending(true);
+    setJobsReportSendError(null);
+    try {
+      const res = await adminFetch("/api/admin/daily-jobs-report/send", {
+        method: "POST",
+        body: JSON.stringify({ force: true, limit: 25 }),
+      });
+      const payload = (await res.json().catch(() => ({}))) as {
+        sent?: boolean;
+        reason?: string;
+        jobs?: DailyJobsReportData["jobs"];
+        date?: string;
+        recipients?: string[];
+        count?: number;
+      };
+      if (!res.ok || payload.sent === false) {
+        throw new Error(payload.reason || `send failed ${res.status}`);
+      }
+      setJobsReport(prev => ({
+        ...(prev || {}),
+        date: payload.date || prev?.date,
+        count: payload.count ?? prev?.count,
+        jobs: payload.jobs || prev?.jobs,
+        recipients: payload.recipients || prev?.recipients,
+        last_sent_date: payload.date || prev?.last_sent_date,
+      }));
+    } catch (e) {
+      setJobsReportSendError(
+        e instanceof Error ? e.message : "Could not send the jobs report."
+      );
+    } finally {
+      setJobsReportSending(false);
+    }
+  }, [adminFetch]);
 
   useEffect(() => {
     if (!me?.is_admin) return;
@@ -3200,6 +3265,14 @@ export default function Admin() {
             Open →
           </span>
         </Link>
+
+        <AdminDailyJobsReport
+          data={jobsReport}
+          loading={jobsReportLoading}
+          sending={jobsReportSending}
+          sendError={jobsReportSendError}
+          onSend={() => void sendJobsReport()}
+        />
 
         <DailyBriefPanel
           data={dailyBrief}

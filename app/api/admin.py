@@ -216,6 +216,30 @@ def get_stats(db: Session = Depends(get_db)):
     return result
 
 
+class DailyJobsReportSendBody(BaseModel):
+    force: bool = True
+    limit: int = 25
+
+
+@router.get("/daily-jobs-report")
+def daily_jobs_report(db: Session = Depends(get_db)):
+    """Operator top-25 named Robot Jobs. Same list the daily email sends."""
+    from app.services.daily_jobs_report import compose_daily_jobs_report
+
+    return compose_daily_jobs_report(db, limit=25)
+
+
+@router.post("/daily-jobs-report/send")
+def daily_jobs_report_send(
+    body: DailyJobsReportSendBody,
+    db: Session = Depends(get_db),
+):
+    """Email the top-25 jobs report now (admin / catch-up)."""
+    from app.services.daily_jobs_report import send_daily_jobs_report
+
+    return send_daily_jobs_report(db, force=body.force, limit=body.limit)
+
+
 # ── Daily brief ───────────────────────────────────────────────────────────────
 
 @router.get("/daily-brief")
