@@ -256,7 +256,7 @@ def _job_needs_hunter(row: Any, *, force: bool = False) -> bool:
     contact = _contact_fields(row)
     blob = _as_map(getattr(row, "provenance", None))
     source = str(blob.get("contact_source") or "")
-    if name and contact.get("email") and source.startswith("hunter"):
+    if not force and name and contact.get("email") and source.startswith("hunter"):
         return False
     if name and contact.get("email") and not force:
         return False
@@ -376,12 +376,13 @@ def _stamp_hit(
     if existing_email and _is_invented_ops_email(existing_email, employer):
         existing_email = ""
         row.employer_email = None
-    if email:
+    existing_name, existing_title = _page_name_title(row)
+    if email and not existing_email:
         row.employer_email = email
     prov = dict(_as_map(getattr(row, "provenance", None)))
-    if name:
+    if name and not existing_name:
         prov["contact_name"] = name
-    if title:
+    if title and not existing_title:
         prov["contact_title"] = title
     source = str(prospect.get("source") or "").strip() or "hunter_domain"
     prov["contact_source"] = source
@@ -435,8 +436,8 @@ def _domain_people(
         people: list[dict[str, Any]] = []
         queries: list[dict[str, Any]] = []
         if domain:
-            queries.append({"domain": domain, "department": departments})
-        queries.append({"company": employer, "department": departments})
+            queries.append({"domain": domain, "department": departments, "seniority": "executive,senior"})
+        queries.append({"company": employer, "department": departments, "seniority": "executive,senior"})
         seen: set[str] = set()
         for query in queries:
             try:
@@ -453,8 +454,6 @@ def _domain_people(
                     continue
                 seen.add(marker)
                 people.append(person)
-            if any(_rankable_hunter_person(p, employer, locality) for p in people):
-                break
         cache[key] = people
     return [
         person
