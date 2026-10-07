@@ -485,11 +485,15 @@ def send_daily_jobs_report(
     }
 
 
-def maybe_send_missed_daily_jobs_report(db: Session) -> dict[str, Any]:
-    """If today's 14:00 UTC send was missed (deploy after the hour), send once."""
-    today = datetime.now(timezone.utc).date().isoformat()
+def maybe_send_missed_daily_jobs_report(db: Session, *, hour: int = 14, minute: int = 0) -> dict[str, Any]:
+    """If today's scheduled send was missed (deploy after the hour), send once."""
+    now = datetime.now(timezone.utc)
+    today = now.date().isoformat()
     if last_sent_day() == today:
         return {"sent": False, "reason": "Already sent today", "date": today}
+    scheduled_time = now.replace(hour=hour, minute=minute, second=0, microsecond=0)
+    if now < scheduled_time:
+        return {"sent": False, "reason": "Scheduled time not yet reached", "date": today}
     return send_daily_jobs_report(db, force=False)
 
 

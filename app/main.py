@@ -1056,7 +1056,7 @@ def _scheduled_daily_jobs_report_loop():
     try:
         if daily_jobs_report_enabled():
             with SessionLocal() as db:
-                catch_up = maybe_send_missed_daily_jobs_report(db)
+                catch_up = maybe_send_missed_daily_jobs_report(db, hour=hour, minute=minute)
             logger.info(
                 "Daily jobs report catch-up: sent=%s reason=%s count=%s",
                 catch_up.get("sent"),
