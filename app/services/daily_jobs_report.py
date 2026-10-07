@@ -22,6 +22,11 @@ DEFAULT_RECIPIENT = "ugobe07@gmail.com"
 _SITE = (os.getenv("PUBLIC_SITE_URL") or "https://readyforrobots.com").rstrip("/")
 _REDIS_SENT_KEY = "jobs:daily_report:last_sent_date"
 _REDIS_PAYLOAD_KEY = "jobs:daily_report:latest"
+_CLAIM_TTL_SEC = 60 * 60 * 48
+
+
+def _claim_key(day: str) -> str:
+    return f"jobs:daily_report:claimed:{day}"
 
 
 def get_daily_jobs_report_recipients() -> list[str]:
@@ -59,11 +64,16 @@ def _redis_client():
 
 
 def _claim_report_day(day: str) -> bool:
+    """Atomically claim today's send. Yesterday's last_sent_date must not block today.
+
+    Same-day de-dupe uses a per-day NX key. The last_sent_date key is display-only
+    and keeps a 48h TTL, so SET NX on that shared key would skip the next morning.
+    """
     client = _redis_client()
     if not client:
         return True
     try:
-        return bool(client.set(_REDIS_SENT_KEY, day, nx=True, ex=60 * 60 * 48))
+        return bool(client.set(_claim_key(day), day, nx=True, ex=_CLAIM_TTL_SEC))
     except Exception:
         return True
 
@@ -73,9 +83,7 @@ def _release_report_day(day: str) -> None:
     if not client:
         return
     try:
-        current = str(client.get(_REDIS_SENT_KEY) or "")
-        if current == day:
-            client.delete(_REDIS_SENT_KEY)
+        client.delete(_claim_key(day))
     except Exception:
         pass
 
@@ -85,8 +93,9 @@ def _mark_report_sent(day: str, payload: dict[str, Any]) -> None:
     if not client:
         return
     try:
-        client.set(_REDIS_SENT_KEY, day, ex=60 * 60 * 48)
-        client.set(_REDIS_PAYLOAD_KEY, json.dumps(payload), ex=60 * 60 * 48)
+        client.set(_REDIS_SENT_KEY, day, ex=_CLAIM_TTL_SEC)
+        client.set(_claim_key(day), day, ex=_CLAIM_TTL_SEC)
+        client.set(_REDIS_PAYLOAD_KEY, json.dumps(payload), ex=_CLAIM_TTL_SEC)
     except Exception:
         pass
 

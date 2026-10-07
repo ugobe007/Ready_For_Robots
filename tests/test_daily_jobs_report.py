@@ -11,6 +11,9 @@ from app.database import Base
 from app.models.robot_directed_discovery import RobotJob
 from app.services.daily_jobs_report import (
     TOP_N,
+    _REDIS_SENT_KEY,
+    _claim_key,
+    _claim_report_day,
     compose_daily_jobs_report,
     get_daily_jobs_report_recipients,
     render_daily_jobs_report_html,
@@ -185,6 +188,37 @@ def test_html_escapes_employer_markup():
     )
     assert "<script>" not in html_body
     assert "&lt;script&gt;" in html_body
+
+
+class _FakeRedis:
+    def __init__(self, store: dict[str, str]):
+        self.store = store
+
+    def get(self, key):
+        return self.store.get(key)
+
+    def set(self, key, value, nx=False, ex=None):
+        if nx and key in self.store:
+            return False
+        self.store[key] = value
+        return True
+
+    def delete(self, key):
+        self.store.pop(key, None)
+
+
+def test_claim_allows_next_calendar_day(monkeypatch):
+    store = {_REDIS_SENT_KEY: "2026-10-07"}
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report._redis_client",
+        lambda: _FakeRedis(store),
+    )
+    assert _claim_report_day("2026-10-07") is True
+    assert _claim_report_day("2026-10-07") is False
+    assert _claim_report_day("2026-10-08") is True
+    assert _claim_report_day("2026-10-08") is False
+    assert store[_REDIS_SENT_KEY] == "2026-10-07"
+    assert store[_claim_key("2026-10-08")] == "2026-10-08"
 
 
 def test_send_skips_when_already_claimed(monkeypatch, db_session):
