@@ -1,7 +1,7 @@
 """Job-aware decision-maker agent for operator sales cards.
 
 Maps a Robot Job (work + workplace) to the titles that actually own that work,
-then scores real Hunter/Apollo people against those titles.
+then scores real Hunter.io people against those titles.
 
 FIND does not call this. Names are never invented. A miss is valid.
 """

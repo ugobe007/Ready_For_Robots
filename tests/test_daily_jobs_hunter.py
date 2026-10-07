@@ -578,5 +578,6 @@ def test_finder_search_does_not_import_hunter():
     hunter_mod = Path("app/services/daily_jobs_hunter.py").read_text(encoding="utf-8")
     assert "ApolloProspectClient" not in hunter_mod
     assert "apollo_contact_enabled" not in hunter_mod
+    assert "extract_dag" not in search
     assert "daily_jobs_hunter" not in matcher
     assert "job_decision_maker_agent" not in matcher

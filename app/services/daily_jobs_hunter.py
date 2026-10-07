@@ -559,15 +559,48 @@ def enrich_daily_jobs_with_hunter(
         plan = plan_for_job(row)
         domain = domain_for_job(row, db)
         locality = str(getattr(row, "locality", "") or "").strip()
-        people = _domain_people(
-            hunter,
-            employer=employer,
-            domain=domain,
-            departments=plan.departments,
-            locality=locality,
-            cache=cache,
-        )
-        prospect = pick_candidate(plan, people, locality=locality)
+
+        def _fetch_hunter_people(
+            *,
+            employer: str,
+            domain: Optional[str],
+            departments: str,
+            locality: str,
+        ) -> list[dict[str, Any]]:
+            return _domain_people(
+                hunter,
+                employer=employer,
+                domain=domain,
+                departments=departments,
+                locality=locality,
+                cache=cache,
+            )
+
+        prospect = None
+        try:
+            from app.services.extract_dag.decision_maker import run_decision_maker_dag
+
+            dag_out = run_decision_maker_dag(
+                row,
+                domain=domain,
+                fetchers={"hunter_people": _fetch_hunter_people},
+            )
+            if dag_out.get("job_function") and dag_out.get("target_titles"):
+                plan.function = str(dag_out["job_function"])
+                plan.titles = list(dag_out["target_titles"])
+                plan.departments = str(dag_out.get("departments") or plan.departments)
+            prospect = dag_out.get("decision_maker")
+            if not isinstance(prospect, dict):
+                prospect = None
+        except Exception:
+            logger.warning("extract DAG failed for %r", employer, exc_info=True)
+            people = _fetch_hunter_people(
+                employer=employer,
+                domain=domain,
+                departments=plan.departments,
+                locality=locality,
+            )
+            prospect = pick_candidate(plan, people, locality=locality)
         if prospect:
             prospect = _fill_email_via_finder(
                 hunter,
