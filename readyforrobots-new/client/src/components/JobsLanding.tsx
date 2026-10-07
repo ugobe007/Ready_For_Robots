@@ -271,7 +271,7 @@ export default function JobsLanding() {
           </div>
         </form>
 
-        {/* Named employer quotes — FIND, not SIGNAL */}
+        {/* Named employer quotes about real work */}
         <div className="rfr-landing-quotes mt-8 mb-5 w-full pt-1" aria-label="Employer quotes">
           <CustomerQuoteBanner />
         </div>
