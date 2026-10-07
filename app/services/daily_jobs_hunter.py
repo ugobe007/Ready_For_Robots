@@ -23,6 +23,7 @@ from app.services.daily_jobs_report import (
     select_daily_report_rows,
 )
 from app.services.hunter_client import (
+    MIN_DOMAIN_CONFIDENCE,
     HunterAPIError,
     HunterClient,
     HunterConfigError,
@@ -519,7 +520,9 @@ def enrich_daily_jobs_with_hunter(
                     locality=locality,
                 )
             )
-            prospect = pick_candidate(plan, people, locality=locality)
+            prospect = pick_candidate(
+                plan, people, locality=locality, min_confidence=MIN_DOMAIN_CONFIDENCE
+            )
         if prospect and (prospect.get("email") or prospect.get("name")):
             _stamp_hit(row, prospect, plan=plan)
             filled += 1

@@ -246,6 +246,10 @@ def job_text(row: Any) -> str:
 
 
 def function_for_job(row: Any) -> str:
+    # Check stored action first — robot_job_lifecycle writes function directly.
+    action = _get(row, "action").lower().replace(" ", "_")
+    if action in TITLES_BY_FUNCTION:
+        return action
     blob = job_text(row).lower()
     for needle, function in KEYWORD_FUNCTION:
         if needle in blob:
@@ -253,7 +257,6 @@ def function_for_job(row: Any) -> str:
     from_title = job_function_from_title(blob)
     if from_title:
         return from_title
-    action = _get(row, "action").lower().replace(" ", "_")
     if action in ACTION_TO_FUNCTION:
         return ACTION_TO_FUNCTION[action]
     return "operations"
@@ -327,6 +330,7 @@ def score_candidate(
         if len(hits) == 1 and hits[0] not in {"operations"}:
             score += 18
             why_bits.append(f"title has {hits[0]}")
+            break
     token_hits = [tok for tok in plan.tokens if tok in title]
     if token_hits:
         score += 16 * min(2, len(token_hits))
@@ -356,6 +360,7 @@ def pick_candidate(
     people: list[dict[str, Any]],
     *,
     locality: str = "",
+    min_confidence: int = 80,
 ) -> Optional[dict[str, Any]]:
     best: Optional[dict[str, Any]] = None
     best_score = -1
@@ -363,11 +368,14 @@ def pick_candidate(
     for person in people:
         if not isinstance(person, dict):
             continue
+        confidence = int(person.get("confidence") or 0)
+        # Enforce Hunter confidence floor to avoid pattern-guessed bounces.
+        if confidence > 0 and confidence < min_confidence:
+            continue
         ranked = score_candidate(plan, person, locality=locality)
         if not ranked:
             continue
         score, why = ranked
-        confidence = int(person.get("confidence") or 0)
         score += min(10, confidence // 20)
         if score > best_score:
             best_score = score
