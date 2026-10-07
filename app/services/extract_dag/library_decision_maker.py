@@ -36,8 +36,28 @@ def compute_page_person(*, page_name, page_title):
     }
 '''
 
+LEADERSHIP_PEOPLE_SRC = '''
+def compute_leadership_people(*, leadership_pages):
+    from app.services.employer_leadership import people_from_pages
+    pages = leadership_pages if isinstance(leadership_pages, list) else []
+    return people_from_pages(pages)
+'''
+
+LEADERSHIP_PERSON_SRC = '''
+def compute_leadership_person(*, leadership_people, target_titles, locality, job_function, job_text):
+    from app.services.job_decision_maker_agent import pick_candidate, plan_for_job
+    plan = plan_for_job({"action": job_function or "", "robot_compatible_task": job_text or ""})
+    if target_titles:
+        plan.titles = list(target_titles)
+    people = leadership_people if isinstance(leadership_people, list) else []
+    picked = pick_candidate(plan, people, locality=locality or "")
+    if not picked:
+        return None
+    return picked
+'''
+
 DECISION_MAKER_SRC = '''
-def compute_decision_maker(*, target_titles, hunter_people, page_person, locality, job_function, job_text):
+def compute_decision_maker(*, target_titles, hunter_people, page_person, leadership_person, locality, job_function, job_text):
     from app.services.job_decision_maker_agent import pick_candidate, plan_for_job, score_candidate
     plan = plan_for_job({"action": job_function or "", "robot_compatible_task": job_text or ""})
     if target_titles:
@@ -51,6 +71,8 @@ def compute_decision_maker(*, target_titles, hunter_people, page_person, localit
             picked["target_titles"] = list(plan.titles)
             picked["job_function"] = plan.function
             return picked
+    if isinstance(leadership_person, dict) and leadership_person.get("name"):
+        return leadership_person
     people = hunter_people if isinstance(hunter_people, list) else []
     picked = pick_candidate(plan, people, locality=locality or "")
     if not picked:
@@ -63,5 +85,7 @@ LIBRARY = {
     "target_titles": TARGET_TITLES_SRC,
     "departments": DEPARTMENTS_SRC,
     "page_person": PAGE_PERSON_SRC,
+    "leadership_people": LEADERSHIP_PEOPLE_SRC,
+    "leadership_person": LEADERSHIP_PERSON_SRC,
     "decision_maker": DECISION_MAKER_SRC,
 }

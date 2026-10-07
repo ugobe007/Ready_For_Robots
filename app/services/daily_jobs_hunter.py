@@ -550,7 +550,10 @@ def enrich_daily_jobs_with_hunter(
         domain: Optional[str],
         departments: str,
         locality: str,
+        leadership_person: Any = None,
     ) -> list[dict[str, Any]]:
+        if isinstance(leadership_person, dict) and leadership_person.get("name"):
+            return []
         return _domain_people(
             hunter,
             employer=employer,
@@ -559,6 +562,20 @@ def enrich_daily_jobs_with_hunter(
             locality=locality,
             cache=cache,
         )
+
+    page_cache: dict[str, list[dict[str, Any]]] = {}
+
+    def _fetch_leadership_pages(
+        *,
+        employer: str,
+        domain: Optional[str],
+    ) -> list[dict[str, Any]]:
+        from app.services.employer_leadership import fetch_leadership_pages
+
+        key = (domain or employer or "").strip().lower()
+        if key not in page_cache:
+            page_cache[key] = fetch_leadership_pages(domain=domain, employer=employer)
+        return page_cache[key]
 
     filled = 0
     missed = 0
@@ -584,7 +601,10 @@ def enrich_daily_jobs_with_hunter(
             dag_out = run_decision_maker_dag(
                 row,
                 domain=domain,
-                fetchers={"hunter_people": _fetch_hunter_people},
+                fetchers={
+                    "hunter_people": _fetch_hunter_people,
+                    "leadership_pages": _fetch_leadership_pages,
+                },
             )
             if dag_out.get("job_function") and dag_out.get("target_titles"):
                 plan.function = str(dag_out["job_function"])
@@ -595,13 +615,18 @@ def enrich_daily_jobs_with_hunter(
                 prospect = None
         except Exception:
             logger.warning("extract DAG failed for %r", employer, exc_info=True)
+            from app.services.employer_leadership import people_from_pages
+
             people = _fetch_hunter_people(
                 employer=employer,
                 domain=domain,
                 departments=plan.departments,
                 locality=locality,
             )
-            prospect = pick_candidate(plan, people, locality=locality)
+            leaders = people_from_pages(
+                _fetch_leadership_pages(employer=employer, domain=domain)
+            )
+            prospect = pick_candidate(plan, leaders + people, locality=locality)
         if prospect:
             prospect = _fill_email_via_finder(
                 hunter,

@@ -2,6 +2,8 @@
 from datetime import datetime, timezone
 from uuid import uuid4
 
+import pytest
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -10,6 +12,14 @@ from app.database import Base
 from app.models.robot_directed_discovery import RobotJob
 from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
 from app.services.daily_jobs_report import compose_daily_jobs_report
+
+
+@pytest.fixture(autouse=True)
+def _stub_leadership_http(monkeypatch):
+    monkeypatch.setattr(
+        "app.services.employer_leadership.fetch_leadership_pages",
+        lambda **kwargs: [],
+    )
 
 
 def _session():
@@ -615,5 +625,54 @@ def test_finder_search_does_not_import_hunter():
     assert "ApolloProspectClient" not in hunter_mod
     assert "apollo_contact_enabled" not in hunter_mod
     assert "extract_dag" not in search
+    assert "employer_leadership" not in search
     assert "daily_jobs_hunter" not in matcher
     assert "job_decision_maker_agent" not in matcher
+    assert "employer_leadership" not in matcher
+
+
+def test_enrich_assigns_leadership_name_then_hunter_finder(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    html = """
+    <html><body>
+      <h2>Priya Shah</h2>
+      <p>Pharmacy Operations Manager</p>
+    </body></html>
+    """
+    monkeypatch.setattr(
+        "app.services.employer_leadership.fetch_leadership_pages",
+        lambda **kwargs: [
+            {"url": "https://harrishealth.org/leadership", "html": html}
+        ],
+    )
+    db = _session()
+    db.add(
+        _job(
+            job_key="hh-pharm",
+            company_name="Harris Health",
+            locality="Houston, TX",
+            action="delivery",
+            robot_compatible_task="Pharmacy cart loop",
+            apply_url="https://www.harrishealth.org/about",
+        )
+    )
+    db.commit()
+    hunter = _FakeHunter(
+        [],
+        finder={
+            "email": "priya.shah@harrishealth.org",
+            "name": "Priya Shah",
+            "title": "Pharmacy Operations Manager",
+            "confidence": 92,
+            "verification_status": "valid",
+            "source": "hunter_finder",
+        },
+    )
+    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    assert result["filled"] == 1
+    assert hunter.finder_calls
+    assert hunter.finder_calls[0]["first_name"] == "Priya"
+    assert hunter.finder_calls[0]["last_name"] == "Shah"
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Priya Shah" in report["jobs"][0]["decision_maker"]
+    assert "priya.shah@harrishealth.org" in report["jobs"][0]["contact"]

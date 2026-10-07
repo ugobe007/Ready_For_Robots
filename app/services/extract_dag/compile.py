@@ -120,8 +120,9 @@ def emit_script(
             parts.append(f"    values[{nid!r}] = leaves.get({nid!r})\n")
         elif isinstance(node, Fetch):
             kwargs = ", ".join(f"{d}=values[{d!r}]" for d in node.deps)
+            parts.append(f"    _fn = fetchers.get({nid!r})\n")
             parts.append(
-                f"    values[{nid!r}] = fetchers[{nid!r}]({kwargs})\n"
+                f"    values[{nid!r}] = _fn({kwargs}) if _fn else []\n"
             )
         elif isinstance(node, Compute):
             kwargs = ", ".join(f"{d}=values[{d!r}]" for d in node.deps)

@@ -100,7 +100,7 @@ def _goal_matches(node: Compute, source: str) -> Review:
     goal = (node.goal or "").lower()
     output = (node.output or "").lower()
     src = source.lower()
-    person_out = "person" in output
+    person_out = "person dict" in output or output.strip() == "person"
     if person_out and any(
         p in goal for p in ("never invent", "do not invent", "nobody fits", "named nobody")
     ):
@@ -115,6 +115,8 @@ def _goal_matches(node: Compute, source: str) -> Review:
     if "prefer a posting" in goal or "posting-named" in goal:
         if "page_person" not in src:
             return Review(False, "goal prefers the posting person; function ignores page_person")
+        if "leadership" in goal and "leadership_person" not in src:
+            return Review(False, "goal uses leadership-page names; function ignores leadership_person")
         if "pick_candidate" not in src and "score_candidate" not in src:
             return Review(False, "goal is pick a title-matched person")
     elif "pick" in goal and "title" in goal:

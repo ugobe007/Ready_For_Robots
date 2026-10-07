@@ -139,6 +139,8 @@ def test_reviewer_accepts_library_decision_maker():
     assert AstReviewer().review(node, LIBRARY["decision_maker"]).ok is True
     page = next(n for n in DECISION_MAKER_GRAPH.nodes if getattr(n, "id", None) == "page_person")
     assert AstReviewer().review(page, LIBRARY["page_person"]).ok is True
+    lead = next(n for n in DECISION_MAKER_GRAPH.nodes if getattr(n, "id", None) == "leadership_person")
+    assert AstReviewer().review(lead, LIBRARY["leadership_person"]).ok is True
 
 
 def test_extract_leaf_reads_posting_name():
@@ -275,14 +277,53 @@ def test_decision_maker_dag_skips_posting_cdo_for_hunter_pharmacy():
     assert out["decision_maker"]["email"] == "priya@harrishealth.org"
 
 
+def test_decision_maker_dag_uses_leadership_page_before_hunter_cdo():
+    html = """
+    <html><body>
+      <h2>Priya Shah</h2>
+      <p>Pharmacy Operations Manager</p>
+    </body></html>
+    """
+    out = run_decision_maker_dag(
+        {
+            "company_name": "Harris Health",
+            "action": "delivery",
+            "robot_compatible_task": "Pharmacy cart loop",
+            "locality": "Houston, TX",
+        },
+        domain="harrishealth.org",
+        fetchers={
+            "leadership_pages": lambda **kwargs: [
+                {"url": "https://harrishealth.org/leadership", "html": html}
+            ],
+            "hunter_people": lambda **kwargs: [
+                {
+                    "email": "kelli@harrishealth.org",
+                    "name": "Kelli Fondren",
+                    "title": "Chief Development Officer",
+                    "confidence": 99,
+                }
+            ],
+        },
+    )
+    assert out["leadership_person"]["name"] == "Priya Shah"
+    assert out["decision_maker"]["name"] == "Priya Shah"
+    assert out["decision_maker"]["source"] == "leadership_page"
+
+
 def test_compiled_script_is_one_run_function():
     compiled = compiled_decision_maker()
     assert "def run(leaves" in compiled.source
     leaf_ids = [n.id for n in DECISION_MAKER_GRAPH.nodes if isinstance(n, Leaf)]
     last_leaf = max(compiled.order.index(i) for i in leaf_ids)
-    first_fetch = compiled.order.index("hunter_people")
-    assert last_leaf < first_fetch
-    assert compiled.order.index("page_person") < compiled.order.index("decision_maker")
+    fetches = [
+        compiled.order.index("hunter_people"),
+        compiled.order.index("leadership_pages"),
+    ]
+    assert last_leaf < min(fetches)
+    assert compiled.order.index("leadership_pages") < compiled.order.index("leadership_people")
+    assert compiled.order.index("leadership_people") < compiled.order.index("leadership_person")
+    assert compiled.order.index("leadership_person") < compiled.order.index("hunter_people")
     assert compiled.order.index("departments") < compiled.order.index("hunter_people")
     assert compiled.order.index("hunter_people") < compiled.order.index("decision_maker")
     assert "# goal:" in compiled.source
