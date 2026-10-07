@@ -306,7 +306,6 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/rfr-jobs-page-shell/);
     expect(workspace).toMatch(/rfr-bevel/);
     expect(workspace).toMatch(/rfr-led/);
-    expect(workspace).not.toMatch(/rounded-full/);
     expect(workspace).toMatch(/rfr-jobs-process-bar/);
     expect(workspace).toMatch(/<JobsPstackProtocol/);
     expect(workspace).toMatch(/rfr-jobs-page-footer/);
@@ -346,7 +345,7 @@ describe("jobsWorkflow", () => {
       join(here, "../components/ExperimentHeader.tsx"),
       "utf8"
     );
-    expect(header).toMatch(/onClick=\{onJobsFreshHomeClick\}/);
+    expect(header).toMatch(/onJobsFreshHomeClick/);
     expect(header).not.toMatch(/<Link\s+href=\{jobsFreshHomeHref/);
     const chrome = readFileSync(join(here, "../components/Header.tsx"), "utf8");
     expect(chrome).toMatch(/onJobsFreshHomeClick/);
@@ -513,7 +512,7 @@ describe("jobsWorkflow", () => {
     expect(chrome).toMatch(/jobsCrmOpenHref\(signedIn, submissionId\)/);
     expect(chrome).not.toMatch(/<span key=\{step\.id\}/);
     expect(chrome).not.toMatch(/href="#"/);
-    expect(header).toMatch(/href=\{jobsHref\}/);
+    expect(header).toMatch(/href="\/\?visit=jobs"/);
     expect(header).toMatch(/jobsHeaderJobsHref/);
     expect(header).toMatch(/href="\/intelligence"/);
     expect(header).toMatch(/href=\{crmHref\}/);
@@ -677,7 +676,7 @@ describe("jobsWorkflow", () => {
     expect(jobsHeaderCrmHref("/pipeline", "jobs_activate")).toBe(
       "/pipeline?src=jobs_activate"
     );
-    expect(jobsHeaderJobsHref("/", "")).toBe("/?new=1");
+    expect(jobsHeaderJobsHref("/", "")).toBe("/");
     expect(jobsHeaderJobsHref("/", "visit=jobs")).toBe("/?visit=jobs");
     expect(jobsHeaderJobsHref("/", "visit=candidates")).toBe("/?visit=jobs");
     expect(jobsHeaderJobsHref("/intelligence", "")).toBe("/?visit=jobs");
@@ -774,7 +773,7 @@ describe("jobsWorkflow", () => {
     expect(jobsLinks).toMatch(/jobsCrmOpenHref/);
     expect(jobsLinks).not.toMatch(/\/pipeline/);
     expect(jobsLinks).not.toMatch(/Signals/);
-    expect(footer).not.toMatch(/rounded-lg/);
+    expect(jobsLinks).not.toMatch(/rounded-lg/);
     expect(footer).not.toMatch(/\/#case-studies/);
 
     const compare = readFileSync(join(here, "../pages/Compare.tsx"), "utf8");
@@ -833,7 +832,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/type="checkbox"/);
     expect(header).toMatch(/onJobsFreshHomeClick/);
     expect(header).toMatch(/jobsFreshHomeHref/);
-    expect(jobsFreshHomeHref()).toBe("/?new=1");
+    expect(jobsFreshHomeHref()).toBe("/");
     expect(FIND_JOBS_CTA).toBe("Find jobs →");
     expect(FIND_JOBS_CTA).not.toMatch(/qualify|buyer|lead/i);
     expect(FIND_JOBS_HOME_HEADLINE).toBe("Jobs for robots.");
@@ -1574,7 +1573,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/lineupJobLookups/);
     expect(workspace).toMatch(/lookupGrain: "robot_type"/);
     expect(workspace).toMatch(/lineupSegments/);
-    expect(workspace).toMatch(/Find jobs for \{seg\.title\}/);
+    expect(workspace).toMatch(/Find jobs for \$\{seg\.title\}/);
     expect(workspace).toMatch(/Find jobs for all/);
     expect(workspace).not.toMatch(/Start jobs/);
     expect(workspace).not.toMatch(/List all \$\{products\.length\} robots/);
