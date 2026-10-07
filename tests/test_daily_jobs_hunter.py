@@ -499,6 +499,42 @@ def test_force_does_not_overwrite_page_name_and_email(monkeypatch):
     assert "maya.chen@geodis.com" in report["jobs"][0]["contact"]
 
 
+def test_name_only_hunter_hit_does_not_wipe_page_name(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(
+        _job(
+            job_key="page-name-only",
+            provenance={
+                "contact_name": "Maya Chen",
+                "contact_title": "Site operations manager",
+            },
+        )
+    )
+    db.commit()
+    hunter = _FakeHunter(
+        [
+            {
+                "email": "",
+                "name": "Priya Shah",
+                "first_name": "Priya",
+                "last_name": "Shah",
+                "title": "Site Operations Manager",
+                "confidence": 90,
+                "department": "operations",
+                "verification_status": "valid",
+            }
+        ]
+    )
+    result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    assert result["filled"] == 0
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Maya Chen" in report["jobs"][0]["decision_maker"]
+    assert "Priya Shah" not in report["jobs"][0]["decision_maker"]
+    assert hunter.finder_calls
+    assert hunter.finder_calls[-1]["first_name"] == "Maya"
+
+
 def test_title_match_is_kept_when_finder_has_no_email(monkeypatch):
     monkeypatch.setenv("HUNTER_API_KEY", "test-key")
     db = _session()

@@ -507,7 +507,7 @@ def _fill_email_via_finder(
         )
     except (HunterAPIError, HunterConfigError) as exc:
         logger.warning("Hunter finder failed for %r %s %s: %s", employer, first, last, exc)
-        return None
+        return merged if merged.get("name") else None
     if found and _usable_hunter_row(found, employer, locality):
         merged.update({k: v for k, v in found.items() if v})
         merged["source"] = found.get("source") or "hunter_finder"
@@ -609,8 +609,11 @@ def enrich_daily_jobs_with_hunter(
                 domain=domain,
                 locality=locality,
             )
-        if not prospect:
-            known_name, known_title = _page_name_title(row)
+        has_mail = bool(
+            prospect and _usable_hunter_row(prospect, employer, locality)
+        )
+        known_name, known_title = _page_name_title(row)
+        if not has_mail:
             bits = known_name.split()
             if len(bits) >= 2 and score_candidate(
                 plan, {"title": known_title or known_name}, locality=locality
@@ -627,7 +630,11 @@ def enrich_daily_jobs_with_hunter(
                     found = None
                 if found and _usable_hunter_row(found, employer, locality):
                     prospect = found
-        if prospect and prospect.get("name"):
+                    has_mail = True
+        if has_mail:
+            _stamp_hit(row, prospect, plan=plan)
+            filled += 1
+        elif prospect and prospect.get("name") and not known_name:
             _stamp_hit(row, prospect, plan=plan)
             filled += 1
         else:
