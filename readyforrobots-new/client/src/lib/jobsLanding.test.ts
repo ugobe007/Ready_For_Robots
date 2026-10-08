@@ -62,6 +62,8 @@ describe("landing fork", () => {
     expect(landingVisitFromSearch("")).toBe("landing");
     expect(landingVisitFromSearch("?new=1")).toBe("landing");
     expect(landingVisitFromSearch("?visit=jobs")).toBe("jobs");
+    expect(landingVisitFromSearch("?job=geodis-dock")).toBe("landing");
+    expect(landingVisitFromSearch("?visit=jobs&job=geodis-dock")).toBe("landing");
     expect(landingVisitFromSearch("?visit=candidates")).toBe("candidates");
     expect(landingVisitFromSearch("?restore=1")).toBe("jobs");
     expect(landingVisitFromSearch("?visit=jobs&restore=1")).toBe("jobs");
@@ -158,6 +160,7 @@ describe("landing fork", () => {
     expect(landing).toMatch(/rfr-landing-employer-link/);
     expect(landing).toMatch(/LiveJobTape/);
     expect(landing).toMatch(/MARKET_TAPE_JOBS/);
+    expect(landing).not.toMatch(/\?visit=jobs&job=/);
     expect(landing).not.toMatch(/LANDING_HOW_STEPS|LANDING_VOCAB/);
     expect(landing).not.toMatch(
       /Look for buyers|SIGNAL|Apollo|Who is this visit/i
@@ -331,6 +334,8 @@ describe("landing fork", () => {
     expect(workspace).toMatch(/I_KNOW_THE_ROBOT_LABEL/);
     expect(workspace).toMatch(/border-emerald-400/);
     expect(workspace).toMatch(/FIND_JOBS_HOME_HEADLINE/);
+    expect(workspace).not.toMatch(/JobsProcessNav/);
+    expect(workspace).not.toMatch(/aria-label="Jobs process"/);
     expect(workspace).toMatch(/submitClassFind/);
     expect(workspace).toMatch(/classOptionsOrDefault/);
     expect(workspace).toMatch(/<select/);

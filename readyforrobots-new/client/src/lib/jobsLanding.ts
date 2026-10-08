@@ -297,8 +297,13 @@ export function landingVisitFromSearch(
   if (params.get("new") === "1") return "landing";
   if (params.get("restore") === "1") return "jobs";
   const visit = (params.get(LANDING_VISIT_QUERY) || "").trim();
+  if (visit === LANDING_VISIT_CANDIDATES || visit === "candidates") {
+    return "candidates";
+  }
+  // A tape job key is a landing modal, not FIND. Pushing visit=jobs here
+  // remounts the 01/02/03 process bar on top of the card.
+  if (params.get("job")) return "landing";
   if (visit === LANDING_VISIT_JOBS || visit === "jobs") return "jobs";
-  if (visit === LANDING_VISIT_CANDIDATES || visit === "candidates") return "candidates";
   return "landing";
 }
 
