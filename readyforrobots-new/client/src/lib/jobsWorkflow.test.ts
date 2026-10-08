@@ -307,7 +307,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/rfr-bevel/);
     expect(workspace).toMatch(/rfr-led/);
     expect(workspace).toMatch(/rfr-jobs-process-bar/);
-    expect(workspace).toMatch(/<JobsPstackProtocol/);
+    expect(workspace).not.toMatch(/<JobsPstackProtocol/);
     expect(workspace).toMatch(/rfr-jobs-page-footer/);
     expect(workspace).toMatch(/layout="page"/);
     expect(workspace).toMatch(/rfr-jobs-process-action/);
@@ -317,24 +317,15 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/min-h-0 flex-1 overflow-y-auto p-6 sm:p-8/);
   });
 
-  it("gives the home live tape its own height so 12 jobs show without a 100vh parent", () => {
-    const tape = readFileSync(
-      join(here, "../components/jobs/LiveJobTape.tsx"),
-      "utf8"
-    );
+  it("FIND home shows live named-employer jobs as inline text, not the tape", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8"
     );
-    expect(tape).toMatch(/export const TAPE_VIEWPORT_PX = VISIBLE \* ROW_PX/);
-    expect(tape).toMatch(/height: TAPE_VIEWPORT_PX/);
-    expect(tape).toMatch(/\$\{revealing\}:\$\{corpus\.length\}/);
-    expect(tape).toMatch(/if \(seededKey\.current === key\) return;/);
-    expect(tape).not.toMatch(/flex h-full min-h-0 flex-col/);
-    expect(tape).not.toMatch(/min-h-0 flex-1 overflow-hidden/);
-    expect(tape).toMatch(/nextUnseenTapeJob/);
-    expect(workspace).toMatch(/<LiveJobTape/);
-    expect(workspace).toMatch(/uniqueTapeJobCount/);
+    expect(workspace).toMatch(/FindProofJobs/);
+    expect(workspace).not.toMatch(/<LiveJobTape/);
+    expect(workspace).not.toMatch(/LiveJobDetailModal/);
+    expect(workspace).not.toMatch(/uniqueTapeJobCount/);
     expect(workspace).not.toMatch(/const MARKET_FOUND_BASE = 140/);
     expect(workspace).not.toMatch(/min-h-\[28rem\]/);
   });
@@ -676,7 +667,7 @@ describe("jobsWorkflow", () => {
     expect(jobsHeaderCrmHref("/pipeline", "jobs_activate")).toBe(
       "/pipeline?src=jobs_activate"
     );
-    expect(jobsHeaderJobsHref("/", "")).toBe("/");
+    expect(jobsHeaderJobsHref("/", "")).toBe("/?visit=jobs");
     expect(jobsHeaderJobsHref("/", "visit=jobs")).toBe("/?visit=jobs");
     expect(jobsHeaderJobsHref("/", "visit=candidates")).toBe("/?visit=jobs");
     expect(jobsHeaderJobsHref("/intelligence", "")).toBe("/?visit=jobs");

@@ -7,7 +7,7 @@
  * so the first attempt cannot paint "Failed to fetch" over the second.
  *
  * Lookup timeout / 500 / abort stays on OEM FIND step 1 (`/?visit=jobs`).
- * Never send `/?new=1` or the landing fork.
+ * Never send employer MATCH.
  */
 import { jobsFindHref, landingVisitFromSearch } from "@/lib/jobsLanding";
 import { isCurrentRobotSubmit, sameRobotUrl } from "@/lib/robotUrlIdentity";
@@ -99,7 +99,7 @@ export function findFailureStayHref(): string {
 }
 
 /**
- * True when a href would dump FIND back to the landing fork.
+ * True when a href would dump FIND onto employer MATCH or another route.
  * `null` means stay on this document — that is the success case.
  */
 export function findFailureBouncesHome(
@@ -135,11 +135,13 @@ export function findLookupFailureOutcome(err: unknown): {
   };
 }
 
-/** Keep `?visit=jobs` so Jobs.tsx cannot paint the landing fork. */
+/** Pin `?visit=jobs` so FIND failure cannot become employer MATCH. */
 export function ensureFindStayVisit(): boolean {
   if (typeof window === "undefined") return false;
-  if (landingVisitFromSearch(window.location.search) === "jobs") return false;
   const params = new URLSearchParams(window.location.search);
+  const already =
+    params.get("visit") === "jobs" && params.get("new") !== "1";
+  if (already) return false;
   params.delete("new");
   params.set("visit", "jobs");
   const next = params.toString();

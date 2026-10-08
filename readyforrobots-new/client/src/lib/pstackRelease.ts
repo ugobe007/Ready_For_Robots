@@ -31,7 +31,7 @@ export const FIND_NO_HOME_FIXTURE = {
   id: "find_no_home",
   timeout: { name: "TimeoutError", message: "Timed out after 8000ms" },
   http500: { name: "Error", message: "robot-job-search 500" },
-  landingHrefs: ["/", "/?new=1"] as const,
+  landingHrefs: ["/?visit=candidates"] as const,
 } as const;
 
 export const CRM_LEFTOVER_FIXTURE = {

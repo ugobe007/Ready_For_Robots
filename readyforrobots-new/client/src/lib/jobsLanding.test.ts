@@ -58,9 +58,9 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 
 describe("landing fork", () => {
-  it("bare / and ?new=1 are the landing fork, not FIND", () => {
-    expect(landingVisitFromSearch("")).toBe("landing");
-    expect(landingVisitFromSearch("?new=1")).toBe("landing");
+  it("bare / and ?new=1 are FIND, not a landing fork", () => {
+    expect(landingVisitFromSearch("")).toBe("jobs");
+    expect(landingVisitFromSearch("?new=1")).toBe("jobs");
     expect(landingVisitFromSearch("?visit=jobs")).toBe("jobs");
     expect(landingVisitFromSearch("?visit=candidates")).toBe("candidates");
     expect(landingVisitFromSearch("?restore=1")).toBe("jobs");
@@ -166,17 +166,43 @@ describe("landing fork", () => {
     expect(landing).not.toMatch(/Headline options|headlineOptions|id:\"A\"/);
     expect(landing).not.toMatch(/CalJobsDesk|choose your workflow/i);
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
-    expect(jobsPage).toMatch(/JobsLanding/);
+    expect(jobsPage).not.toMatch(/JobsLanding/);
     expect(jobsPage).toMatch(/EmployerMatchWorkspace/);
     expect(jobsPage).toMatch(/RobotJobsWorkspace/);
     expect(jobsPage).toMatch(/landingVisitFromSearch/);
-    expect(jobsPage).toMatch(/forcedLanding && fromSearch === "landing"/);
-    expect(jobsPage).not.toMatch(
-      /const visit: LandingVisit = forcedLanding\s*\n\s*\? "landing"/
-    );
+    expect(jobsPage).not.toMatch(/forcedLanding/);
   });
 
-  it("paints a sparse landing fork with Outfit headlines and both doors", () => {
+  it("FIND home is one line, URL field, and a quiet employer link", () => {
+    const landing = readFileSync(
+      join(here, "../components/JobsLanding.tsx"),
+      "utf8"
+    );
+    const workspace = readFileSync(
+      join(here, "../components/RobotJobsWorkspace.tsx"),
+      "utf8"
+    );
+    const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
+    expect(jobsPage).toMatch(/RobotJobsWorkspace/);
+    expect(jobsPage).not.toMatch(/JobsLanding/);
+    expect(workspace).toMatch(/FIND_JOBS_HOME_HEADLINE/);
+    expect(workspace).toMatch(/FIND_JOBS_HOME_SUBHEAD/);
+    expect(workspace).toMatch(/aria-label="Find jobs for your robot"/);
+    expect(workspace).toMatch(/Employers: name the work/);
+    expect(workspace).toMatch(/FindProofJobs/);
+    expect(workspace).not.toMatch(/LiveJobTape/);
+    expect(workspace).not.toMatch(/LiveJobDetailModal/);
+    expect(workspace).not.toMatch(/ready_for_robots_hero/);
+    expect(LANDING_HEADLINE).toBe("Put Robots to Work.");
+    expect(FIND_JOBS_HOME_HEADLINE).toBe("Jobs for robots.");
+    expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
+    expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
+    expect(jobsFindHref()).toBe("/?visit=jobs");
+    expect(jobsCandidatesHref()).toBe("/?visit=candidates");
+    expect(landing).toMatch(/rfr-landing-headline/);
+  });
+
+  it("keeps unused landing CSS tokens off the FIND home path", () => {
     const landing = readFileSync(
       join(here, "../components/JobsLanding.tsx"),
       "utf8"

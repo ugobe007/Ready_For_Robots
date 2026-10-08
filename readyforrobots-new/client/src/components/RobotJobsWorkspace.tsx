@@ -27,7 +27,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { Mail, ArrowRight, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getJobLifecycleState } from "@/lib/jobLifecycle";
 import DailyMatchBriefModal from "@/components/DailyMatchBriefModal";
@@ -46,6 +46,7 @@ import { lookupKnownDistributor } from "@/lib/knownDistributorLineups";
 import {
   I_KNOW_THE_ROBOT_HINT,
   I_KNOW_THE_ROBOT_LABEL,
+  jobsCandidatesHref,
   jobsFindHref,
 } from "@/lib/jobsLanding";
 import {
@@ -60,11 +61,8 @@ import type {
   MatchJob,
 } from "@/lib/robotJobMatch";
 import { classOptionsOrDefault } from "@/lib/robotClassOptions";
-import RobotJobCardUnit from "@/components/pipeline/RobotJobCardUnit";
-import LiveJobTape from "@/components/jobs/LiveJobTape";
-import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
+import FindProofJobs from "@/components/jobs/FindProofJobs";
 import JobQueryModal from "@/components/jobs/JobQueryModal";
-import { MARKET_TAPE_JOBS, uniqueTapeJobCount, type TapeJob } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
@@ -162,7 +160,6 @@ import {
   type FindResearchHandle,
 } from "@/lib/findResearch";
 import { isNamedRobotJob, robotJobCardFromMatch } from "@/lib/robotJobCard";
-import JobsPstackProtocol from "@/components/JobsPstackProtocol";
 
 /* ------------------------------------------------------------------ */
 /* Types + constants                                                   */
@@ -202,7 +199,6 @@ type ProductChoice = {
 };
 type RestoreView = "review" | "jobs" | "portfolio";
 
-const MARKET_FOUND_BASE = uniqueTapeJobCount();
 const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
 const eyebrow = JOBS_EYEBROW_CLASS;
@@ -628,80 +624,6 @@ function pickSelectedJobKey(
   return jobs[0]?.job_key ?? null;
 }
 
-function FindShowcaseSection({ onSelectJob }: { onSelectJob?: (job: TapeJob) => void }) {
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const jobs = MARKET_TAPE_JOBS;
-
-  useEffect(() => {
-    if (paused || jobs.length === 0) return;
-    const timer = window.setInterval(() => {
-      setIndex(prev => (prev + 1) % jobs.length);
-    }, 6000);
-    return () => window.clearInterval(timer);
-  }, [paused, jobs.length]);
-
-  const currentJob = jobs[index % jobs.length];
-  if (!currentJob) return null;
-
-  const parts = (currentJob.industry || "").split(" · ");
-  const customer = currentJob.customer || parts[0] || "Enterprise Buyer";
-  const location = currentJob.location || parts[1] || "Automation Facility";
-  const robotClass = currentJob.robotClass || "Industrial Cobot / AMR";
-  const valueText = currentJob.valueText || "$60,000–$90,000/yr";
-
-  return (
-    <div
-      className="p-4 sm:p-5 border-b border-slate-700/80 bg-[#070f22] transition-colors hover:bg-[#09142d]"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <div className="flex items-center justify-between mb-2.5 px-0.5">
-        <span className="inline-flex items-center gap-2 text-[11px] font-mono font-extrabold uppercase tracking-wider text-purple-300">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-          </span>
-          Showcase Opportunity ({index + 1} of {jobs.length})
-        </span>
-        <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
-          Auto-rotating live buyer demand · Hover to pause
-        </span>
-      </div>
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg border border-slate-800 bg-[#09152e]/90 shadow-sm">
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex items-center gap-2 text-[12px] font-mono text-emerald-400 font-semibold truncate">
-            <span>{customer}</span>
-            <span className="text-slate-600">•</span>
-            <span className="text-slate-300 font-normal">{location}</span>
-          </div>
-          <h4 className="text-sm sm:text-base font-bold text-slate-100 truncate">
-            {currentJob.title}
-          </h4>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 pt-0.5">
-            <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono bg-slate-800 text-slate-200 border border-slate-700">
-              {robotClass}
-            </span>
-            <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 font-semibold">
-              {valueText}
-            </span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => onSelectJob?.(currentJob)}
-          className="self-start sm:self-center shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-emerald-600 text-slate-950 text-xs font-mono font-bold hover:bg-emerald-400 transition-colors shadow-sm"
-        >
-          <span>Inspect Job</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* Component                                                           */
 /* ------------------------------------------------------------------ */
@@ -763,7 +685,6 @@ export default function RobotJobsWorkspace() {
   const [keepSavedCount, setKeepSavedCount] = useState(0);
   const [showAllJobs, setShowAllJobs] = useState(false);
   const [lineupPreview, setLineupPreview] = useState(false);
-  const [selectedTapeModalJob, setSelectedTapeModalJob] = useState<TapeJob | null>(null);
   const [showJobQueryModal, setShowJobQueryModal] = useState(false);
 
   function handleJobQuerySubmit({
@@ -2353,6 +2274,19 @@ export default function RobotJobsWorkspace() {
         : stage === "find"
           ? startJobs
           : openJobsStep;
+  const showProcessBar = stage !== "find" && stage !== "research";
+  const processNav = showProcessBar ? (
+    <JobsProcessNav
+      layout="page"
+      current={processCurrent}
+      onFind={processOnFind}
+      onJobs={processOnJobs}
+      onActivate={processOnActivate}
+      actionLabel={processActionLabel}
+      actionClassName={processActionClass}
+      onAction={processOnAction}
+    />
+  ) : null;
 
   /* -------------------------------------------------------------- */
   /* Render                                                          */
@@ -2360,123 +2294,28 @@ export default function RobotJobsWorkspace() {
 
   return (
     <div className="rfr-jobs-page-shell border border-slate-600 bg-[#0b162f]">
-      <div className="sticky top-14 z-[60] border-b border-slate-600 bg-[#0b162f]">
-        <JobsProcessNav
-          layout="page"
-          current={processCurrent}
-          onFind={processOnFind}
-          onJobs={processOnJobs}
-          onActivate={processOnActivate}
-          actionLabel={processActionLabel}
-          actionClassName={processActionClass}
-          onAction={processOnAction}
-        />
-      </div>
-      <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.34fr)_minmax(0,0.66fr)]">
-        {/* ---------------- LEFT RAIL (context) ---------------- */}
-        <aside className="rfr-find-pane min-w-0 overflow-x-clip border-b border-slate-600 p-5 sm:p-6 lg:border-b-0 lg:border-r">
-          {stage === "find" || stage === "research" || stage === "select" ? (
-            <FindRail
-              stage={stage}
-              url={url}
-              setUrl={setUrl}
-              onSubmit={onSubmitFind}
-              companyName={companyName}
-              error={error}
-              currentSubmitUrl={submittedUrlRef.current}
-              onCancel={stage === "select" ? newRobot : undefined}
-              onPickClass={id => void submitClassFind(id)}
-              onOpenQueryModal={() => setShowJobQueryModal(true)}
-            />
-          ) : stage === "portfolio" ? (
-            <PortfolioRail
-              company={
-                portfolio[0] ? companyIdentity(portfolio[0]).label : companyName
-              }
-              identityVerified={
-                portfolio[0] ? companyIdentity(portfolio[0]).verified : true
-              }
-              count={portfolio.length}
-              onNewRobot={newRobot}
-            />
-          ) : (
-            <ContextRail
-              company={active ? companyIdentity(active).label : companyName}
-              identityVerified={
-                active ? companyIdentity(active).verified : true
-              }
-              product={
-                portfolio.length > 1
-                  ? `${portfolio.length} robots`
-                  : active?.productName || ""
-              }
-              tier={active?.tier || "C"}
-              matched={Boolean(active?.matched)}
-              showCount={showActiveCount}
-              jobCount={Math.min(JOBS_EXAMPLE_CAP, active?.jobs?.length || 0)}
-              hint={
-                railTab === "profile"
-                  ? RAIL_STEP_HINT.profile
-                  : RAIL_STEP_HINT.jobs
-              }
-              portfolioCount={portfolio.length}
-              onBackToPortfolio={
-                portfolio.length > 1 ? () => setStage("portfolio") : undefined
-              }
-              onNewRobot={newRobot}
-            />
-          )}
-        </aside>
-
-        {/* ---------------- LARGE WORKSPACE ---------------- */}
-        <section className="rfr-find-pane min-w-0">
-          {stage === "find" && (
-            <div>
-              <FindShowcaseSection onSelectJob={job => setSelectedTapeModalJob(job)} />
-              <div className="rfr-jobs-start-bar border-b border-slate-600 px-6 py-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={startJobs}
-                    className={`${ctaClass} w-full sm:w-auto`}
-                  >
-                    <FaceCue scale={2.4} onEmerald={false} />
-                    <FindJobsCtaLabel text={FIND_JOBS_CTA} />
-                  </button>
-                  <QueryJobTypesButton
-                    onClick={() => setShowJobQueryModal(true)}
-                    className="w-full sm:w-auto"
-                  />
-                </div>
-                <p className="mt-2 text-[12px] text-slate-400">
-                  Paste a robot URL on the left, then find jobs. Or query a job type.
-                </p>
-              </div>
-              <LiveJobTape
-                title="Live Robot Jobs"
-                subtitle="Click any job opportunity to explore specs, ROI, and share direct links"
-                corpus={MARKET_TAPE_JOBS}
-                baseCount={MARKET_FOUND_BASE}
-                running
-                statusLines={[]}
-                revealTarget={null}
-                onRevealComplete={() => undefined}
-                onSelect={(job) => setSelectedTapeModalJob(job)}
-                selectedKey={selectedTapeModalJob?.key ?? null}
-              />
-              <LiveJobDetailModal
-                job={selectedTapeModalJob}
-                isOpen={Boolean(selectedTapeModalJob)}
-                onClose={() => setSelectedTapeModalJob(null)}
-              />
-            </div>
-          )}
-
-          {stage === "research" && (
+      {processNav ? (
+        <div className="border-b border-slate-600 bg-[#0b162f]">{processNav}</div>
+      ) : null}
+      {stage === "find" || stage === "research" || stage === "select" ? (
+        <div className="rfr-find-pane min-w-0 overflow-x-clip p-5 sm:p-6">
+          <FindRail
+            stage={stage}
+            url={url}
+            setUrl={setUrl}
+            onSubmit={onSubmitFind}
+            companyName={companyName}
+            error={error}
+            currentSubmitUrl={submittedUrlRef.current}
+            onCancel={stage === "select" ? newRobot : undefined}
+            onPickClass={id => void submitClassFind(id)}
+            onOpenQueryModal={() => setShowJobQueryModal(true)}
+          />
+          {stage === "find" ? <FindProofJobs /> : null}
+          {stage === "research" ? (
             <ResearchPanel company={companyName} phase={researchPhase} />
-          )}
-
-          {stage === "select" && (
+          ) : null}
+          {stage === "select" ? (
             <SelectPanel
               company={companyName}
               products={products}
@@ -2485,63 +2324,105 @@ export default function RobotJobsWorkspace() {
               onToggle={toggleProduct}
               onConfirm={confirmSelection}
             />
-          )}
-
-          {stage === "portfolio" && (
-            <PortfolioPanel
-              company={companyName || portfolio[0]?.companyName || ""}
-              robots={portfolio}
-              showCounts={countsTrusted}
-              onView={idx => void researchPortfolioRobot(idx, "jobs")}
-              onReview={idx => void researchPortfolioRobot(idx, "review")}
-              onSeeJobs={() => {
-                const idx = portfolio.findIndex(
-                  row => row.matched && (row.jobs || []).length > 0
-                );
-                void researchPortfolioRobot(idx >= 0 ? idx : 0, "jobs");
-              }}
-              onActivate={goToActivate}
-            />
-          )}
-
-          {stage === "review" && active && (
-            <ReviewPanel
-              analysis={active}
-              matching={matching}
-              matchError={matchError}
-              onFindJobs={() => void findJobsForActive()}
-            />
-          )}
-
-          {stage === "jobs" && active && (
-            <JobsPanel
-              analysis={active}
-              lineup={portfolio}
-              lineupPreview={lineupPreview}
-              expandedJob={expandedJob}
-              checkedJobKeys={checkedJobKeys}
-              showAll={showAllJobs}
-              onSelectJob={selectJob}
-              onToggleJob={toggleCheckedJob}
-              onActivate={goToActivate}
-              keepSavedCount={keepSavedCount}
-              signedIn={Boolean(session)}
-              plan={plan}
-              accessToken={session?.access_token || null}
-              robotUrl={submittedUrlRef.current}
-              submissionId={submissionIdRef.current}
-              onSeeAll={seeAllJobs}
-              onRunOneRobot={runOneRobot}
-              robotCount={lineupPreview ? portfolio.length : 1}
-              companyName={companyName || active.companyName}
-              qualifying={matching}
-              matchError={matchError}
-              onSelectClass={id => void qualifyActive(id)}
-              onOpenQueryModal={() => setShowJobQueryModal(true)}
-            />
-          )}
-        </section>
-      </div>
+          ) : null}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,0.34fr)_minmax(0,0.66fr)]">
+          <aside className="rfr-find-pane min-w-0 overflow-x-clip border-b border-slate-600 p-5 sm:p-6 lg:border-b-0 lg:border-r">
+            {stage === "portfolio" ? (
+              <PortfolioRail
+                company={
+                  portfolio[0] ? companyIdentity(portfolio[0]).label : companyName
+                }
+                identityVerified={
+                  portfolio[0] ? companyIdentity(portfolio[0]).verified : true
+                }
+                count={portfolio.length}
+                onNewRobot={newRobot}
+              />
+            ) : (
+              <ContextRail
+                company={active ? companyIdentity(active).label : companyName}
+                identityVerified={
+                  active ? companyIdentity(active).verified : true
+                }
+                product={
+                  portfolio.length > 1
+                    ? `${portfolio.length} robots`
+                    : active?.productName || ""
+                }
+                tier={active?.tier || "C"}
+                matched={Boolean(active?.matched)}
+                showCount={showActiveCount}
+                jobCount={Math.min(JOBS_EXAMPLE_CAP, active?.jobs?.length || 0)}
+                hint={
+                  railTab === "profile"
+                    ? RAIL_STEP_HINT.profile
+                    : RAIL_STEP_HINT.jobs
+                }
+                portfolioCount={portfolio.length}
+                onBackToPortfolio={
+                  portfolio.length > 1 ? () => setStage("portfolio") : undefined
+                }
+                onNewRobot={newRobot}
+              />
+            )}
+          </aside>
+          <section className="rfr-find-pane min-w-0">
+            {stage === "portfolio" && (
+              <PortfolioPanel
+                company={companyName || portfolio[0]?.companyName || ""}
+                robots={portfolio}
+                showCounts={countsTrusted}
+                onView={idx => void researchPortfolioRobot(idx, "jobs")}
+                onReview={idx => void researchPortfolioRobot(idx, "review")}
+                onSeeJobs={() => {
+                  const idx = portfolio.findIndex(
+                    row => row.matched && (row.jobs || []).length > 0
+                  );
+                  void researchPortfolioRobot(idx >= 0 ? idx : 0, "jobs");
+                }}
+                onActivate={goToActivate}
+              />
+            )}
+            {stage === "review" && active && (
+              <ReviewPanel
+                analysis={active}
+                matching={matching}
+                matchError={matchError}
+                onFindJobs={() => void findJobsForActive()}
+              />
+            )}
+            {stage === "jobs" && active && (
+              <JobsPanel
+                analysis={active}
+                lineup={portfolio}
+                lineupPreview={lineupPreview}
+                expandedJob={expandedJob}
+                checkedJobKeys={checkedJobKeys}
+                showAll={showAllJobs}
+                onSelectJob={selectJob}
+                onToggleJob={toggleCheckedJob}
+                onActivate={goToActivate}
+                keepSavedCount={keepSavedCount}
+                signedIn={Boolean(session)}
+                plan={plan}
+                accessToken={session?.access_token || null}
+                robotUrl={submittedUrlRef.current}
+                submissionId={submissionIdRef.current}
+                onSeeAll={seeAllJobs}
+                onRunOneRobot={runOneRobot}
+                robotCount={lineupPreview ? portfolio.length : 1}
+                companyName={companyName || active.companyName}
+                qualifying={matching}
+                matchError={matchError}
+                onSelectClass={id => void qualifyActive(id)}
+                onOpenQueryModal={() => setShowJobQueryModal(true)}
+              />
+            )}
+          </section>
+        </div>
+      )}
 
       <JobQueryModal
         isOpen={showJobQueryModal}
@@ -2550,21 +2431,11 @@ export default function RobotJobsWorkspace() {
         currentRobotName={active?.productName}
       />
 
-      <div className="relative z-[60] mt-6">
-        <JobsPstackProtocol />
-      </div>
-      <div className="rfr-jobs-page-footer relative z-[60] pointer-events-auto border-t border-slate-600 bg-[#0b162f]">
-        <JobsProcessNav
-          layout="page"
-          current={processCurrent}
-          onFind={processOnFind}
-          onJobs={processOnJobs}
-          onActivate={processOnActivate}
-          actionLabel={processActionLabel}
-          actionClassName={processActionClass}
-          onAction={processOnAction}
-        />
-      </div>
+      {processNav ? (
+        <div className="rfr-jobs-page-footer border-t border-slate-600 bg-[#0b162f]">
+          {processNav}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -2638,19 +2509,13 @@ function FindRail({
               )}
       </h1>
       {stage === "find" && (
-        <>
-          <p className={FIND_JOBS_SUBHEAD_CLASS}>{FIND_JOBS_HOME_SUBHEAD}</p>
-          <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-[12px] leading-relaxed text-emerald-200">
-            <strong className="block font-semibold text-emerald-300">Jobs for robots workspace:</strong>
-            Match your robot specs to real employer demand. Enter a product URL above to find jobs tailored to your hardware, or select a Job Definition / Industry below.
-          </div>
-        </>
+        <p className={FIND_JOBS_SUBHEAD_CLASS}>{FIND_JOBS_HOME_SUBHEAD}</p>
       )}
 
       <form
         aria-label="Find jobs for your robot"
         onSubmit={onSubmit}
-        className="mt-6"
+        className="rfr-jobs-start-bar mt-6"
       >
         <label className={eyebrow} htmlFor="robot-url">
           Robot product URL
@@ -2667,28 +2532,30 @@ function FindRail({
         <button
           type="submit"
           disabled={stage === "select" || !url.trim() || sameSubmit}
-          className={`${ctaClass} mt-3 w-full`}
+          className={`${ctaClass} mt-3 w-full sm:w-auto`}
         >
           <FindJobsCtaLabel text={researching ? "Researching…" : FIND_JOBS_CTA} />
         </button>
       </form>
 
-      {stage === "find" && onPickClass ? (
-        <div className="mt-8 border border-slate-700 bg-transparent p-4 rounded-xl">
-          {onOpenQueryModal ? (
-            <QueryJobTypesButton
-              onClick={onOpenQueryModal}
-              className="mb-4 w-full text-xs sm:text-sm"
-            />
-          ) : null}
-          <label
-            htmlFor="job-definition"
-            className="font-display text-xl font-bold tracking-tight text-slate-100 sm:text-2xl flex items-center gap-2"
+      {stage === "find" ? (
+        <p className="mt-3 text-[13px] leading-snug text-slate-400">
+          <a
+            href={jobsCandidatesHref()}
+            className="text-slate-300 underline decoration-slate-600 underline-offset-2 hover:text-white"
           >
-            Job Definition / Industry
+            Employers: name the work →
+          </a>
+        </p>
+      ) : null}
+
+      {stage === "find" && onPickClass ? (
+        <div className="mt-8">
+          <label htmlFor="job-definition" className={eyebrow}>
+            {I_KNOW_THE_ROBOT_LABEL}
           </label>
           <p className="mt-2 text-[13px] leading-snug text-slate-400">
-            Select a standard job definition (10 available) or enter a custom industry to find matching robot job opportunities.
+            {I_KNOW_THE_ROBOT_HINT}
           </p>
           <select
             id="job-definition"
@@ -2732,10 +2599,19 @@ function FindRail({
                 catalogClass === "custom" ? customIndustry.trim() : catalogClass
               )
             }
-            className={`${ctaClass} mt-3 w-full`}
+            className={`${ctaClass} mt-3 w-full sm:w-auto`}
           >
             <FindJobsCtaLabel text={FIND_JOBS_CTA} />
           </button>
+          {onOpenQueryModal ? (
+            <button
+              type="button"
+              onClick={onOpenQueryModal}
+              className="mt-3 block text-[13px] text-slate-400 underline decoration-slate-600 underline-offset-2 hover:text-slate-200"
+            >
+              Query a job type
+            </button>
+          ) : null}
         </div>
       ) : null}
 
@@ -3453,55 +3329,6 @@ function JobsActivateBar({
   );
 }
 
-const TEN_JOB_DEFINITIONS = [
-  { id: "logistics", label: "Logistics & Freight Handling", hint: "Material movement, parcel sortation, 3PL cross-dock" },
-  { id: "cobot", label: "Case Palletizing & Packing", hint: "Palletizing cobots, carton casing, end-of-line" },
-  { id: "factory", label: "Manufacturing & Assembly", hint: "CNC machine tend, sub-assembly, part placement" },
-  { id: "autonomous_scrubber", label: "Commercial Cleaning & Janitorial", hint: "Autonomous floor scrubbers, vacuuming, terminal care" },
-  { id: "hospitality", label: "Hospitality & Guest Services", hint: "Hotel linen transport, bussing, room service delivery" },
-  { id: "healthcare", label: "Healthcare & Hospital Logistics", hint: "Specimen delivery, pharmacy carts, clinical assist" },
-  { id: "food_prep", label: "Food Processing & Kitchen Prep", hint: "IP69K washdown cobots, food portioning, kitchen prep" },
-  { id: "machine_tending", label: "Machine Tending & Metal Fab", hint: "Press brake load, CNC feeding, welding cell assist" },
-  { id: "agriculture", label: "Agriculture & Farm Automation", hint: "Autonomous tractors, weeding, crop monitoring" },
-  { id: "construction", label: "Construction & Site Inspection", hint: "Jobsite scanning, 3D printing, layout marking" },
-];
-
-function mapShowcaseJobToDeal(job: any, index: number) {
-  const company = job.employer || job.company || job.customer || "Enterprise Buyer";
-  const location = job.workplace || job.location || "North America";
-  const industry = job.sector || job.industry || "Robotics & Automation";
-  const title = job.work || job.title || job.headline || "Robot Automation Opportunity";
-  return {
-    id: index + 1000,
-    company,
-    location,
-    industry,
-    score: job.score || 95,
-    signal: title,
-    signalType: job.status || "HOT BUYER",
-    signalColor: "#34d399",
-    pipelineAction: title,
-    robotTypesNeeded: job.targetRobotTypes || (job.forRobot ? [job.forRobot] : ["Industrial Cobot / AMR"]),
-    projectTiming: {
-      label: "30–90 days (Active Buying Window)",
-      day_min: 30,
-      day_max: 90,
-      source: "buyer_signal",
-    },
-    notes: title,
-    shareSummary: title,
-    crmEvidence: {
-      friction_point: title,
-      workflow_scope: { label: "1 workflow", items: [title] },
-      timing: { label: "Q3 Buying Window" },
-      robot_type: { label: job.forRobot || "Industrial Cobot / High-Payload AMR" },
-      budget: { top_amount: "$60,000–$90,000/yr" },
-      decision_makers: [{ name: "Operations Director", title: "Plant Automation Owner" }],
-    },
-    verdict: "VERIFIED_BUYER",
-  };
-}
-
 function JobsPanel({
   analysis,
   lineup,
@@ -3621,21 +3448,8 @@ function JobsPanel({
 
   const visible = isPaidUser && showAll ? rawBaseJobs : defaultActiveJobs;
 
-  const [showcaseIndex, setShowcaseIndex] = useState(0);
-  const [showcasePaused, setShowcasePaused] = useState(false);
-
-  useEffect(() => {
-    if (showcasePaused || rawBaseJobs.length === 0) return;
-    const timer = window.setInterval(() => {
-      setShowcaseIndex(prev => (prev + 1) % rawBaseJobs.length);
-    }, 6000);
-    return () => window.clearInterval(timer);
-  }, [showcasePaused, rawBaseJobs.length]);
-
-  const showcaseJob = rawBaseJobs.length > 0 ? rawBaseJobs[showcaseIndex % rawBaseJobs.length] : null;
-
   return (
-    <div id="jobs-list" className="p-6 sm:p-8">
+    <div id="jobs-list" className="px-5 py-5 sm:px-6">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <h2 className={`${FIND_JOBS_HEADLINE_CLASS} text-white`}>{heading}</h2>
         <span className="font-mono text-base font-bold text-emerald-300">
@@ -3659,16 +3473,6 @@ function JobsPanel({
         </div>
       ) : null}
 
-      {/* Left Panel Explanation Box */}
-      <div className="mt-4 mb-3 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-[#09152e] to-[#0a1836] p-4 text-slate-100 shadow-xl space-y-1">
-        <p className="text-[11px] font-mono font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1.5">
-          <span>✦</span> Jobs for robots — How to use this feed
-        </p>
-        <p className="text-xs leading-relaxed text-slate-200">
-          Select your job definition category below or enter your industry to match your robot to active buyer demand.
-          Click any job card to expand full operational requirements, equipment specs, and estimated contract value.
-        </p>
-      </div>
       {rawBaseJobs.length > 0 && (
         <p className="mt-2 text-base leading-relaxed text-slate-300">
           {jobsListHint({
@@ -3731,33 +3535,6 @@ function JobsPanel({
         )
       ) : (
         <>
-          {/* TOP OF FUNNEL SHOWCASE JOB CARD (Auto-rotates dynamically) */}
-          {showcaseJob && (
-            <div 
-              className="mt-6 mb-4"
-              onMouseEnter={() => setShowcasePaused(true)}
-              onMouseLeave={() => setShowcasePaused(false)}
-            >
-              <div className="flex items-center justify-between mb-2 px-1">
-                <span className="inline-flex items-center gap-1.5 text-xs font-mono font-extrabold uppercase tracking-wider text-emerald-300">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                  Showcase Opportunity ({showcaseIndex + 1} of {rawBaseJobs.length})
-                </span>
-                <span className="text-[10px] font-mono text-slate-400">
-                  Auto-rotating live demand · Hover to pause
-                </span>
-              </div>
-              <RobotJobCardUnit
-                deal={mapShowcaseJobToDeal(showcaseJob, showcaseIndex)}
-                savedInCrm={false}
-                hasSession={signedIn}
-              />
-            </div>
-          )}
-
           {/* Job Opportunity Status & Filter Bar */}
           <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 pb-3">
             <div className="flex flex-wrap items-center gap-1.5 rounded-lg bg-[#060c1d] p-1 border border-slate-700/80">
@@ -4061,21 +3838,30 @@ function JobCard({
   const card = robotJobCardFromMatch(job);
   const lifecycle = getJobLifecycleState(job);
   if (!card.employer || !card.workplace) return null;
-  const place = [card.employer, card.workplace].filter(Boolean).join(" · ");
+  const models = card.taskModels
+    .map(
+      model =>
+        `${model.label} · ${
+          model.presence === "unknown"
+            ? "Not yet confirmed"
+            : model.presence === "present"
+              ? "Present"
+              : "Absent"
+        }`
+    )
+    .join("; ");
+  const steps = card.modelContract
+    ? card.modelContract.steps
+        .map(step => `${step.n}. ${step.label}. ${step.body}`)
+        .join(" ")
+    : "";
+  const links = (card.modelLinks || []).map(dest => dest.name).join("; ");
   return (
-    <li
-      className={`border bg-[#081126] transition-all ${
-        lifecycle.isPending
-          ? "border-amber-500/40 bg-amber-950/10"
-          : checked || selected
-            ? "border-emerald-400/70"
-            : "border-slate-600"
-      }`}
-    >
-      <div className="flex items-start">
+    <li>
+      <div className="flex items-start gap-2">
         <label
-          className={`flex shrink-0 flex-col items-center gap-1 px-3 pt-4 ${
-            lifecycle.isPending ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+          className={`mt-0.5 flex shrink-0 ${
+            lifecycle.isPending ? "cursor-not-allowed opacity-50" : "cursor-pointer"
           }`}
           onClick={e => e.stopPropagation()}
         >
@@ -4085,225 +3871,53 @@ function JobCard({
             disabled={lifecycle.isPending}
             onChange={lifecycle.isPending ? undefined : onToggle}
             aria-label={`${checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL} ${card.jobTitle} on the CRM desk`}
-            className="h-5 w-5 accent-emerald-400 disabled:opacity-40"
+            className="h-4 w-4 accent-emerald-400 disabled:opacity-40"
           />
-          <span
-            className={`font-mono text-xs font-bold uppercase tracking-[0.08em] ${
-              lifecycle.isPending
-                ? "text-amber-400/70"
-                : checked
-                  ? "text-emerald-300"
-                  : "text-slate-500"
-            }`}
-          >
-            {lifecycle.isPending ? "FULL" : checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL}
-          </span>
         </label>
         <button
           type="button"
           onClick={onSelect}
-          className="flex min-w-0 flex-1 items-start gap-3 py-4 pr-4 text-left"
+          className="min-w-0 flex-1 text-left text-[13px] leading-snug text-slate-200"
         >
-          <span className="flex-1">
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className={JOBS_ROBOT_NAME_CLASS}>{card.jobTitle}</span>
-              <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-wider border ${lifecycle.badgeClass}`}>
-                {lifecycle.statusLabel}
-              </span>
-            </div>
-            {place ? <span className={JOBS_PLACE_CLASS}>{place}</span> : null}
-            <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-xs text-slate-400">
-              <span>{jobIndexLabel(index)}</span>
-              <span>·</span>
-              <span className="text-slate-300">{lifecycle.subLabel}</span>
-            </div>
-            {lifecycle.isPending && (
-              <p className="mt-1.5 text-xs font-medium text-amber-300/90 bg-amber-950/40 border border-amber-500/30 px-2.5 py-1.5 rounded">
-                ⚠️ Applicants under review (3/3 spots filled). No further proposals are currently accepted to avoid spamming the opportunity.
-              </p>
-            )}
-            {card.modelContract?.listLine ? (
-              <span className={JOBS_PLACE_CLASS}>
-                {card.modelContract.listLine}
-              </span>
-            ) : null}
+          <span className="font-mono text-[11px] text-slate-500">
+            {jobIndexLabel(index)}
+            {checked ? ` · ${JOBS_KEEP_LABEL}` : ""}
+            {lifecycle.isPending ? " · full" : ""}
+            {selected ? " · open" : ""}
           </span>
-          <span className="font-mono text-xs text-slate-500">
-            {selected ? "−" : "+"}
+          <span className={JOBS_ROBOT_NAME_CLASS}>{card.jobTitle}</span>
+          <span className="mt-0.5 block text-slate-300">
+            {[card.employer, card.workplace].filter(Boolean).join(" · ")}
+            {card.work ? ` — ${card.work}` : ""}
+            {card.modelContract?.listLine
+              ? ` — ${card.modelContract.listLine}`
+              : ""}
           </span>
         </button>
       </div>
-
-      {selected && (
-        <div className="border-t border-slate-700 px-4 pb-4 pt-3">
-          <dl className="grid gap-2 text-[13px] leading-snug text-slate-200">
-            <div>
-              <dt className={eyebrow}>Employer</dt>
-              <dd className="mt-0.5">{card.employer}</dd>
-            </div>
-            <div>
-              <dt className={eyebrow}>Workplace</dt>
-              <dd className="mt-0.5">{card.workplace}</dd>
-            </div>
-            <div>
-              <dt className={eyebrow}>Work being performed</dt>
-              <dd className="mt-0.5">{card.work}</dd>
-            </div>
-            {card.description ? (
-              <div>
-                <dt className={eyebrow}>Job description</dt>
-                <dd className="mt-0.5 text-slate-300">{card.description}</dd>
-              </div>
-            ) : null}
-            <div>
-              <dt className={eyebrow}>{card.payEstimate.heading}</dt>
-              <dd className="mt-0.5">
-                <span className="text-emerald-300">
-                  {card.payEstimate.monthlyLabel}
-                </span>
-                {" · "}
-                <span className="text-emerald-300">
-                  {card.payEstimate.annualLabel}
-                </span>
-                <span className="mt-0.5 block text-slate-400">
-                  {card.payEstimate.disclaimer}
-                </span>
-              </dd>
-            </div>
-            <div>
-              <dt className={eyebrow}>{card.qualificationLabel}</dt>
-              <dd className="mt-0.5 text-slate-300">
-                {card.qualificationHint}
-              </dd>
-            </div>
-          </dl>
-
-          {card.taskModels.length || card.modelLinks.length ? (
-            <div className="mt-3">
-              <p className={eyebrow}>Task models</p>
-              {card.taskModels.length ? (
-                <ul className="mt-1 space-y-0.5">
-                  {card.taskModels.map(model => (
-                    <li
-                      key={model.id}
-                      className="text-[13px] leading-snug text-slate-200"
-                    >
-                      {model.label}
-                      <span className="text-slate-400">
-                        {" "}
-                        ·{" "}
-                        {model.presence === "unknown"
-                          ? "Not yet confirmed"
-                          : model.presence === "present"
-                            ? "Present"
-                            : "Absent"}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-              {card.modelContract ? (
-                <div className="mt-2 space-y-0.5 text-[13px] leading-snug text-slate-300">
-                  <p className="text-slate-200">
-                    {card.modelContract.headline}
-                  </p>
-                  {card.modelContract.steps.length ? (
-                    <ol className="mt-1 space-y-1">
-                      {card.modelContract.steps.map(step => (
-                        <li key={`${step.n}-${step.label}`}>
-                          <span className="font-mono text-emerald-400">
-                            {step.n}.
-                          </span>{" "}
-                          <span className="text-slate-200">{step.label}.</span>{" "}
-                          {step.body}
-                        </li>
-                      ))}
-                    </ol>
-                  ) : (
-                    <>
-                      {card.modelContract.layer ? (
-                        <p>{card.modelContract.layer}</p>
-                      ) : null}
-                      {card.modelContract.whoTrains ? (
-                        <p>{card.modelContract.whoTrains}</p>
-                      ) : null}
-                      {card.modelContract.time ? (
-                        <p>{card.modelContract.time}</p>
-                      ) : null}
-                      {card.modelContract.youProvide ? (
-                        <p>{card.modelContract.youProvide}</p>
-                      ) : null}
-                      {card.modelContract.fieldFeedback ? (
-                        <p className="text-slate-400">
-                          {card.modelContract.fieldFeedback}
-                        </p>
-                      ) : null}
-                    </>
-                  )}
-                </div>
-              ) : null}
-              {card.modelLinks.length ? (
-                <ul className="mt-1 space-y-0.5">
-                  {card.modelLinks.map(dest => (
-                    <li key={dest.url || dest.name}>
-                      {dest.url ? (
-                        <a
-                          href={dest.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-[13px] leading-snug text-slate-300 underline decoration-slate-600 underline-offset-2"
-                        >
-                          {dest.name}
-                        </a>
-                      ) : (
-                        dest.name
-                      )}
-                    </li>
-                  ))}
-                </ul>
-              ) : null}
-            </div>
-          ) : null}
-
-          {card.requirements.length ? (
-            <div className="mt-3">
-              <p className={eyebrow}>Why this is listed</p>
-              <ul className="mt-1 space-y-0.5">
-                {card.requirements.map(w => (
-                  <li
-                    key={w}
-                    className="text-[13px] leading-snug text-slate-200"
-                  >
-                    <span className="text-emerald-400">✓</span> {w}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {job.blockers?.length ? (
-            <div className="mt-3">
-              <p className="mt-3 font-mono text-sm font-semibold uppercase tracking-[0.08em] text-rose-400/80">
-                Not qualified
-              </p>
-              <ul className="mt-1 space-y-0.5">
-                {job.blockers.map(w => (
-                  <li
-                    key={w}
-                    className="text-[13px] leading-snug text-slate-300"
-                  >
-                    {w}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          <p className="mt-3 text-sm text-slate-400">
-            Next step: {card.nextStep}
-          </p>
-        </div>
-      )}
+      {selected ? (
+        <p className="mt-1 pl-6 text-[13px] leading-snug text-slate-400">
+          Employer {card.employer}. Workplace {card.workplace}. Work being
+          performed {card.work}.
+          {card.description ? ` Job description ${card.description}.` : ""}{" "}
+          {card.payEstimate.heading} {card.payEstimate.monthlyLabel} ·{" "}
+          {card.payEstimate.annualLabel}. {card.payEstimate.disclaimer}{" "}
+          {card.qualificationHint}
+          {models ? ` Task models ${models}.` : ""}
+          {card.modelContract?.headline
+            ? ` ${card.modelContract.headline}`
+            : ""}
+          {steps ? ` ${steps}` : ""}
+          {links ? ` ${links}.` : ""}
+          {card.requirements.length
+            ? ` Why this is listed: ${card.requirements.join("; ")}.`
+            : ""}
+          {job.blockers?.length
+            ? ` Not qualified: ${job.blockers.join("; ")}.`
+            : ""}{" "}
+          Next step: {card.nextStep}
+        </p>
+      ) : null}
     </li>
   );
 }

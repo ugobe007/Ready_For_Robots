@@ -4,8 +4,8 @@ Jobs chrome is the page frame for FIND → cards → CRM: dark header, process b
 
 ## Sub-features
 
-- `chrome-header` Jobs / About / CRM; wordmark goes to `/?new=1` (landing fork). FIND is `/?visit=jobs`.
-- `chrome-process` 01 Show us your robot → 02 Available jobs → 03 CRM, as links, top and bottom.
+- `chrome-header` Jobs / About / CRM; wordmark goes to `/` (FIND). `/?visit=jobs` is the same FIND document.
+- `chrome-process` 01 Show us your robot → 02 Available jobs → 03 CRM as links after jobs load. FIND home has no floating 01 panel.
 - `chrome-no-pipeline` no Pipeline nav, no SIGNAL FAB on Jobs pages.
 - `chrome-scroll` the document scrolls; no `100vh` + `overflow: hidden` trap.
 - `chrome-pstack` How / Act / Critic is the **release gate** (`scripts/pstack_release.py`), not a required banner on `/`. Matcher is `POST /api/robot-job-match`. FIND submit is `POST /api/robot-job-search`. Not a chatbot. Do not put JOBS AGENT PROTOCOL on FIND or CRM as merge proof.

@@ -372,14 +372,14 @@ def phase_how() -> dict[str, Any]:
     jobs_page = _read(JOBS_PAGE) if JOBS_PAGE.is_file() else ""
     find_is_home = (
         "RobotJobsWorkspace" in jobs_page
-        and "JobsLanding" in jobs_page
+        and "JobsLanding" not in jobs_page
         and not re.search(r'["\']\/experiment["\']', jobs_page)
     )
     checks.append(
         _check(
             "find_route",
             find_is_home,
-            "FIND is / after Jobs for Robots; RobotJobsWorkspace stays on pages/Jobs.tsx",
+            "FIND is /; RobotJobsWorkspace stays on pages/Jobs.tsx",
         )
     )
 
@@ -1136,7 +1136,8 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
         and 'setLocation("/")' not in submit
         and "findLookupFailureOutcome" in research_ts
         and "findFailureBouncesHome" in research_ts
-        and 'forcedLanding && fromSearch === "landing"' in jobs_page
+        and "RobotJobsWorkspace" in jobs_page
+        and "JobsLanding" not in jobs_page
         and "FIND_NO_HOME_FIXTURE" in release_ts
         and "find_no_home" in site
         and "find_no_home" in protocol
@@ -1145,7 +1146,7 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
         _check(
             "find_no_home",
             no_home,
-            "FIND timeout / 500 / abort stays on /?visit=jobs, never landing",
+            "FIND timeout / 500 / abort stays on FIND, never employer MATCH",
         )
     )
     checks.append(
