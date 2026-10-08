@@ -27,7 +27,9 @@ _REDIS_PAYLOAD_KEY = "jobs:daily_report:latest"
 _CLAIM_TTL_SEC = 60 * 60 * 48
 DESCRIPTION_MAX = 360
 DECISION_MAKER_EMPTY = "Not named on the posting"
+DECISION_MAKER_HUNTER_MISS = "Hunter.io found no named person"
 CONTACT_EMPTY = "No page email or apply URL. We will not invent one."
+CONTACT_HUNTER_MISS = "Hunter.io found no verified email"
 TIMING_EMPTY = "Timing not on the posting"
 _INVENTED_LEAD_RE = re.compile(r"^operational lead\b", re.I)
 
@@ -171,8 +173,12 @@ def _timing(row: Any) -> str:
 def _page_name_title(row: Any) -> tuple[str, str]:
     """Page-sourced name/title only. Skip matcher-invented Operational Lead rows."""
     blob: dict[str, Any] = {}
-    blob.update(_as_map(getattr(row, "requirements", None)))
-    blob.update(_as_map(getattr(row, "provenance", None)))
+    if isinstance(row, dict):
+        blob.update(_as_map(row.get("requirements")))
+        blob.update(_as_map(row.get("provenance")))
+    else:
+        blob.update(_as_map(getattr(row, "requirements", None)))
+        blob.update(_as_map(getattr(row, "provenance", None)))
     name = _clean(
         blob.get("contact_name")
         or blob.get("decision_maker_name")
@@ -218,19 +224,56 @@ def _contact_fields(row: Any) -> dict[str, Optional[str]]:
     }
 
 
-def _decision_maker_line(name: str, title: str) -> str:
+def _hunter_checked(row: Any) -> bool:
+    blob: dict[str, Any] = {}
+    blob.update(_as_map(getattr(row, "requirements", None)))
+    blob.update(_as_map(getattr(row, "provenance", None)))
+    return bool(blob.get("hunter_checked_at") or blob.get("contact_source") == "hunter_domain")
+
+
+def _contact_source(row: Any) -> Optional[str]:
+    blob: dict[str, Any] = {}
+    blob.update(_as_map(getattr(row, "requirements", None)))
+    blob.update(_as_map(getattr(row, "provenance", None)))
+    src = str(blob.get("contact_source") or "").strip()
+    return src or None
+
+
+def _dm_agent_fields(row: Any) -> tuple[list[str], Optional[str]]:
+    blob: dict[str, Any] = {}
+    blob.update(_as_map(getattr(row, "requirements", None)))
+    blob.update(_as_map(getattr(row, "provenance", None)))
+    titles_raw = blob.get("dm_target_titles") or []
+    titles = [str(t).strip() for t in titles_raw if str(t).strip()][:6]
+    why = _clean(blob.get("dm_match_why"), limit=200) or None
+    return titles, why
+
+
+def _decision_maker_line(name: str, title: str, *, hunter_checked: bool = False) -> str:
     if name and title:
         return f"{name} · {title}"
     if name:
         return name
     if title:
         return title
+    if hunter_checked:
+        return DECISION_MAKER_HUNTER_MISS
     return DECISION_MAKER_EMPTY
 
 
-def _contact_line(contact: dict[str, Optional[str]]) -> str:
-    parts = [p for p in (contact.get("email"), contact.get("contact_url"), contact.get("apply_url")) if p]
-    return " · ".join(parts) if parts else CONTACT_EMPTY
+def _contact_line(
+    contact: dict[str, Optional[str]], *, hunter_checked: bool = False
+) -> str:
+    parts = [
+        p
+        for p in (contact.get("email"), contact.get("contact_url"), contact.get("apply_url"))
+        if p
+    ]
+    if parts:
+        return " · ".join(parts)
+    if hunter_checked:
+        return CONTACT_HUNTER_MISS
+    return CONTACT_EMPTY
 
 
 def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
@@ -241,6 +284,8 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
     created = getattr(row, "created_at", None)
     name, dm_title = _page_name_title(row)
     contact = _contact_fields(row)
+    hunter_checked = _hunter_checked(row)
+    target_titles, match_why = _dm_agent_fields(row)
     return {
         "rank": rank,
         "job_key": str(getattr(row, "job_key", "") or ""),
@@ -250,33 +295,36 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
         "action": action,
         "job_type": _job_type(row),
         "description": _job_description(row),
-        "decision_maker": _decision_maker_line(name, dm_title),
+        "decision_maker": _decision_maker_line(
+            name, dm_title, hunter_checked=hunter_checked
+        ),
         "decision_maker_name": name or None,
         "decision_maker_title": dm_title or None,
         "timing": _timing(row),
-        "contact": _contact_line(contact),
+        "contact": _contact_line(contact, hunter_checked=hunter_checked),
         "employer_email": contact.get("email"),
         "contact_url": contact.get("contact_url"),
         "apply_url": contact.get("apply_url"),
+        "contact_source": _contact_source(row),
+        "target_titles": target_titles,
+        "match_why": match_why,
         "investigate_status": str(getattr(row, "investigate_status", "") or ""),
         "created_at": created.isoformat() if created else None,
     }
 
 
-def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, Any]:
-    """Rank named-employer Robot Jobs the same way FIND accepts them."""
+def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
+    """Named-employer Robot Jobs in the same order as the operator cards."""
     from app.models.robot_directed_discovery import RobotJob
     from app.services.robot_job_extract import is_job_employer_name
     from app.services.robot_requirement_match import is_named_robot_job
 
     cap = max(1, min(int(limit), 50))
-    day_label = datetime.now(timezone.utc).date().isoformat()
     status_rank = case(
         (RobotJob.investigate_status == "yes", 2),
         (RobotJob.investigate_status == "weak", 1),
         else_=0,
     )
-    jobs: list[dict[str, Any]] = []
     try:
         rows = (
             db.query(RobotJob)
@@ -291,7 +339,8 @@ def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, A
         )
     except Exception:
         logger.debug("daily jobs report query skipped", exc_info=True)
-        rows = []
+        return []
+    picked: list[Any] = []
     seen: set[str] = set()
     for row in rows:
         employer = str(getattr(row, "company_name", "") or "").strip()
@@ -305,9 +354,20 @@ def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, A
         if not key or key in seen:
             continue
         seen.add(key)
-        jobs.append(_serialize_job(row, len(jobs) + 1))
-        if len(jobs) >= cap:
+        picked.append(row)
+        if len(picked) >= cap:
             break
+    return picked
+
+
+def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, Any]:
+    """Rank named-employer Robot Jobs the same way FIND accepts them."""
+    cap = max(1, min(int(limit), 50))
+    day_label = datetime.now(timezone.utc).date().isoformat()
+    jobs = [
+        _serialize_job(row, rank)
+        for rank, row in enumerate(select_daily_report_rows(db, limit=cap), start=1)
+    ]
     return {
         "date": day_label,
         "count": len(jobs),
@@ -346,6 +406,12 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
             lines.append(f"        {desc}")
         lines.append("    [2] Decision maker")
         lines.append(f"        {job.get('decision_maker') or DECISION_MAKER_EMPTY}")
+        titles = [str(t).strip() for t in (job.get("target_titles") or []) if str(t).strip()]
+        if titles:
+            lines.append(f"        Looked for: {', '.join(titles[:3])}")
+        why = str(job.get("match_why") or "").strip()
+        if why:
+            lines.append(f"        {why}")
         lines.append("    [3] Timing")
         lines.append(f"        {job.get('timing') or TIMING_EMPTY}")
         lines.append("    [4] Contact information")
@@ -358,6 +424,17 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
         "You receive this once per day. Email now on Admin sends a catch-up.",
     ]
     return "\n".join(lines)
+
+
+def _decision_maker_html(job: dict[str, Any]) -> str:
+    parts = [str(job.get("decision_maker") or DECISION_MAKER_EMPTY)]
+    titles = [str(t).strip() for t in (job.get("target_titles") or []) if str(t).strip()]
+    if titles:
+        parts.append("Looked for: " + ", ".join(titles[:3]))
+    why = str(job.get("match_why") or "").strip()
+    if why:
+        parts.append(why)
+    return "\n".join(parts)
 
 
 def _card_field(label: str, value: str) -> str:
@@ -400,7 +477,7 @@ def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
             f"<div style=\"font-size:18px;font-weight:700;color:#047857\">{employer}</div>"
             f"{place}"
             f"{_card_field('[1] Job type and description', type_block)}"
-            f"{_card_field('[2] Decision maker', str(job.get('decision_maker') or DECISION_MAKER_EMPTY))}"
+            f"{_card_field('[2] Decision maker', _decision_maker_html(job))}"
             f"{_card_field('[3] Timing', str(job.get('timing') or TIMING_EMPTY))}"
             f"{_card_field('[4] Contact information', str(job.get('contact') or CONTACT_EMPTY))}"
             "</div>"
@@ -448,6 +525,16 @@ def send_daily_jobs_report(
             "date": today,
             "recipients": recipients,
         }
+    hunter: dict[str, Any] = {}
+    try:
+        from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
+
+        hunter = enrich_daily_jobs_with_hunter(
+            db, limit=limit, scrape_pages=True
+        )
+    except Exception:
+        logger.warning("Hunter.io daily-jobs enrich skipped", exc_info=True)
+        hunter = {"ok": False, "reason": "hunter_enrich_failed"}
     report = compose_daily_jobs_report(db, limit=limit)
     subject = f"Top {report['limit']} robot job sales cards — {report['date']}"
     body = render_daily_jobs_report_text(report)
@@ -482,6 +569,7 @@ def send_daily_jobs_report(
         "count": report["count"],
         "resend_id": result.get("resend_id"),
         "jobs": report["jobs"],
+        "hunter": hunter,
     }
 
 

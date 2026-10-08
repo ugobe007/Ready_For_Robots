@@ -223,10 +223,20 @@ class DailyJobsReportSendBody(BaseModel):
 
 @router.get("/daily-jobs-report")
 def daily_jobs_report(db: Session = Depends(get_db)):
-    """Operator top-25 named Robot Jobs. Same list the daily email sends."""
+    """Operator top-25 named Robot Jobs. Looks up decision makers on Hunter.io."""
+    from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
     from app.services.daily_jobs_report import compose_daily_jobs_report
 
-    return compose_daily_jobs_report(db, limit=25)
+    hunter: dict = {}
+    try:
+        hunter = enrich_daily_jobs_with_hunter(
+            db, limit=25, force=False, scrape_pages=False
+        )
+    except Exception:
+        hunter = {"ok": False, "reason": "hunter_enrich_failed"}
+    report = compose_daily_jobs_report(db, limit=25)
+    report["hunter"] = hunter
+    return report
 
 
 @router.post("/daily-jobs-report/send")
@@ -238,6 +248,22 @@ def daily_jobs_report_send(
     from app.services.daily_jobs_report import send_daily_jobs_report
 
     return send_daily_jobs_report(db, force=body.force, limit=body.limit)
+
+
+@router.post("/daily-jobs-report/enrich")
+def daily_jobs_report_enrich(
+    db: Session = Depends(get_db),
+):
+    """Hunter.io lookup for missing names/emails on the top-25 cards."""
+    from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
+    from app.services.daily_jobs_report import compose_daily_jobs_report
+
+    hunter = enrich_daily_jobs_with_hunter(
+        db, limit=25, force=True, scrape_pages=True
+    )
+    report = compose_daily_jobs_report(db, limit=25)
+    report["hunter"] = hunter
+    return report
 
 
 # ── Daily brief ───────────────────────────────────────────────────────────────

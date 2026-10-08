@@ -278,6 +278,7 @@ def test_claim_allows_next_calendar_day(monkeypatch):
 
 
 def test_send_skips_when_already_claimed(monkeypatch, db_session):
+    monkeypatch.delenv("HUNTER_API_KEY", raising=False)
     monkeypatch.setattr(
         "app.services.daily_jobs_report._claim_report_day",
         lambda day: False,
@@ -289,6 +290,7 @@ def test_send_skips_when_already_claimed(monkeypatch, db_session):
 
 
 def test_send_emails_operator(monkeypatch, db_session):
+    monkeypatch.delenv("HUNTER_API_KEY", raising=False)
     db_session.add(_job(job_key="named-send"))
     db_session.commit()
     sent = []
@@ -321,6 +323,7 @@ def test_send_emails_operator(monkeypatch, db_session):
 
 
 def test_missed_send_runs_once_when_not_sent_today(monkeypatch, db_session):
+    monkeypatch.delenv("HUNTER_API_KEY", raising=False)
     db_session.add(_job(job_key="missed"))
     db_session.commit()
     sent = []
