@@ -27,12 +27,20 @@ _PREVIEW_CAP = 8
 
 def _public_job(row: Any, rank: int) -> dict[str, Any]:
     data = _serialize_job(row, rank)
-    decision = str(data.get("decision_maker") or "").strip()
-    if decision == DECISION_MAKER_HUNTER_MISS:
+    contact_source = str(data.get("contact_source") or "").strip().lower()
+    is_hunter = contact_source.startswith("hunter") or contact_source == "decision_maker_agent"
+    
+    if is_hunter:
         decision = DECISION_MAKER_EMPTY
-    contact = str(data.get("contact") or "").strip()
-    if contact == CONTACT_HUNTER_MISS:
         contact = CONTACT_EMPTY
+    else:
+        decision = str(data.get("decision_maker") or "").strip()
+        if decision == DECISION_MAKER_HUNTER_MISS:
+            decision = DECISION_MAKER_EMPTY
+        contact = str(data.get("contact") or "").strip()
+        if contact == CONTACT_HUNTER_MISS:
+            contact = CONTACT_EMPTY
+    
     return {
         "job_key": data.get("job_key") or "",
         "employer": data.get("employer") or "",

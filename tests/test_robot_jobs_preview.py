@@ -80,3 +80,75 @@ def test_public_job_does_not_invent_a_person():
     assert "Not named on the posting" in public["decision_maker"]
     assert "operations@" not in public["contact"].lower()
     assert public["contact"].startswith("No page email")
+
+
+def test_public_job_redacts_hunter_enriched_contact():
+    """Hunter.io data must not leak to the anonymous public preview."""
+    row = _job(
+        employer_email="john.doe@example.com",
+        provenance={
+            "contact_name": "John Doe",
+            "contact_title": "Operations Manager",
+            "contact_source": "hunter_domain",
+            "hunter_checked_at": "2026-10-08",
+        },
+        requirements={},
+    )
+    public = _public_job(row, 1)
+    assert "john.doe@example.com" not in public["contact"]
+    assert "John Doe" not in public["decision_maker"]
+    assert "Not named on the posting" in public["decision_maker"]
+    assert "No page email" in public["contact"]
+
+
+def test_public_job_redacts_hunter_finder_contact():
+    """Hunter.io finder results must not leak to the anonymous public preview."""
+    row = _job(
+        employer_email="jane.smith@company.org",
+        provenance={
+            "contact_name": "Jane Smith",
+            "contact_title": "Director of Operations",
+            "contact_source": "hunter_finder",
+            "hunter_checked_at": "2026-10-08",
+        },
+        requirements={},
+    )
+    public = _public_job(row, 1)
+    assert "jane.smith@company.org" not in public["contact"]
+    assert "Jane Smith" not in public["decision_maker"]
+    assert "Not named on the posting" in public["decision_maker"]
+    assert "No page email" in public["contact"]
+
+
+def test_public_job_redacts_decision_maker_agent_contact():
+    """Decision maker agent enrichment must not leak to the anonymous public preview."""
+    row = _job(
+        employer_email="contact@facility.com",
+        provenance={
+            "contact_name": "Operations Lead",
+            "contact_title": "Facility Manager",
+            "contact_source": "decision_maker_agent",
+            "hunter_checked_at": "2026-10-08",
+        },
+        requirements={},
+    )
+    public = _public_job(row, 1)
+    assert "contact@facility.com" not in public["contact"]
+    assert "Operations Lead" not in public["decision_maker"]
+    assert "Not named on the posting" in public["decision_maker"]
+    assert "No page email" in public["contact"]
+
+
+def test_public_job_keeps_page_sourced_contact():
+    """Page-sourced contact information should be preserved (not Hunter)."""
+    row = _job(
+        employer_email="jobs@hospital.org",
+        contact_url="https://hospital.org/apply",
+        provenance={
+            "contact_name": "HR Department",
+            "contact_source": "job_posting_page",
+        },
+        requirements={},
+    )
+    public = _public_job(row, 1)
+    assert "jobs@hospital.org" in public["contact"] or "hospital.org" in public["contact"]
