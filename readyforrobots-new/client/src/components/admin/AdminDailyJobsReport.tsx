@@ -4,7 +4,10 @@
  */
 import { useState } from "react";
 import { Copy, Mail } from "lucide-react";
-import { composeRobotCompanyIntro } from "@/lib/oemJobIntro";
+import {
+  composeEmployerNeedIntro,
+  composeRobotCompanyIntro,
+} from "@/lib/oemJobIntro";
 
 export type DailyJobsReportJob = {
   rank?: number;
@@ -25,6 +28,7 @@ export type DailyJobsReportJob = {
   target_titles?: string[];
   match_why?: string | null;
   intro?: string | null;
+  employer_intro?: string | null;
 };
 
 export type DailyJobsReportHunter = {
@@ -69,14 +73,14 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-function IntroField({ value }: { value: string }) {
+function IntroField({ label, value }: { label: string; value: string }) {
   const [copied, setCopied] = useState(false);
   if (!value) return null;
   return (
     <div className="sm:col-span-2">
       <div className="flex items-center justify-between gap-2">
         <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400">
-          [5] Intro to the robot company
+          {label}
         </p>
         <button
           type="button"
@@ -210,6 +214,7 @@ export default function AdminDailyJobsReport({
                     }
                   />
                   <IntroField
+                    label="[5] Intro to the robot company"
                     value={
                       job.intro ||
                       composeRobotCompanyIntro({
@@ -218,6 +223,17 @@ export default function AdminDailyJobsReport({
                         locality: job.locality,
                         requirements: job.description || job.title,
                         decisionMakerName: job.decision_maker,
+                      })
+                    }
+                  />
+                  <IntroField
+                    label="[6] Intro to the employer"
+                    value={
+                      job.employer_intro ||
+                      composeEmployerNeedIntro({
+                        contactName: job.decision_maker,
+                        announcedNeed: job.title || job.job_type,
+                        automationTasks: job.description,
                       })
                     }
                   />

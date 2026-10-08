@@ -3,6 +3,7 @@ import {
   OEM_INTRO_BLANK,
   OEM_INTRO_PAY_BLANK,
   OEM_INTRO_TERM_BLANK,
+  composeEmployerNeedIntro,
   composeRobotCompanyIntro,
 } from "./oemJobIntro";
 
@@ -40,5 +41,21 @@ describe("composeRobotCompanyIntro", () => {
     expect(text).toContain("arrange a call with GEODIS");
     expect(text).not.toContain("operations@");
     expect(text).not.toContain("Operational Lead");
+  });
+
+  it("writes the employer-need intro without inventing robots or skills", () => {
+    const text = composeEmployerNeedIntro({
+      contactName: "Priya Shah",
+      announcedNeed: "Pallet move",
+      automationTasks: "Unload inbound trailers and stage pallets at the dock.",
+    });
+    expect(text).toContain("Hi Priya, nice to meet you.");
+    expect(text).toContain("I help find robots for automation jobs");
+    expect(text).toContain("need for Pallet move");
+    expect(text).toContain("help with Unload inbound trailers");
+    expect(text).toContain(`robots with ${OEM_INTRO_BLANK} skills`);
+    expect(text).toContain(`capabilities of ${OEM_INTRO_BLANK}`);
+    expect(text).toContain("May I send them to you for review?");
+    expect(text).not.toMatch(/SIGNAL|RaaS|match%/i);
   });
 });

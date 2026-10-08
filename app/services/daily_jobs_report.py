@@ -16,7 +16,10 @@ from typing import Any, Optional
 from sqlalchemy import case, desc
 from sqlalchemy.orm import Session
 
-from app.services.oem_job_intro import intro_from_sales_card
+from app.services.oem_job_intro import (
+    employer_intro_from_sales_card,
+    intro_from_sales_card,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -314,6 +317,7 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
         "created_at": created.isoformat() if created else None,
     }
     card["intro"] = intro_from_sales_card(card)
+    card["employer_intro"] = employer_intro_from_sales_card(card)
     return card
 
 
@@ -425,6 +429,13 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
             lines.append("    [5] Intro to the robot company")
             for intro_line in intro.splitlines():
                 lines.append(f"        {intro_line}")
+        employer_intro = str(
+            job.get("employer_intro") or employer_intro_from_sales_card(job) or ""
+        ).strip()
+        if employer_intro:
+            lines.append("    [6] Intro to the employer")
+            for intro_line in employer_intro.splitlines():
+                lines.append(f"        {intro_line}")
         lines.append("")
     lines += [
         f"FIND: {report.get('find_href') or f'{_SITE}/?visit=jobs'}",
@@ -490,6 +501,7 @@ def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
             f"{_card_field('[3] Timing', str(job.get('timing') or TIMING_EMPTY))}"
             f"{_card_field('[4] Contact information', str(job.get('contact') or CONTACT_EMPTY))}"
             f"{_card_field('[5] Intro to the robot company', str(job.get('intro') or intro_from_sales_card(job) or ''))}"
+            f"{_card_field('[6] Intro to the employer', str(job.get('employer_intro') or employer_intro_from_sales_card(job) or ''))}"
             "</div>"
         )
     listing = (

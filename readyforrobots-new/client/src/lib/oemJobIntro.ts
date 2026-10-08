@@ -24,10 +24,35 @@ function firstName(value: unknown): string {
   return text ? text.split(" ")[0] : "";
 }
 
+function clause(value: unknown): string {
+  const text = named(value);
+  return text.replace(/[.,;:]+$/g, "");
+}
+
 function pay(value: unknown): string {
   let text = clean(value, 40);
   if (text.startsWith("$")) text = text.slice(1).trim();
   return /\d/.test(text) ? text : "";
+}
+
+export function composeEmployerNeedIntro(opts: {
+  contactName?: string | null;
+  announcedNeed?: string | null;
+  automationTasks?: string | null;
+  skills?: string | null;
+  capabilities?: string | null;
+}): string {
+  const hi = firstName(opts.contactName) || OEM_INTRO_BLANK;
+  const need = clause(opts.announcedNeed) || OEM_INTRO_BLANK;
+  let tasks = clause(opts.automationTasks) || OEM_INTRO_BLANK;
+  if (tasks.toLowerCase() === need.toLowerCase()) tasks = OEM_INTRO_BLANK;
+  const skill = clause(opts.skills) || OEM_INTRO_BLANK;
+  const caps = clause(opts.capabilities) || OEM_INTRO_BLANK;
+  return [
+    `Hi ${hi}, nice to meet you. My name is Phelan, I am a robot coordinator for ReadyForRobots where I help find robots for automation jobs. I noticed you announced the need for ${need} to help with ${tasks} automation tasks at your company. I understand the task requires robots with ${skill} skills and capabilities of ${caps}. On that note I found a few robots that match these requirements I would like to share with you. May I send them to you for review? Thanks and look forward to learning more.`,
+    "",
+    "Phelan.",
+  ].join("\n");
 }
 
 export function composeRobotCompanyIntro(opts: {

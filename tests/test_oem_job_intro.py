@@ -3,7 +3,9 @@ from app.services.oem_job_intro import (
     BLANK,
     PAY_BLANK,
     TERM_BLANK,
+    compose_employer_need_intro,
     compose_robot_company_intro,
+    employer_intro_from_sales_card,
     intro_from_sales_card,
 )
 
@@ -86,3 +88,53 @@ def test_intro_from_sales_card_fills_job_not_pay():
     assert "First seen" not in text
     assert "dock.ops@" not in text
     assert f"Hi {BLANK}," in text
+
+
+def test_employer_intro_uses_operator_wording():
+    text = compose_employer_need_intro(
+        contact_name="Priya Shah",
+        announced_need="Pallet move",
+        automation_tasks="Unload inbound trailers and stage pallets at the dock.",
+        skills="indoor navigation",
+        capabilities="500 lb payload",
+    )
+    assert text.startswith("Hi Priya, nice to meet you.")
+    assert "I am a robot coordinator for ReadyForRobots" in text
+    assert "I help find robots for automation jobs" in text
+    assert "need for Pallet move" in text
+    assert "help with Unload inbound trailers and stage pallets at the dock automation tasks" in text
+    assert "robots with indoor navigation skills" in text
+    assert "capabilities of 500 lb payload" in text
+    assert "May I send them to you for review?" in text
+    assert text.endswith("Phelan.")
+    assert "SIGNAL" not in text
+    assert "RaaS" not in text
+    assert "match%" not in text.lower()
+
+
+def test_employer_intro_leaves_skills_blank():
+    text = employer_intro_from_sales_card(
+        {
+            "employer": "GEODIS",
+            "title": "Pallet move",
+            "description": "Unload inbound trailers and stage pallets at the dock.",
+            "decision_maker_name": "Priya Shah",
+            "contact": "dock.ops@geodis.com",
+        }
+    )
+    assert "Hi Priya," in text
+    assert "need for Pallet move" in text
+    assert f"robots with {BLANK} skills" in text
+    assert f"capabilities of {BLANK}" in text
+    assert "dock.ops@" not in text
+    assert "operations@" not in text
+
+
+def test_employer_intro_skips_invented_people():
+    text = compose_employer_need_intro(
+        contact_name="Operational Lead (Vice President)",
+        announced_need="Bowl assembly",
+    )
+    assert text.startswith(f"Hi {BLANK},")
+    assert "Operational Lead" not in text
+    assert f"help with {BLANK} automation tasks" in text

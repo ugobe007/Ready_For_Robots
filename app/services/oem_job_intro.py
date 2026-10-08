@@ -1,7 +1,8 @@
-"""Phelan intro to a robot company about a named-employer job.
+"""Phelan intros for a named-employer job.
 
-Operator copy for OEM outreach. Fill only facts we have. Leave blanks for
-robot SKU, pay, and term — never invent dollars, people, or match%.
+OEM copy goes to the robot company. Employer copy goes to the company that
+posted the job. Fill only facts we have. Leave blanks for robot SKU, pay,
+term, skills, and people — never invent dollars, robots, or match%.
 Not FIND. Not SIGNAL buyer mail. FIND does not call this.
 """
 from __future__ import annotations
@@ -40,6 +41,12 @@ def _named(value: Any) -> str:
     if not text or _EMPTY_CONTACT_RE.search(text) or _INVENTED_LEAD_RE.search(text):
         return ""
     return text
+
+
+def _clause(value: Any) -> str:
+    """A fact dropped into a sentence — no trailing period."""
+    text = _named(value)
+    return text.rstrip(".,;:") if text else ""
 
 
 def _pay(value: Any) -> str:
@@ -143,4 +150,44 @@ def intro_from_sales_card(job: dict[str, Any]) -> str:
         duration=job.get("duration"),
         robot_name=job.get("robot_name"),
         contact_name=job.get("oem_contact_name"),
+    )
+
+
+def compose_employer_need_intro(
+    *,
+    contact_name: str | None = None,
+    announced_need: str | None = None,
+    automation_tasks: str | None = None,
+    skills: str | None = None,
+    capabilities: str | None = None,
+) -> str:
+    """Phelan intro to a company that posted a robot job. Blanks stay blanks."""
+    hi = _first_name(contact_name) or BLANK
+    need = _clause(announced_need) or BLANK
+    tasks = _clause(automation_tasks) or BLANK
+    if tasks.lower() == need.lower():
+        tasks = BLANK
+    skill = _clause(skills) or BLANK
+    caps = _clause(capabilities) or BLANK
+    return (
+        f"Hi {hi}, nice to meet you. My name is Phelan, I am a robot coordinator "
+        "for ReadyForRobots where I help find robots for automation jobs. I noticed "
+        f"you announced the need for {need} to help with {tasks} automation tasks "
+        f"at your company. I understand the task requires robots with {skill} skills "
+        f"and capabilities of {caps}. On that note I found a few robots that match "
+        "these requirements I would like to share with you. May I send them to you "
+        "for review? Thanks and look forward to learning more.\n\nPhelan."
+    )
+
+
+def employer_intro_from_sales_card(job: dict[str, Any]) -> str:
+    """Employer-side intro from a daily sales card. Skills stay blank unless named."""
+    title = str(job.get("title") or job.get("job_type") or "")
+    description = str(job.get("description") or "")
+    return compose_employer_need_intro(
+        contact_name=str(job.get("decision_maker_name") or job.get("contact_name") or ""),
+        announced_need=title,
+        automation_tasks=description if description != title else "",
+        skills=job.get("skills"),
+        capabilities=job.get("capabilities"),
     )
