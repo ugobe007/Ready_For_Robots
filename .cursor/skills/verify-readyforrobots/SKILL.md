@@ -76,14 +76,14 @@ python3 scripts/agent_verify.py ci --evidence "$EVIDENCE"
 | find-stay | FIND catch + `Jobs.tsx` visit guard | timeout / 500 / abort stay on FIND (`/` or `/?visit=jobs`); never employer MATCH. Skip-green is a fail. |
 | employer-match | `POST /api/employer-robot-match` | catalog snapshot only; when `catalog_only` is live, elapsed < 3s; no OEM scrape |
 | job-cards | same payload | cards exist (title + employer); expand in UI shows employer / workplace / work / Conditional |
-| jobs-chrome | homepage JS | process labels + `jobs_activate`; checkout CTA `Find jobs →` |
+| jobs-chrome | homepage JS | FIND headline + `jobs_activate`; checkout CTA `Find jobs →`; no FIND process bar |
 | jobs-crm | `/pipeline?src=jobs_activate` | bundle has activate src; unlocked 5 jobs need a snapshot/session — do not call login a pass |
 | about | `/intelligence` | 200 and JS has the route; body is the Jobs loop, not SIGNAL |
 
 Stable UI handles (browser):
 
 - FIND form: `aria-label="Find jobs for your robot"`; url input placeholder `Paste robot product URL`
-- Process bar: `aria-label="Jobs process"`; steps 01 / 02 / 03
+- FIND has no process bar. CRM desk: `aria-label="Jobs process"`; step 03 is CRM
 - Jobs header: wordmark → `/?new=1`; nav **Jobs** / **About**; **no Pipeline** on `/`
 - Next: `Open CRM →` on the list, not on the card
 - Activate: `/pipeline?src=jobs_activate`

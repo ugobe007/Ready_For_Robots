@@ -12,7 +12,7 @@ A Robot Job Card is the unit of value: named employer, workplace, work, qualific
 
 ## How to get to it (user POV)
 
-- Complete FIND on `/` until step 02 `Available jobs`.
+- Complete FIND on `/` until the job list.
 - Expand a row in the job list.
 - Personalized `/jobs/:slug` still renders the same workspace.
 

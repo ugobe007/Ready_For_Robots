@@ -56,19 +56,11 @@ Collapsible command rail on CRM / pipeline / admin when signed in. Sections: Sel
 
 ## Process bar (Jobs workflow chrome)
 
-Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"` on FIND and `aria-label="Employer process"` on employer MATCH. The document **scrolls**. Do not lock the workspace at `100vh` + `overflow: hidden`.
+Not a sidebar. FIND (`/` and `/?visit=jobs`) has **no** 01 / 02 / 03 process strip — not on home, not after jobs load. The document **scrolls**. Do not lock the workspace at `100vh` + `overflow: hidden`.
 
-FIND home (before submit) has no process bar. After jobs load, the strip is page-level top and bottom — not sticky, not a floating 01 panel.
+CRM desk (`/pipeline?src=jobs_activate`) still uses `aria-label="Jobs process"`. Employer MATCH uses `aria-label="Employer process"`.
 
-### FIND (`/?visit=jobs`)
-
-| Step | Label | CTA |
-|------|-------|-----|
-| 01 | Show us your robot | `Find jobs →` (emerald) |
-| 02 | Available jobs | `Open CRM →` (emerald). Apply is not a sibling CTA on this screen. |
-| 03 | CRM | `Open CRM →` / leave-desk next. Signed desk shows violet **Apply to jobs →**. |
-
-01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM. Apply lives on the CRM desk after Open CRM. Cal stays here after Open CRM. Employer MATCH does not get Cal.
+FIND next is **Open CRM →** on the job list, **not** on the Job Card. Step 03 stays labeled **CRM** on the desk. Place this job (quote the rental) is the money action *inside* CRM. Apply lives on the CRM desk after Open CRM. Cal stays here after Open CRM. Employer MATCH does not get Cal.
 
 ### Employer MATCH (`/?visit=candidates`)
 

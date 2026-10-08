@@ -248,10 +248,8 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/JOBS_APPLY_CTA_CLASS|rfr-jobs-apply-cta/);
     expect(workspace).not.toMatch(/function goToApply/);
     expect(workspace).not.toMatch(/jobsCrmOfferHref/);
-    expect(workspace).toMatch(
-      /processCurrent === "jobs"[\s\S]{0,80}goToActivate/
-    );
-    expect(workspace).toMatch(/jobsProcessActionClass/);
+    expect(workspace).toMatch(/function goToActivate/);
+    expect(workspace).not.toMatch(/jobsProcessActionClass/);
     expect(processChrome).toMatch(/JOBS_APPLY_HERO_CTA/);
     expect(processChrome).toMatch(/rfr-jobs-apply-cta|JOBS_APPLY_CTA_CLASS/);
     expect(desk).toMatch(/JOBS_APPLY_CTA_CLASS/);
@@ -306,11 +304,13 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/rfr-jobs-page-shell/);
     expect(workspace).toMatch(/rfr-bevel/);
     expect(workspace).toMatch(/rfr-led/);
-    expect(workspace).toMatch(/rfr-jobs-process-bar/);
+    expect(workspace).not.toMatch(/rfr-jobs-process-bar/);
+    expect(workspace).not.toMatch(/JobsProcessNav/);
+    expect(workspace).not.toMatch(/aria-label="Jobs process"/);
     expect(workspace).not.toMatch(/<JobsPstackProtocol/);
-    expect(workspace).toMatch(/rfr-jobs-page-footer/);
-    expect(workspace).toMatch(/layout="page"/);
-    expect(workspace).toMatch(/rfr-jobs-process-action/);
+    expect(workspace).not.toMatch(/rfr-jobs-page-footer/);
+    expect(workspace).not.toMatch(/layout="page"/);
+    expect(workspace).not.toMatch(/rfr-jobs-process-action/);
     expect(jobsPage).toMatch(/jobs-page min-h-screen/);
     expect(jobsPage).not.toMatch(/overflow-hidden/);
     expect(jobsPage).not.toMatch(/fresh-find/);
@@ -871,10 +871,10 @@ describe("jobsWorkflow", () => {
     expect(RAIL_STEP_HINT.pipeline).toMatch(/jobs you kept/i);
     expect(JOBS_PLACE_CTA).toBe("Activate job list →");
     expect(workspace).toMatch(/JOBS_NEXT_CTA/);
-    expect(workspace).toMatch(/JobsProcessNav/);
-    expect(workspace).toMatch(/JOBS_PROCESS_STEPS/);
+    expect(workspace).not.toMatch(/JobsProcessNav/);
+    expect(workspace).not.toMatch(/JOBS_PROCESS_STEPS/);
     expect(workspace).toMatch(/rfr-jobs-start-bar/);
-    expect(workspace).toMatch(/rfr-jobs-process-action/);
+    expect(workspace).not.toMatch(/rfr-jobs-process-action/);
     expect(workspace).toMatch(/function JobsActivateBar/);
     expect(workspace).toMatch(/function startJobs/);
     expect(workspace).toMatch(/Find jobs for all/);
@@ -1919,7 +1919,8 @@ describe("jobsWorkflow", () => {
     expect(cardSrc).not.toMatch(/setLocation\(session \? dest/);
     expect(cardSrc).not.toMatch(/window\.location\.href = session/);
     expect(cardSrc).toMatch(/id="jobs-list"/);
-    expect(cardSrc).toMatch(/const processOnActivate = goToActivate/);
+    expect(cardSrc).toMatch(/function goToActivate/);
+    expect(cardSrc).not.toMatch(/JobsProcessNav/);
     expect(cardSrc).toMatch(/cursor-pointer/);
     expect(cardSrc).not.toMatch(/if \(!onClick\) \{/);
     expect(cardSrc).toMatch(/robotJobCardFromMatch/);

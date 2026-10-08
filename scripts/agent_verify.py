@@ -279,8 +279,6 @@ def jobs_chrome_hits(js_text: str, *, source: str | None = None) -> dict[str, bo
     return {
         "find_headline": FIND_HEADLINE in js_text,
         "jobs_activate": JOBS_ACTIVATE in js_text,
-        "process_01": "Show us your robot" in js_text,
-        "process_02": "Available jobs" in js_text,
         "find_jobs_live": FIND_JOBS_CTA in js_text or LIVE_FIND_ACTION_LEGACY in js_text,
         "find_jobs_source": repo_find_jobs_cta_ok(source),
     }

@@ -25,13 +25,13 @@ FIND (URL) → QUALIFY (Job Cards, anonymous OK) → signup wall → CRM desk
 | Step | Surface | Auth | What the user sees |
 |------|---------|------|--------------------|
 | 01 FIND | `/` | Anonymous | Robot URL → understood robot |
-| 02 QUALIFY | `/` results | Anonymous | Process chrome: **Available jobs**. Job Cards. Value is proven **here**. |
+| 02 QUALIFY | `/` results | Anonymous | Job Cards as inline text. Value is proven **here**. No FIND process bar. |
 | — wall | `/signup?next=/pipeline?src=jobs_activate&src=jobs_activate` | Required | Account before the desk. |
 | 03 CRM | `/pipeline?src=jobs_activate` | Signed in | Jobs they kept as an expandable **listing**. Place this job lives **inside** an opened job, not as the only screen. |
 
-Process bar: **01 Show us your robot → 02 Available jobs → 03 CRM**. Step 02 action is **Open CRM →**. Apply is not a sibling CTA on that screen. Signed CRM desk still uses **Apply to jobs →** (violet, not neon green). Open CRM still uses `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
+FIND has no 01 / 02 / 03 process bar. The CRM desk still uses **01 Show us your robot → 02 Available jobs → 03 CRM**. Desk next is **Open CRM →** / leave-desk. Apply is not a sibling CTA on FIND. Signed CRM desk still uses **Apply to jobs →** (violet, not neon green). Open CRM still uses `jobsCrmOpenHref(signedIn, submissionId)` — never a raw desk URL for signed-out users.
 
-**Do not** rename step 03 to Place, Pipeline, or Activate in chrome. Place is the money action **on a deal**, not the process step. Step 02 chrome is **Available jobs** (renamed from “Here are its jobs”).
+**Do not** rename step 03 to Place, Pipeline, or Activate in chrome. Place is the money action **on a deal**, not the process step. Step 02 chrome on the desk is **Available jobs** (renamed from “Here are its jobs”).
 
 ---
 

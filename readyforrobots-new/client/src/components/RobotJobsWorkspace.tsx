@@ -1,13 +1,12 @@
 /**
- * RobotJobsWorkspace — Jobs process on `/`.
+ * RobotJobsWorkspace — FIND on `/`.
  *
- * Architecture (locked): this is a three-step process on a normal page.
- * Site header + process bar are page chrome. The document scrolls.
+ * Architecture: a normal scrolling page. Site header is page chrome.
+ * FIND has no 01 / 02 / 03 process bar — that strip is CRM / employer MATCH.
  * Two columns are a layout of that page — not a 100vh box that clips Chrome.
  *
  *   FIND → SELECT (several SKUs) → one robot: jobs for that product
  *                              → several/all: type-first match (faster) → jobs
- *   Process: 01 robot → 02 jobs → 03 CRM (top and bottom of the page).
 
 
  *
@@ -79,7 +78,6 @@ import {
   JOBS_SKIP_LABEL,
   JOBS_PIPELINE_CAP,
   CRM_UNLOCKED_JOBS,
-  JOBS_PROCESS_STEPS,
   JOBS_RESTORE_ONCE_KEY,
   JOBS_RUN_ONE_ROBOT_CTA,
   JOBS_SEE_JOBS_CTA,
@@ -98,7 +96,6 @@ import {
   JOBS_EYEBROW_CLASS,
   JOBS_META_CLASS,
   JOBS_PLACE_CLASS,
-  JOBS_PROCESS_NAV_CLASS,
   JOBS_RAIL_LINK_CLASS,
   JOBS_ROBOT_NAME_CLASS,
   jobsCrmOpenHref,
@@ -109,9 +106,6 @@ import {
   recordPipelineActivity,
   jobsHeading,
   jobsListHint,
-  jobsProcessActionClass,
-  jobsProcessActionLabel,
-  jobsProcessStepFromStage,
   jobsProductLimitForPlan,
   lineupJobLookups,
   lineupSegments,
@@ -257,93 +251,6 @@ function FaceCue({
       background="transparent"
       className={`shrink-0 inline-flex items-center justify-center self-center ${className}`.trim()}
     />
-  );
-}
-
-function JobsProcessNav({
-  current,
-  onFind,
-  onJobs,
-  onActivate,
-  layout = "rail",
-  actionLabel,
-  onAction,
-  actionClassName,
-}: {
-  current: "find" | "jobs" | "activate";
-  onFind?: () => void;
-  onJobs?: () => void;
-  onActivate?: () => void;
-  layout?: "rail" | "page";
-  actionLabel?: string;
-  onAction?: () => void;
-  actionClassName?: string;
-}) {
-  const page = layout === "page";
-  return (
-    <nav
-      aria-label="Jobs process"
-      className={
-        page ? "rfr-jobs-process-bar flex flex-wrap items-stretch" : "space-y-1"
-      }
-    >
-      {JOBS_PROCESS_STEPS.map(step => {
-        const isCurrent = current === step.id;
-        const onClick =
-          step.id === "find"
-            ? onFind
-            : step.id === "jobs"
-              ? onJobs
-              : onActivate;
-        const className = page
-          ? `flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 px-3 py-3 text-left ${JOBS_PROCESS_NAV_CLASS} transition disabled:cursor-not-allowed ${
-              isCurrent
-                ? "border-b-2 border-emerald-400 bg-emerald-400/5 text-emerald-300"
-                : onClick
-                  ? "border-b-2 border-transparent text-slate-400 hover:text-slate-200"
-                  : "border-b-2 border-transparent text-slate-600"
-            }`
-          : `flex w-full cursor-pointer items-center justify-between border-l-2 px-3 py-2 text-left ${JOBS_PROCESS_NAV_CLASS} transition disabled:cursor-not-allowed ${
-              isCurrent
-                ? "border-emerald-400 bg-emerald-400/5 text-emerald-300"
-                : onClick
-                  ? "border-transparent text-slate-400 hover:text-slate-200"
-                  : "border-transparent text-slate-600"
-            }`;
-        const label = `${step.n} ${step.label}`;
-        return (
-          <button
-            key={step.id}
-            type="button"
-            onClick={onClick}
-            disabled={!onClick}
-            aria-current={isCurrent ? "step" : undefined}
-            className={className}
-          >
-            <span>{label}</span>
-            {!page ? (
-              <span
-                className={isCurrent ? "text-emerald-400/80" : "text-slate-500"}
-              >
-                <FindJobsCtaLabel text={step.linkLabel} />
-              </span>
-            ) : null}
-          </button>
-        );
-      })}
-      {page && onAction && actionLabel ? (
-        <button
-          type="button"
-          onClick={onAction}
-          className={`rfr-jobs-process-action m-2 shrink-0 ${
-            actionClassName ||
-            "rfr-bevel inline-flex items-center justify-center gap-2.5 bg-transparent border-2 border-purple-500 px-5 py-2.5 text-base sm:text-lg font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 rounded-lg"
-          }`}
-        >
-          <FindJobsCtaLabel text={actionLabel} />
-        </button>
-      ) : null}
-    </nav>
   );
 }
 
@@ -2204,99 +2111,12 @@ export default function RobotJobsWorkspace() {
     resetToFind(false);
   }
 
-  function openProfileStep() {
-    setRailTab("profile");
-    setStage("review");
-    saveWorkspaceSession({
-      url: submittedUrlRef.current,
-      products: portfolio.map(p => p.productName),
-      view: "review",
-      activeIdx,
-      selectedJobKey: expandedJob || undefined,
-      checkedJobKeys,
-    });
-  }
-
-  function openJobsStep() {
-    if (stage === "select") {
-      if (selected.length > 0) {
-        void confirmSelection(selected);
-        return;
-      }
-      const segs = lineupSegments(products);
-      if (usesLineupSegments(products, productCap) && segs[0]) {
-        void confirmSelection(searchNamesForSegment(segs[0], productCap));
-        return;
-      }
-      void confirmSelection("all");
-      return;
-    }
-    if (stage === "portfolio") {
-      const idx = portfolio.findIndex(
-        row => row.matched && (row.jobs || []).length > 0
-      );
-      void researchPortfolioRobot(idx >= 0 ? idx : 0, "jobs");
-      return;
-    }
-    if (active?.matched) {
-      goToJobs(activeIdx);
-      return;
-    }
-    void findJobsForActive();
-  }
-
-  const processCurrent = jobsProcessStepFromStage(stage);
-  const processOnFind =
-    stage === "select"
-      ? newRobot
-      : stage === "find" || stage === "research"
-        ? () => window.scrollTo({ top: 0, behavior: "smooth" })
-        : openProfileStep;
-  const processOnJobs =
-    stage === "jobs" || stage === "portfolio"
-      ? () =>
-          document
-            .getElementById("jobs-list")
-            ?.scrollIntoView({ behavior: "smooth" })
-      : stage === "research"
-        ? undefined
-        : stage === "find"
-          ? startJobs
-          : openJobsStep;
-  const processOnActivate = goToActivate;
-  const processActionLabel = jobsProcessActionLabel(processCurrent);
-  const processActionClass = jobsProcessActionClass(processCurrent);
-  const processOnAction =
-    processCurrent === "jobs"
-      ? goToActivate
-      : stage === "research"
-        ? undefined
-        : stage === "find"
-          ? startJobs
-          : openJobsStep;
-  const showProcessBar = stage !== "find" && stage !== "research";
-  const processNav = showProcessBar ? (
-    <JobsProcessNav
-      layout="page"
-      current={processCurrent}
-      onFind={processOnFind}
-      onJobs={processOnJobs}
-      onActivate={processOnActivate}
-      actionLabel={processActionLabel}
-      actionClassName={processActionClass}
-      onAction={processOnAction}
-    />
-  ) : null;
-
   /* -------------------------------------------------------------- */
   /* Render                                                          */
   /* -------------------------------------------------------------- */
 
   return (
     <div className="rfr-jobs-page-shell border border-slate-600 bg-[#0b162f]">
-      {processNav ? (
-        <div className="border-b border-slate-600 bg-[#0b162f]">{processNav}</div>
-      ) : null}
       {stage === "find" || stage === "research" || stage === "select" ? (
         <div className="rfr-find-pane min-w-0 overflow-x-clip p-5 sm:p-6">
           <FindRail
@@ -2430,12 +2250,6 @@ export default function RobotJobsWorkspace() {
         onSubmitQuery={handleJobQuerySubmit}
         currentRobotName={active?.productName}
       />
-
-      {processNav ? (
-        <div className="rfr-jobs-page-footer border-t border-slate-600 bg-[#0b162f]">
-          {processNav}
-        </div>
-      ) : null}
     </div>
   );
 }
