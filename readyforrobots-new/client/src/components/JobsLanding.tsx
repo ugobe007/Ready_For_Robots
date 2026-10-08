@@ -178,7 +178,11 @@ export default function JobsLanding() {
   const handleSelectJob = (job: TapeJob) => {
     setSelectedTapeJob(job);
     try {
-      const newUrl = `${window.location.pathname}?visit=jobs&job=${encodeURIComponent(job.key)}`;
+      const params = new URLSearchParams(window.location.search);
+      params.delete("visit");
+      params.set("job", job.key);
+      const qs = params.toString();
+      const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
       window.history.pushState({ jobKey: job.key }, "", newUrl);
     } catch {
       // Ignore history push errors
@@ -189,7 +193,11 @@ export default function JobsLanding() {
     setSelectedTapeJob(null);
     try {
       if (window.location.search.includes("job=")) {
-        const newUrl = `${window.location.pathname}?visit=jobs`;
+        const params = new URLSearchParams(window.location.search);
+        params.delete("job");
+        params.delete("visit");
+        const qs = params.toString();
+        const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
         window.history.pushState({}, "", newUrl);
       }
     } catch {
