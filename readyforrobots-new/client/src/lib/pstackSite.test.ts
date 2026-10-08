@@ -122,7 +122,7 @@ describe("pstackSite protocol", () => {
 });
 
 describe("pstack site chrome", () => {
-  it("renders on FIND and About, not as the CRM job source", () => {
+  it("renders on About, not as FIND chrome or the CRM job source", () => {
     const chrome = readFileSync(
       join(here, "../components/JobsPstackProtocol.tsx"),
       "utf8"
@@ -148,7 +148,7 @@ describe("pstack site chrome", () => {
     expect(chrome).not.toMatch(/chat with pstack/i);
     expect(chrome).not.toMatch(/AI powered/i);
 
-    expect(workspace).toMatch(/<JobsPstackProtocol/);
+    expect(workspace).not.toMatch(/<JobsPstackProtocol/);
     expect(workspace).toMatch(/fetchRobotJobSearch/);
     expect(workspace).not.toMatch(/fetchRobotJobMatch/);
     expect(workspace).toMatch(/jobsCrmOpenHref/);

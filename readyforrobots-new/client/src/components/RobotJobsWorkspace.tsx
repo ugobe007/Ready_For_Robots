@@ -157,7 +157,6 @@ import {
   type FindResearchHandle,
 } from "@/lib/findResearch";
 import { isNamedRobotJob, robotJobCardFromMatch } from "@/lib/robotJobCard";
-import JobsPstackProtocol from "@/components/JobsPstackProtocol";
 
 /* ------------------------------------------------------------------ */
 /* Types + constants                                                   */
@@ -2375,9 +2374,6 @@ export default function RobotJobsWorkspace() {
         currentRobotName={active?.productName}
       />
 
-      <div className="relative z-[60] mt-6">
-        <JobsPstackProtocol />
-      </div>
     </div>
   );
 }

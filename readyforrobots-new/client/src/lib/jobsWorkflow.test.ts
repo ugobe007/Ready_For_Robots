@@ -307,7 +307,7 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/rfr-jobs-process-bar/);
     expect(workspace).not.toMatch(/JobsProcessNav/);
     expect(workspace).not.toMatch(/aria-label="Jobs process"/);
-    expect(workspace).toMatch(/<JobsPstackProtocol/);
+    expect(workspace).not.toMatch(/<JobsPstackProtocol/);
     expect(workspace).not.toMatch(/rfr-jobs-page-footer/);
     expect(workspace).not.toMatch(/layout="page"/);
     expect(workspace).not.toMatch(/rfr-jobs-process-action/);
