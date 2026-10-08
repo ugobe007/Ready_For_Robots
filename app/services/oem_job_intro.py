@@ -49,6 +49,27 @@ def _clause(value: Any) -> str:
     return text.rstrip(".,;:") if text else ""
 
 
+def _insert_words(text: str) -> str:
+    """Lowercase Title Case fill-ins so they read mid-sentence.
+
+    Keep ALLCAPS tokens (AMR, GEODIS) and blanks. Do not run this on
+    people or employer names.
+    """
+    if not text or text in {BLANK, PAY_BLANK, TERM_BLANK}:
+        return text
+    parts: list[str] = []
+    for token in text.split(" "):
+        if not token:
+            continue
+        core = token.rstrip(".,;:")
+        letters = [c for c in core if c.isalpha()]
+        if letters and all(c.isupper() for c in letters) and len(letters) >= 2:
+            parts.append(token)
+            continue
+        parts.append(token.lower())
+    return " ".join(parts)
+
+
 def _pay(value: Any) -> str:
     text = _clean(value, limit=40)
     if not text:
@@ -66,7 +87,7 @@ def _job_line(
     employer: str = "",
     locality: str = "",
 ) -> str:
-    work = _clean(title, limit=240)
+    work = _insert_words(_clean(title, limit=240))
     company = _named(employer)
     place = _clean(locality, limit=160)
     if work and company and place:
@@ -119,7 +140,7 @@ def compose_robot_company_intro(
     ) or BLANK
     pay = _pay(monthly_comp) or PAY_BLANK
     term = _clean(duration, limit=80) or TERM_BLANK
-    reqs = _clean(requirements, limit=360) or BLANK
+    reqs = _insert_words(_clean(requirements, limit=360)) or BLANK
     call_with = _named(employer_for_call) or _call_with(
         employer=employer or "",
         decision_maker_name=decision_maker_name or "",
@@ -163,12 +184,12 @@ def compose_employer_need_intro(
 ) -> str:
     """Phelan intro to a company that posted a robot job. Blanks stay blanks."""
     hi = _first_name(contact_name) or BLANK
-    need = _clause(announced_need) or BLANK
-    tasks = _clause(automation_tasks) or BLANK
+    need = _insert_words(_clause(announced_need)) or BLANK
+    tasks = _insert_words(_clause(automation_tasks)) or BLANK
     if tasks.lower() == need.lower():
         tasks = BLANK
-    skill = _clause(skills) or BLANK
-    caps = _clause(capabilities) or BLANK
+    skill = _insert_words(_clause(skills)) or BLANK
+    caps = _insert_words(_clause(capabilities)) or BLANK
     return (
         f"Hi {hi}, nice to meet you. My name is Phelan, I am a robot coordinator "
         "for ReadyForRobots where I help find robots for automation jobs. I noticed "

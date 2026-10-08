@@ -27,11 +27,11 @@ def test_intro_uses_operator_wording_and_named_job():
     assert "place robots into robot automation jobs" in text
     assert "your Stretch robot" in text
     assert (
-        "The job is Pharmacy delivery at Rochester Regional Health in Rochester, NY"
+        "The job is pharmacy delivery at Rochester Regional Health in Rochester, NY"
         in text
     )
     assert "comp level of $4200 per month for 12 months" in text
-    assert "requirements of Indoor hall delivery" in text
+    assert "requirements of indoor hall delivery" in text
     assert "arrange a call with Priya at Rochester Regional Health" in text
     assert text.endswith("Phelan.")
     assert "SIGNAL" not in text
@@ -80,8 +80,8 @@ def test_intro_from_sales_card_fills_job_not_pay():
             "contact": "dock.ops@geodis.com",
         }
     )
-    assert "Pallet move at GEODIS in Plainfield, IN" in text
-    assert "Unload inbound trailers" in text
+    assert "pallet move at GEODIS in Plainfield, IN" in text
+    assert "unload inbound trailers" in text
     assert "Priya at GEODIS" in text
     assert f"${PAY_BLANK}" in text
     assert TERM_BLANK in text
@@ -101,8 +101,8 @@ def test_employer_intro_uses_operator_wording():
     assert text.startswith("Hi Priya, nice to meet you.")
     assert "I am a robot coordinator for ReadyForRobots" in text
     assert "I help find robots for automation jobs" in text
-    assert "need for Pallet move" in text
-    assert "help with Unload inbound trailers and stage pallets at the dock automation tasks" in text
+    assert "need for pallet move" in text
+    assert "help with unload inbound trailers and stage pallets at the dock automation tasks" in text
     assert "robots with indoor navigation skills" in text
     assert "capabilities of 500 lb payload" in text
     assert "May I send them to you for review?" in text
@@ -123,11 +123,26 @@ def test_employer_intro_leaves_skills_blank():
         }
     )
     assert "Hi Priya," in text
-    assert "need for Pallet move" in text
+    assert "need for pallet move" in text
     assert f"robots with {BLANK} skills" in text
     assert f"capabilities of {BLANK}" in text
     assert "dock.ops@" not in text
     assert "operations@" not in text
+
+
+def test_employer_intro_keeps_allcaps_tokens():
+    text = compose_employer_need_intro(
+        contact_name="Priya Shah",
+        announced_need="AMR Pallet Move",
+        automation_tasks="Unload inbound trailers",
+        skills="Indoor Navigation",
+        capabilities="AMR 500 lb payload",
+    )
+    assert "need for AMR pallet move" in text
+    assert "help with unload inbound trailers" in text
+    assert "robots with indoor navigation skills" in text
+    assert "capabilities of AMR 500 lb payload" in text
+    assert "Hi Priya," in text
 
 
 def test_employer_intro_skips_invented_people():

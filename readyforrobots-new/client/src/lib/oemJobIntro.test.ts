@@ -22,7 +22,7 @@ describe("composeRobotCompanyIntro", () => {
     });
     expect(text).toContain("Hi Maya, nice to meet you.");
     expect(text).toContain("I am a robot coordinator for ReadyForRobots");
-    expect(text).toContain("Pharmacy delivery at Rochester Regional Health in Rochester, NY");
+    expect(text).toContain("pharmacy delivery at Rochester Regional Health in Rochester, NY");
     expect(text).toContain("$4200 per month for 12 months");
     expect(text).toContain("arrange a call with Priya at Rochester Regional Health");
     expect(text).toMatch(/Phelan\.$/);
@@ -48,14 +48,32 @@ describe("composeRobotCompanyIntro", () => {
       contactName: "Priya Shah",
       announcedNeed: "Pallet move",
       automationTasks: "Unload inbound trailers and stage pallets at the dock.",
+      skills: "indoor navigation",
+      capabilities: "500 lb payload",
     });
     expect(text).toContain("Hi Priya, nice to meet you.");
     expect(text).toContain("I help find robots for automation jobs");
-    expect(text).toContain("need for Pallet move");
-    expect(text).toContain("help with Unload inbound trailers");
-    expect(text).toContain(`robots with ${OEM_INTRO_BLANK} skills`);
-    expect(text).toContain(`capabilities of ${OEM_INTRO_BLANK}`);
+    expect(text).toContain("need for pallet move");
+    expect(text).toContain("help with unload inbound trailers");
+    expect(text).toContain("robots with indoor navigation skills");
+    expect(text).toContain("capabilities of 500 lb payload");
     expect(text).toContain("May I send them to you for review?");
     expect(text).not.toMatch(/SIGNAL|RaaS|match%/i);
+  });
+
+  it("leaves skill blanks and keeps ALLCAPS insert tokens", () => {
+    const blank = composeEmployerNeedIntro({
+      contactName: "Priya Shah",
+      announcedNeed: "Pallet move",
+    });
+    expect(blank).toContain(`robots with ${OEM_INTRO_BLANK} skills`);
+    expect(blank).toContain(`capabilities of ${OEM_INTRO_BLANK}`);
+    const caps = composeEmployerNeedIntro({
+      contactName: "Priya Shah",
+      announcedNeed: "AMR Pallet Move",
+      capabilities: "AMR 500 lb payload",
+    });
+    expect(caps).toContain("need for AMR pallet move");
+    expect(caps).toContain("capabilities of AMR 500 lb payload");
   });
 });

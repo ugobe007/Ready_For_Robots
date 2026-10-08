@@ -103,13 +103,13 @@ def test_compose_keeps_named_employers_drops_boards(db_session):
     assert "will not invent" in report["jobs"][0]["contact"]
     intro = report["jobs"][0]["intro"]
     assert "robot coordinator for ReadyForRobots" in intro
-    assert "Pharmacy delivery at Rochester Regional Health in Rochester, NY" in intro
+    assert "pharmacy delivery at Rochester Regional Health in Rochester, NY" in intro
     assert "arrange a call with Rochester Regional Health" in intro
     assert "$______" in intro
     assert "Not named on the posting" not in intro
     employer_intro = report["jobs"][0]["employer_intro"]
     assert "I help find robots for automation jobs" in employer_intro
-    assert "need for Pharmacy delivery" in employer_intro
+    assert "need for pharmacy delivery" in employer_intro
     assert "May I send them to you for review?" in employer_intro
     assert "Hi _______," in employer_intro
     assert "First seen" in report["jobs"][0]["timing"]
@@ -157,11 +157,11 @@ def test_compose_sales_card_uses_page_contact_not_invented(db_session):
     assert real["decision_maker"] == "Priya Shah · Site operations manager"
     assert "dock.ops@geodis.com" in real["contact"]
     assert "Priya at GEODIS" in real["intro"]
-    assert "Unload inbound trailers" in real["intro"]
+    assert "unload inbound trailers" in real["intro"]
     assert "Hi _______," in real["intro"]
     assert "Hi Priya," in real["employer_intro"]
-    assert "need for Pallet move" in real["employer_intro"]
-    assert "help with Unload inbound trailers" in real["employer_intro"]
+    assert "need for pallet move" in real["employer_intro"]
+    assert "help with unload inbound trailers" in real["employer_intro"]
     assert "robots with _______" in real["employer_intro"]
     fake = by_key["invented-ops"]
     assert fake["decision_maker"] == "Not named on the posting"

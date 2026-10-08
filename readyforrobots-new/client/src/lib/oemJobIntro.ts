@@ -29,6 +29,23 @@ function clause(value: unknown): string {
   return text.replace(/[.,;:]+$/g, "");
 }
 
+/** Lowercase Title Case fill-ins so they read mid-sentence. Keep ALLCAPS. */
+function insertWords(text: string): string {
+  if (!text || text === OEM_INTRO_BLANK || text === OEM_INTRO_PAY_BLANK || text === OEM_INTRO_TERM_BLANK) {
+    return text;
+  }
+  return text
+    .split(" ")
+    .filter(Boolean)
+    .map((token) => {
+      const core = token.replace(/[.,;:]+$/g, "");
+      const letters = [...core].filter((c) => /[A-Za-z]/.test(c));
+      if (letters.length >= 2 && letters.every((c) => c === c.toUpperCase())) return token;
+      return token.toLowerCase();
+    })
+    .join(" ");
+}
+
 function pay(value: unknown): string {
   let text = clean(value, 40);
   if (text.startsWith("$")) text = text.slice(1).trim();
@@ -43,11 +60,11 @@ export function composeEmployerNeedIntro(opts: {
   capabilities?: string | null;
 }): string {
   const hi = firstName(opts.contactName) || OEM_INTRO_BLANK;
-  const need = clause(opts.announcedNeed) || OEM_INTRO_BLANK;
-  let tasks = clause(opts.automationTasks) || OEM_INTRO_BLANK;
+  const need = insertWords(clause(opts.announcedNeed)) || OEM_INTRO_BLANK;
+  let tasks = insertWords(clause(opts.automationTasks)) || OEM_INTRO_BLANK;
   if (tasks.toLowerCase() === need.toLowerCase()) tasks = OEM_INTRO_BLANK;
-  const skill = clause(opts.skills) || OEM_INTRO_BLANK;
-  const caps = clause(opts.capabilities) || OEM_INTRO_BLANK;
+  const skill = insertWords(clause(opts.skills)) || OEM_INTRO_BLANK;
+  const caps = insertWords(clause(opts.capabilities)) || OEM_INTRO_BLANK;
   return [
     `Hi ${hi}, nice to meet you. My name is Phelan, I am a robot coordinator for ReadyForRobots where I help find robots for automation jobs. I noticed you announced the need for ${need} to help with ${tasks} automation tasks at your company. I understand the task requires robots with ${skill} skills and capabilities of ${caps}. On that note I found a few robots that match these requirements I would like to share with you. May I send them to you for review? Thanks and look forward to learning more.`,
     "",
@@ -69,7 +86,7 @@ export function composeRobotCompanyIntro(opts: {
   const hi = firstName(opts.contactName) || OEM_INTRO_BLANK;
   const robot = named(opts.robotName) || OEM_INTRO_BLANK;
   const company = named(opts.employer);
-  const workTitle = clean(opts.title, 240);
+  const workTitle = insertWords(clean(opts.title, 240));
   const place = clean(opts.locality, 160);
   let work = workTitle;
   if (workTitle && company && place) work = `${workTitle} at ${company} in ${place}`;
@@ -78,7 +95,7 @@ export function composeRobotCompanyIntro(opts: {
   work = work || OEM_INTRO_BLANK;
   const monthly = pay(opts.monthlyComp) || OEM_INTRO_PAY_BLANK;
   const term = clean(opts.duration, 80) || OEM_INTRO_TERM_BLANK;
-  const reqs = clean(opts.requirements, 360) || OEM_INTRO_BLANK;
+  const reqs = insertWords(clean(opts.requirements, 360)) || OEM_INTRO_BLANK;
   const person = firstName(opts.decisionMakerName);
   const callWith =
     person && company ? `${person} at ${company}` : company || person || OEM_INTRO_BLANK;
