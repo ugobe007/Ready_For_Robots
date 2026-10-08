@@ -2,7 +2,9 @@
  * Operator top-25 Robot Job sales cards — same cards emailed daily.
  * Named employers and work. Not SIGNAL buyers. No invented people.
  */
-import { Mail } from "lucide-react";
+import { useState } from "react";
+import { Copy, Mail } from "lucide-react";
+import { composeRobotCompanyIntro } from "@/lib/oemJobIntro";
 
 export type DailyJobsReportJob = {
   rank?: number;
@@ -22,6 +24,7 @@ export type DailyJobsReportJob = {
   contact_source?: string | null;
   target_titles?: string[];
   match_why?: string | null;
+  intro?: string | null;
 };
 
 export type DailyJobsReportHunter = {
@@ -61,6 +64,34 @@ function Field({ label, value }: { label: string; value: string }) {
       <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400">
         {label}
       </p>
+      <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-100">{value}</p>
+    </div>
+  );
+}
+
+function IntroField({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false);
+  if (!value) return null;
+  return (
+    <div className="sm:col-span-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400">
+          [5] Intro to the robot company
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            void navigator.clipboard.writeText(value).then(() => {
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1500);
+            });
+          }}
+          className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-300 hover:text-emerald-200"
+        >
+          <Copy size={12} />
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
       <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-100">{value}</p>
     </div>
   );
@@ -176,6 +207,18 @@ export default function AdminDailyJobsReport({
                     value={
                       job.contact ||
                       "No page email or apply URL. We will not invent one."
+                    }
+                  />
+                  <IntroField
+                    value={
+                      job.intro ||
+                      composeRobotCompanyIntro({
+                        title: job.title || job.job_type,
+                        employer: job.employer,
+                        locality: job.locality,
+                        requirements: job.description || job.title,
+                        decisionMakerName: job.decision_maker,
+                      })
                     }
                   />
                 </div>

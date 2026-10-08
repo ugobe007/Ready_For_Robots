@@ -16,6 +16,8 @@ from typing import Any, Optional
 from sqlalchemy import case, desc
 from sqlalchemy.orm import Session
 
+from app.services.oem_job_intro import intro_from_sales_card
+
 logger = logging.getLogger(__name__)
 
 TOP_N = 25
@@ -286,7 +288,7 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
     contact = _contact_fields(row)
     hunter_checked = _hunter_checked(row)
     target_titles, match_why = _dm_agent_fields(row)
-    return {
+    card = {
         "rank": rank,
         "job_key": str(getattr(row, "job_key", "") or ""),
         "employer": _clean(getattr(row, "company_name", ""), limit=240),
@@ -311,6 +313,8 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
         "investigate_status": str(getattr(row, "investigate_status", "") or ""),
         "created_at": created.isoformat() if created else None,
     }
+    card["intro"] = intro_from_sales_card(card)
+    return card
 
 
 def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
@@ -416,6 +420,11 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
         lines.append(f"        {job.get('timing') or TIMING_EMPTY}")
         lines.append("    [4] Contact information")
         lines.append(f"        {job.get('contact') or CONTACT_EMPTY}")
+        intro = str(job.get("intro") or intro_from_sales_card(job) or "").strip()
+        if intro:
+            lines.append("    [5] Intro to the robot company")
+            for intro_line in intro.splitlines():
+                lines.append(f"        {intro_line}")
         lines.append("")
     lines += [
         f"FIND: {report.get('find_href') or f'{_SITE}/?visit=jobs'}",
@@ -480,6 +489,7 @@ def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
             f"{_card_field('[2] Decision maker', _decision_maker_html(job))}"
             f"{_card_field('[3] Timing', str(job.get('timing') or TIMING_EMPTY))}"
             f"{_card_field('[4] Contact information', str(job.get('contact') or CONTACT_EMPTY))}"
+            f"{_card_field('[5] Intro to the robot company', str(job.get('intro') or intro_from_sales_card(job) or ''))}"
             "</div>"
         )
     listing = (

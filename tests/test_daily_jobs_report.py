@@ -101,6 +101,12 @@ def test_compose_keeps_named_employers_drops_boards(db_session):
     assert report["jobs"][0]["job_type"] == "Delivery"
     assert report["jobs"][0]["decision_maker"] == "Not named on the posting"
     assert "will not invent" in report["jobs"][0]["contact"]
+    intro = report["jobs"][0]["intro"]
+    assert "robot coordinator for ReadyForRobots" in intro
+    assert "Pharmacy delivery at Rochester Regional Health in Rochester, NY" in intro
+    assert "arrange a call with Rochester Regional Health" in intro
+    assert "$______" in intro
+    assert "Not named on the posting" not in intro
     assert "First seen" in report["jobs"][0]["timing"]
     assert report["limit"] == TOP_N or report["limit"] == 25
 
@@ -145,6 +151,9 @@ def test_compose_sales_card_uses_page_contact_not_invented(db_session):
     assert "Unload inbound trailers" in real["description"]
     assert real["decision_maker"] == "Priya Shah · Site operations manager"
     assert "dock.ops@geodis.com" in real["contact"]
+    assert "Priya at GEODIS" in real["intro"]
+    assert "Unload inbound trailers" in real["intro"]
+    assert "Hi _______," in real["intro"]
     fake = by_key["invented-ops"]
     assert fake["decision_maker"] == "Not named on the posting"
     assert "operations@chipotle.com" not in fake["contact"]
@@ -204,6 +213,8 @@ def test_render_email_is_jobs_not_signal():
     assert "[2] Decision maker" in text
     assert "[3] Timing" in text
     assert "[4] Contact information" in text
+    assert "[5] Intro to the robot company" in text
+    assert "robot coordinator for ReadyForRobots" in text
     assert "Pharmacy delivery between units" in text
     assert "/?visit=jobs" in text
     assert "admin#daily-jobs-report" in text
@@ -223,6 +234,7 @@ def test_render_email_is_jobs_not_signal():
     assert "Rochester Regional Health" in html_body
     assert "[1] Job type and description" in html_body
     assert "[4] Contact information" in html_body
+    assert "[5] Intro to the robot company" in html_body
     assert "/?visit=jobs" in html_body
     assert "/pipeline?co=" not in html_body
 

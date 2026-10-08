@@ -1,0 +1,88 @@
+"""Phelan OEM job intro — named work only, blanks for unknown pay/robot."""
+from app.services.oem_job_intro import (
+    BLANK,
+    PAY_BLANK,
+    TERM_BLANK,
+    compose_robot_company_intro,
+    intro_from_sales_card,
+)
+
+
+def test_intro_uses_operator_wording_and_named_job():
+    text = compose_robot_company_intro(
+        contact_name="Maya Chen",
+        robot_name="Stretch",
+        title="Pharmacy delivery",
+        employer="Rochester Regional Health",
+        locality="Rochester, NY",
+        monthly_comp="4200",
+        duration="12 months",
+        requirements="Indoor hall delivery between units and central pharmacy",
+        decision_maker_name="Priya Shah",
+    )
+    assert text.startswith("Hi Maya, nice to meet you.")
+    assert "I am a robot coordinator for ReadyForRobots" in text
+    assert "place robots into robot automation jobs" in text
+    assert "your Stretch robot" in text
+    assert (
+        "The job is Pharmacy delivery at Rochester Regional Health in Rochester, NY"
+        in text
+    )
+    assert "comp level of $4200 per month for 12 months" in text
+    assert "requirements of Indoor hall delivery" in text
+    assert "arrange a call with Priya at Rochester Regional Health" in text
+    assert text.endswith("Phelan.")
+    assert "SIGNAL" not in text
+    assert "match%" not in text.lower()
+    assert "ROI" not in text
+
+
+def test_intro_leaves_blanks_instead_of_inventing():
+    text = compose_robot_company_intro(
+        title="Pallet move",
+        employer="GEODIS",
+        locality="Plainfield, IN",
+        requirements="Unload inbound trailers and stage pallets at the dock.",
+    )
+    assert text.startswith(f"Hi {BLANK}, nice to meet you.")
+    assert f"your {BLANK} robot" in text
+    assert f"${PAY_BLANK} per month for {TERM_BLANK}" in text
+    assert "arrange a call with GEODIS" in text
+    assert "operations@" not in text
+    assert "Operational Lead" not in text
+    assert "$8,500" not in text
+
+
+def test_intro_skips_invented_and_empty_people():
+    text = compose_robot_company_intro(
+        contact_name="Operational Lead (Vice President)",
+        employer="Chipotle",
+        title="Bowl assembly",
+        decision_maker_name="Not named on the posting",
+    )
+    assert text.startswith(f"Hi {BLANK},")
+    assert "arrange a call with Chipotle" in text
+    assert "Operational Lead" not in text
+    assert "Not named" not in text
+
+
+def test_intro_from_sales_card_fills_job_not_pay():
+    text = intro_from_sales_card(
+        {
+            "employer": "GEODIS",
+            "title": "Pallet move",
+            "locality": "Plainfield, IN",
+            "description": "Unload inbound trailers and stage pallets at the dock.",
+            "decision_maker_name": "Priya Shah",
+            "timing": "First seen 2026-10-07 · new this week",
+            "contact": "dock.ops@geodis.com",
+        }
+    )
+    assert "Pallet move at GEODIS in Plainfield, IN" in text
+    assert "Unload inbound trailers" in text
+    assert "Priya at GEODIS" in text
+    assert f"${PAY_BLANK}" in text
+    assert TERM_BLANK in text
+    assert "First seen" not in text
+    assert "dock.ops@" not in text
+    assert f"Hi {BLANK}," in text
