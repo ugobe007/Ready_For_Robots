@@ -10,6 +10,7 @@ import LiveJobTape from "@/components/jobs/LiveJobTape";
 import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
 import CustomerQuoteBanner from "@/components/CustomerQuoteBanner";
 import QuickSignupModal from "@/components/QuickSignupModal";
+import { getPublicReadApiBase } from "@/lib/apiBase";
 import { MARKET_TAPE_JOBS, type TapeJob } from "@/lib/jobsTapeCorpus";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
@@ -168,6 +169,46 @@ export default function JobsLanding() {
         );
         if (matched) {
           setSelectedTapeJob(matched);
+        } else {
+          const base = getPublicReadApiBase();
+          void fetch(
+            `${base}/api/robot-job-card/${encodeURIComponent(jobKey)}`
+          )
+            .then(res => (res.ok ? res.json() : null))
+            .then(data => {
+              const card = data?.job;
+              if (!card?.key || !card?.employer) return;
+              const families: TapeJob["family"][] = [
+                "transport",
+                "cart",
+                "pallet",
+                "scrub",
+                "inspect",
+                "gripper",
+              ];
+              const family = families.includes(card.family)
+                ? card.family
+                : "transport";
+              const live: TapeJob = {
+                key: String(card.key),
+                title: String(card.title || "Work"),
+                industry: String(
+                  card.industry ||
+                    [card.employer, card.locality].filter(Boolean).join(" · ")
+                ),
+                path: String(card.path || card.locality || "WORKSITE → WORKSITE"),
+                family,
+                customer: String(card.employer),
+                location: card.locality ? String(card.locality) : undefined,
+                headline: card.description
+                  ? String(card.description)
+                  : undefined,
+              };
+              setSelectedTapeJob(live);
+            })
+            .catch(() => {
+              /* tape miss and live miss stay closed */
+            });
         }
       }
     } catch {

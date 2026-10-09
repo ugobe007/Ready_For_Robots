@@ -12,6 +12,7 @@ import os
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+from urllib.parse import quote
 
 from sqlalchemy import case, desc
 from sqlalchemy.orm import Session
@@ -276,6 +277,69 @@ def _contact_line(
     return CONTACT_EMPTY
 
 
+def job_card_href(job_key: str) -> str:
+    key = str(job_key or "").strip()
+    if not key:
+        return f"{_SITE}/?visit=jobs"
+    return f"{_SITE}/?job={quote(key, safe='')}"
+
+
+def _family_for_action(action: str, title: str) -> str:
+    blob = f"{action} {title}".lower()
+    if any(w in blob for w in ("pallet", "stack", "case")):
+        return "pallet"
+    if any(w in blob for w in ("scrub", "clean", "evs", "floor")):
+        return "scrub"
+    if any(w in blob for w in ("inspect", "vision", "audit")):
+        return "inspect"
+    if any(w in blob for w in ("pick", "grip", "manipul", "arm")):
+        return "gripper"
+    if any(w in blob for w in ("cart", "tote")):
+        return "cart"
+    return "transport"
+
+
+def public_job_card(db: Session, job_key: str) -> Optional[dict[str, Any]]:
+    """Named-employer Robot Job for `/?job=`. No invented people or dollars."""
+    from app.models.robot_directed_discovery import RobotJob
+    from app.services.robot_job_extract import is_job_employer_name
+    from app.services.robot_requirement_match import is_named_robot_job
+
+    key = str(job_key or "").strip()
+    if not key:
+        return None
+    try:
+        row = db.query(RobotJob).filter(RobotJob.job_key == key).one_or_none()
+    except Exception:
+        logger.debug("public job card lookup skipped", exc_info=True)
+        return None
+    if row is None:
+        return None
+    employer = str(getattr(row, "company_name", "") or "").strip()
+    locality = str(getattr(row, "locality", "") or "").strip()
+    title = str(getattr(row, "robot_compatible_task", "") or "").strip()
+    if not is_named_robot_job(employer, locality):
+        return None
+    if not is_job_employer_name(employer, title=title):
+        return None
+    serialized = _serialize_job(row, 0)
+    return {
+        "key": serialized["job_key"],
+        "title": serialized["title"],
+        "employer": serialized["employer"],
+        "locality": serialized["locality"],
+        "description": serialized["description"],
+        "job_type": serialized["job_type"],
+        "action": serialized["action"],
+        "family": _family_for_action(serialized["action"], serialized["title"]),
+        "path": locality or "WORKSITE → WORKSITE",
+        "industry": " · ".join(
+            p for p in (serialized["employer"], serialized["locality"]) if p
+        ),
+        "card_href": serialized["card_href"],
+    }
+
+
 def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
     title = _clean(getattr(row, "robot_compatible_task", ""), limit=240)
     action = _clean(getattr(row, "action", ""), limit=80)
@@ -310,6 +374,7 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
         "match_why": match_why,
         "investigate_status": str(getattr(row, "investigate_status", "") or ""),
         "created_at": created.isoformat() if created else None,
+        "card_href": job_card_href(str(getattr(row, "job_key", "") or "")),
     }
 
 
@@ -380,42 +445,50 @@ def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, A
     }
 
 
+def _job_name_line(job: dict[str, Any]) -> str:
+    title = str(job.get("title") or job.get("job_type") or "Work").strip()
+    desc = str(job.get("description") or "").strip()
+    if desc and desc != title:
+        return f"{title} — {desc}"
+    return title
+
+
+def _decision_maker_inline(job: dict[str, Any]) -> str:
+    parts = [str(job.get("decision_maker") or DECISION_MAKER_EMPTY)]
+    titles = [str(t).strip() for t in (job.get("target_titles") or []) if str(t).strip()]
+    if titles and not job.get("decision_maker_name"):
+        parts.append("Looked for: " + ", ".join(titles[:3]))
+    why = str(job.get("match_why") or "").strip()
+    if why:
+        parts.append(why)
+    return " · ".join(parts)
+
+
 def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
     day = report.get("date") or datetime.now(timezone.utc).date().isoformat()
     jobs = list(report.get("jobs") or [])
     lines = [
-        f"Top {int(report.get('limit') or TOP_N)} robot job sales cards — {day}",
+        f"Top {int(report.get('limit') or TOP_N)} hot job opportunities — {day}",
         "",
-        "Each card is a named-employer Robot Job. We do not invent people or emails.",
+        "Named-employer Robot Jobs. Decision maker and contact as stored. We do not invent people or emails.",
         "",
     ]
     if not jobs:
-        lines.append("  • No named-employer jobs in the live table yet.")
+        lines.append("No named-employer jobs in the live table yet.")
         lines.append("")
     for job in jobs:
         rank = int(job.get("rank") or 0)
         employer = job.get("employer") or "Employer"
-        locality = job.get("locality") or ""
-        lines.append(f"{rank:02d}  {employer}")
+        locality = str(job.get("locality") or "").strip()
+        head = f"{rank:02d}  {employer}"
         if locality:
-            lines.append(f"    {locality}")
-        lines.append("    [1] Job type and description")
-        lines.append(f"        {job.get('job_type') or job.get('title') or 'Work'}")
-        desc = job.get("description") or job.get("title") or ""
-        if desc:
-            lines.append(f"        {desc}")
-        lines.append("    [2] Decision maker")
-        lines.append(f"        {job.get('decision_maker') or DECISION_MAKER_EMPTY}")
-        titles = [str(t).strip() for t in (job.get("target_titles") or []) if str(t).strip()]
-        if titles:
-            lines.append(f"        Looked for: {', '.join(titles[:3])}")
-        why = str(job.get("match_why") or "").strip()
-        if why:
-            lines.append(f"        {why}")
-        lines.append("    [3] Timing")
-        lines.append(f"        {job.get('timing') or TIMING_EMPTY}")
-        lines.append("    [4] Contact information")
-        lines.append(f"        {job.get('contact') or CONTACT_EMPTY}")
+            head = f"{head} · {locality}"
+        lines.append(head)
+        lines.append(f"    {_job_name_line(job)}")
+        lines.append(f"    Decision maker: {_decision_maker_inline(job)}")
+        lines.append(f"    Contact: {job.get('contact') or CONTACT_EMPTY}")
+        href = str(job.get("card_href") or job_card_href(str(job.get("job_key") or "")))
+        lines.append(f"    Job card: {href}")
         lines.append("")
     lines += [
         f"FIND: {report.get('find_href') or f'{_SITE}/?visit=jobs'}",
@@ -426,27 +499,29 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _decision_maker_html(job: dict[str, Any]) -> str:
-    parts = [str(job.get("decision_maker") or DECISION_MAKER_EMPTY)]
-    titles = [str(t).strip() for t in (job.get("target_titles") or []) if str(t).strip()]
-    if titles:
-        parts.append("Looked for: " + ", ".join(titles[:3]))
-    why = str(job.get("match_why") or "").strip()
-    if why:
-        parts.append(why)
-    return "\n".join(parts)
+def _mailto_or_link(value: str) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    if "@" in raw and "://" not in raw and " " not in raw:
+        href = html.escape(f"mailto:{raw}")
+        return f'<a href="{href}">{html.escape(raw)}</a>'
+    if raw.startswith(("http://", "https://")):
+        href = html.escape(raw)
+        return f'<a href="{href}">{html.escape(raw)}</a>'
+    return html.escape(raw)
 
 
-def _card_field(label: str, value: str) -> str:
-    safe_label = html.escape(label)
-    safe_value = html.escape(value or "").replace("\n", "<br>")
-    return (
-        f"<div style=\"margin:8px 0 0\">"
-        f"<div style=\"font-size:11px;letter-spacing:0.08em;text-transform:uppercase;"
-        f"color:#047857;font-weight:700\">{safe_label}</div>"
-        f"<div style=\"font-size:14px;color:#111827;margin-top:2px\">{safe_value}</div>"
-        f"</div>"
-    )
+def _contact_html(job: dict[str, Any]) -> str:
+    bits = [
+        _mailto_or_link(str(job.get("employer_email") or "")),
+        _mailto_or_link(str(job.get("contact_url") or "")),
+        _mailto_or_link(str(job.get("apply_url") or "")),
+    ]
+    bits = [b for b in bits if b]
+    if bits:
+        return " · ".join(bits)
+    return html.escape(str(job.get("contact") or CONTACT_EMPTY))
 
 
 def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
@@ -457,47 +532,43 @@ def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
     admin_href = html.escape(
         str(report.get("admin_href") or f"{_SITE}/admin#daily-jobs-report")
     )
-    cards: list[str] = []
+    rows: list[str] = []
     for job in jobs:
         rank = int(job.get("rank") or 0)
         employer = html.escape(str(job.get("employer") or "Employer"))
-        locality = html.escape(str(job.get("locality") or ""))
-        place = (
-            f"<div style=\"color:#4b5563;font-size:13px;margin:0 0 4px\">{locality}</div>"
-            if locality
-            else ""
-        )
-        job_type = str(job.get("job_type") or job.get("title") or "Work")
-        description = str(job.get("description") or job.get("title") or "")
-        type_block = job_type if job_type == description else f"{job_type}\n{description}"
-        cards.append(
-            "<div style=\"border:1px solid #d1d5db;padding:16px 18px;margin:0 0 12px\">"
-            f"<div style=\"font-family:ui-monospace,monospace;font-size:12px;color:#6b7280\">"
-            f"{rank:02d}</div>"
-            f"<div style=\"font-size:18px;font-weight:700;color:#047857\">{employer}</div>"
-            f"{place}"
-            f"{_card_field('[1] Job type and description', type_block)}"
-            f"{_card_field('[2] Decision maker', _decision_maker_html(job))}"
-            f"{_card_field('[3] Timing', str(job.get('timing') or TIMING_EMPTY))}"
-            f"{_card_field('[4] Contact information', str(job.get('contact') or CONTACT_EMPTY))}"
-            "</div>"
+        locality = html.escape(str(job.get("locality") or "").strip())
+        head = f"{rank:02d} {employer}"
+        if locality:
+            head = f"{head} · {locality}"
+        href = str(job.get("card_href") or job_card_href(str(job.get("job_key") or "")))
+        card = html.escape(href)
+        rows.append(
+            "<p style=\"margin:0 0 12px;padding:0;font-size:14px;line-height:1.45\">"
+            f"<strong>{head}</strong><br>"
+            f"{html.escape(_job_name_line(job))}<br>"
+            f"Decision maker: {html.escape(_decision_maker_inline(job))}<br>"
+            f"Contact: {_contact_html(job)}<br>"
+            f"<a href=\"{card}\">Job card</a>"
+            "</p>"
         )
     listing = (
-        "<p>No named-employer jobs in the live table yet.</p>"
+        "<p style=\"margin:0;padding:0\">No named-employer jobs in the live table yet.</p>"
         if not jobs
-        else "".join(cards)
+        else "".join(rows)
     )
     return (
-        "<div style=\"font-family:Georgia,serif;max-width:640px;color:#111827\">"
-        f"<h1 style=\"font-size:20px;margin:0 0 8px\">"
-        f"Top {limit} robot job sales cards — {day}</h1>"
-        "<p style=\"color:#4b5563;font-size:14px;margin:0 0 16px\">"
-        "Each card is a named-employer Robot Job. We do not invent people or emails.</p>"
+        "<div style=\"font-family:Georgia,serif;max-width:640px;color:#111827;"
+        "margin:0;padding:0\">"
+        f"<p style=\"font-size:16px;font-weight:700;margin:0 0 8px;padding:0\">"
+        f"Top {limit} hot job opportunities — {day}</p>"
+        "<p style=\"color:#4b5563;font-size:13px;margin:0 0 12px;padding:0\">"
+        "Named-employer Robot Jobs. Decision maker and contact as stored. "
+        "We do not invent people or emails.</p>"
         f"{listing}"
-        f"<p style=\"margin:16px 0 0;font-size:13px\">"
+        f"<p style=\"margin:12px 0 0;padding:0;font-size:13px\">"
         f"<a href=\"{find_href}\">FIND</a> · "
-        f"<a href=\"{admin_href}\">Admin cards</a></p>"
-        "<p style=\"color:#6b7280;font-size:12px\">"
+        f"<a href=\"{admin_href}\">Admin</a></p>"
+        "<p style=\"color:#6b7280;font-size:12px;margin:8px 0 0;padding:0\">"
         "You receive this once per day. Email now on Admin sends a catch-up.</p>"
         "</div>"
     )
@@ -507,7 +578,7 @@ def _idempotency_key(day: str, *, force: bool) -> str:
     if force:
         stamp = datetime.now(timezone.utc).strftime("%H%M%S")
         return f"daily-jobs-report-{day}-force-{stamp}"
-    return f"daily-jobs-report-{day}-cards-v1"
+    return f"daily-jobs-report-{day}-cards-v2"
 
 
 def send_daily_jobs_report(
@@ -536,7 +607,7 @@ def send_daily_jobs_report(
         logger.warning("Hunter.io daily-jobs enrich skipped", exc_info=True)
         hunter = {"ok": False, "reason": "hunter_enrich_failed"}
     report = compose_daily_jobs_report(db, limit=limit)
-    subject = f"Top {report['limit']} robot job sales cards — {report['date']}"
+    subject = f"Top {report['limit']} hot job opportunities — {report['date']}"
     body = render_daily_jobs_report_text(report)
     html_body = render_daily_jobs_report_html(report)
     from app.services.resend_email import ResendEmailError, send_email_via_resend

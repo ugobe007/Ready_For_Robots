@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { Mail } from "lucide-react";
 import Header from "@/components/Header";
@@ -19,6 +19,7 @@ type InboxItem = {
   body_text?: string | null;
   detected_intent?: string | null;
   received_at?: string | null;
+  folder?: "main" | "test";
   next_best_action?: { recommendation?: string; intent?: string };
   latest_action?: {
     id?: string;
@@ -44,12 +45,12 @@ function scheduleHref(item: InboxItem) {
 
 export default function Inbox() {
   const { session, loading } = useAuth();
-  const [items, setItems] = useState<InboxItem[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [replyModalOpen, setReplyModalOpen] = useState(false);
-  const [folderTab, setFolderTab] = useState<"main" | "test">("main");
+  const [folderTab, setFolderTab] = useState<"all" | "main" | "test">("all");
+  const [allItems, setAllItems] = useState<InboxItem[]>([]);
 
   const loadInbox = useCallback(async () => {
     if (!session?.access_token) return;
@@ -57,26 +58,37 @@ export default function Inbox() {
     setErr("");
     try {
       const response = await fetch(
-        `${getApiBase()}/api/sales/inbox?folder=${folderTab}`,
+        `${getApiBase()}/api/sales/inbox?folder=all`,
         liveFetchInit({ headers: authHeader(session.access_token) })
       );
       if (!response.ok) throw new Error(await response.text());
       const data = await response.json();
       const list = Array.isArray(data) ? data : [];
-      setItems(list);
-      setSelectedId(current =>
-        list.some(item => item.id === current) ? current : list[0]?.id || ""
-      );
+      setAllItems(list);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not load inbox");
     } finally {
       setBusy(false);
     }
-  }, [session?.access_token, folderTab]);
+  }, [session?.access_token]);
 
   useEffect(() => {
     void loadInbox();
   }, [loadInbox]);
+
+  const items = useMemo(() => {
+    if (folderTab === "all") return allItems;
+    return allItems.filter(item => (item.folder || "main") === folderTab);
+  }, [allItems, folderTab]);
+  const mainCount = allItems.filter(item => (item.folder || "main") === "main")
+    .length;
+  const testCount = allItems.filter(item => item.folder === "test").length;
+
+  useEffect(() => {
+    setSelectedId(current =>
+      items.some(item => item.id === current) ? current : items[0]?.id || ""
+    );
+  }, [items]);
 
   if (loading)
     return <div className="min-h-screen bg-slate-50 text-gray-900" />;
@@ -160,8 +172,18 @@ export default function Inbox() {
               <span className="text-xs text-gray-400">{items.length}</span>
             </div>
 
-            {/* Folder Tabs */}
             <div className="mt-3 flex items-center rounded-xl bg-gray-100 p-1">
+              <button
+                type="button"
+                onClick={() => setFolderTab("all")}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
+                  folderTab === "all"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                All ({allItems.length})
+              </button>
               <button
                 type="button"
                 onClick={() => setFolderTab("main")}
@@ -171,7 +193,7 @@ export default function Inbox() {
                     : "text-gray-500 hover:text-gray-900"
                 }`}
               >
-                Customer Inbox
+                Customer ({mainCount})
               </button>
               <button
                 type="button"
@@ -182,7 +204,7 @@ export default function Inbox() {
                     : "text-gray-500 hover:text-gray-900"
                 }`}
               >
-                System &amp; Test
+                System ({testCount})
               </button>
             </div>
             <div className="mt-4 space-y-2">
@@ -215,7 +237,9 @@ export default function Inbox() {
               ))}
               {!items.length && !busy && (
                 <p className="rounded-2xl border border-gray-200 p-4 text-sm text-gray-500">
-                  No inbound replies yet.
+                  {allItems.length
+                    ? "No messages in this folder."
+                    : "No inbound replies stored yet. Replies need the Resend inbound webhook on /api/webhooks/resend/inbound."}
                 </p>
               )}
             </div>

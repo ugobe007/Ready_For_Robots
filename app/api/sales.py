@@ -377,31 +377,205 @@ def confirm_sales_opportunity_contact(
     return _serialize_opportunity(db, opportunity, include_details=True)
 
 
+def _query_str(value: Any, default: Optional[str] = None) -> Optional[str]:
+    """FastAPI Query objects are truthy; only treat real strings as filters."""
+    if isinstance(value, str):
+        text = value.strip()
+        return text or default
+    return default
+
+
+def _inbox_from_outreach_replies(
+    db: Session,
+    *,
+    team_ids: list[Any],
+    is_admin: bool,
+    already: set[str],
+) -> list[dict[str, Any]]:
+    """Replies stored on outreach_replies that never became a sales_messages row."""
+    from app.models.outreach import OutreachReply
+
+    query = db.query(OutreachReply)
+    if not is_admin:
+        if not team_ids:
+            return []
+        query = query.filter(OutreachReply.team_id.in_(team_ids))
+    rows = query.order_by(desc(OutreachReply.received_at)).limit(100).all()
+    items: list[dict[str, Any]] = []
+    for reply in rows:
+        source_id = str(reply.id)
+        if source_id in already:
+            continue
+        from app.services.inbox_classifier import classify_inbox_folder
+
+        folder = classify_inbox_folder(reply.from_email, reply.subject, reply.body_text)
+        account = None
+        if reply.crm_account_id:
+            account = (
+                db.query(CrmAccount)
+                .filter(CrmAccount.id == reply.crm_account_id)
+                .first()
+            )
+        items.append(
+            {
+                "id": source_id,
+                "thread_id": str(reply.crm_account_id or reply.outreach_message_id),
+                "opportunity_type": "crm",
+                "title": account.name if account else "Inbound reply",
+                "current_stage": "replied",
+                "status": "open",
+                "from_email": reply.from_email,
+                "to_email": reply.to_email,
+                "subject": reply.subject,
+                "body_text": reply.body_text,
+                "detected_intent": reply.detected_intent,
+                "received_at": reply.received_at.isoformat()
+                if reply.received_at
+                else None,
+                "source_type": "outreach_reply",
+                "source_id": source_id,
+                "folder": folder,
+                "crm_account_id": str(reply.crm_account_id)
+                if reply.crm_account_id
+                else None,
+                "robot_company_id": None,
+                "next_best_action": {
+                    "recommendation": "Review the reply. It landed in outreach, not the sales desk."
+                },
+                "latest_action": None,
+            }
+        )
+    return items
+
+
+def _inbox_from_supply_replies(
+    db: Session,
+    *,
+    is_admin: bool,
+    already: set[str],
+) -> list[dict[str, Any]]:
+    """OEM/supply replies that never became a sales_messages row. Admin-only."""
+    if not is_admin:
+        return []
+    from app.models.robot_company import RobotCompany
+    from app.models.supply_outreach import SupplyOutreachReply
+    from app.services.inbox_classifier import classify_inbox_folder
+
+    rows = (
+        db.query(SupplyOutreachReply)
+        .order_by(desc(SupplyOutreachReply.received_at))
+        .limit(100)
+        .all()
+    )
+    items: list[dict[str, Any]] = []
+    for reply in rows:
+        source_id = str(reply.id)
+        if source_id in already:
+            continue
+        robot = None
+        if reply.robot_company_id:
+            robot = (
+                db.query(RobotCompany)
+                .filter(RobotCompany.id == reply.robot_company_id)
+                .first()
+            )
+        folder = classify_inbox_folder(reply.from_email, reply.subject, reply.body_text)
+        items.append(
+            {
+                "id": source_id,
+                "thread_id": str(reply.supply_outreach_message_id),
+                "opportunity_type": "supply",
+                "title": robot.company_name if robot else "Inbound reply",
+                "current_stage": "replied",
+                "status": "open",
+                "from_email": reply.from_email,
+                "to_email": reply.to_email,
+                "subject": reply.subject,
+                "body_text": reply.body_text,
+                "detected_intent": None,
+                "received_at": reply.received_at.isoformat()
+                if reply.received_at
+                else None,
+                "source_type": "supply_outreach_reply",
+                "source_id": source_id,
+                "folder": folder,
+                "crm_account_id": None,
+                "robot_company_id": reply.robot_company_id,
+                "next_best_action": {
+                    "recommendation": "Review the reply. It landed in supply outreach, not the sales desk."
+                },
+                "latest_action": None,
+            }
+        )
+    return items
+
+
 @router.get("/inbox")
 def list_sales_inbox(
     team_id: Optional[str] = Query(None),
-    folder: Optional[str] = Query("main"),
+    folder: Optional[str] = Query("all"),
     db: Session = Depends(get_db),
     user: dict = Depends(_require_user),
 ):
-    team_ids = _team_ids_for_user(db, _uid_uuid(user))
-    if not team_ids:
-        return []
+    from app.api.auth_deps import _is_admin
+
+    uid = _uid_uuid(user)
+    team_ids = _team_ids_for_user(db, uid)
+    is_admin_user = _is_admin(user.get("email") or "")
+    team_id = _query_str(team_id)
+    folder = _query_str(folder, "all") or "all"
     query = (
         db.query(SalesMessage, SalesOpportunity)
         .join(SalesOpportunity, SalesMessage.sales_opportunity_id == SalesOpportunity.id)
-        .filter(SalesMessage.direction == "inbound", SalesOpportunity.team_id.in_(team_ids))
+        .filter(SalesMessage.direction == "inbound")
     )
-    if team_id:
-        requested = _db_uuid(db, team_id)
-        if requested not in team_ids:
-            raise HTTPException(status_code=404, detail="Team not found or access denied")
-        query = query.filter(SalesOpportunity.team_id == requested)
+    if is_admin_user and not team_id:
+        pass
+    else:
+        if not team_ids:
+            items = _inbox_from_outreach_replies(
+                db, team_ids=[], is_admin=is_admin_user, already=set()
+            )
+            items.extend(
+                _inbox_from_supply_replies(
+                    db, is_admin=is_admin_user, already=set()
+                )
+            )
+            items.sort(key=lambda item: item.get("received_at") or "", reverse=True)
+            if folder in ("main", "test"):
+                items = [item for item in items if item.get("folder") == folder]
+            return items[:100]
+        query = query.filter(
+            or_(
+                SalesOpportunity.team_id.in_(team_ids),
+                SalesOpportunity.team_id.is_(None),
+            )
+        )
+        if team_id:
+            requested = _db_uuid(db, team_id)
+            if requested not in team_ids and not is_admin_user:
+                raise HTTPException(status_code=404, detail="Team not found or access denied")
+            query = query.filter(SalesOpportunity.team_id == requested)
     rows = query.order_by(desc(SalesMessage.created_at)).limit(100).all()
     items = [_serialize_inbox_item(db, message, opportunity) for message, opportunity in rows]
-    if folder and folder in ("main", "test"):
+    already = {
+        str(item.get("source_id") or "")
+        for item in items
+        if item.get("source_type") in ("outreach_reply", "supply_outreach_reply")
+        and item.get("source_id")
+    }
+    items.extend(
+        _inbox_from_outreach_replies(
+            db, team_ids=team_ids, is_admin=is_admin_user, already=already
+        )
+    )
+    items.extend(
+        _inbox_from_supply_replies(db, is_admin=is_admin_user, already=already)
+    )
+    items.sort(key=lambda item: item.get("received_at") or "", reverse=True)
+    if folder in ("main", "test"):
         items = [item for item in items if item.get("folder") == folder]
-    return items
+    return items[:100]
 
 
 @router.get("/learning")

@@ -17,6 +17,7 @@ from app.services.daily_jobs_report import (
     compose_daily_jobs_report,
     get_daily_jobs_report_recipients,
     maybe_send_missed_daily_jobs_report,
+    public_job_card,
     render_daily_jobs_report_html,
     render_daily_jobs_report_text,
     send_daily_jobs_report,
@@ -102,6 +103,7 @@ def test_compose_keeps_named_employers_drops_boards(db_session):
     assert report["jobs"][0]["decision_maker"] == "Not named on the posting"
     assert "will not invent" in report["jobs"][0]["contact"]
     assert "First seen" in report["jobs"][0]["timing"]
+    assert report["jobs"][0]["card_href"].endswith("/?job=named")
     assert report["limit"] == TOP_N or report["limit"] == 25
 
 
@@ -145,6 +147,13 @@ def test_compose_sales_card_uses_page_contact_not_invented(db_session):
     assert "Unload inbound trailers" in real["description"]
     assert real["decision_maker"] == "Priya Shah · Site operations manager"
     assert "dock.ops@geodis.com" in real["contact"]
+    html_named = render_daily_jobs_report_html(
+        {"date": "2026-10-09", "limit": 25, "jobs": [real]}
+    )
+    assert "Priya Shah" in html_named
+    assert "mailto:dock.ops@geodis.com" in html_named
+    assert "Job card" in html_named
+    assert real["card_href"].endswith("/?job=page-contact")
     fake = by_key["invented-ops"]
     assert fake["decision_maker"] == "Not named on the posting"
     assert "operations@chipotle.com" not in fake["contact"]
@@ -180,6 +189,7 @@ def test_compose_ranks_yes_ahead_of_weak(db_session):
 def test_render_email_is_jobs_not_signal():
     card = {
         "rank": 1,
+        "job_key": "rrh-pharmacy",
         "employer": "Rochester Regional Health",
         "title": "Pharmacy delivery",
         "locality": "Rochester, NY",
@@ -188,6 +198,7 @@ def test_render_email_is_jobs_not_signal():
         "decision_maker": "Not named on the posting",
         "timing": "First seen 2026-10-07 · new this week",
         "contact": "No page email or apply URL. We will not invent one.",
+        "card_href": "https://readyforrobots.com/?job=rrh-pharmacy",
     }
     text = render_daily_jobs_report_text(
         {
@@ -198,12 +209,11 @@ def test_render_email_is_jobs_not_signal():
             "admin_href": "https://readyforrobots.com/admin#daily-jobs-report",
         }
     )
-    assert "Top 25 robot job sales cards — 2026-10-07" in text
+    assert "Top 25 hot job opportunities — 2026-10-07" in text
     assert "Rochester Regional Health" in text
-    assert "[1] Job type and description" in text
-    assert "[2] Decision maker" in text
-    assert "[3] Timing" in text
-    assert "[4] Contact information" in text
+    assert "Decision maker:" in text
+    assert "Contact:" in text
+    assert "Job card:" in text
     assert "Pharmacy delivery between units" in text
     assert "/?visit=jobs" in text
     assert "admin#daily-jobs-report" in text
@@ -221,10 +231,39 @@ def test_render_email_is_jobs_not_signal():
         }
     )
     assert "Rochester Regional Health" in html_body
-    assert "[1] Job type and description" in html_body
-    assert "[4] Contact information" in html_body
+    assert "Decision maker:" in html_body
+    assert "Contact:" in html_body
+    assert "Job card" in html_body
+    assert "/?job=rrh-pharmacy" in html_body
+    assert "padding:16px" not in html_body
     assert "/?visit=jobs" in html_body
     assert "/pipeline?co=" not in html_body
+
+
+def test_public_job_card_is_named_employer_only(db_session):
+    db_session.add(
+        _job(
+            job_key="rrh-live",
+            company_name="Rochester Regional Health",
+            locality="Rochester, NY",
+            robot_compatible_task="Pharmacy delivery",
+        )
+    )
+    db_session.add(
+        _job(
+            job_key="board",
+            company_name="Indeed",
+            locality="Remote",
+            robot_compatible_task="Warehouse associate",
+        )
+    )
+    db_session.commit()
+    card = public_job_card(db_session, "rrh-live")
+    assert card is not None
+    assert card["employer"] == "Rochester Regional Health"
+    assert card["card_href"].endswith("/?job=rrh-live")
+    assert public_job_card(db_session, "board") is None
+    assert public_job_card(db_session, "missing") is None
 
 
 def test_html_escapes_employer_markup():
@@ -312,9 +351,10 @@ def test_send_emails_operator(monkeypatch, db_session):
     assert result["sent"] is True
     assert result["count"] == 1
     assert sent[0]["to_email"] == ["ugobe07@gmail.com"]
-    assert sent[0]["subject"].startswith("Top 25 robot job sales cards")
+    assert sent[0]["subject"].startswith("Top 25 hot job opportunities")
     assert "Rochester Regional Health" in sent[0]["body_text"]
-    assert "[1] Job type and description" in sent[0]["body_text"]
+    assert "Decision maker:" in sent[0]["body_text"]
+    assert "Job card:" in sent[0]["body_text"]
     assert "Rochester Regional Health" in (sent[0].get("body_html") or "")
     assert (sent[0].get("idempotency_key") or "").startswith(
         "daily-jobs-report-"
