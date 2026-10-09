@@ -306,10 +306,15 @@ class _FakeRedis:
     def get(self, key):
         return self.store.get(key)
 
-    def set(self, key, value, nx=False, ex=None):
+    def set(self, key, value, nx=False, ex=None, xx=False, get=False):
         if nx and key in self.store:
-            return False
+            return self.store.get(key) if get else False
+        if xx and key not in self.store:
+            return None if get else False
+        old = self.store.get(key)
         self.store[key] = value
+        if get:
+            return old
         return True
 
     def delete(self, key):

@@ -183,8 +183,9 @@ export default function AdminDailyJobsReport({
         </p>
       ) : null}
       <p className="mt-2 text-[11px] text-slate-500">
-        Decision maker name and contact are stored facts or Hunter.io hits. We
-        do not invent people. Daily email at 14:00 UTC to ugobe07@gmail.com.
+        Look up companies reads the employer leadership page, then asks
+        Hunter.io for that person&apos;s email (name, company, and site domain).
+        We do not invent people. Daily email at 14:00 UTC to ugobe07@gmail.com.
         Each line opens the Job Card on the site.
       </p>
     </section>
