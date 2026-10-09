@@ -259,6 +259,22 @@ def domain_for_job(row: Any, db: Session) -> Optional[str]:
     return None
 
 
+def domain_from_people(people: list[dict[str, Any]] | None) -> Optional[str]:
+    """Hunter company search often has no website on the job row. Use email hosts."""
+    for person in people or []:
+        if not isinstance(person, dict):
+            continue
+        host = registrable_domain(person.get("organization_domain"))
+        if host:
+            return host
+        email = str(person.get("email") or "").strip().lower()
+        if "@" in email:
+            host = registrable_domain(email.split("@", 1)[1])
+            if host:
+                return host
+    return None
+
+
 def _page_contact_complete(row: Any) -> bool:
     name, _title = _page_name_title(row)
     contact = _contact_fields(row)
@@ -287,6 +303,40 @@ def _job_needs_hunter(
             return True
         return False
     return True
+
+
+def _company_search_names(employer: str, locality: str = "") -> list[str]:
+    """Hunter company search uses the brand, not 'Westin Fort Lauderdale'."""
+    raw = re.sub(r"\s+", " ", (employer or "").strip())
+    names: list[str] = []
+    seen: set[str] = set()
+
+    def add(value: str) -> None:
+        text = re.sub(r"\s+", " ", (value or "").strip(" -,."))
+        key = text.lower()
+        if len(text) < 3 or key in seen:
+            return
+        seen.add(key)
+        names.append(text)
+
+    add(raw)
+    add(raw.replace(".", ""))
+    add(re.sub(r"\s+by\s+.+$", "", raw, flags=re.I))
+    add(re.sub(r"\s+of\s+[A-Z].*$", "", raw))
+    add(
+        re.sub(
+            r",?\s+(inc|llc|ltd|corp|corporation|company|co|services|group|hotels|hotel|restaurants|restaurant)\.?$",
+            "",
+            raw,
+            flags=re.I,
+        )
+    )
+    city = (locality or "").split(",")[0].strip()
+    if len(city) >= 4:
+        for base in list(names):
+            if base.lower().endswith(city.lower()):
+                add(base[: -len(city)])
+    return names
 
 
 def _employer_tokens(employer: str) -> list[str]:
@@ -359,12 +409,12 @@ def _usable_hunter_row(
         return False
     if _is_invented_ops_email(email, employer):
         return False
-    if not _email_fits_employer(email, employer, locality, domain=domain):
-        return False
     local = email.split("@", 1)[0]
     if local in _ROLE_LOCALS:
         return False
     if (row.get("verification_status") or "").lower() == "invalid":
+        return False
+    if not _email_fits_employer(email, employer, locality, domain=domain):
         return False
     try:
         confidence = int(row.get("confidence") or 0)
@@ -484,7 +534,16 @@ def _rankable_hunter_person(
         return False
     email = str(row.get("email") or "").strip().lower()
     if email and "@" in email:
-        return _usable_hunter_row(row, employer, locality, domain=domain)
+        if _is_invented_ops_email(email, employer):
+            return False
+        if (row.get("verification_status") or "").lower() == "invalid":
+            return False
+        local = email.split("@", 1)[0]
+        if local in _ROLE_LOCALS:
+            return False
+        if not row.get("from_company_search") and domain:
+            if not _email_fits_employer(email, employer, locality, domain=domain):
+                return False
     return True
 
 
@@ -503,7 +562,8 @@ def _domain_people(
         queries: list[dict[str, Any]] = []
         if domain:
             queries.append({"domain": domain, "department": departments})
-        queries.append({"company": employer, "department": departments})
+        for name in _company_search_names(employer, locality):
+            queries.append({"company": name, "department": departments})
         seen: set[str] = set()
         for query in queries:
             try:
@@ -511,6 +571,12 @@ def _domain_people(
             except (HunterAPIError, HunterConfigError) as exc:
                 logger.warning("Hunter domain search failed for %r: %s", employer, exc)
                 continue
+            discovered = registrable_domain(search.get("domain"))
+            company_hit = bool(query.get("company") and not query.get("domain"))
+            if discovered:
+                for person in search.get("emails") or []:
+                    if isinstance(person, dict) and not person.get("organization_domain"):
+                        person["organization_domain"] = discovered
             for person in search.get("emails") or []:
                 if not isinstance(person, dict):
                     continue
@@ -519,7 +585,10 @@ def _domain_people(
                 if not marker or marker in seen:
                     continue
                 seen.add(marker)
-                people.append(person)
+                row = dict(person)
+                if company_hit:
+                    row["from_company_search"] = True
+                people.append(row)
         cache[key] = people
     return [
         person
@@ -682,6 +751,16 @@ def enrich_daily_jobs_with_hunter(
         plan = plan_for_job(row)
         domain = domain_for_job(row, db)
         locality = str(getattr(row, "locality", "") or "").strip()
+        if hunter is not None and not domain:
+            preview = _domain_people(
+                hunter,
+                employer=employer,
+                domain=None,
+                departments=plan.departments,
+                locality=locality,
+                cache=cache,
+            )
+            domain = domain_from_people(preview)
 
         prospect = None
         try:

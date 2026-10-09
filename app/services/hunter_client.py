@@ -122,12 +122,16 @@ class HunterClient:
 
         data = self._get(HUNTER_DOMAIN_SEARCH_PATH, params)
         emails = []
+        block: dict[str, Any] = {}
         if isinstance(data, dict):
-            block = data.get("data")
-            if isinstance(block, dict):
+            maybe = data.get("data")
+            if isinstance(maybe, dict):
+                block = maybe
                 emails = block.get("emails") or []
         return {
             "emails": [_normalize_domain_email(row) for row in emails if isinstance(row, dict)],
+            "domain": registrable_domain(block.get("domain")),
+            "organization": block.get("organization"),
             "meta": data.get("meta") if isinstance(data, dict) else {},
         }
 

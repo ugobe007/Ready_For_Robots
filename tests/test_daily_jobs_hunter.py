@@ -278,6 +278,20 @@ def test_send_runs_hunter_before_email(monkeypatch):
     assert "Priya Shah" in sent[0]["body_text"]
 
 
+def test_company_search_uses_brand_not_property_suffix():
+    from app.services.daily_jobs_hunter import _company_search_names
+
+    names = _company_search_names("HMSHost by Avolta")
+    assert "HMSHost" in names
+    names = _company_search_names("Westin Fort Lauderdale", "Fort Lauderdale, FL 33334")
+    assert "Westin" in names
+    names = _company_search_names("Materion Newton Inc.", "Newton, MA 02461")
+    assert "Materion" in names
+    names = _company_search_names("Texas Health Resources", "McKinney, TX 75071")
+    assert names[0] == "Texas Health Resources"
+    assert "Texas Health" not in names
+
+
 def test_email_must_belong_to_the_named_employer():
     from app.services.daily_jobs_hunter import _email_fits_employer
 
@@ -340,6 +354,58 @@ def test_email_must_belong_to_the_named_employer():
     ) is False
 
 
+def test_hunter_company_search_unlocks_leadership_when_job_has_no_url(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    html = """
+    <html><body>
+      <h2>Priya Shah</h2>
+      <p>Site Operations Manager</p>
+    </body></html>
+    """
+    seen = {}
+
+    def fake_pages(**kwargs):
+        seen.update(kwargs)
+        return [{"url": "https://geodis.com/leadership", "html": html}]
+
+    monkeypatch.setattr(
+        "app.services.employer_leadership.fetch_leadership_pages",
+        fake_pages,
+    )
+    db = _session()
+    db.add(_job(job_key="no-url"))
+    db.commit()
+    hunter = _FakeHunter(
+        [
+            {
+                "email": "other.person@geodis.com",
+                "name": "Other Person",
+                "title": "COO",
+                "confidence": 99,
+                "department": "executive",
+                "verification_status": "valid",
+            }
+        ],
+        finder={
+            "email": "priya.shah@geodis.com",
+            "name": "Priya Shah",
+            "title": "Site Operations Manager",
+            "confidence": 92,
+            "verification_status": "valid",
+            "source": "hunter_finder",
+            "organization_domain": "geodis.com",
+        },
+    )
+    result = enrich_daily_jobs_with_hunter(
+        db, limit=25, client=hunter, scrape_pages=True
+    )
+    assert result["filled"] == 1
+    assert seen.get("domain") == "geodis.com"
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Priya Shah" in report["jobs"][0]["decision_maker"]
+    assert "priya.shah@geodis.com" in report["jobs"][0]["contact"]
+
+
 def test_company_lookup_fills_empty_posting_via_hunter(monkeypatch):
     monkeypatch.setenv("HUNTER_API_KEY", "test-key")
     db = _session()
@@ -367,7 +433,8 @@ def test_company_lookup_fills_empty_posting_via_hunter(monkeypatch):
     result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
     assert result["filled"] == 1
     assert any(call.get("company") == "GEODIS" for call in hunter.domain_calls)
-    assert not any(call.get("domain") for call in hunter.domain_calls)
+    assert not any("greenhouse" in str(call.get("domain") or "") for call in hunter.domain_calls)
+    assert any(call.get("domain") == "geodis.com" for call in hunter.domain_calls)
     report = compose_daily_jobs_report(db, limit=25)
     assert "Priya Shah" in report["jobs"][0]["decision_maker"]
     assert "priya.shah@geodis.com" in report["jobs"][0]["contact"]
@@ -601,8 +668,9 @@ def test_low_confidence_hunter_email_is_not_used(monkeypatch):
         ]
     )
     result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
-    assert result["filled"] == 0
+    assert result["filled"] == 1
     report = compose_daily_jobs_report(db, limit=25)
+    assert "Guess Pattern" in report["jobs"][0]["decision_maker"]
     assert "guess.pattern@geodis.com" not in (report["jobs"][0]["contact"] or "")
 
 
