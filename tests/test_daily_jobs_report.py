@@ -12,6 +12,7 @@ from app.models.robot_directed_discovery import RobotJob
 from app.services.daily_jobs_report import (
     TOP_N,
     _REDIS_SENT_KEY,
+    _STALE_CLAIM_SEC,
     _claim_key,
     _claim_report_day,
     _family_for_action,
@@ -326,19 +327,104 @@ def test_claim_allows_next_calendar_day(monkeypatch):
     assert _claim_report_day("2026-10-08") is True
     assert _claim_report_day("2026-10-08") is False
     assert store[_REDIS_SENT_KEY] == "2026-10-07"
-    assert store[_claim_key("2026-10-08")] == "2026-10-08"
+    assert "T" in str(store[_claim_key("2026-10-08")])
 
 
-def test_send_skips_when_already_claimed(monkeypatch, db_session):
+def test_day_only_claim_is_stolen(monkeypatch):
+    """Old claim-before-send stored the date string. That is not a living lock."""
+    store = {_claim_key("2026-10-09"): "2026-10-09"}
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report._redis_client",
+        lambda: _FakeRedis(store),
+    )
+    assert _claim_report_day("2026-10-09") is True
+    assert "T" in str(store[_claim_key("2026-10-09")])
+
+
+def test_stale_iso_claim_is_stolen(monkeypatch):
+    old = datetime.now(timezone.utc).timestamp() - (_STALE_CLAIM_SEC + 60)
+    stamp = datetime.fromtimestamp(old, tz=timezone.utc).isoformat()
+    store = {_claim_key("2026-10-09"): stamp}
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report._redis_client",
+        lambda: _FakeRedis(store),
+    )
+    assert _claim_report_day("2026-10-09") is True
+
+
+def test_fresh_iso_claim_stays_exclusive(monkeypatch):
+    stamp = datetime.now(timezone.utc).isoformat()
+    store = {_claim_key("2026-10-09"): stamp}
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report._redis_client",
+        lambda: _FakeRedis(store),
+    )
+    assert _claim_report_day("2026-10-09") is False
+
+
+def test_send_skips_when_already_sent_today(monkeypatch, db_session):
     monkeypatch.delenv("HUNTER_API_KEY", raising=False)
+    today = datetime.now(timezone.utc).date().isoformat()
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report.last_sent_day", lambda: today
+    )
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report.last_sent_payload",
+        lambda: {
+            "resend_id": "re_live",
+            "sent_at": "2026-10-09T14:01:00+00:00",
+            "count": 25,
+        },
+    )
+    claimed = []
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report._claim_report_day",
+        lambda day: claimed.append(day) or True,
+    )
+    result = send_daily_jobs_report(db_session, force=False)
+    assert result["sent"] is False
+    assert result["reason"] == "Already sent today"
+    assert result["resend_id"] == "re_live"
+    assert result["count"] == 25
+    assert claimed == []
+    assert "ugobe07@gmail.com" in result["recipients"]
+
+
+def test_send_reports_in_progress_when_lock_held(monkeypatch, db_session):
+    monkeypatch.delenv("HUNTER_API_KEY", raising=False)
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report.last_sent_day", lambda: None
+    )
     monkeypatch.setattr(
         "app.services.daily_jobs_report._claim_report_day",
         lambda day: False,
     )
     result = send_daily_jobs_report(db_session, force=False)
     assert result["sent"] is False
-    assert result["reason"] == "Already sent today"
+    assert result["reason"] == "Send already in progress"
     assert "ugobe07@gmail.com" in result["recipients"]
+
+
+def test_compose_failure_releases_claim(monkeypatch, db_session):
+    monkeypatch.delenv("HUNTER_API_KEY", raising=False)
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report.last_sent_day", lambda: None
+    )
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report._claim_report_day", lambda day: True
+    )
+    released = []
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report._release_report_day",
+        lambda day: released.append(day),
+    )
+    monkeypatch.setattr(
+        "app.services.daily_jobs_report.compose_daily_jobs_report",
+        lambda *a, **k: (_ for _ in ()).throw(RuntimeError("compose exploded")),
+    )
+    with pytest.raises(RuntimeError, match="compose exploded"):
+        send_daily_jobs_report(db_session, force=False)
+    assert released
 
 
 def test_send_emails_operator(monkeypatch, db_session):

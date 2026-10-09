@@ -26,6 +26,9 @@ _SITE = (os.getenv("PUBLIC_SITE_URL") or "https://readyforrobots.com").rstrip("/
 _REDIS_SENT_KEY = "jobs:daily_report:last_sent_date"
 _REDIS_PAYLOAD_KEY = "jobs:daily_report:latest"
 _CLAIM_TTL_SEC = 60 * 60 * 48
+# A living send holds the NX lock. After this, a crashed worker no longer
+# looks like a delivered email — GHA / catch-up may steal and send.
+_STALE_CLAIM_SEC = 40 * 60
 DESCRIPTION_MAX = 360
 DECISION_MAKER_EMPTY = "Not named on the posting"
 DECISION_MAKER_HUNTER_MISS = "Hunter.io found no named person"
@@ -73,17 +76,53 @@ def _redis_client():
     return client_fn()
 
 
-def _claim_report_day(day: str) -> bool:
-    """Atomically claim today's send. Yesterday's last_sent_date must not block today.
+def _parse_claim_at(raw: Any) -> Optional[datetime]:
+    text = str(raw or "").strip()
+    if not text:
+        return None
+    # Date-only leftover from claim-before-send is not a living lock.
+    if "T" not in text and " " not in text:
+        return None
+    try:
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
-    Same-day de-dupe uses a per-day NX key. The last_sent_date key is display-only
-    and keeps a 48h TTL, so SET NX on that shared key would skip the next morning.
+
+def _claim_report_day(day: str) -> bool:
+    """Atomically lock today's send. Yesterday's last_sent_date must not block today.
+
+    The lock value is an ISO timestamp. A leftover day-only value from the old
+    claim-before-send path is treated as stale so a hung Hunter run cannot fake
+    Gmail delivery. Fresh locks younger than `_STALE_CLAIM_SEC` stay exclusive.
     """
     client = _redis_client()
     if not client:
         return True
+    stamp = datetime.now(timezone.utc).isoformat()
     try:
-        return bool(client.set(_claim_key(day), day, nx=True, ex=_CLAIM_TTL_SEC))
+        if client.set(_claim_key(day), stamp, nx=True, ex=_CLAIM_TTL_SEC):
+            return True
+        claimed_at = _parse_claim_at(client.get(_claim_key(day)))
+        if claimed_at is None:
+            logger.warning("daily jobs report: stealing unparseable claim for %s", day)
+            client.set(_claim_key(day), stamp, ex=_CLAIM_TTL_SEC)
+            return True
+        age = (datetime.now(timezone.utc) - claimed_at).total_seconds()
+        if age >= _STALE_CLAIM_SEC:
+            logger.warning(
+                "daily jobs report: stealing stale claim for %s age_sec=%.0f",
+                day,
+                age,
+            )
+            client.set(_claim_key(day), stamp, ex=_CLAIM_TTL_SEC)
+            return True
+        return False
     except Exception:
         return True
 
@@ -104,7 +143,11 @@ def _mark_report_sent(day: str, payload: dict[str, Any]) -> None:
         return
     try:
         client.set(_REDIS_SENT_KEY, day, ex=_CLAIM_TTL_SEC)
-        client.set(_claim_key(day), day, ex=_CLAIM_TTL_SEC)
+        client.set(
+            _claim_key(day),
+            datetime.now(timezone.utc).isoformat(),
+            ex=_CLAIM_TTL_SEC,
+        )
         client.set(_REDIS_PAYLOAD_KEY, json.dumps(payload), ex=_CLAIM_TTL_SEC)
     except Exception:
         pass
@@ -119,6 +162,21 @@ def last_sent_day() -> Optional[str]:
         return str(raw) if raw else None
     except Exception:
         return None
+
+
+def last_sent_payload() -> dict[str, Any]:
+    """Last successful Resend payload. Empty if the day was only claimed."""
+    client = _redis_client()
+    if not client:
+        return {}
+    try:
+        raw = client.get(_REDIS_PAYLOAD_KEY)
+        if not raw:
+            return {}
+        parsed = json.loads(raw) if isinstance(raw, (str, bytes)) else raw
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception:
+        return {}
 
 
 def _as_map(value: Any) -> dict[str, Any]:
@@ -438,6 +496,7 @@ def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, A
         _serialize_job(row, rank)
         for rank, row in enumerate(select_daily_report_rows(db, limit=cap), start=1)
     ]
+    last = last_sent_payload()
     return {
         "date": day_label,
         "count": len(jobs),
@@ -445,6 +504,8 @@ def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, A
         "jobs": jobs,
         "recipients": get_daily_jobs_report_recipients(),
         "last_sent_date": last_sent_day(),
+        "last_sent_at": last.get("sent_at"),
+        "last_resend_id": last.get("resend_id"),
         "find_href": f"{_SITE}/?visit=jobs",
         "admin_href": f"{_SITE}/admin#daily-jobs-report",
     }
@@ -586,6 +647,20 @@ def _idempotency_key(day: str, *, force: bool) -> str:
     return f"daily-jobs-report-{day}-cards-v2"
 
 
+def _already_sent_response(
+    *, today: str, recipients: list[str], payload: dict[str, Any]
+) -> dict[str, Any]:
+    return {
+        "sent": False,
+        "reason": "Already sent today",
+        "date": today,
+        "recipients": recipients,
+        "resend_id": payload.get("resend_id"),
+        "sent_at": payload.get("sent_at"),
+        "count": payload.get("count"),
+    }
+
+
 def send_daily_jobs_report(
     db: Session,
     *,
@@ -594,66 +669,86 @@ def send_daily_jobs_report(
 ) -> dict[str, Any]:
     recipients = get_daily_jobs_report_recipients()
     today = datetime.now(timezone.utc).date().isoformat()
+    payload = last_sent_payload()
+    if not force and last_sent_day() == today:
+        return _already_sent_response(
+            today=today, recipients=recipients, payload=payload
+        )
     if not force and not _claim_report_day(today):
         return {
             "sent": False,
-            "reason": "Already sent today",
+            "reason": "Send already in progress",
             "date": today,
             "recipients": recipients,
+            "last_sent_date": last_sent_day(),
+            "resend_id": payload.get("resend_id"),
+            "sent_at": payload.get("sent_at"),
         }
     hunter: dict[str, Any] = {}
     try:
-        from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
+        try:
+            from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
 
-        hunter = enrich_daily_jobs_with_hunter(
-            db, limit=limit, scrape_pages=True
-        )
+            hunter = enrich_daily_jobs_with_hunter(
+                db, limit=limit, scrape_pages=True
+            )
+        except Exception:
+            logger.warning("Hunter.io daily-jobs enrich skipped", exc_info=True)
+            hunter = {"ok": False, "reason": "hunter_enrich_failed"}
+        report = compose_daily_jobs_report(db, limit=limit)
+        subject = f"Top {report['limit']} hot job opportunities — {report['date']}"
+        body = render_daily_jobs_report_text(report)
+        html_body = render_daily_jobs_report_html(report)
+        from app.services.resend_email import ResendEmailError, send_email_via_resend
+
+        try:
+            result = send_email_via_resend(
+                to_email=recipients,
+                subject=subject,
+                body_text=body,
+                body_html=html_body,
+                from_display_name="Ready For Robots · Jobs ops",
+                idempotency_key=_idempotency_key(today, force=force),
+            )
+        except ResendEmailError as exc:
+            logger.warning("daily jobs report email failed: %s", exc)
+            if not force:
+                _release_report_day(today)
+            return {"sent": False, "reason": str(exc), "recipients": recipients}
+        sent_payload = {
+            "date": today,
+            "count": report["count"],
+            "jobs": report["jobs"],
+            "sent_at": datetime.now(timezone.utc).isoformat(),
+            "resend_id": result.get("resend_id"),
+            "recipients": recipients,
+        }
+        _mark_report_sent(today, sent_payload)
+        return {
+            "sent": True,
+            "date": today,
+            "recipients": recipients,
+            "count": report["count"],
+            "resend_id": result.get("resend_id"),
+            "jobs": report["jobs"],
+            "hunter": hunter,
+        }
     except Exception:
-        logger.warning("Hunter.io daily-jobs enrich skipped", exc_info=True)
-        hunter = {"ok": False, "reason": "hunter_enrich_failed"}
-    report = compose_daily_jobs_report(db, limit=limit)
-    subject = f"Top {report['limit']} hot job opportunities — {report['date']}"
-    body = render_daily_jobs_report_text(report)
-    html_body = render_daily_jobs_report_html(report)
-    from app.services.resend_email import ResendEmailError, send_email_via_resend
-
-    try:
-        result = send_email_via_resend(
-            to_email=recipients,
-            subject=subject,
-            body_text=body,
-            body_html=html_body,
-            from_display_name="Ready For Robots · Jobs ops",
-            idempotency_key=_idempotency_key(today, force=force),
-        )
-    except ResendEmailError as exc:
-        logger.warning("daily jobs report email failed: %s", exc)
         if not force:
             _release_report_day(today)
-        return {"sent": False, "reason": str(exc), "recipients": recipients}
-    payload = {
-        "date": today,
-        "count": report["count"],
-        "jobs": report["jobs"],
-        "sent_at": datetime.now(timezone.utc).isoformat(),
-    }
-    _mark_report_sent(today, payload)
-    return {
-        "sent": True,
-        "date": today,
-        "recipients": recipients,
-        "count": report["count"],
-        "resend_id": result.get("resend_id"),
-        "jobs": report["jobs"],
-        "hunter": hunter,
-    }
+        raise
 
 
 def maybe_send_missed_daily_jobs_report(db: Session) -> dict[str, Any]:
     """If today's 14:00 UTC send was missed (deploy after the hour), send once."""
     today = datetime.now(timezone.utc).date().isoformat()
     if last_sent_day() == today:
-        return {"sent": False, "reason": "Already sent today", "date": today}
+        payload = last_sent_payload()
+        return _already_sent_response(
+            today=today,
+            recipients=get_daily_jobs_report_recipients(),
+            payload=payload,
+        )
     return send_daily_jobs_report(db, force=False)
 
 
