@@ -243,6 +243,14 @@ export const EMPLOYER_MATCH_CTA = "Match robots →";
 export const EMPLOYER_POST_JOB_CTA = "Post this job →";
 export const EMPLOYER_EMPTY_MATCH =
   "No catalog robots for this work yet. Post the job so OEMs can find it.";
+export const EMPLOYER_EXAMINE_HINT =
+  "Click a robot to examine it before you post.";
+export const EMPLOYER_EXAMINE_CTA = "Examine →";
+export const EMPLOYER_EXAMINE_CLOSE = "Close";
+export const EMPLOYER_EXAMINE_EMPTY =
+  "Catalog has the name and OEM. We will not invent specs.";
+export const EMPLOYER_SHORTLIST_ADD = "Add to shortlist";
+export const EMPLOYER_SHORTLIST_DROP = "Remove from shortlist";
 
 export const EMPLOYER_PROCESS_STEPS = [
   {

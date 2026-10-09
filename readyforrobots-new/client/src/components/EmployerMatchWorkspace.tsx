@@ -6,8 +6,11 @@
 import { useMemo, useState } from "react";
 import { WorkClassIcon } from "@/components/SiteIcon";
 import { iconForWorkClass } from "@/lib/siteIcons";
+import EmployerMatchedRobotModal from "@/components/EmployerMatchedRobotModal";
 import {
   EMPLOYER_EMPTY_MATCH,
+  EMPLOYER_EXAMINE_CTA,
+  EMPLOYER_EXAMINE_HINT,
   EMPLOYER_MATCH_CTA,
   EMPLOYER_POST_JOB_CTA,
   EMPLOYER_PROCESS_STEPS,
@@ -22,6 +25,7 @@ import {
 } from "@/lib/jobsWorkflow";
 import {
   EMPLOYER_JD_ACCEPT,
+  employerRobotKey,
   fetchEmployerRobotMatch,
   postEmployerJobDraft,
   readEmployerJdFile,
@@ -58,6 +62,7 @@ export default function EmployerMatchWorkspace() {
   const [robots, setRobots] = useState<EmployerMatchedRobot[]>([]);
   const [emptyCopy, setEmptyCopy] = useState<string | null>(null);
   const [checked, setChecked] = useState<string[]>([]);
+  const [examined, setExamined] = useState<EmployerMatchedRobot | null>(null);
   const [employer, setEmployer] = useState("");
   const [title, setTitle] = useState("");
   const [workplace, setWorkplace] = useState("");
@@ -97,7 +102,8 @@ export default function EmployerMatchWorkspace() {
       setEmptyCopy(
         res.empty_copy || (res.robot_count ? null : EMPLOYER_EMPTY_MATCH)
       );
-      setChecked((res.robots || []).map(r => `${r.vendor_name}|${r.name}`));
+      setChecked((res.robots || []).map(employerRobotKey));
+      setExamined(null);
       setStep("robots");
     } catch {
       setError("Could not match catalog robots. Try again.");
@@ -119,7 +125,7 @@ export default function EmployerMatchWorkspace() {
     setPostingBusy(true);
     setPostingError(null);
     const shortlisted = robots.filter(r =>
-      checked.includes(`${r.vendor_name}|${r.name}`)
+      checked.includes(employerRobotKey(r))
     );
     const local: EmployerPosting = {
       id: `${Date.now()}`,
@@ -201,7 +207,10 @@ export default function EmployerMatchWorkspace() {
                 key={item.id}
                 type="button"
                 aria-current={isCurrent ? "step" : undefined}
-                onClick={() => setStep(item.id)}
+                onClick={() => {
+                  setExamined(null);
+                  setStep(item.id);
+                }}
                 className={`flex min-w-0 flex-1 cursor-pointer items-center justify-between gap-2 px-3 py-3 text-left ${JOBS_PROCESS_NAV_CLASS} ${
                   isCurrent
                     ? "border-b-2 border-emerald-400 bg-emerald-400/5 text-emerald-300"
@@ -477,6 +486,11 @@ export default function EmployerMatchWorkspace() {
                   {qualified.tradeoff}
                 </p>
               ) : null}
+              {robots.length ? (
+                <p className="mt-2 text-sm leading-snug text-slate-400">
+                  {EMPLOYER_EXAMINE_HINT}
+                </p>
+              ) : null}
               {robots.length === 0 ? (
                 <div className="mt-4 border border-slate-600 bg-[#081126] p-5">
                   <h2 className="font-display text-lg font-bold text-slate-100">
@@ -498,17 +512,18 @@ export default function EmployerMatchWorkspace() {
                 <>
                   <ol className="mt-4 space-y-3">
                     {robots.map(robot => {
-                      const key = `${robot.vendor_name}|${robot.name}`;
+                      const key = employerRobotKey(robot);
                       const on = checked.includes(key);
                       return (
                         <li
                           key={key}
                           className="border border-slate-600 bg-[#081126] px-4 py-3"
                         >
-                          <label className="flex cursor-pointer items-start gap-3">
+                          <div className="flex items-start gap-3">
                             <input
                               type="checkbox"
                               checked={on}
+                              aria-label={`Shortlist ${robot.name}`}
                               onChange={() =>
                                 setChecked(prev =>
                                   on
@@ -518,7 +533,13 @@ export default function EmployerMatchWorkspace() {
                               }
                               className="mt-1"
                             />
-                            <span>
+                            <button
+                              type="button"
+                              aria-haspopup="dialog"
+                              aria-label={`Examine ${robot.name}`}
+                              onClick={() => setExamined(robot)}
+                              className="min-w-0 flex-1 cursor-pointer text-left"
+                            >
                               <span className="block font-display text-base font-bold text-slate-100">
                                 {robot.name}
                               </span>
@@ -533,8 +554,11 @@ export default function EmployerMatchWorkspace() {
                                   {robot.description}
                                 </span>
                               ) : null}
-                            </span>
-                          </label>
+                              <span className="mt-2 block font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
+                                {EMPLOYER_EXAMINE_CTA}
+                              </span>
+                            </button>
+                          </div>
                         </li>
                       );
                     })}
@@ -576,7 +600,7 @@ export default function EmployerMatchWorkspace() {
                   {posting.shortlisted.length ? (
                     <ul className="mt-3 space-y-1 text-sm text-slate-300">
                       {posting.shortlisted.map(r => (
-                        <li key={`${r.vendor_name}|${r.name}`}>
+                        <li key={employerRobotKey(r)}>
                           {r.name} · {r.vendor_name}
                         </li>
                       ))}
@@ -696,6 +720,21 @@ export default function EmployerMatchWorkspace() {
           ) : null}
         </section>
       </div>
+      {step === "robots" && examined ? (
+        <EmployerMatchedRobotModal
+          robot={examined}
+          shortlisted={checked.includes(employerRobotKey(examined))}
+          onToggleShortlist={() => {
+            const key = employerRobotKey(examined);
+            setChecked(prev =>
+              prev.includes(key)
+                ? prev.filter(k => k !== key)
+                : [...prev, key]
+            );
+          }}
+          onClose={() => setExamined(null)}
+        />
+      ) : null}
     </div>
   );
 }

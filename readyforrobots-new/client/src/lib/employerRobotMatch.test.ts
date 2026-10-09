@@ -5,6 +5,9 @@ import { fileURLToPath } from "node:url";
 import {
   EMPLOYER_JD_ACCEPT,
   EMPLOYER_MATCH_TIMEOUT_MS,
+  catalogHttpUrl,
+  catalogSpecRows,
+  employerRobotKey,
   readEmployerJdFile,
 } from "./employerRobotMatch";
 
@@ -55,5 +58,37 @@ describe("employer MATCH catalog budget and JD upload", () => {
     expect(ui).toMatch(/type="file"/);
     expect(ui).toMatch(/jdFilename/);
     expect(ui).not.toMatch(/hunter\.io|Apollo/i);
+  });
+
+  it("lets employers examine catalog robots without inventing specs", () => {
+    expect(employerRobotKey({ vendor_name: "Pudu", name: "BellaBot" })).toBe(
+      "Pudu|BellaBot"
+    );
+    expect(catalogHttpUrl("https://www.pudurobotics.com/product/bellabot")).toMatch(
+      /pudurobotics/
+    );
+    expect(catalogHttpUrl("javascript:alert(1)")).toBeNull();
+    expect(catalogHttpUrl("")).toBeNull();
+    expect(catalogSpecRows({ payload_kg: 10, battery_life_h: 8 })).toEqual([
+      { label: "Payload", value: "10 kg" },
+      { label: "Runtime", value: "8 h" },
+    ]);
+    expect(catalogSpecRows({})).toEqual([]);
+    const ui = readFileSync(
+      join(here, "../components/EmployerMatchWorkspace.tsx"),
+      "utf8"
+    );
+    const modal = readFileSync(
+      join(here, "../components/EmployerMatchedRobotModal.tsx"),
+      "utf8"
+    );
+    expect(ui).toMatch(/aria-haspopup="dialog"/);
+    expect(ui).toMatch(/Examine \$\{robot\.name\}/);
+    expect(ui).toMatch(/EmployerMatchedRobotModal/);
+    expect(modal).toMatch(/aria-label="Catalog robot"/);
+    expect(modal).toMatch(/EMPLOYER_EXAMINE_EMPTY/);
+    expect(modal).toMatch(/Product page/);
+    expect(modal).not.toMatch(/match %|match percent|ROI|fit score/i);
+    expect(ui).not.toMatch(/match %|fit score/i);
   });
 });

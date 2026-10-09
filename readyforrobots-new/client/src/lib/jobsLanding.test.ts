@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   EMPLOYER_EMPTY_MATCH,
+  EMPLOYER_EXAMINE_HINT,
   EMPLOYER_PROCESS_STEPS,
   EMPLOYER_WORK_TILE_IDS,
   LANDING_BRIEF_HEADLINE,
@@ -358,6 +359,7 @@ describe("landing fork", () => {
       "Post the job",
     ]);
     expect(EMPLOYER_EMPTY_MATCH).toMatch(/Post the job so OEMs can find it/);
+    expect(EMPLOYER_EXAMINE_HINT).toMatch(/examine it before you post/);
     expect(EMPLOYER_WORK_TILE_IDS).toEqual([
       "pallets",
       "pick_pack",
@@ -387,6 +389,9 @@ describe("landing fork", () => {
     expect(employer).toMatch(/readEmployerJdFile/);
     expect(employer).toMatch(/type="file"/);
     expect(employer).toMatch(/EMPLOYER_JD_ACCEPT/);
+    expect(employer).toMatch(/EmployerMatchedRobotModal/);
+    expect(employer).toMatch(/Examine \$\{robot\.name\}/);
+    expect(employer).toMatch(/EMPLOYER_EXAMINE_HINT/);
     expect(employer).not.toMatch(/SIGNAL|Apollo|find-robots/i);
     expect(employer).not.toMatch(/CalJobsDesk|send_buyer_intro/);
   });

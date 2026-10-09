@@ -8,6 +8,7 @@ FIND lookup timeout, 500, abort, or Failed to fetch stays on OEM step 1 (`/?visi
 - `find-no-new1` forbids `goJobsFreshHome`, `/?new=1`, and Jobs.tsx `forcedLanding` while visit is jobs.
 - `find-fail-fast` caps unknown-OEM search at 8s and catalog SKU search at 12s, hitting Fly directly so Vercel cannot sit on the rewrite for ~90s.
 - `employer-catalog` is MATCH from the vendor index only, with a 3s client budget. No live OEM scrape.
+- `employer-examine` opens a named catalog robot (name, OEM, class, stored description/specs, product page) before `Post this job →`. No invented specs or match%.
 - `employer-jd` uploads a pdf/docx/txt with the post-job draft. No invented employer or email.
 
 ## How to get to it (user POV)
@@ -15,7 +16,7 @@ FIND lookup timeout, 500, abort, or Failed to fetch stays on OEM step 1 (`/?visi
 - Open `https://readyforrobots.com/` and click **Jobs for Robots**, or load `/?visit=jobs`.
 - Paste a robot URL and click Find jobs. If lookup times out or the API returns 500, you stay on that FIND form with an error. Retry on the same step.
 - Wordmark / Jobs still returns to the landing fork on purpose. Lookup failure does not.
-- Employer door: **Robots for Jobs** → match catalog robots → post the job, optionally with a job-description file.
+- Employer door: **Robots for Jobs** → match catalog robots → click a robot to examine it → post the job, optionally with a job-description file.
 
 ## Driving it with verify-readyforrobots
 

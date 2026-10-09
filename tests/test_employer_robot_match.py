@@ -66,6 +66,44 @@ def test_match_module_does_not_scrape():
     assert "_catalog_robots_snapshot" in src
 
 
+def test_matched_robots_carry_catalog_facts_for_examine():
+    result = match_catalog_robots(work_class="serving", limit=12)
+    assert result["state"] == "matches"
+    assert result["robots"]
+    for robot in result["robots"]:
+        assert robot["name"]
+        assert robot["vendor_name"]
+        assert "product_url" in robot
+        assert "match_percent" not in robot
+        assert "roi" not in robot
+        assert "fit_score" not in robot
+    assert any(
+        robot.get("product_url") or robot.get("vendor_url")
+        for robot in result["robots"]
+    )
+
+
+def test_public_matched_robot_does_not_invent_specs():
+    from app.services.employer_robot_match import public_matched_robot
+
+    public = public_matched_robot(
+        {
+            "name": "BellaBot",
+            "vendor_name": "Pudu Robotics",
+            "vendor_url": "https://www.pudurobotics.com/",
+            "robot_class": "serving",
+            "description": "Restaurant serving.",
+            "product_url": "https://www.pudurobotics.com/product/bellabot",
+            "task": None,
+            "setting": None,
+        }
+    )
+    assert public["name"] == "BellaBot"
+    assert public["product_url"].endswith("bellabot")
+    assert "specs" not in public
+    assert "match_percent" not in public
+
+
 def test_employer_draft_persists_jd_on_robot_jobs():
     from pathlib import Path
 
