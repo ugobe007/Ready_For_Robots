@@ -10,7 +10,7 @@ import ResendEmailModal from "@/components/ResendEmailModal";
 
 type InboxItem = {
   id: string;
-  thread_id: string;
+  thread_id: string | null;
   opportunity_type: "crm" | "supply";
   title: string;
   current_stage: string;
@@ -34,6 +34,9 @@ function formatDate(value?: string | null) {
 }
 
 function scheduleHref(item: InboxItem) {
+  if (!item.thread_id) {
+    return "#";
+  }
   const params = new URLSearchParams({
     opportunity_id: item.thread_id,
     title: `Meeting with ${item.title}`,
@@ -261,12 +264,14 @@ export default function Inbox() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Link
-                      href={`/sales-console?opportunity_id=${encodeURIComponent(selected.thread_id)}`}
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600"
-                    >
-                      Open in Sales Console
-                    </Link>
+                    {selected.thread_id ? (
+                      <Link
+                        href={`/sales-console?opportunity_id=${encodeURIComponent(selected.thread_id)}`}
+                        className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600"
+                      >
+                        Open in Sales Console
+                      </Link>
+                    ) : null}
                     {selected.latest_action?.id &&
                     (selected.latest_action.status === "pending" ||
                       selected.latest_action.status === "drafted") ? (
@@ -289,12 +294,14 @@ export default function Inbox() {
                       <Mail className="w-3.5 h-3.5" />
                       Reply via Resend
                     </button>
-                    <Link
-                      href={scheduleHref(selected)}
-                      className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black text-[#111827]"
-                    >
-                      Schedule meeting
-                    </Link>
+                    {selected.thread_id ? (
+                      <Link
+                        href={scheduleHref(selected)}
+                        className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black text-[#111827]"
+                      >
+                        Schedule meeting
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
                 <div className="mt-5 rounded-2xl border border-gray-300 bg-gray-50 p-4">

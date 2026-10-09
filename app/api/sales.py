@@ -419,7 +419,7 @@ def _inbox_from_outreach_replies(
         items.append(
             {
                 "id": source_id,
-                "thread_id": str(reply.crm_account_id or reply.outreach_message_id),
+                "thread_id": None,  # No sales opportunity exists for this reply
                 "opportunity_type": "crm",
                 "title": account.name if account else "Inbound reply",
                 "current_stage": "replied",
@@ -483,7 +483,7 @@ def _inbox_from_supply_replies(
         items.append(
             {
                 "id": source_id,
-                "thread_id": str(reply.supply_outreach_message_id),
+                "thread_id": None,  # No sales opportunity exists for this reply
                 "opportunity_type": "supply",
                 "title": robot.company_name if robot else "Inbound reply",
                 "current_stage": "replied",

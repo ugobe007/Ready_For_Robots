@@ -286,15 +286,29 @@ def job_card_href(job_key: str) -> str:
 
 def _family_for_action(action: str, title: str) -> str:
     blob = f"{action} {title}".lower()
-    if any(w in blob for w in ("pallet", "stack", "case")):
+    # Use word boundary pattern to avoid matching substrings like "arm" in "pharmacy"
+    pattern = re.compile(r'\b(' + '|'.join([
+        r'pallet', r'stack', r'case',
+        r'scrub', r'clean', r'evs', r'floor',
+        r'inspect', r'vision', r'audit',
+        r'pick', r'grip', r'manipul', r'arm',
+        r'cart', r'tote'
+    ]) + r')\b')
+    
+    match = pattern.search(blob)
+    if not match:
+        return "transport"
+    
+    word = match.group(1)
+    if word in ("pallet", "stack", "case"):
         return "pallet"
-    if any(w in blob for w in ("scrub", "clean", "evs", "floor")):
+    if word in ("scrub", "clean", "evs", "floor"):
         return "scrub"
-    if any(w in blob for w in ("inspect", "vision", "audit")):
+    if word in ("inspect", "vision", "audit"):
         return "inspect"
-    if any(w in blob for w in ("pick", "grip", "manipul", "arm")):
+    if word in ("pick", "grip", "manipul", "arm"):
         return "gripper"
-    if any(w in blob for w in ("cart", "tote")):
+    if word in ("cart", "tote"):
         return "cart"
     return "transport"
 
