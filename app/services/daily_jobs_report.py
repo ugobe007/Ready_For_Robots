@@ -285,22 +285,21 @@ def job_card_href(job_key: str) -> str:
 
 
 def _family_for_action(action: str, title: str) -> str:
-    blob = f"{action} {title}".lower()
-    # Match whole words or stems, allowing snake_case and plurals
-    # Use lookahead/lookbehind to avoid matching "arm" inside "pharmacy"
-    if any(stem in blob for stem in ("pallet", "palletiz", "stack", "case")):
+    """Letter tokens only. `arm` in pharmacy is not a gripper; `pallet_move` is a pallet."""
+    tokens = re.findall(r"[a-z]+", f"{action} {title}".lower())
+
+    def has(*stems: str) -> bool:
+        return any(token.startswith(stem) for token in tokens for stem in stems)
+
+    if has("pallet", "stack", "case"):
         return "pallet"
-    if any(stem in blob for stem in ("scrub", "clean", "evs", "floor")):
+    if has("scrub", "clean", "evs", "floor"):
         return "scrub"
-    if any(stem in blob for stem in ("inspect", "vision", "audit")):
+    if has("inspect", "vision", "audit"):
         return "inspect"
-    # Check for manipulation keywords (pick, grip, manipul prefix, or "arm" not in "pharmacy")
-    if any(stem in blob for stem in ("pick", "grip", "manipul")):
+    if has("pick", "grip", "manipul") or "arm" in tokens:
         return "gripper"
-    # For "arm", ensure it's not part of "pharmacy", "arm" or similar
-    if re.search(r'(?<!ph)(?<!al)\barm\b', blob):
-        return "gripper"
-    if any(stem in blob for stem in ("cart", "tote")):
+    if has("cart", "tote"):
         return "cart"
     return "transport"
 

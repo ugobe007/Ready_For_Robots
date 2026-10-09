@@ -14,6 +14,7 @@ from app.services.daily_jobs_report import (
     _REDIS_SENT_KEY,
     _claim_key,
     _claim_report_day,
+    _family_for_action,
     compose_daily_jobs_report,
     get_daily_jobs_report_recipients,
     maybe_send_missed_daily_jobs_report,
@@ -262,8 +263,20 @@ def test_public_job_card_is_named_employer_only(db_session):
     assert card is not None
     assert card["employer"] == "Rochester Regional Health"
     assert card["card_href"].endswith("/?job=rrh-live")
+    assert card["family"] == "transport"
     assert public_job_card(db_session, "board") is None
     assert public_job_card(db_session, "missing") is None
+
+
+def test_family_tokens_not_substrings():
+    assert _family_for_action("delivery", "Pharmacy delivery") == "transport"
+    assert _family_for_action("pallet_move", "Pallet move") == "pallet"
+    assert _family_for_action("palletizing", "Inbound palletizing") == "pallet"
+    assert _family_for_action("picking", "Piece picking") == "gripper"
+    assert _family_for_action("pick", "Bin pick") == "gripper"
+    assert _family_for_action("manipulation", "Arm tend") == "gripper"
+    assert _family_for_action("robotic_arm", "Machine tend") == "gripper"
+    assert _family_for_action("cart_move", "Tote run") == "cart"
 
 
 def test_html_escapes_employer_markup():

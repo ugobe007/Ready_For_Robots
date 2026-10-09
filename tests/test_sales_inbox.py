@@ -131,6 +131,7 @@ def test_inbox_includes_outreach_reply_missing_sales_message(monkeypatch):
         assert items[0]["from_email"] == "buyer@endeavor.example"
         assert items[0]["source_type"] == "outreach_reply"
         assert items[0]["title"] == "Endeavor Health"
+        assert items[0]["thread_id"] is None
     finally:
         db.close()
         Base.metadata.drop_all(bind=engine)

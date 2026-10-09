@@ -99,7 +99,7 @@ type AdminActivity = {
 
 type CalInboxItem = {
   id: string;
-  thread_id: string;
+  thread_id?: string | null;
   opportunity_type: "crm" | "supply";
   title?: string;
   current_stage?: string;
