@@ -290,6 +290,38 @@ def test_company_search_uses_brand_not_property_suffix():
     names = _company_search_names("Texas Health Resources", "McKinney, TX 75071")
     assert names[0] == "Texas Health Resources"
     assert "Texas Health" not in names
+    names = _company_search_names("University of Rochester", "Rochester, NY")
+    assert "University" not in names
+    assert "University of Rochester" in names
+    names = _company_search_names("Office Pride of Cedar Rapids", "Cedar Falls, IA")
+    assert "Office Pride" in names
+
+
+def test_preview_domain_must_fit_employer_name():
+    from app.services.daily_jobs_hunter import domain_from_people
+
+    assert (
+        domain_from_people(
+            [
+                {
+                    "email": "patrice.valade@telushealth.com",
+                    "organization_domain": "telushealth.com",
+                    "name": "Patrice Valade",
+                }
+            ],
+            "Texas Health Resources",
+            "McKinney, TX",
+        )
+        is None
+    )
+    assert (
+        domain_from_people(
+            [{"email": "tandrews@asbury.org", "name": "Todd Andrews"}],
+            "Asbury",
+            "Union City, GA",
+        )
+        == "asbury.org"
+    )
 
 
 def test_email_must_belong_to_the_named_employer():

@@ -259,19 +259,25 @@ def domain_for_job(row: Any, db: Session) -> Optional[str]:
     return None
 
 
-def domain_from_people(people: list[dict[str, Any]] | None) -> Optional[str]:
-    """Hunter company search often has no website on the job row. Use email hosts."""
+def domain_from_people(
+    people: list[dict[str, Any]] | None,
+    employer: str = "",
+    locality: str = "",
+) -> Optional[str]:
+    """Hunter company search often has no website on the job row. Use email hosts
+    that already fit the employer name — never the first Hunter hit's domain."""
     for person in people or []:
         if not isinstance(person, dict):
             continue
-        host = registrable_domain(person.get("organization_domain"))
-        if host:
-            return host
         email = str(person.get("email") or "").strip().lower()
-        if "@" in email:
+        host = registrable_domain(person.get("organization_domain"))
+        if not host and "@" in email:
             host = registrable_domain(email.split("@", 1)[1])
-            if host:
-                return host
+        if not host:
+            continue
+        probe = email if "@" in email else f"name@{host}"
+        if _email_fits_employer(probe, employer, locality):
+            return host
     return None
 
 
@@ -322,7 +328,9 @@ def _company_search_names(employer: str, locality: str = "") -> list[str]:
     add(raw)
     add(raw.replace(".", ""))
     add(re.sub(r"\s+by\s+.+$", "", raw, flags=re.I))
-    add(re.sub(r"\s+of\s+[A-Z].*$", "", raw))
+    of_match = re.match(r"^(.+?)\s+of\s+(.+)$", raw)
+    if of_match and len(of_match.group(1).split()) >= 2:
+        add(of_match.group(1))
     add(
         re.sub(
             r",?\s+(inc|llc|ltd|corp|corporation|company|co|services|group|hotels|hotel|restaurants|restaurant)\.?$",
@@ -541,9 +549,8 @@ def _rankable_hunter_person(
         local = email.split("@", 1)[0]
         if local in _ROLE_LOCALS:
             return False
-        if not row.get("from_company_search") and domain:
-            if not _email_fits_employer(email, employer, locality, domain=domain):
-                return False
+        if not _email_fits_employer(email, employer, locality, domain=domain):
+            return False
     return True
 
 
@@ -751,7 +758,7 @@ def enrich_daily_jobs_with_hunter(
                 locality=locality,
                 cache=cache,
             )
-            domain = domain_from_people(preview)
+            domain = domain_from_people(preview, employer, locality)
 
         prospect = None
         try:
