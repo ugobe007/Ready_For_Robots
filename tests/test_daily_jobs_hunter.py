@@ -870,3 +870,32 @@ def test_finder_retries_company_when_domain_misses(monkeypatch):
     )
     report = compose_daily_jobs_report(db, limit=25)
     assert "priya.shah@harrishealth.org" in report["jobs"][0]["contact"]
+
+
+def test_finder_does_not_accept_wrong_company_domain(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(
+        _job(
+            job_key="unifi",
+            company_name="Unifi Aviation",
+            locality="ATL — Atlanta, GA",
+            apply_url="https://www.unifiservice.com/about",
+        )
+    )
+    db.commit()
+    hunter = _FakeHunter(
+        [],
+        finder={
+            "email": "jurias@unical.com",
+            "name": "Guess Person",
+            "title": "Site Operations Manager",
+            "confidence": 99,
+            "verification_status": "valid",
+            "source": "hunter_finder",
+            "organization_domain": "unical.com",
+        },
+    )
+    enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "jurias@unical.com" not in (report["jobs"][0]["contact"] or "")

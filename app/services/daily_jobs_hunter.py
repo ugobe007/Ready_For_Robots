@@ -488,7 +488,7 @@ def _stamp_hit(
         prospect,
         employer,
         str(getattr(row, "locality", "") or ""),
-        domain=domain or prospect.get("organization_domain"),
+        domain=domain,
     ):
         row.employer_email = email
     if name:
@@ -650,15 +650,6 @@ def _fill_email_via_finder(
             )
             continue
         if found and _usable_hunter_row(found, employer, locality, domain=domain):
-            merged.update({k: v for k, v in found.items() if v})
-            merged["source"] = found.get("source") or "hunter_finder"
-            return merged
-        if found and _usable_hunter_row(
-            found,
-            employer,
-            locality,
-            domain=found.get("organization_domain"),
-        ):
             merged.update({k: v for k, v in found.items() if v})
             merged["source"] = found.get("source") or "hunter_finder"
             return merged
