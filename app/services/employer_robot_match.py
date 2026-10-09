@@ -151,6 +151,40 @@ def public_matched_robot(robot: dict[str, Any]) -> dict[str, Any]:
     return public
 
 
+def public_shortlisted_robots(rows: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    """Named catalog robots the employer chose. Several are allowed. Never invent."""
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for raw in rows or []:
+        if not isinstance(raw, dict):
+            continue
+        name = str(raw.get("name") or "").strip()
+        vendor = str(raw.get("vendor_name") or "").strip()
+        if not name or not vendor:
+            continue
+        key = (vendor.lower(), name.lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        item: dict[str, Any] = {
+            "name": name[:240],
+            "vendor_name": vendor[:240],
+        }
+        cls = str(raw.get("robot_class") or "").strip()
+        if cls:
+            item["robot_class"] = cls[:40]
+        url = str(raw.get("vendor_url") or "").strip()
+        if url:
+            item["vendor_url"] = url[:2000]
+        product = str(raw.get("product_url") or "").strip()
+        if product:
+            item["product_url"] = product[:2000]
+        out.append(item)
+        if len(out) >= 24:
+            break
+    return out
+
+
 def iter_catalog_robots() -> list[dict[str, Any]]:
     """Named catalog robots only. Deduped. Junk SKU names dropped."""
     return [dict(row) for row in _catalog_robots_snapshot()]

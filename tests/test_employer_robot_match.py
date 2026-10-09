@@ -104,6 +104,27 @@ def test_public_matched_robot_does_not_invent_specs():
     assert "match_percent" not in public
 
 
+def test_employer_can_shortlist_more_than_one_catalog_robot():
+    from pathlib import Path
+
+    from app.services.employer_robot_match import public_shortlisted_robots
+
+    chosen = public_shortlisted_robots(
+        [
+            {"name": "BellaBot", "vendor_name": "Pudu Robotics", "robot_class": "serving"},
+            {"name": "Dinerbot T10", "vendor_name": "Keenon Robotics", "robot_class": "serving"},
+            {"name": "BellaBot", "vendor_name": "Pudu Robotics"},
+            {"name": "", "vendor_name": "Ghost"},
+        ]
+    )
+    assert [r["name"] for r in chosen] == ["BellaBot", "Dinerbot T10"]
+    api = Path("app/api/employer_jobs.py").read_text(encoding="utf-8")
+    life = Path("app/services/robot_job_lifecycle.py").read_text(encoding="utf-8")
+    assert "employer_shortlisted_robots" in api
+    assert "employer_shortlisted_robots" in life
+    assert "public_shortlisted_robots" in api
+
+
 def test_employer_draft_persists_jd_on_robot_jobs():
     from pathlib import Path
 

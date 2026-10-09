@@ -43,6 +43,11 @@ export function employerRobotKey(
   return `${robot.vendor_name}|${robot.name}`;
 }
 
+/** Additive shortlist. Checking one robot never clears the others. */
+export function toggleEmployerRobotKey(prev: string[], key: string): string[] {
+  return prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key];
+}
+
 export function catalogHttpUrl(raw?: string | null): string | null {
   const text = (raw || "").trim();
   if (!text) return null;

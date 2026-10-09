@@ -13,7 +13,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.services.employer_robot_match import EMPTY_COPY, match_catalog_robots
+from app.services.employer_robot_match import (
+    EMPTY_COPY,
+    match_catalog_robots,
+    public_shortlisted_robots,
+)
 from app.services.robot_job_extract import job_function_from_title
 from app.services.robot_job_lifecycle import upsert_robot_job_from_extract
 
@@ -80,6 +84,9 @@ def post_employer_job_draft(
         extract["job_description"] = jd_text[:12000]
     if jd_filename:
         extract["job_description_filename"] = jd_filename[:240]
+    chosen = public_shortlisted_robots(body.shortlisted)
+    if chosen:
+        extract["employer_shortlisted_robots"] = chosen
     try:
         row = upsert_robot_job_from_extract(
             db,

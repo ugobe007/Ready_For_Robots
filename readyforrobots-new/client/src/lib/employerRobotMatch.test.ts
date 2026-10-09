@@ -9,6 +9,7 @@ import {
   catalogSpecRows,
   employerRobotKey,
   readEmployerJdFile,
+  toggleEmployerRobotKey,
 } from "./employerRobotMatch";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -64,6 +65,15 @@ describe("employer MATCH catalog budget and JD upload", () => {
     expect(employerRobotKey({ vendor_name: "Pudu", name: "BellaBot" })).toBe(
       "Pudu|BellaBot"
     );
+    expect(
+      toggleEmployerRobotKey(["Pudu|BellaBot"], "Keenon|Dinerbot T10")
+    ).toEqual(["Pudu|BellaBot", "Keenon|Dinerbot T10"]);
+    expect(
+      toggleEmployerRobotKey(
+        ["Pudu|BellaBot", "Keenon|Dinerbot T10"],
+        "Pudu|BellaBot"
+      )
+    ).toEqual(["Keenon|Dinerbot T10"]);
     expect(catalogHttpUrl("https://www.pudurobotics.com/product/bellabot")).toMatch(
       /pudurobotics/
     );

@@ -8,12 +8,16 @@ import { WorkClassIcon } from "@/components/SiteIcon";
 import { iconForWorkClass } from "@/lib/siteIcons";
 import EmployerMatchedRobotModal from "@/components/EmployerMatchedRobotModal";
 import {
+  EMPLOYER_CHANGE_CHOSEN_CTA,
+  EMPLOYER_CHOOSE_ALL,
+  EMPLOYER_CLEAR_CHOSEN,
   EMPLOYER_EMPTY_MATCH,
   EMPLOYER_EXAMINE_CTA,
   EMPLOYER_EXAMINE_HINT,
   EMPLOYER_MATCH_CTA,
   EMPLOYER_POST_JOB_CTA,
   EMPLOYER_PROCESS_STEPS,
+  employerChosenCopy,
   jobsFindHref,
   type EmployerProcessStepId,
 } from "@/lib/jobsLanding";
@@ -27,6 +31,7 @@ import {
   EMPLOYER_JD_ACCEPT,
   employerRobotKey,
   fetchEmployerRobotMatch,
+  toggleEmployerRobotKey,
   postEmployerJobDraft,
   readEmployerJdFile,
   type EmployerJdFile,
@@ -102,7 +107,7 @@ export default function EmployerMatchWorkspace() {
       setEmptyCopy(
         res.empty_copy || (res.robot_count ? null : EMPLOYER_EMPTY_MATCH)
       );
-      setChecked((res.robots || []).map(employerRobotKey));
+      setChecked([]);
       setExamined(null);
       setStep("robots");
     } catch {
@@ -111,6 +116,10 @@ export default function EmployerMatchWorkspace() {
       setMatching(false);
     }
   }
+
+  const chosenRobots = robots.filter(r =>
+    checked.includes(employerRobotKey(r))
+  );
 
   async function postJob() {
     const shop = employer.trim();
@@ -124,9 +133,6 @@ export default function EmployerMatchWorkspace() {
     }
     setPostingBusy(true);
     setPostingError(null);
-    const shortlisted = robots.filter(r =>
-      checked.includes(employerRobotKey(r))
-    );
     const local: EmployerPosting = {
       id: `${Date.now()}`,
       employer: shop,
@@ -141,7 +147,7 @@ export default function EmployerMatchWorkspace() {
       jd_filename: jd?.filename,
       jd_text: jd?.text || undefined,
       persisted: false,
-      shortlisted: shortlisted.map(r => ({
+      shortlisted: chosenRobots.map(r => ({
         name: r.name,
         vendor_name: r.vendor_name,
         robot_class: r.robot_class,
@@ -487,9 +493,36 @@ export default function EmployerMatchWorkspace() {
                 </p>
               ) : null}
               {robots.length ? (
-                <p className="mt-2 text-sm leading-snug text-slate-400">
-                  {EMPLOYER_EXAMINE_HINT}
-                </p>
+                <>
+                  <p className="mt-2 text-sm leading-snug text-slate-400">
+                    {EMPLOYER_EXAMINE_HINT}
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                    <p className="text-sm text-slate-200">
+                      {employerChosenCopy(chosenRobots.length, robots.length)}
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setChecked(robots.map(employerRobotKey))
+                        }
+                        className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300 hover:text-emerald-200"
+                      >
+                        {EMPLOYER_CHOOSE_ALL}
+                      </button>
+                      {chosenRobots.length ? (
+                        <button
+                          type="button"
+                          onClick={() => setChecked([])}
+                          className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-slate-400 hover:text-slate-200"
+                        >
+                          {EMPLOYER_CLEAR_CHOSEN}
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                </>
               ) : null}
               {robots.length === 0 ? (
                 <div className="mt-4 border border-slate-600 bg-[#081126] p-5">
@@ -526,9 +559,7 @@ export default function EmployerMatchWorkspace() {
                               aria-label={`Shortlist ${robot.name}`}
                               onChange={() =>
                                 setChecked(prev =>
-                                  on
-                                    ? prev.filter(k => k !== key)
-                                    : [...prev, key]
+                                  toggleEmployerRobotKey(prev, key)
                                 )
                               }
                               className="mt-1"
@@ -640,7 +671,7 @@ export default function EmployerMatchWorkspace() {
                     id="job-title"
                     value={title}
                     onChange={e => setTitle(e.target.value)}
-                    placeholder="What the robot would do"
+                    placeholder="What the robots would do"
                     className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
                   />
                   <label
@@ -687,6 +718,31 @@ export default function EmployerMatchWorkspace() {
                       employer, no invented email.
                     </p>
                   )}
+                  <div className="mt-6">
+                    <p className={JOBS_EYEBROW_CLASS}>Chosen robots</p>
+                    {chosenRobots.length ? (
+                      <ul className="mt-3 space-y-1 text-sm text-slate-300">
+                        {chosenRobots.map(r => (
+                          <li key={employerRobotKey(r)}>
+                            {r.name} · {r.vendor_name}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-3 text-sm text-slate-400">
+                        No robots chosen. You can still post the job.
+                      </p>
+                    )}
+                    {robots.length ? (
+                      <button
+                        type="button"
+                        onClick={() => setStep("robots")}
+                        className="mt-3 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300 hover:text-emerald-200"
+                      >
+                        {EMPLOYER_CHANGE_CHOSEN_CTA}
+                      </button>
+                    ) : null}
+                  </div>
                   {postingError ? (
                     <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
                       {postingError}
@@ -725,11 +781,8 @@ export default function EmployerMatchWorkspace() {
           robot={examined}
           shortlisted={checked.includes(employerRobotKey(examined))}
           onToggleShortlist={() => {
-            const key = employerRobotKey(examined);
             setChecked(prev =>
-              prev.includes(key)
-                ? prev.filter(k => k !== key)
-                : [...prev, key]
+              toggleEmployerRobotKey(prev, employerRobotKey(examined))
             );
           }}
           onClose={() => setExamined(null)}

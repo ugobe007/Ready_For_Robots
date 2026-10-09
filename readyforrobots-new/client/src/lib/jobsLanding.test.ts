@@ -6,6 +6,7 @@ import {
   EMPLOYER_EMPTY_MATCH,
   EMPLOYER_EXAMINE_HINT,
   EMPLOYER_PROCESS_STEPS,
+  employerChosenCopy,
   EMPLOYER_WORK_TILE_IDS,
   LANDING_BRIEF_HEADLINE,
   LANDING_BRIEF_JOB_FIELD,
@@ -359,7 +360,10 @@ describe("landing fork", () => {
       "Post the job",
     ]);
     expect(EMPLOYER_EMPTY_MATCH).toMatch(/Post the job so OEMs can find it/);
-    expect(EMPLOYER_EXAMINE_HINT).toMatch(/examine it before you post/);
+    expect(EMPLOYER_EXAMINE_HINT).toMatch(/choose more than one/);
+    expect(employerChosenCopy(0, 12)).toMatch(/more than one/);
+    expect(employerChosenCopy(1, 12)).toMatch(/Check another/);
+    expect(employerChosenCopy(3, 12)).toBe("3 of 12 robots chosen.");
     expect(EMPLOYER_WORK_TILE_IDS).toEqual([
       "pallets",
       "pick_pack",
@@ -392,6 +396,11 @@ describe("landing fork", () => {
     expect(employer).toMatch(/EmployerMatchedRobotModal/);
     expect(employer).toMatch(/Examine \$\{robot\.name\}/);
     expect(employer).toMatch(/EMPLOYER_EXAMINE_HINT/);
+    expect(employer).toMatch(/toggleEmployerRobotKey/);
+    expect(employer).toMatch(/employerChosenCopy/);
+    expect(employer).toMatch(/Chosen robots/);
+    expect(employer).toMatch(/setChecked\(\[\]\)/);
+    expect(employer).not.toMatch(/type="radio"/);
     expect(employer).not.toMatch(/SIGNAL|Apollo|find-robots/i);
     expect(employer).not.toMatch(/CalJobsDesk|send_buyer_intro/);
   });

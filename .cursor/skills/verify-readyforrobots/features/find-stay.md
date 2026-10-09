@@ -9,6 +9,7 @@ FIND lookup timeout, 500, abort, or Failed to fetch stays on OEM step 1 (`/?visi
 - `find-fail-fast` caps unknown-OEM search at 8s and catalog SKU search at 12s, hitting Fly directly so Vercel cannot sit on the rewrite for ~90s.
 - `employer-catalog` is MATCH from the vendor index only, with a 3s client budget. No live OEM scrape.
 - `employer-examine` opens a named catalog robot (name, OEM, class, stored description/specs, product page) before `Post this job →`. No invented specs or match%.
+- `employer-choose-many` lets the employer check more than one catalog robot for the same work. The posting keeps that shortlist.
 - `employer-jd` uploads a pdf/docx/txt with the post-job draft. No invented employer or email.
 
 ## How to get to it (user POV)

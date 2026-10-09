@@ -244,13 +244,27 @@ export const EMPLOYER_POST_JOB_CTA = "Post this job →";
 export const EMPLOYER_EMPTY_MATCH =
   "No catalog robots for this work yet. Post the job so OEMs can find it.";
 export const EMPLOYER_EXAMINE_HINT =
-  "Click a robot to examine it before you post.";
+  "Click a robot to examine it. Check every robot that can do this work — you can choose more than one.";
 export const EMPLOYER_EXAMINE_CTA = "Examine →";
 export const EMPLOYER_EXAMINE_CLOSE = "Close";
 export const EMPLOYER_EXAMINE_EMPTY =
   "Catalog has the name and OEM. We will not invent specs.";
 export const EMPLOYER_SHORTLIST_ADD = "Add to shortlist";
 export const EMPLOYER_SHORTLIST_DROP = "Remove from shortlist";
+export const EMPLOYER_CHOOSE_ALL = "Choose all";
+export const EMPLOYER_CLEAR_CHOSEN = "Clear";
+export const EMPLOYER_CHANGE_CHOSEN_CTA = "Change chosen robots →";
+export const EMPLOYER_CHOSEN_NONE =
+  "None chosen yet. Check the robots that fit. You can choose more than one.";
+
+export function employerChosenCopy(chosen: number, total: number): string {
+  if (total <= 0) return EMPLOYER_CHOSEN_NONE;
+  if (chosen <= 0) return EMPLOYER_CHOSEN_NONE;
+  if (chosen === 1) {
+    return "1 robot chosen. Check another if it also fits.";
+  }
+  return `${chosen} of ${total} robots chosen.`;
+}
 
 export const EMPLOYER_PROCESS_STEPS = [
   {
