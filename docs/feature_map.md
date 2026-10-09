@@ -68,8 +68,8 @@ FIND next is **Open CRM →** on the job list, **not** on the Job Card. Step 03 
 | Step | Label | CTA |
 |------|-------|-----|
 | 01 | What is the work | `Match robots →` |
-| 02 | Matching robots | named catalog robots, then `Post this job →` |
-| 03 | Post the job | employer name + work title. No invented email. Employer CRM is their postings + shortlisted robots. |
+| 02 | Matching robots | named catalog robots. Click a robot to examine on-file description, specs, and photo if stored. Check every robot that fits — more than one is allowed. Then `Post this job →` |
+| 03 | Post the job | Company, job name (lookup), and contact name. No invented email. Employer CRM is their postings + shortlisted robots. |
 
 On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and signed desk). Unsigned next is **Sign up to open CRM →**. Signed next leaves the desk: **Back to jobs →** when they have a submission or kept cards, otherwise **Find jobs →**. Header **About** stays visible on all widths.
 

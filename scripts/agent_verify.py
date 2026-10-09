@@ -44,6 +44,14 @@ FIND_RESEARCH = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "findRe
 FIND_WORKSPACE = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "RobotJobsWorkspace.tsx"
 JOBS_PAGE = ROOT / "readyforrobots-new" / "client" / "src" / "pages" / "Jobs.tsx"
 EMPLOYER_MATCH_PY = ROOT / "app" / "services" / "employer_robot_match.py"
+EMPLOYER_MATCH_UI = (
+    ROOT
+    / "readyforrobots-new"
+    / "client"
+    / "src"
+    / "components"
+    / "EmployerMatchWorkspace.tsx"
+)
 VEGA = ROOT / "tests" / "fixtures" / "m2_profiles" / "vega.json"
 SKILL_DIR = ROOT / ".cursor" / "skills" / "verify-readyforrobots"
 FEATURE_DIR = SKILL_DIR / "features"
@@ -411,11 +419,18 @@ def drive_employer_match(*, api: str | None = None) -> dict[str, Any]:
     """Employer MATCH is catalog-only and has a 3s budget once the new field is live."""
     fly = (api or FLY_API).rstrip("/")
     py = EMPLOYER_MATCH_PY.read_text(encoding="utf-8") if EMPLOYER_MATCH_PY.is_file() else ""
+    ui = EMPLOYER_MATCH_UI.read_text(encoding="utf-8") if EMPLOYER_MATCH_UI.is_file() else ""
     src_ok = (
         "_catalog_robots_snapshot" in py
         and "listing_from_catalog" not in py
         and "build_robot_profile" not in py
         and "scrape_robot_page" not in py
+        and "EmployerMatchedRobotModal" in ui
+        and "Examine ${robot.name}" in ui
+        and "toggleEmployerRobotKey" in ui
+        and "employerChosenCopy" in ui
+        and 'id="contact-name"' in ui
+        and "catalogHttpUrl(robot.image_url)" in ui
     )
     t0 = time.perf_counter()
     code, data = _post_json(
