@@ -41,12 +41,13 @@ export default function EmployerMatchedRobotModal({
 
   const productUrl = catalogHttpUrl(robot.product_url);
   const vendorUrl = catalogHttpUrl(robot.vendor_url);
+  const imageUrl = catalogHttpUrl(robot.image_url);
   const specs = catalogSpecRows(robot.specs);
   const classLabel = robot.robot_class
     ? robot.robot_class.replace(/_/g, " ")
     : null;
   const hasFacts = Boolean(
-    robot.description || robot.task || robot.setting || specs.length
+    robot.description || robot.task || robot.setting || specs.length || imageUrl
   );
 
   return (
@@ -82,6 +83,13 @@ export default function EmployerMatchedRobotModal({
           </button>
         </div>
         <div className="space-y-4 px-5 py-5">
+          {imageUrl ? (
+            <img
+              src={imageUrl}
+              alt=""
+              className="max-h-48 w-full object-contain bg-[#081126]"
+            />
+          ) : null}
           {robot.description ? (
             <p className="text-sm leading-snug text-slate-200">
               {robot.description}

@@ -11,11 +11,16 @@ import {
   EMPLOYER_CHANGE_CHOSEN_CTA,
   EMPLOYER_CHOOSE_ALL,
   EMPLOYER_CLEAR_CHOSEN,
+  EMPLOYER_COMPANY_LABEL,
+  EMPLOYER_CONTACT_LABEL,
   EMPLOYER_EMPTY_MATCH,
   EMPLOYER_EXAMINE_CTA,
   EMPLOYER_EXAMINE_HINT,
+  EMPLOYER_JOB_NAME_LABEL,
+  EMPLOYER_LOOKUP_HINT,
   EMPLOYER_MATCH_CTA,
   EMPLOYER_POST_JOB_CTA,
+  EMPLOYER_POST_MISSING,
   EMPLOYER_PROCESS_STEPS,
   employerChosenCopy,
   jobsFindHref,
@@ -29,6 +34,8 @@ import {
 } from "@/lib/jobsWorkflow";
 import {
   EMPLOYER_JD_ACCEPT,
+  catalogHttpUrl,
+  catalogSpecRows,
   employerRobotKey,
   fetchEmployerRobotMatch,
   toggleEmployerRobotKey,
@@ -70,6 +77,7 @@ export default function EmployerMatchWorkspace() {
   const [examined, setExamined] = useState<EmployerMatchedRobot | null>(null);
   const [employer, setEmployer] = useState("");
   const [title, setTitle] = useState("");
+  const [contactName, setContactName] = useState("");
   const [workplace, setWorkplace] = useState("");
   const [jd, setJd] = useState<EmployerJdFile | null>(null);
   const [posting, setPosting] = useState<EmployerPosting | null>(null);
@@ -123,12 +131,10 @@ export default function EmployerMatchWorkspace() {
 
   async function postJob() {
     const shop = employer.trim();
-    const workTitle =
-      title.trim() || qualified?.title || description.trim().slice(0, 120);
-    if (!shop || !workTitle) {
-      setPostingError(
-        "Name the employer and the work. We will not invent either."
-      );
+    const workTitle = title.trim();
+    const contact = contactName.trim();
+    if (!shop || !workTitle || !contact) {
+      setPostingError(EMPLOYER_POST_MISSING);
       return;
     }
     setPostingBusy(true);
@@ -137,6 +143,7 @@ export default function EmployerMatchWorkspace() {
       id: `${Date.now()}`,
       employer: shop,
       title: workTitle,
+      contact_name: contact,
       workplace: workplace.trim() || undefined,
       description:
         [qualified?.summary, description.trim() || jd?.text]
@@ -159,6 +166,7 @@ export default function EmployerMatchWorkspace() {
       const res = await postEmployerJobDraft({
         employer: shop,
         title: workTitle,
+        contactName: contact,
         workplace: workplace.trim(),
         description: local.description,
         workClass: qualified?.catalogClass || workClass,
@@ -547,6 +555,8 @@ export default function EmployerMatchWorkspace() {
                     {robots.map(robot => {
                       const key = employerRobotKey(robot);
                       const on = checked.includes(key);
+                      const imageUrl = catalogHttpUrl(robot.image_url);
+                      const specs = catalogSpecRows(robot.specs).slice(0, 3);
                       return (
                         <li
                           key={key}
@@ -571,18 +581,36 @@ export default function EmployerMatchWorkspace() {
                               onClick={() => setExamined(robot)}
                               className="min-w-0 flex-1 cursor-pointer text-left"
                             >
-                              <span className="block font-display text-base font-bold text-slate-100">
-                                {robot.name}
-                              </span>
-                              <span className="mt-0.5 block text-sm text-slate-400">
-                                {robot.vendor_name}
-                                {robot.robot_class
-                                  ? ` · ${robot.robot_class.replace(/_/g, " ")}`
-                                  : ""}
+                              <span className="flex items-start gap-3">
+                                {imageUrl ? (
+                                  <img
+                                    src={imageUrl}
+                                    alt=""
+                                    className="h-14 w-14 shrink-0 object-contain bg-[#0b162f]"
+                                  />
+                                ) : null}
+                                <span className="min-w-0 flex-1">
+                                  <span className="block font-display text-base font-bold text-slate-100">
+                                    {robot.name}
+                                  </span>
+                                  <span className="mt-0.5 block text-sm text-slate-400">
+                                    {robot.vendor_name}
+                                    {robot.robot_class
+                                      ? ` · ${robot.robot_class.replace(/_/g, " ")}`
+                                      : ""}
+                                  </span>
+                                </span>
                               </span>
                               {robot.description ? (
                                 <span className="mt-1 block text-[13px] leading-snug text-slate-300">
                                   {robot.description}
+                                </span>
+                              ) : null}
+                              {specs.length ? (
+                                <span className="mt-1 block text-[12px] text-slate-400">
+                                  {specs
+                                    .map(row => `${row.label} ${row.value}`)
+                                    .join(" · ")}
                                 </span>
                               ) : null}
                               <span className="mt-2 block font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
@@ -616,6 +644,11 @@ export default function EmployerMatchWorkspace() {
                   </h2>
                   <p className="mt-1 text-sm text-slate-300">
                     {posting.employer}
+                    {posting.contact_name ? ` · ${posting.contact_name}` : ""}
+                  </p>
+                  <p className="mt-2 font-mono text-[12px] text-emerald-200">
+                    Lookup: {posting.employer} · {posting.title}
+                    {posting.job_key ? ` · ${posting.job_key}` : ""}
                   </p>
                   <p className="mt-2 text-[13px] text-slate-400">
                     {posting.persisted
@@ -651,8 +684,11 @@ export default function EmployerMatchWorkspace() {
                     void postJob();
                   }}
                 >
+                  <p className="mb-4 text-sm leading-snug text-slate-400">
+                    {EMPLOYER_LOOKUP_HINT}
+                  </p>
                   <label className={JOBS_EYEBROW_CLASS} htmlFor="employer-name">
-                    Employer
+                    {EMPLOYER_COMPANY_LABEL}
                   </label>
                   <input
                     id="employer-name"
@@ -665,13 +701,26 @@ export default function EmployerMatchWorkspace() {
                     className={`${JOBS_EYEBROW_CLASS} mt-4 block`}
                     htmlFor="job-title"
                   >
-                    Work title
+                    {EMPLOYER_JOB_NAME_LABEL}
                   </label>
                   <input
                     id="job-title"
                     value={title}
                     onChange={e => setTitle(e.target.value)}
-                    placeholder="What the robots would do"
+                    placeholder="Name we look this job up by"
+                    className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
+                  />
+                  <label
+                    className={`${JOBS_EYEBROW_CLASS} mt-4 block`}
+                    htmlFor="contact-name"
+                  >
+                    {EMPLOYER_CONTACT_LABEL}
+                  </label>
+                  <input
+                    id="contact-name"
+                    value={contactName}
+                    onChange={e => setContactName(e.target.value)}
+                    placeholder="Person at the company"
                     className="mt-2 w-full border border-slate-600 bg-[#081126] px-3 py-3 text-sm text-slate-100 placeholder-slate-600 outline-none focus:border-emerald-500"
                   />
                   <label

@@ -248,7 +248,14 @@ export const EMPLOYER_EXAMINE_HINT =
 export const EMPLOYER_EXAMINE_CTA = "Examine →";
 export const EMPLOYER_EXAMINE_CLOSE = "Close";
 export const EMPLOYER_EXAMINE_EMPTY =
-  "Catalog has the name and OEM. We will not invent specs.";
+  "Catalog has the name and OEM. We will not invent specs or a photo.";
+export const EMPLOYER_COMPANY_LABEL = "Company";
+export const EMPLOYER_JOB_NAME_LABEL = "Job name";
+export const EMPLOYER_CONTACT_LABEL = "Contact name";
+export const EMPLOYER_LOOKUP_HINT =
+  "Company and job name are the lookup. Name the contact. We will not invent an email.";
+export const EMPLOYER_POST_MISSING =
+  "Name the company, the job, and the contact. We will not invent them.";
 export const EMPLOYER_SHORTLIST_ADD = "Add to shortlist";
 export const EMPLOYER_SHORTLIST_DROP = "Remove from shortlist";
 export const EMPLOYER_CHOOSE_ALL = "Choose all";

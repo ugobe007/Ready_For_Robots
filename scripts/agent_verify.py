@@ -429,6 +429,8 @@ def drive_employer_match(*, api: str | None = None) -> dict[str, Any]:
         and "Examine ${robot.name}" in ui
         and "toggleEmployerRobotKey" in ui
         and "employerChosenCopy" in ui
+        and 'id="contact-name"' in ui
+        and "catalogHttpUrl(robot.image_url)" in ui
     )
     t0 = time.perf_counter()
     code, data = _post_json(

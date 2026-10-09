@@ -98,6 +98,10 @@ describe("employer MATCH catalog budget and JD upload", () => {
     expect(modal).toMatch(/aria-label="Catalog robot"/);
     expect(modal).toMatch(/EMPLOYER_EXAMINE_EMPTY/);
     expect(modal).toMatch(/Product page/);
+    expect(modal).toMatch(/robot\.image_url/);
+    expect(ui).toMatch(/catalogHttpUrl\(robot\.image_url\)/);
+    expect(ui).toMatch(/id="contact-name"/);
+    expect(ui).toMatch(/contactName: contact/);
     expect(modal).not.toMatch(/match %|match percent|ROI|fit score/i);
     expect(ui).not.toMatch(/match %|fit score/i);
   });

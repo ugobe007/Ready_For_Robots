@@ -110,8 +110,19 @@ def _catalog_robots_snapshot() -> tuple[dict[str, Any], ...]:
             specs = _catalog_specs(raw)
             if specs:
                 row["specs"] = specs
+            image_url = _catalog_image_url(raw)
+            if image_url:
+                row["image_url"] = image_url
             out.append(row)
     return tuple(out)
+
+
+def _catalog_image_url(raw: dict[str, Any]) -> str | None:
+    """Stored catalog photo only. Never invent or scrape."""
+    url = str(raw.get("image_url") or "").strip()
+    if url.startswith("https://") or url.startswith("http://"):
+        return url
+    return None
 
 
 def _catalog_specs(raw: dict[str, Any]) -> dict[str, Any] | None:
@@ -148,6 +159,9 @@ def public_matched_robot(robot: dict[str, Any]) -> dict[str, Any]:
     specs = robot.get("specs")
     if isinstance(specs, dict) and specs:
         public["specs"] = specs
+    image_url = robot.get("image_url")
+    if isinstance(image_url, str) and image_url.startswith(("http://", "https://")):
+        public["image_url"] = image_url
     return public
 
 

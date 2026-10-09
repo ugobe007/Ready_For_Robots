@@ -400,6 +400,12 @@ describe("landing fork", () => {
     expect(employer).toMatch(/employerChosenCopy/);
     expect(employer).toMatch(/Chosen robots/);
     expect(employer).toMatch(/setChecked\(\[\]\)/);
+    expect(employer).toMatch(/EMPLOYER_COMPANY_LABEL/);
+    expect(employer).toMatch(/EMPLOYER_JOB_NAME_LABEL/);
+    expect(employer).toMatch(/EMPLOYER_CONTACT_LABEL/);
+    expect(employer).toMatch(/id="contact-name"/);
+    expect(employer).toMatch(/Lookup:/);
+    expect(employer).toMatch(/catalogHttpUrl\(robot\.image_url\)/);
     expect(employer).not.toMatch(/type="radio"/);
     expect(employer).not.toMatch(/SIGNAL|Apollo|find-robots/i);
     expect(employer).not.toMatch(/CalJobsDesk|send_buyer_intro/);

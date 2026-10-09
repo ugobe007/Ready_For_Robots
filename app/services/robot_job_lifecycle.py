@@ -213,6 +213,9 @@ def upsert_robot_job_from_extract(
     shortlisted = extract.get("employer_shortlisted_robots")
     if isinstance(shortlisted, list) and shortlisted:
         req["employer_shortlisted_robots"] = shortlisted[:24]
+    contact_name = str(extract.get("contact_name") or "").strip()
+    if contact_name:
+        req["contact_name"] = contact_name[:240]
     _copy_contact_fields(req, extract)
     row.requirements = req
     row.unknowns = list(extract.get("unknowns") or [])

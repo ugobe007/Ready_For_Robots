@@ -8,8 +8,9 @@ FIND lookup timeout, 500, abort, or Failed to fetch stays on OEM step 1 (`/?visi
 - `find-no-new1` forbids `goJobsFreshHome`, `/?new=1`, and Jobs.tsx `forcedLanding` while visit is jobs.
 - `find-fail-fast` caps unknown-OEM search at 8s and catalog SKU search at 12s, hitting Fly directly so Vercel cannot sit on the rewrite for ~90s.
 - `employer-catalog` is MATCH from the vendor index only, with a 3s client budget. No live OEM scrape.
-- `employer-examine` opens a named catalog robot (name, OEM, class, stored description/specs, product page) before `Post this job →`. No invented specs or match%.
+- `employer-examine` opens a named catalog robot (name, OEM, class, stored description/specs, photo if on file, product page) before `Post this job →`. No invented specs, photos, or match%.
 - `employer-choose-many` lets the employer check more than one catalog robot for the same work. The posting keeps that shortlist.
+- `employer-job-lookup` requires company, job name, and contact name. Company + job name is the lookup. No invented email.
 - `employer-jd` uploads a pdf/docx/txt with the post-job draft. No invented employer or email.
 
 ## How to get to it (user POV)

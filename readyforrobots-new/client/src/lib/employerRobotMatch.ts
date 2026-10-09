@@ -35,6 +35,7 @@ export type EmployerMatchedRobot = {
   task?: string | null;
   setting?: string | null;
   specs?: Record<string, string | number | boolean> | null;
+  image_url?: string | null;
 };
 
 export function employerRobotKey(
@@ -179,6 +180,7 @@ export async function fetchEmployerRobotMatch(opts: {
 export async function postEmployerJobDraft(opts: {
   employer: string;
   title: string;
+  contactName?: string;
   workplace?: string;
   description?: string;
   workClass?: string;
@@ -194,6 +196,7 @@ export async function postEmployerJobDraft(opts: {
     body: JSON.stringify({
       employer: opts.employer,
       title: opts.title,
+      contact_name: opts.contactName || null,
       workplace: opts.workplace || null,
       description: opts.description || null,
       work_class: opts.workClass || null,
