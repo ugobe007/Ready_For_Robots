@@ -100,5 +100,5 @@ jobs:
             echo "::error::forced daily jobs report did not deliver"
             exit 1
           fi
-          echo "Retrying with force=true — Redis claim is not proof of Gmail delivery"
-          post true "${extra[@]}"
+          echo "First attempt failed. Do not retry — force=true skips lock and races the living send."
+          exit 1

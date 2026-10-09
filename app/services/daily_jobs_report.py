@@ -105,14 +105,17 @@ def _claim_report_day(day: str) -> bool:
     if not client:
         return True
     stamp = datetime.now(timezone.utc).isoformat()
+    key = _claim_key(day)
     try:
-        if client.set(_claim_key(day), stamp, nx=True, ex=_CLAIM_TTL_SEC):
+        if client.set(key, stamp, nx=True, ex=_CLAIM_TTL_SEC):
             return True
-        claimed_at = _parse_claim_at(client.get(_claim_key(day)))
+        raw = client.get(key)
+        claimed_at = _parse_claim_at(raw)
         if claimed_at is None:
             logger.warning("daily jobs report: stealing unparseable claim for %s", day)
-            client.set(_claim_key(day), stamp, ex=_CLAIM_TTL_SEC)
-            return True
+            if client.set(key, stamp, xx=True, ex=_CLAIM_TTL_SEC, get=True) == raw:
+                return True
+            return False
         age = (datetime.now(timezone.utc) - claimed_at).total_seconds()
         if age >= _STALE_CLAIM_SEC:
             logger.warning(
@@ -120,8 +123,9 @@ def _claim_report_day(day: str) -> bool:
                 day,
                 age,
             )
-            client.set(_claim_key(day), stamp, ex=_CLAIM_TTL_SEC)
-            return True
+            if client.set(key, stamp, xx=True, ex=_CLAIM_TTL_SEC, get=True) == raw:
+                return True
+            return False
         return False
     except Exception:
         return True
