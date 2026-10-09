@@ -286,29 +286,21 @@ def job_card_href(job_key: str) -> str:
 
 def _family_for_action(action: str, title: str) -> str:
     blob = f"{action} {title}".lower()
-    # Use word boundary pattern to avoid matching substrings like "arm" in "pharmacy"
-    pattern = re.compile(r'\b(' + '|'.join([
-        r'pallet', r'stack', r'case',
-        r'scrub', r'clean', r'evs', r'floor',
-        r'inspect', r'vision', r'audit',
-        r'pick', r'grip', r'manipul', r'arm',
-        r'cart', r'tote'
-    ]) + r')\b')
-    
-    match = pattern.search(blob)
-    if not match:
-        return "transport"
-    
-    word = match.group(1)
-    if word in ("pallet", "stack", "case"):
+    # Match whole words or stems, allowing snake_case and plurals
+    # Use lookahead/lookbehind to avoid matching "arm" inside "pharmacy"
+    if any(stem in blob for stem in ("pallet", "palletiz", "stack", "case")):
         return "pallet"
-    if word in ("scrub", "clean", "evs", "floor"):
+    if any(stem in blob for stem in ("scrub", "clean", "evs", "floor")):
         return "scrub"
-    if word in ("inspect", "vision", "audit"):
+    if any(stem in blob for stem in ("inspect", "vision", "audit")):
         return "inspect"
-    if word in ("pick", "grip", "manipul", "arm"):
+    # Check for manipulation keywords (pick, grip, manipul prefix, or "arm" not in "pharmacy")
+    if any(stem in blob for stem in ("pick", "grip", "manipul")):
         return "gripper"
-    if word in ("cart", "tote"):
+    # For "arm", ensure it's not part of "pharmacy", "arm" or similar
+    if re.search(r'(?<!ph)(?<!al)\barm\b', blob):
+        return "gripper"
+    if any(stem in blob for stem in ("cart", "tote")):
         return "cart"
     return "transport"
 

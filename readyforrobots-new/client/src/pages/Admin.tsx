@@ -3804,13 +3804,17 @@ export default function Admin() {
                       >
                         Review
                       </Link>
-                      <span className="text-slate-600">·</span>
-                      <Link
-                        href={`/sales-console?opportunity_id=${encodeURIComponent(item.thread_id)}`}
-                        className="font-semibold text-sky-300 underline underline-offset-2 hover:text-sky-200"
-                      >
-                        Thread
-                      </Link>
+                      {item.thread_id && (
+                        <>
+                          <span className="text-slate-600">·</span>
+                          <Link
+                            href={`/sales-console?opportunity_id=${encodeURIComponent(item.thread_id)}`}
+                            className="font-semibold text-sky-300 underline underline-offset-2 hover:text-sky-200"
+                          >
+                            Thread
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))
