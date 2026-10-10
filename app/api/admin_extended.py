@@ -1079,7 +1079,7 @@ def cal_bulk_draft(
                 from app.services.agent_messaging import pick_buyer_variant
 
                 cmeta = dict(company.crm_metadata or {})
-                cmeta["cal_variant_id"] = pick_buyer_variant(company.id)
+                cmeta["phelan_variant_id"] = pick_buyer_variant(company.id)
                 company.crm_metadata = cmeta
 
             acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
@@ -1561,8 +1561,8 @@ def cal_variant_preview(
 
     stored_variant = None
     meta = company.crm_metadata if isinstance(company.crm_metadata, dict) else {}
-    if meta.get("cal_variant_id") in BUYER_VARIANTS:
-        stored_variant = str(meta.get("cal_variant_id"))
+    if meta.get("phelan_variant_id") in BUYER_VARIANTS:
+        stored_variant = str(meta.get("phelan_variant_id"))
     selected_variant = stored_variant or pick_buyer_variant(getattr(company, "id", None))
 
     previews: list[dict[str, str]] = []

@@ -374,7 +374,7 @@ def _hermes_context_reason(company: Any) -> Optional[str]:
             return f"caught this on {name}: {clause}"
     if _cal_include_buying_window():
         bw = meta.get("hermes_buying_window") if isinstance(meta.get("hermes_buying_window"), dict) else {}
-        hint = (bw.get("cal_hint") or "").strip()
+        hint = (bw.get("phelan_hint") or bw.get("cal_hint") or "").strip()
         if 20 <= len(hint) <= 140:
             return hint[0].lower() + hint[1:] if hint[0].isupper() else hint
     return None

@@ -1731,7 +1731,7 @@ def _hermes_pipeline_fields(crm_meta: Optional[dict]) -> dict:
             {
                 "urgency_0_100": buying.get("urgency_0_100"),
                 "window_label": (buying.get("window_label") or None),
-                "cal_hint": (buying.get("phelan_hint") or "")[:280] or None,
+                "cal_hint": (buying.get("phelan_hint") or buying.get("cal_hint") or "")[:280] or None,
                 "confidence": buying.get("confidence"),
                 "factors": factor_preview,
                 "truth_state": buying.get("truth_state") or "HERMES_OVERLAY",
