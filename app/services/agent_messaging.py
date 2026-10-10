@@ -3,42 +3,42 @@ from __future__ import annotations
 
 import re
 
-from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_buyer_email_signature, cal_signature
+from app.services.phelan_persona import PHELAN_BANNED_PHRASES, PHELAN_ORG, phelan_buyer_email_signature, phelan_signature
 
 # ── Cal voice: veteran sherpa for robot companies ─────────────────────────────
 # Wise, abbreviated, in-the-know. Engineer-led teams, PoC → deployment reality.
 # Honesty and trust over hype. Draws on deep robotics industry experience.
 
-# External outreach constants (used in cal_opening, cal_vendor_opening, sales_agent)
-CAL_INTRO = (
+# External outreach constants (used in phelan_opening, phelan_vendor_opening, sales_agent)
+PHELAN_INTRO = (
     "I'm Phelan, Robot Job Analyst at ReadyForRobots. ReadyForRobots is recruitment and placement infrastructure for robotic labor. "
     "We evaluate physical task feasibility, cell constraints, payload/throughput requirements, and hardware capabilities "
     "to match qualified robotic labor directly to real, verified job openings at enterprise and industrial facilities."
 )
 
-CAL_BUYER_ROLE_LINE = (
+PHELAN_BUYER_ROLE_LINE = (
     "I'm Phelan, Robot Job Analyst at ReadyForRobots. ReadyForRobots provides recruitment and placement infrastructure for robotic labor, "
     "evaluating physical task feasibility to match qualified hardware with real production workflows."
 )
 
-CAL_BUYER_REMINDER_LINE = (
+PHELAN_BUYER_REMINDER_LINE = (
     "Following up on task feasibility and robotic labor placement planning for your operations."
 )
 
-CAL_VENDOR_ROLE_LINE = (
+PHELAN_VENDOR_ROLE_LINE = (
     "Our platform matches enterprise buyer demand with verified robot specifications and turnkey commercial proposals."
 )
 
-CAL_VENDOR_REMINDER_LINE = (
+PHELAN_VENDOR_REMINDER_LINE = (
     "Quick note from ReadyForRobots regarding qualified enterprise buyer matches for your robot lineup."
 )
 
-CAL_VENDOR_IDENTITY = (
+PHELAN_VENDOR_IDENTITY = (
     "ReadyForRobots evaluates physical task feasibility, operating cell geometry, and throughput requirements "
     "to help operators cut through vendor claims and deploy qualified robotic labor."
 )
 
-CAL_VENDOR_SHERPA_LINE = (
+PHELAN_VENDOR_SHERPA_LINE = (
     "We provide independent engineering evaluations and turnkey commercial quotes — "
     "honest readouts and 3D feasibility simulations, zero sales theater."
 )
@@ -71,13 +71,13 @@ VENDOR_SIGNAL_EXPLANATION = (
     "real intent, not list noise."
 )
 
-CAL_VENDOR_PIPELINE_EXPLANATION = (
+PHELAN_VENDOR_PIPELINE_EXPLANATION = (
     "I've reviewed your robots and specs against what buyers are asking for right now. "
     "The fit isn't always obvious on paper — ROI, proof points, PoC availability, technical support, "
     "and how your team shows up all factor in."
 )
 
-CAL_VENDOR_PIPELINE_LOGIC_LINE = (
+PHELAN_VENDOR_PIPELINE_LOGIC_LINE = (
     "PoCs fail when capabilities don't match buyer requirements. "
     "Deployments happen when positioning, support, and follow-through align."
 )
@@ -87,14 +87,14 @@ VEGAS_DISTRIBUTION_LINE = (
     "hotels, casinos, logistics hubs — where robot trials actually get evaluated."
 )
 
-CAL_VENDOR_OFFRAMP_LINE = (
+PHELAN_VENDOR_OFFRAMP_LINE = (
     "If the signal is weak or the fit isn't there, I'll say so. "
     "The point is fewer wasted PoCs, not more pipeline noise."
 )
 
-CAL_VENDOR_STRATEGY_CALL_CTA = "If helpful, we can do a short walkthrough after you've reviewed the matches."
+PHELAN_VENDOR_STRATEGY_CALL_CTA = "If helpful, we can do a short walkthrough after you've reviewed the matches."
 
-CAL_VENDOR_BUYER_MATCH_CTA = "Want me to send the buyer profiles? I'll flag what fits and what doesn't."
+PHELAN_VENDOR_BUYER_MATCH_CTA = "Want me to send the buyer profiles? I'll flag what fits and what doesn't."
 
 # Customer-facing rep voice (robot sales rep -> buyer ops). No Ready For Robots branding.
 REP_OUTREACH_CTA = "If this belongs with someone else on your ops team, could you point me to the right contact?"
@@ -582,13 +582,13 @@ def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
     return "\n".join([
         greeting,
         "",
-        CAL_BUYER_REMINDER_LINE,
+        PHELAN_BUYER_REMINDER_LINE,
         "",
         core,
         "",
         close,
         "",
-        cal_buyer_email_signature(),
+        phelan_buyer_email_signature(),
     ])
 
 
@@ -607,7 +607,7 @@ def pick_buyer_variant(company_id, *, allowed=None) -> str:
 def resolve_buyer_variant(company, acct=None) -> str | None:
     """The angle a send should be tagged with.
 
-    Prefers the variant stashed at draft time (``crm_metadata['cal_variant_id']``)
+    Prefers the variant stashed at draft time (``crm_metadata['phelan_variant_id']``)
     so the tag matches the copy that actually shipped; otherwise falls back to the
     deterministic round-robin. Returns ``None`` for vendors / StageGate accounts,
     which don't use the trust-first buyer angles.
@@ -618,7 +618,7 @@ def resolve_buyer_variant(company, acct=None) -> str | None:
     meta = getattr(company, "crm_metadata", None) or {}
     if meta.get("outreach_pipeline") == "stagegate":
         return None
-    stored = meta.get("cal_variant_id")
+    stored = meta.get("phelan_variant_id")
     if stored in BUYER_VARIANTS:
         return stored
     return pick_buyer_variant(getattr(company, "id", None))
@@ -726,7 +726,7 @@ def _variant_workflow_first(name: str, industry: str) -> str:
         "",
         _mission_close(),
         "",
-        cal_buyer_email_signature(),
+        phelan_buyer_email_signature(),
     ])
 
 
@@ -761,7 +761,7 @@ def _variant_what_survives(name: str, industry: str) -> str:
         "",
         _mission_close(),
         "",
-        cal_buyer_email_signature(),
+        phelan_buyer_email_signature(),
     ])
 
 
@@ -794,7 +794,7 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
         "",
         _mission_close(),
         "",
-        cal_buyer_email_signature(),
+        phelan_buyer_email_signature(),
     ])
 
 
@@ -930,32 +930,32 @@ def buyer_variant_subject(name: str, industry: str, variant_id: str) -> str:
     )
 
 
-def cal_opening(*, audience: str = "buyer") -> str:
+def phelan_opening(*, audience: str = "buyer") -> str:
     explanation = VENDOR_SIGNAL_EXPLANATION if audience == "vendor" else BUYER_SIGNAL_EXPLANATION
-    return f"{CAL_INTRO}\n\n{explanation}"
+    return f"{PHELAN_INTRO}\n\n{explanation}"
 
 
-def cal_vendor_opening(*, reminder: bool = False) -> str:
+def phelan_vendor_opening(*, reminder: bool = False) -> str:
     if reminder:
         return (
-            f"{CAL_VENDOR_REMINDER_LINE}\n\n"
+            f"{PHELAN_VENDOR_REMINDER_LINE}\n\n"
             f"{VENDOR_SIGNAL_EXPLANATION}"
         )
     return (
-        f"{CAL_INTRO}\n\n"
-        f"{CAL_VENDOR_ROLE_LINE}\n\n"
-        f"{CAL_VENDOR_IDENTITY}\n\n"
-        f"{CAL_VENDOR_SHERPA_LINE}\n\n"
+        f"{PHELAN_INTRO}\n\n"
+        f"{PHELAN_VENDOR_ROLE_LINE}\n\n"
+        f"{PHELAN_VENDOR_IDENTITY}\n\n"
+        f"{PHELAN_VENDOR_SHERPA_LINE}\n\n"
         f"{VENDOR_SIGNAL_EXPLANATION}"
     )
 
 
-def cal_vendor_match_paragraph(company_name: str, *, industry: str = "your space") -> str:
+def phelan_vendor_match_paragraph(company_name: str, *, industry: str = "your space") -> str:
     """Core vendor outreach block — opportunities + PoC realism."""
     name = (company_name or "your team").strip()
     ind = (industry or "your space").strip()
     return (
         f"I've looked at {name}'s robots against active buyer signals in {ind}. "
         f"A few opportunities align with your capabilities — not generic leads, accounts with timing behind them.\n\n"
-        f"{CAL_VENDOR_PIPELINE_LOGIC_LINE}"
+        f"{PHELAN_VENDOR_PIPELINE_LOGIC_LINE}"
     )

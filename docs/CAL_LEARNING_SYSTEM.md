@@ -44,7 +44,7 @@ Research → Draft → Evaluate → Send → Observe → Learn → Update Cal
 
 ## 2. Two layers: Brain vs Voice
 
-### Cal Intelligence (brain)
+### Phelan Intelligence (brain)
 
 Determines:
 
@@ -57,7 +57,7 @@ Determines:
 
 Outputs: facts, inferences, assumptions, unknowns, and a proposed conversation goal — clearly labeled.
 
-### Cal Voice (communication)
+### Phelan Voice (communication)
 
 Determines:
 
@@ -256,7 +256,7 @@ Promotion checklist:
 | [`scripts/cal_log_learning.py`](../scripts/cal_log_learning.py) | Append a Learning Log row |
 | [`scripts/cal_preflight.py`](../scripts/cal_preflight.py) | Includes advisory `[1b] Voice rubric` sample |
 | [`docs/cal_stage1_operator_card.md`](./cal_stage1_operator_card.md) | Daily operator checklist |
-| [`app/services/cal_voice_rubric.py`](../app/services/cal_voice_rubric.py) | Heuristic rubric (Stage 2 may add LLM judge) |
+| [`app/services/phelan_voice_rubric.py`](../app/services/phelan_voice_rubric.py) | Heuristic rubric (Stage 2 may add LLM judge) |
 
 Do not skip Stage 1. Automation without logged judgment recreates slogan Cal.
 

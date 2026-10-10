@@ -18,16 +18,16 @@ def main() -> int:
     args = parser.parse_args()
 
     from app.database import SessionLocal
-    from app.services.cal_daily_digest import build_cal_daily_digest, send_cal_daily_digest
+    from app.services.phelan_daily_digest import build_phelan_daily_digest, send_phelan_daily_digest
 
     with SessionLocal() as db:
         if args.preview:
-            digest = build_cal_daily_digest(db, period_hours=args.period_hours)
+            digest = build_phelan_daily_digest(db, period_hours=args.period_hours)
             print(digest["subject"])
             print()
             print(digest["body_text"])
             return 0
-        result = send_cal_daily_digest(db, period_hours=args.period_hours, force=args.force)
+        result = send_phelan_daily_digest(db, period_hours=args.period_hours, force=args.force)
     print(result)
     return 0 if result.get("sent") or args.preview else 1
 

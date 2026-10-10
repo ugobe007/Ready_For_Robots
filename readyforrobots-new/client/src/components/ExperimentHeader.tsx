@@ -224,7 +224,7 @@ export default function ExperimentHeader() {
                         Pricing & Plans
                       </div>
                       <div className="text-[11px] text-slate-400 font-normal">
-                        Pro plans & Cal outreach entitlement
+                        Pro plans & Phelan outreach entitlement
                       </div>
                     </div>
                   </a>

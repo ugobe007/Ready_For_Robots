@@ -1,4 +1,4 @@
-"""Add special project targets (Cal outreach queue for a special project).
+"""Add special project targets (Phelan outreach queue for a special project).
 
 Revision ID: r2s3t4u5v6w7
 Revises: q1r2s3t4u5v6

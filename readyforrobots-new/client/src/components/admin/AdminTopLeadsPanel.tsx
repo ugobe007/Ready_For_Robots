@@ -31,7 +31,7 @@ export type TopLeadItem = {
     source_url?: string;
     confidence?: number;
   }>;
-  cal_seller_brief?: {
+  phelan_seller_brief?: {
     why_now?: string;
     pitch?: string;
     robot_fit?: string;
@@ -552,7 +552,7 @@ export default function AdminTopLeadsPanel() {
 DECISION MAKER: ${hunterMatch?.name || primaryDm?.name || "Operations Lead"} (${hunterMatch?.title || primaryDm?.title || "Executive"})
 EMAIL: ${hunterMatch?.email || lead.inferred_contact_email || "N/A"}
 PHONE: ${lead.inferred_contact_phone || "N/A"}
-WHY NOW: ${lead.cal_seller_brief?.why_now || lead.priority_reasons?.[0] || "High automation intent signal"}
+WHY NOW: ${lead.phelan_seller_brief?.why_now || lead.priority_reasons?.[0] || "High automation intent signal"}
 
 OUTREACH EMAIL DRAFT:
 SUBJECT: ${emailData.subject}
@@ -696,7 +696,7 @@ ${emailData.body}`;
 
             const phone = lead.inferred_contact_phone;
             const whyNow =
-              lead.cal_seller_brief?.why_now ||
+              lead.phelan_seller_brief?.why_now ||
               lead.priority_reasons?.[0] ||
               lead.specific_problem ||
               "High automation intent signal";

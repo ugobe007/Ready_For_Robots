@@ -59,7 +59,7 @@ i.e. hospitality/aviation/gaming were **deliberately seeded as cleaning/service/
 delivery-robot buyers**. The off-ICP industry gate was overcorrecting.
 
 ### Changes shipped
-1. **Narrowed the off-ICP gate** (`app/services/cal_autonomy.py`) to pure
+1. **Narrowed the off-ICP gate** (`app/services/phelan_autonomy.py`) to pure
    non-buyers only (publishing/newspaper/market research). Re-admitted hospitality/
    aviation/gaming/food service. Eligible HOT/WARM pool: **179 → 295** (ineligible
    121 → 5). Tests updated (`tests/test_cal_autonomy.py`).

@@ -1,7 +1,7 @@
 # Hermes ↔ Cal (and local RFR agents)
 
 > **RETIRED 2026-08-26.** Hermes is not a product agent. Cal buyer outreach is not Jobs.
-> `CAL_AUTONOMY_ENABLED=0` in `fly.toml`. See [`hermes_retired.md`](hermes_retired.md).
+> `PHELAN_AUTONOMY_ENABLED=0` in `fly.toml`. See [`hermes_retired.md`](hermes_retired.md).
 
 Historical note: how Hermes research used to correlate with **Cal** (buyer outreach), Scout, and Pipeline.
 
@@ -38,7 +38,7 @@ job-orders / qualify / DMs / news
 | Mode | Surfaces | Voice |
 |------|----------|-------|
 | **OemCal** | Results, Signup, sticky CTA (`oemCalCopy.ts`) | “These buyers fit your robot — claim them” |
-| **BuyerCal** | Outbound assembly (`cal_persona.py`) | Observation → interpretation → next step |
+| **BuyerCal** | Outbound assembly (`phelan_persona.py`) | Observation → interpretation → next step |
 
 Floor Manager emits `VOICE` if conversion copy drifts into researcher essays.
 
@@ -54,9 +54,9 @@ Floor Manager emits `VOICE` if conversion copy drifts into researcher essays.
 
 Cal still requires verified/trusted email + assembly + bounce gates before any send.
 
-## Cal behavior hooks (code)
+## Phelan behavior hooks (code)
 
-In `app/services/cal_autonomy.py`:
+In `app/services/phelan_autonomy.py`:
 
 1. **`prioritize_hermes_qualified`** — after unsent prioritization, prefer Hermes-qualified companies.
 2. **`prioritize_buying_window`** — when `CAL_INCLUDE_BUYING_WINDOW=1`, prefer high `urgency_0_100` after qualify priority.

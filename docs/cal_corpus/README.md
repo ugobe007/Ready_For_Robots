@@ -1,4 +1,4 @@
-# Cal Corpus
+# Phelan Corpus
 
 Approved and rejected Cal communications for judgment training.
 

@@ -1,4 +1,4 @@
-# Cal is the Jobs recruiter on CRM
+# Phelan is the Jobs recruiter on CRM
 
 **Date:** 2026-09-01  
 **Type:** build  
@@ -33,7 +33,7 @@ FIND `/` has no Cal. pstack is still the merge gate, not a customer bot.
 - Hunt jobs on FIND
 - Send buyer / SIGNAL mail
 - Email the employer (you send)
-- Run with `CAL_AUTONOMY_ENABLED` (production stays `0`)
+- Run with `PHELAN_AUTONOMY_ENABLED` (production stays `0`)
 
 ## Included from #202
 
@@ -43,6 +43,6 @@ Open CRM is the only Jobs-for-robot list CTA. Task-model columns and `POST /api/
 
 Pytest: persona, tool routing, task-model persist, apply-draft prepare, refused FIND/buyer tools.  
 Vitest: Cal on the desk, not on FIND, not Cal queue.  
-`PYTHONPATH=/workspace python3 scripts/pstack_release.py --local` green, including `cal_jobs_desk`.
+`PYTHONPATH=/workspace python3 scripts/pstack_release.py --local` green, including `phelan_jobs_desk`.
 
 No Fly deploy. Draft only.

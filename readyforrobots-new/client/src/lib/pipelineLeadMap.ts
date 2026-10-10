@@ -1,7 +1,7 @@
 /** Map FastAPI /api/leads row → Pipeline UI deal shape (stages are local until CRM sync exists). */
 
 import { cleanAndClampText, cleanScrapedText } from "@/lib/text";
-import { CAL_SIGNATURE } from "@/lib/agentMessaging";
+import { PHELAN_SIGNATURE } from "@/lib/agentMessaging";
 
 export type PipelineStage =
   | "New Signal"
@@ -100,7 +100,7 @@ export interface ApiLead {
   share_summary?: string | null;
   share_blurb?: string | null;
   pipeline_action?: string | null;
-  cal_seller_brief?: {
+  phelan_seller_brief?: {
     headline?: string;
     why_now?: string;
     pitch?: string;
@@ -400,7 +400,7 @@ function outreachBody(
     "",
     "I'd be interested in your perspective.",
     "",
-    CAL_SIGNATURE,
+    PHELAN_SIGNATURE,
   ].join("\n");
 }
 
@@ -441,7 +441,7 @@ function buildSellerBrief(
   signalType: string,
   signalText: string
 ) {
-  const fromApi = lead.cal_seller_brief;
+  const fromApi = lead.phelan_seller_brief;
   if (fromApi?.headline && fromApi?.why_now) {
     return {
       headline: fromApi.headline,

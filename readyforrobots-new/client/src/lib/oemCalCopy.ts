@@ -3,7 +3,7 @@
  * Open CRM. He asks missing apply facts and prepares the draft. You send.
  *
  * SIGNAL `/results` strings below do not name Cal as a buyer matcher.
- * BuyerCal leftover notes stay in app/services/cal_persona.py and stay frozen.
+ * BuyerCal leftover notes stay in app/services/phelan_persona.py and stay frozen.
  */
 
 export const OEM_CAL_NAME = "Automate Job Applications";

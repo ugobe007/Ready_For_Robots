@@ -74,7 +74,7 @@ every gate.
   unrelated failures only (wikidata network probe, humanoid-catalog astribot data).
 
 ### Follow-ups
-- Cal cycle window (`_hot_warm_companies(limit=max(draft_limit,100))`) is still
+- Phelan cycle window (`_hot_warm_companies(limit=max(draft_limit,100))`) is still
   burned by bounce-era sends — now safe to widen since the pool is clean.
 - Add `ZERO_BOUNCE_API_KEY` to catch stale Hunter mailboxes pre-send.
 - Consider applying the same vendor-precedence hardening to the supply pipeline.

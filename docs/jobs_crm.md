@@ -203,7 +203,7 @@ Hunt on FIND. Keep jobs on the CRM listing. Apply when the user is ready.
 
 ### F18 — Cal on the desk (ship)
 
-After Open CRM, **Cal** is the Jobs recruiter on `/pipeline?src=jobs_activate`. He reads kept Job Cards, asks missing apply facts (task-model source vs self-train, catalogued SKU, monthly rental, skippable PoC), and prepares the existing violet apply draft. The operator reviews and sends. Tools: `GET/POST /api/jobs-crm/cal/desk`. Production `CAL_AUTONOMY_ENABLED=0`. Not FIND. Not buyer/SIGNAL mail. Not a second home.
+After Open CRM, **Cal** is the Jobs recruiter on `/pipeline?src=jobs_activate`. He reads kept Job Cards, asks missing apply facts (task-model source vs self-train, catalogued SKU, monthly rental, skippable PoC), and prepares the existing violet apply draft. The operator reviews and sends. Tools: `GET/POST /api/jobs-crm/cal/desk`. Production `PHELAN_AUTONOMY_ENABLED=0`. Not FIND. Not buyer/SIGNAL mail. Not a second home.
 
 ---
 
