@@ -1,4 +1,4 @@
-# Cal Floor Manager Log
+# Phelan Floor Manager Log
 
 **Hermes is retired (2026-08-26).** Historical hourly coach ticks from retired skill `rfr-sales-floor-manager`. Newest first. Do not cron this as Jobs.
 
@@ -192,7 +192,7 @@ Spec: [docs/skills/rfr-sales-floor-manager.SKILL.md](./skills/rfr-sales-floor-ma
 ## 2026-09-15 06:21 PDT (tick-26)
 - Scoreboard: cal=disabled(dual-lock:env_enabled=false+runtime_override=true|fingerprint-mismatch:45e2977c≠1bd087e4|send_limit=0|draft_batch=0|heartbeat-fresh-160s) scraper=399/150(266%✅) hermes_stamp=1/5(unchanged) pipeline=HOT=0/5(all tier_none|built_at=13:13Z-fresh) funnel=no-snapshot
 - Actions:
-  1. ALERT: Cal dual-lock persists tick-26. env_enabled=false AND runtime_override=true remain in conflict — Cal heartbeat is alive but sends/drafts fully locked (send_limit=0, draft_batch=0). Fingerprint mismatch unchanged (45e2977c ≠ 1bd087e4). Operator must: (a) resolve env_enabled vs runtime_override conflict, (b) clear/re-store fingerprint before sends can resume.
+  1. ALERT: Cal dual-lock persists tick-26. env_enabled=false AND runtime_override=true remain in conflict — Phelan heartbeat is alive but sends/drafts fully locked (send_limit=0, draft_batch=0). Fingerprint mismatch unchanged (45e2977c ≠ 1bd087e4). Operator must: (a) resolve env_enabled vs runtime_override conflict, (b) clear/re-store fingerprint before sends can resume.
   2. ALERT: Pipeline HOT=0 for 26th consecutive tick. All 5 leads remain tier_none despite 399 leads/24h intake. Cache is fresh (13:13Z). Root cause is tier-scoring not promoting any lead — Cal has no qualified pool to work regardless of lock state.
   3. INGEST_GAP: Hermes stamp flat at 1/5 — no improvement from tick-25. Even if stamp grows, tier_none block prevents HOT promotion. Tier-scoring fix is the critical path; Hermes stamp is secondary until tier logic is restored.
 - Next hour watch: fingerprint mismatch resolution; any tier_none→HOT promotion; hermes_stamp movement above 1/5
@@ -215,4 +215,4 @@ Spec: [docs/skills/rfr-sales-floor-manager.SKILL.md](./skills/rfr-sales-floor-ma
   1. `ALERT` — Cal dual-lock persists tick-28: env_enabled=false AND runtime_override=true → send_limit=0, draft_batch=0. Operator must set CAL_ENABLED=true in Fly secrets to clear env lock. Fingerprint mismatch (45e2977c≠1bd087e4) also still present — template version "3" deployed but stored hash not updated. Both must be resolved before Cal can draft.
   2. `ALERT` — Pipeline HOT=0 for 28th consecutive tick. All 5 pipeline leads are tier_none. Tier-scoring is the critical path blocking Cal supply. Scraper is over-producing (444/day) but no leads are clearing the tier gate — scoring fix is operator-required.
   3. `INGEST_GAP` — Hermes stamp flat at 1/5 (20%). Remains a secondary blocker; primary is tier-scoring. Once HOT/WARM leads exist, stamp coverage needs to reach ≥50% before Cal can prioritize qualified pool.
-- **Next hour watch:** Cal heartbeat freshness (stale_threshold=1800s); any HOT tier count > 0 (tier-scoring fix); fingerprint match resolved; harness snapshot staleness (32d+).
+- **Next hour watch:** Phelan heartbeat freshness (stale_threshold=1800s); any HOT tier count > 0 (tier-scoring fix); fingerprint match resolved; harness snapshot staleness (32d+).

@@ -1,5 +1,5 @@
 """
-Clean the Cal outreach queue — quarantine contaminated unsent drafts.
+Clean the Phelan outreach queue — quarantine contaminated unsent drafts.
 
 Classifies every unsent-draft CRM account and (with --apply) clears + suppresses
 the contaminated ones so autopilot never sends them:
@@ -36,7 +36,7 @@ def _off_icp(industry: str | None, name: str | None) -> bool:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Clean the Cal outreach queue.")
+    parser = argparse.ArgumentParser(description="Clean the Phelan outreach queue.")
     parser.add_argument("--apply", action="store_true", help="Persist changes (default dry-run).")
     parser.add_argument("--clean-off-icp", action="store_true", help="Also clean off-ICP industry buyers.")
     parser.add_argument("--clean-no-domain", action="store_true", help="Also clean accounts with no verifiable domain.")

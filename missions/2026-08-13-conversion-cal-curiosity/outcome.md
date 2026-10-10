@@ -5,10 +5,10 @@
 
 ## Diff summary
 
-### Cal voice (server)
+### Phelan voice (server)
 - Rewrote buyer variants in `app/services/agent_messaging.py` to short curiosity-peer notes (~90–110 words)
 - Curiosity subjects; removed Robert/RFQ first-touch closes
-- Expanded `CAL_BANNED_PHRASES` / persona rules; updated `docs/cal_persona_spec.md`
+- Expanded `PHELAN_BANNED_PHRASES` / persona rules; updated `docs/cal_persona_spec.md`
 - Hermes opener phrasing: “noticed … hiring … that timing caught my eye”
 - Tests: `tests/test_cal_voice.py`, `test_cal_draft_guard.py`, `test_context_reason.py`, `test_ladder_cadence.py`, `test_cal_hermes_priority.py` — **35 passed**
 

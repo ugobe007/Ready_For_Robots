@@ -62,7 +62,7 @@ def main() -> None:
         if p is None:
             raise SystemExit(f"project not found: {SLUG}")
 
-        from app.services.cal_email_send import send_cal_email_via_resend
+        from app.services.phelan_email_send import send_phelan_email_via_resend
 
         candidates = [t for t in p.targets if _eligible(t)]
         candidates.sort(key=lambda t: t.sort_order)
@@ -76,7 +76,7 @@ def main() -> None:
                 print(f"  would send → {t.company} <{t.contact_email}> [{t.contact_status}]")
                 continue
             try:
-                send_cal_email_via_resend(
+                send_phelan_email_via_resend(
                     to_email=t.contact_email.strip(),
                     subject=t.draft_subject.strip(),
                     body_text=t.draft_body.strip(),

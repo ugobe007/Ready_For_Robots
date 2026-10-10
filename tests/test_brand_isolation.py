@@ -101,7 +101,7 @@ def test_send_guard_blocks_stagegate_from_rfr(monkeypatch):
 
 
 def test_cal_buyer_loop_rejects_stagegate_account():
-    from app.services.cal_autonomy import _cal_buyer_eligible
+    from app.services.phelan_autonomy import _cal_buyer_eligible
 
     company = SimpleNamespace(
         name="Keenon Robotics",

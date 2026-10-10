@@ -1,4 +1,4 @@
-# Cal Jobs CRM copilot — brief
+# Phelan Jobs CRM copilot — brief
 
 **Date:** 2026-09-01  
 **Type:** build  

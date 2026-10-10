@@ -1,4 +1,4 @@
-"""Tests for StageGate Cal outreach voice."""
+"""Tests for StageGate Phelan outreach voice."""
 from app.services.stagegate_voice import (
     STAGEGATE_OUTREACH_RULES,
     stagegate_outreach_email,

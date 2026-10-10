@@ -388,7 +388,7 @@ export function MarketingVsGenericAI() {
     },
     {
       dumb: "Export a CSV, then go build your own stack",
-      rfr: "Pipeline, Cal outreach drafts, and HubSpot sync — done for you",
+      rfr: "Pipeline, Phelan outreach drafts, and HubSpot sync — done for you",
     },
     {
       dumb: "Static lists that go stale the day you download them",

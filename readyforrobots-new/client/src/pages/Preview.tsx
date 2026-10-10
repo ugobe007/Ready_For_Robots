@@ -209,7 +209,7 @@ export default function Preview() {
             Email preview loop
           </h2>
           <p className="mt-1 text-xs text-gray-600">
-            Compact footer animation in Cal outreach emails.
+            Compact footer animation in Phelan outreach emails.
           </p>
           <img
             src="/marketing/cal-pipeline-demo.gif"

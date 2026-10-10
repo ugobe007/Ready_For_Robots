@@ -30,7 +30,7 @@ FLY_API = os.getenv("RFR_FLY_API", "https://ready-2-robot.fly.dev").rstrip("/")
 WORKSPACE = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "RobotJobsWorkspace.tsx"
 CRM_DESK = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "JobsCrmDesk.tsx"
 CAL_DESK_UI = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "CalJobsDesk.tsx"
-CAL_DESK_PY = ROOT / "app" / "services" / "cal_jobs_desk.py"
+CAL_DESK_PY = ROOT / "app" / "services" / "phelan_jobs_desk.py"
 IDENTITY = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "robotUrlIdentity.ts"
 FIND_RESEARCH = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "findResearch.ts"
 CRM_ACCOUNT = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsCrmAccount.ts"
@@ -536,7 +536,7 @@ def phase_act() -> dict[str, Any]:
     )
     checks.append(
         _check(
-            "cal_jobs_desk",
+            "phelan_jobs_desk",
             "CalJobsDesk" in desk
             and "data-cal-jobs-desk" in cal_desk
             and "save_task_model" in cal_py

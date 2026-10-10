@@ -4,8 +4,8 @@ from types import SimpleNamespace
 import pytest
 
 from app.services.brand import is_stagegate_branded
-from app.services.cal_draft_guard import draft_needs_regeneration
-from app.services.cal_insights import pick_cal_insight
+from app.services.phelan_draft_guard import draft_needs_regeneration
+from app.services.phelan_insights import pick_cal_insight
 from app.services.stagegate_crm_bridge import _existing_company_is_rfr_buyer, _upsert_company
 
 

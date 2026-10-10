@@ -509,9 +509,9 @@ def _deliver_target(p: SpecialProject, t: SpecialProjectTarget, *, followup: boo
     if not subject or not body:
         raise ValueError("Draft subject and body are required before sending.")
 
-    from app.services.cal_email_send import send_cal_email_via_resend
+    from app.services.phelan_email_send import send_phelan_email_via_resend
 
-    send_cal_email_via_resend(
+    send_phelan_email_via_resend(
         to_email=t.contact_email.strip(),
         subject=subject,
         body_text=body,

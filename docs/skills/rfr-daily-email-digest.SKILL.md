@@ -25,7 +25,7 @@ Fly and GitHub Actions own this email. A leftover Hermes job with `--provider ai
 2. Celery Beat `cal-daily-digest` (15:00 UTC) when Celery is running (Fly worker sets `SKIP_CELERY=1`)
 3. GitHub Action `.github/workflows/cal-daily-digest.yml` (15:05 UTC backup)
 
-Web does **not** start a digest thread unless `CAL_DAILY_DIGEST_WEB_BACKUP=1`. All senders call `send_cal_daily_digest`, which claims the calendar day with Redis SET NX before sending.
+Web does **not** start a digest thread unless `CAL_DAILY_DIGEST_WEB_BACKUP=1`. All senders call `send_phelan_daily_digest`, which claims the calendar day with Redis SET NX before sending.
 
 Copy is Jobs-path (matcher / kept jobs / applications) plus a Cal-frozen one-liner. Do not attach the SIGNAL industry brief.
 

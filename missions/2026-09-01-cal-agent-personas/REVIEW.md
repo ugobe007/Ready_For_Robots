@@ -1,4 +1,4 @@
-# Cal is not performing
+# Phelan is not performing
 
 **Date:** 2026-09-01  
 **Type:** research. No code rewrite. No deploy.  
@@ -19,13 +19,13 @@ The docs and the runtime do not agree on who he is. Then production turns him of
 
 ### 1. Three jobs, one name
 
-`docs/cal_persona_spec.md` and `app/services/cal_persona.py` say Cal is a **jobs advisor**. He finds Robot Jobs a machine can do. He does not sell robots to operating companies.
+`docs/cal_persona_spec.md` and `app/services/phelan_persona.py` say Cal is a **jobs advisor**. He finds Robot Jobs a machine can do. He does not sell robots to operating companies.
 
 `docs/cal_voice_and_persona.md` still says he is a **research and sales intelligence agent** who works both sides of the market: help factories buy robots, help OEMs find buyers.
 
-`app/services/agent_messaging.py` still signs him as a **deployment sherpa for capturing qualified buyers**. `CAL_VENDOR_ROLE_LINE` is "help robot companies capture qualified buyers… instead of noisy list traffic."
+`app/services/agent_messaging.py` still signs him as a **deployment sherpa for capturing qualified buyers**. `PHELAN_VENDOR_ROLE_LINE` is "help robot companies capture qualified buyers… instead of noisy list traffic."
 
-`readyforrobots-new/client/src/lib/oemCalCopy.ts` is a third voice. OemCal on `/results` and `/signup` talks about matched **buyers** and unlocking 15 sales leads. BuyerCal in `cal_persona.py` is the outbound note. Floor Manager in `docs/skills/rfr-sales-floor-manager.SKILL.md` exists to keep those two from bleeding. That skill is retired with Hermes. The copy files are still there.
+`readyforrobots-new/client/src/lib/oemCalCopy.ts` is a third voice. OemCal on `/results` and `/signup` talks about matched **buyers** and unlocking 15 sales leads. BuyerCal in `phelan_persona.py` is the outbound note. Floor Manager in `docs/skills/rfr-sales-floor-manager.SKILL.md` exists to keep those two from bleeding. That skill is retired with Hermes. The copy files are still there.
 
 A named agent cannot perform when the company has not picked the job.
 
@@ -37,9 +37,9 @@ That loop was SIGNAL outreach.
 research/signals → draft → assembly gate → Resend intro → follow-up sequences
 ```
 
-`fly.toml` has `CAL_AUTONOMY_ENABLED=0` and `ENABLE_SCHEDULED_CAL_AUTONOMY=0` since 2026-08-26. `CAL_BUYER_SALES_ENABLED` defaults off. `docs/hermes_retired.md` says buyer outreach is not the Jobs product. Scheduled draft create/refresh and due follow-ups stay paused. Tests lock the digest copy to "Cal sales outreach is frozen."
+`fly.toml` has `PHELAN_AUTONOMY_ENABLED=0` and `ENABLE_SCHEDULED_PHELAN_AUTONOMY=0` since 2026-08-26. `PHELAN_BUYER_SALES_ENABLED` defaults off. `docs/hermes_retired.md` says buyer outreach is not the Jobs product. Scheduled draft create/refresh and due follow-ups stay paused. Tests lock the digest copy to "Cal sales outreach is frozen."
 
-The daily digest in `app/services/cal_daily_digest.py` is now an operator status mail. Jobs-path counts, then "Cal sales must stay 0," then leftover HOT/WARM rows that are **not a send list.** Cal's surviving public act is telling the operator he is off.
+The daily digest in `app/services/phelan_daily_digest.py` is now an operator status mail. Jobs-path counts, then "Cal sales must stay 0," then leftover HOT/WARM rows that are **not a send list.** Cal's surviving public act is telling the operator he is off.
 
 `docs/cal_floor_manager_log.md` has never had a cron tick. Hermes was the hourly coach. Hermes is retired. Nobody is watching a floor.
 
@@ -62,7 +62,7 @@ Cal has an unusually thick persona.
 - operator card `docs/cal_stage1_operator_card.md`
 - corpus of **two** samples in `docs/cal_corpus/`: one Excellent PFG first-touch, one Not Cal label-stack
 - learning log last written 2026-08-13
-- assembly agent in `app/services/cal_assembly_agent.py` that reviews **email copy** before send
+- assembly agent in `app/services/phelan_assembly_agent.py` that reviews **email copy** before send
 
 What he cannot do on Jobs CRM:
 
@@ -165,10 +165,10 @@ Reuse, do not rebuild:
 
 - Apply prepare/send already lives in `docs/jobs_crm.md` F11. Operator reviews, then `POST /api/jobs-crm/applications/{id}/send`.
 - Decline already asks a task-model reason code.
-- `cal_persona.py` identity line already says jobs advisor. Point the LLM at apply drafts, not buyer intros.
+- `phelan_persona.py` identity line already says jobs advisor. Point the LLM at apply drafts, not buyer intros.
 - Digest already reports matcher / kept / applications. Next version can say "Cal asked 3 OEMs for a task model" instead of "intros sent: 0."
 
-What this is not: unfreezing `CAL_AUTONOMY_ENABLED`. Not emailing operating companies. Not a chat FAB on `/`. Not generate-plan on SIGNAL accounts.
+What this is not: unfreezing `PHELAN_AUTONOMY_ENABLED`. Not emailing operating companies. Not a chat FAB on `/`. Not generate-plan on SIGNAL accounts.
 
 Size: one CRM-desk prompt plus wiring into the existing prepare-apply path. If the first slice cannot be described in one PR that a critic can drive FIND → cards → Open CRM → see Cal ask one question, it is too big. Stop.
 

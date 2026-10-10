@@ -14,4 +14,4 @@ export const CAL_TAGLINE = "ReadyForRobots Robot Job Analyst — Recruitment & P
 export const CAL_INTRO = "I am Phelan, Robot Job Analyst at ReadyForRobots. ReadyForRobots is recruitment and placement infrastructure for robotic labor.";
 export const CAL_VENDOR_SHERPA_LINE =
   "ReadyForRobots matches qualified robotic labor directly to real, verified job openings at enterprise and industrial facilities.";
-export const CAL_SIGNATURE = ["Phelan", "Robot Job Analyst | ReadyForRobots", "readyforrobots.com"].join("\n");
+export const PHELAN_SIGNATURE = ["Phelan", "Robot Job Analyst | ReadyForRobots", "readyforrobots.com"].join("\n");

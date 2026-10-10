@@ -359,7 +359,7 @@ def daily_brief(db: Session = Depends(get_db)):
 
     cal_queue: dict[str, Any] = {}
     try:
-        from app.services.cal_autonomy import get_cal_review_email, resolve_cal_admin_context
+        from app.services.phelan_autonomy import get_phelan_review_email, resolve_cal_admin_context
         from app.api.admin_extended import _build_cal_draft_status_payload
 
         ctx = resolve_cal_admin_context(db)
@@ -368,7 +368,7 @@ def daily_brief(db: Session = Depends(get_db)):
             cal_payload = _build_cal_draft_status_payload(
                 db,
                 admin_uid=admin_uid,
-                admin_email=get_cal_review_email() or "",
+                admin_email=get_phelan_review_email() or "",
                 include_draft_bodies=False,
                 include_prospects=False,
                 prospect_limit=1,

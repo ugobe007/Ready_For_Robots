@@ -1,4 +1,4 @@
-# Cal daily digest and worker match Jobs
+# Phelan daily digest and worker match Jobs
 
 **Date:** 2026-08-27  
 **Type:** build  
@@ -10,7 +10,7 @@ Cal’s daily email and worker must match the Jobs product. Autopilot/scheduled 
 
 ## Acceptance
 
-1. `CAL_AUTONOMY_ENABLED` and `ENABLE_SCHEDULED_CAL_AUTONOMY` stay `0` in `fly.toml`. Do not enable `MARKET_GRAPH_RUN_RESEARCH`, `HERMES_INGEST_ENABLED`, or `LEAD_RESEARCH_AGENT_ENABLED`.
+1. `PHELAN_AUTONOMY_ENABLED` and `ENABLE_SCHEDULED_PHELAN_AUTONOMY` stay `0` in `fly.toml`. Do not enable `MARKET_GRAPH_RUN_RESEARCH`, `HERMES_INGEST_ENABLED`, or `LEAD_RESEARCH_AGENT_ENABLED`.
 2. When autopilot is off, scheduled `_draft_and_store` and due follow-ups no-op. Manual admin Run cycle still works and does not send held follow-ups.
 3. Digest copy has Jobs-path counts (matcher / kept jobs / applications) and a Cal-frozen line. No industry brief / “sales teams prioritize accounts.”
 4. Intros stay on the 0 path. HOT 300 is leftover queue copy, not a send list.

@@ -195,7 +195,7 @@ export default function ExperimentHeader() {
                     <span className="text-base">💳</span>
                     <div>
                       <div className="font-semibold text-slate-100">Pricing & Plans</div>
-                      <div className="text-[11px] text-slate-400 font-normal">Pro plans & Cal outreach entitlement</div>
+                      <div className="text-[11px] text-slate-400 font-normal">Pro plans & Phelan outreach entitlement</div>
                     </div>
                   </a>
                   {isAdmin && (
