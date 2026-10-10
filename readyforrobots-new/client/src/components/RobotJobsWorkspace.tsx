@@ -46,6 +46,7 @@ import { lookupKnownDistributor } from "@/lib/knownDistributorLineups";
 import {
   I_KNOW_THE_ROBOT_HINT,
   I_KNOW_THE_ROBOT_LABEL,
+  jobsCandidatesHref,
   jobsFindHref,
 } from "@/lib/jobsLanding";
 import {
@@ -2410,6 +2411,16 @@ function FindRail({
           />
         </button>
       </form>
+      {stage === "find" ? (
+        <p className="mt-3 text-[12px] text-slate-400">
+          <a
+            href={jobsCandidatesHref()}
+            className="text-slate-400 underline underline-offset-4 hover:text-slate-200"
+          >
+            Employers: name the work
+          </a>
+        </p>
+      ) : null}
 
       {stage === "find" && onPickClass ? (
         <div className="mt-8 border border-slate-700 bg-transparent p-4 rounded-xl">

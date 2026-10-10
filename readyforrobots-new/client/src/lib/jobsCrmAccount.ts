@@ -22,6 +22,7 @@ import {
 } from "@/lib/jobsHandoffSnapshot";
 import { canonicalRobotUrl } from "@/lib/robotUrlIdentity";
 import type { MatchJob } from "@/lib/robotJobMatch";
+import { FEATURED_BUYER_QUOTES, type BuyerQuote } from "@/lib/buyerQuotes";
 
 export const JOBS_KEEP_JOBS_CTA = "Keep jobs";
 export const JOBS_KEEP_YES_CTA = "Yes, keep them";
@@ -912,8 +913,6 @@ const EMPTY_CRM_DESK: CrmDeskForRobot = {
   savedCount: 0,
 };
 
-import { FEATURED_BUYER_QUOTES, type BuyerQuote } from "@/lib/buyerQuotes";
-
 export function buyerQuoteToMatchJob(quote: BuyerQuote): MatchJob {
   return {
     job_key: quote.id,
@@ -945,8 +944,7 @@ export function buyerQuoteToMatchJob(quote: BuyerQuote): MatchJob {
 
 /**
  * Desk identity + jobs for the robot FIND just ran.
- * The submitted URL is the primary key. If no snap URL exists, fallback
- * to the quote job corpus matching the target company.
+ * The submitted URL is the primary key. Landing quotes are not CRM jobs.
  */
 export function crmDeskForCurrentRobot(opts: {
   snap: JobsHandoffSnapshot | null;
@@ -954,40 +952,6 @@ export function crmDeskForCurrentRobot(opts: {
 }): CrmDeskForRobot {
   const snapUrl = canonicalRobotUrl(opts.snap?.url || "");
   if (!snapUrl) {
-    const search =
-      typeof window !== "undefined" ? window.location?.search || "" : "";
-    const params = new URLSearchParams(search);
-    const coQuery = (
-      params.get("co") ||
-      params.get("q") ||
-      params.get("company") ||
-      ""
-    )
-      .trim()
-      .toLowerCase();
-
-    if (coQuery) {
-      const quoteJobs = FEATURED_BUYER_QUOTES.map(buyerQuoteToMatchJob);
-      const foundQuote = FEATURED_BUYER_QUOTES.find(
-        q =>
-          q.company.toLowerCase().includes(coQuery) ||
-          q.matchedJobTitle.toLowerCase().includes(coQuery) ||
-          q.industry.toLowerCase().includes(coQuery)
-      );
-      if (foundQuote) {
-        quoteJobs.sort((a, b) =>
-          a.job_key === foundQuote.id ? -1 : b.job_key === foundQuote.id ? 1 : 0
-        );
-        return {
-          product: foundQuote.targetRobotTypes.join(" / ") || "your robot",
-          robotUrl: "",
-          rows: [],
-          jobs: quoteJobs,
-          savedCount: quoteJobs.length,
-        };
-      }
-    }
-
     return {
       product: "your robot",
       robotUrl: "",

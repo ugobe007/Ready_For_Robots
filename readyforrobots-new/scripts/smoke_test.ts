@@ -30,13 +30,26 @@ function runSmokeTests() {
     "Buyer quotes count >= 4",
     `Found ${FEATURED_BUYER_QUOTES.length}`
   );
-  const hiltonQuote = FEATURED_BUYER_QUOTES.find(q =>
-    q.company.includes("Hilton")
+  const namedEmployers = FEATURED_BUYER_QUOTES.map(q => q.company);
+  assert(
+    namedEmployers.some(name => name.includes("Rochester Regional")),
+    "Rochester Regional Health quote present",
+    `Companies: ${namedEmployers.join(", ")}`
   );
   assert(
-    Boolean(hiltonQuote && hiltonQuote.quote.includes("luggage")),
-    "Hilton Hotels quote loaded correctly",
-    "Hilton quote missing or incomplete"
+    namedEmployers.some(name => name.includes("Chipotle")),
+    "Chipotle quote present",
+    `Companies: ${namedEmployers.join(", ")}`
+  );
+  assert(
+    FEATURED_BUYER_QUOTES.every(q => q.opportunityHref.includes("visit=jobs")),
+    "Quote links go to FIND",
+    FEATURED_BUYER_QUOTES.map(q => q.opportunityHref).join(", ")
+  );
+  assert(
+    FEATURED_BUYER_QUOTES.every(q => !q.opportunityHref.includes("/pipeline")),
+    "Quotes do not hop to SIGNAL pipeline",
+    FEATURED_BUYER_QUOTES.map(q => q.opportunityHref).join(", ")
   );
 
   // 2. Data Integrity: Known OEM Lineups

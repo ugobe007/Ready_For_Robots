@@ -322,10 +322,10 @@ export default function JobsLanding() {
           </div>
         </form>
 
-        {/* Featured Daily Customer Intent Quotes */}
+        {/* Named employer quotes about real work */}
         <div
           className="rfr-landing-quotes mt-8 mb-5 w-full pt-1"
-          aria-label="Customer Quotes"
+          aria-label="Employer quotes"
         >
           <CustomerQuoteBanner />
         </div>
