@@ -44,6 +44,7 @@ _DEFAULT_FAMILIES: dict[str, list[str]] = {
     "food_prep": ["food_prep"],
     "beverage": ["beverage_prep"],
     "restroom": ["surface_clean"],
+    "hospitality": ["hospitality_task"],
 }
 
 

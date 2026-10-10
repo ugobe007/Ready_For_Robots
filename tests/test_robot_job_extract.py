@@ -191,8 +191,8 @@ def test_harvest_and_cnc_titles_map_to_find_tape_families():
     assert tape_family_for_job_function("haulage") == "mining"
     assert job_function_from_title("Casino Bartender") == "serving"
     assert tape_family_for_job_function("serving") == "serve"
-    assert job_function_from_title("Office Janitor") == "environmental_services"
-    assert job_function_from_title("Data Center Custodian") == "environmental_services"
+    assert job_function_from_title("Office Janitor") == "cleaning"
+    assert job_function_from_title("Data Center Custodian") == "cleaning"
     assert is_job_employer_name("Sunrise Orchards") is True
     assert is_job_employer_name("Indeed") is False
     assert is_job_employer_name("Warehouse Associate", title="Warehouse Associate") is False

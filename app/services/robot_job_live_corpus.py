@@ -89,7 +89,7 @@ def tape_family_for_live_job(
         return "aerial_clean"
     if cls == "food_prep" or function in {"food_prep", "warewash"}:
         return "food_prep"
-    if function in {"cleaning", "janitorial", "custodial"}:
+    if cls == "cleaning" or function in {"cleaning", "janitorial", "custodial"}:
         if any(w in blob_early for w in ("restroom", "bathroom", "lavatory", "toilet")):
             return "restroom"
         return "scrub"
