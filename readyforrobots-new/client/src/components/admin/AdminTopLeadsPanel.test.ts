@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
-import AdminTopLeadsPanel, { buildPhelanExecutiveEmail } from "./AdminTopLeadsPanel";
+import AdminTopLeadsPanel, {
+  buildPhelanExecutiveEmail,
+} from "./AdminTopLeadsPanel";
 
 describe("AdminTopLeadsPanel component module", () => {
   it("exports AdminTopLeadsPanel as a valid React component function", () => {
@@ -13,9 +15,15 @@ describe("AdminTopLeadsPanel component module", () => {
       robotTypes: ["Meal Assembly Cobots", "Kitchen Prep Manipulators"],
     });
 
-    expect(email.subject).toBe("Robotic labor placement & task feasibility evaluation for CloudKitchens");
+    expect(email.subject).toBe(
+      "Robotic labor placement & task feasibility evaluation for CloudKitchens"
+    );
     expect(email.body).toContain("Hi Justin,");
-    expect(email.body).toContain("I'm Phelan, AI Robotics Placement Specialist at ReadyForRobots.");
-    expect(email.body).toContain("Would you be open to reviewing a brief task feasibility and robotic labor placement summary for your facilities?");
+    expect(email.body).toContain(
+      "I'm Phelan, AI Robotics Placement Specialist at ReadyForRobots."
+    );
+    expect(email.body).toContain(
+      "Would you be open to reviewing a brief task feasibility and robotic labor placement summary for your facilities?"
+    );
   });
 });

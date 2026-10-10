@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { ADMIN_WORKSPACE_SECTIONS, ADMIN_WORKSPACE_LINKS } from "./adminNavLinks";
+import {
+  ADMIN_WORKSPACE_SECTIONS,
+  ADMIN_WORKSPACE_LINKS,
+} from "./adminNavLinks";
 import { buildBobExecutiveEmail } from "../components/admin/AdminTopLeadsPanel";
-import { getBenchmarkForIndustry, INDUSTRY_BENCHMARKS } from "./industryBenchmarkingData";
+import {
+  getBenchmarkForIndustry,
+  INDUSTRY_BENCHMARKS,
+} from "./industryBenchmarkingData";
 
 describe("3-Click Rule & Workflow Logic Audit", () => {
   it("enforces 3-click maximum for Admin Top 10 Executive Outreach workflow", () => {
@@ -86,9 +92,15 @@ describe("3-Click Rule & Workflow Logic Audit", () => {
       robotTypes: ["Meal Assembly Cobots", "Kitchen Prep Manipulators"],
     });
 
-    expect(email.subject).toBe("Engineering task feasibility & robotics evaluation for CloudKitchens");
+    expect(email.subject).toBe(
+      "Engineering task feasibility & robotics evaluation for CloudKitchens"
+    );
     expect(email.body).toContain("Dear Justin,");
-    expect(email.body).toContain("My name is Bob Christopher, President of ReadyForRobots.");
-    expect(email.body).toContain("Would you be open to reviewing a brief feasibility and ROI summary for your facilities?");
+    expect(email.body).toContain(
+      "My name is Bob Christopher, President of ReadyForRobots."
+    );
+    expect(email.body).toContain(
+      "Would you be open to reviewing a brief feasibility and ROI summary for your facilities?"
+    );
   });
 });

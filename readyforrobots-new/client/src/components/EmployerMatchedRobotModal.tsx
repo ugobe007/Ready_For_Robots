@@ -8,10 +8,7 @@ import {
   EMPLOYER_SHORTLIST_ADD,
   EMPLOYER_SHORTLIST_DROP,
 } from "@/lib/jobsLanding";
-import {
-  JOBS_EYEBROW_CLASS,
-  JOBS_FIND_CTA_CLASS,
-} from "@/lib/jobsWorkflow";
+import { JOBS_EYEBROW_CLASS, JOBS_FIND_CTA_CLASS } from "@/lib/jobsWorkflow";
 import {
   catalogHttpUrl,
   catalogSpecRows,

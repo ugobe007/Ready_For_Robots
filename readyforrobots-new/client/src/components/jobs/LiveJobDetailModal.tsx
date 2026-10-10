@@ -15,10 +15,7 @@ import {
 } from "lucide-react";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD } from "@/lib/kareIcons";
-import {
-  TAPE_ICONS,
-  type TapeJob,
-} from "@/lib/jobsTapeCorpus";
+import { TAPE_ICONS, type TapeJob } from "@/lib/jobsTapeCorpus";
 
 type Props = {
   job: TapeJob | null;
@@ -84,7 +81,12 @@ export default function LiveJobDetailModal({
             : "Autonomous Mobile Robot (AMR) & Tugger";
 
   const specs = {
-    payload: job.family === "pallet" ? "500kg - 1,200kg" : job.family === "gripper" ? "15kg - 35kg" : "50kg - 250kg",
+    payload:
+      job.family === "pallet"
+        ? "500kg - 1,200kg"
+        : job.family === "gripper"
+          ? "15kg - 35kg"
+          : "50kg - 250kg",
     shift: "3-Shift Continuous (24/7 Deployment)",
     payback: "Est. 8.4-month payback · $8.5k/mo RaaS option",
     wms: "WMS / PLC REST API & ROS2 Interface Compliant",
@@ -171,13 +173,15 @@ export default function LiveJobDetailModal({
           {/* Form Factor & Hardware Suitability */}
           <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4">
             <div className="flex items-center gap-2 font-mono text-xs font-bold uppercase tracking-wider text-emerald-400">
-              <Cpu className="h-4 w-4 text-emerald-400" /> Form Factor & Hardware Suitability
+              <Cpu className="h-4 w-4 text-emerald-400" /> Form Factor &
+              Hardware Suitability
             </div>
             <p className="mt-1.5 text-sm font-bold text-slate-100">
               {formFactor}
             </p>
             <p className="mt-1 text-xs text-slate-300">
-              This task model requires automated navigation, obstacle avoidance, and standardized payload transfer mechanisms.
+              This task model requires automated navigation, obstacle avoidance,
+              and standardized payload transfer mechanisms.
             </p>
           </div>
 
@@ -190,27 +194,39 @@ export default function LiveJobDetailModal({
             <div className="rounded-xl border border-slate-700/60 bg-[#081126] divide-y divide-slate-800 text-xs">
               <div className="flex items-center justify-between p-3">
                 <span className="text-slate-400 flex items-center gap-1.5">
-                  <Zap className="h-3.5 w-3.5 text-amber-400" /> Payload & Weight Limit
+                  <Zap className="h-3.5 w-3.5 text-amber-400" /> Payload &
+                  Weight Limit
                 </span>
-                <span className="font-semibold text-slate-100 font-mono">{specs.payload}</span>
+                <span className="font-semibold text-slate-100 font-mono">
+                  {specs.payload}
+                </span>
               </div>
               <div className="flex items-center justify-between p-3">
                 <span className="text-slate-400 flex items-center gap-1.5">
-                  <Clock className="h-3.5 w-3.5 text-emerald-400" /> Shift & Operating Schedule
+                  <Clock className="h-3.5 w-3.5 text-emerald-400" /> Shift &
+                  Operating Schedule
                 </span>
-                <span className="font-semibold text-slate-100">{specs.shift}</span>
+                <span className="font-semibold text-slate-100">
+                  {specs.shift}
+                </span>
               </div>
               <div className="flex items-center justify-between p-3">
                 <span className="text-slate-400 flex items-center gap-1.5">
-                  <DollarSign className="h-3.5 w-3.5 text-cyan-400" /> ROI & RaaS Financing
+                  <DollarSign className="h-3.5 w-3.5 text-cyan-400" /> ROI &
+                  RaaS Financing
                 </span>
-                <span className="font-semibold text-amber-300 font-mono">{specs.payback}</span>
+                <span className="font-semibold text-amber-300 font-mono">
+                  {specs.payback}
+                </span>
               </div>
               <div className="flex items-center justify-between p-3">
                 <span className="text-slate-400 flex items-center gap-1.5">
-                  <ShieldCheck className="h-3.5 w-3.5 text-purple-400" /> WMS & Safety Standard
+                  <ShieldCheck className="h-3.5 w-3.5 text-purple-400" /> WMS &
+                  Safety Standard
                 </span>
-                <span className="font-semibold text-slate-200">{specs.safety}</span>
+                <span className="font-semibold text-slate-200">
+                  {specs.safety}
+                </span>
               </div>
             </div>
           </div>
@@ -218,10 +234,14 @@ export default function LiveJobDetailModal({
           {/* Turnkey Proposal Note */}
           <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4 text-xs text-slate-300 space-y-1.5">
             <div className="flex items-center gap-1.5 text-slate-100 font-semibold">
-              <Sparkles className="h-3.5 w-3.5 text-emerald-400" /> Feasibility & Commercial Proposal Ready
+              <Sparkles className="h-3.5 w-3.5 text-emerald-400" /> Feasibility
+              & Commercial Proposal Ready
             </div>
             <p>
-              ReadyForRobots has pre-mapped this task model against 109+ commercial robot specifications. Sign up for a free enterprise workspace to generate full 3D cell simulations and turnkey commercial quotes for this lead.
+              ReadyForRobots has pre-mapped this task model against 109+
+              commercial robot specifications. Sign up for a free enterprise
+              workspace to generate full 3D cell simulations and turnkey
+              commercial quotes for this lead.
             </p>
           </div>
         </div>

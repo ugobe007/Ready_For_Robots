@@ -83,8 +83,9 @@ export default function Inbox() {
     if (folderTab === "all") return allItems;
     return allItems.filter(item => (item.folder || "main") === folderTab);
   }, [allItems, folderTab]);
-  const mainCount = allItems.filter(item => (item.folder || "main") === "main")
-    .length;
+  const mainCount = allItems.filter(
+    item => (item.folder || "main") === "main"
+  ).length;
   const testCount = allItems.filter(item => item.folder === "test").length;
 
   useEffect(() => {

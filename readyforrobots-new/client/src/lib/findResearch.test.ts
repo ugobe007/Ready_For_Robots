@@ -232,8 +232,8 @@ describe("FIND timeout / 500 / abort stay on /?visit=jobs", () => {
     expect(findFailureStayHref()).toBe("/?visit=jobs");
     expect(findFailureBouncesHome(null)).toBe(false);
     expect(findFailureBouncesHome("/?visit=jobs")).toBe(false);
-    expect(findFailureBouncesHome("/")).toBe(true);
-    expect(findFailureBouncesHome("/?new=1")).toBe(true);
+    expect(findFailureBouncesHome("/")).toBe(false);
+    expect(findFailureBouncesHome("/?new=1")).toBe(false);
     expect(findFailureBouncesHome("/?visit=candidates")).toBe(true);
     for (const err of [
       new FetchTimeoutError(8_000),

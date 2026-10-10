@@ -31,7 +31,8 @@ const SAMPLE_ROBOT_COMPANIES: SampleRobotCompany[] = [
   {
     name: "Locus Robotics",
     url: "https://locusrobotics.com",
-    profile: "Autonomous mobile robots (AMRs) for high-volume warehouse & fulfillment sites.",
+    profile:
+      "Autonomous mobile robots (AMRs) for high-volume warehouse & fulfillment sites.",
     suggestedSubject: "Optimizing warehouse picking throughput with Locus AMRs",
     draftBody: `Hi Operations Team,
 
@@ -50,8 +51,10 @@ ReadyForRobots Sales Team`,
   {
     name: "Gecko Robotics",
     url: "https://www.geckorobotics.com",
-    profile: "Wall-climbing inspection robots and asset integrity software for manufacturing.",
-    suggestedSubject: "Automated wall-climbing NDT inspection for industrial assets",
+    profile:
+      "Wall-climbing inspection robots and asset integrity software for manufacturing.",
+    suggestedSubject:
+      "Automated wall-climbing NDT inspection for industrial assets",
     draftBody: `Hi Maintenance & Engineering Team,
 
 We identified your heavy manufacturing facilities as a prime candidate for automated NDT structural inspections. Gecko Robotics' wall-climbing robots capture 1,000x more data than manual inspections while eliminating hazardous scaffolding.
@@ -69,8 +72,10 @@ ReadyForRobots Sales Team`,
   {
     name: "Diligent Robotics",
     url: "https://www.diligentrobots.com",
-    profile: "Moxi autonomous workflow assistant robots for hospital and healthcare logistics.",
-    suggestedSubject: "Relieving clinical staff burnout with Moxi autonomous assistant robots",
+    profile:
+      "Moxi autonomous workflow assistant robots for hospital and healthcare logistics.",
+    suggestedSubject:
+      "Relieving clinical staff burnout with Moxi autonomous assistant robots",
     draftBody: `Hi Clinical Operations Team,
 
 Nursing teams spend up to 30% of their shifts fetching supplies and medication. Diligent Robotics' Moxi assistant robot automates routine transport so clinical staff can focus on patient care.
@@ -88,8 +93,10 @@ ReadyForRobots Sales Team`,
   {
     name: "Miso Robotics",
     url: "https://misorobotics.com",
-    profile: "Flippy kitchen automation robotics for QSR and commercial food service.",
-    suggestedSubject: "Commercial kitchen automation & frying robotics with Flippy",
+    profile:
+      "Flippy kitchen automation robotics for QSR and commercial food service.",
+    suggestedSubject:
+      "Commercial kitchen automation & frying robotics with Flippy",
     draftBody: `Hi Restaurant Operations Team,
 
 Labor turnover and kitchen safety remain major friction points in high-volume food service. Miso Robotics' Flippy assistant automates fry stations with AI vision and temperature accuracy.
@@ -187,7 +194,9 @@ export default function SalesSamples() {
 
   if ((authLoading && !authWaitExceeded) || meLoading) {
     return (
-      <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <div
+        className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+      >
         <ExperimentHeader />
         <main className="mx-auto max-w-2xl px-6 pt-32 text-center text-slate-400">
           Checking admin access...
@@ -198,13 +207,18 @@ export default function SalesSamples() {
 
   if (!session) {
     return (
-      <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <div
+        className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+      >
         <ExperimentHeader />
         <main className="mx-auto max-w-xl px-6 pt-32 text-center">
           <Shield className="mx-auto mb-4 h-8 w-8 text-amber-400" />
-          <h1 className="text-2xl font-bold text-white">Admin Sign-in Required</h1>
+          <h1 className="text-2xl font-bold text-white">
+            Admin Sign-in Required
+          </h1>
           <p className="mt-3 text-sm text-slate-400">
-            This sales draft and proposal generator is private to admin accounts.
+            This sales draft and proposal generator is private to admin
+            accounts.
           </p>
           <Link
             href="/login?next=%2Fsales%2Fsamples"
@@ -219,13 +233,18 @@ export default function SalesSamples() {
 
   if (!isAdmin) {
     return (
-      <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <div
+        className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+      >
         <ExperimentHeader />
         <main className="mx-auto max-w-xl px-6 pt-32 text-center">
           <AlertTriangle className="mx-auto mb-4 h-8 w-8 text-rose-400" />
-          <h1 className="text-2xl font-bold text-white">Admin Access Required</h1>
+          <h1 className="text-2xl font-bold text-white">
+            Admin Access Required
+          </h1>
           <p className="mt-3 text-sm text-slate-400">
-            {signedInEmail || "This account"} is signed in but not registered in ADMIN_EMAILS.
+            {signedInEmail || "This account"} is signed in but not registered in
+            ADMIN_EMAILS.
           </p>
           <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
             <Link
@@ -247,7 +266,9 @@ export default function SalesSamples() {
   }
 
   return (
-    <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+    <div
+      className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+    >
       <ExperimentHeader />
       <main className="admin-workspace max-w-7xl mx-auto px-4 sm:px-6 pt-8 pb-16">
         <AdminNav variant="dark" />
@@ -261,7 +282,8 @@ export default function SalesSamples() {
               Sales Draft & Proposal Generator
             </h1>
             <p className="mt-2 max-w-2xl text-sm text-slate-400">
-              Review, copy, and send high-converting buyer email drafts and shareable sample proposals for top robot OEMs and distributors.
+              Review, copy, and send high-converting buyer email drafts and
+              shareable sample proposals for top robot OEMs and distributors.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -289,7 +311,8 @@ export default function SalesSamples() {
                 Robot Company Outreach Presets
               </h2>
               <p className="text-xs text-slate-400 mt-1">
-                Pre-written buyer outreach drafts and sample pipeline benchmarks.
+                Pre-written buyer outreach drafts and sample pipeline
+                benchmarks.
               </p>
             </div>
             <Link
@@ -351,9 +374,13 @@ export default function SalesSamples() {
                       type="button"
                       onClick={() => {
                         const fullText = `Subject: ${sample.suggestedSubject}\n\n${sample.draftBody}`;
-                        void navigator.clipboard.writeText(fullText).then(() => {
-                          toast.success(`Copied draft email for ${sample.name}`);
-                        });
+                        void navigator.clipboard
+                          .writeText(fullText)
+                          .then(() => {
+                            toast.success(
+                              `Copied draft email for ${sample.name}`
+                            );
+                          });
                       }}
                       className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-900/60 transition"
                     >
@@ -388,7 +415,8 @@ export default function SalesSamples() {
             Generate Custom Buyer Draft & Proposal
           </h2>
           <p className="mt-1 text-xs text-slate-400">
-            Enter any robot manufacturer or distributor to instantly build a draft outreach email and shareable sample proposal.
+            Enter any robot manufacturer or distributor to instantly build a
+            draft outreach email and shareable sample proposal.
           </p>
           <div className="mt-5 grid gap-3 sm:grid-cols-2">
             <div>
@@ -427,9 +455,13 @@ export default function SalesSamples() {
                 <button
                   type="button"
                   onClick={() => {
-                    void navigator.clipboard.writeText(customDraftBody).then(() => {
-                      toast.success("Custom buyer draft copied to clipboard!");
-                    });
+                    void navigator.clipboard
+                      .writeText(customDraftBody)
+                      .then(() => {
+                        toast.success(
+                          "Custom buyer draft copied to clipboard!"
+                        );
+                      });
                   }}
                   className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition shadow-md shadow-emerald-950/40"
                 >
@@ -449,9 +481,11 @@ export default function SalesSamples() {
                   <button
                     type="button"
                     onClick={() => {
-                      void navigator.clipboard.writeText(customShareUrl).then(() => {
-                        toast.success("Shareable proposal link copied");
-                      });
+                      void navigator.clipboard
+                        .writeText(customShareUrl)
+                        .then(() => {
+                          toast.success("Shareable proposal link copied");
+                        });
                     }}
                     className="inline-flex items-center gap-2 rounded-lg border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-400 hover:text-slate-200 transition"
                   >
@@ -462,7 +496,8 @@ export default function SalesSamples() {
             </div>
           ) : (
             <p className="mt-3 text-xs text-slate-500">
-              Enter a company name and website URL above to preview the custom buyer draft email.
+              Enter a company name and website URL above to preview the custom
+              buyer draft email.
             </p>
           )}
         </section>

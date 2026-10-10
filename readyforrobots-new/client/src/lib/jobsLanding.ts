@@ -1,19 +1,7 @@
 /**
- * `/` first beat is the product fork. Not FIND yet.
- *
- * Option 1 Jobs for Robots → OEM FIND step 1 (`/?visit=jobs`).
- * Option 2 Robots for Jobs → employer MATCH/POST (`/?visit=candidates`).
- * Wordmark `/?new=1` returns to this fork. FIND after the fork is unchanged.
- *
- * Layout is the sparse fork: kicker, two-line headline, Kare face down
- * and to the right (emerald stroke + eyes + mouth, no filled square),
- * intro, two door cards (large catalog icons, who-label, dest line),
- * then Jobs brief. FIND is the emerald frame; MATCH is the cream
- * outline. Navy / cream. Outfit on headlines and CTAs, same as the
- * header wordmark (`font-display`). True emerald on Robots, the Kare
- * face, and brief employer names. Archivo on the subhead and intro.
- * No dither, no window bars, no SIGNAL report hero. The A–E picker
- * stays out of production.
+ * `/` is FIND. `/?visit=jobs` is the same FIND document.
+ * `/?visit=candidates` is employer MATCH/POST.
+ * Wordmark `/` resets FIND. There is no landing fork.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -87,8 +75,7 @@ export const LANDING_STATS = [
 export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
 export const LANDING_BRIEF_HEADLINE = "Jobs for robots.";
 export const LANDING_BRIEF_JOB_FIELD = "Jobs";
-export const LANDING_BRIEF_NOTE =
-  "Evidence shown on every verified match.";
+export const LANDING_BRIEF_NOTE = "Evidence shown on every verified match.";
 
 export type LandingBriefJob = {
   id: string;
@@ -323,8 +310,6 @@ export function landingVisitFromSearch(
   search: string | null | undefined
 ): LandingVisit {
   const params = new URLSearchParams((search || "").replace(/^\?/, ""));
-  if (params.get("new") === "1") return "landing";
-  if (params.get("restore") === "1") return "jobs";
   const visit = (params.get(LANDING_VISIT_QUERY) || "").trim();
   if (visit === LANDING_VISIT_CANDIDATES || visit === "candidates") {
     return "candidates";
@@ -333,7 +318,8 @@ export function landingVisitFromSearch(
   // remounts the 01/02/03 process bar on top of the card.
   if (params.get("job")) return "landing";
   if (visit === LANDING_VISIT_JOBS || visit === "jobs") return "jobs";
-  return "landing";
+  // Bare `/`, `?new=1`, and `?restore=1` are FIND.
+  return "jobs";
 }
 
 export function isEmployerVisit(search: string | null | undefined): boolean {

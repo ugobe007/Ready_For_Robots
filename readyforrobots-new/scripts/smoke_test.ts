@@ -30,7 +30,9 @@ function runSmokeTests() {
     "Buyer quotes count >= 4",
     `Found ${FEATURED_BUYER_QUOTES.length}`
   );
-  const hiltonQuote = FEATURED_BUYER_QUOTES.find((q) => q.company.includes("Hilton"));
+  const hiltonQuote = FEATURED_BUYER_QUOTES.find(q =>
+    q.company.includes("Hilton")
+  );
   assert(
     Boolean(hiltonQuote && hiltonQuote.quote.includes("luggage")),
     "Hilton Hotels quote loaded correctly",
@@ -91,7 +93,9 @@ function runSmokeTests() {
   ];
 
   for (const route of registeredRoutes) {
-    const routeRegex = new RegExp(`path=["']${route.replace(/\//g, "\\/")}["']`);
+    const routeRegex = new RegExp(
+      `path=["']${route.replace(/\//g, "\\/")}["']`
+    );
     assert(
       routeRegex.test(appTsx),
       `Route '${route}' is registered in App.tsx`,
@@ -100,7 +104,9 @@ function runSmokeTests() {
   }
 
   console.log("\n=========================================");
-  console.log(`📊 SMOKE TEST SUMMARY: ${totalPassed} PASSED, ${totalFailed} FAILED`);
+  console.log(
+    `📊 SMOKE TEST SUMMARY: ${totalPassed} PASSED, ${totalFailed} FAILED`
+  );
   console.log("=========================================\n");
 
   if (totalFailed > 0) {

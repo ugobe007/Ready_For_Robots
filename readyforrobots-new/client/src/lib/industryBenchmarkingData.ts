@@ -1,7 +1,14 @@
 export type BenchmarkRobotSpec = {
   vendor: string;
   model: string;
-  category: "cobot" | "amr" | "scara" | "6-axis" | "service" | "cleaning" | "harvest";
+  category:
+    | "cobot"
+    | "amr"
+    | "scara"
+    | "6-axis"
+    | "service"
+    | "cleaning"
+    | "harvest";
   payload: string;
   battery_runtime: string;
   speed: string;
@@ -30,7 +37,8 @@ export const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmarkDataset> = {
   hospitality: {
     id: "hospitality",
     title: "Hospitality & Foodservice Automation Benchmark",
-    subtitle: "Comparative analysis of commercial service robots, dining busing AMRs, and room-service delivery units.",
+    subtitle:
+      "Comparative analysis of commercial service robots, dining busing AMRs, and room-service delivery units.",
     target_accounts: [
       "Thompson Hospitality",
       "Aimbridge Hospitality",
@@ -111,7 +119,8 @@ export const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmarkDataset> = {
   logistics: {
     id: "logistics",
     title: "Surface Freight & Warehouse Logistics Benchmark",
-    subtitle: "Evaluation of autonomous forklifts, parcel sortation AMRs, and case-picking workcells.",
+    subtitle:
+      "Evaluation of autonomous forklifts, parcel sortation AMRs, and case-picking workcells.",
     target_accounts: ["FedEx Ground", "Ryder System"],
     labor_vacancy_rate: "38% - 44%",
     avg_strain_reduction: "40% - 45%",
@@ -187,7 +196,8 @@ export const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmarkDataset> = {
   facilities: {
     id: "facilities",
     title: "Facility Services & Commercial Cleaning Benchmark",
-    subtitle: "Comparative guide to industrial autonomous floor scrubbers, vacuum AMRs, and trash transport units.",
+    subtitle:
+      "Comparative guide to industrial autonomous floor scrubbers, vacuum AMRs, and trash transport units.",
     target_accounts: [
       "ABM Industries",
       "Harvard Maintenance",
@@ -253,7 +263,8 @@ export const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmarkDataset> = {
   healthcare: {
     id: "healthcare",
     title: "Healthcare & Clinical Logistics Automation Benchmark",
-    subtitle: "Analysis of hospital delivery AMRs, pharmacy transport units, and senior living support robots.",
+    subtitle:
+      "Analysis of hospital delivery AMRs, pharmacy transport units, and senior living support robots.",
     target_accounts: [
       "HCA Healthcare",
       "Sunrise Senior Living",
@@ -321,7 +332,8 @@ export const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmarkDataset> = {
   gaming: {
     id: "gaming",
     title: "Gaming & Casino Resort Service Automation Benchmark",
-    subtitle: "Evaluation of casino floor beverage runners, busing AMRs, and automated kitchen workcells.",
+    subtitle:
+      "Evaluation of casino floor beverage runners, busing AMRs, and automated kitchen workcells.",
     target_accounts: ["MGM Resorts International", "Penn Entertainment"],
     labor_vacancy_rate: "35% - 42%",
     avg_strain_reduction: "30% - 38%",
@@ -369,7 +381,8 @@ export const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmarkDataset> = {
   aviation: {
     id: "aviation",
     title: "Aviation Ground Operations & Airport Cargo Benchmark",
-    subtitle: "Analysis of autonomous baggage tractors, air cargo palletizers, and ramp logistics AMRs.",
+    subtitle:
+      "Analysis of autonomous baggage tractors, air cargo palletizers, and ramp logistics AMRs.",
     target_accounts: ["United Airlines"],
     labor_vacancy_rate: "36% - 41%",
     avg_strain_reduction: "38% - 44%",
@@ -417,7 +430,8 @@ export const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmarkDataset> = {
   agriculture: {
     id: "agriculture",
     title: "Agricultural Harvesting & AI Berry Pickers Benchmark",
-    subtitle: "Comparative guide to autonomous berry harvesters, field AMRs, and sorting vision systems.",
+    subtitle:
+      "Comparative guide to autonomous berry harvesters, field AMRs, and sorting vision systems.",
     target_accounts: ["Wish Farms (Tampa Bay AG)"],
     labor_vacancy_rate: "48% - 55%",
     avg_strain_reduction: "45% - 50%",
@@ -463,15 +477,29 @@ export const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmarkDataset> = {
   },
 };
 
-export function getBenchmarkForIndustry(industryId: string): IndustryBenchmarkDataset {
+export function getBenchmarkForIndustry(
+  industryId: string
+): IndustryBenchmarkDataset {
   const normalized = (industryId || "").toLowerCase().trim();
-  if (normalized.includes("hospitality") || normalized.includes("hotel") || normalized.includes("food")) {
+  if (
+    normalized.includes("hospitality") ||
+    normalized.includes("hotel") ||
+    normalized.includes("food")
+  ) {
     return INDUSTRY_BENCHMARKS.hospitality;
   }
-  if (normalized.includes("logistics") || normalized.includes("freight") || normalized.includes("warehouse")) {
+  if (
+    normalized.includes("logistics") ||
+    normalized.includes("freight") ||
+    normalized.includes("warehouse")
+  ) {
     return INDUSTRY_BENCHMARKS.logistics;
   }
-  if (normalized.includes("facilities") || normalized.includes("cleaning") || normalized.includes("janitorial")) {
+  if (
+    normalized.includes("facilities") ||
+    normalized.includes("cleaning") ||
+    normalized.includes("janitorial")
+  ) {
     return INDUSTRY_BENCHMARKS.facilities;
   }
   if (
@@ -482,13 +510,25 @@ export function getBenchmarkForIndustry(industryId: string): IndustryBenchmarkDa
   ) {
     return INDUSTRY_BENCHMARKS.healthcare;
   }
-  if (normalized.includes("gaming") || normalized.includes("casino") || normalized.includes("resort")) {
+  if (
+    normalized.includes("gaming") ||
+    normalized.includes("casino") ||
+    normalized.includes("resort")
+  ) {
     return INDUSTRY_BENCHMARKS.gaming;
   }
-  if (normalized.includes("aviation") || normalized.includes("airline") || normalized.includes("airport")) {
+  if (
+    normalized.includes("aviation") ||
+    normalized.includes("airline") ||
+    normalized.includes("airport")
+  ) {
     return INDUSTRY_BENCHMARKS.aviation;
   }
-  if (normalized.includes("ag") || normalized.includes("farm") || normalized.includes("berry")) {
+  if (
+    normalized.includes("ag") ||
+    normalized.includes("farm") ||
+    normalized.includes("berry")
+  ) {
     return INDUSTRY_BENCHMARKS.agriculture;
   }
   return INDUSTRY_BENCHMARKS.hospitality;

@@ -24,7 +24,9 @@ export default function WorkflowDriveBanner({
       setLocation("/pipeline");
       return;
     }
-    const clean = url.trim().startsWith("http") ? url.trim() : `https://${url.trim()}`;
+    const clean = url.trim().startsWith("http")
+      ? url.trim()
+      : `https://${url.trim()}`;
     setLocation(`/?url=${encodeURIComponent(clean)}`);
   };
 
@@ -37,7 +39,9 @@ export default function WorkflowDriveBanner({
               <Zap className="h-5 w-5 text-purple-400" />
             </div>
             <div>
-              <h3 className="font-display text-base font-bold text-white">{title}</h3>
+              <h3 className="font-display text-base font-bold text-white">
+                {title}
+              </h3>
               <p className="text-xs text-slate-300">{subtitle}</p>
             </div>
           </div>
@@ -46,7 +50,7 @@ export default function WorkflowDriveBanner({
               type="text"
               placeholder="e.g. bostondynamics.com/stretch"
               value={url}
-              onChange={(e) => setUrl(e.target.value)}
+              onChange={e => setUrl(e.target.value)}
               className="w-full md:w-64 rounded-xl border border-slate-700 bg-slate-900/90 px-3.5 py-2 text-xs text-white placeholder-slate-400 outline-none focus:border-purple-500"
             />
             <button
@@ -74,28 +78,32 @@ export default function WorkflowDriveBanner({
           <h2 className="font-display text-2xl font-extrabold text-white sm:text-3xl tracking-tight">
             {title}
           </h2>
-          <p className="text-sm text-slate-300 leading-relaxed">
-            {subtitle}
-          </p>
+          <p className="text-sm text-slate-300 leading-relaxed">{subtitle}</p>
           <div className="flex flex-wrap items-center gap-4 text-xs text-slate-300 pt-2">
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-purple-400" /> 25 Verified Leads
+              <CheckCircle2 className="h-4 w-4 text-purple-400" /> 25 Verified
+              Leads
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-purple-400" /> Instant Task Alignment
+              <CheckCircle2 className="h-4 w-4 text-purple-400" /> Instant Task
+              Alignment
             </span>
             <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-purple-400" /> Ready-to-Send Outreach
+              <CheckCircle2 className="h-4 w-4 text-purple-400" /> Ready-to-Send
+              Outreach
             </span>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="w-full md:w-auto flex flex-col sm:flex-row items-stretch gap-2.5">
+        <form
+          onSubmit={handleSubmit}
+          className="w-full md:w-auto flex flex-col sm:flex-row items-stretch gap-2.5"
+        >
           <input
             type="text"
             placeholder="Paste robot URL (e.g., unitree.com/h1)..."
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={e => setUrl(e.target.value)}
             className="w-full sm:w-72 rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-3 text-sm text-white placeholder-slate-400 outline-none focus:border-purple-500"
           />
           <button

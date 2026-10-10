@@ -267,7 +267,8 @@ function InteractiveRoiCalculator() {
   // Calculations
   const hoursPerShiftPerDay = 8;
   const operatingDaysPerYear = 300;
-  const annualHoursPerRobot = shifts * hoursPerShiftPerDay * operatingDaysPerYear; // e.g. 2 * 8 * 300 = 4,800 hrs
+  const annualHoursPerRobot =
+    shifts * hoursPerShiftPerDay * operatingDaysPerYear; // e.g. 2 * 8 * 300 = 4,800 hrs
 
   // Annual Human Labor Cost Replaced (1 robot replaces ~1 FTE per shift)
   const annualHumanLaborCost = fleetSize * annualHoursPerRobot * laborRate;
@@ -277,21 +278,38 @@ function InteractiveRoiCalculator() {
   const annualRaasCost = fleetSize * raasFee * 12;
   const raasHourlyCost = (raasFee * 12) / annualHoursPerRobot;
   const annualSavingsRaas = annualHumanLaborCost - annualRaasCost;
-  const raasOpExSavingsPct = Math.round((annualSavingsRaas / annualHumanLaborCost) * 100);
+  const raasOpExSavingsPct = Math.round(
+    (annualSavingsRaas / annualHumanLaborCost) * 100
+  );
 
   // CapEx Model Costs (Maintenance & Software Support = ~$8k/yr per robot)
   const totalCapExInitial = fleetSize * capexCost;
   const annualCapExMaintenance = fleetSize * 8000;
   const annualSavingsCapEx = annualHumanLaborCost - annualCapExMaintenance;
-  const capexPaybackMonths = Math.max(0.5, (totalCapExInitial / Math.max(1, annualSavingsCapEx)) * 12);
+  const capexPaybackMonths = Math.max(
+    0.5,
+    (totalCapExInitial / Math.max(1, annualSavingsCapEx)) * 12
+  );
   const capexFiveYearNetSavings = annualSavingsCapEx * 5 - totalCapExInitial;
-  const capexFiveYearRoiPct = Math.round((capexFiveYearNetSavings / Math.max(1, totalCapExInitial)) * 100);
+  const capexFiveYearRoiPct = Math.round(
+    (capexFiveYearNetSavings / Math.max(1, totalCapExInitial)) * 100
+  );
 
   // Active metrics depending on selected model
-  const activeAnnualSavings = model === "raas" ? annualSavingsRaas : annualSavingsCapEx;
-  const activePaybackLabel = model === "raas" ? "Day 1 (Instant Cashflow)" : `${capexPaybackMonths.toFixed(1)} Months`;
-  const activeHourlyCost = model === "raas" ? raasHourlyCost : (capexCost / (annualHoursPerRobot * 3)) + (8000 / annualHoursPerRobot);
-  const activeSavingsPct = model === "raas" ? raasOpExSavingsPct : Math.round((activeAnnualSavings / annualHumanLaborCost) * 100);
+  const activeAnnualSavings =
+    model === "raas" ? annualSavingsRaas : annualSavingsCapEx;
+  const activePaybackLabel =
+    model === "raas"
+      ? "Day 1 (Instant Cashflow)"
+      : `${capexPaybackMonths.toFixed(1)} Months`;
+  const activeHourlyCost =
+    model === "raas"
+      ? raasHourlyCost
+      : capexCost / (annualHoursPerRobot * 3) + 8000 / annualHoursPerRobot;
+  const activeSavingsPct =
+    model === "raas"
+      ? raasOpExSavingsPct
+      : Math.round((activeAnnualSavings / annualHumanLaborCost) * 100);
 
   return (
     <div className="overflow-hidden rounded-2xl border border-slate-700/80 bg-[#0d1b38] shadow-2xl p-6 sm:p-8 mb-12">
@@ -305,7 +323,9 @@ function InteractiveRoiCalculator() {
             Humanoid & Automation ROI & RaaS Payback Calculator
           </h2>
           <p className="text-xs text-slate-300 mt-1 max-w-2xl">
-            Simulate OpEx savings, hourly cost replacement, and payback timelines for RaaS subscriptions vs CapEx purchases across 300 operating days.
+            Simulate OpEx savings, hourly cost replacement, and payback
+            timelines for RaaS subscriptions vs CapEx purchases across 300
+            operating days.
           </p>
         </div>
         <div className="flex items-center gap-2 rounded-xl bg-[#081126] p-1 border border-slate-700/80">
@@ -341,7 +361,8 @@ function InteractiveRoiCalculator() {
           <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4">
             <div className="flex justify-between items-center mb-2">
               <label className="text-xs font-mono font-bold uppercase text-slate-300 flex items-center gap-1.5">
-                <Bot className="h-4 w-4 text-purple-400" /> Fleet Size (Humanoids / AMRs)
+                <Bot className="h-4 w-4 text-purple-400" /> Fleet Size
+                (Humanoids / AMRs)
               </label>
               <span className="font-mono text-base font-extrabold text-purple-300 bg-purple-500/20 px-2.5 py-0.5 rounded-lg border border-purple-500/30">
                 {fleetSize} Robots
@@ -352,7 +373,7 @@ function InteractiveRoiCalculator() {
               min="1"
               max="50"
               value={fleetSize}
-              onChange={(e) => setFleetSize(Number(e.target.value))}
+              onChange={e => setFleetSize(Number(e.target.value))}
               className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-500"
             />
             <div className="flex justify-between text-[10px] font-mono text-slate-400 mt-1">
@@ -366,7 +387,8 @@ function InteractiveRoiCalculator() {
           <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4">
             <div className="flex justify-between items-center mb-2">
               <label className="text-xs font-mono font-bold uppercase text-slate-300 flex items-center gap-1.5">
-                <DollarSign className="h-4 w-4 text-emerald-400" /> Hourly Labor Cost Replaced
+                <DollarSign className="h-4 w-4 text-emerald-400" /> Hourly Labor
+                Cost Replaced
               </label>
               <span className="font-mono text-base font-extrabold text-emerald-300 bg-emerald-500/20 px-2.5 py-0.5 rounded-lg border border-emerald-500/30">
                 ${laborRate}/hr
@@ -378,7 +400,7 @@ function InteractiveRoiCalculator() {
               max="65"
               step="1"
               value={laborRate}
-              onChange={(e) => setLaborRate(Number(e.target.value))}
+              onChange={e => setLaborRate(Number(e.target.value))}
               className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-500"
             />
             <div className="flex justify-between text-[10px] font-mono text-slate-400 mt-1">
@@ -392,14 +414,15 @@ function InteractiveRoiCalculator() {
           <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4">
             <div className="flex justify-between items-center mb-2">
               <label className="text-xs font-mono font-bold uppercase text-slate-300 flex items-center gap-1.5">
-                <Clock className="h-4 w-4 text-amber-400" /> Operational Shifts / Day
+                <Clock className="h-4 w-4 text-amber-400" /> Operational Shifts
+                / Day
               </label>
               <span className="font-mono text-base font-extrabold text-amber-300 bg-amber-500/20 px-2.5 py-0.5 rounded-lg border border-amber-500/30">
                 {shifts} Shift{shifts > 1 ? "s" : ""} ({shifts * 8} hrs/day)
               </span>
             </div>
             <div className="grid grid-cols-3 gap-2 mt-2">
-              {[1, 2, 3].map((s) => (
+              {[1, 2, 3].map(s => (
                 <button
                   key={s}
                   type="button"
@@ -433,11 +456,12 @@ function InteractiveRoiCalculator() {
                 max="12000"
                 step="500"
                 value={raasFee}
-                onChange={(e) => setRaasFee(Number(e.target.value))}
+                onChange={e => setRaasFee(Number(e.target.value))}
                 className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-purple-400"
               />
               <p className="text-[11px] text-slate-400 mt-2">
-                Includes hardware lease, software updates, maintenance, and 24/7 cloud support.
+                Includes hardware lease, software updates, maintenance, and 24/7
+                cloud support.
               </p>
             </div>
           ) : (
@@ -456,11 +480,12 @@ function InteractiveRoiCalculator() {
                 max="180000"
                 step="5000"
                 value={capexCost}
-                onChange={(e) => setCapexCost(Number(e.target.value))}
+                onChange={e => setCapexCost(Number(e.target.value))}
                 className="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-emerald-400"
               />
               <p className="text-[11px] text-slate-400 mt-2">
-                Outright hardware purchase + ~$8k/year per robot maintenance & software license.
+                Outright hardware purchase + ~$8k/year per robot maintenance &
+                software license.
               </p>
             </div>
           )}
@@ -485,13 +510,16 @@ function InteractiveRoiCalculator() {
             {/* Payback Window */}
             <div className="rounded-xl border border-purple-500/40 bg-gradient-to-br from-[#0f1430] to-[#1c123d] p-5 shadow-lg">
               <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1">
-                <Sparkles className="h-3.5 w-3.5 text-purple-400" /> Payback Window
+                <Sparkles className="h-3.5 w-3.5 text-purple-400" /> Payback
+                Window
               </p>
               <p className="mt-2 text-2xl font-black font-mono text-purple-200">
                 {activePaybackLabel}
               </p>
               <p className="mt-1 text-[11px] text-purple-300/80 font-medium">
-                {model === "raas" ? "Zero upfront capital requirement" : "Full payback of initial hardware expenditure"}
+                {model === "raas"
+                  ? "Zero upfront capital requirement"
+                  : "Full payback of initial hardware expenditure"}
               </p>
             </div>
 
@@ -504,14 +532,20 @@ function InteractiveRoiCalculator() {
                 ${activeHourlyCost.toFixed(2)}/hr
               </p>
               <p className="mt-1 text-[11px] text-slate-400">
-                vs <span className="line-through text-slate-500">${hourlyHumanCost}.00/hr</span> human rate
+                vs{" "}
+                <span className="line-through text-slate-500">
+                  ${hourlyHumanCost}.00/hr
+                </span>{" "}
+                human rate
               </p>
             </div>
 
             {/* 5-Year Cumulative Impact */}
             <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
               <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
-                {model === "raas" ? "5-Year Cumulative Savings" : "5-Year ROI %"}
+                {model === "raas"
+                  ? "5-Year Cumulative Savings"
+                  : "5-Year ROI %"}
               </p>
               <p className="mt-1 text-2xl font-black font-mono text-amber-300">
                 {model === "raas"
@@ -527,22 +561,36 @@ function InteractiveRoiCalculator() {
           {/* Comparative Summary Table */}
           <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4 text-xs">
             <h4 className="font-mono font-bold uppercase tracking-wider text-slate-300 mb-3 text-[11px]">
-              Annual Operational Breakdown ({fleetSize} Robots · {shifts} Shifts)
+              Annual Operational Breakdown ({fleetSize} Robots · {shifts}{" "}
+              Shifts)
             </h4>
             <div className="space-y-2">
               <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
                 <span>Human Labor Base Cost:</span>
-                <span className="font-mono text-slate-200 font-bold">${annualHumanLaborCost.toLocaleString()}/yr</span>
+                <span className="font-mono text-slate-200 font-bold">
+                  ${annualHumanLaborCost.toLocaleString()}/yr
+                </span>
               </div>
               <div className="flex justify-between border-b border-slate-800 pb-1.5 text-slate-400">
-                <span>{model === "raas" ? "RaaS Subscription Cost:" : "CapEx Maintenance & License:"}</span>
+                <span>
+                  {model === "raas"
+                    ? "RaaS Subscription Cost:"
+                    : "CapEx Maintenance & License:"}
+                </span>
                 <span className="font-mono text-purple-300 font-bold">
-                  -${(model === "raas" ? annualRaasCost : annualCapExMaintenance).toLocaleString()}/yr
+                  -$
+                  {(model === "raas"
+                    ? annualRaasCost
+                    : annualCapExMaintenance
+                  ).toLocaleString()}
+                  /yr
                 </span>
               </div>
               <div className="flex justify-between pt-1 font-bold text-emerald-300 text-sm">
                 <span>Net Operating Advantage:</span>
-                <span className="font-mono">+${Math.max(0, activeAnnualSavings).toLocaleString()}/yr</span>
+                <span className="font-mono">
+                  +${Math.max(0, activeAnnualSavings).toLocaleString()}/yr
+                </span>
               </div>
             </div>
           </div>
@@ -552,7 +600,8 @@ function InteractiveRoiCalculator() {
               href="/pipeline"
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/30 hover:bg-purple-500 transition-all cursor-pointer"
             >
-              Match This ROI Model to 25 Verified Buyer Leads <ArrowRight className="h-4 w-4" />
+              Match This ROI Model to 25 Verified Buyer Leads{" "}
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -582,12 +631,15 @@ export default function Benchmark() {
         }
         title={
           <span>
-            Enterprise Robotics <span className="text-emerald-400">ROI Calculator</span> & Benchmark
+            Enterprise Robotics{" "}
+            <span className="text-emerald-400">ROI Calculator</span> & Benchmark
           </span>
         }
         description={
           <p className="max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
-            Model RaaS subscription payback, calculate hourly labor replacement costs, and review independent Fraunhofer IPA testing benchmarks for humanoid deployments.
+            Model RaaS subscription payback, calculate hourly labor replacement
+            costs, and review independent Fraunhofer IPA testing benchmarks for
+            humanoid deployments.
           </p>
         }
         stats={[
@@ -629,7 +681,10 @@ export default function Benchmark() {
             How to Benchmark a Humanoid Robot Before Deployment
           </h2>
           <p className="mt-2 max-w-3xl text-sm text-slate-300">
-            Most vendors show curated marketing demos. Independent benchmarks show reality. Fraunhofer IPA — Europe&apos;s leading applied research institute — established a six-criteria test framework for humanoid robotics.
+            Most vendors show curated marketing demos. Independent benchmarks
+            show reality. Fraunhofer IPA — Europe&apos;s leading applied
+            research institute — established a six-criteria test framework for
+            humanoid robotics.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-[12px] text-slate-400">
             <span>Source: Fraunhofer IPA, May 2026</span>
@@ -675,7 +730,10 @@ export default function Benchmark() {
                   >
                     {c.number}
                   </span>
-                  <Icon className="h-5 w-5 shrink-0" style={{ color: c.color }} />
+                  <Icon
+                    className="h-5 w-5 shrink-0"
+                    style={{ color: c.color }}
+                  />
                   <div className="flex-1 min-w-0">
                     <p className="font-bold text-white text-[15px] font-display">
                       {c.label}
@@ -751,9 +809,7 @@ export default function Benchmark() {
                             <p
                               className="text-[12px] font-semibold"
                               style={{
-                                color: r.warn
-                                  ? "#f87171"
-                                  : "#e2e8f0",
+                                color: r.warn ? "#f87171" : "#e2e8f0",
                               }}
                             >
                               {r.value}
@@ -801,7 +857,9 @@ export default function Benchmark() {
                   <span className="shrink-0 flex items-center justify-center rounded-full w-5 h-5 text-[10px] font-mono font-bold mt-0.5 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                     {i + 1}
                   </span>
-                  <p className="text-sm text-slate-200 leading-relaxed">{item}</p>
+                  <p className="text-sm text-slate-200 leading-relaxed">
+                    {item}
+                  </p>
                 </li>
               ))}
             </ul>
@@ -815,7 +873,9 @@ export default function Benchmark() {
               Ready to find the right robot for your operation?
             </h2>
             <p className="text-sm text-slate-300 mb-7 max-w-xl mx-auto">
-              Ready For Robots matches enterprise buyer requirements to vetted robot vendors — backed by signal data and live intent, not pitch decks.
+              Ready For Robots matches enterprise buyer requirements to vetted
+              robot vendors — backed by signal data and live intent, not pitch
+              decks.
             </p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Link

@@ -89,9 +89,9 @@ export default function SiteFooter({
   >("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const emailValue = onEmailChange ? newsletterEmail ?? "" : internalEmail;
+  const emailValue = onEmailChange ? (newsletterEmail ?? "") : internalEmail;
   const statusValue = onNewsletterSubmit
-    ? newsletterStatus ?? "idle"
+    ? (newsletterStatus ?? "idle")
     : internalStatus;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -114,14 +114,17 @@ export default function SiteFooter({
         })
       );
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+        const data = (await res.json().catch(() => null)) as {
+          detail?: string;
+        } | null;
         throw new Error(data?.detail || "Could not subscribe");
       }
       setInternalStatus("success");
       setInternalEmail("");
     } catch (err: unknown) {
       setInternalStatus("error");
-      const msg = err instanceof Error ? err.message : "Could not subscribe. Try again.";
+      const msg =
+        err instanceof Error ? err.message : "Could not subscribe. Try again.";
       setErrorMsg(msg);
     }
   }
@@ -166,7 +169,9 @@ export default function SiteFooter({
                     disabled={statusValue === "submitting"}
                     className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 rounded-lg cursor-pointer"
                   >
-                    {statusValue === "submitting" ? "Subscribing…" : "Subscribe"}
+                    {statusValue === "submitting"
+                      ? "Subscribing…"
+                      : "Subscribe"}
                   </button>
                 </form>
                 {statusValue === "success" && (

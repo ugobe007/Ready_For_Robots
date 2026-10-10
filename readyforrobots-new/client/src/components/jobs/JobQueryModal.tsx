@@ -14,17 +14,61 @@ type Props = {
 };
 
 const JOB_DEFINITION_OPTIONS = [
-  { id: "hospitality", label: "Hospitality & Guest Services", hint: "Hotel linen transport, room service, bussing" },
-  { id: "cleaning", label: "Commercial Cleaning & Sanitation", hint: "Autonomous floor scrubbers, janitorial, terminal care" },
-  { id: "logistics", label: "Logistics & 3PL Warehousing", hint: "Material movement, parcel sortation, cross-dock" },
-  { id: "factory", label: "Machine Tending & Metal Fabrication", hint: "CNC machine loading, press brake assist, welding cell" },
-  { id: "amr", label: "Material Handling & Conveyance", hint: "AMR/AGV tugging, pallet transport, line replenishment" },
-  { id: "cobot", label: "Case Palletizing & Packaging", hint: "End-of-line cobots, case packing, carton casing" },
-  { id: "quadruped", label: "Inspection & Quality Control", hint: "Jobsite scanning, thermal inspection, facility mapping" },
-  { id: "mobile_manipulator", label: "Assembly & Precision Manufacturing", hint: "Kitting, sub-assembly, electronics placement" },
-  { id: "healthcare", label: "Healthcare & Hospital Logistics", hint: "Specimen delivery, pharmacy carts, clinical assist" },
-  { id: "agriculture", label: "Agriculture & Outdoor Automation", hint: "Autonomous tractors, weeding, crop monitoring" },
-  { id: "custom", label: "Other / Custom Job Requirement Entry", hint: "Type custom job specifications or industry below" },
+  {
+    id: "hospitality",
+    label: "Hospitality & Guest Services",
+    hint: "Hotel linen transport, room service, bussing",
+  },
+  {
+    id: "cleaning",
+    label: "Commercial Cleaning & Sanitation",
+    hint: "Autonomous floor scrubbers, janitorial, terminal care",
+  },
+  {
+    id: "logistics",
+    label: "Logistics & 3PL Warehousing",
+    hint: "Material movement, parcel sortation, cross-dock",
+  },
+  {
+    id: "factory",
+    label: "Machine Tending & Metal Fabrication",
+    hint: "CNC machine loading, press brake assist, welding cell",
+  },
+  {
+    id: "amr",
+    label: "Material Handling & Conveyance",
+    hint: "AMR/AGV tugging, pallet transport, line replenishment",
+  },
+  {
+    id: "cobot",
+    label: "Case Palletizing & Packaging",
+    hint: "End-of-line cobots, case packing, carton casing",
+  },
+  {
+    id: "quadruped",
+    label: "Inspection & Quality Control",
+    hint: "Jobsite scanning, thermal inspection, facility mapping",
+  },
+  {
+    id: "mobile_manipulator",
+    label: "Assembly & Precision Manufacturing",
+    hint: "Kitting, sub-assembly, electronics placement",
+  },
+  {
+    id: "healthcare",
+    label: "Healthcare & Hospital Logistics",
+    hint: "Specimen delivery, pharmacy carts, clinical assist",
+  },
+  {
+    id: "agriculture",
+    label: "Agriculture & Outdoor Automation",
+    hint: "Autonomous tractors, weeding, crop monitoring",
+  },
+  {
+    id: "custom",
+    label: "Other / Custom Job Requirement Entry",
+    hint: "Type custom job specifications or industry below",
+  },
 ];
 
 export default function JobQueryModal({
@@ -54,7 +98,8 @@ export default function JobQueryModal({
       selectedCategory === "custom"
         ? customQuery.trim()
         : selectedCategory
-          ? (JOB_DEFINITION_OPTIONS.find(o => o.id === selectedCategory)?.label || selectedCategory)
+          ? JOB_DEFINITION_OPTIONS.find(o => o.id === selectedCategory)
+              ?.label || selectedCategory
           : customQuery.trim();
 
     if (!activeText) return;
@@ -66,7 +111,9 @@ export default function JobQueryModal({
     });
   };
 
-  const selectedHint = JOB_DEFINITION_OPTIONS.find(o => o.id === selectedCategory)?.hint;
+  const selectedHint = JOB_DEFINITION_OPTIONS.find(
+    o => o.id === selectedCategory
+  )?.hint;
 
   const dialog = (
     <div
@@ -134,7 +181,9 @@ export default function JobQueryModal({
                 }}
                 className="w-full rounded-xl border border-slate-600 bg-[#040914] px-4 py-3.5 font-mono text-base text-slate-100 outline-none transition focus:border-purple-500 focus:ring-1 focus:ring-purple-500 sm:text-lg"
               >
-                <option value="">-- Select a Job Category (10 Options) --</option>
+                <option value="">
+                  -- Select a Job Category (10 Options) --
+                </option>
                 {JOB_DEFINITION_OPTIONS.map(opt => (
                   <option key={opt.id} value={opt.id}>
                     {opt.label}
@@ -174,7 +223,8 @@ export default function JobQueryModal({
               <Search className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500 pointer-events-none" />
             </div>
             <p className="mt-2 text-xs text-slate-400">
-              Type any specific payload, environment, or equipment requirement to match against active employer jobs.
+              Type any specific payload, environment, or equipment requirement
+              to match against active employer jobs.
             </p>
           </div>
 

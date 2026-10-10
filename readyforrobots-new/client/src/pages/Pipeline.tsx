@@ -2241,19 +2241,28 @@ export default function Pipeline() {
   const [serverSearchDeals, setServerSearchDeals] = useState<Deal[]>([]);
 
   useEffect(() => {
-    const target = (companyNameFromQuery || searchQueryFromQuery || "").trim().toLowerCase();
+    const target = (companyNameFromQuery || searchQueryFromQuery || "")
+      .trim()
+      .toLowerCase();
     if (!target) return;
     const pool = [...serverSearchDeals, ...deals];
     if (pool.length === 0) return;
-    const found = pool.find(d =>
-      d.company.toLowerCase().includes(target) ||
-      (d.shareSummary || "").toLowerCase().includes(target) ||
-      (d.shareBlurb || "").toLowerCase().includes(target)
+    const found = pool.find(
+      d =>
+        d.company.toLowerCase().includes(target) ||
+        (d.shareSummary || "").toLowerCase().includes(target) ||
+        (d.shareBlurb || "").toLowerCase().includes(target)
     );
     if (found && selectedId !== found.id) {
       setSelectedId(found.id);
     }
-  }, [companyNameFromQuery, searchQueryFromQuery, deals, serverSearchDeals, selectedId]);
+  }, [
+    companyNameFromQuery,
+    searchQueryFromQuery,
+    deals,
+    serverSearchDeals,
+    selectedId,
+  ]);
   const [serverSearchLoading, setServerSearchLoading] = useState(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activationErr, setActivationErr] = useState("");
@@ -5083,8 +5092,12 @@ export default function Pipeline() {
             <div className="flex items-center gap-2.5">
               <span className="text-lg">🤖</span>
               <div>
-                <p className="text-xs font-bold text-white">Find Jobs for Your Robot</p>
-                <p className="text-[11px] text-slate-300">Scan any robot URL to build your 25-lead buyer pipeline.</p>
+                <p className="text-xs font-bold text-white">
+                  Find Jobs for Your Robot
+                </p>
+                <p className="text-[11px] text-slate-300">
+                  Scan any robot URL to build your 25-lead buyer pipeline.
+                </p>
               </div>
             </div>
             <a
@@ -6436,11 +6449,15 @@ export default function Pipeline() {
                               }
                             : undefined,
                         }}
-                        savedInCrm={Boolean(crmAccountIdByCompanyId[selected.id])}
+                        savedInCrm={Boolean(
+                          crmAccountIdByCompanyId[selected.id]
+                        )}
                         hasSession={Boolean(session?.access_token)}
                         advancing={advancingLeadId === selected.id}
                         onSaveLead={
-                          canSaveSelected ? () => void handleSaveLead(selected) : undefined
+                          canSaveSelected
+                            ? () => void handleSaveLead(selected)
+                            : undefined
                         }
                         onCopyDraft={copyDraft}
                         copiedDraft={copied}
@@ -6530,8 +6547,13 @@ export default function Pipeline() {
                             )}
                             {selected.contact && (
                               <span className="text-[11px] text-gray-500 flex items-center gap-1.5">
-                                <LeadEmailDisplay email={selected.contact} variant="inline" />
-                                {selected.contactTitle ? <span>· {selected.contactTitle}</span> : null}
+                                <LeadEmailDisplay
+                                  email={selected.contact}
+                                  variant="inline"
+                                />
+                                {selected.contactTitle ? (
+                                  <span>· {selected.contactTitle}</span>
+                                ) : null}
                               </span>
                             )}
                           </div>
@@ -6764,7 +6786,12 @@ export default function Pipeline() {
                                 action: selected.pipelineAction,
                                 company: selected.company,
                                 industry: selected.industry,
-                                title: (typeof selected.signal?.[0] === 'string' ? selected.signal[0] : (selected.signal?.[0] as any)?.display_text) || (selected as any).signals?.[0]?.display_text,
+                                title:
+                                  (typeof selected.signal?.[0] === "string"
+                                    ? selected.signal[0]
+                                    : (selected.signal?.[0] as any)
+                                        ?.display_text) ||
+                                  (selected as any).signals?.[0]?.display_text,
                               }) ||
                               "This is the work — inspect the station, shift, and robot fit.";
                             return (
@@ -7105,9 +7132,9 @@ export default function Pipeline() {
                             {panelPlan === "anonymous" && (
                               <p className="text-[10px] leading-relaxed text-emerald-700">
                                 Free workspace unlocks up to 25 leads, save up
-                                to 25 leads, and copy outreach drafts. Upgrade to
-                                Pro to unlock more leads and automate your sales
-                                pipeline.
+                                to 25 leads, and copy outreach drafts. Upgrade
+                                to Pro to unlock more leads and automate your
+                                sales pipeline.
                               </p>
                             )}
                           </div>
@@ -7939,75 +7966,81 @@ export default function Pipeline() {
       </AlertDialog>
 
       {/* Shared Job Card Deep-Link Modal Overlay */}
-      {deepLinkModalOpen && (deepLinkLeadId != null || Boolean(companyNameFromQuery)) && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md">
-          <div className="relative w-full max-w-2xl rounded-2xl border-2 border-emerald-400 bg-[#081126] p-4 sm:p-6 shadow-2xl space-y-4 text-slate-100 max-h-[90vh] overflow-y-auto">
-            {/* Modal Header */}
-            <div className="flex items-center justify-between border-b border-slate-700/80 pb-3">
-              <div className="flex items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-400/10 px-3 py-1 font-mono text-xs font-extrabold uppercase tracking-wider text-emerald-300">
-                  ✦ SHARED ROBOT JOB CARD
-                </span>
-                <span className="text-xs text-slate-400">
-                  Direct Lead Review
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => setDeepLinkModalOpen(false)}
-                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
-                aria-label="Close Job Card Modal"
-              >
-                <X className="h-6 w-6" />
-              </button>
-            </div>
-
-            {selected ? (
-              <div className="space-y-4">
-                <RobotJobCardUnit
-                  deal={{
-                    ...selected,
-                    projectTiming: selected.projectTiming
-                      ? {
-                          label:
-                            selected.projectTiming.label ||
-                            selected.projectTiming.display_phrase,
-                          day_min: selected.projectTiming.day_min,
-                          day_max: selected.projectTiming.day_max,
-                          source: selected.projectTiming.source,
-                        }
-                      : undefined,
-                  }}
-                  savedInCrm={Boolean(crmAccountIdByCompanyId[selected.id])}
-                  hasSession={Boolean(session?.access_token)}
-                  advancing={advancingLeadId === selected.id}
-                  onSaveLead={
-                    canSaveSelected ? () => void handleSaveLead(selected) : undefined
-                  }
-                  onCopyDraft={copyDraft}
-                  copiedDraft={copied}
-                />
-                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setDeepLinkModalOpen(false)}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-slate-200 hover:bg-slate-700 hover:text-white transition-all"
-                  >
-                    <span>Close & Explore Full Pipeline ({displayedDeals.length} Jobs) →</span>
-                  </button>
+      {deepLinkModalOpen &&
+        (deepLinkLeadId != null || Boolean(companyNameFromQuery)) && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md">
+            <div className="relative w-full max-w-2xl rounded-2xl border-2 border-emerald-400 bg-[#081126] p-4 sm:p-6 shadow-2xl space-y-4 text-slate-100 max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="flex items-center justify-between border-b border-slate-700/80 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-400/10 px-3 py-1 font-mono text-xs font-extrabold uppercase tracking-wider text-emerald-300">
+                    ✦ SHARED ROBOT JOB CARD
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    Direct Lead Review
+                  </span>
                 </div>
+                <button
+                  type="button"
+                  onClick={() => setDeepLinkModalOpen(false)}
+                  className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+                  aria-label="Close Job Card Modal"
+                >
+                  <X className="h-6 w-6" />
+                </button>
               </div>
-            ) : (
-              <div className="py-12 text-center space-y-3">
-                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
-                <p className="font-mono text-sm font-semibold text-emerald-300">
-                  Loading shared job card details…
-                </p>
-              </div>
-            )}
+
+              {selected ? (
+                <div className="space-y-4">
+                  <RobotJobCardUnit
+                    deal={{
+                      ...selected,
+                      projectTiming: selected.projectTiming
+                        ? {
+                            label:
+                              selected.projectTiming.label ||
+                              selected.projectTiming.display_phrase,
+                            day_min: selected.projectTiming.day_min,
+                            day_max: selected.projectTiming.day_max,
+                            source: selected.projectTiming.source,
+                          }
+                        : undefined,
+                    }}
+                    savedInCrm={Boolean(crmAccountIdByCompanyId[selected.id])}
+                    hasSession={Boolean(session?.access_token)}
+                    advancing={advancingLeadId === selected.id}
+                    onSaveLead={
+                      canSaveSelected
+                        ? () => void handleSaveLead(selected)
+                        : undefined
+                    }
+                    onCopyDraft={copyDraft}
+                    copiedDraft={copied}
+                  />
+                  <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
+                    <button
+                      type="button"
+                      onClick={() => setDeepLinkModalOpen(false)}
+                      className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-slate-200 hover:bg-slate-700 hover:text-white transition-all"
+                    >
+                      <span>
+                        Close & Explore Full Pipeline ({displayedDeals.length}{" "}
+                        Jobs) →
+                      </span>
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-12 text-center space-y-3">
+                  <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
+                  <p className="font-mono text-sm font-semibold text-emerald-300">
+                    Loading shared job card details…
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+        )}
     </div>
   );
 }

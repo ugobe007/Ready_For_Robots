@@ -74,9 +74,9 @@ describe("employer MATCH catalog budget and JD upload", () => {
         "Pudu|BellaBot"
       )
     ).toEqual(["Keenon|Dinerbot T10"]);
-    expect(catalogHttpUrl("https://www.pudurobotics.com/product/bellabot")).toMatch(
-      /pudurobotics/
-    );
+    expect(
+      catalogHttpUrl("https://www.pudurobotics.com/product/bellabot")
+    ).toMatch(/pudurobotics/);
     expect(catalogHttpUrl("javascript:alert(1)")).toBeNull();
     expect(catalogHttpUrl("")).toBeNull();
     expect(catalogSpecRows({ payload_kg: 10, battery_life_h: 8 })).toEqual([

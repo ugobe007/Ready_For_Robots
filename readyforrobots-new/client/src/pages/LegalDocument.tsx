@@ -30,11 +30,15 @@ export default function LegalDocument({
 
       <main className="max-w-2xl mx-auto px-4 sm:px-6 pb-16 -mt-4 relative z-10">
         <article className="rounded-2xl border border-gray-200 bg-white p-6 sm:p-10 shadow-sm">
-          <p className="text-sm text-gray-500 mb-8">Effective date: {effectiveDate}</p>
+          <p className="text-sm text-gray-500 mb-8">
+            Effective date: {effectiveDate}
+          </p>
 
           {sections.map(section => (
             <section key={section.title} className="mb-8 last:mb-0">
-              <h2 className="text-lg font-bold text-gray-900 mb-3">{section.title}</h2>
+              <h2 className="text-lg font-bold text-gray-900 mb-3">
+                {section.title}
+              </h2>
               <div className="space-y-3">
                 {section.body.map(para => (
                   <p
@@ -49,23 +53,38 @@ export default function LegalDocument({
           ))}
 
           <p className="mt-10 pt-6 border-t border-gray-100 text-sm text-gray-600">
-            <Link href="/privacy" className="font-semibold text-emerald-700 hover:underline">
+            <Link
+              href="/privacy"
+              className="font-semibold text-emerald-700 hover:underline"
+            >
               Privacy
             </Link>
             {" · "}
-            <Link href="/terms" className="font-semibold text-emerald-700 hover:underline">
+            <Link
+              href="/terms"
+              className="font-semibold text-emerald-700 hover:underline"
+            >
               Terms
             </Link>
             {" · "}
-            <Link href="/support" className="font-semibold text-emerald-700 hover:underline">
+            <Link
+              href="/support"
+              className="font-semibold text-emerald-700 hover:underline"
+            >
               Support
             </Link>
             {" · "}
-            <Link href={jobsFindHref()} className="font-semibold text-emerald-700 hover:underline">
+            <Link
+              href={jobsFindHref()}
+              className="font-semibold text-emerald-700 hover:underline"
+            >
               Find jobs
             </Link>
             {" · "}
-            <Link href={jobsFreshHomeHref()} className="font-semibold text-emerald-700 hover:underline">
+            <Link
+              href={jobsFreshHomeHref()}
+              className="font-semibold text-emerald-700 hover:underline"
+            >
               Home
             </Link>
           </p>

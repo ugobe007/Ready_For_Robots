@@ -122,7 +122,9 @@ function BriefJobCard({ job }: { job: LandingBriefJob }) {
       <div className="rfr-landing-brief-row">
         <span className="rfr-landing-brief-id">{job.id}</span>
         <h3 className="rfr-landing-brief-employer">{job.employer}</h3>
-        <span className="rfr-landing-brief-sector">{job.workplace || job.sector}</span>
+        <span className="rfr-landing-brief-sector">
+          {job.workplace || job.sector}
+        </span>
         {!isConditional && (
           <span
             className={`rfr-landing-brief-status rfr-landing-brief-status--${job.status.toLowerCase()}`}
@@ -165,15 +167,13 @@ export default function JobsLanding() {
 
       if (jobKey) {
         const matched = MARKET_TAPE_JOBS.find(
-          (j) => j.key.toLowerCase() === jobKey.toLowerCase()
+          j => j.key.toLowerCase() === jobKey.toLowerCase()
         );
         if (matched) {
           setSelectedTapeJob(matched);
         } else {
           const base = getPublicReadApiBase();
-          void fetch(
-            `${base}/api/robot-job-card/${encodeURIComponent(jobKey)}`
-          )
+          void fetch(`${base}/api/robot-job-card/${encodeURIComponent(jobKey)}`)
             .then(res => (res.ok ? res.json() : null))
             .then(data => {
               const card = data?.job;
@@ -196,7 +196,9 @@ export default function JobsLanding() {
                   card.industry ||
                     [card.employer, card.locality].filter(Boolean).join(" · ")
                 ),
-                path: String(card.path || card.locality || "WORKSITE → WORKSITE"),
+                path: String(
+                  card.path || card.locality || "WORKSITE → WORKSITE"
+                ),
                 family,
                 customer: String(card.employer),
                 location: card.locality ? String(card.locality) : undefined,
@@ -310,7 +312,7 @@ export default function JobsLanding() {
               type="text"
               placeholder="Paste a robot product URL (e.g. https://www.dexmate.ai)..."
               value={heroUrl}
-              onChange={(e) => setHeroUrl(e.target.value)}
+              onChange={e => setHeroUrl(e.target.value)}
               className="rfr-landing-hero-input"
               aria-label="Robot product URL"
             />
@@ -321,7 +323,10 @@ export default function JobsLanding() {
         </form>
 
         {/* Featured Daily Customer Intent Quotes */}
-        <div className="rfr-landing-quotes mt-8 mb-5 w-full pt-1" aria-label="Customer Quotes">
+        <div
+          className="rfr-landing-quotes mt-8 mb-5 w-full pt-1"
+          aria-label="Customer Quotes"
+        >
           <CustomerQuoteBanner />
         </div>
 
@@ -343,7 +348,9 @@ export default function JobsLanding() {
       </section>
 
       <section className="rfr-landing-brief" aria-label="Live job feed">
-        <h2 className="rfr-landing-brief-headline">Jobs for <span className="text-emerald-400">robots.</span></h2>
+        <h2 className="rfr-landing-brief-headline">
+          Jobs for <span className="text-emerald-400">robots.</span>
+        </h2>
         <p className="rfr-landing-brief-note">{LANDING_BRIEF_NOTE}</p>
         <div className="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-[#081126] shadow-2xl">
           <LiveJobTape

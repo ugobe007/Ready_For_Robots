@@ -38,7 +38,8 @@ export default function AdminBenchmarkingReportsPanel() {
             </h2>
           </div>
           <p className="mt-1 text-xs text-slate-400">
-            Shareable 2026 benchmarking reports pre-configured for executive prospects when they reply.
+            Shareable 2026 benchmarking reports pre-configured for executive
+            prospects when they reply.
           </p>
         </div>
 
@@ -76,7 +77,9 @@ export default function AdminBenchmarkingReportsPanel() {
               </p>
 
               <div className="mt-3 flex flex-wrap gap-1 text-[10px] text-slate-300">
-                <span className="font-semibold text-emerald-400">Accounts: </span>
+                <span className="font-semibold text-emerald-400">
+                  Accounts:{" "}
+                </span>
                 {bm.target_accounts.slice(0, 2).join(", ")}
                 {bm.target_accounts.length > 2 && "..."}
               </div>

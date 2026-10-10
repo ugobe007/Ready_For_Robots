@@ -70,7 +70,8 @@ export const WORKFLOWS: readonly WorkflowOption[] = [
     label: "Cleaning",
     hint: "Floor scrubbing and coverage",
     catalogClass: "cleaning",
-    tradeoff: "Cleaning is floor coverage. It does not move pallets or pack orders.",
+    tradeoff:
+      "Cleaning is floor coverage. It does not move pallets or pack orders.",
   },
   {
     id: "healthcare",

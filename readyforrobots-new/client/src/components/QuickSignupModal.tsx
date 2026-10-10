@@ -1,6 +1,10 @@
 import { useState, FormEvent } from "react";
 import { X, Sparkles, CheckCircle2, Mail, Lock, Github } from "lucide-react";
-import { supabase, supabaseOAuthRedirect, AUTH_UNAVAILABLE_MSG } from "@/lib/supabase";
+import {
+  supabase,
+  supabaseOAuthRedirect,
+  AUTH_UNAVAILABLE_MSG,
+} from "@/lib/supabase";
 import { toast } from "sonner";
 
 function GoogleGlyph() {
@@ -45,7 +49,9 @@ export default function QuickSignupModal({
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(null);
+  const [oauthLoading, setOauthLoading] = useState<"google" | "github" | null>(
+    null
+  );
 
   if (!isOpen) return null;
 
@@ -105,7 +111,9 @@ export default function QuickSignupModal({
         return;
       }
 
-      toast.success("🎉 Account created successfully! Welcome to ReadyForRobots.");
+      toast.success(
+        "🎉 Account created successfully! Welcome to ReadyForRobots."
+      );
       setIsSubmitting(false);
       onClose();
       window.location.href = "/welcome?registered=1";
@@ -148,15 +156,23 @@ export default function QuickSignupModal({
         <div className="mt-5 p-3.5 rounded-2xl bg-slate-950/60 border border-slate-800/80 space-y-2 text-xs relative z-10">
           <div className="flex items-center gap-2 text-slate-200">
             <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-            <span><strong>Verified Enterprise Buyer Signals</strong> ($100M+ revenue)</span>
+            <span>
+              <strong>Verified Enterprise Buyer Signals</strong> ($100M+
+              revenue)
+            </span>
           </div>
           <div className="flex items-center gap-2 text-slate-200">
             <CheckCircle2 className="w-4 h-4 text-cyan-400 flex-shrink-0" />
-            <span><strong>1-Click Commercial Proposals</strong> & RaaS calculations</span>
+            <span>
+              <strong>1-Click Commercial Proposals</strong> & RaaS calculations
+            </span>
           </div>
           <div className="flex items-center gap-2 text-slate-200">
             <CheckCircle2 className="w-4 h-4 text-amber-400 flex-shrink-0" />
-            <span><strong>3D Cell Layout Video Simulations</strong> & HEIR Feasibility</span>
+            <span>
+              <strong>3D Cell Layout Video Simulations</strong> & HEIR
+              Feasibility
+            </span>
           </div>
         </div>
 
@@ -169,7 +185,11 @@ export default function QuickSignupModal({
             className="w-full py-3 px-4 rounded-xl bg-slate-800 hover:bg-slate-750 border border-slate-700 text-slate-100 font-semibold text-xs tracking-wide transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
           >
             <GoogleGlyph />
-            <span>{oauthLoading === "google" ? "Connecting to Google..." : "Continue with Google"}</span>
+            <span>
+              {oauthLoading === "google"
+                ? "Connecting to Google..."
+                : "Continue with Google"}
+            </span>
           </button>
 
           <button
@@ -179,20 +199,30 @@ export default function QuickSignupModal({
             className="w-full py-2.5 px-4 rounded-xl bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-200 font-semibold text-xs tracking-wide transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <Github className="w-4 h-4 text-slate-300" />
-            <span>{oauthLoading === "github" ? "Connecting..." : "Continue with GitHub"}</span>
+            <span>
+              {oauthLoading === "github"
+                ? "Connecting..."
+                : "Continue with GitHub"}
+            </span>
           </button>
         </div>
 
         {/* Divider */}
         <div className="relative my-5 text-center text-xs text-slate-500">
-          <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-800"></div></div>
-          <span className="relative bg-slate-900 px-3 text-[11px] uppercase tracking-wider font-mono text-slate-400">or sign up with email</span>
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-slate-800"></div>
+          </div>
+          <span className="relative bg-slate-900 px-3 text-[11px] uppercase tracking-wider font-mono text-slate-400">
+            or sign up with email
+          </span>
         </div>
 
         {/* Form */}
         <form onSubmit={handleEmailSignup} className="space-y-3 relative z-10">
           <div>
-            <label className="text-[11px] font-mono text-slate-400 block mb-1">Work Email</label>
+            <label className="text-[11px] font-mono text-slate-400 block mb-1">
+              Work Email
+            </label>
             <div className="relative">
               <Mail className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
               <input
@@ -207,7 +237,9 @@ export default function QuickSignupModal({
           </div>
 
           <div>
-            <label className="text-[11px] font-mono text-slate-400 block mb-1">Password</label>
+            <label className="text-[11px] font-mono text-slate-400 block mb-1">
+              Password
+            </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-500 absolute left-3 top-3" />
               <input
@@ -227,13 +259,18 @@ export default function QuickSignupModal({
             disabled={isSubmitting}
             className="w-full mt-2 py-3 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs tracking-wide uppercase transition-all shadow-lg shadow-emerald-400/20 flex items-center justify-center gap-2 cursor-pointer"
           >
-            {isSubmitting ? "Creating Account..." : "Create Free Workspace Account →"}
+            {isSubmitting
+              ? "Creating Account..."
+              : "Create Free Workspace Account →"}
           </button>
         </form>
 
         <p className="mt-4 text-[11px] text-slate-400 text-center">
           Already have an account?{" "}
-          <a href="/login" className="text-emerald-400 font-bold hover:underline">
+          <a
+            href="/login"
+            className="text-emerald-400 font-bold hover:underline"
+          >
             Sign In
           </a>
         </p>

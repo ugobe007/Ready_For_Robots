@@ -22,9 +22,13 @@ describe("composeRobotCompanyIntro", () => {
     });
     expect(text).toContain("Hi Maya, nice to meet you.");
     expect(text).toContain("I am a robot coordinator for ReadyForRobots");
-    expect(text).toContain("pharmacy delivery at Rochester Regional Health in Rochester, NY");
+    expect(text).toContain(
+      "pharmacy delivery at Rochester Regional Health in Rochester, NY"
+    );
     expect(text).toContain("$4200 per month for 12 months");
-    expect(text).toContain("arrange a call with Priya at Rochester Regional Health");
+    expect(text).toContain(
+      "arrange a call with Priya at Rochester Regional Health"
+    );
     expect(text).toMatch(/Phelan\.$/);
     expect(text).not.toMatch(/SIGNAL|match%|ROI/i);
   });
@@ -37,7 +41,9 @@ describe("composeRobotCompanyIntro", () => {
       requirements: "Unload inbound trailers and stage pallets at the dock.",
     });
     expect(text.startsWith(`Hi ${OEM_INTRO_BLANK},`)).toBe(true);
-    expect(text).toContain(`$${OEM_INTRO_PAY_BLANK} per month for ${OEM_INTRO_TERM_BLANK}`);
+    expect(text).toContain(
+      `$${OEM_INTRO_PAY_BLANK} per month for ${OEM_INTRO_TERM_BLANK}`
+    );
     expect(text).toContain("arrange a call with GEODIS");
     expect(text).not.toContain("operations@");
     expect(text).not.toContain("Operational Lead");
