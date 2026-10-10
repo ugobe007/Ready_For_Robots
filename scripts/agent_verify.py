@@ -185,6 +185,32 @@ def doctor(*, origin: str | None = None, fly: str | None = None) -> dict[str, An
         if not js_ok:
             alerts.append("Jobs JS missing FIND/activate canaries")
 
+    pcode, pbody, purl = _get(f"{api}/api/robot-jobs/preview?limit=3", timeout=20)
+    preview_json = False
+    preview_count = 0
+    try:
+        pdata = json.loads(pbody.decode()) if pbody else {}
+        jobs = pdata.get("jobs") if isinstance(pdata, dict) else None
+        preview_json = isinstance(pdata, dict) and isinstance(jobs, list)
+        preview_count = len(jobs) if isinstance(jobs, list) else 0
+    except json.JSONDecodeError:
+        pdata = {}
+    preview_ok = pcode == 200 and preview_json
+    checks.append(
+        {
+            "id": "fly_jobs_preview",
+            "ok": preview_ok,
+            "url": purl,
+            "status": pcode,
+            "json": preview_json,
+            "jobs_count": preview_count,
+        }
+    )
+    if not preview_ok:
+        alerts.append(
+            "Fly /api/robot-jobs/preview is not JSON — SPA catch-all or undeployed route"
+        )
+
     ok = health_ok and pipe_ok and page_ok and js_ok
     return {
         "ok": ok,

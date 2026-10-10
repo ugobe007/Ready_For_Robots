@@ -12,8 +12,8 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 
 | Surface | Route | What the user is doing |
 |---------|-------|------------------------|
-| Landing fork | `/` or `/?new=1` | Put your robot to work. Only robot is emerald. Subhead: Find jobs for robots and robots for jobs.... START HERE → then two door cards: Jobs for Robots (truck, Robot owner, emerald frame) / Robots for Jobs (handshake, Employer, cream outline). Icons render at scale 4. Jobs brief below with employer names in emerald and a Jobs field. Sparse System 1 fork. No SIGNAL report, newsletter, or robot index. |
-| Jobs FIND | `/?visit=jobs` | OEM/integrator step 1: paste robot URL or pick a named catalog SKU / class. Then Job Cards. |
+| Jobs FIND (home) | `/` and `/?visit=jobs` | Live named-employer job board is visible without a URL submit (`GET /api/robot-jobs/preview`, three inline lines). URL / class FIND is optional next. `/jobs` redirects here. |
+| Employer MATCH | `/?visit=candidates` | Employer step 1: work tiles + description. Named catalog robots, then post-job draft. |
 | Employer MATCH | `/?visit=candidates` | Employer step 1: work tiles + description. Named catalog robots, then post-job draft. |
 | About | `/intelligence` | Jobs loop explainer; Find jobs → `/?visit=jobs` |
 | Jobs CRM | `/pipeline?src=jobs_activate` | Step 03 for robot companies: jobs you kept, inspect, quote rental, Place this job. Cal asks missing apply facts and prepares the draft. Inbox confirm/release for a held interview slot. |
@@ -32,11 +32,11 @@ Canonical frontend: `readyforrobots-new/client/`. API: `https://ready-2-robot.fl
 
 ### Jobs header (`ExperimentHeader`)
 
-Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/?new=1` (landing fork). While already on `/`, the click resets in place — it must not reload the document or abort an in-flight Find jobs.
+Fixed dark bar on Jobs chrome. Wordmark + Kare face → `/` (FIND home). While already on `/`, the click resets in place — it must not reload the document or abort an in-flight Find jobs.
 
 | Item | Behavior |
 |------|----------|
-| Jobs | Selected on `/` and `/jobs/:slug`. Landing fork while already on `/` / `/?new=1`. FIND (`/?visit=jobs`) from About, Pricing, MATCH, and FIND itself. CRM desk restores Job Cards (`/?visit=jobs&restore=1`). |
+| Jobs | Selected on `/` and `/jobs/:slug`. FIND home. CRM desk restores Job Cards (`/?visit=jobs&restore=1`). |
 | About | `/intelligence` |
 | Pipeline | **Hidden** on Jobs chrome and Jobs CRM |
 | CRM | On Jobs chrome (signed in or out): `/pipeline?src=jobs_activate`. On SIGNAL `/pipeline` or bare `/crm`: `/crm` (signed-in) |
@@ -84,7 +84,7 @@ On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and
 | Job list | Up to 5 example jobs before signup. All five start **Keep**-checked. Tag `Job # is for {SKU}`. Collapsed row shows model `list_line` (layer · time · who trains) so QUALIFY happens before the check. |
 | Job Card (expanded) | Employer, workplace, work, qualification (usually Conditional), open questions, task models, numbered placement steps, Next is **not** here. |
 | Research console | Stage labels while Understanding + match run. Not the result. |
-| Live job tape | Ambient listings; not a substitute for named Job Cards. |
+| Live job board | FIND home / `/jobs`: three named-employer lines from `GET /api/robot-jobs/preview` (corpus fallback if Fly returns HTML). SIGNAL `/pipeline`: anonymous strip from `/api/leads/pipeline`. Not a substitute for matched Job Cards. |
 | Cal desk | After Open CRM on the signed listing. Asks the next missing apply fact. Prepares the draft. You send. Not on FIND. |
 
 SIGNAL-only panels (activity feed, next actions, Cal queue, lead share) stay off the Jobs path.
@@ -110,9 +110,8 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
 
 ```
 /
-  → Jobs for Robots | Robots for Jobs
-/?visit=jobs
-  → paste robot URL or pick class / named catalog SKU (FIND)
+  → live named-employer job board (no URL required)
+  → optional: paste robot URL or pick class / named catalog SKU (FIND)
   → optional SKU pick
   → Job Cards (QUALIFY / inspect + check — checking dumps the row into CRM)
   → Open CRM → /signup?next=/pipeline?src=jobs_activate&src=jobs_activate
@@ -122,7 +121,7 @@ API the UI calls: `POST /api/robot-job-match`. Public reads use `getPublicReadAp
   → post-job draft (employer name + work; no invented contacts)
 ```
 
-Wordmark returns to the landing fork (`/?new=1`). Header **Jobs** is FIND except while already on the landing fork. Restore is `/?visit=jobs&restore=1` — never the landing. Bare `/pipeline` without a Jobs `src` is SIGNAL — do not dump Jobs traffic there.
+Wordmark and `/jobs` stay on FIND (`/`). Restore is `/?visit=jobs&restore=1`. Bare `/pipeline` without a Jobs `src` is SIGNAL — do not dump Jobs traffic there. SIGNAL `/pipeline` still shows the anonymous live buyer/job strip from `/api/leads/pipeline`.
 
 Agent proof of this loop: `python3 scripts/agent_verify.py ci`.
 
