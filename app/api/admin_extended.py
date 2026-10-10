@@ -728,7 +728,7 @@ def cal_apply_variant(
     acct.outreach_stage = "draft_approved" if not cal_manual_approval_required() else "draft_ready"
 
     cmeta = dict(company.crm_metadata or {}) if isinstance(company.crm_metadata, dict) else {}
-    cmeta["cal_variant_id"] = variant_id
+    cmeta["phelan_variant_id"] = variant_id
     company.crm_metadata = cmeta
 
     db.commit()

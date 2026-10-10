@@ -767,7 +767,7 @@ def market_graph_buying_window_overlay(
                 urgency_0_100=item.urgency_0_100,
                 window_label=item.window_label,
                 factors=item.factors,
-                cal_hint=item.cal_hint,
+                phelan_hint=item.cal_hint,
                 confidence=item.confidence,
                 hermes_run_id=body.hermes_run_id,
                 dry_run=body.dry_run,

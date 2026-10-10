@@ -533,13 +533,13 @@ def resolve_cal_admin_context(db: Session) -> Optional[tuple[uuid.UUID, Any]]:
         if member:
             return member.user_id, team
 
-    uid_raw = (os.getenv("CAL_ADMIN_USER_ID") or "").strip()
+    uid_raw = (os.getenv("PHELAN_ADMIN_USER_ID") or os.getenv("CAL_ADMIN_USER_ID") or "").strip()
     if not uid_raw:
         return None
     try:
         uid = uuid.UUID(uid_raw)
     except ValueError:
-        logger.warning("Invalid CAL_ADMIN_USER_ID")
+        logger.warning("Invalid PHELAN_ADMIN_USER_ID / CAL_ADMIN_USER_ID")
         return None
     from app.api.admin_extended import _admin_team
 
@@ -600,7 +600,7 @@ def _draft_and_store(
     )
     if variant_id:
         meta = dict(company.crm_metadata or {})
-        meta["cal_variant_id"] = variant_id
+        meta["phelan_variant_id"] = variant_id
         company.crm_metadata = meta
 
     if acct is None:

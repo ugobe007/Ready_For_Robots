@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_BUYER_SEQUENCE = {
     "name": "Cal buyer cadence",
-    "slug": "phelan_buyer_v1",
+    "slug": "cal_buyer_v1",
     # Cal's voice: smooth, smart, lightly self-aware. Each touch adds a NEW idea
     # (not "just bumping this"), keeps it short/mobile-friendly, and makes the ask
     # a low-friction yes/no. Templates support {company_name} and {industry}.
