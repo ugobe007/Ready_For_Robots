@@ -30,6 +30,24 @@ export interface BuyerQuote {
 
 const FIND_JOBS = "/?visit=jobs";
 
+/** About half the quotes link to the article. Stable so the set does not flicker. */
+export function quoteShowsSourceLink(id: string): boolean {
+  let hash = 2166136261;
+  for (let i = 0; i < id.length; i++) {
+    hash ^= id.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0) % 2 === 0;
+}
+
+export function quoteSourceHost(url: string): string {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "source";
+  }
+}
+
 export const FEATURED_BUYER_QUOTES: BuyerQuote[] = [
   {
     id: "quote-rochester-regional",

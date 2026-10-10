@@ -50,7 +50,7 @@ import {
   landingHeadlineParts,
   landingVisitFromSearch,
 } from "./jobsLanding";
-import { FEATURED_BUYER_QUOTES } from "./buyerQuotes";
+import { FEATURED_BUYER_QUOTES, quoteShowsSourceLink } from "./buyerQuotes";
 import { FIND_JOBS_CTA } from "./jobsWorkflow";
 import { catalogSkusForClass, listKnownOemCatalog } from "./knownOemCatalog";
 import {
@@ -579,6 +579,11 @@ describe("landing chrome hrefs cannot swap visits", () => {
     expect(companies).toMatch(/DHL Supply Chain/);
     expect(companies).toMatch(/Chipotle/);
     expect(companies).toMatch(/Marriott International/);
+    const linked = FEATURED_BUYER_QUOTES.filter(q =>
+      quoteShowsSourceLink(q.id)
+    );
+    expect(linked.length).toBeGreaterThan(0);
+    expect(linked.length).toBeLessThan(FEATURED_BUYER_QUOTES.length);
     for (const quote of FEATURED_BUYER_QUOTES) {
       expect(quote.author.trim().length).toBeGreaterThan(2);
       expect(quote.quote.trim().length).toBeGreaterThan(40);
@@ -594,6 +599,8 @@ describe("landing chrome hrefs cannot swap visits", () => {
     );
     expect(banner).toMatch(/jobsFindHref\(\)/);
     expect(banner).toMatch(/FIND_JOBS_CTA/);
+    expect(banner).toMatch(/quoteShowsSourceLink/);
+    expect(banner).toMatch(/activeQuote\.sourceUrl/);
     expect(banner).not.toMatch(/Job Opportunity/);
     expect(banner).not.toMatch(/\/pipeline\?co=/);
     const landing = readFileSync(

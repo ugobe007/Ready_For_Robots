@@ -339,6 +339,38 @@ def _editorial_headline(
     return f"{name}: {_sig_label(sig_type)} signal active in {_industry_display(industry)}"
 
 
+def _public_edition_headline(company: str, story_headline: str) -> str:
+    """One readable sentence for the brief. Not 'Name: to pilot ...'. """
+    import html as html_lib
+
+    text = html_lib.unescape(story_headline or "")
+    text = re.sub(r"&nbsp;?", " ", text, flags=re.IGNORECASE)
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"(?:\s*\.){2,}$", "", text).strip(" .")
+    name = (company or "").strip()
+    inner = _strip_leading_company(text, name)
+    inner = re.sub(r"(?i)^buyer persona hire:\s*", "", inner).strip()
+    first = re.split(r"[.!?]", inner)[0].strip(" -—–:")
+    if name:
+        idx = first.lower().find(name.lower())
+        if idx > 8:
+            first = first[:idx].strip(" -—–.")
+    if not first:
+        return name or "Who is buying robots this week"
+    if first.lower().startswith(name.lower()) and name:
+        headline = first
+    elif first[0].islower():
+        headline = f"{name} {first}".strip()
+    else:
+        headline = f"{name} {first[0].lower()}{first[1:]}".strip() if name else first
+    headline = re.sub(r"\s+", " ", headline).strip(" .")
+    if headline and headline[0].islower():
+        headline = headline[0].upper() + headline[1:]
+    if len(headline) > 110:
+        headline = headline[:107].rsplit(" ", 1)[0].strip()
+    return headline or (name or "Who is buying robots this week")
+
+
 def _strip_leading_company(text: str, name: str) -> str:
     """Remove one or more leading '<Company>[ :\\-—]' mentions from a headline.
 
@@ -625,11 +657,9 @@ def generate_edition(db: Session, limit: int = 8, *, skip_openai_brief: bool = F
 
     if stories:
         top = stories[0]
-        _inner = _strip_leading_company(top.get("headline", ""), top["company"])
-        main_headline = (
-            f"{top['company']}: {_truncate(_inner, 60)}"
-            if _inner
-            else _truncate(top["company"], 80)
+        main_headline = _public_edition_headline(
+            top.get("company") or "",
+            top.get("headline") or "",
         )
         subheadline = f"{len(stories)} hot leads with actionable signals — {top.get('category', '')} leading"
     else:

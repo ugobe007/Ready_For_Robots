@@ -24,6 +24,7 @@ import {
   writeSurfaceCache,
   writeSessionCache,
 } from "@/lib/apiBase";
+import { readableNewsletterHeadline } from "@/lib/newsletterHeadline";
 import { cleanScrapedText, leadPreviewSentences } from "@/lib/text";
 
 type NewsletterStory = {
@@ -148,19 +149,7 @@ function formatEditionUpdated(iso?: string, fallback?: string): string {
 }
 
 function cleanHeadline(text?: string): string {
-  let s = cleanScrapedText(text || "");
-  if (!s) return "Who is buying robots this week";
-  if (s.includes(":")) {
-    const parts = s.split(":");
-    if (parts.length >= 2) {
-      const left = parts[0].trim().toLowerCase();
-      const right = parts[1].trim().toLowerCase();
-      if (right.startsWith(left.slice(0, 4)) || left.length < 15) {
-        s = parts.slice(1).join(":").trim();
-      }
-    }
-  }
-  return s;
+  return readableNewsletterHeadline(text);
 }
 
 function cleanSubheadline(text?: string): string {

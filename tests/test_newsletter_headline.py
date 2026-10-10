@@ -1,5 +1,9 @@
 """Newsletter headline must not duplicate the company name (CLLIX: CLLIX — CLLIX...)."""
-from app.services.newsletter_service import _editorial_headline, _strip_leading_company
+from app.services.newsletter_service import (
+    _editorial_headline,
+    _public_edition_headline,
+    _strip_leading_company,
+)
 
 
 def test_strip_leading_company_collapses_repeats():
@@ -23,3 +27,14 @@ def test_editorial_headline_does_not_duplicate_company():
     # Company should appear exactly once at the start.
     assert h.count(n) == 1, h
     assert h.startswith(n)
+
+
+def test_public_edition_headline_is_one_sentence():
+    raw = (
+        "Medline — to pilot warehouse automation platform from Symbotic. "
+        "Medline to pilot warehouse automation platform"
+    )
+    headline = _public_edition_headline("Medline", raw)
+    assert headline == "Medline to pilot warehouse automation platform from Symbotic"
+    assert "...." not in headline
+    assert not headline.split(" ", 1)[1][:1].isupper()
