@@ -1,13 +1,13 @@
-from app.services.cal_autonomy import (
+from app.services.phelan_autonomy import (
     _cal_autonomy_env_default,
-    cal_autonomy_enabled,
-    get_cal_autonomy_runtime_override,
-    set_cal_autonomy_runtime_override,
+    phelan_autonomy_enabled,
+    get_phelan_autonomy_runtime_override,
+    set_phelan_autonomy_runtime_override,
 )
 
 
 def test_cal_autonomy_runtime_override(monkeypatch):
-    monkeypatch.setenv("CAL_AUTONOMY_ENABLED", "1")
+    monkeypatch.setenv("PHELAN_AUTONOMY_ENABLED", "1")
     store: dict[str, str] = {}
 
     class FakeRedis:
@@ -20,12 +20,12 @@ def test_cal_autonomy_runtime_override(monkeypatch):
     monkeypatch.setattr("app.services.cal_autonomy._redis_client", lambda: FakeRedis())
 
     assert _cal_autonomy_env_default() is True
-    assert cal_autonomy_enabled() is True
-    assert get_cal_autonomy_runtime_override() is None
+    assert phelan_autonomy_enabled() is True
+    assert get_phelan_autonomy_runtime_override() is None
 
-    set_cal_autonomy_runtime_override(False)
-    assert get_cal_autonomy_runtime_override() is False
-    assert cal_autonomy_enabled() is False
+    set_phelan_autonomy_runtime_override(False)
+    assert get_phelan_autonomy_runtime_override() is False
+    assert phelan_autonomy_enabled() is False
 
-    set_cal_autonomy_runtime_override(True)
-    assert cal_autonomy_enabled() is True
+    set_phelan_autonomy_runtime_override(True)
+    assert phelan_autonomy_enabled() is True

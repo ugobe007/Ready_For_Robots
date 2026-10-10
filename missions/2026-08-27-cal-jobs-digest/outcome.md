@@ -11,9 +11,9 @@
 | **Drafts: 16 with Autopilot OFF** | Digest counted any `CrmAccount` with an `outreach_draft` and a recent `updated_at` (pipeline/enrichment touches). `_draft_and_store` could still write from ingest/scout even when the scheduled autonomy thread was off. | When autopilot is off, `_draft_and_store` returns without writing. Digest reports scheduled drafts as `0 (paused)` and does not use `updated_at` as a draft cycle. |
 | **Digest copy** | `build_industry_brief_payload` appended “1452 opportunity signals / sales teams should prioritize…”. Links were `/admin` `/inbox` `/calendar`. | Industry brief removed. Body leads with Jobs-path counts (matcher / kept / apply) and a Cal-frozen one-liner. Links: `/`, `/pipeline?src=jobs_activate`, `/admin`. |
 | **Double-send (08-26 copies)** | Web (`SKIP_CELERY=1`) and worker both started the 15:00 UTC digest thread. Idempotency was get-then-set, so both could pass. | Worker owns the in-app thread. Web starts only if `CAL_DAILY_DIGEST_WEB_BACKUP=1`. Send claims the UTC day with Redis SET NX and releases on failure. GHA 15:05 remains backup. |
-| **22 due follow-ups** | `process_due_enrollments` had no autonomy gate (Celery hourly + any manual/API call). Autonomy cycle also ran follow-ups when it ran. | `process_due_enrollments` returns `paused` when `CAL_AUTONOMY_ENABLED=0`. Scheduled cycle does not send follow-ups. HOT 300 stays leftover-queue copy, not a send list. |
+| **22 due follow-ups** | `process_due_enrollments` had no autonomy gate (Celery hourly + any manual/API call). Autonomy cycle also ran follow-ups when it ran. | `process_due_enrollments` returns `paused` when `PHELAN_AUTONOMY_ENABLED=0`. Scheduled cycle does not send follow-ups. HOT 300 stays leftover-queue copy, not a send list. |
 
-Intros stay on the 0 path: `CAL_BUYER_SALES_ENABLED` default 0; scheduled cycle disabled; buyer-sales draft/send limits stay 0.
+Intros stay on the 0 path: `PHELAN_BUYER_SALES_ENABLED` default 0; scheduled cycle disabled; buyer-sales draft/send limits stay 0.
 
 ## Files
 
@@ -36,6 +36,6 @@ Intros stay on the 0 path: `CAL_BUYER_SALES_ENABLED` default 0; scheduled cycle 
 
 ## Prod flags / deploy
 
-`fly.toml` already has `CAL_AUTONOMY_ENABLED=0` and `ENABLE_SCHEDULED_CAL_AUTONOMY=0` from #148. **No flag deploy needed.** This branch is code: draft/follow-up gates, digest copy, double-send claim. Those land only after a normal app deploy. This mission did not `fly deploy` (no `fly.toml` flag change).
+`fly.toml` already has `PHELAN_AUTONOMY_ENABLED=0` and `ENABLE_SCHEDULED_PHELAN_AUTONOMY=0` from #148. **No flag deploy needed.** This branch is code: draft/follow-up gates, digest copy, double-send claim. Those land only after a normal app deploy. This mission did not `fly deploy` (no `fly.toml` flag change).
 
 Do not set `MARKET_GRAPH_RUN_RESEARCH`, `HERMES_INGEST_ENABLED`, or `LEAD_RESEARCH_AGENT_ENABLED`.

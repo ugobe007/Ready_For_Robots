@@ -1,5 +1,5 @@
 """
-Brand isolation — Cal works for two businesses from one codebase.
+Brand isolation — Phelan works for two businesses from one codebase.
 
 Same person, two jobs (voice + sending identity must match):
 

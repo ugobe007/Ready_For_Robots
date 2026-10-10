@@ -1,18 +1,18 @@
 """Safe auto-send guards: daily cap parsing + angle-rotation fallback."""
-from app.services import cal_autonomy as ca
+from app.services import phelan_autonomy as ca
 from app.services.agent_messaging import BUYER_VARIANTS, pick_buyer_variant
 
 
 def test_daily_send_cap_defaults_low(monkeypatch):
-    monkeypatch.delenv("CAL_AUTONOMY_DAILY_CAP", raising=False)
-    assert ca.cal_daily_send_cap() == 10
+    monkeypatch.delenv("PHELAN_AUTONOMY_DAILY_CAP", raising=False)
+    assert ca.phelan_daily_send_cap() == 10
 
 
 def test_daily_send_cap_env_override(monkeypatch):
-    monkeypatch.setenv("CAL_AUTONOMY_DAILY_CAP", "3")
-    assert ca.cal_daily_send_cap() == 3
-    monkeypatch.setenv("CAL_AUTONOMY_DAILY_CAP", "garbage")
-    assert ca.cal_daily_send_cap() == 10
+    monkeypatch.setenv("PHELAN_AUTONOMY_DAILY_CAP", "3")
+    assert ca.phelan_daily_send_cap() == 3
+    monkeypatch.setenv("PHELAN_AUTONOMY_DAILY_CAP", "garbage")
+    assert ca.phelan_daily_send_cap() == 10
 
 
 def test_daily_sent_count_safe_without_redis(monkeypatch):

@@ -1,4 +1,4 @@
-"""Demand-side buyer ingestion — curated operator companies → Cal buyer leads.
+"""Demand-side buyer ingestion — curated operator companies → Phelan buyer leads.
 
 News discovery structurally surfaces robot *makers* (supply), not the operators
 who *buy* robots (demand), and the Apollo key is free-tier (no org/people search),
@@ -194,13 +194,13 @@ def ingest_operator_buyer(
 
 
 def _ensure_cal_crm_account(db: Session, company: Company) -> tuple[bool, str]:
-    """Create the Cal CRM account + buyer draft (idempotent) for a scored company."""
+    """Create the Phelan CRM account + buyer draft (idempotent) for a scored company."""
     from app.models.crm import CrmAccount
-    from app.services.cal_autonomy import _draft_and_store, resolve_cal_admin_context
+    from app.services.phelan_autonomy import _draft_and_store, resolve_cal_admin_context
 
     ctx = resolve_cal_admin_context(db)
     if not ctx:
-        return False, "no Cal admin context (admin-cal-outreach team / CAL_ADMIN_USER_ID)"
+        return False, "no Phelan admin context (admin-cal-outreach team / CAL_ADMIN_USER_ID)"
     _uid, team = ctx
     acct = (
         db.query(CrmAccount)

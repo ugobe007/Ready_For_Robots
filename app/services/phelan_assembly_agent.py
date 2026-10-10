@@ -14,7 +14,7 @@ from typing import Any, Optional
 
 from sqlalchemy.orm import Session
 
-from app.services.cal_persona import CAL_LLM_SYSTEM, cal_persona_payload
+from app.services.phelan_persona import CAL_LLM_SYSTEM, cal_persona_payload
 
 logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ def curate_supply_matches(
         if not ok:
             issues.append(f"{company.name}: {skip}")
             continue
-        from app.services.cal_pipeline_enrichment import enrichment_supply_eligible
+        from app.services.phelan_pipeline_enrichment import enrichment_supply_eligible
 
         enrich_ok, enrich_skip = enrichment_supply_eligible(company)
         if not enrich_ok:
@@ -329,7 +329,7 @@ def assemble_buyer_outreach(
     subject: str,
     body: str,
 ) -> AssemblyResult:
-    """Lightweight assembly for buyer-side Cal autonomy sends."""
+    """Lightweight assembly for buyer-side Phelan autonomy sends."""
     issues: list[str] = []
     if not (company_name or "").strip():
         issues.append("Missing buyer company name")
@@ -341,7 +341,7 @@ def assemble_buyer_outreach(
         if marker in body_low:
             issues.append(f"Wrong product voice: {marker}")
 
-    from app.services.cal_persona import CAL_BANNED_PHRASES
+    from app.services.phelan_persona import CAL_BANNED_PHRASES
 
     for phrase in CAL_BANNED_PHRASES:
         if phrase in body_low:

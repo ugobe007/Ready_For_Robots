@@ -1,9 +1,9 @@
-"""Send Cal outreach with optional inline demo GIF (HTML multipart)."""
+"""Send Phelan outreach with optional inline demo GIF (HTML multipart)."""
 from __future__ import annotations
 
 from typing import Any
 
-from app.services.cal_email_demo import enrich_cal_email_with_demo
+from app.services.phelan_email_demo import enrich_cal_email_with_demo
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 
 

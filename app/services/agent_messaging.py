@@ -3,16 +3,16 @@ from __future__ import annotations
 
 import re
 
-from app.services.cal_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_buyer_email_signature, cal_signature
+from app.services.phelan_persona import CAL_BANNED_PHRASES, CAL_ORG, cal_buyer_email_signature, cal_signature
 
 # ── Cal voice: veteran sherpa for robot companies ─────────────────────────────
 # Wise, abbreviated, in-the-know. Engineer-led teams, PoC → deployment reality.
 # Honesty and trust over hype. Draws on deep robotics industry experience.
 
-CAL_INTRO = "Hi, I am Cal. I work at ReadyForRobots as a deployment advisor. I focus on robot deployments and their metrics, to help companies improve ROI."
+PHELAN_INTRO = "Hi, I am Phelan. I work at ReadyForRobots as a deployment advisor. I focus on robot deployments and their metrics, to help companies improve ROI."
 
-CAL_BUYER_ROLE_LINE = (
-    "This is Cal from Ready For Robots. I track which deployments still work months later, not just in demo week."
+PHELAN_BUYER_ROLE_LINE = (
+    "This is Phelan from Ready For Robots. I track which deployments still work months later, not just in demo week."
 )
 
 CAL_BUYER_REMINDER_LINE = (
@@ -24,7 +24,7 @@ CAL_VENDOR_ROLE_LINE = (
 )
 
 CAL_VENDOR_REMINDER_LINE = (
-    "Quick reminder: I'm Cal at Ready For Robots — I help robot companies qualify buyers, assess fit early, and activate the right next sales step."
+    "Quick reminder: I'm Phelan at Ready For Robots — I help robot companies qualify buyers, assess fit early, and activate the right next sales step."
 )
 
 CAL_VENDOR_IDENTITY = (
@@ -141,7 +141,7 @@ def max_signature() -> str:
 # Three different premises, same voice: smart, analytical, practical, complete
 # sentences. Problems/tasks before robots. Evidence before claims. Room to say
 # robotics is not the right move yet. Every variant must (a) mention the company
-# name (assembly gate) and (b) end with Cal's sign-off (draft-completeness gate).
+# name (assembly gate) and (b) end with Phelan's sign-off (draft-completeness gate).
 
 BUYER_VARIANTS: tuple[str, ...] = ("workflow_first", "what_survives", "bottleneck_first")
 
@@ -294,7 +294,7 @@ _INDUSTRY_INSIGHT: tuple[tuple[tuple[str, ...], dict[str, object]], ...] = (
 
 
 def _buyer_insight(industry: str) -> dict[str, object]:
-    """Return Cal's deployment read for an industry (substring match, generic fallback)."""
+    """Return Phelan's deployment read for an industry (substring match, generic fallback)."""
     ind = (industry or "").strip()
     if "(" in ind:
         ind = ind.split("(", 1)[0].strip()
@@ -321,7 +321,7 @@ def _buyer_insight(industry: str) -> dict[str, object]:
 
 # ── Relationship ladder: teaching follow-ups ──────────────────────────────────
 # The follow-up cadence isn't "just bumping this." Each touch teaches ONE thing
-# in Cal's advisor voice: a deployment lesson (teach), a market pattern/mistake
+# in Phelan's advisor voice: a deployment lesson (teach), a market pattern/mistake
 # (trend), then an easy, genuine question that invites the buyer's expertise
 # (question). No pitch, no AI tells. Company name is added by the wrapper's close
 # so every touch clears the assembly gate.
@@ -553,7 +553,7 @@ def ladder_touch_subject(touch: str, name: str, industry: str) -> str:
 
 def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
     """Assemble a teaching follow-up body. Each touch teaches one thing and ends
-    with a company-named close (assembly gate) plus Cal's sign-off."""
+    with a company-named close (assembly gate) plus Phelan's sign-off."""
     n = (name or "your team").strip()
     content = _ladder_content(industry)
     core = content.get(touch, _GENERIC_LADDER.get(touch, ""))
@@ -573,7 +573,7 @@ def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
             "would earn its keep. Curious what you would say."
         )
     return "\n".join([
-        f"Hi {n}, this is Cal again.",
+        f"Hi {n}, this is Phelan again.",
         "",
         CAL_BUYER_REMINDER_LINE,
         "",
@@ -663,7 +663,7 @@ def _greeting_name(name: str) -> str:
 
 def _cal_intro() -> str:
     return (
-        "I'm Cal with ReadyForRobots. I research how companies are using robotics and help "
+        "I'm Phelan with ReadyForRobots. I research how companies are using robotics and help "
         "identify jobs where automation could actually make a difference."
     )
 
@@ -796,7 +796,7 @@ def _variant_bottleneck_first(name: str, industry: str) -> str:
 
 
 
-# A concrete, external event is the only thing Cal will cite as a reason — an
+# A concrete, external event is the only thing Phelan will cite as a reason — an
 # opening, expansion, funding round, hire, RFP, deployment. Inferred prose like
 # "sits in a sector facing labor shortages" is NOT a verifiable event and reads
 # as assumptive/naive, so it is deliberately excluded.
@@ -820,12 +820,12 @@ _EVENT_MARKER_RE = re.compile(
 def build_context_reason(name: str, signal_blob: str, *, max_chars: int = 200) -> str | None:
     """A single verifiable, humble hook grounded in a concrete company event.
 
-    Cal only names a reason when the company's own signals contain a real,
+    Phelan only names a reason when the company's own signals contain a real,
     external, event-like fact (an opening, expansion, funding round, hire, RFP,
     deployment). Inferred category prose is rejected because reciting it back
     reads as assumptive. Returns ``None`` when there's nothing concrete to stand
     behind, so callers fall back to the clean industry opener. Stays humble: it
-    explains *why Cal reached out*, not what the company should buy.
+    explains *why Phelan reached out*, not what the company should buy.
     """
     n = (name or "").strip()
     blob = (signal_blob or "").strip()
@@ -889,7 +889,7 @@ def build_buyer_variant_body(
             body = f"Hi {short} team,\n\n{anchor}\n\n{body}"
     if reason:
         # Inject the grounded hook right after the greeting line so the email
-        # leads with a real, verifiable reason before Cal's field observation.
+        # leads with a real, verifiable reason before Phelan's field observation.
         if body.startswith("Hi") and "\n\n" in body:
             first, rest = body.split("\n\n", 1)
             if not rest.startswith(reason):
@@ -925,7 +925,7 @@ def buyer_variant_subject(name: str, industry: str, variant_id: str) -> str:
 
 def cal_opening(*, audience: str = "buyer") -> str:
     explanation = VENDOR_SIGNAL_EXPLANATION if audience == "vendor" else BUYER_SIGNAL_EXPLANATION
-    return f"{CAL_INTRO}\n\n{explanation}"
+    return f"{PHELAN_INTRO}\n\n{explanation}"
 
 
 def cal_vendor_opening(*, reminder: bool = False) -> str:
@@ -935,7 +935,7 @@ def cal_vendor_opening(*, reminder: bool = False) -> str:
             f"{VENDOR_SIGNAL_EXPLANATION}"
         )
     return (
-        f"{CAL_INTRO}\n\n"
+        f"{PHELAN_INTRO}\n\n"
         f"{CAL_VENDOR_ROLE_LINE}\n\n"
         f"{CAL_VENDOR_IDENTITY}\n\n"
         f"{CAL_VENDOR_SHERPA_LINE}\n\n"

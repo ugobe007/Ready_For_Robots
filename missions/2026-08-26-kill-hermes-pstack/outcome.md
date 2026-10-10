@@ -10,15 +10,15 @@
 - Ingest family returns **410** unless `HERMES_INGEST_ENABLED=1`.
 - Hermes scripts refuse unless `HERMES_RETIRED_OVERRIDE=1`.
 - `hermes-fly-smoke.yml` is skip-by-default and never `--apply`s.
-- `fly.toml`: `CAL_AUTONOMY_ENABLED` 1 → 0; `ENABLE_SCHEDULED_CAL_AUTONOMY` 1 → 0.
+- `fly.toml`: `PHELAN_AUTONOMY_ENABLED` 1 → 0; `ENABLE_SCHEDULED_PHELAN_AUTONOMY` 1 → 0.
 - Checked-in pstack rules (IDE only). Matcher and ontology untouched.
 
 ## Cal flag
 
 | Flag | Before | After |
 |------|--------|-------|
-| `CAL_AUTONOMY_ENABLED` | `1` | `0` |
-| `ENABLE_SCHEDULED_CAL_AUTONOMY` | `1` | `0` |
+| `PHELAN_AUTONOMY_ENABLED` | `1` | `0` |
+| `ENABLE_SCHEDULED_PHELAN_AUTONOMY` | `1` | `0` |
 
 `[env]` in `fly.toml` needs a Fly deploy to land. This VM has no `flyctl` / `FLY_API_TOKEN`, so production Cal is still on until deploy:
 

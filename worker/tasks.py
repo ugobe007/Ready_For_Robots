@@ -1187,7 +1187,7 @@ def run_outreach_sequences_task(self, limit: int = 50):
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
 def send_cal_daily_digest_task(self, force: bool = False, period_hours: int = 24):
     """Send the operator Cal daily digest. No paid LLM / AI Gateway."""
-    from app.services.cal_daily_digest import send_cal_daily_digest
+    from app.services.phelan_daily_digest import send_cal_daily_digest
 
     db = get_db()
     try:

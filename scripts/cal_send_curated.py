@@ -1,5 +1,5 @@
 """
-Controlled proof-of-deliverability: send Cal outreach to a curated set of buyers
+Controlled proof-of-deliverability: send Phelan outreach to a curated set of buyers
 by name, reusing the REAL send primitives (resolve -> trust gate -> deliverability
 -> send_cal_intro_email -> follow-up enroll). Bypasses the cycle's top-100 window
 so we can validate the hardened verified-only path on hand-picked clean companies.
@@ -26,9 +26,9 @@ def main() -> int:
     from app.database import SessionLocal
     from app.models.company import Company
     from app.models.crm import CrmAccount
-    from app.services.cal_autonomy import _cal_buyer_eligible, resolve_cal_admin_context
-    from app.services.cal_draft_guard import is_complete_cal_draft
-    from app.services.cal_outreach_send import (
+    from app.services.phelan_autonomy import _cal_buyer_eligible, resolve_cal_admin_context
+    from app.services.phelan_draft_guard import is_complete_cal_draft
+    from app.services.phelan_outreach_send import (
         enroll_cal_followup,
         parse_cal_draft,
         send_cal_intro_email,

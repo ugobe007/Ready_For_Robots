@@ -16,7 +16,7 @@ from app.models.outreach import OutreachMessage
 from app.services.email_address import normalize_recipient_email
 from app.services.lead_enrichment import is_generic_role_inbox, source_is_provider_verified
 from app.services.resend_email import ResendEmailError
-from app.services.cal_email_send import send_cal_email_via_resend
+from app.services.phelan_email_send import send_cal_email_via_resend
 
 logger = logging.getLogger(__name__)
 

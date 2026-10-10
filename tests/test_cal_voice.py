@@ -3,9 +3,9 @@ from app.services.agent_messaging import (
     BUYER_VARIANTS,
     build_buyer_variant_body,
 )
-from app.services.cal_assembly_agent import assemble_buyer_outreach
-from app.services.cal_draft_guard import is_complete_cal_draft
-from app.services.cal_persona import (
+from app.services.phelan_assembly_agent import assemble_buyer_outreach
+from app.services.phelan_draft_guard import is_complete_cal_draft
+from app.services.phelan_persona import (
     CAL_ALWAYS,
     CAL_BANNED_PHRASES,
     CAL_NEVER,

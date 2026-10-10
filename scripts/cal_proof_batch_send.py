@@ -70,10 +70,10 @@ def main() -> int:
 
     from app.models.company import Company
     from app.models.crm import CrmAccount
-    from app.services.cal_assembly_agent import assemble_buyer_outreach, cal_assembly_required
-    from app.services.cal_autonomy import resolve_cal_admin_context
-    from app.services.cal_draft_guard import is_complete_cal_draft
-    from app.services.cal_outreach_send import enroll_cal_followup, parse_cal_draft, send_cal_intro_email
+    from app.services.phelan_assembly_agent import assemble_buyer_outreach, cal_assembly_required
+    from app.services.phelan_autonomy import resolve_cal_admin_context
+    from app.services.phelan_draft_guard import is_complete_cal_draft
+    from app.services.phelan_outreach_send import enroll_cal_followup, parse_cal_draft, send_cal_intro_email
     from app.services.lead_enrichment import (
         _VERIFIED_EMAIL_SOURCES,
         address_previously_bounced,

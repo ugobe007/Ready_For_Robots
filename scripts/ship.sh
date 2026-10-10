@@ -3,7 +3,7 @@
 # Frontend (readyforrobots.com) deploys via Vercel on push to main.
 #
 # Usage:
-#   ./scripts/ship.sh "Fix Cal outreach email inference"
+#   ./scripts/ship.sh "Fix Phelan outreach email inference"
 #   ./scripts/ship.sh                    # commit with default message if there are changes
 #   SKIP_COMMIT=1 ./scripts/ship.sh      # push + deploy only (already committed)
 #   SKIP_DEPLOY=1 ./scripts/ship.sh "…"  # commit + push only

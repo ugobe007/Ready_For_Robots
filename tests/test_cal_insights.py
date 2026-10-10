@@ -1,6 +1,6 @@
 import pytest
 
-from app.services.cal_insights import pick_cal_insight
+from app.services.phelan_insights import pick_cal_insight
 
 
 def test_pick_cal_insight_is_deterministic():

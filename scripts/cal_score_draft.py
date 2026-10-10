@@ -52,7 +52,7 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    from app.services.cal_voice_rubric import format_rubric_report, score_cal_draft
+    from app.services.phelan_voice_rubric import format_rubric_report, score_cal_draft
 
     draft, company = _read_draft(args)
     result = score_cal_draft(draft, company_hint=company or args.company)

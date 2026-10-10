@@ -386,11 +386,11 @@ def process_due_enrollments(
     db: Session, *, limit: int = 50, force: bool = False
 ) -> dict[str, Any]:
     if not force:
-        from app.services.cal_autonomy import cal_autonomy_enabled
+        from app.services.phelan_autonomy import phelan_autonomy_enabled
 
-        if not cal_autonomy_enabled():
+        if not phelan_autonomy_enabled():
             logger.info(
-                "[sequences] due follow-ups held — CAL_AUTONOMY_ENABLED off"
+                "[sequences] due follow-ups held — PHELAN_AUTONOMY_ENABLED off"
             )
             return {
                 "processed": 0,
@@ -398,7 +398,7 @@ def process_due_enrollments(
                 "skipped": 0,
                 "failed": 0,
                 "status": "paused",
-                "reason": "CAL_AUTONOMY_ENABLED off — due follow-ups are held",
+                "reason": "PHELAN_AUTONOMY_ENABLED off — due follow-ups are held",
             }
     now = datetime.now(timezone.utc)
     due = (

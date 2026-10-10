@@ -1,5 +1,5 @@
 """Tests for Cal Seller Brief — OEM-facing conversion artifact."""
-from app.services.cal_seller_brief import build_cal_seller_brief, format_cal_seller_brief_text
+from app.services.phelan_seller_brief import build_cal_seller_brief, format_cal_seller_brief_text
 
 
 def test_seller_brief_is_oem_facing():

@@ -14,7 +14,7 @@ After #156 (Accept / propose time / connect us), add **hold a slot** as a first-
 2. Hold writes `interview_held`, stores `held_at` / `hold_expires_at` / `slot_start` / `slot_end`.
 3. Recruiter email to OEM: slot held for {employer} {job} {time}, plus confirm/release link. Both-sides email only when a real employer email exists.
 4. OEM CRM inbox shows the held slot and Confirm hold / Release hold.
-5. Success/fail stay on the application. Process 03 stays CRM. No SIGNAL hop. `CAL_AUTONOMY_ENABLED` stays 0. Hermes stays retired.
+5. Success/fail stay on the application. Process 03 stays CRM. No SIGNAL hop. `PHELAN_AUTONOMY_ENABLED` stays 0. Hermes stays retired.
 6. Tests cover hold vs propose, mocked Resend, no employer send without an employer email.
 
 ## Out of scope

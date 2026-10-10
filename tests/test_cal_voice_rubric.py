@@ -1,6 +1,6 @@
 """Stage 1 Cal voice rubric — golden passes, label-stack fails."""
 from app.services.agent_messaging import build_buyer_variant_body
-from app.services.cal_voice_rubric import score_cal_draft
+from app.services.phelan_voice_rubric import score_cal_draft
 
 
 def test_pfg_golden_passes_rubric_gate():

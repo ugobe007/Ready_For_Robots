@@ -208,7 +208,7 @@ class ScoutLeadBrief:
 
 def _cal_draft_for_company(company: Company) -> tuple[str, str]:
     from app.api.admin_extended import _cal_draft_for_company as build_cal_draft
-    from app.services.cal_autonomy import format_cal_draft_storage
+    from app.services.phelan_autonomy import format_cal_draft_storage
 
     subject, body = build_cal_draft(company, fresh=False)
     return subject, format_cal_draft_storage(subject, body)
@@ -319,7 +319,7 @@ def develop_lead_brief(
         "Book 30-minute discovery to validate budget band and deployment scope.",
     ]
     if pri.tier == "HOT":
-        next_steps.insert(0, "Send Cal outreach within 48 hours while signal is fresh.")
+        next_steps.insert(0, "Send Phelan outreach within 48 hours while signal is fresh.")
 
     evidence = []
     for sig in sigs[:4]:
@@ -668,9 +668,9 @@ def execute_activation(
             continue
 
         if not dry_run:
-            from app.services.cal_autonomy import cal_scheduled_sales_work_enabled
+            from app.services.phelan_autonomy import phelan_scheduled_sales_work_enabled
 
-            include_draft = cal_scheduled_sales_work_enabled()
+            include_draft = phelan_scheduled_sales_work_enabled()
             dev = develop_lead_brief(
                 db, company_id, refresh_inference=True, include_draft=include_draft
             )

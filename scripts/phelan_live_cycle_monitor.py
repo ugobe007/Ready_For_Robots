@@ -15,12 +15,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 def main() -> int:
     from app.database import SessionLocal
     from app.models.outreach import OutreachMessage
-    from app.services.cal_autonomy import run_cal_autonomy_cycle
+    from app.services.phelan_autonomy import run_phelan_autonomy_cycle
 
     started = datetime.now(timezone.utc)
     db = SessionLocal()
     try:
-        r = run_cal_autonomy_cycle(db, dry_run=False)
+        r = run_phelan_autonomy_cycle(db, dry_run=False)
         print("=" * 60)
         print("CAL LIVE CYCLE RESULT")
         print("=" * 60)

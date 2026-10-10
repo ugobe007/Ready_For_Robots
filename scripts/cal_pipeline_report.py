@@ -27,7 +27,7 @@ def main() -> int:
     from app.database import SessionLocal
     from app.models.crm import CrmAccount
     from app.models.outreach import OutreachMessage, OutreachReply
-    from app.services.cal_autonomy import get_cal_autonomy_status
+    from app.services.phelan_autonomy import get_cal_autonomy_status
 
     db = SessionLocal()
     try:

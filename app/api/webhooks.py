@@ -1,4 +1,4 @@
-"""External webhooks for Cal outreach in SCOUT workflows."""
+"""External webhooks for Phelan outreach in SCOUT workflows."""
 from __future__ import annotations
 
 import base64

@@ -18,7 +18,7 @@ def main() -> int:
     from app.api.admin_extended import _hot_warm_companies
     from app.database import SessionLocal
     from app.models.contact import Contact
-    from app.services.cal_autonomy import _cal_buyer_eligible
+    from app.services.phelan_autonomy import _cal_buyer_eligible
     from app.services.outreach_email_inference import looks_like_person_email
 
     db = SessionLocal()

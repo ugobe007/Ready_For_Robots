@@ -1,7 +1,7 @@
 """Cal inline email demo GIF."""
 from pathlib import Path
 
-from app.services.cal_email_demo import (
+from app.services.phelan_email_demo import (
     build_cal_demo_html,
     cal_demo_enabled,
     cal_demo_gif_bytes,

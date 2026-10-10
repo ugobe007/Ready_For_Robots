@@ -1,7 +1,7 @@
 # Hermes ↔ Cal (and local RFR agents)
 
 > **RETIRED 2026-08-26.** Hermes is not a product agent. Cal buyer outreach is not Jobs.
-> `CAL_AUTONOMY_ENABLED=0` in `fly.toml`. See [`hermes_retired.md`](hermes_retired.md).
+> `PHELAN_AUTONOMY_ENABLED=0` in `fly.toml`. See [`hermes_retired.md`](hermes_retired.md).
 
 Historical note: how Hermes research used to correlate with **Cal** (buyer outreach), Scout, and Pipeline.
 
@@ -15,7 +15,7 @@ job-orders / qualify / DMs / news
                                    crm_metadata.hermes_*
         │                                    │
         │                                    ├─► Pipeline UI (Hermes intelligence panel)
-        │                                    ├─► Cal autonomy pool (priority + draft grounding)
+        │                                    ├─► Phelan autonomy pool (priority + draft grounding)
         │                                    └─► Scout / scores (via same HOT/WARM graph)
         │
         └── GET …/market-graph/cal-status ─► Redis heartbeat / autopilot (ops digest)

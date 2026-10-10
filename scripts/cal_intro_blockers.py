@@ -34,7 +34,7 @@ def main() -> int:
     from app.api.admin_extended import _hot_warm_companies
     from app.database import SessionLocal
     from app.models.crm import CrmAccount
-    from app.services.cal_autonomy import _cal_buyer_eligible, resolve_cal_admin_context
+    from app.services.phelan_autonomy import _cal_buyer_eligible, resolve_cal_admin_context
     from app.services.lead_enrichment import (
         address_previously_bounced,
         outreach_recipient_trusted,

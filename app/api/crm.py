@@ -57,7 +57,7 @@ from app.models.company import Company
 from app.models.crm import Team, TeamMember, CrmAccount, CrmEngagement, CrmTask, CrmNote
 from app.models.outreach import OutreachMessage
 from app.services.agent_messaging import REP_OUTREACH_CTA, cal_signature, rep_outreach_signature
-from app.services.cal_insights import pick_cal_insight
+from app.services.phelan_insights import pick_cal_insight
 from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import crm_workflow_intelligence, record_sales_experience
@@ -598,7 +598,7 @@ def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], colla
 def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instruction: str, collateral_policy: str, collateral_links: str | None, company: Optional[Any] = None) -> str:
     """Route to buyer, vendor, or StageGate draft based on account_type and pipeline."""
     if company is not None:
-        from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
+        from app.services.stagegate_crm_bridge import phelan_draft_for_stagegate_company, is_stagegate_company
 
         if is_stagegate_company(company):
             return cal_draft_for_stagegate_company(company)["body"]
@@ -611,7 +611,7 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
 
 def _draft_subject_for_account(acct: CrmAccount, company: Optional[Any] = None) -> str:
     if company is not None:
-        from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
+        from app.services.stagegate_crm_bridge import phelan_draft_for_stagegate_company, is_stagegate_company
 
         if is_stagegate_company(company):
             return cal_draft_for_stagegate_company(company)["subject"]

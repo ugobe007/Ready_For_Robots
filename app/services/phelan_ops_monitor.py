@@ -7,7 +7,7 @@ from sqlalchemy import desc, func
 from sqlalchemy.orm import Session
 
 from app.models.sales_learning import SalesExperienceEvent
-from app.services.cal_assembly_agent import get_cal_assembly_status
+from app.services.phelan_assembly_agent import get_cal_assembly_status
 
 _CONVERSION_EVENT_TYPES = (
     "supply_signup_landing",

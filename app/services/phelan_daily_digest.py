@@ -20,9 +20,9 @@ def get_cal_digest_recipients() -> list[str]:
     explicit = (os.getenv("CAL_DAILY_DIGEST_EMAIL") or "").strip()
     if explicit:
         return _split_emails(explicit)
-    from app.services.cal_autonomy import get_cal_review_email
+    from app.services.phelan_autonomy import get_phelan_review_email
 
-    primary = get_cal_review_email()
+    primary = get_phelan_review_email()
     if primary:
         return [primary]
     admins = (os.getenv("ADMIN_EMAILS") or "").strip()
@@ -45,7 +45,7 @@ def _split_emails(raw: str) -> list[str]:
 
 
 def _redis_client():
-    from app.services.cal_autonomy import _redis_client as client_fn
+    from app.services.phelan_autonomy import _redis_client as client_fn
 
     return client_fn()
 
@@ -128,7 +128,7 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
     from app.models.outreach import OutreachMessage, OutreachReply
     from app.models.sales_agent import SalesAgentAction, SalesOpportunity
     from app.models.sequences import OutreachSequenceEnrollment
-    from app.services.cal_autonomy import get_cal_autonomy_status, resolve_cal_admin_context
+    from app.services.phelan_autonomy import get_cal_autonomy_status, resolve_cal_admin_context
 
     now = datetime.now(timezone.utc)
     since = now - timedelta(hours=max(1, period_hours))
@@ -314,7 +314,7 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
             continue
         needs_you.append(f"  • Book meeting: {opp.title or 'Opportunity'}")
 
-    from app.services.cal_ops_monitor import get_cal_ops_monitor
+    from app.services.phelan_ops_monitor import get_cal_ops_monitor
 
     # Assembly rejections are Cal's buyer/eligibility guard working as intended —
     # it auto-skips OEMs/vendors (e.g. Zebra) that are not real buyers. No send
@@ -354,7 +354,7 @@ def build_cal_daily_digest(db: Session, *, period_hours: int = 24) -> dict[str, 
     # whether the fix is proving out (canary delivering) or the leak persists (canary bounced).
     if deliverability["paused"]:
         try:
-            from app.services.cal_autonomy import _canary_stats
+            from app.services.phelan_autonomy import _canary_stats
 
             deliverability["canary"] = _canary_stats(db, hours=72)
         except Exception:  # noqa: BLE001 — digest must never break on the canary lookup
@@ -585,7 +585,7 @@ def render_cal_daily_digest_text(
     else:
         lines.append(
             "You receive this once per day. Cal sales outreach stays frozen unless "
-            "CAL_AUTONOMY_ENABLED is turned on in production."
+            "PHELAN_AUTONOMY_ENABLED is turned on in production."
         )
     return "\n".join(lines)
 

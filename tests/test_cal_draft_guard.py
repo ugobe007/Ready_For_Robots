@@ -4,9 +4,9 @@ from app.services.agent_messaging import (
     buyer_variant_subject,
     pick_buyer_variant,
 )
-from app.services.cal_assembly_agent import assemble_buyer_outreach
-from app.services.cal_autonomy import cal_buyer_outreach_body
-from app.services.cal_draft_guard import draft_needs_regeneration, is_complete_cal_draft, is_legacy_cal_draft, parse_cal_draft_or_raise
+from app.services.phelan_assembly_agent import assemble_buyer_outreach
+from app.services.phelan_autonomy import phelan_buyer_outreach_body
+from app.services.phelan_draft_guard import draft_needs_regeneration, is_complete_cal_draft, is_legacy_cal_draft, parse_cal_draft_or_raise
 
 _THEATER = (
     "innovation theater",

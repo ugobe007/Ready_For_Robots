@@ -1,7 +1,7 @@
 """Cal prioritizes Hermes-qualified companies in the outreach pool."""
 from types import SimpleNamespace
 
-from app.services.cal_autonomy import (
+from app.services.phelan_autonomy import (
     prioritize_hermes_qualified,
     prioritize_buying_window,
     _hermes_context_reason,

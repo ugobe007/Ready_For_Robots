@@ -68,6 +68,6 @@
 ## Follow-ups
 
 1. Confirm Vercel production URL matches Fly frontend (if custom domain still on Vercel)
-2. Next Cal autonomy cycle regenerates CRM drafts with new templates (stale refresh)
+2. Next Phelan autonomy cycle regenerates CRM drafts with new templates (stale refresh)
 3. After 1–2 weeks of buying-window overlay quality, consider `CAL_INCLUDE_BUYING_WINDOW=1`
 4. Watch signup starts from `/pipeline` this week

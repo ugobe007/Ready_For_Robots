@@ -111,7 +111,7 @@ def refresh_pipeline_surface_caches(db: Session, *, include_humanoid_report: boo
         KEY_PIPELINE_FEED,
         INDUSTRY_SEARCH_CACHE_QUERIES,
     )
-    from app.services.cal_lead_drops import build_cal_lead_drops_preview
+    from app.services.phelan_lead_drops import build_cal_lead_drops_preview
 
     from app.services.homepage_rotation import homepage_rotation_day, homepage_rotation_slot
 

@@ -38,7 +38,7 @@ def _verified_retry(db, limit: int, apply: bool, names: list[str] | None = None)
     from app.models.crm import CrmAccount
     from app.models.outreach import OutreachMessage
     from app.api.admin_extended import _cal_draft_for_company
-    from app.services.cal_autonomy import _cal_buyer_eligible, format_cal_draft_storage
+    from app.services.phelan_autonomy import _cal_buyer_eligible, format_cal_draft_storage
     from app.services.lead_enrichment import company_website_domain, resolve_outreach_email
     from app.services.robot_vendor_names import is_known_robotics_vendor_name
 
@@ -124,7 +124,7 @@ def main() -> int:
     from app.models.company import Company
     from app.models.crm import CrmAccount
     from app.models.outreach import OutreachMessage
-    from app.services.cal_autonomy import _cal_buyer_eligible
+    from app.services.phelan_autonomy import _cal_buyer_eligible
     from app.services.lead_enrichment import company_website_domain
 
     db = SessionLocal()

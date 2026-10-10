@@ -131,7 +131,7 @@ def autostart_stopped_workers() -> dict[str, Any]:
 
 
 # ── Heartbeat (worker side) ─────────────────────────────────────────────────────
-def record_cal_heartbeat(status: str = "alive", extra: Optional[dict[str, Any]] = None) -> bool:
+def record_phelan_heartbeat(status: str = "alive", extra: Optional[dict[str, Any]] = None) -> bool:
     client = _redis_client()
     if not client:
         return False
@@ -192,10 +192,10 @@ def watchdog_status() -> dict[str, Any]:
 # ── Alerting (web side) ─────────────────────────────────────────────────────────
 def _send_alert_email(subject: str, body: str) -> bool:
     try:
-        from app.services.cal_autonomy import get_cal_review_email
+        from app.services.phelan_autonomy import get_phelan_review_email
         from app.services.resend_email import send_email_via_resend
 
-        to_email = get_cal_review_email()
+        to_email = get_phelan_review_email()
         if not to_email:
             logger.warning("[cal-watchdog] no admin email configured; cannot alert")
             return False
@@ -236,12 +236,12 @@ def check_and_alert() -> dict[str, Any]:
 
     # Only alert when Cal is supposed to be running.
     try:
-        from app.services.cal_autonomy import cal_autonomy_enabled
+        from app.services.phelan_autonomy import phelan_autonomy_enabled
 
-        cal_on = cal_autonomy_enabled()
+        cal_on = phelan_autonomy_enabled()
     except Exception:
         cal_on = True
-    scheduled = (os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "1") or "1").strip().lower() not in (
+    scheduled = (os.getenv("ENABLE_SCHEDULED_PHELAN_AUTONOMY", "1") or "1").strip().lower() not in (
         "0", "false", "no",
     )
     if not (cal_on and scheduled):

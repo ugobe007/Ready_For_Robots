@@ -576,7 +576,7 @@ def market_graph_daily_digest_send(
     _auth: dict = Depends(_require_ingest_auth),
 ) -> dict[str, Any]:
     """Send the operator daily digest via Resend. No paid LLM / AI Gateway."""
-    from app.services.cal_daily_digest import send_cal_daily_digest
+    from app.services.phelan_daily_digest import send_cal_daily_digest
 
     result = send_cal_daily_digest(
         db, period_hours=body.period_hours, force=body.force
@@ -910,9 +910,9 @@ def market_graph_video_evidence_seed_targets(
 def market_graph_cal_status(
     _auth: dict = Depends(_require_ingest_auth),
 ) -> dict[str, Any]:
-    """Hermes-readable Cal autonomy snapshot (Redis heartbeat + toggle). Auth: admin/cron."""
+    """Hermes-readable Phelan autonomy snapshot (Redis heartbeat + toggle). Auth: admin/cron."""
     try:
-        from app.services.cal_autonomy import get_cal_autonomy_status
+        from app.services.phelan_autonomy import get_cal_autonomy_status
 
         status = get_cal_autonomy_status()
     except Exception as exc:

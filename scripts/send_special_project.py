@@ -62,7 +62,7 @@ def main() -> None:
         if p is None:
             raise SystemExit(f"project not found: {SLUG}")
 
-        from app.services.cal_email_send import send_cal_email_via_resend
+        from app.services.phelan_email_send import send_cal_email_via_resend
 
         candidates = [t for t in p.targets if _eligible(t)]
         candidates.sort(key=lambda t: t.sort_order)

@@ -2,7 +2,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from app.services.cal_outreach_send import parse_cal_draft, send_cal_intro_email
+from app.services.phelan_outreach_send import parse_cal_draft, send_cal_intro_email
 from app.services.resend_email import ResendEmailError
 
 

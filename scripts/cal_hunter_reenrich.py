@@ -43,7 +43,7 @@ def main() -> int:
 
     from app.models.company import Company
     from app.models.crm import CrmAccount
-    from app.services.cal_autonomy import resolve_cal_admin_context
+    from app.services.phelan_autonomy import resolve_cal_admin_context
     from app.services.hunter_client import hunter_contact_enabled
     from app.services.lead_enrichment import (
         _VERIFIED_EMAIL_SOURCES,

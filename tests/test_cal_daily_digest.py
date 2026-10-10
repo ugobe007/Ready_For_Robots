@@ -1,7 +1,7 @@
 """Tests for Cal daily activity digest email."""
 from datetime import datetime, timezone
 
-from app.services.cal_daily_digest import (
+from app.services.phelan_daily_digest import (
     build_cal_daily_digest,
     digest_in_process_owner,
     get_cal_digest_recipients,
@@ -210,8 +210,8 @@ def test_digest_in_process_owner_worker_only(monkeypatch):
 def test_build_cal_daily_digest_without_db_context(monkeypatch):
     """Smoke test: empty DB session still returns structured digest."""
     monkeypatch.setenv("ADMIN_EMAIL", "ugobe07@gmail.com")
-    monkeypatch.setenv("CAL_AUTONOMY_ENABLED", "0")
-    monkeypatch.setenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "0")
+    monkeypatch.setenv("PHELAN_AUTONOMY_ENABLED", "0")
+    monkeypatch.setenv("ENABLE_SCHEDULED_PHELAN_AUTONOMY", "0")
 
     class FakeQuery:
         def filter(self, *args, **kwargs):

@@ -437,7 +437,7 @@ def _cal_draft_for_company(
 
     from app.api.crm import _draft_subject
     from app.models.crm import CrmAccount as _Acct
-    from app.services.cal_autonomy import cal_buyer_outreach_body
+    from app.services.phelan_autonomy import phelan_buyer_outreach_body
 
     dummy = _Acct(
         name=company.name or "Unknown",
@@ -521,7 +521,7 @@ def _crm_accounts_for_companies(
     *,
     team_id: uuid.UUID | None = None,
 ) -> dict[int, SimpleNamespace]:
-    """Load CRM fields for Cal outreach — scoped to admin outreach team when team_id set."""
+    """Load CRM fields for Phelan outreach — scoped to admin outreach team when team_id set."""
     if not company_ids:
         return {}
     q = (
@@ -590,7 +590,7 @@ def cal_draft_body(
     user: dict = Depends(require_admin),
 ):
     """Return full Cal draft text for one CRM account (lazy-loaded from admin table expand)."""
-    from app.services.cal_draft_guard import draft_needs_regeneration
+    from app.services.phelan_draft_guard import draft_needs_regeneration
 
     acct = db.query(CrmAccount).filter(CrmAccount.id == account_id).first()
     if not acct:
@@ -619,7 +619,7 @@ def cal_draft_body(
     )
     if needs and company:
         from app.services.agent_messaging import pick_buyer_variant, resolve_buyer_variant
-        from app.services.cal_autonomy import format_cal_draft_storage
+        from app.services.phelan_autonomy import format_cal_draft_storage
 
         variant_id = resolve_buyer_variant(company, acct)
         if variant_id is None and (getattr(acct, "account_type", None) or "buyer") == "buyer":
@@ -656,7 +656,7 @@ def patch_cal_draft(
     db: Session = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
-    """Save editorial changes to a Cal outreach draft (admin only)."""
+    """Save editorial changes to a Phelan outreach draft (admin only)."""
     acct = db.query(CrmAccount).filter(CrmAccount.id == account_id).first()
     if not acct:
         raise HTTPException(status_code=404, detail="CRM account not found")
@@ -664,7 +664,7 @@ def patch_cal_draft(
         draft = (body.outreach_draft or "").strip()
         if not draft:
             raise HTTPException(status_code=400, detail="outreach_draft cannot be empty")
-        from app.services.cal_draft_guard import is_complete_cal_draft
+        from app.services.phelan_draft_guard import is_complete_cal_draft
 
         ok, reason = is_complete_cal_draft(draft)
         if not ok:
@@ -702,7 +702,7 @@ def cal_apply_variant(
 ):
     """Rebuild one buyer draft from a selected trust-first variant."""
     from app.services.agent_messaging import BUYER_VARIANTS
-    from app.services.cal_autonomy import format_cal_draft_storage
+    from app.services.phelan_autonomy import format_cal_draft_storage
 
     variant_id = (body.variant_id or "").strip()
     if variant_id not in BUYER_VARIANTS:
@@ -1007,7 +1007,7 @@ def cal_bulk_draft(
     user: dict = Depends(require_admin),
 ):
     """
-    Draft Cal outreach emails for all HOT+WARM prospects using Cal's template voice.
+    Draft Phelan outreach emails for all HOT+WARM prospects using Cal's template voice.
     No LLM calls — uses _draft_body directly. Creates CRM accounts under the admin
     team if they don't already exist. Sets a role inbox (e.g. operations@domain) as default contact_email.
     """
@@ -1039,7 +1039,7 @@ def cal_bulk_draft(
         try:
             acct = existing.get(company.id)
             if acct and acct.outreach_draft and not body.regenerate:
-                from app.services.cal_draft_guard import draft_needs_regeneration
+                from app.services.phelan_draft_guard import draft_needs_regeneration
 
                 account_type = getattr(acct, "account_type", None) or "buyer"
                 if not draft_needs_regeneration(acct.outreach_draft, account_type=account_type)[0]:
@@ -1071,7 +1071,7 @@ def cal_bulk_draft(
             # here permanently blocks the verified-contact upgrade and becomes a bounce.
             # Leave it empty; the send gate resolves through the full verified waterfall.
 
-            from app.services.cal_autonomy import format_cal_draft_storage
+            from app.services.phelan_autonomy import format_cal_draft_storage
 
             # Record which trust-first angle this draft used so the send tag and the
             # weekly learning report stay consistent with the deterministic pick.
@@ -1103,7 +1103,7 @@ def cal_bulk_draft(
 
 @router.get("/cal/autonomy-status")
 def cal_autonomy_status(_user: dict = Depends(require_admin)):
-    from app.services.cal_autonomy import get_cal_autonomy_status
+    from app.services.phelan_autonomy import get_cal_autonomy_status
 
     return get_cal_autonomy_status()
 
@@ -1124,8 +1124,8 @@ def cal_activity(
     from app.models.outreach import OutreachMessage, OutreachReply
     from app.models.sales_agent import SalesAgentAction, SalesOpportunity
     from app.models.sequences import OutreachSequenceEnrollment
-    from app.services.cal_autonomy import get_cal_autonomy_status, resolve_cal_admin_context
-    from app.services.cal_ops_monitor import get_cal_ops_monitor
+    from app.services.phelan_autonomy import get_cal_autonomy_status, resolve_cal_admin_context
+    from app.services.phelan_ops_monitor import get_cal_ops_monitor
 
     cap = max(10, min(limit, 100))
     now = datetime.now(timezone.utc)
@@ -1351,7 +1351,7 @@ def cal_ops_monitor(
     limit: int = Query(25, ge=1, le=100),
     _user: dict = Depends(require_admin),
 ):
-    from app.services.cal_ops_monitor import get_cal_ops_monitor
+    from app.services.phelan_ops_monitor import get_cal_ops_monitor
 
     return get_cal_ops_monitor(db, limit=limit)
 
@@ -1366,9 +1366,9 @@ def cal_autonomy_run(
     db: Session = Depends(get_db),
     user: dict = Depends(require_admin),
 ):
-    from app.services.cal_autonomy import run_cal_autonomy_cycle
+    from app.services.phelan_autonomy import run_phelan_autonomy_cycle
 
-    return run_cal_autonomy_cycle(
+    return run_phelan_autonomy_cycle(
         db,
         dry_run=body.dry_run,
         admin_uid=uuid.UUID(user["uid"]),
@@ -1388,7 +1388,7 @@ def cal_operator_dashboard(
     from app.api.admin import workflow_actions
     from app.models.crm import CrmAccount
     from app.models.sales_agent import SalesOpportunity
-    from app.services.cal_autonomy import cal_buyer_outreach_body, get_cal_autonomy_status
+    from app.services.phelan_autonomy import phelan_buyer_outreach_body, get_cal_autonomy_status
 
     uid = uuid.UUID(user["uid"])
     team = _admin_team(db, uid, user.get("email") or "")
@@ -1456,7 +1456,7 @@ def cal_operator_dashboard(
         "ai_assistants": [
             {
                 "id": "cal_autonomy",
-                "name": "Cal autonomy",
+                "name": "Phelan autonomy",
                 "role": "Drafts HOT/WARM buyer emails, sends on schedule, runs follow-up sequences",
                 "review_url": "/admin#cal-outreach",
                 "status": "active" if get_cal_autonomy_status().get("enabled") else "paused",
@@ -1596,9 +1596,9 @@ def cal_autonomy_toggle(
     _user: dict = Depends(require_admin),
 ):
     """Runtime on/off for Cal worker autopilot (Redis override; env default remains on Fly)."""
-    from app.services.cal_autonomy import get_cal_autonomy_status, set_cal_autonomy_runtime_override
+    from app.services.phelan_autonomy import get_cal_autonomy_status, set_phelan_autonomy_runtime_override
 
-    if not set_cal_autonomy_runtime_override(body.enabled):
+    if not set_phelan_autonomy_runtime_override(body.enabled):
         from fastapi import HTTPException
 
         raise HTTPException(
@@ -1620,7 +1620,7 @@ def cal_daily_digest_send(
     _user: dict = Depends(require_admin),
 ):
     """Send the plain-text Cal daily activity email now (for testing or catch-up)."""
-    from app.services.cal_daily_digest import send_cal_daily_digest
+    from app.services.phelan_daily_digest import send_cal_daily_digest
 
     return send_cal_daily_digest(db, period_hours=body.period_hours, force=body.force)
 
@@ -1639,21 +1639,21 @@ def communication_learning_send(
 ):
     """Build (and optionally email) the weekly per-angle learning report now."""
     from app.services.communication_learning_report import (
-        build_communication_learning_report,
-        render_communication_learning_text,
-        send_communication_learning_report,
+        build_phelan_learning_report,
+        render_phelan_learning_text,
+        send_phelan_learning_report,
     )
 
     if body.preview_only:
-        report = build_communication_learning_report(db, period_hours=body.period_hours)
+        report = build_phelan_learning_report(db, period_hours=body.period_hours)
         return {
             "sent": False,
             "preview": True,
             "totals": report.get("totals"),
             "variants": report.get("variants"),
-            "body_text": render_communication_learning_text(report),
+            "body_text": render_phelan_learning_text(report),
         }
-    return send_communication_learning_report(
+    return send_phelan_learning_report(
         db, period_hours=body.period_hours, force=body.force
     )
 
@@ -1666,10 +1666,10 @@ def communication_learning_report(
 ):
     """Live per-angle learning scoreboard for the admin UI (reply rate by angle
     and by industry). Read-only; no email is sent."""
-    from app.services.communication_learning_report import build_communication_learning_report
+    from app.services.communication_learning_report import build_phelan_learning_report
 
     ph = max(1, min(int(period_hours or 168), 24 * 90))
-    return build_communication_learning_report(db, period_hours=ph)
+    return build_phelan_learning_report(db, period_hours=ph)
 
 
 @router.get("/supply/autonomy-status")
@@ -1704,11 +1704,11 @@ def cal_bulk_send(
     user: dict = Depends(require_admin),
 ):
     """
-    Send Cal outreach emails for all HOT+WARM prospects that have a draft but
+    Send Phelan outreach emails for all HOT+WARM prospects that have a draft but
     have NOT been sent yet.  Uses Resend under the hood.  Hard-caps at
     `body.limit` to prevent accidental mass-sends.
     """
-    from app.services.cal_outreach_send import enroll_cal_followup, parse_cal_draft, send_cal_intro_email
+    from app.services.phelan_outreach_send import enroll_cal_followup, parse_cal_draft, send_cal_intro_email
     from app.services.resend_email import ResendEmailError
 
     uid = uuid.UUID(user["uid"])
@@ -1757,7 +1757,7 @@ def cal_bulk_send(
         if not acct or not acct.outreach_draft:
             skipped_no_draft += 1
             continue
-        from app.services.cal_draft_guard import is_complete_cal_draft
+        from app.services.phelan_draft_guard import is_complete_cal_draft
 
         draft_ok, draft_reason = is_complete_cal_draft(acct.outreach_draft)
         if not draft_ok:
@@ -2158,7 +2158,7 @@ def cal_send_one(
     user: dict = Depends(require_admin),
 ):
     """Send a single drafted Cal email by CRM account ID."""
-    from app.services.cal_outreach_send import enroll_cal_followup, parse_cal_draft, send_cal_intro_email
+    from app.services.phelan_outreach_send import enroll_cal_followup, parse_cal_draft, send_cal_intro_email
     from app.services.resend_email import ResendEmailError
     import uuid as _uuid
 
@@ -2180,7 +2180,7 @@ def cal_send_one(
         raise HTTPException(status_code=400, detail="Draft not approved — approve before sending")
 
     if (body.outreach_draft or "").strip():
-        from app.services.cal_draft_guard import is_complete_cal_draft
+        from app.services.phelan_draft_guard import is_complete_cal_draft
 
         draft_candidate = body.outreach_draft.strip()
         ok, reason = is_complete_cal_draft(draft_candidate)
@@ -2224,7 +2224,7 @@ def cal_send_one(
         if not ok:
             raise HTTPException(status_code=400, detail=f"Email failed verification ({reason}): {to_email}")
 
-    from app.services.cal_draft_guard import is_complete_cal_draft, parse_cal_draft_or_raise
+    from app.services.phelan_draft_guard import is_complete_cal_draft, parse_cal_draft_or_raise
 
     ok, reason = is_complete_cal_draft(acct.outreach_draft)
     if not ok:
@@ -2353,7 +2353,7 @@ def scout_bulk_activate(
 ):
     """
     Activate SCOUT for all HOT/WARM prospects that don't yet have an activation.
-    Auto-drafts Cal outreach in agent voice immediately — no per-prospect click needed.
+    Auto-drafts Phelan outreach in agent voice immediately — no per-prospect click needed.
     """
     from app.models.scout_chat import ScoutActivation, ScoutSession
     from app.models.crm import CrmAccount, Team, TeamMember

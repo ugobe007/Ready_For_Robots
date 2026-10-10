@@ -12,8 +12,8 @@ from app.models.company import Company
 from app.models.sales_learning import SalesExperienceEvent
 from app.models.score import Score
 from app.models.signal import Signal
-from app.services.cal_ops_monitor import get_cal_ops_monitor, record_cal_assembly_rejection
-from app.services.cal_pipeline_enrichment import enrichment_supply_eligible
+from app.services.phelan_ops_monitor import get_cal_ops_monitor, record_cal_assembly_rejection
+from app.services.phelan_pipeline_enrichment import enrichment_supply_eligible
 from app.services.supply_autonomy import append_signup_cta, build_supply_tracking
 from app.services.supply_conversion import parse_supply_attribution, record_supply_signup_landing
 import app.models  # noqa: F401

@@ -265,7 +265,7 @@ def _start_web_cache_rehydrate() -> None:
 
 
 def _cal_watchdog_loop() -> None:
-    from app.services.cal_watchdog import check_and_alert
+    from app.services.phelan_watchdog import check_and_alert
 
     first_delay = float(os.getenv("CAL_WATCHDOG_FIRST_DELAY_MINUTES", "12") or "12")
     time.sleep(max(60, first_delay * 60))
@@ -281,7 +281,7 @@ def _cal_watchdog_loop() -> None:
 def _start_cal_watchdog() -> None:
     """Web (always-on) watches the worker's Cal heartbeat and emails on outage."""
     from app.runtime_role import is_web_process
-    from app.services.cal_watchdog import watchdog_enabled
+    from app.services.phelan_watchdog import watchdog_enabled
 
     if not is_web_process():
         return
@@ -883,12 +883,12 @@ def _start_scheduled_data_quality():
 def _cal_heartbeat_sleep(total_seconds: float, status: str = "alive") -> None:
     """Sleep in short chunks, refreshing the Cal heartbeat each chunk so the
     web-side watchdog can detect a dead worker within minutes (not hours)."""
-    from app.services.cal_watchdog import record_cal_heartbeat
+    from app.services.phelan_watchdog import record_phelan_heartbeat
 
     remaining = max(0.0, float(total_seconds))
     chunk = 300.0  # 5 min
     while remaining > 0:
-        record_cal_heartbeat(status)
+        record_phelan_heartbeat(status)
         nap = min(chunk, remaining)
         time.sleep(nap)
         remaining -= nap
@@ -896,35 +896,35 @@ def _cal_heartbeat_sleep(total_seconds: float, status: str = "alive") -> None:
 
 def _scheduled_cal_autonomy_loop():
     from app.database import SessionLocal
-    from app.services.cal_autonomy import cal_autonomy_enabled, run_cal_autonomy_cycle
-    from app.services.cal_watchdog import record_cal_heartbeat
+    from app.services.phelan_autonomy import phelan_autonomy_enabled, run_phelan_autonomy_cycle
+    from app.services.phelan_watchdog import record_phelan_heartbeat
 
-    record_cal_heartbeat("starting")
-    delay_min = float(os.getenv("CAL_AUTONOMY_FIRST_RUN_DELAY_MINUTES", "20") or "20")
+    record_phelan_heartbeat("starting")
+    delay_min = float(os.getenv("PHELAN_AUTONOMY_FIRST_RUN_DELAY_MINUTES", "20") or "20")
     _cal_heartbeat_sleep(max(60, delay_min * 60), status="warming_up")
     while True:
-        record_cal_heartbeat("tick")
-        if not cal_autonomy_enabled():
+        record_phelan_heartbeat("tick")
+        if not phelan_autonomy_enabled():
             _cal_heartbeat_sleep(3600, status="disabled")
             continue
         try:
             with SessionLocal() as db:
-                result = run_cal_autonomy_cycle(db)
-            record_cal_heartbeat(
+                result = run_phelan_autonomy_cycle(db)
+            record_phelan_heartbeat(
                 "cycle_ok",
                 {"sent": result.get("sent"), "drafted": result.get("drafted")},
             )
             logger.info(
-                "Cal autonomy cycle: status=%s drafted=%s sent=%s format_notified=%s",
+                "Phelan autonomy cycle: status=%s drafted=%s sent=%s format_notified=%s",
                 result.get("status"),
                 result.get("drafted"),
                 result.get("sent"),
                 result.get("format_review_notified"),
             )
         except Exception as exc:
-            record_cal_heartbeat("cycle_error")
-            logger.exception("Cal autonomy cycle failed: %s", exc)
-        interval_hours = float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "6") or "6")
+            record_phelan_heartbeat("cycle_error")
+            logger.exception("Phelan autonomy cycle failed: %s", exc)
+        interval_hours = float(os.getenv("PHELAN_AUTONOMY_EVERY_HOURS", "6") or "6")
         _cal_heartbeat_sleep(max(1800, int(interval_hours * 3600)))
 
 
@@ -932,16 +932,16 @@ def _start_scheduled_cal_autonomy():
     from app.runtime_role import is_worker_process
 
     if not is_worker_process():
-        logger.info("In-app Cal autonomy skipped on web process")
+        logger.info("In-app Phelan autonomy skipped on web process")
         return
-    if os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "1").strip().lower() in (
+    if os.getenv("ENABLE_SCHEDULED_PHELAN_AUTONOMY", "1").strip().lower() in (
         "0", "false", "no"
     ):
-        logger.info("In-app Cal autonomy disabled")
+        logger.info("In-app Phelan autonomy disabled")
         return
     enabled = (
         os.getenv("FLY_APP_NAME")
-        or os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "").lower() in ("1", "true", "yes")
+        or os.getenv("ENABLE_SCHEDULED_PHELAN_AUTONOMY", "").lower() in ("1", "true", "yes")
     )
     if not enabled:
         return
@@ -951,10 +951,10 @@ def _start_scheduled_cal_autonomy():
         name="cal-autonomy",
     )
     t.start()
-    print("[cal-autonomy] scheduler thread started", flush=True)
+    print("[phelan-autonomy] scheduler thread started", flush=True)
     logger.info(
-        "In-app Cal autonomy thread started (every %s hours)",
-        os.getenv("CAL_AUTONOMY_EVERY_HOURS", "6"),
+        "In-app Phelan autonomy thread started (every %s hours)",
+        os.getenv("PHELAN_AUTONOMY_EVERY_HOURS", "6"),
     )
 
 
@@ -987,7 +987,7 @@ def _scheduled_cal_daily_digest_loop():
     from datetime import datetime, timezone
 
     from app.database import SessionLocal
-    from app.services.cal_daily_digest import (
+    from app.services.phelan_daily_digest import (
         cal_daily_digest_enabled,
         next_digest_run_utc,
         send_cal_daily_digest,
@@ -1019,7 +1019,7 @@ def _scheduled_cal_daily_digest_loop():
 
 
 def _start_scheduled_cal_daily_digest():
-    from app.services.cal_daily_digest import digest_in_process_owner
+    from app.services.phelan_daily_digest import digest_in_process_owner
 
     owner = digest_in_process_owner()
     if not owner:
@@ -1040,7 +1040,7 @@ def _start_scheduled_cal_daily_digest():
         name="cal-daily-digest",
     )
     t.start()
-    print("[cal-daily-digest] scheduler thread started", flush=True)
+    print("[phelan-daily-digest] scheduler thread started", flush=True)
     logger.info(
         "In-app Cal daily digest thread started (daily at %s:%02d UTC)",
         os.getenv("CAL_DAILY_DIGEST_HOUR_UTC", "15"),
@@ -1053,8 +1053,8 @@ def _scheduled_communication_learning_loop():
 
     from app.database import SessionLocal
     from app.services.communication_learning_report import (
-        communication_learning_enabled,
-        send_communication_learning_report,
+        phelan_learning_enabled,
+        send_phelan_learning_report,
     )
 
     # Weekly cadence. Interval keeps it simple (no day-of-week math); first run is
@@ -1062,17 +1062,17 @@ def _scheduled_communication_learning_loop():
     interval = max(3600, int(os.getenv("CAL_COMM_LEARNING_INTERVAL_HOURS", "168") or "168") * 3600)
     time.sleep(int(os.getenv("CAL_COMM_LEARNING_FIRST_DELAY_SEC", "900") or "900"))
     while True:
-        if communication_learning_enabled():
+        if phelan_learning_enabled():
             try:
                 with SessionLocal() as db:
-                    result = send_communication_learning_report(db)
+                    result = send_phelan_learning_report(db)
                 logger.info(
-                    "Cal communication learning report: sent=%s reason=%s",
+                    "Phelan communication learning report: sent=%s reason=%s",
                     result.get("sent"),
                     result.get("reason"),
                 )
             except Exception as exc:
-                logger.exception("Cal communication learning report failed: %s", exc)
+                logger.exception("Phelan communication learning report failed: %s", exc)
         time.sleep(interval)
 
 
@@ -1080,14 +1080,14 @@ def _start_scheduled_communication_learning():
     from app.runtime_role import is_worker_process
 
     if not is_worker_process():
-        logger.info("In-app Cal communication learning skipped on web process")
+        logger.info("In-app Phelan communication learning skipped on web process")
         return
-    if os.getenv("ENABLE_SCHEDULED_CAL_COMM_LEARNING", "1").strip().lower() in ("0", "false", "no"):
-        logger.info("In-app Cal communication learning disabled")
+    if os.getenv("ENABLE_SCHEDULED_PHELAN_COMM_LEARNING", "1").strip().lower() in ("0", "false", "no"):
+        logger.info("In-app Phelan communication learning disabled")
         return
     if not (
         os.getenv("FLY_APP_NAME")
-        or os.getenv("ENABLE_SCHEDULED_CAL_COMM_LEARNING", "").lower() in ("1", "true", "yes")
+        or os.getenv("ENABLE_SCHEDULED_PHELAN_COMM_LEARNING", "").lower() in ("1", "true", "yes")
     ):
         return
     t = threading.Thread(
@@ -1096,8 +1096,8 @@ def _start_scheduled_communication_learning():
         name="cal-comm-learning",
     )
     t.start()
-    print("[cal-comm-learning] scheduler thread started", flush=True)
-    logger.info("In-app Cal communication learning thread started (weekly)")
+    print("[phelan-comm-learning] scheduler thread started", flush=True)
+    logger.info("In-app Phelan communication learning thread started (weekly)")
 
 
 def _newsletter_publish_hour_utc() -> int:

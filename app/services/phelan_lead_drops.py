@@ -115,7 +115,7 @@ def _cal_prompt_for_tier(tier: str, company_name: str) -> str:
 def _recommended_action(tier: str) -> str:
     t = (tier or "").upper()
     if t == "HOT":
-        return "Send Cal outreach within 48 hours while the signal is fresh."
+        return "Send Phelan outreach within 48 hours while the signal is fresh."
     if t == "WARM":
         return "Book a 30-minute discovery to validate budget and deployment scope."
     return "Track only — wait for stronger intent."

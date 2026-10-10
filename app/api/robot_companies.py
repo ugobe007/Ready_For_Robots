@@ -40,10 +40,10 @@ from app.services.agent_messaging import (
     cal_signature,
     cal_vendor_match_paragraph,
 )
-from app.services.cal_insights import pick_cal_insight
+from app.services.phelan_insights import pick_cal_insight
 from app.services.company_domain import normalize_website_domain
 from app.services.email_templates import get_email_template
-from app.services.cal_email_send import send_cal_email_via_resend
+from app.services.phelan_email_send import send_cal_email_via_resend
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import record_sales_experience
 from app.services.shared_api_cache import shared_cache_get, shared_cache_set
@@ -1233,7 +1233,7 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]], *, for
         robot_type=getattr(rc, "robot_type", None),
         allow_humor=True,
     )
-    from app.services.agent_messaging import cal_vendor_match_paragraph
+    from app.services.agent_messaging import phelan_vendor_match_paragraph
 
     body = f"""Hi,
 

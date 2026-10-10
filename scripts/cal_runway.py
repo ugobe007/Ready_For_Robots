@@ -16,7 +16,7 @@ def main() -> int:
     from app.api.admin_extended import _hot_warm_companies
     from app.database import SessionLocal
     from app.models.crm import CrmAccount
-    from app.services.cal_autonomy import _cal_buyer_eligible
+    from app.services.phelan_autonomy import _cal_buyer_eligible
 
     db = SessionLocal()
     try:

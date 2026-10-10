@@ -1,17 +1,17 @@
-"""Cal autonomy — review email resolution and template fingerprint."""
+"""Phelan autonomy — review email resolution and template fingerprint."""
 from __future__ import annotations
 
 import os
 
 import pytest
 
-from app.services.cal_autonomy import (
+from app.services.phelan_autonomy import (
     _cal_buyer_eligible,
     cal_buyer_outreach_body,
-    cal_buyer_sales_enabled,
+    phelan_buyer_sales_enabled,
     format_cal_draft_storage,
     get_cal_autonomy_status,
-    get_cal_review_email,
+    get_phelan_review_email,
     outreach_template_fingerprint,
     prioritize_unsent,
 )
@@ -111,13 +111,13 @@ def test_prioritize_unsent_stable_when_all_unsent():
 def test_get_cal_review_email_prefers_admin_email(monkeypatch):
     monkeypatch.setenv("ADMIN_EMAIL", "ops@example.com")
     monkeypatch.setenv("ADMIN_EMAILS", "other@example.com")
-    assert get_cal_review_email() == "ops@example.com"
+    assert get_phelan_review_email() == "ops@example.com"
 
 
 def test_get_cal_review_email_falls_back_to_admin_emails(monkeypatch):
     monkeypatch.delenv("ADMIN_EMAIL", raising=False)
     monkeypatch.setenv("ADMIN_EMAILS", "first@example.com,second@example.com")
-    assert get_cal_review_email() == "first@example.com"
+    assert get_phelan_review_email() == "first@example.com"
 
 
 def test_outreach_template_fingerprint_stable(monkeypatch):
@@ -144,7 +144,7 @@ def test_cal_buyer_outreach_body_mentions_cal():
 
 
 def test_cal_vendor_outreach_body_sherpa_tone():
-    from app.services.cal_autonomy import cal_vendor_outreach_body
+    from app.services.phelan_autonomy import phelan_vendor_outreach_body
 
     body = cal_vendor_outreach_body(
         type("Co", (), {"name": "DexMate Robotics", "industry": "Logistics"})(),
@@ -156,10 +156,10 @@ def test_cal_vendor_outreach_body_sherpa_tone():
 
 
 def test_cal_buyer_sales_disabled_by_default(monkeypatch):
-    monkeypatch.delenv("CAL_BUYER_SALES_ENABLED", raising=False)
-    monkeypatch.setenv("CAL_AUTONOMY_ENABLED", "0")
-    monkeypatch.setenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "0")
-    assert cal_buyer_sales_enabled() is False
+    monkeypatch.delenv("PHELAN_BUYER_SALES_ENABLED", raising=False)
+    monkeypatch.setenv("PHELAN_AUTONOMY_ENABLED", "0")
+    monkeypatch.setenv("ENABLE_SCHEDULED_PHELAN_AUTONOMY", "0")
+    assert phelan_buyer_sales_enabled() is False
     status = get_cal_autonomy_status()
     assert status["buyer_sales_enabled"] is False
     assert status["scheduled_drafts_paused"] is True
@@ -169,10 +169,10 @@ def test_cal_buyer_sales_disabled_by_default(monkeypatch):
 
 
 def test_cal_buyer_sales_enabled_when_flagged(monkeypatch):
-    monkeypatch.setenv("CAL_BUYER_SALES_ENABLED", "1")
+    monkeypatch.setenv("PHELAN_BUYER_SALES_ENABLED", "1")
     monkeypatch.setenv("CAL_AUTONOMY_SEND_LIMIT", "25")
     monkeypatch.setenv("CAL_AUTONOMY_DRAFT_BATCH", "100")
-    assert cal_buyer_sales_enabled() is True
+    assert phelan_buyer_sales_enabled() is True
     status = get_cal_autonomy_status()
     assert status["buyer_sales_enabled"] is True
     assert status["send_limit"] == 25

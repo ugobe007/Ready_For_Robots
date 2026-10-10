@@ -18,7 +18,7 @@ def main() -> int:
     args = parser.parse_args()
 
     from app.database import SessionLocal
-    from app.services.cal_daily_digest import build_cal_daily_digest, send_cal_daily_digest
+    from app.services.phelan_daily_digest import build_cal_daily_digest, send_cal_daily_digest
 
     with SessionLocal() as db:
         if args.preview:

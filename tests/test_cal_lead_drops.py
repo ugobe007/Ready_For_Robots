@@ -1,5 +1,5 @@
 """Cal lead drops — preview cache builder."""
-from app.services.cal_lead_drops import (
+from app.services.phelan_lead_drops import (
     _cal_personal_observation,
     _cal_prompt_for_tier,
     _recommended_action,

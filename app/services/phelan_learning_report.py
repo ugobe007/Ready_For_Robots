@@ -24,7 +24,7 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
-_REDIS_KEY = "cal:comm_learning:last_sent_date"
+_REDIS_KEY = "phelan:comm_learning:last_sent_date"
 _SITE = (os.getenv("PUBLIC_SITE_URL") or "https://readyforrobots.com").rstrip("/")
 
 _POSITIVE_INTENTS = ("interested", "meeting", "pricing", "referral")
@@ -36,7 +36,7 @@ _MIN_SENDS_PER_ANGLE_FOR_LEXICON = 3
 
 
 def _redis_client():
-    from app.services.cal_autonomy import _redis_client as client_fn
+    from app.services.phelan_autonomy import _redis_client as client_fn
 
     return client_fn()
 
@@ -45,7 +45,7 @@ def _pct(part: int, whole: int) -> float:
     return round(100.0 * part / whole, 1) if whole else 0.0
 
 
-def build_communication_learning_report(db: Session, *, period_hours: int = 168) -> dict[str, Any]:
+def build_phelan_learning_report(db: Session, *, period_hours: int = 168) -> dict[str, Any]:
     """Aggregate intro sends and their classified replies by trust-first angle."""
     from app.models.crm import CrmAccount
     from app.models.outreach import OutreachMessage, OutreachReply
@@ -289,14 +289,14 @@ def build_communication_learning_report(db: Session, *, period_hours: int = 168)
     }
 
 
-def render_communication_learning_text(report: dict[str, Any]) -> str:
+def render_phelan_learning_text(report: dict[str, Any]) -> str:
     days = round((report.get("period_hours") or 168) / 24)
     t = report.get("totals") or {}
     h = report.get("health") or {}
     sent_n = t.get("sent", 0)
 
     lines = [
-        f"Cal communication learning report — last {days}d",
+        f"Phelan communication learning report — last {days}d",
         "",
         "How to read this: directional signal, not statistical proof. At our send "
         "volume, treat these as hints about which angle earns trust — not a verdict. "
@@ -417,12 +417,12 @@ def render_communication_learning_text(report: dict[str, Any]) -> str:
 
 
 def get_learning_report_recipients() -> list[str]:
-    from app.services.cal_daily_digest import get_cal_digest_recipients
+    from app.services.phelan_daily_digest import get_cal_digest_recipients
 
     return get_cal_digest_recipients()
 
 
-def send_communication_learning_report(
+def send_phelan_learning_report(
     db: Session, *, period_hours: int = 168, force: bool = False
 ) -> dict[str, Any]:
     """Email the weekly learning report. Skips if already sent today unless force."""
@@ -439,8 +439,8 @@ def send_communication_learning_report(
         except Exception:
             pass
 
-    report = build_communication_learning_report(db, period_hours=period_hours)
-    body = render_communication_learning_text(report)
+    report = build_phelan_learning_report(db, period_hours=period_hours)
+    body = render_phelan_learning_text(report)
     days = round(period_hours / 24)
 
     from app.services.resend_email import ResendEmailError, send_email_via_resend
@@ -448,13 +448,13 @@ def send_communication_learning_report(
     try:
         result = send_email_via_resend(
             to_email=recipients,
-            subject=f"Cal learning report — last {days}d ({report['totals']['positive']} positive replies)",
+            subject=f"Phelan learning report — last {days}d ({report['totals']['positive']} positive replies)",
             body_text=body,
-            from_display_name="Ready For Robots · Cal ops",
+            from_display_name="Ready For Robots · Phelan ops",
             idempotency_key=f"cal-comm-learning-{today}",
         )
     except ResendEmailError as exc:
-        logger.warning("Cal communication learning report email failed: %s", exc)
+        logger.warning("Phelan communication learning report email failed: %s", exc)
         return {"sent": False, "reason": str(exc), "recipients": recipients}
 
     if client is not None:
@@ -472,7 +472,7 @@ def send_communication_learning_report(
     }
 
 
-def communication_learning_enabled() -> bool:
-    if os.getenv("CAL_COMM_LEARNING_ENABLED", "").strip().lower() in ("0", "false", "no"):
+def phelan_learning_enabled() -> bool:
+    if os.getenv("PHELAN_COMM_LEARNING_ENABLED", "").strip().lower() in ("0", "false", "no"):
         return False
-    return os.getenv("ENABLE_SCHEDULED_CAL_COMM_LEARNING", "1").strip().lower() in ("1", "true", "yes")
+    return os.getenv("ENABLE_SCHEDULED_PHELAN_COMM_LEARNING", "1").strip().lower() in ("1", "true", "yes")

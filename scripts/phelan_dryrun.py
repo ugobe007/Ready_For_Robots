@@ -1,4 +1,4 @@
-"""Preview one Cal autonomy cycle without sending (dry-run). Read-only."""
+"""Preview one Phelan autonomy cycle without sending (dry-run). Read-only."""
 from __future__ import annotations
 
 import sys
@@ -9,13 +9,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 def main() -> int:
     from app.database import SessionLocal
-    from app.services.cal_autonomy import run_cal_autonomy_cycle
+    from app.services.phelan_autonomy import run_phelan_autonomy_cycle
 
     import json
 
     db = SessionLocal()
     try:
-        r = run_cal_autonomy_cycle(db, dry_run=True)
+        r = run_phelan_autonomy_cycle(db, dry_run=True)
         print("=" * 54)
         print("CAL DRY-RUN CYCLE PREVIEW")
         print("=" * 54)

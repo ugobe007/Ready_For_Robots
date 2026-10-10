@@ -5,7 +5,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from app.services import cal_watchdog
+from app.services import phelan_watchdog
 
 
 class FakeRedis:
@@ -28,8 +28,8 @@ def fake(monkeypatch):
     r = FakeRedis()
     monkeypatch.setattr(cal_watchdog, "_redis_client", lambda: r)
     monkeypatch.setenv("CAL_WATCHDOG_ENABLED", "1")
-    monkeypatch.setenv("CAL_AUTONOMY_ENABLED", "1")
-    monkeypatch.setenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "1")
+    monkeypatch.setenv("PHELAN_AUTONOMY_ENABLED", "1")
+    monkeypatch.setenv("ENABLE_SCHEDULED_PHELAN_AUTONOMY", "1")
     monkeypatch.setenv("CAL_WATCHDOG_STALE_MINUTES", "30")
     return r
 
@@ -47,7 +47,7 @@ def _write_heartbeat(fake, *, minutes_ago=0.0, status="tick"):
 
 
 def test_record_and_age(fake):
-    assert cal_watchdog.record_cal_heartbeat("tick") is True
+    assert cal_watchdog.record_phelan_heartbeat("tick") is True
     age = cal_watchdog.cal_heartbeat_age_seconds()
     assert age is not None and age < 5
 
@@ -106,7 +106,7 @@ def test_recovery_notice_after_alert(fake, sent):
 
 
 def test_skips_when_cal_disabled(fake, sent, monkeypatch):
-    monkeypatch.setenv("CAL_AUTONOMY_ENABLED", "0")
+    monkeypatch.setenv("PHELAN_AUTONOMY_ENABLED", "0")
     _write_heartbeat(fake, minutes_ago=90)
     res = cal_watchdog.check_and_alert()
     assert res["checked"] is False

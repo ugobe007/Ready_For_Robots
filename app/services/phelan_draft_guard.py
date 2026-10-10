@@ -1,9 +1,9 @@
-"""Validate Cal outreach drafts before save/send — blocks truncated admin previews."""
+"""Validate Phelan outreach drafts before save/send — blocks truncated admin previews."""
 from __future__ import annotations
 
 import re
 
-from app.services.cal_persona import CAL_BANNED_PHRASES
+from app.services.phelan_persona import CAL_BANNED_PHRASES
 
 _MIN_DRAFT_CHARS = 280
 _COMPLETE_MARKERS = (
@@ -153,7 +153,7 @@ def draft_needs_regeneration(draft: str | None, *, account_type: str = "buyer") 
 
 def parse_cal_draft_or_raise(draft: str | None, fallback_name: str) -> tuple[str, str]:
     """Parse subject/body and reject incomplete stored drafts."""
-    from app.services.cal_outreach_send import parse_cal_draft
+    from app.services.phelan_outreach_send import parse_cal_draft
 
     ok, reason = is_complete_cal_draft(draft)
     if not ok:

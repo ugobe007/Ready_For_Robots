@@ -1,4 +1,4 @@
-"""Cal autonomous outreach — draft, refresh, send, and format review notifications."""
+"""Phelan autonomous outreach — draft, refresh, send, and format review notifications."""
 from __future__ import annotations
 
 import hashlib
@@ -14,13 +14,13 @@ from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
 
-_REDIS_FP_KEY = "cal:outreach:template_fingerprint"
-_REDIS_AUTONOMY_KEY = "cal:autonomy:runtime_enabled"
+_REDIS_FP_KEY = "phelan:outreach:template_fingerprint"
+_REDIS_AUTONOMY_KEY = "phelan:autonomy:runtime_enabled"
 
 
-def get_cal_review_email() -> Optional[str]:
+def get_phelan_review_email() -> Optional[str]:
     """Operator inbox for Cal format reviews (ADMIN_EMAIL on Fly)."""
-    for key in ("ADMIN_EMAIL", "CAL_REVIEW_EMAIL", "HARNESS_NOTIFY_EMAIL"):
+    for key in ("ADMIN_EMAIL", "PHELAN_REVIEW_EMAIL", "HARNESS_NOTIFY_EMAIL"):
         raw = (os.getenv(key) or "").strip()
         if raw and "@" in raw:
             return raw.split(",")[0].strip()
@@ -31,7 +31,7 @@ def get_cal_review_email() -> Optional[str]:
     return None
 
 
-def get_cal_autonomy_runtime_override() -> Optional[bool]:
+def get_phelan_autonomy_runtime_override() -> Optional[bool]:
     """Operator toggle stored in Redis; None = use env default."""
     client = _redis_client()
     if not client:
@@ -45,7 +45,7 @@ def get_cal_autonomy_runtime_override() -> Optional[bool]:
         return None
 
 
-def set_cal_autonomy_runtime_override(enabled: bool) -> bool:
+def set_phelan_autonomy_runtime_override(enabled: bool) -> bool:
     client = _redis_client()
     if not client:
         return False
@@ -57,36 +57,36 @@ def set_cal_autonomy_runtime_override(enabled: bool) -> bool:
 
 
 def _cal_autonomy_env_default() -> bool:
-    if os.getenv("CAL_AUTONOMY_ENABLED", "").strip().lower() in ("0", "false", "no"):
+    if os.getenv("PHELAN_AUTONOMY_ENABLED", "").strip().lower() in ("0", "false", "no"):
         return False
-    if os.getenv("CAL_AUTONOMY_ENABLED", "").strip().lower() in ("1", "true", "yes"):
+    if os.getenv("PHELAN_AUTONOMY_ENABLED", "").strip().lower() in ("1", "true", "yes"):
         return True
-    return os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "").strip().lower() in ("1", "true", "yes")
+    return os.getenv("ENABLE_SCHEDULED_PHELAN_AUTONOMY", "").strip().lower() in ("1", "true", "yes")
 
 
-def cal_autonomy_enabled() -> bool:
-    if os.getenv("CAL_AUTONOMY_ENABLED", "").strip().lower() in ("0", "false", "no"):
+def phelan_autonomy_enabled() -> bool:
+    if os.getenv("PHELAN_AUTONOMY_ENABLED", "").strip().lower() in ("0", "false", "no"):
         return False
-    override = get_cal_autonomy_runtime_override()
+    override = get_phelan_autonomy_runtime_override()
     if override is not None:
         return override
     return _cal_autonomy_env_default()
 
 
-def cal_buyer_sales_enabled() -> bool:
+def phelan_buyer_sales_enabled() -> bool:
     """Robot-sales intros to operating companies. Default off — Cal places jobs."""
-    return os.getenv("CAL_BUYER_SALES_ENABLED", "0").strip().lower() in ("1", "true", "yes")
+    return os.getenv("PHELAN_BUYER_SALES_ENABLED", "0").strip().lower() in ("1", "true", "yes")
 
 
-def cal_scheduled_sales_work_enabled() -> bool:
+def phelan_scheduled_sales_work_enabled() -> bool:
     """Scheduled draft create/refresh, intros, and follow-ups.
 
     False when autopilot is off. Manual admin Run cycle may still call
-    ``run_cal_autonomy_cycle(manual=True)``; that path must pass
+    ``run_phelan_autonomy_cycle(manual=True)``; that path must pass
     ``allow_when_paused=True`` into ``_draft_and_store`` and still must
     not send buyer intros or due follow-ups unless those flags are on.
     """
-    return cal_autonomy_enabled()
+    return phelan_autonomy_enabled()
 
 
 def _redis_client():
@@ -123,19 +123,19 @@ def _persist_template_fingerprint(fp: str) -> None:
 
 # ── Safe auto-send guards: daily cap + angle rotation/retirement ──────────────
 
-def cal_daily_send_cap() -> int:
+def phelan_daily_send_cap() -> int:
     """Hard ceiling on buyer intros per calendar day across all cycles.
 
     Deliberately conservative — we resume auto-send throttled low so the new
     trust-first angles can prove out on small batches before any volume push.
     """
     try:
-        return max(0, int(os.getenv("CAL_AUTONOMY_DAILY_CAP", "10") or "10"))
+        return max(0, int(os.getenv("PHELAN_AUTONOMY_DAILY_CAP", "10") or "10"))
     except (TypeError, ValueError):
         return 10
 
 
-_BOUNCE_ALERT_KEY = "cal:bounce_pause:alerted"
+_BOUNCE_ALERT_KEY = "phelan:bounce_pause:alerted"
 
 
 def _maybe_alert_bounce_pause(stats: dict, threshold: float) -> None:
@@ -159,13 +159,13 @@ def _maybe_alert_bounce_pause(stats: dict, threshold: float) -> None:
         "problem. Check address suppression and the Hunter confidence thresholds.\n"
     )
     try:
-        from app.services.cal_watchdog import _send_alert_email
+        from app.services.phelan_watchdog import _send_alert_email
 
         if _send_alert_email(subject, body) and client:
             hours = float(os.getenv("CAL_BOUNCE_ALERT_COOLDOWN_HOURS", "12") or "12")
             client.set(_BOUNCE_ALERT_KEY, datetime.now(timezone.utc).isoformat(), ex=int(hours * 3600))
     except Exception as exc:  # noqa: BLE001 — alerting must never break the cycle
-        logger.warning("[cal-autonomy] bounce-pause alert failed: %s", exc)
+        logger.warning("[phelan-autonomy] bounce-pause alert failed: %s", exc)
 
 
 def _canary_stats(db, *, hours: int) -> dict:
@@ -422,7 +422,7 @@ def cal_vendor_outreach_body(company: Any, *, fresh: bool = False) -> str:
         cal_vendor_match_paragraph,
         cal_signature,
     )
-    from app.services.cal_insights import pick_cal_insight
+    from app.services.phelan_insights import pick_cal_insight
 
     name = (getattr(company, "name", None) or "your team").strip()
     industry = (getattr(company, "industry", None) or "your space").strip()
@@ -477,14 +477,14 @@ def notify_admin_of_format_change(
     new_fingerprint: str,
 ) -> bool:
     """Email ADMIN_EMAIL when Cal's outreach template/format changes."""
-    to_email = get_cal_review_email()
+    to_email = get_phelan_review_email()
     if not to_email:
         logger.warning("Cal format changed but ADMIN_EMAIL / ADMIN_EMAILS is not configured")
         return False
 
     from app.services.resend_email import ResendEmailError, send_email_via_resend
 
-    subject = "Cal outreach template updated — review sample"
+    subject = "Phelan outreach template updated — review sample"
     body = f"""Cal refreshed the outreach template used for prospective buyers.
 
 Previous fingerprint: {previous_fingerprint or "(none)"}
@@ -500,14 +500,14 @@ Sample subject: {sample_subject}
 
 ---
 Review in the command center: /admin#cal-outreach
-Reply to this email if you want Cal outreach paused or the tone adjusted.
+Reply to this email if you want Phelan outreach paused or the tone adjusted.
 """
     try:
         send_email_via_resend(
             to_email=to_email,
             subject=subject,
             body_text=body,
-            from_display_name="Ready For Robots · Cal ops",
+            from_display_name="Ready For Robots · Phelan ops",
             idempotency_key=f"cal-format-review-{new_fingerprint}",
         )
         return True
@@ -540,7 +540,7 @@ def resolve_cal_admin_context(db: Session) -> Optional[tuple[uuid.UUID, Any]]:
         return None
     from app.api.admin_extended import _admin_team
 
-    email = get_cal_review_email() or "admin@readyforrobots.com"
+    email = get_phelan_review_email() or "admin@readyforrobots.com"
     team = _admin_team(db, uid, email)
     return uid, team
 
@@ -558,9 +558,9 @@ def _draft_and_store(
     allow_when_paused: bool = False,
 ) -> tuple[bool, bool]:
     """Return (drafted, refreshed)."""
-    if not allow_when_paused and not cal_scheduled_sales_work_enabled():
+    if not allow_when_paused and not phelan_scheduled_sales_work_enabled():
         logger.info(
-            "[cal-autonomy] scheduled draft create/refresh skipped — autopilot off"
+            "[phelan-autonomy] scheduled draft create/refresh skipped — autopilot off"
         )
         return False, False
     from app.api.admin_extended import _cal_draft_for_company
@@ -577,7 +577,7 @@ def _draft_and_store(
             is_stale = ts <= stale_before
 
     if has_draft and not regenerate and not is_stale:
-        from app.services.cal_draft_guard import draft_needs_regeneration
+        from app.services.phelan_draft_guard import draft_needs_regeneration
 
         account_type = getattr(acct, "account_type", None) or "buyer"
         needs_refresh, _ = draft_needs_regeneration(acct.outreach_draft, account_type=account_type)
@@ -627,7 +627,7 @@ def _draft_and_store(
     # waterfall (Apollo → Hunter → …) and only a verified address clears the gate.
 
     acct.outreach_draft = format_cal_draft_storage(subject, draft_body)
-    from app.api.admin_extended import cal_manual_approval_required
+    from app.api.admin_extended import phelan_manual_approval_required
 
     acct.outreach_stage = (
         "draft_approved" if not cal_manual_approval_required() else "draft_ready"
@@ -780,7 +780,7 @@ def prioritize_buying_window(companies: list, *, min_urgency: float = 50.0) -> l
     return sorted(companies, key=_rank)
 
 
-def run_cal_autonomy_cycle(
+def run_phelan_autonomy_cycle(
     db: Session,
     *,
     dry_run: bool = False,
@@ -795,10 +795,10 @@ def run_cal_autonomy_cycle(
     passes ``manual=True`` so the button still works; buyer-sales and
     follow-up sends stay gated by their own flags.
     """
-    if not manual and not cal_autonomy_enabled():
+    if not manual and not phelan_autonomy_enabled():
         return {
             "status": "disabled",
-            "reason": "CAL_AUTONOMY_ENABLED / ENABLE_SCHEDULED_CAL_AUTONOMY off",
+            "reason": "PHELAN_AUTONOMY_ENABLED / ENABLE_SCHEDULED_PHELAN_AUTONOMY off",
             "drafted": 0,
             "refreshed": 0,
             "sent": 0,
@@ -814,7 +814,7 @@ def run_cal_autonomy_cycle(
     if admin_uid is not None:
         from app.api.admin_extended import _admin_team
 
-        team = _admin_team(db, admin_uid, admin_email or get_cal_review_email() or "admin@readyforrobots.com")
+        team = _admin_team(db, admin_uid, admin_email or get_phelan_review_email() or "admin@readyforrobots.com")
         uid = admin_uid
     else:
         ctx = resolve_cal_admin_context(db)
@@ -841,19 +841,19 @@ def run_cal_autonomy_cycle(
 
     use_apollo = (os.getenv("CAL_USE_APOLLO") or "0").strip().lower() in ("1", "true", "yes")
 
-    buyer_sales = cal_buyer_sales_enabled()
+    buyer_sales = phelan_buyer_sales_enabled()
     draft_limit = int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
     send_limit = int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
     if not buyer_sales:
         draft_limit = 0
         send_limit = 0
         logger.info(
-            "[cal-autonomy] buyer-sales intros skipped — Cal works Robot Jobs, not robot sales"
+            "[phelan-autonomy] buyer-sales intros skipped — Cal works Robot Jobs, not robot sales"
         )
     # Angle rotation: only draft with angles that haven't been auto-retired.
     allowed_variants = active_buyer_variants(db)
     # Daily cap across all cycles — resume auto-send throttled low.
-    daily_cap = cal_daily_send_cap()
+    daily_cap = phelan_daily_send_cap()
     already_sent_today = cal_daily_sent_count()
     daily_remaining = max(0, daily_cap - already_sent_today) if daily_cap else send_limit
     if daily_cap:
@@ -950,13 +950,13 @@ def run_cal_autonomy_cycle(
     reconcile = {}
     if not dry_run:
         try:
-            from app.services.cal_delivery_reconcile import reconcile_pending_deliveries
+            from app.services.phelan_delivery_reconcile import reconcile_pending_deliveries
 
             reconcile = reconcile_pending_deliveries(
                 db, limit=int(os.getenv("CAL_RECONCILE_BATCH", "60") or "60")
             )
         except Exception as exc:  # noqa: BLE001 — reconciliation must never break the cycle
-            logger.warning("[cal-autonomy] delivery reconcile failed: %s", exc)
+            logger.warning("[phelan-autonomy] delivery reconcile failed: %s", exc)
 
     bounce_stats = recent_bounce_rate(db, hours=168)
     pause_threshold = float(os.getenv("CAL_BOUNCE_PAUSE_THRESHOLD", "0.10") or "0.10")
@@ -1073,7 +1073,7 @@ def run_cal_autonomy_cycle(
             })
             continue
 
-        from app.api.admin_extended import cal_manual_approval_required
+        from app.api.admin_extended import phelan_manual_approval_required
 
         if cal_manual_approval_required() and (acct.outreach_stage or "") not in (
             "draft_approved",
@@ -1087,8 +1087,8 @@ def run_cal_autonomy_cycle(
             skipped_unverified += 1
             continue
 
-        from app.services.cal_outreach_send import parse_cal_draft
-        from app.services.cal_draft_guard import is_complete_cal_draft
+        from app.services.phelan_outreach_send import parse_cal_draft
+        from app.services.phelan_draft_guard import is_complete_cal_draft
 
         draft_ok, draft_reason = is_complete_cal_draft(acct.outreach_draft)
         if not draft_ok:
@@ -1106,7 +1106,7 @@ def run_cal_autonomy_cycle(
             sent += 1
             continue
 
-        from app.services.cal_assembly_agent import assemble_buyer_outreach, cal_assembly_required
+        from app.services.phelan_assembly_agent import assemble_buyer_outreach, cal_assembly_required
 
         if cal_assembly_required():
             assembly = assemble_buyer_outreach(
@@ -1115,7 +1115,7 @@ def run_cal_autonomy_cycle(
                 body=body_text,
             )
             if not assembly.approved:
-                from app.services.cal_ops_monitor import record_cal_assembly_rejection
+                from app.services.phelan_ops_monitor import record_cal_assembly_rejection
 
                 record_cal_assembly_rejection(
                     db,
@@ -1149,7 +1149,7 @@ def run_cal_autonomy_cycle(
                 break
 
         try:
-            from app.services.cal_outreach_send import enroll_cal_followup, send_cal_intro_email
+            from app.services.phelan_outreach_send import enroll_cal_followup, send_cal_intro_email
 
             from app.services.agent_messaging import resolve_buyer_variant
 
@@ -1179,7 +1179,7 @@ def run_cal_autonomy_cycle(
             errors.append({"company_id": company.id, "name": company.name, "error": str(exc)})
 
     followups: dict[str, Any] = {"processed": 0, "sent": 0, "skipped": 0, "failed": 0}
-    if not dry_run and cal_autonomy_enabled():
+    if not dry_run and phelan_autonomy_enabled():
         try:
             from app.services.sequence_runner import process_due_enrollments
 
@@ -1193,7 +1193,7 @@ def run_cal_autonomy_cycle(
             "skipped": 0,
             "failed": 0,
             "status": "paused",
-            "reason": "CAL_AUTONOMY_ENABLED off — due follow-ups are held",
+            "reason": "PHELAN_AUTONOMY_ENABLED off — due follow-ups are held",
         }
 
     if not dry_run:
@@ -1222,7 +1222,7 @@ def run_cal_autonomy_cycle(
         "errors": errors[:20],
         "template_fingerprint": new_fp,
         "format_review_notified": format_notified,
-        "review_email": get_cal_review_email(),
+        "review_email": get_phelan_review_email(),
         "admin_user_id": str(uid),
         "active_variants": allowed_variants,
         "daily_cap": daily_cap,
@@ -1232,10 +1232,10 @@ def run_cal_autonomy_cycle(
 
 
 def get_cal_autonomy_status() -> dict[str, Any]:
-    from app.services.cal_assembly_agent import get_cal_assembly_status
+    from app.services.phelan_assembly_agent import get_cal_assembly_status
 
     try:
-        from app.services.cal_watchdog import watchdog_status
+        from app.services.phelan_watchdog import watchdog_status
 
         heartbeat = watchdog_status()
     except Exception:
@@ -1243,34 +1243,34 @@ def get_cal_autonomy_status() -> dict[str, Any]:
 
     return {
         "heartbeat": heartbeat,
-        "enabled": cal_autonomy_enabled(),
-        "scheduled_sales_work_enabled": cal_scheduled_sales_work_enabled(),
-        "scheduled_drafts_paused": not cal_scheduled_sales_work_enabled(),
-        "followups_paused": not cal_autonomy_enabled(),
-        "buyer_sales_enabled": cal_buyer_sales_enabled(),
+        "enabled": phelan_autonomy_enabled(),
+        "scheduled_sales_work_enabled": phelan_scheduled_sales_work_enabled(),
+        "scheduled_drafts_paused": not phelan_scheduled_sales_work_enabled(),
+        "followups_paused": not phelan_autonomy_enabled(),
+        "buyer_sales_enabled": phelan_buyer_sales_enabled(),
         "env_enabled": _cal_autonomy_env_default(),
-        "runtime_override": get_cal_autonomy_runtime_override(),
+        "runtime_override": get_phelan_autonomy_runtime_override(),
         "runtime_toggle_available": _redis_client() is not None,
-        "scheduled_on_worker": os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "1").strip().lower()
+        "scheduled_on_worker": os.getenv("ENABLE_SCHEDULED_PHELAN_AUTONOMY", "1").strip().lower()
         not in ("0", "false", "no"),
-        "review_email": get_cal_review_email(),
+        "review_email": get_phelan_review_email(),
         "template_fingerprint": outreach_template_fingerprint(),
         "stored_fingerprint": _stored_template_fingerprint(),
         "template_version": os.getenv("CAL_TEMPLATE_VERSION") or "2",
         "send_limit": (
             int(os.getenv("CAL_AUTONOMY_SEND_LIMIT", "25") or "25")
-            if cal_buyer_sales_enabled()
+            if phelan_buyer_sales_enabled()
             else 0
         ),
         "followup_limit": int(os.getenv("CAL_AUTONOMY_FOLLOWUP_LIMIT", "25") or "25"),
         "draft_batch": (
             int(os.getenv("CAL_AUTONOMY_DRAFT_BATCH", "100") or "100")
-            if cal_buyer_sales_enabled()
+            if phelan_buyer_sales_enabled()
             else 0
         ),
         "pool_window": int(os.getenv("CAL_AUTONOMY_POOL", "400") or "400"),
         "refresh_stale_days": int(os.getenv("CAL_REFRESH_STALE_DAYS", "7") or "7"),
-        "every_hours": float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "3") or "3"),
+        "every_hours": float(os.getenv("PHELAN_AUTONOMY_EVERY_HOURS", "3") or "3"),
         "manual_approval": (os.getenv("CAL_MANUAL_APPROVAL") or "0").strip().lower() in ("1", "true", "yes"),
         "assembly": get_cal_assembly_status(),
     }

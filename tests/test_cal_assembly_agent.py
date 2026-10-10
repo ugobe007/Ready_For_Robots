@@ -10,12 +10,12 @@ from app.database import Base
 from app.models.company import Company
 from app.models.score import Score
 from app.models.signal import Signal
-from app.services.cal_assembly_agent import (
+from app.services.phelan_assembly_agent import (
     assemble_supply_outreach,
     cal_assembly_required,
     curate_supply_matches,
 )
-from app.services.cal_persona import cal_persona_payload
+from app.services.phelan_persona import phelan_persona_payload
 import app.models  # noqa: F401
 
 

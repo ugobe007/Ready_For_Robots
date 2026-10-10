@@ -1312,7 +1312,7 @@ def _fmt_pipeline_card(
     if isinstance(hermes_jobs, list) and hermes_jobs:
         hermes_job = str(hermes_jobs[0] or "").strip()
     try:
-        from app.services.cal_seller_brief import build_cal_seller_brief
+        from app.services.phelan_seller_brief import build_cal_seller_brief
 
         payload["cal_seller_brief"] = build_cal_seller_brief(
             company_name=str(payload.get("company_name") or c.name or ""),
@@ -1571,7 +1571,7 @@ def _fmt_company(
         elif isinstance(inf.get("specific_problem"), str):
             pitch_src = str(inf.get("specific_problem") or "").strip()
     try:
-        from app.services.cal_seller_brief import build_cal_seller_brief
+        from app.services.phelan_seller_brief import build_cal_seller_brief
 
         payload["cal_seller_brief"] = build_cal_seller_brief(
             company_name=str(payload.get("company_name") or c.name or ""),
@@ -3180,7 +3180,7 @@ def get_cal_email_preview():
     """HTML preview of Cal vendor email with inline demo GIF (for QA / marketing)."""
     from fastapi.responses import HTMLResponse
 
-    from app.services.cal_email_demo import enrich_cal_email_with_demo
+    from app.services.phelan_email_demo import enrich_cal_email_with_demo
 
     sample = """Hi,
 

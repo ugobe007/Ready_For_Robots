@@ -10,7 +10,7 @@ from app.services.agent_messaging import (
     cal_signature,
     cal_vendor_opening,
 )
-from app.services.cal_insights import pick_cal_insight
+from app.services.phelan_insights import pick_cal_insight
 
 
 def _focus(company_data: Dict) -> str:

@@ -96,7 +96,7 @@ bounce and notifies to add a verified contact. Supply channel left unchanged.
    ("Miami logistics company" → miami.com, "2021 Women" → women.com). Hunter
    "verifies" a real person at these wrong domains. Clean names/events upstream
    before widening Cal's send window.
-2. **Cycle window is burned:** `run_cal_autonomy_cycle` only looks at the top ~100
+2. **Cycle window is burned:** `run_phelan_autonomy_cycle` only looks at the top ~100
    HOT/WARM (`_hot_warm_companies(limit=max(draft_limit,100))`), all already-sent
    from the bounce era, so Cal reaches no new runway. Prefer unsent/verified when
    building the window (after pool cleanup).

@@ -47,7 +47,7 @@ def main() -> int:
     from app.database import SessionLocal
     from app.models.crm import CrmAccount
     from app.models.robot_company import RobotCompany
-    from app.services.cal_draft_guard import draft_needs_regeneration
+    from app.services.phelan_draft_guard import draft_needs_regeneration
     from app.api.robot_companies import _match_buyer_leads
 
     db = SessionLocal()
@@ -82,7 +82,7 @@ def main() -> int:
             print(f"        - {n:>3}  {reason}")
 
         # 1b — Stage 1 voice rubric (sample of guard-ok drafts)
-        from app.services.cal_voice_rubric import score_cal_draft
+        from app.services.phelan_voice_rubric import score_cal_draft
 
         rubric_sample = []
         for a in unsent:

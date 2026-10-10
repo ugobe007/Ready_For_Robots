@@ -15,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 def main() -> int:
     from app.api.admin_extended import _hot_warm_companies
     from app.database import SessionLocal
-    from app.services.cal_autonomy import _cal_buyer_eligible
+    from app.services.phelan_autonomy import _cal_buyer_eligible
 
     db = SessionLocal()
     try:
