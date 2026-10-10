@@ -20,10 +20,12 @@ from app.services.daily_jobs_report import (
     get_daily_jobs_report_recipients,
     maybe_send_missed_daily_jobs_report,
     public_job_card,
+    render_daily_jobs_report_csv,
     render_daily_jobs_report_html,
     render_daily_jobs_report_text,
     send_daily_jobs_report,
 )
+from app.models.daily_jobs_report_edition import DailyJobsReportEdition
 
 
 @pytest.fixture()
@@ -171,7 +173,8 @@ def test_compose_sales_card_uses_page_contact_not_invented(db_session):
         {"date": "2026-10-09", "limit": 25, "jobs": [real]}
     )
     assert "Priya Shah" in html_named
-    assert "Job card" in html_named
+    assert "Job card" not in html_named
+    assert "/?job=" not in html_named
     assert real["card_href"].endswith("/?job=page-contact")
     fake = by_key["invented-ops"]
     assert fake["decision_maker"] == "Not named on the posting"
@@ -232,7 +235,9 @@ def test_render_email_is_jobs_not_signal():
     assert "Rochester Regional Health" in text
     assert "Decision maker:" in text
     assert "Contact:" in text
-    assert "Job card:" in text
+    assert "Job card:" not in text
+    assert "/?job=" not in text
+    assert "CSV of these leads is attached" in text
     assert "[5] Intro to the robot company" in text
     assert "[6] Intro to the employer" in text
     assert "robot coordinator for ReadyForRobots" in text
@@ -256,8 +261,19 @@ def test_render_email_is_jobs_not_signal():
     assert "Rochester Regional Health" in html_body
     assert "Decision maker:" in html_body
     assert "Contact:" in html_body
-    assert "Job card" in html_body
-    assert "/?job=rrh-pharmacy" in html_body
+    assert "Job card" not in html_body
+    assert "/?job=rrh-pharmacy" not in html_body
+    csv_body = render_daily_jobs_report_csv(
+        {
+            "date": "2026-10-07",
+            "limit": 25,
+            "jobs": [card],
+        }
+    )
+    assert csv_body.splitlines()[0].startswith("rank,employer,locality")
+    assert "Rochester Regional Health" in csv_body
+    assert "rrh-pharmacy" not in csv_body
+    assert "/?job=" not in csv_body
     assert "padding:16px" not in html_body
     assert "/?visit=jobs" in html_body
     assert "/pipeline?co=" not in html_body
@@ -479,7 +495,15 @@ def test_send_emails_operator(monkeypatch, db_session):
     assert sent[0]["subject"].startswith("Top 25 hot job opportunities")
     assert "Rochester Regional Health" in sent[0]["body_text"]
     assert "Decision maker:" in sent[0]["body_text"]
-    assert "Job card:" in sent[0]["body_text"]
+    assert "Job card:" not in sent[0]["body_text"]
+    attachment = sent[0]["attachments"][0]
+    assert attachment["filename"].startswith("daily-jobs-")
+    assert attachment["filename"].endswith(".csv")
+    assert attachment["content_type"] == "text/csv"
+    stored = db_session.query(DailyJobsReportEdition).one()
+    assert "Rochester Regional Health" in stored.body_text
+    assert "Job card" not in stored.body_text
+    assert stored.csv_text.startswith("rank,employer,locality")
     assert "[5] Intro to the robot company" in sent[0]["body_text"]
     assert "[6] Intro to the employer" in sent[0]["body_text"]
     assert "Rochester Regional Health" in (sent[0].get("body_html") or "")

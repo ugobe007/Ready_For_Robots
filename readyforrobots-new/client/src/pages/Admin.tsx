@@ -1074,6 +1074,7 @@ export default function Admin() {
   );
   const [jobsReportLoading, setJobsReportLoading] = useState(true);
   const [jobsReportSending, setJobsReportSending] = useState(false);
+  const [jobsReportDownloading, setJobsReportDownloading] = useState(false);
   const [jobsReportEnriching, setJobsReportEnriching] = useState(false);
   const [jobsReportSendError, setJobsReportSendError] = useState<string | null>(
     null
@@ -1240,6 +1241,32 @@ export default function Admin() {
       );
     } finally {
       setJobsReportSending(false);
+    }
+  }, [adminFetch]);
+
+  const downloadJobsCsv = useCallback(async () => {
+    setJobsReportDownloading(true);
+    setJobsReportSendError(null);
+    try {
+      const res = await adminFetch("/api/admin/daily-jobs-report.csv");
+      if (!res.ok) throw new Error(`csv download ${res.status}`);
+      const blob = await res.blob();
+      const disposition = res.headers.get("Content-Disposition") || "";
+      const named = /filename="([^"]+)"/.exec(disposition)?.[1];
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = named || "daily-jobs.csv";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      setJobsReportSendError(
+        e instanceof Error ? e.message : "Could not download the CSV."
+      );
+    } finally {
+      setJobsReportDownloading(false);
     }
   }, [adminFetch]);
 
@@ -3321,6 +3348,8 @@ export default function Admin() {
           sendError={jobsReportSendError}
           onSend={() => void sendJobsReport()}
           onEnrich={() => void enrichJobsReport()}
+          onDownloadCsv={() => void downloadJobsCsv()}
+          downloading={jobsReportDownloading}
         />
 
         {/* ── Top Executive User Metrics Dashboard ── */}

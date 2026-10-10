@@ -1,6 +1,6 @@
 /**
- * Operator top-25 hot job opportunities — same inline list emailed daily.
- * Named employers, stored decision maker and contact, link to the Job Card.
+ * Operator top-25 hot job opportunities — same inline text emailed daily.
+ * Named employers, stored decision maker and contact. CSV download, no job cards.
  */
 import { useState } from "react";
 import { Copy, Mail } from "lucide-react";
@@ -30,7 +30,6 @@ export type DailyJobsReportJob = {
   match_why?: string | null;
   intro?: string | null;
   employer_intro?: string | null;
-  card_href?: string;
 };
 
 export type DailyJobsReportHunter = {
@@ -62,6 +61,8 @@ type Props = {
   sendError?: string | null;
   onSend?: () => void;
   onEnrich?: () => void;
+  onDownloadCsv?: () => void;
+  downloading?: boolean;
 };
 
 function jobNameLine(job: DailyJobsReportJob): string {
@@ -118,6 +119,8 @@ export default function AdminDailyJobsReport({
   sendError,
   onSend,
   onEnrich,
+  onDownloadCsv,
+  downloading,
 }: Props) {
   const jobs = data?.jobs || [];
   const today = data?.date ?? new Date().toISOString().slice(0, 10);
@@ -157,6 +160,14 @@ export default function AdminDailyJobsReport({
           </button>
           <button
             type="button"
+            onClick={onDownloadCsv}
+            disabled={sending || enriching || loading || downloading}
+            className="inline-flex items-center justify-center border border-emerald-500/60 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-50"
+          >
+            {downloading ? "Preparing CSV…" : "Download CSV"}
+          </button>
+          <button
+            type="button"
             onClick={onSend}
             disabled={sending || enriching || loading}
             className="inline-flex items-center justify-center bg-emerald-500 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#090d16] hover:bg-emerald-400 disabled:opacity-50"
@@ -177,9 +188,6 @@ export default function AdminDailyJobsReport({
       ) : (
         <ol className="mt-3">
           {jobs.map(job => {
-            const href = job.job_key
-              ? `/?job=${encodeURIComponent(job.job_key)}`
-              : job.card_href || "/?visit=jobs";
             const place = [job.employer, job.locality]
               .filter(Boolean)
               .join(" · ");
@@ -216,13 +224,6 @@ export default function AdminDailyJobsReport({
                 Contact:{" "}
                 {job.contact ||
                   "No page email or apply URL. We will not invent one."}
-                <br />
-                <a
-                  href={href}
-                  className="text-emerald-300 underline decoration-emerald-500/40 hover:text-emerald-200"
-                >
-                  Job card
-                </a>
                 {robotIntro ? (
                   <>
                     <br />
@@ -262,8 +263,8 @@ export default function AdminDailyJobsReport({
       <p className="mt-2 text-[11px] text-slate-500">
         Look up companies reads the employer leadership page, then asks
         Hunter.io for that person&apos;s email (name, company, and site domain).
-        We do not invent people. Daily email at 14:00 UTC to ugobe07@gmail.com.
-        Each line opens the Job Card on the site.
+        We do not invent people. Daily email at 14:00 UTC to ugobe07@gmail.com
+        is this text, with the CSV attached. Download CSV saves the same file.
       </p>
     </section>
   );

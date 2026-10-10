@@ -221,6 +221,32 @@ class DailyJobsReportSendBody(BaseModel):
     limit: int = 25
 
 
+@router.get("/daily-jobs-report.csv")
+def daily_jobs_report_csv(db: Session = Depends(get_db)):
+    """Download today's 25 leads. Also stores the inline text and CSV."""
+    from fastapi.responses import Response
+
+    from app.services.daily_jobs_report import (
+        compose_daily_jobs_report,
+        render_daily_jobs_report_csv,
+        render_daily_jobs_report_text,
+        store_daily_jobs_report_edition,
+    )
+
+    report = compose_daily_jobs_report(db, limit=25)
+    body = render_daily_jobs_report_text(report)
+    csv_text = render_daily_jobs_report_csv(report)
+    store_daily_jobs_report_edition(db, report, body_text=body, csv_text=csv_text)
+    day = str(report.get("date") or "jobs")[:10]
+    return Response(
+        content=csv_text,
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="daily-jobs-{day}.csv"'
+        },
+    )
+
+
 @router.get("/daily-jobs-report")
 def daily_jobs_report(db: Session = Depends(get_db)):
     """Operator top-25 named Robot Jobs. Read-only.
@@ -261,7 +287,7 @@ def daily_jobs_report_send(
 def daily_jobs_report_enrich(
     db: Session = Depends(get_db),
 ):
-    """Hunter.io lookup for missing names/emails on the top-25 cards."""
+    """Hunter.io lookup for missing names/emails on the top-25 leads."""
     from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
     from app.services.daily_jobs_report import compose_daily_jobs_report
 
