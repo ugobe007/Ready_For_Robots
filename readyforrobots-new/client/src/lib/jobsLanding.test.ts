@@ -4,7 +4,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   EMPLOYER_EMPTY_MATCH,
+  EMPLOYER_EXAMINE_HINT,
   EMPLOYER_PROCESS_STEPS,
+  employerChosenCopy,
   EMPLOYER_WORK_TILE_IDS,
   LANDING_BRIEF_HEADLINE,
   LANDING_BRIEF_JOB_FIELD,
@@ -62,6 +64,8 @@ describe("landing fork", () => {
     expect(landingVisitFromSearch("")).toBe("jobs");
     expect(landingVisitFromSearch("?new=1")).toBe("jobs");
     expect(landingVisitFromSearch("?visit=jobs")).toBe("jobs");
+    expect(landingVisitFromSearch("?job=geodis-dock")).toBe("landing");
+    expect(landingVisitFromSearch("?visit=jobs&job=geodis-dock")).toBe("landing");
     expect(landingVisitFromSearch("?visit=candidates")).toBe("candidates");
     expect(landingVisitFromSearch("?restore=1")).toBe("jobs");
     expect(landingVisitFromSearch("?visit=jobs&restore=1")).toBe("jobs");
@@ -158,6 +162,8 @@ describe("landing fork", () => {
     expect(landing).toMatch(/rfr-landing-employer-link/);
     expect(landing).toMatch(/LiveJobTape/);
     expect(landing).toMatch(/MARKET_TAPE_JOBS/);
+    expect(landing).toMatch(/\/api\/robot-job-card\//);
+    expect(landing).not.toMatch(/\?visit=jobs&job=/);
     expect(landing).not.toMatch(/LANDING_HOW_STEPS|LANDING_VOCAB/);
     expect(landing).not.toMatch(
       /Look for buyers|SIGNAL|Apollo|Who is this visit/i
@@ -165,6 +171,18 @@ describe("landing fork", () => {
     expect(landing).not.toMatch(/Market Intelligence|Automation Imperative/i);
     expect(landing).not.toMatch(/Headline options|headlineOptions|id:\"A\"/);
     expect(landing).not.toMatch(/CalJobsDesk|choose your workflow/i);
+    const report = readFileSync(
+      join(here, "../components/admin/AdminDailyJobsReport.tsx"),
+      "utf8"
+    );
+    expect(report).toMatch(/Decision maker:/);
+    expect(report).toMatch(/Job card/);
+    expect(report).toMatch(/card_href/);
+    expect(report).not.toMatch(/\[1\] Job type and description/);
+    const inbox = readFileSync(join(here, "../pages/Inbox.tsx"), "utf8");
+    expect(inbox).toMatch(/folder=all/);
+    const admin = readFileSync(join(here, "../pages/Admin.tsx"), "utf8");
+    expect(admin).toMatch(/\/api\/sales\/inbox\?folder=all/);
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
     expect(jobsPage).not.toMatch(/JobsLanding/);
     expect(jobsPage).toMatch(/EmployerMatchWorkspace/);
@@ -359,6 +377,8 @@ describe("landing fork", () => {
     expect(workspace).toMatch(/I_KNOW_THE_ROBOT_LABEL/);
     expect(workspace).toMatch(/border-emerald-400/);
     expect(workspace).toMatch(/FIND_JOBS_HOME_HEADLINE/);
+    expect(workspace).not.toMatch(/JobsProcessNav/);
+    expect(workspace).not.toMatch(/aria-label="Jobs process"/);
     expect(workspace).toMatch(/submitClassFind/);
     expect(workspace).toMatch(/classOptionsOrDefault/);
     expect(workspace).toMatch(/<select/);
@@ -381,6 +401,10 @@ describe("landing fork", () => {
       "Post the job",
     ]);
     expect(EMPLOYER_EMPTY_MATCH).toMatch(/Post the job so OEMs can find it/);
+    expect(EMPLOYER_EXAMINE_HINT).toMatch(/choose more than one/);
+    expect(employerChosenCopy(0, 12)).toMatch(/more than one/);
+    expect(employerChosenCopy(1, 12)).toMatch(/Check another/);
+    expect(employerChosenCopy(3, 12)).toBe("3 of 12 robots chosen.");
     expect(EMPLOYER_WORK_TILE_IDS).toEqual([
       "pallets",
       "pick_pack",
@@ -410,6 +434,20 @@ describe("landing fork", () => {
     expect(employer).toMatch(/readEmployerJdFile/);
     expect(employer).toMatch(/type="file"/);
     expect(employer).toMatch(/EMPLOYER_JD_ACCEPT/);
+    expect(employer).toMatch(/EmployerMatchedRobotModal/);
+    expect(employer).toMatch(/Examine \$\{robot\.name\}/);
+    expect(employer).toMatch(/EMPLOYER_EXAMINE_HINT/);
+    expect(employer).toMatch(/toggleEmployerRobotKey/);
+    expect(employer).toMatch(/employerChosenCopy/);
+    expect(employer).toMatch(/Chosen robots/);
+    expect(employer).toMatch(/setChecked\(\[\]\)/);
+    expect(employer).toMatch(/EMPLOYER_COMPANY_LABEL/);
+    expect(employer).toMatch(/EMPLOYER_JOB_NAME_LABEL/);
+    expect(employer).toMatch(/EMPLOYER_CONTACT_LABEL/);
+    expect(employer).toMatch(/id="contact-name"/);
+    expect(employer).toMatch(/Lookup:/);
+    expect(employer).toMatch(/catalogHttpUrl\(robot\.image_url\)/);
+    expect(employer).not.toMatch(/type="radio"/);
     expect(employer).not.toMatch(/SIGNAL|Apollo|find-robots/i);
     expect(employer).not.toMatch(/CalJobsDesk|send_buyer_intro/);
   });

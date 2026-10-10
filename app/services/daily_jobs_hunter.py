@@ -29,6 +29,7 @@ from app.services.hunter_client import (
     HunterClient,
     HunterConfigError,
     hunter_contact_enabled,
+    registrable_domain,
 )
 from app.services.job_decision_maker_agent import (
     DecisionMakerPlan,
@@ -236,19 +237,48 @@ def _host(url: str | None) -> Optional[str]:
 
 
 def domain_for_job(row: Any, db: Session) -> Optional[str]:
+    """Employer website first. Job-board and press URLs are the wrong Hunter domain."""
+    hosts: list[str] = []
+    company_id = getattr(row, "company_id", None)
+    if company_id and db is not None:
+        from app.models.company import Company
+
+        company = db.query(Company).filter(Company.id == company_id).first()
+        if company:
+            host = _host(str(getattr(company, "website", "") or ""))
+            if host:
+                hosts.append(host)
     for attr in ("contact_url", "apply_url"):
         host = _host(str(getattr(row, attr, "") or ""))
         if host:
-            return host
-    company_id = getattr(row, "company_id", None)
-    if not company_id:
-        return None
-    from app.models.company import Company
+            hosts.append(host)
+    for host in hosts:
+        cleaned = registrable_domain(host)
+        if cleaned:
+            return cleaned
+    return None
 
-    company = db.query(Company).filter(Company.id == company_id).first()
-    if not company:
-        return None
-    return _host(str(getattr(company, "website", "") or ""))
+
+def domain_from_people(
+    people: list[dict[str, Any]] | None,
+    employer: str = "",
+    locality: str = "",
+) -> Optional[str]:
+    """Hunter company search often has no website on the job row. Use email hosts
+    that already fit the employer name — never the first Hunter hit's domain."""
+    for person in people or []:
+        if not isinstance(person, dict):
+            continue
+        email = str(person.get("email") or "").strip().lower()
+        host = registrable_domain(person.get("organization_domain"))
+        if not host and "@" in email:
+            host = registrable_domain(email.split("@", 1)[1])
+        if not host:
+            continue
+        probe = email if "@" in email else f"name@{host}"
+        if _email_fits_employer(probe, employer, locality):
+            return host
+    return None
 
 
 def _page_contact_complete(row: Any) -> bool:
@@ -262,7 +292,9 @@ def _page_contact_complete(row: Any) -> bool:
     return True
 
 
-def _job_needs_hunter(row: Any, *, force: bool = False) -> bool:
+def _job_needs_hunter(
+    row: Any, *, force: bool = False, scrape_pages: bool = False
+) -> bool:
     if _page_contact_complete(row):
         return False
     name, _title = _page_name_title(row)
@@ -271,8 +303,48 @@ def _job_needs_hunter(row: Any, *, force: bool = False) -> bool:
     if name and contact.get("email") and not force:
         return False
     if not force and str(blob.get("hunter_checked_at") or "") == _today():
+        # Domain-only miss (admin GET used to do this) must not skip the
+        # leadership-page → Hunter finder pass.
+        if scrape_pages and str(blob.get("hunter_leadership_at") or "") != _today():
+            return True
         return False
     return True
+
+
+def _company_search_names(employer: str, locality: str = "") -> list[str]:
+    """Hunter company search uses the brand, not 'Westin Fort Lauderdale'."""
+    raw = re.sub(r"\s+", " ", (employer or "").strip())
+    names: list[str] = []
+    seen: set[str] = set()
+
+    def add(value: str) -> None:
+        text = re.sub(r"\s+", " ", (value or "").strip(" -,."))
+        key = text.lower()
+        if len(text) < 3 or key in seen:
+            return
+        seen.add(key)
+        names.append(text)
+
+    add(raw)
+    add(raw.replace(".", ""))
+    add(re.sub(r"\s+by\s+.+$", "", raw, flags=re.I))
+    of_match = re.match(r"^(.+?)\s+of\s+(.+)$", raw)
+    if of_match and len(of_match.group(1).split()) >= 2:
+        add(of_match.group(1))
+    add(
+        re.sub(
+            r",?\s+(inc|llc|ltd|corp|corporation|company|co|services|group|hotels|hotel|restaurants|restaurant)\.?$",
+            "",
+            raw,
+            flags=re.I,
+        )
+    )
+    city = (locality or "").split(",")[0].strip()
+    if len(city) >= 4:
+        for base in list(names):
+            if base.lower().endswith(city.lower()):
+                add(base[: -len(city)])
+    return names
 
 
 def _employer_tokens(employer: str) -> list[str]:
@@ -300,7 +372,9 @@ def _is_us_locality(place: str) -> bool:
     return bool(match and match.group(1) in _US_STATE_ABBR)
 
 
-def _email_fits_employer(email: str, employer: str, locality: str = "") -> bool:
+def _email_fits_employer(
+    email: str, employer: str, locality: str = "", domain: str | None = None
+) -> bool:
     """Reject Marin General for Mercy, NAPA Australia for a PA DC, Unical for Unifi."""
     raw = (email or "").strip().lower()
     if "@" not in raw:
@@ -308,6 +382,10 @@ def _email_fits_employer(email: str, employer: str, locality: str = "") -> bool:
     host = raw.split("@", 1)[1].lower()
     if _is_us_locality(locality) and any(host.endswith(tld) for tld in _FOREIGN_TLDS):
         return False
+    want = registrable_domain(domain)
+    got = registrable_domain(host)
+    if want and got and (want == got or got.endswith("." + want) or want.endswith("." + got)):
+        return True
     core = re.sub(r"[^a-z0-9]", "", _host_core(raw))
     emp_slug = re.sub(r"[^a-z0-9]", "", employer.lower())
     if core and emp_slug and core == emp_slug:
@@ -328,7 +406,10 @@ def _email_fits_employer(email: str, employer: str, locality: str = "") -> bool:
 
 
 def _usable_hunter_row(
-    row: dict[str, Any], employer: str, locality: str = ""
+    row: dict[str, Any],
+    employer: str,
+    locality: str = "",
+    domain: str | None = None,
 ) -> bool:
     email = str(row.get("email") or "").strip().lower()
     name = str(row.get("name") or "").strip()
@@ -336,12 +417,12 @@ def _usable_hunter_row(
         return False
     if _is_invented_ops_email(email, employer):
         return False
-    if not _email_fits_employer(email, employer, locality):
-        return False
     local = email.split("@", 1)[0]
     if local in _ROLE_LOCALS:
         return False
     if (row.get("verification_status") or "").lower() == "invalid":
+        return False
+    if not _email_fits_employer(email, employer, locality, domain=domain):
         return False
     try:
         confidence = int(row.get("confidence") or 0)
@@ -361,9 +442,16 @@ def _stamp_plan(prov: dict[str, Any], plan: DecisionMakerPlan | None) -> None:
     prov["dm_job_function"] = plan.function
 
 
-def _stamp_miss(row: Any, plan: DecisionMakerPlan | None = None) -> None:
+def _stamp_miss(
+    row: Any,
+    plan: DecisionMakerPlan | None = None,
+    *,
+    scrape_pages: bool = False,
+) -> None:
     prov = dict(_as_map(getattr(row, "provenance", None)))
     prov["hunter_checked_at"] = _today()
+    if scrape_pages:
+        prov["hunter_leadership_at"] = _today()
     _stamp_plan(prov, plan)
     row.provenance = prov
     flag_modified(row, "provenance")
@@ -373,6 +461,9 @@ def _stamp_hit(
     row: Any,
     prospect: dict[str, Any],
     plan: DecisionMakerPlan | None = None,
+    *,
+    scrape_pages: bool = False,
+    domain: str | None = None,
 ) -> None:
     email = str(prospect.get("email") or "").strip().lower()
     if "email_not_unlocked" in email:
@@ -396,10 +487,17 @@ def _stamp_hit(
     if page_owned:
         _stamp_plan(prov, plan)
         prov["hunter_checked_at"] = _today()
+        if scrape_pages:
+            prov["hunter_leadership_at"] = _today()
         row.provenance = prov
         flag_modified(row, "provenance")
         return
-    if email and _usable_hunter_row(prospect, employer, str(getattr(row, "locality", "") or "")):
+    if email and _usable_hunter_row(
+        prospect,
+        employer,
+        str(getattr(row, "locality", "") or ""),
+        domain=domain,
+    ):
         row.employer_email = email
     if name:
         prov["contact_name"] = name
@@ -415,6 +513,8 @@ def _stamp_hit(
     _stamp_plan(prov, plan)
     if prospect.get("target_titles") and not plan:
         prov["dm_target_titles"] = list(prospect.get("target_titles") or [])
+    if prospect.get("source") == "leadership_page" or scrape_pages:
+        prov["hunter_leadership_at"] = _today()
     row.provenance = prov
     flag_modified(row, "provenance")
 
@@ -431,7 +531,10 @@ def _name_bits(person: dict[str, Any]) -> tuple[str, str]:
 
 
 def _rankable_hunter_person(
-    row: dict[str, Any], employer: str, locality: str = ""
+    row: dict[str, Any],
+    employer: str,
+    locality: str = "",
+    domain: str | None = None,
 ) -> bool:
     name = str(row.get("name") or "").strip()
     title = str(row.get("title") or row.get("position") or "").strip()
@@ -439,7 +542,15 @@ def _rankable_hunter_person(
         return False
     email = str(row.get("email") or "").strip().lower()
     if email and "@" in email:
-        return _usable_hunter_row(row, employer, locality)
+        if _is_invented_ops_email(email, employer):
+            return False
+        if (row.get("verification_status") or "").lower() == "invalid":
+            return False
+        local = email.split("@", 1)[0]
+        if local in _ROLE_LOCALS:
+            return False
+        if not _email_fits_employer(email, employer, locality, domain=domain):
+            return False
     return True
 
 
@@ -458,7 +569,8 @@ def _domain_people(
         queries: list[dict[str, Any]] = []
         if domain:
             queries.append({"domain": domain, "department": departments})
-        queries.append({"company": employer, "department": departments})
+        for name in _company_search_names(employer, locality):
+            queries.append({"company": name, "department": departments})
         seen: set[str] = set()
         for query in queries:
             try:
@@ -466,6 +578,12 @@ def _domain_people(
             except (HunterAPIError, HunterConfigError) as exc:
                 logger.warning("Hunter domain search failed for %r: %s", employer, exc)
                 continue
+            discovered = registrable_domain(search.get("domain"))
+            company_hit = bool(query.get("company") and not query.get("domain"))
+            if discovered:
+                for person in search.get("emails") or []:
+                    if isinstance(person, dict) and not person.get("organization_domain"):
+                        person["organization_domain"] = discovered
             for person in search.get("emails") or []:
                 if not isinstance(person, dict):
                     continue
@@ -474,13 +592,41 @@ def _domain_people(
                 if not marker or marker in seen:
                     continue
                 seen.add(marker)
-                people.append(person)
+                row = dict(person)
+                if company_hit:
+                    row["from_company_search"] = True
+                people.append(row)
         cache[key] = people
     return [
         person
         for person in cache[key]
-        if _rankable_hunter_person(person, employer, locality)
+        if _rankable_hunter_person(person, employer, locality, domain=domain)
     ]
+
+
+def _finder_attempts(domain: Optional[str], employer: str) -> list[dict[str, str]]:
+    """Leadership name + employer site first. Company-only if that domain is wrong."""
+    attempts: list[dict[str, str]] = []
+    seen: set[tuple[str, str]] = set()
+    clean = (registrable_domain(domain) or "").strip()
+    company = (employer or "").strip()
+    for domain_value, company_value in (
+        (clean, company),
+        ("", company),
+    ):
+        if not domain_value and not company_value:
+            continue
+        key = (domain_value.lower(), company_value.lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        query: dict[str, str] = {}
+        if domain_value:
+            query["domain"] = domain_value
+        if company_value:
+            query["company"] = company_value
+        attempts.append(query)
+    return attempts
 
 
 def _fill_email_via_finder(
@@ -493,25 +639,27 @@ def _fill_email_via_finder(
 ) -> dict[str, Any] | None:
     merged = dict(prospect)
     email = str(merged.get("email") or "").strip().lower()
-    if email and _usable_hunter_row(merged, employer, locality):
+    if email and _usable_hunter_row(merged, employer, locality, domain=domain):
         return merged
     first, last = _name_bits(merged)
     if not first or not last:
         return merged if merged.get("name") else None
-    try:
-        found = client.find_email(
-            domain=domain,
-            company=employer,
-            first_name=first,
-            last_name=last,
-        )
-    except (HunterAPIError, HunterConfigError) as exc:
-        logger.warning("Hunter finder failed for %r %s %s: %s", employer, first, last, exc)
-        return merged if merged.get("name") else None
-    if found and _usable_hunter_row(found, employer, locality):
-        merged.update({k: v for k, v in found.items() if v})
-        merged["source"] = found.get("source") or "hunter_finder"
-        return merged
+    for query in _finder_attempts(domain, employer):
+        try:
+            found = client.find_email(
+                first_name=first,
+                last_name=last,
+                **query,
+            )
+        except (HunterAPIError, HunterConfigError) as exc:
+            logger.warning(
+                "Hunter finder failed for %r %s %s: %s", employer, first, last, exc
+            )
+            continue
+        if found and _usable_hunter_row(found, employer, locality, domain=domain):
+            merged.update({k: v for k, v in found.items() if v})
+            merged["source"] = found.get("source") or "hunter_finder"
+            return merged
     return merged if merged.get("name") else None
 
 
@@ -590,7 +738,7 @@ def enrich_daily_jobs_with_hunter(
     skipped = 0
     looked = 0
     for row in rows:
-        if not _job_needs_hunter(row, force=force):
+        if not _job_needs_hunter(row, force=force, scrape_pages=scrape_pages):
             skipped += 1
             continue
         employer = str(getattr(row, "company_name", "") or "").strip()
@@ -601,6 +749,16 @@ def enrich_daily_jobs_with_hunter(
         plan = plan_for_job(row)
         domain = domain_for_job(row, db)
         locality = str(getattr(row, "locality", "") or "").strip()
+        if hunter is not None and not domain:
+            preview = _domain_people(
+                hunter,
+                employer=employer,
+                domain=None,
+                departments=plan.departments,
+                locality=locality,
+                cache=cache,
+            )
+            domain = domain_from_people(preview, employer, locality)
 
         prospect = None
         try:
@@ -644,35 +802,43 @@ def enrich_daily_jobs_with_hunter(
                 locality=locality,
             )
         has_mail = bool(
-            prospect and _usable_hunter_row(prospect, employer, locality)
+            prospect
+            and _usable_hunter_row(prospect, employer, locality, domain=domain)
         )
         known_name, known_title = _page_name_title(row)
         if not has_mail and hunter is not None:
-            bits = known_name.split()
-            if len(bits) >= 2 and score_candidate(
+            first, last = _name_bits({"name": known_name})
+            if first and last and score_candidate(
                 plan, {"title": known_title or known_name}, locality=locality
             ):
-                try:
-                    found = hunter.find_email(
-                        domain=domain,
-                        company=employer,
-                        first_name=bits[0],
-                        last_name=bits[-1],
-                    )
-                except (HunterAPIError, HunterConfigError) as exc:
-                    logger.warning("Hunter finder failed for %r: %s", employer, exc)
-                    found = None
-                if found and _usable_hunter_row(found, employer, locality):
-                    prospect = found
-                    has_mail = True
+                for query in _finder_attempts(domain, employer):
+                    try:
+                        found = hunter.find_email(
+                            first_name=first,
+                            last_name=last,
+                            **query,
+                        )
+                    except (HunterAPIError, HunterConfigError) as exc:
+                        logger.warning("Hunter finder failed for %r: %s", employer, exc)
+                        found = None
+                    if found and _usable_hunter_row(
+                        found, employer, locality, domain=domain
+                    ):
+                        prospect = found
+                        has_mail = True
+                        break
         if has_mail:
-            _stamp_hit(row, prospect, plan=plan)
+            _stamp_hit(
+                row, prospect, plan=plan, scrape_pages=scrape_pages, domain=domain
+            )
             filled += 1
         elif prospect and prospect.get("name") and not known_name:
-            _stamp_hit(row, prospect, plan=plan)
+            _stamp_hit(
+                row, prospect, plan=plan, scrape_pages=scrape_pages, domain=domain
+            )
             filled += 1
         else:
-            _stamp_miss(row, plan=plan)
+            _stamp_miss(row, plan=plan, scrape_pages=scrape_pages)
             missed += 1
     if looked:
         db.commit()

@@ -25,7 +25,7 @@ FIND (URL) → QUALIFY (Job Cards, anonymous OK) → signup wall → CRM desk
 | Step | Surface | Auth | What the user sees |
 |------|---------|------|--------------------|
 | 01 FIND | `/` | Anonymous | Robot URL → understood robot |
-| 02 QUALIFY | `/` results | Anonymous | Job Cards as inline text. Value is proven **here**. No FIND process bar. |
+| 02 QUALIFY | `/` results | Anonymous | Job Cards. Value is proven **here**. No FIND process bar. |
 | — wall | `/signup?next=/pipeline?src=jobs_activate&src=jobs_activate` | Required | Account before the desk. |
 | 03 CRM | `/pipeline?src=jobs_activate` | Signed in | Jobs they kept as an expandable **listing**. Place this job lives **inside** an opened job, not as the only screen. |
 

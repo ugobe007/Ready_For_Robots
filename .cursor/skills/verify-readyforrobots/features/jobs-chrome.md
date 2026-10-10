@@ -4,8 +4,8 @@ Jobs chrome is the page frame for FIND → cards → CRM: dark header, process b
 
 ## Sub-features
 
-- `chrome-header` Jobs / About / CRM; wordmark goes to `/` (FIND). `/?visit=jobs` is the same FIND document.
-- `chrome-process` FIND has no 01 / 02 / 03 process bar. CRM desk still has `aria-label="Jobs process"` with step 03 labeled CRM.
+- `chrome-header` Jobs / About / CRM; wordmark goes to `/?new=1` (landing fork). FIND is `/?visit=jobs`.
+- `chrome-process` FIND has no 01 / 02 / 03 process bar. Clicking a job card must not remount it. CRM desk still has `aria-label="Jobs process"` with step 03 labeled CRM.
 - `chrome-no-pipeline` no Pipeline nav, no SIGNAL FAB on Jobs pages.
 - `chrome-scroll` the document scrolls; no `100vh` + `overflow: hidden` trap.
 - `chrome-pstack` How / Act / Critic is the **release gate** (`scripts/pstack_release.py`), not a required banner on `/`. Matcher is `POST /api/robot-job-match`. FIND submit is `POST /api/robot-job-search`. Not a chatbot. Do not put JOBS AGENT PROTOCOL on FIND or CRM as merge proof.
@@ -22,9 +22,9 @@ Preconditions:
 - Doctor healthy.
 
 - **Header.** On `/`, nav includes Jobs, About, and CRM. Pipeline is absent. Signed-out Sign In stays. Signed-out CRM href is the signup wall with `next=/pipeline?src=jobs_activate`.
-- FIND has no process bar. CRM desk: `aria-label="Jobs process"`. List action `Open CRM →`. Step 03 label is CRM.
+- FIND has no process bar. Job-card click stays on the card modal, not FIND chrome. CRM desk: `aria-label="Jobs process"`. List action `Open CRM →`. Step 03 label is CRM.
 - **JS canary (CI).** Run `python3 scripts/agent_verify.py drive --feature jobs-chrome --evidence "$EVIDENCE"`. Live `/` bundle: `Find jobs for your robot`, `jobs_activate`, and a FIND action (`Find jobs →`, or `Start jobs →` until Vercel ships this copy). Checkout: `FIND_JOBS_CTA = "Find jobs →"`.
-- **Proof.** `drive-jobs-chrome.json` hits are all true. Browser: screenshot of `/` with header + FIND, no 01 / 02 / 03 strip, Pipeline not in the header.
+- **Proof.** `drive-jobs-chrome.json` hits are all true. Browser: screenshot of `/` with header + FIND, no 01 / 02 / 03 strip on a job card, Pipeline not in the header.
 
 ## Gotchas
 
