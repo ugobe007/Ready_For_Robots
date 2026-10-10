@@ -95,7 +95,7 @@ export function composeRobotCompanyIntro(opts: {
   work = work || OEM_INTRO_BLANK;
   const monthly = pay(opts.monthlyComp) || OEM_INTRO_PAY_BLANK;
   const term = clean(opts.duration, 80) || OEM_INTRO_TERM_BLANK;
-  const reqs = insertWords(clean(opts.requirements, 360)) || OEM_INTRO_BLANK;
+  const reqs = insertWords(clause(opts.requirements)) || OEM_INTRO_BLANK;
   const person = firstName(opts.decisionMakerName);
   const callWith =
     person && company ? `${person} at ${company}` : company || person || OEM_INTRO_BLANK;

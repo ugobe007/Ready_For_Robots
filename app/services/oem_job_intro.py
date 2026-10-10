@@ -140,7 +140,7 @@ def compose_robot_company_intro(
     ) or BLANK
     pay = _pay(monthly_comp) or PAY_BLANK
     term = _clean(duration, limit=80) or TERM_BLANK
-    reqs = _insert_words(_clean(requirements, limit=360)) or BLANK
+    reqs = _insert_words(_clause(requirements)) or BLANK
     call_with = _named(employer_for_call) or _call_with(
         employer=employer or "",
         decision_maker_name=decision_maker_name or "",

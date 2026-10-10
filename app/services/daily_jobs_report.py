@@ -632,6 +632,21 @@ def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
             head = f"{head} · {locality}"
         href = str(job.get("card_href") or job_card_href(str(job.get("job_key") or "")))
         card = html.escape(href)
+        intro = str(job.get("intro") or intro_from_sales_card(job) or "").strip()
+        employer_intro = str(
+            job.get("employer_intro") or employer_intro_from_sales_card(job) or ""
+        ).strip()
+        intro_html = ""
+        if intro:
+            intro_html += (
+                "<br><strong style=\"font-size:12px;color:#059669\">[5] Intro to the robot company</strong><br>"
+                f"<span style=\"font-size:13px;color:#374151\">{html.escape(intro).replace(chr(10), '<br>')}</span>"
+            )
+        if employer_intro:
+            intro_html += (
+                "<br><strong style=\"font-size:12px;color:#059669\">[6] Intro to the employer</strong><br>"
+                f"<span style=\"font-size:13px;color:#374151\">{html.escape(employer_intro).replace(chr(10), '<br>')}</span>"
+            )
         rows.append(
             "<p style=\"margin:0 0 12px;padding:0;font-size:14px;line-height:1.45\">"
             f"<strong>{head}</strong><br>"
@@ -639,6 +654,7 @@ def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
             f"Decision maker: {html.escape(_decision_maker_inline(job))}<br>"
             f"Contact: {_contact_html(job)}<br>"
             f"<a href=\"{card}\">Job card</a>"
+            f"{intro_html}"
             "</p>"
         )
     listing = (

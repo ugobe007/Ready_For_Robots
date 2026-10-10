@@ -184,12 +184,12 @@ export default function AdminDailyJobsReport({
                 employer: job.employer,
                 locality: job.locality,
                 requirements: job.description || job.title,
-                decisionMakerName: job.decision_maker,
+                decisionMakerName: job.decision_maker_name,
               });
             const employerIntro =
               job.employer_intro ||
               composeEmployerNeedIntro({
-                contactName: job.decision_maker,
+                contactName: job.decision_maker_name,
                 announcedNeed: job.title || job.job_type,
                 automationTasks: job.description,
               });
