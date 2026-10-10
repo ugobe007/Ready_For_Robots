@@ -1,10 +1,10 @@
 /**
  * Jobs submit workflow — FIND on `/`.
  *
- * Step 01 FIND → step 02 JOBS → step 03 CRM.
- * Checking a job dumps it into CRM. Next / 03 opens the CRM desk
- * (quote → Place this job). Process chrome lives on the page. The document
- * scrolls. Do not trap the next step inside a clipped 100vh box.
+ * FIND → Job Cards → CRM. Checking a job dumps it into CRM. Next opens
+ * the CRM desk (quote → Place this job). FIND has no 01 / 02 / 03 process
+ * bar; that strip lives on the CRM desk. The document scrolls. Do not
+ * trap the next step inside a clipped 100vh box.
  *
  * Cap: 5 example jobs on `/`. Activate fills the live list to 15.
  */

@@ -13,7 +13,11 @@ from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.services.employer_robot_match import EMPTY_COPY, match_catalog_robots
+from app.services.employer_robot_match import (
+    EMPTY_COPY,
+    match_catalog_robots,
+    public_shortlisted_robots,
+)
 from app.services.robot_job_extract import job_function_from_title
 from app.services.robot_job_lifecycle import upsert_robot_job_from_extract
 
@@ -29,6 +33,7 @@ class EmployerRobotMatchIn(BaseModel):
 class EmployerJobDraftIn(BaseModel):
     employer: str = Field(..., max_length=240)
     title: str = Field(..., max_length=200)
+    contact_name: Optional[str] = Field(default=None, max_length=240)
     workplace: Optional[str] = Field(default=None, max_length=240)
     description: Optional[str] = Field(default=None, max_length=12000)
     work_class: Optional[str] = Field(default=None, max_length=40)
@@ -54,16 +59,18 @@ def post_employer_job_draft(
 ) -> dict[str, Any]:
     employer = (body.employer or "").strip()
     title = (body.title or "").strip()
-    if not employer or not title:
+    contact_name = (body.contact_name or "").strip()
+    if not employer or not title or not contact_name:
         return {
             "ok": False,
             "persisted": False,
             "job_key": None,
-            "detail": "Name the employer and the work. We will not invent either.",
+            "detail": "Name the company, the job, and the contact. We will not invent them.",
         }
     extract: dict[str, Any] = {
         "employer": employer,
         "job_title": title,
+        "contact_name": contact_name,
         "workplace": (body.workplace or "").strip() or None,
         "job_function": job_function_from_title(title),
         "status": "open",
@@ -80,6 +87,9 @@ def post_employer_job_draft(
         extract["job_description"] = jd_text[:12000]
     if jd_filename:
         extract["job_description_filename"] = jd_filename[:240]
+    chosen = public_shortlisted_robots(body.shortlisted)
+    if chosen:
+        extract["employer_shortlisted_robots"] = chosen
     try:
         row = upsert_robot_job_from_extract(
             db,

@@ -57,27 +57,19 @@ Collapsible command rail on CRM / pipeline / admin when signed in. Sections: Sel
 
 ## Process bar (Jobs workflow chrome)
 
-Not a sidebar. Page-level strip, **top and bottom**, `aria-label="Jobs process"` on FIND and `aria-label="Employer process"` on employer MATCH. The document **scrolls**. Do not lock the workspace at `100vh` + `overflow: hidden`.
+Not a sidebar. FIND (`/?visit=jobs`) and the landing job-card modal have **no** 01 / 02 / 03 process strip. Clicking a job card must not remount FIND chrome. The document **scrolls**. Do not lock the workspace at `100vh` + `overflow: hidden`.
 
-Landing has no process bar.
+CRM desk (`/pipeline?src=jobs_activate`) still uses `aria-label="Jobs process"`. Employer MATCH uses `aria-label="Employer process"`.
 
-### FIND (`/?visit=jobs`)
-
-| Step | Label | CTA |
-|------|-------|-----|
-| 01 | Show us your robot | `Find jobs →` (emerald) |
-| 02 | Available jobs | `Open CRM →` (emerald). Apply is not a sibling CTA on this screen. |
-| 03 | CRM | `Open CRM →` / leave-desk next. Signed desk shows violet **Apply to jobs →**. |
-
-01 / 02 / 03 stay **links** even while research is running. Next is on the list and process bars, **not** on the Job Card. Step 03 is **CRM**. Place this job (quote the rental) is the money action *inside* CRM. Apply lives on the CRM desk after Open CRM. Cal stays here after Open CRM. Employer MATCH does not get Cal.
+FIND next is **Open CRM →** on the job list, **not** on the Job Card. Step 03 stays labeled **CRM** on the desk. Place this job (quote the rental) is the money action *inside* CRM. Apply lives on the CRM desk after Open CRM. Cal stays here after Open CRM. Employer MATCH does not get Cal.
 
 ### Employer MATCH (`/?visit=candidates`)
 
 | Step | Label | CTA |
 |------|-------|-----|
 | 01 | What is the work | `Match robots →` |
-| 02 | Matching robots | named catalog robots, then `Post this job →` |
-| 03 | Post the job | employer name + work title. No invented email. Employer CRM is their postings + shortlisted robots. |
+| 02 | Matching robots | named catalog robots. Click a robot to examine on-file description, specs, and photo if stored. Check every robot that fits — more than one is allowed. Then `Post this job →` |
+| 03 | Post the job | Company, job name (lookup), and contact name. No invented email. Employer CRM is their postings + shortlisted robots. |
 
 On `/pipeline?src=jobs_activate` the same process bar renders (unsigned wall and signed desk). Unsigned next is **Sign up to open CRM →**. Signed next leaves the desk: **Back to jobs →** when they have a submission or kept cards, otherwise **Find jobs →**. Header **About** stays visible on all widths.
 

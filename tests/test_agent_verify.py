@@ -37,10 +37,7 @@ def test_find_jobs_cta_is_checkout_copy_not_live_lag():
         encoding="utf-8"
     )
     assert 'JOBS_APPLY_HERO_CTA = "Apply to jobs →"' in workflow
-    live_lag = (
-        f"{FIND_HEADLINE} {JOBS_ACTIVATE} Show us your robot Available jobs "
-        "Start jobs →"
-    )
+    live_lag = f"{FIND_HEADLINE} {JOBS_ACTIVATE} Start jobs →"
     hits = jobs_chrome_hits(live_lag)
     assert hits["find_jobs_live"] is True
     assert hits["find_jobs_source"] is True
