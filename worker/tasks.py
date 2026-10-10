@@ -1185,17 +1185,34 @@ def run_outreach_sequences_task(self, limit: int = 50):
 
 
 @celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
-def send_cal_daily_digest_task(self, force: bool = False, period_hours: int = 24):
+def send_phelan_daily_digest_task(self, force: bool = False, period_hours: int = 24):
     """Send the operator Cal daily digest. No paid LLM / AI Gateway."""
-    from app.services.cal_daily_digest import send_cal_daily_digest
+    from app.services.phelan_daily_digest import send_phelan_daily_digest
 
     db = get_db()
     try:
-        result = send_cal_daily_digest(db, period_hours=period_hours, force=force)
+        result = send_phelan_daily_digest(db, period_hours=period_hours, force=force)
         logger.info("[DIGEST] Cal daily digest result=%s", result)
         return result
     except Exception as exc:
         logger.error("[DIGEST] Cal daily digest failed: %s", exc)
+        raise self.retry(exc=exc)
+    finally:
+        db.close()
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=120)
+def send_daily_jobs_report_task(self, force: bool = False, limit: int = 25):
+    """Email the operator top-25 Robot Jobs report. No paid LLM."""
+    from app.services.daily_jobs_report import send_daily_jobs_report
+
+    db = get_db()
+    try:
+        result = send_daily_jobs_report(db, force=force, limit=limit)
+        logger.info("[JOBS_REPORT] daily result=%s", result)
+        return result
+    except Exception as exc:
+        logger.error("[JOBS_REPORT] daily send failed: %s", exc)
         raise self.retry(exc=exc)
     finally:
         db.close()

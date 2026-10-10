@@ -21,6 +21,8 @@ def test_how_and_act_pass_on_this_tree():
     assert "chrome_not_gate" in ids
     assert "silent_abort" in ids
     assert "bind_url" in ids
+    assert "phelan_jobs_desk" in ids
+    assert "crm_first_cta" in ids
 
 
 def test_local_release_skips_fly_drive():
@@ -30,63 +32,104 @@ def test_local_release_skips_fly_drive():
     assert result["authority"] == "release_gate"
     critic_ids = [c["id"] for c in result["critic"]["checks"]]
     assert "find_abort" in critic_ids
+    assert "find_no_home" in critic_ids
     assert "crm_leftover" in critic_ids
     assert "oem_extract" in critic_ids
     assert "class_picker" in critic_ids
     assert "healthcare_class" in critic_ids
     assert "healthcare_class:live" in critic_ids
     assert "ontology_industry_language" in critic_ids
+    assert "url_workflow" in critic_ids
     assert "find_drive" in critic_ids
 
 
-def test_post_json_retries_transient_503(monkeypatch):
+PR_194_FILES = [
+    "app/scrapers/job_board_scraper_enhanced.py",
+    "app/scrapers/scrape_targets.py",
+    "app/services/robot_job_extract.py",
+    "fly.toml",
+    "scripts/pstack_release.py",
+    "tests/test_job_board_scraper_pipeline.py",
+    "tests/test_pstack_release.py",
+    "tests/test_robot_job_extract.py",
+]
+
+
+def test_scrape_only_paths_skip_live_find():
+    from scripts.pstack_release import path_is_scrape_only, paths_are_scrape_only
+
+    assert path_is_scrape_only("app/scrapers/scrape_targets.py")
+    assert path_is_scrape_only("fly.toml")
+    assert path_is_scrape_only("app/services/robot_job_extract.py")
+    assert not path_is_scrape_only("readyforrobots-new/client/src/lib/jobsWorkflow.ts")
+    assert not path_is_scrape_only("ontology/industry_work_language.v1.json")
+    assert paths_are_scrape_only(
+        [
+            "app/scrapers/scrape_targets.py",
+            "app/scrapers/job_board_scraper_enhanced.py",
+            "app/services/robot_job_extract.py",
+            "tests/test_job_board_scraper_pipeline.py",
+            "tests/test_robot_job_extract.py",
+            "fly.toml",
+        ]
+    )
+    assert not paths_are_scrape_only(
+        ["app/scrapers/scrape_targets.py", "readyforrobots-new/client/src/lib/jobsWorkflow.ts"]
+    )
+    # Gate-script edits on a scrape PR are not scrape-only — that is why CI still
+    # drove Dexmate after 149d2775.
+    assert not paths_are_scrape_only(PR_194_FILES)
+
+
+def test_scrape_plus_pstack_harness_skips_live_find():
+    from scripts.pstack_release import skip_live_find_drives
+
+    skip, reason = skip_live_find_drives(PR_194_FILES)
+    assert skip, reason
+    assert "FIND" in reason
+
+
+def test_find_ui_diff_still_runs_live_find():
+    from scripts.pstack_release import skip_live_find_drives
+
+    skip, _reason = skip_live_find_drives(
+        ["readyforrobots-new/client/src/lib/jobsWorkflow.ts", "scripts/pstack_release.py"]
+    )
+    assert not skip
+
+
+def test_empty_ci_file_list_skips_live_find(monkeypatch):
+    from scripts.pstack_release import skip_live_find_drives
+
+    monkeypatch.setenv("GITHUB_ACTIONS", "true")
+    skip, reason = skip_live_find_drives([])
+    assert skip, reason
+
+
+def test_critic_skips_fly_on_scrape_pr_file_list(monkeypatch):
     from scripts import pstack_release as ps
 
-    calls = {"n": 0}
+    monkeypatch.setattr(ps, "pr_changed_files", lambda: list(PR_194_FILES))
 
-    def fake_once(url, payload, *, timeout):
-        calls["n"] += 1
-        if calls["n"] < 3:
-            return 503, {"_raw": ""}
-        return 200, {"state": "matches", "company_name": "Dexmate"}
+    def boom(*_a, **_k):
+        raise AssertionError("live FIND must not run on scrape + pstack-harness diffs")
 
-    monkeypatch.setattr(ps, "_post_json_once", fake_once)
-    monkeypatch.setenv("PSTACK_HTTP_RETRIES", "6")
-    monkeypatch.setenv("PSTACK_HTTP_RETRY_SLEEP", "0")
-    code, body = ps._post_json("https://example.test/api/robot-job-search", {"url": "https://www.dexmate.ai/"})
-    assert code == 200
-    assert body["state"] == "matches"
-    assert calls["n"] == 3
-
-
-def test_find_tile_pr_must_not_skip_live_critic():
-    """Serving/Cleaning FIND tiles are not a scrape-only PR — live critic must run."""
-    tile_files = (
-        "readyforrobots-new/client/src/lib/robotClassOptions.ts",
-        "readyforrobots-new/client/src/lib/jobsWorkflow.ts",
-        "app/services/robot_class_qualify.py",
-        "ontology/industry_work_language.v1.json",
-        "scripts/pstack_release.py",
-    )
-    scrape_only = {
-        "app/services/robot_job_extract.py",
-        "app/services/job_board_scraper_runner.py",
-        "tests/test_job_board_scraper_pipeline.py",
-        "tests/test_robot_job_extract.py",
-        "fly.toml",
-    }
-    assert not all(path in scrape_only or path.startswith("app/scrapers/") for path in tile_files)
-    src = (ROOT / "scripts" / "pstack_release.py").read_text(encoding="utf-8")
-    assert "wait_for_fly_health" in src
-    assert "TRANSIENT_HTTP" in src
-    assert 'if local:' in src
-    assert "scrape-only PR" not in src
+    monkeypatch.setattr(ps, "drive_find_url", boom)
+    monkeypatch.setattr(ps, "drive_diligent_healthcare", boom)
+    critic = ps.phase_critic(api="https://ready-2-robot.fly.dev", local=False)
+    assert critic["ok"], critic
+    ids = {c["id"]: c for c in critic["checks"]}
+    assert ids["find_drive"]["ok"]
+    assert ids["healthcare_class:live"]["ok"]
+    assert ids["ontology_industry_language"]["ok"]
+    assert ids["url_workflow"]["ok"]
 
 
 def test_critic_gates_include_abort_and_leftover():
     assert critic_gate_ids() == [
         "find",
         "find_abort",
+        "find_no_home",
         "find_identity",
         "crm_leftover",
         "job_cards",
@@ -96,6 +139,7 @@ def test_critic_gates_include_abort_and_leftover():
         "class_picker",
         "healthcare_class",
         "ontology_industry_language",
+        "url_workflow",
     ]
 
 

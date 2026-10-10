@@ -175,7 +175,7 @@ def _indexed_work_kind_product(url: str, product: str | None) -> str | None:
 
 
 def compose_robot_job_search(
-    url: str,
+    url: str | None = None,
     *,
     product: str | None = None,
     max_sources: int = 6,
@@ -189,17 +189,34 @@ def compose_robot_job_search(
     scraping a SKU page — only when there is no named product. A catalog SKU
     (`product=LaserWeeder`) matches that configuration's work-kind even if
     the client still sends the parent FIND tile.
+
+    Class-only FIND (no URL) uses thin_class_profile. That is type-first MATCH,
+    not an invented OEM page.
     """
     t0 = time.perf_counter()
-    safe = assert_public_http_url(url)
+    raw = (url or "").strip()
     product_name = (product or "").strip() or None
     grain = _normalize_lookup_grain(lookup_grain)
     build_timings: dict[str, Any] = {"resolve_ms": 0, "profile_ms": 0}
     cached_hit = False
     type_first = False
     profile_dict: dict[str, Any] | None = None
+    safe: str | None = None
 
-    if grain == "robot_type":
+    if not raw:
+        from app.services.robot_class_qualify import lookup_class_id, thin_class_profile
+        from app.services.robot_url_safety import UrlSafetyError
+
+        class_id = lookup_class_id(asserted_class)
+        if not class_id:
+            raise UrlSafetyError("need a robot URL or a robot class")
+        profile_dict = thin_class_profile("your robot", class_id)
+        type_first = True
+        grain = "robot_type"
+    else:
+        safe = assert_public_http_url(raw)
+
+    if safe and grain == "robot_type":
         from app.services.robot_class_qualify import lookup_class_id, thin_class_profile
 
         sku_name = _indexed_work_kind_product(safe, product_name)

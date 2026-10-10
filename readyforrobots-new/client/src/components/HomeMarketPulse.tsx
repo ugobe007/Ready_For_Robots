@@ -36,7 +36,8 @@ function parsePulseJson(data: unknown): PulseNums | null {
   return {
     buyers,
     leads: Number.isFinite(leads) && leads >= 0 ? leads : 0,
-    deployments: Number.isFinite(deployments) && deployments >= 0 ? deployments : 0,
+    deployments:
+      Number.isFinite(deployments) && deployments >= 0 ? deployments : 0,
     live: true,
   };
 }
@@ -65,7 +66,7 @@ export default function HomeMarketPulse() {
           `${base}/api/leads/market-pulse`,
           {},
           6_000,
-          { retries: 1, retryDelayMs: 400 },
+          { retries: 1, retryDelayMs: 400 }
         );
         if (res.ok) {
           const ct = res.headers.get("content-type") || "";
@@ -86,7 +87,7 @@ export default function HomeMarketPulse() {
           `${base}/api/leads/homepage`,
           {},
           8_000,
-          { retries: 1, retryDelayMs: 400 },
+          { retries: 1, retryDelayMs: 400 }
         );
         if (!res.ok) return;
         const parsed = parseHomepageSummary(await res.json());
@@ -102,7 +103,8 @@ export default function HomeMarketPulse() {
   }, []);
 
   const mono = {
-    fontFamily: "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
+    fontFamily:
+      "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace",
   } as const;
 
   return (
@@ -121,19 +123,26 @@ export default function HomeMarketPulse() {
           style={{ backgroundColor: DEPLOY_COLOR }}
         />
       </span>
-      <span className="font-medium tabular-nums" style={{ color: DEPLOY_COLOR }}>
+      <span
+        className="font-medium tabular-nums"
+        style={{ color: DEPLOY_COLOR }}
+      >
         {fmt(pulse.deployments)}
       </span>
       <span className="text-slate-500">deployments</span>
       <span className="text-slate-600" aria-hidden>
         ·
       </span>
-      <span className="font-medium tabular-nums text-[#3ecf8e]">{fmt(pulse.buyers)}</span>
+      <span className="font-medium tabular-nums text-[#3ecf8e]">
+        {fmt(pulse.buyers)}
+      </span>
       <span className="text-slate-500">buyers</span>
       <span className="text-slate-600" aria-hidden>
         ·
       </span>
-      <span className="font-medium tabular-nums text-slate-100">{fmt(pulse.leads)}</span>
+      <span className="font-medium tabular-nums text-slate-100">
+        {fmt(pulse.leads)}
+      </span>
       <span className="text-slate-500">leads</span>
       <span className="text-slate-600" aria-hidden>
         ·

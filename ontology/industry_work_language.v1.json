@@ -9,7 +9,7 @@
     "morphology"
   ],
   "rule_id": "R33",
-  "rule": "Work-language / task-model evidence outranks generic humanoid morphology when both fire. A social torso, face, or arm does not override hospital or hotel delivery work. Warehouse and factory verticals do not outrank a true humanoid. Hardware still comes first. Never company \u2192 category \u2192 jobs.",
+  "rule": "Work-language / task-model evidence outranks generic humanoid morphology when both fire. A social torso, face, or arm does not override hospital, hotel delivery, restaurant serving, or floor-cleaning work. Infer per product (a waiter SKU is serving; a scrubber SKU is cleaning) — never company → category → jobs. Warehouse and factory verticals do not outrank a true humanoid. Hardware still comes first.",
   "morphology_classes": [
     "humanoid",
     "semi-humanoid",
@@ -576,38 +576,32 @@
     {
       "id": "serving",
       "find_class": "serving",
-      "verticals": [
-        "restaurant",
-        "hospitality"
-      ],
+      "verticals": ["restaurant", "hospitality"],
       "claim_predicate": "claims_serving",
       "capability": "serving_task",
-      "product_classes": [
-        "serving"
-      ],
+      "product_classes": ["serving"],
       "aliases": [
         "serving",
         "table service",
         "food running",
         "waitstaff",
-        "table_service"
+        "table_service",
+        "food delivery amr"
       ],
-      "outranks_morphology": [
-        "humanoid",
-        "semi-humanoid",
-        "biped",
-        "bipedal"
-      ],
-      "task_model_ids": [
-        "dining_floor_service_policy"
-      ],
+      "outranks_morphology": ["humanoid", "semi-humanoid", "biped", "bipedal"],
+      "task_model_ids": ["dining_floor_service_policy"],
       "class_signals": [
         "table service",
         "food running",
         "bussing",
         "dining room",
         "food runner",
-        "cocktail server"
+        "cocktail server",
+        "tray delivery",
+        "restaurant delivery",
+        "waiter robot",
+        "food service",
+        "table delivery"
       ],
       "work_words": [
         "table service",
@@ -625,35 +619,36 @@
         "casino cocktail",
         "airport restaurant",
         "office cafeteria",
-        "mall food court"
+        "mall food court",
+        "tray delivery",
+        "delivery tray",
+        "delivery trays",
+        "dish return",
+        "table delivery",
+        "front-of-house",
+        "front of house",
+        "restaurant delivery",
+        "food delivery amr",
+        "food delivery",
+        "food service",
+        "restaurants",
+        "restaurant",
+        "waiter",
+        "waiter robot",
+        "serving robot",
+        "food and beverage"
       ]
     },
     {
       "id": "cleaning",
       "find_class": "cleaning",
-      "verticals": [
-        "hospitality",
-        "restaurant"
-      ],
+      "verticals": ["commercial", "hospitality", "restaurant"],
       "claim_predicate": "claims_surface_cleaning",
       "capability": "surface_clean",
-      "product_classes": [
-        "cleaning"
-      ],
-      "aliases": [
-        "cleaning",
-        "janitorial",
-        "custodial"
-      ],
-      "outranks_morphology": [
-        "humanoid",
-        "semi-humanoid",
-        "biped",
-        "bipedal"
-      ],
-      "task_model_ids": [
-        "commercial_cleaning_policy"
-      ],
+      "product_classes": ["cleaning"],
+      "aliases": ["cleaning", "janitorial", "custodial"],
+      "outranks_morphology": ["humanoid", "semi-humanoid", "biped", "bipedal"],
+      "task_model_ids": ["commercial_cleaning_policy"],
       "class_signals": [
         "janitor",
         "custodian",
@@ -676,7 +671,49 @@
         "restaurant janitor",
         "data center janitor",
         "office janitor",
-        "mall janitor"
+        "mall janitor",
+        "vacuuming",
+        "scrubbing",
+        "mopping",
+        "sweeping",
+        "cleaning",
+        "commercial floors",
+        "public venues",
+        "public buildings",
+        "floor scrubber"
+      ]
+    },
+    {
+      "id": "cleaning_drone",
+      "find_class": "cleaning_drone",
+      "verticals": ["commercial"],
+      "claim_predicate": "claims_surface_cleaning",
+      "capability": "surface_clean",
+      "product_classes": ["cleaning_drone"],
+      "aliases": [
+        "cleaning drone",
+        "window washing drone",
+        "facade cleaning drone"
+      ],
+      "outranks_morphology": [],
+      "task_model_ids": [],
+      "class_signals": [
+        "cleaning drone",
+        "window washing drone",
+        "facade cleaning",
+        "exterior cleaning drone"
+      ],
+      "work_words": [
+        "cleaning drone",
+        "cleaning drones",
+        "window washing drone",
+        "window washing",
+        "facade cleaning",
+        "exterior cleaning",
+        "exterior building washing",
+        "building washing",
+        "power washing cleaning drone",
+        "drone cleaning"
       ]
     },
     {

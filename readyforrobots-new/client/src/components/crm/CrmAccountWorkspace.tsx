@@ -1,6 +1,20 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Check, ExternalLink, Loader2, Plus } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  Loader2,
+  Plus,
+  Mail,
+  Box,
+  FileText,
+  Sparkles,
+} from "lucide-react";
+import LeadEmailDisplay from "@/components/LeadEmailDisplay";
+import ResendEmailModal from "@/components/ResendEmailModal";
+import FeasibilitySimulationModal from "@/components/FeasibilitySimulationModal";
+import ProposalPdfModal from "@/components/ProposalPdfModal";
+import { buildPhelanExecutiveEmail } from "@/lib/executiveEmailGenerator";
 
 type CrmTask = {
   id: string;
@@ -76,13 +90,22 @@ type Props = {
 function fmtWhen(value?: string | null) {
   if (!value) return "—";
   try {
-    return new Date(value).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+    return new Date(value).toLocaleString(undefined, {
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
   } catch {
     return value;
   }
 }
 
-export default function CrmAccountWorkspace({ accountId, authFetch, onStageChange }: Props) {
+export default function CrmAccountWorkspace({
+  accountId,
+  authFetch,
+  onStageChange,
+}: Props) {
   const [detail, setDetail] = useState<AccountDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -91,19 +114,40 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
   const [sequenceName, setSequenceName] = useState<string | null>(null);
   const [sequenceSteps, setSequenceSteps] = useState<number>(0);
   const [enrollmentStatus, setEnrollmentStatus] = useState<string | null>(null);
+  const [showResendModal, setShowResendModal] = useState(false);
+  const [showFeasibilityModal, setShowFeasibilityModal] = useState(false);
+  const [showProposalModal, setShowProposalModal] = useState(false);
 
   const reload = useCallback(async () => {
     if (!accountId) return;
     setLoading(true);
     setError(null);
     try {
-      const data = (await authFetch(`/api/crm/accounts/${accountId}`)) as AccountDetail;
-      setDetail(data);
+      const data = (await authFetch(
+        `/api/crm/accounts/${accountId}`
+      )) as AccountDetail;
+      const safeDetail: AccountDetail = {
+        account: data?.account || { id: accountId, name: "Account" },
+        engagement: data?.engagement || null,
+        tasks: Array.isArray(data?.tasks) ? data.tasks : [],
+        notes: Array.isArray(data?.notes) ? data.notes : [],
+        outreach_history: Array.isArray(data?.outreach_history)
+          ? data.outreach_history
+          : [],
+        timeline: Array.isArray(data?.timeline) ? data.timeline : [],
+      };
+      setDetail(safeDetail);
       try {
         const seqPayload = (await authFetch("/api/sales/sequences")) as {
-          sequences?: Array<{ name: string; is_default?: boolean; steps?: unknown[] }>;
+          sequences?: Array<{
+            name: string;
+            is_default?: boolean;
+            steps?: unknown[];
+          }>;
         };
-        const seq = (seqPayload.sequences || []).find((s) => s.is_default) || seqPayload.sequences?.[0];
+        const seq =
+          (seqPayload.sequences || []).find(s => s.is_default) ||
+          seqPayload.sequences?.[0];
         if (seq) {
           setSequenceName(seq.name);
           setSequenceSteps(seq.steps?.length ?? 0);
@@ -113,7 +157,9 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
       }
     } catch (e) {
       setDetail(null);
-      setError(e instanceof Error ? e.message : "Could not load account workspace");
+      setError(
+        e instanceof Error ? e.message : "Could not load account workspace"
+      );
     } finally {
       setLoading(false);
     }
@@ -147,7 +193,9 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
       await authFetch(`/api/crm/tasks/${task.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: task.status === "done" ? "todo" : "done" }),
+        body: JSON.stringify({
+          status: task.status === "done" ? "todo" : "done",
+        }),
       });
       await reload();
     } catch (e) {
@@ -167,7 +215,9 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
       })) as { status?: string; current_step?: number };
       setEnrollmentStatus(result.status || "active");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not enroll in sequence");
+      setError(
+        err instanceof Error ? err.message : "Could not enroll in sequence"
+      );
     } finally {
       setBusy(false);
     }
@@ -207,7 +257,7 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
 
   if (!detail) return null;
 
-  const openTasks = detail.tasks.filter((t) => t.status !== "done");
+  const openTasks = detail.tasks.filter(t => t.status !== "done");
 
   return (
     <div className="space-y-3">
@@ -238,10 +288,10 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
             <select
               value={detail.engagement.stage}
               disabled={busy}
-              onChange={(e) => void patchEngagementStage(e.target.value)}
+              onChange={e => void patchEngagementStage(e.target.value)}
               className="sb-input text-xs"
             >
-              {ENGAGEMENT_STAGES.map((s) => (
+              {ENGAGEMENT_STAGES.map(s => (
                 <option key={s.value} value={s.value}>
                   {s.label}
                 </option>
@@ -249,19 +299,57 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
             </select>
           </label>
         ) : null}
+
+        {/* Phelan Tools & Placement Workflow Action Bar */}
+        <div className="mt-3 border-t border-slate-700/60 pt-2.5">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1 mb-2">
+            <Sparkles className="h-3 w-3" /> Phelan Placement Tools
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setShowResendModal(true)}
+              className="inline-flex items-center gap-1 rounded bg-emerald-600/90 border border-emerald-500 px-2 py-1 text-[11px] font-bold text-white hover:bg-emerald-500 transition"
+            >
+              <Mail className="h-3 w-3" /> Send Next Steps Email
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowFeasibilityModal(true)}
+              className="inline-flex items-center gap-1 rounded bg-slate-800 border border-slate-700 px-2 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-700 hover:text-white transition"
+            >
+              <Box className="h-3 w-3 text-emerald-400" /> 3D Feasibility
+              Simulation
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowProposalModal(true)}
+              className="inline-flex items-center gap-1 rounded bg-slate-800 border border-slate-700 px-2 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-700 hover:text-white transition"
+            >
+              <FileText className="h-3 w-3 text-amber-400" /> Turnkey Proposal
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className=" border border-slate-600 bg-[#0b162f] p-2.5">
         <div className="flex items-center justify-between gap-2">
           <p className="sb-kicker">Tasks</p>
-          <span className="text-[10px] text-slate-500">{openTasks.length} open</span>
+          <span className="text-[10px] text-slate-500">
+            {openTasks.length} open
+          </span>
         </div>
         {openTasks.length === 0 ? (
-          <p className="mt-2 text-[11px] text-slate-500">No open tasks — run Generate sales plan to create some.</p>
+          <p className="mt-2 text-[11px] text-slate-500">
+            No open tasks — run Generate sales plan to create some.
+          </p>
         ) : (
           <ul className="mt-2 space-y-1.5">
-            {openTasks.slice(0, 8).map((task) => (
-              <li key={task.id} className="flex items-start gap-2  border border-slate-700 bg-[#081126] p-1.5">
+            {openTasks.slice(0, 8).map(task => (
+              <li
+                key={task.id}
+                className="flex items-start gap-2  border border-slate-700 bg-[#081126] p-1.5"
+              >
                 <button
                   type="button"
                   disabled={busy}
@@ -269,12 +357,22 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
                   className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center  border border-slate-500 bg-[#0b162f] hover:border-emerald-400"
                   aria-label={`Mark ${task.title} done`}
                 >
-                  {task.status === "done" ? <Check className="h-3 w-3 text-emerald-400" /> : null}
+                  {task.status === "done" ? (
+                    <Check className="h-3 w-3 text-emerald-400" />
+                  ) : null}
                 </button>
                 <div className="min-w-0">
-                  <p className="text-[11px] font-semibold text-slate-100">{task.title}</p>
-                  {task.body ? <p className="text-[10px] text-slate-400">{task.body}</p> : null}
-                  {task.due_at ? <p className="text-[10px] text-slate-500">Due {fmtWhen(task.due_at)}</p> : null}
+                  <p className="text-[11px] font-semibold text-slate-100">
+                    {task.title}
+                  </p>
+                  {task.body ? (
+                    <p className="text-[10px] text-slate-400">{task.body}</p>
+                  ) : null}
+                  {task.due_at ? (
+                    <p className="text-[10px] text-slate-500">
+                      Due {fmtWhen(task.due_at)}
+                    </p>
+                  ) : null}
                 </div>
               </li>
             ))}
@@ -289,9 +387,16 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
             {sequenceName} · {sequenceSteps} steps
           </p>
           {enrollmentStatus ? (
-            <p className="mt-1 text-[10px] font-semibold text-emerald-400">Enrolled · {enrollmentStatus}</p>
+            <p className="mt-1 text-[10px] font-semibold text-emerald-400">
+              Enrolled · {enrollmentStatus}
+            </p>
           ) : (
-            <button type="button" disabled={busy} onClick={() => void enrollSequence()} className="sb-btn mt-2 text-xs">
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void enrollSequence()}
+              className="sb-btn mt-2 text-xs"
+            >
               Enroll in cadence
             </button>
           )}
@@ -300,22 +405,31 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
 
       <div className=" border border-slate-600 bg-[#0b162f] p-2.5">
         <p className="sb-kicker">Notes</p>
-        <form onSubmit={(e) => void addNote(e)} className="mt-2 flex gap-1.5">
+        <form onSubmit={e => void addNote(e)} className="mt-2 flex gap-1.5">
           <input
             value={noteBody}
-            onChange={(e) => setNoteBody(e.target.value)}
+            onChange={e => setNoteBody(e.target.value)}
             placeholder="Add a note…"
             className="sb-input flex-1 text-xs"
           />
-          <button type="submit" disabled={busy || !noteBody.trim()} className="sb-btn shrink-0 px-2">
+          <button
+            type="submit"
+            disabled={busy || !noteBody.trim()}
+            className="sb-btn shrink-0 px-2"
+          >
             <Plus className="h-3.5 w-3.5" />
           </button>
         </form>
         <ul className="mt-2 max-h-32 space-y-1 overflow-y-auto">
-          {detail.notes.slice(0, 6).map((note) => (
-            <li key={note.id} className=" border border-slate-700 bg-[#081126] p-1.5 text-[10px] text-slate-300">
+          {detail.notes.slice(0, 6).map(note => (
+            <li
+              key={note.id}
+              className=" border border-slate-700 bg-[#081126] p-1.5 text-[10px] text-slate-300"
+            >
               {note.body}
-              <span className="mt-0.5 block text-slate-500">{fmtWhen(note.created_at)}</span>
+              <span className="mt-0.5 block text-slate-500">
+                {fmtWhen(note.created_at)}
+              </span>
             </li>
           ))}
         </ul>
@@ -324,14 +438,18 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
       <div className=" border border-slate-600 bg-[#0b162f] p-2.5">
         <p className="sb-kicker">Outreach history</p>
         {detail.outreach_history.length === 0 ? (
-          <p className="mt-2 text-[11px] text-slate-500">No outreach sent yet.</p>
+          <p className="mt-2 text-[11px] text-slate-500">
+            No outreach sent yet.
+          </p>
         ) : (
           <ul className="mt-2 space-y-1">
-            {detail.outreach_history.slice(0, 5).map((row) => (
+            {detail.outreach_history.slice(0, 5).map(row => (
               <li key={row.id} className="text-[10px] text-slate-300">
-                <span className="font-semibold">{row.to_email}</span>
+                <LeadEmailDisplay email={row.to_email} variant="inline" />
                 <span className="text-slate-500"> · {row.status}</span>
-                <span className="block truncate text-slate-500">{row.subject}</span>
+                <span className="block truncate text-slate-500">
+                  {row.subject}
+                </span>
                 <span className="text-slate-500">{fmtWhen(row.sent_at)}</span>
               </li>
             ))}
@@ -343,8 +461,13 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
         <p className="sb-kicker">Activity timeline</p>
         <ul className="mt-2 max-h-36 space-y-1 overflow-y-auto">
           {detail.timeline.slice(0, 10).map((item, idx) => (
-            <li key={`${item.type}-${item.at}-${idx}`} className="flex gap-2 text-[10px]">
-              <span className="shrink-0 text-slate-500">{fmtWhen(item.at)}</span>
+            <li
+              key={`${item.type}-${item.at}-${idx}`}
+              className="flex gap-2 text-[10px]"
+            >
+              <span className="shrink-0 text-slate-500">
+                {fmtWhen(item.at)}
+              </span>
               <span className="text-slate-300">{item.label}</span>
             </li>
           ))}
@@ -352,6 +475,50 @@ export default function CrmAccountWorkspace({ accountId, authFetch, onStageChang
       </div>
 
       {error ? <p className="text-[11px] text-amber-800">{error}</p> : null}
+
+      {/* Modals for Phelan Placement Tools */}
+      {showResendModal && (
+        <ResendEmailModal
+          isOpen={showResendModal}
+          onClose={() => setShowResendModal(false)}
+          defaultTo=""
+          defaultSubject={
+            buildPhelanExecutiveEmail({ companyName: detail.account.name })
+              .subject
+          }
+          defaultBody={
+            buildPhelanExecutiveEmail({ companyName: detail.account.name }).body
+          }
+          companyName={detail.account.name}
+          crmAccountId={detail.account.id}
+          onSent={() => reload()}
+        />
+      )}
+
+      {showFeasibilityModal && (
+        <FeasibilitySimulationModal
+          isOpen={showFeasibilityModal}
+          onClose={() => setShowFeasibilityModal(false)}
+          companyName={detail.account.name}
+          onOpenProposalModal={() => setShowProposalModal(true)}
+        />
+      )}
+
+      {showProposalModal && (
+        <ProposalPdfModal
+          open={showProposalModal}
+          onClose={() => setShowProposalModal(false)}
+          accessToken=""
+          data={{
+            company_name: detail.account.name,
+            proposal: `Turnkey RaaS Commercial Proposal & 3D Cell-Feasibility Audit for ${detail.account.name}.\n\nShortlisted Models:\n- Universal Robots UR10e\n- FANUC CRX-20iA\n- ABB GoFa CRB 15000\n\nRaaS Monthly Rate: $3,200/month\nDeployment Timeline: 4 weeks`,
+            sender_company: "ReadyForRobots",
+            sender_name: "Phelan",
+            sender_title: "Robot Job Analyst",
+            generated_at: Date.now(),
+          }}
+        />
+      )}
     </div>
   );
 }

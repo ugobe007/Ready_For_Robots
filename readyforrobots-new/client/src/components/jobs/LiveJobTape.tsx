@@ -64,7 +64,9 @@ function jobsFoundLabel(n: number): string {
 }
 
 function nextInterval(): number {
-  return INTERVAL_MIN + Math.floor(Math.random() * (INTERVAL_MAX - INTERVAL_MIN));
+  return (
+    INTERVAL_MIN + Math.floor(Math.random() * (INTERVAL_MAX - INTERVAL_MIN))
+  );
 }
 
 function revealStepMs(target: number): number {
@@ -78,7 +80,7 @@ function toTitleCase(s: string): string {
   return s
     .trim()
     .toLowerCase()
-    .replace(/\b([a-z])/g, (c) => c.toUpperCase());
+    .replace(/\b([a-z])/g, c => c.toUpperCase());
 }
 
 export default function LiveJobTape({
@@ -216,7 +218,7 @@ export default function LiveJobTape({
     const jobPick = nextUnseenTapeJob(
       orderRef.current.length ? orderRef.current : corpus,
       cursorRef.current,
-      new Set(rowsRef.current.map((r) => r.key)),
+      new Set(rowsRef.current.map(r => r.key))
     );
     if (!jobPick) return;
     if (jobPick.wrapped) {
@@ -234,8 +236,8 @@ export default function LiveJobTape({
 
     setAnimate(false);
     setOffsetY(-ROW_PX);
-    setRows((prev) => {
-      const cleared = prev.map((r) => ({ ...r, isNew: false }));
+    setRows(prev => {
+      const cleared = prev.map(r => ({ ...r, isNew: false }));
       const incoming: Row = { ...job, instanceId, seq: nextSeq, isNew: true };
       return [incoming, ...cleared].slice(0, VISIBLE + 1);
     });
@@ -247,15 +249,22 @@ export default function LiveJobTape({
       });
     });
 
-    later(() => {
-      setAnimate(false);
-      setRows((prev) => prev.slice(0, VISIBLE));
-      if (!fromReveal) arriving.current = false;
-    }, fromReveal ? Math.min(SHIFT_MS, 90) : SHIFT_MS);
+    later(
+      () => {
+        setAnimate(false);
+        setRows(prev => prev.slice(0, VISIBLE));
+        if (!fromReveal) arriving.current = false;
+      },
+      fromReveal ? Math.min(SHIFT_MS, 90) : SHIFT_MS
+    );
     later(() => setIconActive(false), fromReveal ? 160 : 420);
     if (!fromReveal) {
       later(() => {
-        setRows((prev) => prev.map((r) => (r.instanceId === instanceId ? { ...r, isNew: false } : r)));
+        setRows(prev =>
+          prev.map(r =>
+            r.instanceId === instanceId ? { ...r, isNew: false } : r
+          )
+        );
       }, NEW_HOLD_MS);
     }
   }
@@ -288,11 +297,13 @@ export default function LiveJobTape({
           className="flex flex-col justify-center gap-2 px-5 py-8 font-mono text-[12px] font-semibold uppercase tracking-[0.1em] text-slate-400"
           style={{ minHeight: TAPE_VIEWPORT_PX }}
         >
-          {statusLines!.map((line) => (
+          {statusLines!.map(line => (
             <p
               key={line}
               className={
-                line.includes("✓") || line.startsWith(">") ? "text-emerald-400" : undefined
+                line.includes("✓") || line.startsWith(">")
+                  ? "text-emerald-400"
+                  : undefined
               }
             >
               {line}
@@ -313,7 +324,7 @@ export default function LiveJobTape({
                 : "none",
             }}
           >
-            {rows.map((row) => {
+            {rows.map(row => {
               const idle = TAPE_ICONS[row.family];
               const active = TAPE_ICONS_ACTIVE[row.family];
               const map = row.isNew && iconActive ? active : idle;
@@ -322,7 +333,11 @@ export default function LiveJobTape({
                 <li
                   key={row.instanceId}
                   className={`box-border border-b border-slate-800/90 ${
-                    row.isNew ? "bg-emerald-500/15" : selected ? "bg-slate-800/50" : ""
+                    row.isNew
+                      ? "bg-emerald-500/15"
+                      : selected
+                        ? "bg-slate-800/50"
+                        : ""
                   }`}
                   style={{ height: ROW_PX, minHeight: ROW_PX }}
                 >
@@ -362,7 +377,11 @@ export default function LiveJobTape({
                       </span>
                       <span
                         className="block overflow-hidden text-ellipsis whitespace-nowrap font-sans font-normal text-slate-400"
-                        style={{ fontSize: 11, lineHeight: "14px", marginTop: 2 }}
+                        style={{
+                          fontSize: 11,
+                          lineHeight: "14px",
+                          marginTop: 2,
+                        }}
                       >
                         {row.industry}
                       </span>

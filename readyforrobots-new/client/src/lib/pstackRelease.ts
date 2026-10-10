@@ -5,10 +5,11 @@
  * These fixtures are the checks that would have failed #173 (self-abort FIND
  * shown as Failed to fetch) and #172 (strawberry CRM leftover).
  */
+import { findUserFacingError, isSilentFindError } from "./robotUrlIdentity";
 import {
-  findUserFacingError,
-  isSilentFindError,
-} from "./robotUrlIdentity";
+  findFailureBouncesHome,
+  findLookupFailureOutcome,
+} from "./findResearch";
 import { crmDeskForCurrentRobot } from "./jobsCrmAccount";
 import { beginJobsHandoffForUrl } from "./jobsHandoffSnapshot";
 import { classJobsEmptyCopy } from "./jobsWorkflow";
@@ -26,6 +27,13 @@ export const FIND_ABORT_FIXTURE = {
   fallback: "Research failed. Check the URL and try again.",
 } as const;
 
+export const FIND_NO_HOME_FIXTURE = {
+  id: "find_no_home",
+  timeout: { name: "TimeoutError", message: "Timed out after 8000ms" },
+  http500: { name: "Error", message: "robot-job-search 500" },
+  landingHrefs: ["/?visit=candidates"] as const,
+} as const;
+
 export const CRM_LEFTOVER_FIXTURE = {
   id: "crm_leftover",
   priorUrl: "https://www.agrobot.com/",
@@ -37,17 +45,31 @@ export const CRM_LEFTOVER_FIXTURE = {
 export function abortMustNotSurfaceAsResearchFailed(): boolean {
   const abort = findUserFacingError(
     FIND_ABORT_FIXTURE.abort,
-    FIND_ABORT_FIXTURE.fallback,
+    FIND_ABORT_FIXTURE.fallback
   );
   const fetchFail = findUserFacingError(
     FIND_ABORT_FIXTURE.failedToFetch,
-    FIND_ABORT_FIXTURE.fallback,
+    FIND_ABORT_FIXTURE.fallback
   );
   return (
     abort === null &&
     fetchFail === null &&
     isSilentFindError(FIND_ABORT_FIXTURE.abort) &&
     isSilentFindError(FIND_ABORT_FIXTURE.failedToFetch)
+  );
+}
+
+export function findErrorMustStayOnFind(err: unknown): boolean {
+  const out = findLookupFailureOutcome(err);
+  return (
+    out.stage === "find" &&
+    out.href === "/?visit=jobs" &&
+    out.bounceHome === false &&
+    Boolean(out.error) &&
+    !findFailureBouncesHome(out.href) &&
+    FIND_NO_HOME_FIXTURE.landingHrefs.every(href =>
+      findFailureBouncesHome(href)
+    )
   );
 }
 
@@ -67,13 +89,13 @@ export function leftoverCrmMustNotKeepPriorRobot(opts: {
 export function bindUrlFlushesPriorRobot(): boolean {
   const snap = beginJobsHandoffForUrl(
     CRM_LEFTOVER_FIXTURE.nextUrl,
-    CRM_LEFTOVER_FIXTURE.nextProduct,
+    CRM_LEFTOVER_FIXTURE.nextProduct
   );
   return Boolean(
     snap &&
       snap.url.includes("greenfieldincorporated") &&
       snap.jobs.length === 0 &&
-      !/strawberry/i.test(snap.productName),
+      !/strawberry/i.test(snap.productName)
   );
 }
 
@@ -93,25 +115,48 @@ export const HEALTHCARE_CLASS_FIXTURE = {
   emptyCopy: "No healthcare jobs for this robot yet.",
   forbidClass: "humanoid",
   forbidEmpty: "No humanoid jobs for this robot yet.",
-    extraTiles: ["mining", "warehouse", "logistics", "factory", "hospitality", "food_prep", "serving", "cleaning"],
+  extraTiles: [
+    "mining",
+    "warehouse",
+    "logistics",
+    "factory",
+    "hospitality",
+    "food_prep",
+    "serving",
+    "cleaning",
+  ],
+} as const;
+
+export const URL_WORKFLOW_FIXTURE = {
+  id: "url_workflow",
+  command: "python3 scripts/url_workflow_critic.py --fixtures",
+  corpus: "app/data/url_workflow_corpus.json",
+  breaks: [
+    "mixed_range_flattened",
+    "chrome_as_sku",
+    "cleaning_drone_as_scrubber",
+    "company_class_not_product_class",
+  ],
 } as const;
 
 /** Critic fixture: Diligent/Moxi is healthcare, Healthcare tile exists, empty copy is not humanoid. */
 export function diligentMustNotBeHumanoidEmpty(): boolean {
   const listing = lookupKnownOem(HEALTHCARE_CLASS_FIXTURE.url);
   const moxi = listing?.robots.find(
-    row => (row.name || "").toLowerCase() === "moxi",
+    row => (row.name || "").toLowerCase() === "moxi"
   );
   const cls = String(moxi?.display_class || "").toLowerCase();
   const empty = classJobsEmptyCopy(HEALTHCARE_CLASS_FIXTURE.classId);
-  const humanoidEmpty = classJobsEmptyCopy(HEALTHCARE_CLASS_FIXTURE.forbidClass);
+  const humanoidEmpty = classJobsEmptyCopy(
+    HEALTHCARE_CLASS_FIXTURE.forbidClass
+  );
   const hasNewTiles = HEALTHCARE_CLASS_FIXTURE.extraTiles.every(id =>
-    CLASS_OPTION_IDS.includes(id),
+    CLASS_OPTION_IDS.includes(id)
   );
   return (
     Boolean(listing?.vendor_name?.toLowerCase().includes("diligent")) &&
     cls === HEALTHCARE_CLASS_FIXTURE.classId &&
-    cls !== HEALTHCARE_CLASS_FIXTURE.forbidClass &&
+    (cls as string) !== (HEALTHCARE_CLASS_FIXTURE.forbidClass as string) &&
     CLASS_OPTION_IDS.includes("healthcare") &&
     hasNewTiles &&
     CLASS_OPTION_IDS.length === 20 &&

@@ -16,11 +16,33 @@ OUTPUT = _root / ".vercel" / "output"
 
 API = "https://ready-2-robot.fly.dev"
 
+# Hard-nav Jobs paths that are wouter routes, not static HTML. Vercel
+# `cleanUrls` maps /pipeline → /pipeline.html; that file does not exist, so
+# the edge 404s before the SPA catch-all. Do not set cleanUrls on this pack.
+SPA_SHELL_PATHS = (
+    "/pipeline",
+    "/pipeline?src=jobs_activate",
+    "/signup",
+    "/login",
+    "/pricing",
+    "/intelligence",
+    "/icons",
+)
+
+LEGAL_HTML_PATHS = (
+    "/privacy",
+    "/terms",
+    "/support",
+)
+
 ROUTES = [
     {"src": "^/api(?:/(.*))$", "dest": f"{API}/api/$1"},
     {"src": "^/health$", "dest": f"{API}/health"},
     {"src": "^/health(?:/(.*))$", "dest": f"{API}/health/$1"},
     {"handle": "filesystem"},
+    {"src": "^/privacy/?$", "dest": "/legal/privacy.html"},
+    {"src": "^/terms/?$", "dest": "/legal/terms.html"},
+    {"src": "^/support/?$", "dest": "/legal/support.html"},
     {"src": "/(.*)", "dest": "/index.html"},
 ]
 

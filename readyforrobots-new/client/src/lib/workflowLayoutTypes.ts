@@ -41,7 +41,10 @@ export type WorkflowLayout = {
   flows: WorkflowFlow[];
 };
 
-export const ZONE_COLORS: Record<string, { fill: string; stroke: string; text: string }> = {
+export const ZONE_COLORS: Record<
+  string,
+  { fill: string; stroke: string; text: string }
+> = {
   human: { fill: "#f8fafc", stroke: "#94a3b8", text: "#475569" },
   robot: { fill: "#ecfdf5", stroke: "#059669", text: "#065f46" },
   handoff: { fill: "#fffbeb", stroke: "#d97706", text: "#92400e" },
@@ -49,8 +52,11 @@ export const ZONE_COLORS: Record<string, { fill: string; stroke: string; text: s
   process: { fill: "#eff6ff", stroke: "#3b82f6", text: "#1e40af" },
 };
 
-export function zoneCenter(zones: WorkflowZone[], id: string): { x: number; y: number } | null {
-  const z = zones.find((zone) => zone.id === id);
+export function zoneCenter(
+  zones: WorkflowZone[],
+  id: string
+): { x: number; y: number } | null {
+  const z = zones.find(zone => zone.id === id);
   if (!z) return null;
   return { x: z.x + z.w / 2, y: z.y + z.h / 2 };
 }
@@ -81,9 +87,34 @@ export const ZONE_PRESETS: ZonePreset[] = [
 ];
 
 export const ROBOT_PRESETS: RobotPreset[] = [
-  { label: "Pallet AMR", tasks: ["Pallet move", "dock-to-pick"], labor_hours_saved_per_week: 45, throughput_delta_pct: 22 },
-  { label: "Delivery bot", tasks: ["Room delivery", "linens"], labor_hours_saved_per_week: 28, throughput_delta_pct: 15 },
-  { label: "Cobot arm", tasks: ["Pick assist", "pack"], labor_hours_saved_per_week: 35, throughput_delta_pct: 18 },
-  { label: "Floor scrubber", tasks: ["Autonomous clean"], labor_hours_saved_per_week: 20, throughput_delta_pct: 8 },
-  { label: "Goods-to-person", tasks: ["Shelving", "replenish"], labor_hours_saved_per_week: 40, throughput_delta_pct: 25 },
+  {
+    label: "Pallet AMR",
+    tasks: ["Pallet move", "dock-to-pick"],
+    labor_hours_saved_per_week: 45,
+    throughput_delta_pct: 22,
+  },
+  {
+    label: "Delivery bot",
+    tasks: ["Room delivery", "linens"],
+    labor_hours_saved_per_week: 28,
+    throughput_delta_pct: 15,
+  },
+  {
+    label: "Cobot arm",
+    tasks: ["Pick assist", "pack"],
+    labor_hours_saved_per_week: 35,
+    throughput_delta_pct: 18,
+  },
+  {
+    label: "Floor scrubber",
+    tasks: ["Autonomous clean"],
+    labor_hours_saved_per_week: 20,
+    throughput_delta_pct: 8,
+  },
+  {
+    label: "Goods-to-person",
+    tasks: ["Shelving", "replenish"],
+    labor_hours_saved_per_week: 40,
+    throughput_delta_pct: 25,
+  },
 ];

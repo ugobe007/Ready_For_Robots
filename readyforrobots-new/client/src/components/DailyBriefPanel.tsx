@@ -1,10 +1,15 @@
 import { useLocation } from "wouter";
 import { Sun } from "lucide-react";
 import SupabaseInlineLink from "@/components/admin/SupabaseInlineLink";
-import { scrollToAdminSection, scrollToAdminSectionFromHref } from "@/lib/adminNavigation";
+import {
+  scrollToAdminSection,
+  scrollToAdminSectionFromHref,
+} from "@/lib/adminNavigation";
 
 function normalizePath(path: string) {
-  return (path.replace(/^\/readyforrobots/, "") || "/").replace(/\/$/, "") || "/";
+  return (
+    (path.replace(/^\/readyforrobots/, "") || "/").replace(/\/$/, "") || "/"
+  );
 }
 
 export type DailyBriefData = {
@@ -59,33 +64,39 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
   const m = data?.metrics;
   const today = data?.date ?? new Date().toISOString().slice(0, 10);
 
-  const goToStep = (href: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    const hashIndex = href.indexOf("#");
-    const path = hashIndex === -1 ? href : href.slice(0, hashIndex);
-    const hash = hashIndex === -1 ? "" : href.slice(hashIndex + 1);
-    const current = normalizePath(window.location.pathname);
-    const target = normalizePath(path || current);
+  const goToStep =
+    (href: string) => (e: React.MouseEvent<HTMLAnchorElement>) => {
+      e.preventDefault();
+      const hashIndex = href.indexOf("#");
+      const path = hashIndex === -1 ? href : href.slice(0, hashIndex);
+      const hash = hashIndex === -1 ? "" : href.slice(hashIndex + 1);
+      const current = normalizePath(window.location.pathname);
+      const target = normalizePath(path || current);
 
-    if (target === current) {
-      if (hash) {
-        window.history.replaceState(null, "", `${window.location.pathname}#${hash}`);
-        scrollToAdminSection(hash);
+      if (target === current) {
+        if (hash) {
+          window.history.replaceState(
+            null,
+            "",
+            `${window.location.pathname}#${hash}`
+          );
+          scrollToAdminSection(hash);
+        }
+        return;
       }
-      return;
-    }
 
-    setLocation(path || current);
-    if (hash) {
-      window.setTimeout(() => scrollToAdminSection(hash), 400);
-    }
-  };
+      setLocation(path || current);
+      if (hash) {
+        window.setTimeout(() => scrollToAdminSection(hash), 400);
+      }
+    };
 
   const nonCalSteps = (data?.next_steps ?? []).filter(
-    (s) => !s.label.toLowerCase().includes("cal autopilot")
-      && !s.label.toLowerCase().includes("cal leads need drafting")
-      && !s.label.toLowerCase().includes("cal drafts need approval")
-      && !s.label.toLowerCase().includes("hot leads not yet"),
+    s =>
+      !s.label.toLowerCase().includes("cal autopilot") &&
+      !s.label.toLowerCase().includes("cal leads need drafting") &&
+      !s.label.toLowerCase().includes("cal drafts need approval") &&
+      !s.label.toLowerCase().includes("hot leads not yet")
   );
 
   const calTotal = m?.cal_queue_total ?? 0;
@@ -94,48 +105,67 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
   const calUnsent = calActions?.unsentDrafted ?? m?.unsent_drafted ?? 0;
   const calNoEmail = calActions?.noEmail ?? 0;
 
-  const openQueue = calActions?.onOpenQueue ?? (() => scrollToAdminSection("cal-outreach"));
+  const openQueue =
+    calActions?.onOpenQueue ?? (() => scrollToAdminSection("cal-outreach"));
 
   // Order the "Do now" links by where they sit in the outreach lifecycle so the
   // brief reads as a chronological timeline (discover → research → draft →
   // review → send → replies) instead of an arbitrary link soup.
   const stageRank = (label: string): number => {
     const l = label.toLowerCase();
-    if (l.includes("new") || l.includes("compan") || l.includes("hot")) return 1;
+    if (l.includes("new") || l.includes("compan") || l.includes("hot"))
+      return 1;
     if (l.includes("research")) return 2;
-    if (l.includes("draft") && !l.includes("signal") && !l.includes("awaiting")) return 3;
-    if (l.includes("review") || l.includes("signal") || l.includes("awaiting") || l.includes("approv")) return 4;
+    if (l.includes("draft") && !l.includes("signal") && !l.includes("awaiting"))
+      return 3;
+    if (
+      l.includes("review") ||
+      l.includes("signal") ||
+      l.includes("awaiting") ||
+      l.includes("approv")
+    )
+      return 4;
     if (l.includes("send") || l.includes("email")) return 5;
-    if (l.includes("repl") || l.includes("follow") || l.includes("inbox")) return 6;
+    if (l.includes("repl") || l.includes("follow") || l.includes("inbox"))
+      return 6;
     return 5;
   };
 
   return (
-    <div className="mb-4 rounded-xl border-2 border-gray-300 bg-white px-5 py-5 shadow-sm">
+    <div className="mb-4 rounded-xl border border-slate-700/60 bg-[#0a1226] px-5 py-5 shadow-lg text-slate-100">
       <div className="mb-3 flex items-center gap-2">
-        <Sun size={16} className="text-amber-600" />
+        <Sun size={16} className="text-amber-400 shrink-0" />
         <div>
-          <h2 className="text-sm font-bold text-gray-900">Daily brief</h2>
-          <p className="text-[11px] text-gray-600">UTC {today}</p>
+          <h2 className="text-sm font-bold text-slate-100">Daily brief</h2>
+          <p className="text-[11px] text-slate-400">UTC {today}</p>
         </div>
       </div>
 
       {loading ? (
-        <p className="py-2 text-sm text-gray-600">Loading…</p>
+        <p className="py-2 text-sm text-slate-400">Loading…</p>
       ) : (
         <>
           <div className="mb-4">
-            <p className="admin-kicker mb-1.5">Do now · in workflow order</p>
-            <div className="text-sm leading-relaxed text-gray-800">
+            <p className="text-xs font-bold uppercase tracking-wider text-amber-400 mb-1.5">
+              Do now · in workflow order
+            </p>
+            <div className="text-sm leading-relaxed text-slate-200">
               {(() => {
-                const items: Array<{ rank: number; key: string; node: React.ReactNode }> = [];
+                const items: Array<{
+                  rank: number;
+                  key: string;
+                  node: React.ReactNode;
+                }> = [];
                 if ((calNoEmail ?? 0) > 0 && calActions?.onFixEmails) {
                   items.push({
                     rank: 1,
                     key: "cal-fix",
                     node: (
-                      <SupabaseInlineLink tone="amber" onClick={calActions.onFixEmails}>
-                        Fix {calNoEmail} Cal contact emails
+                      <SupabaseInlineLink
+                        tone="amber"
+                        onClick={calActions.onFixEmails}
+                      >
+                        Fix {calNoEmail} Phelan contact emails
                       </SupabaseInlineLink>
                     ),
                   });
@@ -145,8 +175,11 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                     rank: 2,
                     key: "cal-draft",
                     node: (
-                      <SupabaseInlineLink onClick={calActions.onDraftAll} busy={calActions.draftBusy}>
-                        Draft {calPending} Cal leads
+                      <SupabaseInlineLink
+                        onClick={calActions.onDraftAll}
+                        busy={calActions.draftBusy}
+                      >
+                        Draft {calPending} Phelan leads
                       </SupabaseInlineLink>
                     ),
                   });
@@ -156,7 +189,11 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                     rank: 3,
                     key: "cal-redraft",
                     node: (
-                        <SupabaseInlineLink tone="amber" onClick={calActions.onRedraft} busy={calActions.redraftBusy ?? calActions.draftBusy}>
+                      <SupabaseInlineLink
+                        tone="amber"
+                        onClick={calActions.onRedraft}
+                        busy={calActions.redraftBusy ?? calActions.draftBusy}
+                      >
                         Redraft {calUnsent} unsent
                       </SupabaseInlineLink>
                     ),
@@ -168,7 +205,7 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                     key: "cal-open",
                     node: (
                       <SupabaseInlineLink tone="blue" onClick={openQueue}>
-                        Review Cal queue
+                        Review Phelan queue
                       </SupabaseInlineLink>
                     ),
                   });
@@ -178,18 +215,25 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                     rank: 5,
                     key: "cal-send",
                     node: (
-                      <SupabaseInlineLink onClick={calActions.onSendAll} busy={calActions.sendBusy} tone="amber">
-                        Send {calSendable} Cal emails
+                      <SupabaseInlineLink
+                        onClick={calActions.onSendAll}
+                        busy={calActions.sendBusy}
+                        tone="amber"
+                      >
+                        Send {calSendable} Phelan emails
                       </SupabaseInlineLink>
                     ),
                   });
                 }
-                nonCalSteps.forEach((step) => {
+                nonCalSteps.forEach(step => {
                   items.push({
                     rank: stageRank(step.label),
                     key: `step-${step.label}`,
                     node: (
-                      <SupabaseInlineLink href={step.href} onNavigate={goToStep(step.href)}>
+                      <SupabaseInlineLink
+                        href={step.href}
+                        onNavigate={goToStep(step.href)}
+                      >
                         {step.count} {step.label}
                       </SupabaseInlineLink>
                     ),
@@ -197,11 +241,13 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
                 });
                 items.sort((a, b) => a.rank - b.rank);
                 if (items.length === 0) {
-                  return <span className="text-gray-600">No pending actions.</span>;
+                  return (
+                    <span className="text-slate-400">No pending actions.</span>
+                  );
                 }
                 return items.map((item, i) => (
                   <span key={item.key}>
-                    {i > 0 ? <span className="text-gray-400"> · </span> : null}
+                    {i > 0 ? <span className="text-slate-500"> · </span> : null}
                     {item.node}
                   </span>
                 ));
@@ -209,15 +255,19 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
             </div>
           </div>
 
-          <div className="text-sm text-gray-700">
-            <span className="font-semibold text-gray-950">Cal queue:</span>{" "}
-            {calTotal} leads · {calPending} need draft · {calUnsent} unsent · {calSendable} sendable
+          <div className="text-sm text-slate-300">
+            <span className="font-semibold text-slate-100">Phelan queue:</span>{" "}
+            {calTotal} leads · {calPending} need draft · {calUnsent} unsent ·{" "}
+            {calSendable} sendable
             {(m?.scout_drafted ?? 0) > 0 ? (
-              <span className="text-gray-600"> · SIGNAL drafts separate ({m?.scout_drafted})</span>
+              <span className="text-slate-400">
+                {" "}
+                · SIGNAL drafts separate ({m?.scout_drafted})
+              </span>
             ) : null}
             {calTotal > 0 ? (
               <>
-                <span className="text-gray-400"> · </span>
+                <span className="text-slate-500"> · </span>
                 <SupabaseInlineLink tone="gray" onClick={openQueue}>
                   jump to workflow
                 </SupabaseInlineLink>

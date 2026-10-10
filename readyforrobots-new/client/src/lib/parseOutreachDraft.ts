@@ -1,5 +1,8 @@
 /** Split a combined outreach draft into subject + body. */
-export function parseOutreachDraft(draft: string): { subject?: string; body?: string } {
+export function parseOutreachDraft(draft: string): {
+  subject?: string;
+  body?: string;
+} {
   const trimmed = draft.trim();
   if (!trimmed) return {};
 

@@ -14,10 +14,10 @@ type Props = {
 };
 
 const TONE: Record<NonNullable<Props["tone"]>, string> = {
-  emerald: "text-emerald-700 hover:text-emerald-900",
-  amber: "text-amber-800 hover:text-amber-950",
-  gray: "text-gray-700 hover:text-gray-900",
-  blue: "text-blue-700 hover:text-blue-900",
+  emerald: "text-emerald-400 hover:text-emerald-300",
+  amber: "text-amber-400 hover:text-amber-300",
+  gray: "text-slate-400 hover:text-slate-200",
+  blue: "text-sky-400 hover:text-sky-300",
 };
 
 export default function SupabaseInlineLink({
@@ -34,9 +34,13 @@ export default function SupabaseInlineLink({
   const cls = [
     "cursor-pointer font-medium underline underline-offset-2 bg-transparent border-0 p-0 inline",
     TONE[tone],
-    inactive ? "pointer-events-none opacity-40 no-underline cursor-not-allowed" : "",
+    inactive
+      ? "pointer-events-none opacity-40 no-underline cursor-not-allowed"
+      : "",
     className,
-  ].filter(Boolean).join(" ");
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   if (href && onNavigate) {
     return (

@@ -16,7 +16,7 @@ from app.models.sales_agent import SalesAgentAction, SalesMessage, SalesOpportun
 from app.models.supply_outreach import SupplyOutreachMessage, SupplyOutreachReply
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.crm_engagement_sync import ensure_engagement_for_opportunity, sync_opportunity_stage_to_engagement
-from app.services.agent_messaging import BUYER_SIGNAL_EXPLANATION, CAL_INTRO, cal_signature, max_signature
+from app.services.agent_messaging import BUYER_SIGNAL_EXPLANATION, PHELAN_INTRO, phelan_signature, max_signature
 from app.services.sales_learning_agent import capture_sales_action_experience
 
 
@@ -84,13 +84,13 @@ def plan_sales_reply(
         recommendation = (
             "Max should acknowledge the technical question and escalate to management before answering."
             if needs_management
-            else "Cal should copy Max to answer the technical question and collect constraints before sending final specs."
+            else "Phelan should copy Max to answer the technical question and collect constraints before sending final specs."
         )
         body = _max_reply_body(
             opener=(
-                "Cal copied me on this. I want to get the technical answer right, so I am checking with management before I give you a firm answer."
+                "Phelan copied me on this. I want to get the technical answer right, so I am checking with management before I give you a firm answer."
                 if needs_management
-                else "Cal copied me on this. I can help narrow the technical requirements and map them to the right robotics solution or support materials."
+                else "Phelan copied me on this. I can help narrow the technical requirements and map them to the right robotics solution or support materials."
             ),
             questions=(
                 ["the exact requirement or standard you need answered", "site or workflow context", "deadline for a confirmed answer"]
@@ -138,7 +138,7 @@ def plan_sales_reply(
     elif intent == "negative":
         stage = "lost"
         recommendation = "Respect the response and stop active outreach."
-        body = f"Thanks for letting us know. We will pause outreach here.\n\n{cal_signature()}"
+        body = f"Thanks for letting us know. We will pause outreach here.\n\n{phelan_signature()}"
     elif intent == "nurture":
         stage = "nurture"
         recommendation = "Respect timing and ask permission to follow up later."
@@ -188,7 +188,7 @@ To make the next step useful, could you share:
 
 {close}
 
-{cal_signature()}"""
+{phelan_signature()}"""
 
 
 def _max_reply_body(*, opener: str, questions: list[str], close: str) -> str:
@@ -326,7 +326,7 @@ def create_automated_next_action(
     subject = f"Next step: {opportunity.title}"
     body = f"""Hi,
 
-{CAL_INTRO}
+{PHELAN_INTRO}
 
 {BUYER_SIGNAL_EXPLANATION}
 
@@ -335,7 +335,7 @@ For this opportunity, the next useful step looks like:
 
 Could you share the best detail or time window so we can keep this moving without unnecessary back-and-forth?
 
-{cal_signature()}"""
+{phelan_signature()}"""
     action = SalesAgentAction(
         id=_new_uuid(db),
         sales_opportunity_id=_uuid_value(db, opportunity.id),
@@ -385,7 +385,7 @@ def execute_sales_agent_action(
         return action
     try:
         action_payload = action.payload or {}
-        from_display_name = "Max" if action_payload.get("responder_persona") == "max" else "Cal"
+        from_display_name = "Max" if action_payload.get("responder_persona") == "max" else "Phelan"
         cc: list[str] = []
         max_copy = _max_support_copy_email()
         if action_payload.get("copied_by") == "cal" and max_copy:
@@ -393,7 +393,7 @@ def execute_sales_agent_action(
         send_result = send_email_via_resend(
             to_email=recipient,
             subject=action.draft_subject or f"Re: {opportunity.title}",
-            body_text=action.draft_body or action.recommendation or "Cal is following up on this opportunity on behalf of Ready For Robots.",
+            body_text=action.draft_body or action.recommendation or "Phelan is following up on this opportunity on behalf of Ready For Robots.",
             from_display_name=from_display_name,
             reply_to=reply_to,
             cc=cc or None,

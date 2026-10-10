@@ -216,6 +216,63 @@ def get_stats(db: Session = Depends(get_db)):
     return result
 
 
+class DailyJobsReportSendBody(BaseModel):
+    force: bool = True
+    limit: int = 25
+
+
+@router.get("/daily-jobs-report")
+def daily_jobs_report(db: Session = Depends(get_db)):
+    """Operator top-25 named Robot Jobs. Read-only.
+
+    Opening this page must not call Hunter. A domain-only miss used to stamp
+    hunter_checked_at and skip the leadership-page → email-finder pass.
+    Lookup is POST /daily-jobs-report/enrich or the daily send.
+    """
+    from app.services.daily_jobs_report import compose_daily_jobs_report
+    from app.services.hunter_client import hunter_contact_enabled
+
+    report = compose_daily_jobs_report(db, limit=25)
+    enabled = hunter_contact_enabled()
+    report["hunter"] = {
+        "ok": True,
+        "enabled": enabled,
+        "looked_up": 0,
+        "filled": 0,
+        "skipped": 0,
+        "missed": 0,
+        "reason": None if enabled else "hunter_disabled",
+    }
+    return report
+
+
+@router.post("/daily-jobs-report/send")
+def daily_jobs_report_send(
+    body: DailyJobsReportSendBody,
+    db: Session = Depends(get_db),
+):
+    """Email the top-25 jobs report now (admin / catch-up)."""
+    from app.services.daily_jobs_report import send_daily_jobs_report
+
+    return send_daily_jobs_report(db, force=body.force, limit=body.limit)
+
+
+@router.post("/daily-jobs-report/enrich")
+def daily_jobs_report_enrich(
+    db: Session = Depends(get_db),
+):
+    """Hunter.io lookup for missing names/emails on the top-25 cards."""
+    from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
+    from app.services.daily_jobs_report import compose_daily_jobs_report
+
+    hunter = enrich_daily_jobs_with_hunter(
+        db, limit=25, force=True, scrape_pages=True
+    )
+    report = compose_daily_jobs_report(db, limit=25)
+    report["hunter"] = hunter
+    return report
+
+
 # ── Daily brief ───────────────────────────────────────────────────────────────
 
 @router.get("/daily-brief")
@@ -302,7 +359,7 @@ def daily_brief(db: Session = Depends(get_db)):
 
     cal_queue: dict[str, Any] = {}
     try:
-        from app.services.cal_autonomy import get_cal_review_email, resolve_cal_admin_context
+        from app.services.phelan_autonomy import get_phelan_review_email, resolve_cal_admin_context
         from app.api.admin_extended import _build_cal_draft_status_payload
 
         ctx = resolve_cal_admin_context(db)
@@ -311,7 +368,7 @@ def daily_brief(db: Session = Depends(get_db)):
             cal_payload = _build_cal_draft_status_payload(
                 db,
                 admin_uid=admin_uid,
-                admin_email=get_cal_review_email() or "",
+                admin_email=get_phelan_review_email() or "",
                 include_draft_bodies=False,
                 include_prospects=False,
                 prospect_limit=1,

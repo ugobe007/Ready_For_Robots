@@ -13,7 +13,7 @@
 | **Connect us** | `interview_requested` | `interview_mode=connect_you` | OEM arranges, then confirm | Same; no time |
 | **Hold this slot** | `interview_held` | `slot_start` / `slot_end` / `held_at` / `hold_expires_at` (48h) / `interview_at=slot_start` | OEM **Confirm hold** (books) or **Release hold** (clears). Until then the hold *is* the booked window. | OEM “slot held for {employer} {job} {time}” + `/oem-hold/:token`. Both-sides only with a real employer email. |
 
-`/calendar` is SIGNAL Cal. Interviews do not enter that send queue. `CAL_AUTONOMY_ENABLED` stays `0`. Hermes stays retired. No invented employer emails. No HOT-buyer send.
+`/calendar` is SIGNAL Cal. Interviews do not enter that send queue. `PHELAN_AUTONOMY_ENABLED` stays `0`. Hermes stays retired. No invented employer emails. No HOT-buyer send.
 
 ## Schema (`job_applications`)
 

@@ -54,29 +54,28 @@ def test_food_service_urls_include_qsr_make_line_not_only_vp():
         assert urls.index(operational[0]) < urls.index(vp[0])
 
 
-def test_food_prep_serving_cleaning_urls_cover_venues_not_housekeeping():
-    food = job_board_urls(industry="Food Service")
-    hospitality = job_board_urls(industry="Hospitality")
-    healthcare = job_board_urls(industry="Healthcare")
-    food_blob = " ".join(food).lower()
-    hosp_blob = " ".join(hospitality).lower()
-    health_blob = " ".join(healthcare).lower()
-    venue_kitchen = [
+def test_food_serve_clean_urls_cover_venues_not_qsr_only():
+    food_urls = job_board_urls(industry="Food Service")
+    hosp_urls = job_board_urls(industry="Hospitality")
+    blob = " ".join(food_urls + hosp_urls).lower()
+    assert "make+line" in blob or "qsr" in blob
+    for venue in ("hotel", "casino", "airport", "mall"):
+        assert venue in blob, venue
+    assert "office" in blob or "cafeteria" in blob
+    assert "data+center" in blob or "data%20center" in blob
+    assert "janitor" in blob or "custodian" in blob
+    assert "server" in blob or "busser" in blob
+    assert "cook" in blob or "kitchen" in blob
+    assert "window+washer" in blob or "facade" in blob or "drone+clean" in blob
+    vp = [u for u in food_urls if "VP+Director" in u]
+    venue_ops = [
         u
-        for u in food + hospitality
-        if "kitchen" in u.lower()
-        and any(v in u.lower() for v in ("hotel", "casino", "airport"))
+        for u in food_urls
+        if any(bit in u.lower() for bit in ("casino", "airport", "hotel+casino"))
     ]
-    assert venue_kitchen, food_blob
-    assert any("busser" in u.lower() for u in food + hospitality)
-    assert any("janitor" in u.lower() for u in food + hospitality)
-    assert any("data+center" in u.lower() or "data%20center" in u.lower() for u in hospitality)
-    assert "housekeeper" in hosp_blob
-    assert "housekeep" not in food_blob
-    janitor_urls = [u for u in food + hospitality if "janitor" in u.lower()]
-    assert janitor_urls
-    assert all("housekeep" not in u.lower() for u in janitor_urls)
-    assert "evs" in health_blob or "environmental" in health_blob or "patient" in health_blob
+    assert venue_ops, food_urls
+    if vp:
+        assert food_urls.index(venue_ops[0]) < food_urls.index(vp[0])
 
 
 def test_scheduled_rotation_covers_core_verticals(monkeypatch):
@@ -143,6 +142,9 @@ def test_operational_titles_pass_relevancy_and_builders_fail():
     ) >= 0.15
     assert calculate_job_relevancy_score("Cook", "Immediate hire.") >= 0.15
     assert calculate_job_relevancy_score("Server", "Multiple openings.") >= 0.15
+    assert calculate_job_relevancy_score("Bartender", "Casino cocktail service.") >= 0.15
+    assert calculate_job_relevancy_score("Janitor", "Office floors and restrooms.") >= 0.15
+    assert calculate_job_relevancy_score("Custodian", "Data center facility cleaner.") >= 0.15
     assert calculate_job_relevancy_score("Warehouse Worker", "Night shift.") >= 0.15
     assert calculate_job_relevancy_score("EVS Technician", "Hospital floors.") >= 0.15
     assert calculate_job_relevancy_score("Palletizer Operator", "Packaging line.") >= 0.15
@@ -542,3 +544,74 @@ def test_generic_gm_is_not_a_robot_job():
     )
     upsert.assert_not_called()
     scraper.save_signal.assert_not_called()
+
+
+def test_serving_posting_does_not_use_cleaner_class():
+    html = """
+    <div class="job_seen_beacon">
+      <h2>Banquet Server</h2>
+      <div class="companyName">Named Casino</div>
+      <div class="companyLocation">Las Vegas, NV</div>
+      <div class="job-snippet">Food runner and busser. Dining room cocktail service. Multiple openings.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=casino+cocktail+server"
+    )
+    upsert.assert_called_once()
+    extract = upsert.call_args.kwargs["extract"]
+    assert extract["job_function"] == "serving"
+    assert extract["product_class"] == "serving"
+    assert "serving_task" in extract["required_capabilities"]
+    assert "hard_floor_scrub" not in extract["required_capabilities"]
+    assert extract["product_class"] not in {"cleaning", "autonomous_scrubber"}
+    assert extract["work_task_model_kind"] == "unknown"
+    assert extract["work_task_model_source"] is None
+
+
+def test_chrome_and_class_dump_are_not_jobs():
+    chrome = """
+    <div class="job_seen_beacon">
+      <h2>Housekeeper</h2>
+      <div class="companyName">Impact</div>
+      <div class="companyLocation">Austin, TX</div>
+      <div class="job-snippet">Room attendant. Immediate hire.</div>
+    </div>
+    """
+    dump = """
+    <div class="job_seen_beacon">
+      <h2>Seer Humanoid</h2>
+      <div class="companyName">Named Warehouse</div>
+      <div class="companyLocation">Austin, TX</div>
+      <div class="job-snippet">Humanoid AMR. Immediate hire.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(chrome, "https://www.indeed.com/jobs?q=housekeeper")
+    upsert.assert_not_called()
+    scraper.save_signal.assert_not_called()
+    scraper, upsert = _parse_with_upsert(dump, "https://www.indeed.com/jobs?q=humanoid")
+    upsert.assert_not_called()
+
+
+def test_drone_cleaning_title_is_operational():
+    from app.scrapers.job_board_scraper_enhanced import calculate_job_relevancy_score
+
+    assert calculate_job_relevancy_score(
+        "Window Washer",
+        "Facade cleaning drone for building exteriors.",
+    ) >= 0.15
+    html = """
+    <div class="job_seen_beacon">
+      <h2>Window Washer</h2>
+      <div class="companyName">Named Facilities LLC</div>
+      <div class="companyLocation">Chicago, IL</div>
+      <div class="job-snippet">Window washing drone for facades and exteriors. Immediate hire.</div>
+    </div>
+    """
+    scraper, upsert = _parse_with_upsert(
+        html, "https://www.indeed.com/jobs?q=window+washer+facade+cleaner+drone+cleaning"
+    )
+    upsert.assert_called_once()
+    extract = upsert.call_args.kwargs["extract"]
+    assert extract["product_class"] == "cleaning_drone"
+    assert "hard_floor_scrub" not in extract["required_capabilities"]

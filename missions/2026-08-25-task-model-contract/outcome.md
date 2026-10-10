@@ -10,7 +10,7 @@
 - Ontology `task_model_ontology.v1.json` 1.2.0: model layers, time bands, data contract, no automatic field-data rebate
 - Job Card “To place this job” (layer, who trains, typical time, data you provide)
 - Practitioner doc: `docs/robot_task_model_contract.md`
-- Cal: `CAL_BUYER_SALES_ENABLED` default off — skip buyer-sales drafts and new intros
+- Cal: `PHELAN_BUYER_SALES_ENABLED` default off — skip buyer-sales drafts and new intros
 - Digest: 0 robot-sales intros is expected; HOT queue is not a send list
 - Seller brief / persona: jobs at a named employer, not robot sales
 
@@ -31,7 +31,7 @@ Production after `fly deploy` (version **2822**, image `deployment-01M0X7ZJW5H50
 ## Follow-ups
 
 - Do not invent dollar prices or dump pricing indexes on the Job Card
-- Do not turn `CAL_BUYER_SALES_ENABLED` on
+- Do not turn `PHELAN_BUYER_SALES_ENABLED` on
 - Do not expand Cal into a new jobs-placement email product this cycle
 - Production Cal still runs old code until this branch is deployed
 - Canonical Vercel homepage may lag Fly static until frontend deploy

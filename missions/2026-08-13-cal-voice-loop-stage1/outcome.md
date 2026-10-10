@@ -5,7 +5,7 @@
 
 ## Shipped
 
-- `app/services/cal_voice_rubric.py` — heuristic 6-dimension + Accuracy gate
+- `app/services/phelan_voice_rubric.py` — heuristic 6-dimension + Accuracy gate
 - `scripts/cal_score_draft.py` — score file/stdin/variant; `--gate`
 - `scripts/cal_log_learning.py` — append learning-log rows
 - `scripts/cal_preflight.py` — advisory `[1b] Voice rubric` sample

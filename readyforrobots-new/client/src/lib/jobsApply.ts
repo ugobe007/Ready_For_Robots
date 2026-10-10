@@ -63,11 +63,11 @@ function hasPoc(value: string): boolean {
 
 export function jobCredentialGaps(
   job: MatchJob,
-  record: JobApplyRecord,
+  record: JobApplyRecord
 ): CredentialGap[] {
   const card = robotJobCardFromMatch(job);
   const modelUnknown = (card.taskModels || []).some(
-    m => !m.presence || m.presence === "unknown",
+    m => !m.presence || m.presence === "unknown"
   );
   const slot = card.taskModels[0]?.label || "required task-library pack";
   return [
@@ -105,22 +105,26 @@ export function requiredCredentialGaps(gaps: CredentialGap[]): CredentialGap[] {
 
 export function applyStatusFromGaps(
   gaps: CredentialGap[],
-  record: JobApplyRecord,
+  record: JobApplyRecord
 ): JobApplyStatus {
   if (record.status === "follow_up") return "follow_up";
   if (record.status === "applied") return "applied";
   return requiredCredentialGaps(gaps).every(g => g.met) ? "ready" : "blocked";
 }
 
-export function canApplyToJob(gaps: CredentialGap[], record: JobApplyRecord): boolean {
-  if (record.status === "applied" || record.status === "follow_up") return false;
+export function canApplyToJob(
+  gaps: CredentialGap[],
+  record: JobApplyRecord
+): boolean {
+  if (record.status === "applied" || record.status === "follow_up")
+    return false;
   return requiredCredentialGaps(gaps).every(g => g.met);
 }
 
 export function placementOutreachDraft(
   job: MatchJob,
   record: JobApplyRecord,
-  robotName: string,
+  robotName: string
 ): string {
   const card = robotJobCardFromMatch(job);
   const employer = card.employer || "the employer";
@@ -133,7 +137,8 @@ export function placementOutreachDraft(
     : record.pocSkipped
       ? "skipped (employers prefer proof of concept)"
       : "(skipped — employers prefer proof of concept)";
-  const rent = (record.monthlyRental || "").trim() || "(missing — you must quote this)";
+  const rent =
+    (record.monthlyRental || "").trim() || "(missing — you must quote this)";
   const who = (robotName || "this robot").trim() || "this robot";
   return [
     `Subject: Applying ${who} to ${work} at ${employer}`,
@@ -155,7 +160,7 @@ function slotLine(card: ReturnType<typeof robotJobCardFromMatch>): string {
 
 export function placementWorkflowStrategy(
   gaps: CredentialGap[],
-  record: JobApplyRecord,
+  record: JobApplyRecord
 ): string {
   if (record.status === "follow_up") {
     return "Follow-up is open: confirm the employer received the application, book the site assessment, and check whether the pack license and monthly rental were accepted.";
@@ -178,9 +183,10 @@ export function placementWorkflowStrategy(
 
 export function placementMoneyLane(
   gaps: CredentialGap[],
-  record: JobApplyRecord,
+  record: JobApplyRecord
 ): PlacementLane {
-  if (record.status === "applied" || record.status === "follow_up") return "track";
+  if (record.status === "applied" || record.status === "follow_up")
+    return "track";
   const byId = Object.fromEntries(gaps.map(g => [g.id, g.met]));
   if (!byId.model_pack) return "pack";
   if (!byId.monthly_rental || !record.quoteCommitted) {
@@ -199,7 +205,7 @@ export function placementLaneLabel(lane: PlacementLane): string {
 /** One primary action on the selected job — not a nested 1–2–3 form. */
 export function placementNextActionLabel(
   job: MatchJob,
-  record: JobApplyRecord,
+  record: JobApplyRecord
 ): string {
   const lane = placementMoneyLane(jobCredentialGaps(job, record), record);
   if (lane === "pack") return "Confirm pack";
@@ -208,14 +214,19 @@ export function placementNextActionLabel(
   return "Track follow-up";
 }
 
-export function canLockQuote(gaps: CredentialGap[], record: JobApplyRecord): boolean {
+export function canLockQuote(
+  gaps: CredentialGap[],
+  record: JobApplyRecord
+): boolean {
   if (record.quoteCommitted) return false;
   const rental = gaps.find(g => g.id === "monthly_rental");
   return Boolean(rental?.met || hasMonthlyRental(record.monthlyRental));
 }
 
 /** Commit the monthly quote. Empty / short PoC is skipped automatically. */
-export function lockQuoteUpdate(record: JobApplyRecord): Partial<JobApplyRecord> {
+export function lockQuoteUpdate(
+  record: JobApplyRecord
+): Partial<JobApplyRecord> {
   const hasEvidence = hasPoc(record.pocEvidence);
   return {
     quoteCommitted: true,
@@ -226,7 +237,7 @@ export function lockQuoteUpdate(record: JobApplyRecord): Partial<JobApplyRecord>
 export function placementAgentBrief(
   job: MatchJob,
   record: JobApplyRecord,
-  robotName: string,
+  robotName: string
 ): string {
   const card = robotJobCardFromMatch(job);
   const who = (robotName || "this robot").trim() || "this robot";
@@ -252,9 +263,12 @@ export function placementAgentBrief(
   return `${known} Your move: confirm the task-library pack. Hardware in the room is not enough.`;
 }
 
-export function placementBoardStats(
-  jobs: MatchJob[],
-): { applied: number; quoted: number; total: number; quotes: string[] } {
+export function placementBoardStats(jobs: MatchJob[]): {
+  applied: number;
+  quoted: number;
+  total: number;
+  quotes: string[];
+} {
   const quotes: string[] = [];
   let applied = 0;
   let quoted = 0;
@@ -299,7 +313,10 @@ function readStore(): Store {
 function writeStore(store: Store): void {
   if (typeof window === "undefined") return;
   try {
-    window.sessionStorage.setItem(JOBS_APPLY_STORAGE_KEY, JSON.stringify(store));
+    window.sessionStorage.setItem(
+      JOBS_APPLY_STORAGE_KEY,
+      JSON.stringify(store)
+    );
   } catch {
     /* quota */
   }

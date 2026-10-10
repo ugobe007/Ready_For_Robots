@@ -311,7 +311,28 @@ def build_robot_profile(
             if f.epistemic not in ("unknown", "contradicted")
         }
         added = 0
+        from app.services.robot_class_qualify import GENERIC_CATEGORY_CLASSES
+
         for fact in extra:
+            if fact.predicate == "product_class":
+                existing_pc = [
+                    f
+                    for f in facts
+                    if f.predicate == "product_class"
+                    and f.epistemic not in ("unknown", "contradicted")
+                ]
+                incoming = str(fact.value or "").strip().lower()
+                generic_existing = all(
+                    str(f.value or "").strip().lower() in GENERIC_CATEGORY_CLASSES
+                    for f in existing_pc
+                )
+                if existing_pc and not generic_existing:
+                    continue
+                if existing_pc and generic_existing and incoming not in GENERIC_CATEGORY_CLASSES:
+                    facts[:] = [f for f in facts if f.predicate != "product_class"]
+                    known.discard("product_class")
+            elif fact.predicate in known:
+                continue
             if fact.predicate in known:
                 continue
             facts.append(fact)
@@ -411,7 +432,15 @@ def build_robot_profile(
                     if str(f.value).lower() in morph_vals
                 ]
                 best = max(morph or class_facts, key=lambda f: f.confidence)
-            selected.display_class = str(best.value)
+            claimed = str(best.value)
+            from app.services.robot_class_qualify import keep_claimed_display_class
+
+            selected.display_class = keep_claimed_display_class(
+                selected.display_class,
+                claimed,
+                name=selected.name,
+                description=selected.description or "",
+            )
 
     facts, morphology, coverage_rate, coverage_level = apply_research_gaps(
         facts,

@@ -31,6 +31,7 @@ export type CriticGate = {
   id:
     | "find"
     | "find_abort"
+    | "find_no_home"
     | "find_identity"
     | "crm_leftover"
     | "job_cards"
@@ -39,7 +40,8 @@ export type CriticGate = {
     | "oem_extract"
     | "class_picker"
     | "healthcare_class"
-    | "ontology_industry_language";
+    | "ontology_industry_language"
+    | "url_workflow";
   prove: string;
   fail: string;
 };
@@ -89,6 +91,11 @@ export const CRITIC_GATES: readonly CriticGate[] = [
     fail: "self-abort FIND shown as Research failed / Failed to fetch",
   },
   {
+    id: "find_no_home",
+    prove: "FIND timeout / 500 / abort stays on FIND (`/` or /?visit=jobs)",
+    fail: "lookup failure dumps to employer MATCH",
+  },
+  {
     id: "find_identity",
     prove: "submitted URL is the identity key",
     fail: "Greenfield shown as another OEM / leftover robot",
@@ -120,18 +127,27 @@ export const CRITIC_GATES: readonly CriticGate[] = [
   },
   {
     id: "class_picker",
-    prove: "class-picker click starts robot-job-search and settles jobs or empty",
+    prove:
+      "class-picker click starts robot-job-search and settles jobs or empty",
     fail: "Agriculture click silently no-ops or dumps empty CRM as the only outcome",
   },
   {
     id: "healthcare_class",
-    prove: "Diligent/Moxi is healthcare; Healthcare tile exists; class search returns named employers",
+    prove:
+      "Diligent/Moxi is healthcare; Healthcare tile exists; class search returns named employers",
     fail: "Diligent classified humanoid, empty humanoid copy, or missing Healthcare class tile",
   },
   {
     id: "ontology_industry_language",
-    prove: "Industry work words live in the ontology and outrank humanoid morphology where R33 says so",
+    prove:
+      "Industry work words live in the ontology and outrank humanoid morphology where R33 says so",
     fail: "hospital/hotel/mining/warehouse work words missing from ontology files",
+  },
+  {
+    id: "url_workflow",
+    prove:
+      "FIND URL critic reports product range, named SKUs, and per-product capabilities",
+    fail: "mixed OEM flattened, chrome-as-SKU, cleaning-drone-as-scrubber, or company-class dump",
   },
 ] as const;
 
@@ -182,7 +198,11 @@ export function crmWallRequired(): boolean {
   return PSTACK_CRM_WALL_REQUIRED;
 }
 
-export function refuseSiteAgent(reason: SiteAgentRefusal): { ok: false; reason: SiteAgentRefusal; detail: string } {
+export function refuseSiteAgent(reason: SiteAgentRefusal): {
+  ok: false;
+  reason: SiteAgentRefusal;
+  detail: string;
+} {
   return { ok: false, reason, detail: FORBIDDEN[reason] };
 }
 
@@ -190,7 +210,12 @@ export function siteAgentAsk(input: {
   role: PstackRoleId;
   surface: "jobs_find" | "jobs_crm" | "crm_generate_plan" | "scout_chat";
 }):
-  | { ok: true; role: PstackRoleId; jobSource: JobsMatcherSource; gates: readonly CriticGate[] }
+  | {
+      ok: true;
+      role: PstackRoleId;
+      jobSource: JobsMatcherSource;
+      gates: readonly CriticGate[];
+    }
   | { ok: false; reason: SiteAgentRefusal; detail: string } {
   if (input.surface === "scout_chat") {
     return refuseSiteAgent("customer_pstack_chat");

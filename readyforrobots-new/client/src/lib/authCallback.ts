@@ -4,7 +4,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 export function readSupabaseOAuthError(): string | null {
   if (typeof window === "undefined") return null;
 
-  const hash = window.location.hash.startsWith("#") ? window.location.hash.slice(1) : "";
+  const hash = window.location.hash.startsWith("#")
+    ? window.location.hash.slice(1)
+    : "";
   const hashParams = new URLSearchParams(hash);
   const queryParams = new URLSearchParams(window.location.search);
 
@@ -18,9 +20,18 @@ export function readSupabaseOAuthError(): string | null {
   return decodeURIComponent(description.replace(/\+/g, " "));
 }
 
-export function clearSupabaseOAuthParams(pathname: string, search: string): string {
+export function clearSupabaseOAuthParams(
+  pathname: string,
+  search: string
+): string {
   const params = new URLSearchParams(search);
-  for (const key of ["code", "state", "error", "error_description", "error_code"]) {
+  for (const key of [
+    "code",
+    "state",
+    "error",
+    "error_description",
+    "error_code",
+  ]) {
     params.delete(key);
   }
   const next = params.toString();
@@ -31,7 +42,7 @@ export function clearSupabaseOAuthParams(pathname: string, search: string): stri
 export async function finishSupabaseOAuthCallback(
   client: SupabaseClient,
   pathname: string,
-  search: string,
+  search: string
 ): Promise<{ error: string | null }> {
   const params = new URLSearchParams(search);
   const code = params.get("code");
@@ -41,6 +52,10 @@ export async function finishSupabaseOAuthCallback(
   if (error) {
     return { error: error.message || "Sign-in could not be completed." };
   }
-  window.history.replaceState(null, "", clearSupabaseOAuthParams(pathname, search));
+  window.history.replaceState(
+    null,
+    "",
+    clearSupabaseOAuthParams(pathname, search)
+  );
   return { error: null };
 }

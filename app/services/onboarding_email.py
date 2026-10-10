@@ -27,10 +27,10 @@ Your best first step: open the pipeline and save one account that looks worth pu
 
 {pipeline}
 
-Pick a HOT or WARM lead, save it to your workspace, and Cal will keep the context ready for outreach.
+Pick a HOT or WARM lead, save it to your workspace, and Phelan will keep the context ready for outreach.
 
-— Cal
-Ready For Robots
+— Phelan
+ReadyForRobots
 """
 
 
@@ -45,7 +45,7 @@ def send_welcome_activation_email(*, to_email: str, display_name: Optional[str] 
             to_email=email,
             subject="Save your first lead on Ready For Robots",
             body_text=welcome_email_body(display_name=display_name),
-            from_display_name="Cal · Ready For Robots",
+            from_display_name="Phelan · ReadyForRobots",
             idempotency_key=f"welcome-activation/{user_id}",
         )
         return True

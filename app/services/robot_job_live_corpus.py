@@ -37,6 +37,7 @@ TAPE_INDUSTRY = {
     "agriculture": "Agriculture",
     "construction": "Construction",
     "mining": "Mining",
+    "aerial_clean": "Commercial",
 }
 
 TAPE_FAMILIES = {
@@ -55,6 +56,7 @@ TAPE_FAMILIES = {
     "agriculture": [],
     "construction": [],
     "mining": [],
+    "aerial_clean": [],
 }
 
 
@@ -76,9 +78,17 @@ def tape_family_for_live_job(
     job_function: Optional[str],
     title: str = "",
     extra_text: str = "",
+    product_class: Optional[str] = None,
 ) -> Optional[str]:
     function = (job_function or "").strip().lower()
+    cls = (product_class or "").strip().lower()
     blob_early = f"{title} {extra_text}".lower()
+    if cls == "serving" or function == "serving":
+        return "serve"
+    if cls == "cleaning_drone" or function == "facade_cleaning":
+        return "aerial_clean"
+    if cls == "food_prep" or function in {"food_prep", "warewash"}:
+        return "food_prep"
     if function in {"cleaning", "janitorial", "custodial"}:
         if any(w in blob_early for w in ("restroom", "bathroom", "lavatory", "toilet")):
             return "restroom"
@@ -95,10 +105,10 @@ def tape_family_for_live_job(
     try:
         from app.services.robot_ontology import find_class_from_work_language
 
-        cls = find_class_from_work_language(blob)
+        work_cls = find_class_from_work_language(blob)
     except Exception:
         return None
-    if not cls:
+    if not work_cls:
         return None
     return {
         "healthcare": "clinical_delivery",
@@ -112,7 +122,8 @@ def tape_family_for_live_job(
         "food_prep": "food_prep",
         "serving": "serve",
         "cleaning": "scrub",
-    }.get(cls)
+        "cleaning_drone": "aerial_clean",
+    }.get(work_cls)
 
 
 def corpus_row_from_robot_job(row: Any) -> Optional[dict[str, Any]]:
@@ -123,6 +134,7 @@ def corpus_row_from_robot_job(row: Any) -> Optional[dict[str, Any]]:
     if not isinstance(req, dict):
         req = {}
     function = str(req.get("job_function") or getattr(row, "action", "") or "").strip()
+    product_class = str(req.get("product_class") or "").strip() or None
     from app.services.robot_requirement_match import is_named_robot_job
 
     if not is_named_robot_job(employer, locality):
@@ -132,7 +144,8 @@ def corpus_row_from_robot_job(row: Any) -> Optional[dict[str, Any]]:
     tape = tape_family_for_live_job(
         job_function=function,
         title=title,
-        extra_text=f"{employer} {locality}",
+        extra_text=f"{employer} {locality} {title}",
+        product_class=product_class,
     )
     if not tape:
         return None
@@ -163,11 +176,22 @@ def corpus_row_from_robot_job(row: Any) -> Optional[dict[str, Any]]:
         "text": f"{title} {function} {employer} {locality} {tape}",
         "source": "live_scrape",
         "tape_family": tape,
+        "product_class": product_class,
+        "required_capabilities": list(req.get("required_capabilities") or []),
+        "task_model_ids": list(req.get("task_model_ids") or []),
+        "work_task_model_kind": str(req.get("work_task_model_kind") or "unknown"),
+        "work_task_model_source": req.get("work_task_model_source"),
         "unknowns": list(req.get("unknowns") or getattr(row, "unknowns", None) or []),
         "employer_email": email,
         "contact_url": contact_url,
         "apply_url": apply_url,
     }
+    if product_class == "serving":
+        mapped["families"] = [f for f in mapped["families"] if f != "floor_scrub"]
+        if not mapped["families"]:
+            mapped["families"] = list(TAPE_FAMILIES["serve"])
+    if product_class == "cleaning_drone" or tape == "aerial_clean":
+        mapped["families"] = [f for f in mapped["families"] if f != "floor_scrub"]
     return mapped
 
 

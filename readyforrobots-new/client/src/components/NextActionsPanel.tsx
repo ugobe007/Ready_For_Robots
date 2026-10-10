@@ -75,7 +75,10 @@ export default function NextActionsPanel({
       <div className="mb-4 flex items-start justify-between gap-3">
         <div>
           <div className="mb-2 inline-flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
+            <span
+              className="h-1.5 w-1.5 rounded-full animate-pulse"
+              style={{ background: "#03DAC5" }}
+            />
             <p
               id="next-actions-heading"
               className="text-[10px] font-bold uppercase tracking-[0.2em]"
@@ -135,12 +138,21 @@ export default function NextActionsPanel({
                       action.meta?.humanoid_pilot_tier === "PILOT_INTENT") && (
                       <span
                         className="mt-1 inline-flex rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide"
-                        style={{ color: "#03DAC5", background: "rgba(3,218,197,0.12)", border: "1px solid rgba(3,218,197,0.22)" }}
+                        style={{
+                          color: "#03DAC5",
+                          background: "rgba(3,218,197,0.12)",
+                          border: "1px solid rgba(3,218,197,0.22)",
+                        }}
                       >
-                        {String(action.meta?.humanoid_pilot_label || "Humanoid pilot")}
+                        {String(
+                          action.meta?.humanoid_pilot_label || "Humanoid pilot"
+                        )}
                       </span>
                     )}
-                    <p className="mt-0.5 truncate text-[11px]" style={{ color: style.text }}>
+                    <p
+                      className="mt-0.5 truncate text-[11px]"
+                      style={{ color: style.text }}
+                    >
                       {action.companyName}
                     </p>
                   </div>

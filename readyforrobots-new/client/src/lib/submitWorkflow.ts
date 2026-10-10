@@ -48,7 +48,12 @@ export function isResearchingPhase(phase: SubmitPhase): boolean {
 }
 
 export function isStableLandingPhase(phase: SubmitPhase): boolean {
-  return phase === "idle" || isResearchingPhase(phase) || phase === "product_selection" || phase === "results";
+  return (
+    phase === "idle" ||
+    isResearchingPhase(phase) ||
+    phase === "product_selection" ||
+    phase === "results"
+  );
 }
 
 /** Right-hand public tape must keep scrolling until RESULTS. */
@@ -66,7 +71,10 @@ const RESEARCH_STAGES = [
   { id: "matching", label: "Matching work" },
 ] as const;
 
-export function researchStageIndex(elapsedMs: number, composing: boolean): number {
+export function researchStageIndex(
+  elapsedMs: number,
+  composing: boolean
+): number {
   if (composing) return 3;
   if (elapsedMs < 300) return 0;
   if (elapsedMs < 900) return 1;
@@ -91,7 +99,9 @@ export function researchStatusLine(opts: {
 }): string {
   if (opts.composing) {
     const n = opts.jobCount ?? 0;
-    return n > 0 ? `Profile ready. ${n} jobs found.` : "Profile ready. Displaying best matches…";
+    return n > 0
+      ? `Profile ready. ${n} jobs found.`
+      : "Profile ready. Displaying best matches…";
   }
   const who = opts.robotName || opts.companyName || "this robot";
   return `Researching ${who} and comparing it against our robot job corpus.`;

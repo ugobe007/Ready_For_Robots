@@ -123,7 +123,8 @@ export default function ScoutWorkflowAnimation({
     scoreTimer.current = setInterval(() => {
       v += step;
       setScoreProgress(Math.min(Math.round(v), cycle.score));
-      if (v >= cycle.score && scoreTimer.current) clearInterval(scoreTimer.current);
+      if (v >= cycle.score && scoreTimer.current)
+        clearInterval(scoreTimer.current);
     }, 20);
     return () => {
       if (scoreTimer.current) clearInterval(scoreTimer.current);
@@ -149,11 +150,11 @@ export default function ScoutWorkflowAnimation({
   useEffect(() => {
     timerRef.current = setTimeout(() => {
       if (stage < 2) {
-        setStage((s) => (s + 1) as ScoutWorkflowStage);
+        setStage(s => (s + 1) as ScoutWorkflowStage);
       } else {
         setFading(true);
         setTimeout(() => {
-          setCycleIdx((c) => c + 1);
+          setCycleIdx(c => c + 1);
           setStage(0);
           setFading(false);
         }, BETWEEN_CYCLES);
@@ -165,7 +166,12 @@ export default function ScoutWorkflowAnimation({
   }, [stage, cycleIdx]);
 
   const isPartnership = cycle.track === "partnership";
-  const sources = ["job_boards", "earnings_calls", "osha_filings", "real_estate_permits"];
+  const sources = [
+    "job_boards",
+    "earnings_calls",
+    "osha_filings",
+    "real_estate_permits",
+  ];
 
   const shellStyle = embedded
     ? {
@@ -184,11 +190,15 @@ export default function ScoutWorkflowAnimation({
         opacity: fading ? 0 : 1,
         transition: "opacity 0.4s ease",
         fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-        boxShadow: "0 0 0 1px rgba(124,58,237,0.1), 0 0 40px rgba(124,58,237,0.08), 0 24px 48px rgba(0,0,0,0.5)",
+        boxShadow:
+          "0 0 0 1px rgba(124,58,237,0.1), 0 0 40px rgba(124,58,237,0.08), 0 24px 48px rgba(0,0,0,0.5)",
       };
 
   return (
-    <div className={`flex flex-col overflow-hidden w-full h-full ${className}`.trim()} style={shellStyle}>
+    <div
+      className={`flex flex-col overflow-hidden w-full h-full ${className}`.trim()}
+      style={shellStyle}
+    >
       {!embedded && (
         <>
           <div
@@ -199,14 +209,31 @@ export default function ScoutWorkflowAnimation({
             }}
           >
             <div className="flex items-center gap-1.5" aria-hidden>
-              <span className="h-3 w-3 rounded-full" style={{ background: "#ff5f57" }} />
-              <span className="h-3 w-3 rounded-full" style={{ background: "#febc2e" }} />
-              <span className="h-3 w-3 rounded-full" style={{ background: "#28c840" }} />
+              <span
+                className="h-3 w-3 rounded-full"
+                style={{ background: "#ff5f57" }}
+              />
+              <span
+                className="h-3 w-3 rounded-full"
+                style={{ background: "#febc2e" }}
+              />
+              <span
+                className="h-3 w-3 rounded-full"
+                style={{ background: "#28c840" }}
+              />
             </div>
-            <span className="rfr-scout-wordmark text-[10px] text-white/40">signal · live pipeline</span>
+            <span className="rfr-scout-wordmark text-[10px] text-white/40">
+              signal · live pipeline
+            </span>
             <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full animate-pulse" style={{ background: "#03DAC5" }} />
-              <span className="text-[11px] font-bold" style={{ color: "#03DAC5" }}>
+              <span
+                className="h-2 w-2 rounded-full animate-pulse"
+                style={{ background: "#03DAC5" }}
+              />
+              <span
+                className="text-[11px] font-bold"
+                style={{ color: "#03DAC5" }}
+              >
                 LIVE
               </span>
             </div>
@@ -214,7 +241,10 @@ export default function ScoutWorkflowAnimation({
 
           <div
             className="flex shrink-0"
-            style={{ borderBottom: "1px solid rgba(124,58,237,0.12)", background: "rgba(0,0,0,0.2)" }}
+            style={{
+              borderBottom: "1px solid rgba(124,58,237,0.12)",
+              background: "rgba(0,0,0,0.2)",
+            }}
           >
             {STAGE_LABELS.map((label, i) => {
               const isActive = stage === i;
@@ -224,10 +254,19 @@ export default function ScoutWorkflowAnimation({
                   key={label}
                   className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all duration-500"
                   style={{
-                    color: isDone ? "rgba(3,218,197,0.55)" : isActive ? "#03DAC5" : "rgba(255,255,255,0.22)",
-                    background: isActive ? "rgba(3,218,197,0.05)" : "transparent",
-                    borderBottom: isActive ? "2px solid #03DAC5" : "2px solid transparent",
-                    borderRight: i < 2 ? "1px solid rgba(255,255,255,0.07)" : "none",
+                    color: isDone
+                      ? "rgba(3,218,197,0.55)"
+                      : isActive
+                        ? "#03DAC5"
+                        : "rgba(255,255,255,0.22)",
+                    background: isActive
+                      ? "rgba(3,218,197,0.05)"
+                      : "transparent",
+                    borderBottom: isActive
+                      ? "2px solid #03DAC5"
+                      : "2px solid transparent",
+                    borderRight:
+                      i < 2 ? "1px solid rgba(255,255,255,0.07)" : "none",
                   }}
                 >
                   {isDone ? (
@@ -257,7 +296,11 @@ export default function ScoutWorkflowAnimation({
         }
       >
         <div className="flex items-center gap-2 flex-wrap">
-          <span className={`text-sm font-bold ${embedded ? "text-gray-900" : "text-white"}`}>{cycle.company}</span>
+          <span
+            className={`text-sm font-bold ${embedded ? "text-gray-900" : "text-white"}`}
+          >
+            {cycle.company}
+          </span>
           <span
             className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm"
             style={{
@@ -274,23 +317,43 @@ export default function ScoutWorkflowAnimation({
               isPartnership
                 ? {
                     color: embedded ? "#047857" : "#a78bfa",
-                    background: embedded ? "rgba(4,120,87,0.08)" : "rgba(167,139,250,0.12)",
-                    border: embedded ? "1px solid rgba(4,120,87,0.22)" : "1px solid rgba(167,139,250,0.3)",
+                    background: embedded
+                      ? "rgba(4,120,87,0.08)"
+                      : "rgba(167,139,250,0.12)",
+                    border: embedded
+                      ? "1px solid rgba(4,120,87,0.22)"
+                      : "1px solid rgba(167,139,250,0.3)",
                   }
                 : embedded
-                  ? { color: "#6b7280", background: "#f3f4f6", border: "1px solid #e5e7eb" }
-                  : { color: "rgba(255,255,255,0.4)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }
+                  ? {
+                      color: "#6b7280",
+                      background: "#f3f4f6",
+                      border: "1px solid #e5e7eb",
+                    }
+                  : {
+                      color: "rgba(255,255,255,0.4)",
+                      background: "rgba(255,255,255,0.06)",
+                      border: "1px solid rgba(255,255,255,0.1)",
+                    }
             }
           >
             {cycle.trackLabel}
           </span>
         </div>
-        <p className={`text-[11px] mt-1 ${embedded ? "text-gray-500" : "text-white/35"}`}>{cycle.industry}</p>
+        <p
+          className={`text-[11px] mt-1 ${embedded ? "text-gray-500" : "text-white/35"}`}
+        >
+          {cycle.industry}
+        </p>
       </div>
 
       <div
         className={`flex items-center gap-3 px-4 py-2.5 shrink-0 ${embedded ? "border-b border-gray-100 bg-white" : ""}`}
-        style={embedded ? undefined : { borderBottom: "1px solid rgba(124,58,237,0.1)" }}
+        style={
+          embedded
+            ? undefined
+            : { borderBottom: "1px solid rgba(124,58,237,0.1)" }
+        }
       >
         <span
           className={`text-[10px] font-bold uppercase tracking-widest shrink-0 ${embedded ? "text-emerald-700" : ""}`}
@@ -298,15 +361,28 @@ export default function ScoutWorkflowAnimation({
         >
           signal
         </span>
-        <span className={`text-[11px] truncate ${embedded ? "text-gray-700" : "text-white/60"}`}>{cycle.signal}</span>
+        <span
+          className={`text-[11px] truncate ${embedded ? "text-gray-700" : "text-white/60"}`}
+        >
+          {cycle.signal}
+        </span>
       </div>
 
-      <div className="flex-1 px-4 py-4 flex flex-col gap-3" style={{ minHeight: "130px" }}>
+      <div
+        className="flex-1 px-4 py-4 flex flex-col gap-3"
+        style={{ minHeight: "130px" }}
+      >
         {stage === 0 && (
           <div className="flex flex-col gap-3 rfr-animate-fade-in">
             <div className="flex items-center gap-2">
-              <span className={`h-1.5 w-1.5 rounded-full animate-pulse shrink-0 ${embedded ? "bg-emerald-500" : ""}`} style={embedded ? undefined : { background: "#03DAC5" }} />
-              <span className={`text-[11px] ${embedded ? "text-emerald-700" : ""}`} style={embedded ? undefined : { color: "#03DAC5" }}>
+              <span
+                className={`h-1.5 w-1.5 rounded-full animate-pulse shrink-0 ${embedded ? "bg-emerald-500" : ""}`}
+                style={embedded ? undefined : { background: "#03DAC5" }}
+              />
+              <span
+                className={`text-[11px] ${embedded ? "text-emerald-700" : ""}`}
+                style={embedded ? undefined : { color: "#03DAC5" }}
+              >
                 Scanning 150+ sources for buying signals…
               </span>
             </div>
@@ -330,25 +406,47 @@ export default function ScoutWorkflowAnimation({
                     embedded
                       ? undefined
                       : {
-                          borderBottom: i < sources.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                          background: i < 2 ? "rgba(3,218,197,0.03)" : "transparent",
+                          borderBottom:
+                            i < sources.length - 1
+                              ? "1px solid rgba(255,255,255,0.05)"
+                              : "none",
+                          background:
+                            i < 2 ? "rgba(3,218,197,0.03)" : "transparent",
                         }
                   }
                 >
                   <span
                     className={`text-[11px] w-4 text-center font-bold shrink-0 ${embedded ? (i < 2 ? "text-emerald-600" : "text-gray-300") : ""}`}
-                    style={embedded ? undefined : { color: i < 2 ? "#03DAC5" : "rgba(255,255,255,0.18)" }}
+                    style={
+                      embedded
+                        ? undefined
+                        : {
+                            color: i < 2 ? "#03DAC5" : "rgba(255,255,255,0.18)",
+                          }
+                    }
                   >
                     {i < 2 ? "✓" : "·"}
                   </span>
                   <span
                     className={`text-[11px] flex-1 ${embedded ? (i < 2 ? "text-gray-800" : "text-gray-400") : ""}`}
-                    style={embedded ? undefined : { color: i < 2 ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.22)" }}
+                    style={
+                      embedded
+                        ? undefined
+                        : {
+                            color:
+                              i < 2
+                                ? "rgba(255,255,255,0.65)"
+                                : "rgba(255,255,255,0.22)",
+                          }
+                    }
                   >
                     {src}
                   </span>
                   {i < 2 && (
-                    <span className={`text-[10px] ${embedded ? "text-emerald-600" : ""}`} style={embedded ? undefined : { color: "#03DAC5" }}>
+                    <span
+                      className={`text-[10px] ${embedded ? "text-emerald-600" : ""}`}
+                      style={embedded ? undefined : { color: "#03DAC5" }}
+                    >
                       match
                     </span>
                   )}
@@ -361,17 +459,39 @@ export default function ScoutWorkflowAnimation({
         {stage === 1 && (
           <div className="flex flex-col gap-3 rfr-animate-fade-in">
             <div className="flex items-center justify-between">
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${embedded ? "text-gray-500" : ""}`} style={embedded ? undefined : { color: "rgba(255,255,255,0.3)" }}>
+              <span
+                className={`text-[10px] font-bold uppercase tracking-widest ${embedded ? "text-gray-500" : ""}`}
+                style={
+                  embedded ? undefined : { color: "rgba(255,255,255,0.3)" }
+                }
+              >
                 fit_score
               </span>
               <div className="flex items-end gap-1.5">
-                <span className={`text-2xl font-extrabold tabular-nums leading-none ${embedded ? "text-emerald-600" : ""}`} style={embedded ? undefined : { color: "#03DAC5" }}>
+                <span
+                  className={`text-2xl font-extrabold tabular-nums leading-none ${embedded ? "text-emerald-600" : ""}`}
+                  style={embedded ? undefined : { color: "#03DAC5" }}
+                >
                   {scoreProgress}
                 </span>
-                <span className={`text-xs mb-0.5 ${embedded ? "text-gray-400" : "text-white/25"}`}>/ 100</span>
+                <span
+                  className={`text-xs mb-0.5 ${embedded ? "text-gray-400" : "text-white/25"}`}
+                >
+                  / 100
+                </span>
               </div>
             </div>
-            <div className={`h-1.5 overflow-hidden rounded-sm ${embedded ? "bg-gray-200" : ""}`} style={embedded ? undefined : { background: "rgba(255,255,255,0.08)", borderRadius: "2px" }}>
+            <div
+              className={`h-1.5 overflow-hidden rounded-sm ${embedded ? "bg-gray-200" : ""}`}
+              style={
+                embedded
+                  ? undefined
+                  : {
+                      background: "rgba(255,255,255,0.08)",
+                      borderRadius: "2px",
+                    }
+              }
+            >
               <div
                 className="h-full transition-all duration-75 rounded-sm"
                 style={{
@@ -397,7 +517,11 @@ export default function ScoutWorkflowAnimation({
               {[
                 { key: "labor_pain", val: "high", threshold: 30 },
                 { key: "expansion_stage", val: "active", threshold: 55 },
-                { key: "automation_fit", val: cycle.robotType.toLowerCase(), threshold: 75 },
+                {
+                  key: "automation_fit",
+                  val: cycle.robotType.toLowerCase(),
+                  threshold: 75,
+                },
               ].map(({ key, val, threshold }, i) => {
                 const done = scoreProgress >= threshold;
                 return (
@@ -408,21 +532,46 @@ export default function ScoutWorkflowAnimation({
                       embedded
                         ? { borderBottom: i < 2 ? "1px solid #e5e7eb" : "none" }
                         : {
-                            borderBottom: i < 2 ? "1px solid rgba(255,255,255,0.05)" : "none",
-                            background: done ? "rgba(3,218,197,0.03)" : "transparent",
+                            borderBottom:
+                              i < 2
+                                ? "1px solid rgba(255,255,255,0.05)"
+                                : "none",
+                            background: done
+                              ? "rgba(3,218,197,0.03)"
+                              : "transparent",
                           }
                     }
                   >
                     <span
                       className={`text-[11px] w-4 text-center font-bold shrink-0 transition-colors duration-300 ${embedded ? (done ? "text-emerald-600" : "text-gray-300") : ""}`}
-                      style={embedded ? undefined : { color: done ? "#03DAC5" : "rgba(255,255,255,0.18)" }}
+                      style={
+                        embedded
+                          ? undefined
+                          : {
+                              color: done
+                                ? "#03DAC5"
+                                : "rgba(255,255,255,0.18)",
+                            }
+                      }
                     >
                       {done ? "✓" : "·"}
                     </span>
-                    <span className={`text-[11px] flex-1 ${embedded ? "text-gray-600" : "text-white/40"}`}>{key}</span>
+                    <span
+                      className={`text-[11px] flex-1 ${embedded ? "text-gray-600" : "text-white/40"}`}
+                    >
+                      {key}
+                    </span>
                     <span
                       className={`text-[11px] font-bold transition-colors duration-300 ${embedded ? (done ? "text-gray-900" : "text-gray-400") : ""}`}
-                      style={embedded ? undefined : { color: done ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.18)" }}
+                      style={
+                        embedded
+                          ? undefined
+                          : {
+                              color: done
+                                ? "rgba(255,255,255,0.75)"
+                                : "rgba(255,255,255,0.18)",
+                            }
+                      }
                     >
                       {val}
                     </span>
@@ -438,7 +587,10 @@ export default function ScoutWorkflowAnimation({
 
         {stage === 2 && (
           <div className="flex flex-col gap-3 rfr-animate-fade-in">
-            <span className={`text-[10px] font-bold uppercase tracking-widest ${embedded ? "text-gray-500" : ""}`} style={embedded ? undefined : { color: "rgba(255,255,255,0.3)" }}>
+            <span
+              className={`text-[10px] font-bold uppercase tracking-widest ${embedded ? "text-gray-500" : ""}`}
+              style={embedded ? undefined : { color: "rgba(255,255,255,0.3)" }}
+            >
               draft_outreach
             </span>
             <div
@@ -459,8 +611,14 @@ export default function ScoutWorkflowAnimation({
                   key={i}
                   className="text-[12px] leading-relaxed transition-all duration-500"
                   style={{
-                    color: i < outreachIdx ? (embedded ? "#374151" : "rgba(255,255,255,0.72)") : "transparent",
-                    transform: i < outreachIdx ? "translateY(0)" : "translateY(4px)",
+                    color:
+                      i < outreachIdx
+                        ? embedded
+                          ? "#374151"
+                          : "rgba(255,255,255,0.72)"
+                        : "transparent",
+                    transform:
+                      i < outreachIdx ? "translateY(0)" : "translateY(4px)",
                   }}
                 >
                   {line}
@@ -480,8 +638,14 @@ export default function ScoutWorkflowAnimation({
                       }
                 }
               >
-                <CheckCircle2 className={`h-3.5 w-3.5 shrink-0 ${embedded ? "text-emerald-600" : ""}`} style={embedded ? undefined : { color: "#03DAC5" }} />
-                <span className={`text-[11px] font-semibold ${embedded ? "text-emerald-700" : ""}`} style={embedded ? undefined : { color: "#03DAC5" }}>
+                <CheckCircle2
+                  className={`h-3.5 w-3.5 shrink-0 ${embedded ? "text-emerald-600" : ""}`}
+                  style={embedded ? undefined : { color: "#03DAC5" }}
+                />
+                <span
+                  className={`text-[11px] font-semibold ${embedded ? "text-emerald-700" : ""}`}
+                  style={embedded ? undefined : { color: "#03DAC5" }}
+                >
                   {cycle.sentLabel}
                 </span>
               </div>
@@ -498,7 +662,9 @@ export default function ScoutWorkflowAnimation({
             borderTop: "1px solid rgba(124,58,237,0.15)",
           }}
         >
-          <span className="rfr-scout-wordmark text-[9px] text-white/30">signal · {STAGE_LABELS[stage].toLowerCase()}</span>
+          <span className="rfr-scout-wordmark text-[9px] text-white/30">
+            signal · {STAGE_LABELS[stage].toLowerCase()}
+          </span>
           <span className="text-[10px] text-white/25">
             {(cycleIdx % CYCLES.length) + 1} / {CYCLES.length} opportunities
           </span>

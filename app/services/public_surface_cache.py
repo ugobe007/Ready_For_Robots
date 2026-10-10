@@ -111,7 +111,7 @@ def refresh_pipeline_surface_caches(db: Session, *, include_humanoid_report: boo
         KEY_PIPELINE_FEED,
         INDUSTRY_SEARCH_CACHE_QUERIES,
     )
-    from app.services.cal_lead_drops import build_cal_lead_drops_preview
+    from app.services.phelan_lead_drops import build_phelan_lead_drops_preview
 
     from app.services.homepage_rotation import homepage_rotation_day, homepage_rotation_slot
 
@@ -149,9 +149,9 @@ def refresh_pipeline_surface_caches(db: Session, *, include_humanoid_report: boo
         write_public_cache(db, _industry_search_cache_key(search_q), search_leads)
         stats[f"leads_search_{search_q.replace(' ', '_')}"] = len(search_leads)
 
-    cal_drops = build_cal_lead_drops_preview(db, limit=3)
+    cal_drops = build_phelan_lead_drops_preview(db, limit=3)
     write_public_cache(db, KEY_CAL_LEAD_DROPS, cal_drops)
-    stats["cal_lead_drops"] = cal_drops.get("count", 0)
+    stats["phelan_lead_drops"] = cal_drops.get("count", 0)
 
     try:
         pipeline_leads = build_public_pipeline_feed(db, limit=PIPELINE_FEED_LIMIT)

@@ -38,8 +38,8 @@ def _fallback_plan(account: CrmAccount, company: Company | None, signals: list[S
             "linked_signal_types": signal_types[:2],
         },
         {
-            "title": "Send Cal intro referencing top buying signal",
-            "rationale": intel.get("recommended_action") or "Lead shows automation intent.",
+            "title": "Draft a first-touch note from the top buying signal",
+            "rationale": intel.get("recommended_action") or "Lead shows automation intent. Cal is the Jobs CRM recruiter, not this SIGNAL send.",
             "priority": "high",
             "due_offset_days": 2,
             "linked_signal_types": signal_types[:3],
@@ -72,7 +72,7 @@ def _fallback_plan(account: CrmAccount, company: Company | None, signals: list[S
         "risks": [
             {
                 "risk": "Contact email may be inferred rather than verified.",
-                "mitigation": "Validate via Apollo or a warm intro before high-stakes outreach.",
+                "mitigation": "Confirm the contact is already on the account. Do not scrape Apollo from this path.",
             }
         ],
         "talk_tracks": [
@@ -102,7 +102,9 @@ def _openai_plan(account: CrmAccount, company: Company | None, signals: list[Sig
             for s in signals[:12]
         ]
         prompt = (
-            "You are a B2B sales copilot for robotics/automation. "
+            "You are a SIGNAL desk copilot for leftover buyer accounts. "
+            "Cal is the Jobs recruiter on /pipeline?src=jobs_activate, not this path. "
+            "Do not invent a Cal intro send. Do not hop Jobs traffic onto this account. "
             "Return JSON only matching this schema: plan_schema_version, executive_summary, hypothesis, "
             "recommended_next_stage, stakeholders[], tasks[], risks[], talk_tracks[], citations[]. "
             "Do not invent private contact data. Ground claims in provided signals.\n\n"

@@ -6,7 +6,10 @@ import type { ZoneNodeData } from "@/lib/workflowFlowAdapter";
 const HANDLE_CLASS =
   "!w-3 !h-3 !bg-emerald-500 !border-2 !border-white shadow-sm";
 
-export default function WorkflowZoneNode({ data, selected }: NodeProps<Node<ZoneNodeData>>) {
+export default function WorkflowZoneNode({
+  data,
+  selected,
+}: NodeProps<Node<ZoneNodeData>>) {
   const c = ZONE_COLORS[data.kind] || ZONE_COLORS.process;
   return (
     <div
@@ -21,10 +24,30 @@ export default function WorkflowZoneNode({ data, selected }: NodeProps<Node<Zone
         color: c.text,
       }}
     >
-      <Handle type="target" position={Position.Top} id="top" className={HANDLE_CLASS} />
-      <Handle type="target" position={Position.Left} id="left" className={HANDLE_CLASS} />
-      <Handle type="source" position={Position.Right} id="right" className={HANDLE_CLASS} />
-      <Handle type="source" position={Position.Bottom} id="bottom" className={HANDLE_CLASS} />
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        className={HANDLE_CLASS}
+      />
+      <Handle
+        type="target"
+        position={Position.Left}
+        id="left"
+        className={HANDLE_CLASS}
+      />
+      <Handle
+        type="source"
+        position={Position.Right}
+        id="right"
+        className={HANDLE_CLASS}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        className={HANDLE_CLASS}
+      />
       <span className="text-xs font-semibold leading-tight pointer-events-none select-none">
         {data.label}
       </span>

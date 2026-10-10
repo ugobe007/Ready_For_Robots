@@ -35,10 +35,25 @@ type Props = {
   signupHref?: string;
 };
 
-const TIER_STYLES: Record<string, { bg: string; text: string; border: string }> = {
-  HOT: { bg: "rgba(239,68,68,0.08)", text: "#b91c1c", border: "rgba(239,68,68,0.35)" },
-  WARM: { bg: "rgba(245,158,11,0.1)", text: "#b45309", border: "rgba(245,158,11,0.4)" },
-  COLD: { bg: "rgba(100,116,139,0.08)", text: "#475569", border: "rgba(100,116,139,0.3)" },
+const TIER_STYLES: Record<
+  string,
+  { bg: string; text: string; border: string }
+> = {
+  HOT: {
+    bg: "rgba(239,68,68,0.08)",
+    text: "#b91c1c",
+    border: "rgba(239,68,68,0.35)",
+  },
+  WARM: {
+    bg: "rgba(245,158,11,0.1)",
+    text: "#b45309",
+    border: "rgba(245,158,11,0.4)",
+  },
+  COLD: {
+    bg: "rgba(100,116,139,0.08)",
+    text: "#475569",
+    border: "rgba(100,116,139,0.3)",
+  },
 };
 
 function tierStyle(tier: string) {
@@ -82,7 +97,9 @@ export default function CalLeadDrop({
             <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-800">
               SIGNAL recommendation
             </p>
-            <h3 className="text-lg font-bold text-gray-900 truncate">{drop.company_name}</h3>
+            <h3 className="text-lg font-bold text-gray-900 truncate">
+              {drop.company_name}
+            </h3>
             <p className="text-xs text-gray-500 mt-0.5">
               {drop.vertical_label || drop.industry}
               {drop.location ? ` · ${drop.location}` : ""}
@@ -91,7 +108,11 @@ export default function CalLeadDrop({
         </div>
         <div
           className="shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide"
-          style={{ background: ts.bg, color: ts.text, border: `1px solid ${ts.border}` }}
+          style={{
+            background: ts.bg,
+            color: ts.text,
+            border: `1px solid ${ts.border}`,
+          }}
         >
           {drop.tier} · {Math.round(drop.intent_score)} intent
         </div>
@@ -109,7 +130,9 @@ export default function CalLeadDrop({
         )}
 
         <section>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">Why now</p>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-1">
+            Why now
+          </p>
           <p className="text-sm leading-relaxed text-gray-800">
             {cleanAndClampText(drop.why_now, compact ? 220 : 360)}
           </p>
@@ -122,7 +145,7 @@ export default function CalLeadDrop({
               Fit for your robots
             </p>
             <div className="flex flex-wrap gap-1.5">
-              {drop.robot_fit!.slice(0, compact ? 3 : 4).map((r) => (
+              {drop.robot_fit!.slice(0, compact ? 3 : 4).map(r => (
                 <span
                   key={r}
                   className="rounded-full bg-slate-100 px-2.5 py-0.5 text-[11px] font-medium text-slate-700"
@@ -148,7 +171,9 @@ export default function CalLeadDrop({
               Open with this
             </p>
             {drop.draft_subject && (
-              <p className="text-xs font-semibold text-amber-950 mb-2">{drop.draft_subject}</p>
+              <p className="text-xs font-semibold text-amber-950 mb-2">
+                {drop.draft_subject}
+              </p>
             )}
             {drop.draft_body && (
               <pre className="whitespace-pre-wrap break-words font-sans text-[11px] leading-relaxed text-gray-600 max-h-32 overflow-y-auto">

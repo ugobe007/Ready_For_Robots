@@ -32,21 +32,27 @@ import HubSpotConnect from "./pages/HubSpotConnect";
 import Benchmark from "./pages/Benchmark";
 import Robots from "./pages/Robots";
 import HumanoidComparisonReport from "./pages/HumanoidComparisonReport";
+import IndustryBenchmarkingReport from "./pages/IndustryBenchmarkingReport";
 import FindRobots from "./pages/FindRobots";
 import Admin from "./pages/Admin";
 import SpecialProjectsAdmin from "./pages/SpecialProjectsAdmin";
 import ProjectPortal from "./pages/ProjectPortal";
 import EmployerDecision from "./pages/EmployerDecision";
 import OemHold from "./pages/OemHold";
+import ProposalOemReview from "./pages/ProposalOemReview";
 import Social from "./pages/Social";
 import Jobs from "./pages/Jobs";
 import ExperimentRedirect from "./pages/ExperimentRedirect";
 import Preview from "./pages/Preview";
 import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
+import Support from "./pages/Support";
 import VendorDesignBuilder from "./pages/VendorDesignBuilder";
 import DesignShare from "./pages/DesignShare";
 import IconReview from "./pages/IconReview";
-import { AuthProvider } from "./contexts/AuthContext";
+import Icons from "./pages/Icons";
+import Welcome from "./pages/Welcome";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
 import VisitTracker from "./components/VisitTracker";
@@ -62,12 +68,19 @@ function JourneyHomeRedirect() {
   return <Redirect to={`/${search}`} />;
 }
 
+function PipelineRoute() {
+  return <Pipeline />;
+}
+
 function Router() {
   return (
     <Switch>
       {/* Product front door = Find jobs for your robot */}
       <Route path="/" component={Jobs} />
-      <Route path="/robots/analysis/:analysisId" component={RobotAnalysisReview} />
+      <Route
+        path="/robots/analysis/:analysisId"
+        component={RobotAnalysisReview}
+      />
       <Route path="/robots/:robotId/review" component={RobotDetailReview} />
       <Route path="/journey/url" component={JourneyHomeRedirect} />
       <Route path="/journey/identity" component={JourneyHomeRedirect} />
@@ -75,20 +88,35 @@ function Router() {
       <Route path="/journey/activate" component={JourneyHomeRedirect} />
       <Route path="/results" component={Results} />
       <Route path="/sales/samples" component={SalesSamples} />
-      <Route path="/pipeline" component={Pipeline} />
+      <Route path="/pipeline" component={PipelineRoute} />
+      <Route path="/about" component={Intelligence} />
       <Route path="/compare" component={Compare} />
       <Route path="/signals" component={Signals} />
-      <Route path="/intelligence" component={Intelligence} />
+      <Route path="/intelligence" component={Newsletter} />
       <Route path="/newsletter" component={Newsletter} />
+      <Route path="/market-insights" component={Newsletter} />
+      <Route path="/robot-ready" component={Robots} />
+      <Route path="/roi-calculator" component={Benchmark} />
+      <Route path="/roi" component={Benchmark} />
       <Route path="/how-it-works">
         <Redirect to="/intelligence" />
       </Route>
       <Route path="/preview" component={Preview} />
       <Route path="/privacy" component={Privacy} />
+      <Route path="/terms" component={Terms} />
+      <Route path="/support" component={Support} />
       <Route path="/vendor/design" component={VendorDesignBuilder} />
       <Route path="/design/:shareId" component={DesignShare} />
       <Route path="/benchmark" component={Benchmark} />
       <Route path="/robots/report" component={HumanoidComparisonReport} />
+      <Route
+        path="/reports/benchmarking/:industry"
+        component={IndustryBenchmarkingReport}
+      />
+      <Route
+        path="/reports/benchmarking"
+        component={IndustryBenchmarkingReport}
+      />
       <Route path="/robots" component={Robots} />
       <Route path="/find-robots" component={FindRobots} />
       <Route path="/pricing" component={Pricing} />
@@ -97,9 +125,11 @@ function Router() {
       <Route path="/jobs/:slug" component={Jobs} />
       <Route path="/jobs" component={JobsIndexRedirect} />
       <Route path="/experiment" component={ExperimentRedirect} />
+      <Route path="/icons" component={Icons} />
       <Route path="/icon-review" component={IconReview} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
+      <Route path="/welcome" component={Welcome} />
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/profile" component={Profile} />
       <Route path="/my-robots" component={MyRobots} />
@@ -123,17 +153,24 @@ function Router() {
       <Route path="/p/:token" component={ProjectPortal} />
       <Route path="/employer/:token" component={EmployerDecision} />
       <Route path="/oem-hold/:token" component={OemHold} />
+      <Route path="/proposal/oem-review" component={ProposalOemReview} />
       <Route path="/readyforrobots/admin/prospects">
         <Redirect to="/pipeline" />
       </Route>
-      <Route path="/readyforrobots/admin/special-projects" component={SpecialProjectsAdmin} />
+      <Route
+        path="/readyforrobots/admin/special-projects"
+        component={SpecialProjectsAdmin}
+      />
       <Route path="/readyforrobots/admin" component={Admin} />
       <Route path="/readyforrobots/crm" component={Crm} />
       <Route path="/readyforrobots/inbox" component={Inbox} />
       <Route path="/readyforrobots/calendar" component={CalendarPage} />
       <Route path="/readyforrobots/sales-console" component={SalesConsole} />
       <Route path="/readyforrobots/sales-workflow" component={SalesWorkflow} />
-      <Route path="/readyforrobots/supply-pipeline" component={SupplyPipeline} />
+      <Route
+        path="/readyforrobots/supply-pipeline"
+        component={SupplyPipeline}
+      />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
@@ -148,10 +185,10 @@ function App() {
           <PostAuthRedirect />
           <ScoutChat>
             <VisitTracker>
-            <TooltipProvider>
-              <Toaster />
-              <Router />
-            </TooltipProvider>
+              <TooltipProvider>
+                <Toaster />
+                <Router />
+              </TooltipProvider>
             </VisitTracker>
           </ScoutChat>
         </AuthProvider>

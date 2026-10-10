@@ -9,9 +9,18 @@ import {
   peekPendingNext,
   navigateAfterAuth,
 } from "@/lib/authNext";
-import { normalizeJobsReturnPath, isJobsProductReturnPath } from "@/lib/signupWorkflowPath";
+import {
+  normalizeJobsReturnPath,
+  isJobsProductReturnPath,
+} from "@/lib/signupWorkflowPath";
 
-const NEUTRAL_PATHS = new Set(["/", "/login", "/signup", "/auth/callback", "/pricing"]);
+const NEUTRAL_PATHS = new Set([
+  "/",
+  "/login",
+  "/signup",
+  "/auth/callback",
+  "/pricing",
+]);
 
 export default function PostAuthRedirect() {
   const { session, loading } = useAuth();
@@ -25,15 +34,19 @@ export default function PostAuthRedirect() {
     const path = window.location.pathname;
     if (!NEUTRAL_PATHS.has(path)) return;
 
-    let target = isJobsProductReturnPath(pending) ? normalizeJobsReturnPath(pending) : pending;
+    let target = isJobsProductReturnPath(pending)
+      ? normalizeJobsReturnPath(pending)
+      : pending;
     const current = `${window.location.pathname}${window.location.search}`;
     if (current === target) {
       clearPendingNext();
       handled.current = true;
       return;
     }
-    // Already on product home with a home-shaped pending (e.g. / or /?src=) — stay if paths match.
-    if (path === "/" && target.split("?")[0] === "/" && !target.includes("?")) {
+    // On product home (/): any home-shaped pending (e.g. / or /?new=1 or /?visit=jobs) is already on home.
+    // Clear pending intent and NEVER trigger window.location.replace reload loop.
+    const targetPath = (target.split("?")[0] || "/").trim();
+    if (path === "/" && (targetPath === "/" || targetPath === "")) {
       clearPendingNext();
       handled.current = true;
       return;

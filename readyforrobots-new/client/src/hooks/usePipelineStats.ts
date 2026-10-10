@@ -22,7 +22,7 @@ export function usePipelineStats(): PipelineStats {
       try {
         const res = await fetch(
           `${getApiBase()}/api/leads/summary?exclude_junk=true`,
-          liveFetchInit(),
+          liveFetchInit()
         );
         if (!res.ok || cancelled) return;
         const data = (await res.json()) as {
@@ -36,7 +36,9 @@ export function usePipelineStats(): PipelineStats {
         const h = Number(data.hot ?? 0);
         const w = Number(data.warm ?? 0);
         const t = Number(data.total ?? 0) || h + w;
-        const signals = Number(data.total_signals ?? data.signals_in_database ?? 0);
+        const signals = Number(
+          data.total_signals ?? data.signals_in_database ?? 0
+        );
         if (h > 0) setHot(h);
         if (w > 0) setWarm(w);
         if (t > 0) setTotal(t);

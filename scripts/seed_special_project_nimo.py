@@ -48,7 +48,7 @@ UPDATES = [
     {
         "category": "milestone",
         "title": "Beta GTM playbook built",
-        "body": "Strategy, ~50 ranked beta-host targets, and 3-touch Cal outreach sequences ready. "
+        "body": "Strategy, ~50 ranked beta-host targets, and 3-touch Phelan outreach sequences ready. "
         "Motion: no-cost validation pilot with reference rights.",
     },
     {

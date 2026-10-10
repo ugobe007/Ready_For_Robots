@@ -44,7 +44,10 @@ export type JobsWatchStatus = {
   free_taste?: boolean;
 };
 
-export type CrmTasteJob = Pick<MatchJob, "title" | "company_name" | "forRobot"> & {
+export type CrmTasteJob = Pick<
+  MatchJob,
+  "title" | "company_name" | "forRobot"
+> & {
   required_task_models?: MatchJob["required_task_models"];
 };
 
@@ -95,7 +98,9 @@ export default function CrmHero({
           className="mt-1 shrink-0"
         />
         <div className="min-w-0 flex-1">
-          <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>ReadyForRobots</p>
+          <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>
+            ReadyForRobots
+          </p>
           <h1 className={`mt-2 ${CRM_HEADLINE_CLASS}`}>{CRM_PAGE_HEADLINE}</h1>
           <p className={CRM_SUBHEAD_CLASS}>{CRM_PAGE_NEXT}</p>
           {activateCta ? <div className="mt-4">{activateCta}</div> : null}
@@ -104,7 +109,10 @@ export default function CrmHero({
 
       <ol className="mt-5 max-w-2xl space-y-2">
         {CRM_HOW_TO_STEPS.map((step, i) => (
-          <li key={step} className="flex gap-3 text-base leading-relaxed text-slate-200">
+          <li
+            key={step}
+            className="flex gap-3 text-base leading-relaxed text-slate-200"
+          >
             <span className="font-mono text-emerald-400">{i + 1}.</span>
             <span>{step}</span>
           </li>
@@ -123,7 +131,10 @@ export default function CrmHero({
             {unlocked.map((job, i) => {
               const modelLine = jobModelListLine(job);
               return (
-                <li key={`${job.title || "job"}-${i}`} className="text-sm text-slate-200">
+                <li
+                  key={`${job.title || "job"}-${i}`}
+                  className="text-sm text-slate-200"
+                >
                   • {job.title}
                   {job.company_name ? ` · ${job.company_name}` : ""}
                   {modelLine ? (
@@ -160,7 +171,9 @@ export default function CrmHero({
         {optedIn && watch?.robot_url ? (
           <p className="mt-3 font-mono text-sm text-emerald-300">
             Watching {watch.product_name || watch.robot_url}
-            {watch.last_checked_at ? " · last check recorded" : " · first check runs on the daily cron"}
+            {watch.last_checked_at
+              ? " · last check recorded"
+              : " · first check runs on the daily cron"}
           </p>
         ) : null}
         {events.length > 0 ? (
@@ -187,9 +200,13 @@ export default function CrmHero({
         ) : null}
       </div>
 
-      {actions ? <div className="mt-4 flex flex-wrap gap-3">{actions}</div> : null}
+      {actions ? (
+        <div className="mt-4 flex flex-wrap gap-3">{actions}</div>
+      ) : null}
       {activateCta ? <div className="mt-4">{activateCta}</div> : null}
-      {footer ? <div className="mt-4 text-base text-slate-400">{footer}</div> : null}
+      {footer ? (
+        <div className="mt-4 text-base text-slate-400">{footer}</div>
+      ) : null}
       <a
         href={jobsFreshHomeHref()}
         onClick={onJobsFreshHomeClick}

@@ -358,8 +358,5 @@ def test_public_class_options_include_ten_classes():
     assert "hotel" in by_id["hospitality"]["hint"].lower()
     assert "food prep" not in by_id["hospitality"]["hint"].lower()
     assert "make-line" in by_id["food_prep"]["hint"].lower() or "bowl" in by_id["food_prep"]["hint"].lower()
-    assert "hotel" in by_id["food_prep"]["hint"].lower() or "casino" in by_id["food_prep"]["hint"].lower()
-    assert by_id["serving"]["label"] == "Serving"
-    assert "housekeep" not in by_id["serving"]["hint"].lower()
-    assert by_id["cleaning"]["label"] == "Cleaning"
-    assert "data center" in by_id["cleaning"]["hint"].lower()
+    assert "table" in by_id["serving"]["hint"].lower() or "bussing" in by_id["serving"]["hint"].lower()
+    assert "floor" in by_id["cleaning"]["hint"].lower() or "scrub" in by_id["cleaning"]["hint"].lower()

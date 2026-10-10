@@ -11,7 +11,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from app.api import leads, companies, scoring
 from app.api.analyze import router as analyze_router
 from app.api.scraper_health import router as scraper_health_router
@@ -60,9 +60,13 @@ from app.api.vendor_design import router as vendor_design_router
 from app.api.robot_job_match import router as robot_job_match_router
 from app.api.robot_profile import router as robot_profile_router
 from app.api.robot_job_search import router as robot_job_search_router
+from app.api.robot_jobs_preview import router as robot_jobs_preview_router
+from app.api.employer_jobs import router as employer_jobs_router
+from app.api.gpt_actions import router as gpt_actions_router
 from app.api.v1 import router as v1_router
 from app.api.v1.errors import V1HTTPException, error_response
 from app.database import get_db
+from app.spa_fallback import is_api_catchall_path
 import app.models
 import app.models.shared_calculation
 import app.models.site_analytics_event
@@ -229,7 +233,8 @@ def _run_web_startup() -> None:
     # Worker owns the daily digest. Web starts it only when
     # CAL_DAILY_DIGEST_WEB_BACKUP=1 (default off) so SKIP_CELERY=1 does not
     # double-send with the worker at 15:00 UTC. GHA remains the late backup.
-    _start_scheduled_cal_daily_digest()
+    _start_scheduled_phelan_daily_digest()
+    _start_scheduled_daily_jobs_report()
 
 
 def _web_cache_rehydrate_loop() -> None:
@@ -265,7 +270,7 @@ def _start_web_cache_rehydrate() -> None:
 
 
 def _cal_watchdog_loop() -> None:
-    from app.services.cal_watchdog import check_and_alert
+    from app.services.phelan_watchdog import check_and_alert
 
     first_delay = float(os.getenv("CAL_WATCHDOG_FIRST_DELAY_MINUTES", "12") or "12")
     time.sleep(max(60, first_delay * 60))
@@ -279,9 +284,9 @@ def _cal_watchdog_loop() -> None:
 
 
 def _start_cal_watchdog() -> None:
-    """Web (always-on) watches the worker's Cal heartbeat and emails on outage."""
+    """Web (always-on) watches the worker's Phelan heartbeat and emails on outage."""
     from app.runtime_role import is_web_process
-    from app.services.cal_watchdog import watchdog_enabled
+    from app.services.phelan_watchdog import watchdog_enabled
 
     if not is_web_process():
         return
@@ -323,8 +328,9 @@ def _run_worker_startup() -> None:
     _start_scheduled_job_board()
     _start_scheduled_secondary_pipeline()
     _start_scheduled_data_quality()
-    _start_scheduled_cal_autonomy()
-    _start_scheduled_cal_daily_digest()
+    _start_scheduled_phelan_autonomy()
+    _start_scheduled_phelan_daily_digest()
+    _start_scheduled_daily_jobs_report()
     _start_scheduled_communication_learning()
     _start_scheduled_supply_autonomy()
     _start_scheduled_newsletter_publish()
@@ -474,6 +480,12 @@ _RATE_MAX = 300   # requests per window per IP (generous for real users)
 @app.middleware("http")
 async def rate_limit_and_block_probes(request: Request, call_next):
     path = request.url.path
+    # The plugin lists https://ready-2-robot.fly.dev/mcp. The mount only
+    # receives /mcp/, and the SPA catch-all would otherwise answer GET /mcp.
+    if path == "/mcp":
+        request.scope["path"] = "/mcp/"
+        request.scope["raw_path"] = b"/mcp/"
+        path = "/mcp/"
     # 404 immediately for obvious scanner probes
     if _PROBE_PATTERNS.search(path):
         return JSONResponse(status_code=404, content={"detail": "Not found"})
@@ -484,6 +496,7 @@ async def rate_limit_and_block_probes(request: Request, call_next):
         and not path.startswith("/_next/")
         and path != "/health"
         and path != "/"
+        and not path.startswith("/.well-known/")
     ):
         ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -546,6 +559,9 @@ app.include_router(vendor_design_router, prefix="/api/vendor-design", tags=["ven
 app.include_router(robot_job_match_router, prefix="/api", tags=["robot-job-match"])
 app.include_router(robot_profile_router, prefix="/api", tags=["robot-profile"])
 app.include_router(robot_job_search_router, prefix="/api", tags=["robot-job-search"])
+app.include_router(robot_jobs_preview_router, prefix="/api", tags=["robot-jobs-preview"])
+app.include_router(employer_jobs_router, prefix="/api", tags=["employer-jobs"])
+app.include_router(gpt_actions_router)
 app.include_router(v1_router, prefix="/api/v1", tags=["v1"])
 # Alias under /api/v1 for clients that prefer v1 namespace (no feature flag — same handler)
 app.include_router(robot_job_match_router, prefix="/api/v1", tags=["robot-job-match"])
@@ -574,6 +590,15 @@ if _mcp_asgi is not None:
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/.well-known/openai-apps-challenge", include_in_schema=False)
+def openai_apps_challenge():
+    """Plain-text domain challenge for the plugin scanner. Body is only the token."""
+    token = (os.getenv("OPENAI_APPS_CHALLENGE_TOKEN") or "").strip()
+    if not token:
+        return PlainTextResponse("", status_code=404)
+    return PlainTextResponse(token)
 
 
 @app.get("/health/db")
@@ -881,36 +906,36 @@ def _start_scheduled_data_quality():
 
 
 def _cal_heartbeat_sleep(total_seconds: float, status: str = "alive") -> None:
-    """Sleep in short chunks, refreshing the Cal heartbeat each chunk so the
+    """Sleep in short chunks, refreshing the Phelan heartbeat each chunk so the
     web-side watchdog can detect a dead worker within minutes (not hours)."""
-    from app.services.cal_watchdog import record_cal_heartbeat
+    from app.services.phelan_watchdog import record_phelan_heartbeat
 
     remaining = max(0.0, float(total_seconds))
     chunk = 300.0  # 5 min
     while remaining > 0:
-        record_cal_heartbeat(status)
+        record_phelan_heartbeat(status)
         nap = min(chunk, remaining)
         time.sleep(nap)
         remaining -= nap
 
 
-def _scheduled_cal_autonomy_loop():
+def _scheduled_phelan_autonomy_loop():
     from app.database import SessionLocal
-    from app.services.cal_autonomy import cal_autonomy_enabled, run_cal_autonomy_cycle
-    from app.services.cal_watchdog import record_cal_heartbeat
+    from app.services.phelan_autonomy import phelan_autonomy_enabled, run_phelan_autonomy_cycle
+    from app.services.phelan_watchdog import record_phelan_heartbeat
 
-    record_cal_heartbeat("starting")
-    delay_min = float(os.getenv("CAL_AUTONOMY_FIRST_RUN_DELAY_MINUTES", "20") or "20")
+    record_phelan_heartbeat("starting")
+    delay_min = float(os.getenv("PHELAN_AUTONOMY_FIRST_RUN_DELAY_MINUTES", "20") or "20")
     _cal_heartbeat_sleep(max(60, delay_min * 60), status="warming_up")
     while True:
-        record_cal_heartbeat("tick")
-        if not cal_autonomy_enabled():
+        record_phelan_heartbeat("tick")
+        if not phelan_autonomy_enabled():
             _cal_heartbeat_sleep(3600, status="disabled")
             continue
         try:
             with SessionLocal() as db:
-                result = run_cal_autonomy_cycle(db)
-            record_cal_heartbeat(
+                result = run_phelan_autonomy_cycle(db)
+            record_phelan_heartbeat(
                 "cycle_ok",
                 {"sent": result.get("sent"), "drafted": result.get("drafted")},
             )
@@ -922,39 +947,39 @@ def _scheduled_cal_autonomy_loop():
                 result.get("format_review_notified"),
             )
         except Exception as exc:
-            record_cal_heartbeat("cycle_error")
+            record_phelan_heartbeat("cycle_error")
             logger.exception("Cal autonomy cycle failed: %s", exc)
-        interval_hours = float(os.getenv("CAL_AUTONOMY_EVERY_HOURS", "6") or "6")
+        interval_hours = float(os.getenv("PHELAN_AUTONOMY_EVERY_HOURS", "6") or "6")
         _cal_heartbeat_sleep(max(1800, int(interval_hours * 3600)))
 
 
-def _start_scheduled_cal_autonomy():
+def _start_scheduled_phelan_autonomy():
     from app.runtime_role import is_worker_process
 
     if not is_worker_process():
         logger.info("In-app Cal autonomy skipped on web process")
         return
-    if os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "1").strip().lower() in (
+    if os.getenv("ENABLE_SCHEDULED_PHELAN_AUTONOMY", "1").strip().lower() in (
         "0", "false", "no"
     ):
         logger.info("In-app Cal autonomy disabled")
         return
     enabled = (
         os.getenv("FLY_APP_NAME")
-        or os.getenv("ENABLE_SCHEDULED_CAL_AUTONOMY", "").lower() in ("1", "true", "yes")
+        or os.getenv("ENABLE_SCHEDULED_PHELAN_AUTONOMY", "").lower() in ("1", "true", "yes")
     )
     if not enabled:
         return
     t = threading.Thread(
-        target=_scheduled_cal_autonomy_loop,
+        target=_scheduled_phelan_autonomy_loop,
         daemon=True,
-        name="cal-autonomy",
+        name="phelan-autonomy",
     )
     t.start()
-    print("[cal-autonomy] scheduler thread started", flush=True)
+    print("[phelan-autonomy] scheduler thread started", flush=True)
     logger.info(
         "In-app Cal autonomy thread started (every %s hours)",
-        os.getenv("CAL_AUTONOMY_EVERY_HOURS", "6"),
+        os.getenv("PHELAN_AUTONOMY_EVERY_HOURS", "6"),
     )
 
 
@@ -983,14 +1008,14 @@ def _scheduled_supply_autonomy_loop():
         time.sleep(max(1800, int(interval_hours * 3600)))
 
 
-def _scheduled_cal_daily_digest_loop():
+def _scheduled_phelan_daily_digest_loop():
     from datetime import datetime, timezone
 
     from app.database import SessionLocal
-    from app.services.cal_daily_digest import (
+    from app.services.phelan_daily_digest import (
         cal_daily_digest_enabled,
         next_digest_run_utc,
-        send_cal_daily_digest,
+        send_phelan_daily_digest,
     )
 
     hour = int(os.getenv("CAL_DAILY_DIGEST_HOUR_UTC", "15") or "15")
@@ -1004,7 +1029,7 @@ def _scheduled_cal_daily_digest_loop():
             continue
         try:
             with SessionLocal() as db:
-                result = send_cal_daily_digest(db)
+                result = send_phelan_daily_digest(db)
             logger.info(
                 "Cal daily digest: sent=%s recipients=%s reason=%s",
                 result.get("sent"),
@@ -1018,8 +1043,87 @@ def _scheduled_cal_daily_digest_loop():
         time.sleep(sleep_sec)
 
 
-def _start_scheduled_cal_daily_digest():
-    from app.services.cal_daily_digest import digest_in_process_owner
+def _scheduled_daily_jobs_report_loop():
+    from datetime import datetime, timezone
+
+    from app.database import SessionLocal
+    from app.services.daily_jobs_report import (
+        daily_jobs_report_enabled,
+        maybe_send_missed_daily_jobs_report,
+        next_report_run_utc,
+        send_daily_jobs_report,
+    )
+
+    hour = int(os.getenv("DAILY_JOBS_REPORT_HOUR_UTC", "14") or "14")
+    minute = int(os.getenv("DAILY_JOBS_REPORT_MINUTE_UTC", "0") or "0")
+    try:
+        if daily_jobs_report_enabled():
+            with SessionLocal() as db:
+                catch_up = maybe_send_missed_daily_jobs_report(db)
+            logger.info(
+                "Daily jobs report catch-up: sent=%s reason=%s count=%s",
+                catch_up.get("sent"),
+                catch_up.get("reason"),
+                catch_up.get("count"),
+            )
+    except Exception as exc:
+        logger.exception("Daily jobs report catch-up failed: %s", exc)
+    first = next_report_run_utc(hour=hour, minute=minute)
+    delay = max(60, int((first - datetime.now(timezone.utc)).total_seconds()))
+    time.sleep(delay)
+    while True:
+        if not daily_jobs_report_enabled():
+            time.sleep(3600)
+            continue
+        try:
+            with SessionLocal() as db:
+                result = send_daily_jobs_report(db)
+            logger.info(
+                "Daily jobs report: sent=%s recipients=%s reason=%s count=%s",
+                result.get("sent"),
+                result.get("recipients"),
+                result.get("reason"),
+                result.get("count"),
+            )
+        except Exception as exc:
+            logger.exception("Daily jobs report failed: %s", exc)
+        next_run = next_report_run_utc(hour=hour, minute=minute)
+        sleep_sec = max(300, int((next_run - datetime.now(timezone.utc)).total_seconds()))
+        time.sleep(sleep_sec)
+
+
+def _start_scheduled_daily_jobs_report():
+    from app.services.daily_jobs_report import report_in_process_owner
+
+    owner = report_in_process_owner()
+    if not owner:
+        logger.info(
+            "In-app daily jobs report skipped on this process "
+            "(worker owns it; set DAILY_JOBS_REPORT_WEB_BACKUP=1 for web backup)"
+        )
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_DAILY_JOBS_REPORT", "").lower() in ("1", "true", "yes")
+    )
+    if not enabled:
+        return
+    t = threading.Thread(
+        target=_scheduled_daily_jobs_report_loop,
+        daemon=True,
+        name="daily-jobs-report",
+    )
+    t.start()
+    print("[daily-jobs-report] scheduler thread started", flush=True)
+    logger.info(
+        "In-app daily jobs report thread started (daily at %s:%02d UTC)",
+        os.getenv("DAILY_JOBS_REPORT_HOUR_UTC", "14"),
+        int(os.getenv("DAILY_JOBS_REPORT_MINUTE_UTC", "0") or "0"),
+    )
+
+
+def _start_scheduled_phelan_daily_digest():
+    from app.services.phelan_daily_digest import digest_in_process_owner
 
     owner = digest_in_process_owner()
     if not owner:
@@ -1035,7 +1139,7 @@ def _start_scheduled_cal_daily_digest():
     if not enabled:
         return
     t = threading.Thread(
-        target=_scheduled_cal_daily_digest_loop,
+        target=_scheduled_phelan_daily_digest_loop,
         daemon=True,
         name="cal-daily-digest",
     )
@@ -1052,8 +1156,8 @@ def _scheduled_communication_learning_loop():
     from datetime import datetime, timedelta, timezone
 
     from app.database import SessionLocal
-    from app.services.communication_learning_report import (
-        communication_learning_enabled,
+    from app.services.phelan_learning_report import (
+        phelan_learning_enabled,
         send_communication_learning_report,
     )
 
@@ -1062,7 +1166,7 @@ def _scheduled_communication_learning_loop():
     interval = max(3600, int(os.getenv("CAL_COMM_LEARNING_INTERVAL_HOURS", "168") or "168") * 3600)
     time.sleep(int(os.getenv("CAL_COMM_LEARNING_FIRST_DELAY_SEC", "900") or "900"))
     while True:
-        if communication_learning_enabled():
+        if phelan_learning_enabled():
             try:
                 with SessionLocal() as db:
                     result = send_communication_learning_report(db)
@@ -1313,6 +1417,10 @@ if os.path.exists(STATIC_DIR):
     async def serve_frontend(full_path: str):
         # 0. 404 for probe-like paths (middleware also catches, but belt-and-suspenders)
         if _PROBE_PATTERNS.search(full_path):
+            return JSONResponse(status_code=404, content={"detail": "Not found"})
+        # Unknown /api/* must be JSON 404, never the Vite shell. HTML 200 made
+        # FIND home treat a missing preview route as an empty job table.
+        if is_api_catchall_path(full_path):
             return JSONResponse(status_code=404, content={"detail": "Not found"})
         # 1. Exact file (e.g. favicon.ico)
         candidate = os.path.join(STATIC_DIR, full_path)

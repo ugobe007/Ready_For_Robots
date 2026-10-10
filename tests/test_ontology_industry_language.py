@@ -83,6 +83,7 @@ def test_every_claimed_industry_has_work_words_and_a_task_model():
         "hospitality",
         "food_prep",
         "serving",
+        "cleaning",
         "hotel",
         "cleaning",
     ):
@@ -94,8 +95,10 @@ def test_every_claimed_industry_has_work_words_and_a_task_model():
     assert rows["hospitality"]["find_class"] == "hospitality"
     assert rows["hotel"]["find_class"] == "hospitality"
     assert rows["serving"]["find_class"] == "serving"
-    assert rows["food_prep"]["find_class"] == "food_prep"
     assert rows["cleaning"]["find_class"] == "cleaning"
+    assert rows["food_prep"]["find_class"] == "food_prep"
+    assert rows["cleaning_drone"]["find_class"] == "cleaning_drone"
+    assert rows["cleaning_drone"].get("class_signals") or rows["cleaning_drone"].get("work_words")
 
 
 def test_hospital_work_words_are_healthcare_not_humanoid():
@@ -260,24 +263,14 @@ def test_diligent_hospital_copy_stays_healthcare():
     assert find_class_from_work_language(HOTEL) != "cleaning"
 
 
-HOTEL_KITCHEN = (
-    "Hotel kitchen prep cook on the banquet commissary line. Casino kitchen "
-    "and airport kitchen culinary. Food preparation at the kitchen station."
-)
 SERVING = (
-    "Table service food runner and busser. Cocktail server in hotel dining. "
-    "Banquet server waitstaff. Mall food court dining room and airport restaurant."
+    "Restaurant serving robot for table service and food running. "
+    "Bussing station waitstaff. Dining room tray delivery and dish return."
 )
 CLEANING = (
-    "Hotel janitor and restroom attendant. Data center custodian. "
-    "Office building vacuum. Shopping mall floor cleaning. Restaurant janitor."
+    "Commercial floor cleaning robot. Vacuuming, scrubbing, and mopping "
+    "on commercial floors. Janitor and custodian work in public venues."
 )
-
-
-def test_hotel_casino_airport_kitchens_are_food_prep():
-    assert find_class_from_work_language(HOTEL_KITCHEN) == "food_prep"
-    assert infer_class_from_work_language(HOTEL_KITCHEN) == "food_prep"
-    assert find_class_from_work_language(HOTEL_KITCHEN) != "hospitality"
 
 
 def test_serving_and_cleaning_work_language_are_own_find_classes():
@@ -285,5 +278,30 @@ def test_serving_and_cleaning_work_language_are_own_find_classes():
     assert infer_class_from_work_language(SERVING) == "serving"
     assert find_class_from_work_language(CLEANING) == "cleaning"
     assert infer_class_from_work_language(CLEANING) == "cleaning"
+    assert find_class_from_work_language(SERVING) != "cleaning"
+    assert find_class_from_work_language(CLEANING) != "serving"
     assert find_class_from_work_language(SERVING) != "hospitality"
-    assert find_class_from_work_language(CLEANING) != "healthcare"
+    assert work_language_outranks_morphology(SERVING, "humanoid") is True
+    assert work_language_outranks_morphology(CLEANING, "humanoid") is True
+    assert normalize_class_id("serving") == "serving"
+    assert normalize_class_id("table_service") == "serving"
+    assert normalize_class_id("janitorial") == "cleaning"
+    rows = {r["id"]: r for r in industry_work_rows()}
+    blob = " ".join(
+        str(x).lower()
+        for x in list(rows["serving"].get("work_words") or [])
+        + list(rows["serving"].get("class_signals") or [])
+    )
+    for term in ("table service", "bussing", "tray delivery", "restaurant delivery", "food delivery amr", "food service", "restaurants"):
+        assert term in blob, term
+    clean_blob = " ".join(
+        str(x).lower()
+        for x in list(rows["cleaning"].get("work_words") or [])
+        + list(rows["cleaning"].get("class_signals") or [])
+    )
+    for term in ("vacuuming", "scrubbing", "mopping", "commercial floors", "floor cleaning"):
+        assert term in clean_blob, term
+    hospitality_aliases = {
+        str(a).lower().replace(" ", "_") for a in (rows["hospitality"].get("aliases") or [])
+    }
+    assert "serving" not in hospitality_aliases

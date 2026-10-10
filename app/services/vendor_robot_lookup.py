@@ -80,13 +80,38 @@ JUNK_LOOKUP_HOSTS = frozenset(
         "alibaba.com",
         "baidu.com",
         # Vehicle OEM homepages — cars/investor pages are not FIND robots.
-        # Iron/humanoid only via live evidence on a robot page, never this host.
-        "xpeng.com",
+        # xpeng.com is a mixed host: IRON is a named robot on
+        # /au/explore/xpeng_ai_robot_iron. The EV catalog stays out.
         "xiaopeng.com",
     }
 )
 
+# Page-evidence oem_sku lineup replaces the humanoid-index dump on these hosts.
+OEM_SKU_REPLACES_INDEX_HOSTS = frozenset(
+    {
+        "booster.tech",
+        "lumosbot.tech",
+        "galbot.com",
+        "unix-group.ai",
+        "noetixrobotics.com",
+        "primebot.cn",
+        "limxdynamics.com",
+        "thirdwave.ai",
+        "dexory.com",
+        "galaxea-dynamics.com",
+        "galaxea.ai",
+        "xpeng.com",
+        "ararobotics.eu",
+        "cartken.com",
+        "mobile-industrial-robots.com",
+        "teradyne.com",
+    }
+)
+
 VENDOR_HOME_FALLBACK = {
+    "feather robotics": "https://feather.dev",
+    "feather": "https://feather.dev",
+    "feather.dev": "https://feather.dev",
     "keenon robotics": "https://www.keenonrobot.com",
     "keenon": "https://www.keenonrobot.com",
     "ubtech / uworld": "https://www.ubtrobot.com",
@@ -320,7 +345,7 @@ def names_are_same_sku(left: str, right: str, *, slug_left: str = "", slug_right
     if a == b:
         return True
     longer, shorter = (a, b) if len(a) >= len(b) else (b, a)
-    if longer.endswith(shorter) and len(shorter) >= 3:
+    if longer.endswith(shorter) and len(shorter) >= 2:
         prefix = longer[: -len(shorter)]
         if prefix.isalpha() and len(prefix) >= 3:
             return True
@@ -367,6 +392,34 @@ def _overlay_colliding_robot(robots: list[dict[str, Any]], robot: dict[str, Any]
         better = prefer_product_url(robot.get("product_url"), existing.get("product_url"))
         if better and better != (existing.get("product_url") or ""):
             existing["product_url"] = better
+        # Commercial seed often has specs + a thin class claim. OEM/SKU seed
+        # has the public product blurb. Keep both — never drop named work copy.
+        inc_desc = str(robot.get("description") or "").strip()
+        ex_desc = str(existing.get("description") or "").strip()
+        generic = {"service_robot", "service", "robot", "commercial", ""}
+        inc_class = str(robot.get("primary_class") or "").strip().lower()
+        ex_class = str(existing.get("primary_class") or "").strip().lower()
+        if inc_class and inc_class not in generic and ex_class in generic:
+            existing["primary_class"] = robot.get("primary_class")
+        if inc_desc and len(inc_desc) > len(ex_desc):
+            existing["description"] = inc_desc
+        inc_claims = robot.get("catalog_claims") if isinstance(robot.get("catalog_claims"), list) else []
+        ex_claims = existing.get("catalog_claims") if isinstance(existing.get("catalog_claims"), list) else []
+        if inc_claims:
+            seen_spans = {
+                str((c or {}).get("evidence_span") or "")
+                for c in ex_claims
+                if isinstance(c, dict)
+            }
+            merged = list(ex_claims)
+            for claim in inc_claims:
+                if not isinstance(claim, dict):
+                    continue
+                span = str(claim.get("evidence_span") or "")
+                if span and span not in seen_spans:
+                    merged.append(claim)
+                    seen_spans.add(span)
+            existing["catalog_claims"] = merged
         return True
     return False
 
@@ -384,6 +437,25 @@ def _vendor_domain_map(index: dict[str, Any] | None = None) -> dict[str, dict[st
                 out[domain] = vendor
                 continue
             if existing is vendor:
+                continue
+            # Evidence catalog replaces the humanoid-index dump on these hosts
+            # only. Other OEM/SKU overlays still merge so workbook + index SKUs
+            # such as UBTECH U1 stay in FIND.
+            incoming_oem = str(vendor.get("list_category") or "") == "oem_sku"
+            if incoming_oem and (vendor.get("robots") or []) and domain in OEM_SKU_REPLACES_INDEX_HOSTS:
+                domains = list(existing.get("domains") or [])
+                for host in vendor.get("domains") or []:
+                    if host not in domains:
+                        domains.append(host)
+                replaced = dict(existing)
+                replaced["robots"] = list(vendor.get("robots") or [])
+                replaced["domains"] = domains
+                replaced["list_category"] = "oem_sku"
+                if vendor.get("vendor_name"):
+                    replaced["vendor_name"] = vendor.get("vendor_name")
+                if vendor.get("vendor_url"):
+                    replaced["vendor_url"] = vendor.get("vendor_url")
+                out[domain] = replaced
                 continue
             robots = list(existing.get("robots") or [])
             seen = {r.get("model_slug") for r in robots if r.get("model_slug")}
@@ -793,6 +865,64 @@ def catalog_claim_facts(robot: dict[str, Any] | None) -> list[dict[str, Any]]:
                 "evidence_span": span,
             }
         )
+    from app.services.robot_class_qualify import (
+        GENERIC_CATEGORY_CLASSES,
+        prefer_work_language_class,
+    )
+
+    evidence = " ".join(
+        x
+        for x in (
+            str(robot.get("name") or ""),
+            str(robot.get("description") or ""),
+            str(robot.get("task") or ""),
+            str(robot.get("setting") or ""),
+            *(
+                str((c or {}).get("evidence_span") or "")
+                for c in (robot.get("catalog_claims") or [])
+                if isinstance(c, dict)
+            ),
+        )
+        if x
+    )
+    work = prefer_work_language_class(evidence, primary, name=str(robot.get("name") or ""))
+    if work and work not in GENERIC_CATEGORY_CLASSES:
+        replaced = False
+        for fact in out:
+            if fact.get("predicate") != "product_class":
+                continue
+            current = str(fact.get("value") or "").strip().lower()
+            if current in GENERIC_CATEGORY_CLASSES or not current:
+                fact["value"] = work
+                if evidence:
+                    fact["evidence_span"] = evidence[:180]
+                replaced = True
+        if not replaced:
+            out.append(
+                {
+                    "predicate": "product_class",
+                    "value": work,
+                    "units": None,
+                    "epistemic": "explicit",
+                    "evidence_span": evidence[:180],
+                }
+            )
+            seen.add("product_class")
+        claim_pred = "claims_serving" if work == "serving" else (
+            "claims_surface_cleaning" if work == "cleaning" else None
+        )
+        if claim_pred and claim_pred not in seen:
+            seen.add(claim_pred)
+            out.append(
+                {
+                    "predicate": claim_pred,
+                    "value": True,
+                    "units": None,
+                    "epistemic": "explicit",
+                    "evidence_span": evidence[:180],
+                }
+            )
+
     slim = slim_specs(robot.get("specs") if isinstance(robot.get("specs"), dict) else {})
     for spec_key, (predicate, units) in _CHECKLIST_SPEC_FACT.items():
         if spec_key not in slim or predicate in seen:

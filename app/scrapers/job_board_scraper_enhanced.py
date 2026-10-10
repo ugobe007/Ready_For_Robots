@@ -25,6 +25,7 @@ from app.services.robot_job_extract import (
     format_robot_job_signal,
     is_job_employer_name,
 )
+from app.services.robot_job_scrape_params import should_persist_robot_job
 from app.services.robot_job_lifecycle import (
     apply_closeout_to_job,
     status_from_evidence,
@@ -104,11 +105,18 @@ OPERATIONAL_TITLE_PATTERNS = [
     re.compile(r"\b(dish\s?washers?|kitchen (?:staff|helper|worker)|food service)\b", re.I),
     re.compile(r"\b(crew members?|team members?|baristas?|cashiers?)\b", re.I),
     re.compile(
-        r"\b(food runners?|bussers?|servers?|host(?:ess|es)?|waitstaff|waiters?)\b",
+        r"\b(food runners?|bussers?|servers?|bartenders?|cocktail servers?|"
+        r"host(?:ess|es)?|waitstaff|waiters?)\b",
         re.I,
     ),
     re.compile(
-        r"\b(housekeep(?:er|ing)?|room attendants?|housepersons?|housemen)\b",
+        r"\b(housekeep(?:er|ing)?|room attendants?|housepersons?|housemen|"
+        r"janitors?|custodians?|floor techs?|restroom attendants?)\b",
+        re.I,
+    ),
+    re.compile(
+        r"\b(window washers?|facade cleaners?|drone cleaners?|"
+        r"building wash(?:ers|ing)?)\b",
         re.I,
     ),
     re.compile(
@@ -253,7 +261,8 @@ LABOR_PAIN_KEYWORDS = [
     # Food service
     "line cook", "prep cook", "dishwasher", "food runner", "busser",
     "kitchen staff", "crew member", "team member", "fry cook",
-    "barista", "cashier", "janitor", "custodian", "restroom attendant",
+    "barista", "cashier", "bartender", "cocktail server", "banquet server",
+    "janitor", "custodian", "floor technician", "restroom attendant",
     "floor cleaner", "banquet cook",
     # Healthcare
     "patient transport", "environmental services", "sterile processing",
@@ -640,6 +649,9 @@ class EnhancedJobBoardScraper(BaseScraper):
                 sig_type = "automation_intent"
                 summary_text = f"Automation intent hire: {title}"
             elif is_operational_robot_job(title, desc):
+                if not should_persist_robot_job(title=title, employer=company_name):
+                    skipped_no_pain += 1
+                    continue
                 pain_score = operational_labor_hits(title, desc)
                 urgency_score = sum(1 for p in PAIN_SIGNALS if p in f"{title} {desc}".lower())
                 job = extract_robot_job(
@@ -651,6 +663,9 @@ class EnhancedJobBoardScraper(BaseScraper):
                     html=card.get("html") or "",
                     jsonld=card.get("jsonld"),
                 )
+                if not job.get("persistable"):
+                    skipped_no_pain += 1
+                    continue
                 posting_state = status_from_posting_text(desc)
                 job["status"] = posting_state["status"]
                 strength = min(1.0, round(0.20 + pain_score * 0.15 + urgency_score * 0.10, 2))
@@ -685,10 +700,20 @@ class EnhancedJobBoardScraper(BaseScraper):
                 industry = "Factory"
             elif any(w in url_lower for w in ["warehouse", "fulfillment", "logistics", "supply", "distribution", "dock"]):
                 industry = "Logistics"
-            elif any(w in url_lower for w in ["janitor", "custodian", "restroom", "data+center", "data%20center"]):
+            elif any(w in url_lower for w in ["window+wash", "window%20wash", "facade", "drone+clean", "drone%20clean"]):
                 industry = "Hospitality"
+            elif any(w in url_lower for w in ["restaurant", "food", "kitchen", "cook", "dishwash", "crew", "qsr", "make+line", "make%20line", "bowl+assembly", "bowl%20assembly", "tortilla", "prep+cook", "fast+casual", "fast%20casual"]):
+                industry = "Food Service"
             elif any(w in url_lower for w in ["hospital", "health", "medical", "pharmacy", "sterile", "dietary"]):
                 industry = "Healthcare"
+
+            if robot_job_extract and robot_job_extract.get("product_class") == "serving":
+                # Venue URL can be hotel/casino; the work is still serving, not a cleaner dump.
+                industry = "Food Service"
+            elif robot_job_extract and robot_job_extract.get("product_class") == "food_prep":
+                industry = "Food Service"
+            elif robot_job_extract and robot_job_extract.get("product_class") == "cleaning_drone":
+                industry = "Hospitality"
 
             company = self.save_company({
                 "name": company_name,

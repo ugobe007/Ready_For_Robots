@@ -27,10 +27,7 @@ def test_picker_adds_industry_tiles_including_food_prep_serving_cleaning():
     ids = [row["id"] for row in public_class_options()]
     assert ids[-1] == "cleaning"
     assert len(ids) == 20
-    for tile in (
-        "mining", "warehouse", "logistics", "factory",
-        "hospitality", "food_prep", "serving", "cleaning",
-    ):
+    for tile in ("mining", "warehouse", "logistics", "factory", "hospitality", "food_prep", "serving", "cleaning"):
         assert tile in FIND_TILE_CLASSES
         assert tile in ids
     assert "hotel" not in ids

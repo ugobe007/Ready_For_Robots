@@ -21,7 +21,7 @@ from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import text
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import (
     IntegrityError,
@@ -56,8 +56,8 @@ from app.api.user import _ensure_profile
 from app.models.company import Company
 from app.models.crm import Team, TeamMember, CrmAccount, CrmEngagement, CrmTask, CrmNote
 from app.models.outreach import OutreachMessage
-from app.services.agent_messaging import REP_OUTREACH_CTA, cal_signature, rep_outreach_signature
-from app.services.cal_insights import pick_cal_insight
+from app.services.agent_messaging import REP_OUTREACH_CTA, phelan_signature, rep_outreach_signature
+from app.services.phelan_insights import pick_cal_insight
 from app.services.apollo_client import recommended_prospect_titles
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import crm_workflow_intelligence, record_sales_experience
@@ -551,10 +551,10 @@ def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collat
 def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:
     """Email to a robot company — Cal as veteran sherpa, not a sales blast."""
     from app.services.agent_messaging import (
-        CAL_VENDOR_BUYER_MATCH_CTA,
-        CAL_VENDOR_STRATEGY_CALL_CTA,
-        cal_vendor_match_paragraph,
-        cal_signature,
+        PHELAN_VENDOR_BUYER_MATCH_CTA,
+        PHELAN_VENDOR_STRATEGY_CALL_CTA,
+        phelan_signature,
+        phelan_vendor_match_paragraph,
     )
 
     industry = (acct.industry or "your space").strip()
@@ -564,7 +564,7 @@ def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], colla
 
     lines: list[str] = ["Hi,", ""]
 
-    lines.append(cal_vendor_match_paragraph(name, industry=industry))
+    lines.append(phelan_vendor_match_paragraph(name, industry=industry))
     lines.append("")
     lines.append(pick_cal_insight(company_name=name, allow_humor=allow_humor, audience="vendor"))
     lines.append("")
@@ -583,22 +583,22 @@ def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], colla
         channel = getattr(settings, "scout_preferred_channel", "email") if settings else "email"
         meeting = getattr(settings, "scout_meeting_preference", None) if settings else None
         if channel in ("phone", "meeting"):
-            lines.append(meeting or CAL_VENDOR_STRATEGY_CALL_CTA)
+            lines.append(meeting or PHELAN_VENDOR_STRATEGY_CALL_CTA)
         else:
-            lines.append(CAL_VENDOR_BUYER_MATCH_CTA)
+            lines.append(PHELAN_VENDOR_BUYER_MATCH_CTA)
 
     collateral = _collateral_note(collateral_policy, collateral_links)
     if collateral:
         lines.extend(["", collateral])
 
-    lines.extend(["", cal_signature()])
+    lines.extend(["", phelan_signature()])
     return "\n".join(lines)
 
 
 def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instruction: str, collateral_policy: str, collateral_links: str | None, company: Optional[Any] = None) -> str:
     """Route to buyer, vendor, or StageGate draft based on account_type and pipeline."""
     if company is not None:
-        from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
+        from app.services.stagegate_crm_bridge import phelan_draft_for_stagegate_company, is_stagegate_company
 
         if is_stagegate_company(company):
             return cal_draft_for_stagegate_company(company)["body"]
@@ -611,7 +611,7 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
 
 def _draft_subject_for_account(acct: CrmAccount, company: Optional[Any] = None) -> str:
     if company is not None:
-        from app.services.stagegate_crm_bridge import cal_draft_for_stagegate_company, is_stagegate_company
+        from app.services.stagegate_crm_bridge import phelan_draft_for_stagegate_company, is_stagegate_company
 
         if is_stagegate_company(company):
             return cal_draft_for_stagegate_company(company)["subject"]
@@ -1731,6 +1731,152 @@ def send_account_outreach(
                 "https://ready-2-robot.fly.dev/api/webhooks/resend/inbound"
             )
         return result
+    except HTTPException:
+        raise
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
+        _raise_crm_db_error(e)
+
+
+class SendCustomEmailIn(BaseModel):
+    to_email: str = Field(..., max_length=320)
+    subject: str = Field(..., max_length=500)
+    body_text: str = Field(..., max_length=20000)
+    from_display_name: Optional[str] = Field("Phelan", max_length=120)
+    company_name: Optional[str] = Field(None, max_length=240)
+    crm_account_id: Optional[str] = Field(None, max_length=64)
+    cc: Optional[list[str]] = None
+    bcc: Optional[list[str]] = None
+
+
+@router.post("/send-custom-email")
+def send_custom_email(
+    body: SendCustomEmailIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    """Send a custom outreach or lead email via Resend directly from the site."""
+    try:
+        uid = _uid_uuid(user)
+        to_email = body.to_email.strip()
+        if not to_email or "@" not in to_email:
+            raise HTTPException(status_code=400, detail="Valid recipient email required")
+        if not body.subject.strip():
+            raise HTTPException(status_code=400, detail="Subject line required")
+        if not body.body_text.strip():
+            raise HTTPException(status_code=400, detail="Email body text required")
+
+        try:
+            settings = _user_settings_row(db, uid)
+        except Exception:
+            settings = None
+        sender_name = body.from_display_name or (settings.sender_name if settings else None) or "Phelan"
+
+        reply_token = secrets.token_urlsafe(18)
+        reply_to = _reply_address(reply_token)
+
+        _inbound_missing = False
+        try:
+            send_result = send_email_via_resend(
+                to_email=to_email,
+                subject=body.subject.strip(),
+                body_text=body.body_text.strip(),
+                from_display_name=sender_name.strip(),
+                reply_to=reply_to,
+                cc=body.cc,
+                bcc=body.bcc,
+                idempotency_key=f"custom-email/{uid}/{to_email}/{secrets.token_hex(4)}",
+            )
+        except ResendEmailError as e:
+            err_text = str(e).lower()
+            if any(kw in err_text for kw in ("notification service", "notification_service", "notification url", "notification_url", "inbound", "not set", "not configured")):
+                _inbound_missing = True
+                try:
+                    send_result = send_email_via_resend(
+                        to_email=to_email,
+                        subject=body.subject.strip(),
+                        body_text=body.body_text.strip(),
+                        from_display_name=sender_name.strip(),
+                        reply_to=None,
+                        cc=body.cc,
+                        bcc=body.bcc,
+                        idempotency_key=f"custom-email/{uid}/{to_email}/{secrets.token_hex(4)}/no-inbound",
+                    )
+                except ResendEmailError as e2:
+                    raise HTTPException(status_code=502, detail=str(e2)) from e2
+            else:
+                raise HTTPException(status_code=502, detail=str(e)) from e
+
+        aid = None
+        if body.crm_account_id:
+            try:
+                aid = uuid.UUID(body.crm_account_id)
+            except ValueError:
+                aid = None
+
+        now = datetime.now(timezone.utc)
+        try:
+            team = _ensure_default_team(db, uid, str(user.get("email") or "admin@readyforrobots.com"))
+            acct = None
+            if aid:
+                acct = db.query(CrmAccount).filter(CrmAccount.id == aid).first()
+            if not acct:
+                acct = db.query(CrmAccount).filter(func.lower(CrmAccount.contact_email) == to_email.lower()).first()
+
+            if not acct:
+                company_label = (body.company_name or "").strip() or to_email.split("@")[0].capitalize()
+                acct = CrmAccount(
+                    team_id=team.id,
+                    name=company_label,
+                    contact_email=to_email,
+                    account_type="buyer",
+                    outreach_stage="intro_sent",
+                    outreach_sent_at=now,
+                )
+                db.add(acct)
+                db.flush()
+
+            msg = OutreachMessage(
+                team_id=acct.team_id or team.id,
+                crm_account_id=acct.id,
+                company_id=acct.company_id,
+                sender_user_id=uid,
+                to_email=to_email,
+                from_email=send_result.get("from_email"),
+                reply_to=reply_to if not _inbound_missing else None,
+                reply_token=reply_token if not _inbound_missing else None,
+                subject=body.subject.strip(),
+                body_text=body.body_text.strip(),
+                status="sent",
+                sent_at=now,
+                send_identity="scout",
+                resend_id=send_result.get("resend_id"),
+                payload={
+                    "custom_send": True,
+                    "company_name": body.company_name,
+                    "to": to_email,
+                    "resend_id": send_result.get("resend_id"),
+                },
+            )
+            db.add(msg)
+
+            acct.outreach_stage = "intro_sent"
+            acct.outreach_sent_at = now
+            acct.latest_outreach_message_id = msg.id
+
+            db.commit()
+        except Exception as db_err:
+            db.rollback()
+            logger.warning("CRM DB error while recording custom email: %s", db_err)
+
+        return {
+            "ok": True,
+            "resend_id": send_result.get("resend_id"),
+            "to": to_email,
+            "subject": body.subject.strip(),
+            "from_email": send_result.get("from_email"),
+            "sent_at": now.isoformat(),
+            "message": "Email sent successfully via Resend.",
+        }
     except HTTPException:
         raise
     except (OperationalError, ProgrammingError, SQLAlchemyError) as e:

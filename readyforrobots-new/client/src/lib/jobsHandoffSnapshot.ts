@@ -28,7 +28,7 @@ export function normalizeRobotHandoffUrl(url: string): string {
 
 export function sameRobotHandoffUrl(
   a?: string | null,
-  b?: string | null,
+  b?: string | null
 ): boolean {
   return sameRobotUrl(a, b);
 }
@@ -47,7 +47,7 @@ export function saveJobsHandoffSnapshot(snap: JobsHandoffSnapshot): void {
         productName: snap.productName || "",
         jobs: snap.jobs,
         selectedCount: snap.selectedCount ?? snap.jobs.length,
-      } satisfies JobsHandoffSnapshot),
+      } satisfies JobsHandoffSnapshot)
     );
   } catch {
     /* ignore quota / private mode */
@@ -57,7 +57,7 @@ export function saveJobsHandoffSnapshot(snap: JobsHandoffSnapshot): void {
 /** Bind CRM to this URL immediately — honest empty until FIND returns. */
 export function beginJobsHandoffForUrl(
   url: string,
-  productName = "",
+  productName = ""
 ): JobsHandoffSnapshot | null {
   const identity = emptyRobotIdentity(url, productName);
   if (!identity.url) return null;
@@ -80,7 +80,9 @@ export function clearJobsHandoffSnapshot(): void {
   }
 }
 
-export function loadJobsHandoffSnapshot(url: string): JobsHandoffSnapshot | null {
+export function loadJobsHandoffSnapshot(
+  url: string
+): JobsHandoffSnapshot | null {
   const parsed = readJobsHandoffSnapshot();
   if (!parsed) return null;
   const wanted = canonicalRobotUrl(url);

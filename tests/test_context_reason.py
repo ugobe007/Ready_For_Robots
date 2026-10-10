@@ -10,7 +10,7 @@ from app.services.agent_messaging import (
     build_buyer_variant_body,
     build_context_reason,
 )
-from app.services.cal_draft_guard import is_complete_cal_draft
+from app.services.phelan_draft_guard import is_complete_cal_draft
 
 _AI_TELLS = ("honest", "genuinely", "i'd love", "hope you're well", "circling back", "just bumping")
 

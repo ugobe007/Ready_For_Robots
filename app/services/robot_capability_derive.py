@@ -19,19 +19,19 @@ GROUNDED = frozenset({"explicit", "strongly_inferred"})
 MANIP_CLASSES = frozenset(
     {"mobile_manipulator", "humanoid", "cobot", "manipulator", "arm"}
 )
-SCRUB_CLASSES = frozenset({"autonomous_scrubber", "scrubber"})
+SCRUB_CLASSES = frozenset({"autonomous_scrubber", "scrubber", "cleaning"})
 TRANSPORT_CLASSES = frozenset({"amr"})
 INSPECT_CLASSES = frozenset({"quadruped"})
 AGRICULTURE_CLASSES = frozenset({"agriculture", "agricultural_robot", "farm_robot"})
 MARINE_CLASSES = frozenset({"marine", "marine_robot"})
 AVIONICS_CLASSES = frozenset(
-    {"avionics", "aviation_robot", "drone", "evtol", "uav", "autonomous_aircraft"}
+    {"avionics", "aviation_robot", "drone", "evtol", "uav", "autonomous_aircraft", "cleaning_drone"}
 )
 # Configuration splits inside avionics. Generic avionics/aviation_robot (FIND
 # tile) is the flying-work union. A named SKU class is not that union:
 # eVTOL is air-taxi flight, not Spot-like ramp walking.
 EVTOL_CLASSES = frozenset({"evtol"})
-DRONE_CLASSES = frozenset({"drone", "uav"})
+DRONE_CLASSES = frozenset({"drone", "uav", "cleaning_drone"})
 AUTONOMOUS_AIRCRAFT_CLASSES = frozenset({"autonomous_aircraft"})
 GENERIC_AVIONICS_CLASSES = frozenset({"avionics", "aviation_robot"})
 AEROSPACE_CLASSES = frozenset({"aerospace", "aerospace_robot"})

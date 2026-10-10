@@ -6,6 +6,7 @@ fact: product_class. Jobs then match from that class. Never a dead-end copy.
 from __future__ import annotations
 
 import copy
+import re
 from typing import Any
 
 CLASS_OPTIONS: list[dict[str, str]] = [
@@ -236,9 +237,14 @@ def normalize_class_id(raw: str | None) -> str | None:
         "table_service": "serving",
         "food_running": "serving",
         "waitstaff": "serving",
+        "food_delivery_amr": "serving",
         "cleaning": "cleaning",
         "janitorial": "cleaning",
         "custodial": "cleaning",
+        "cleaning_robot": "cleaning",
+        "cleaning_drone": "cleaning_drone",
+        "window_washing_drone": "cleaning_drone",
+        "facade_cleaning_drone": "cleaning_drone",
     }
     mapped = aliases.get(want)
     if not mapped:
@@ -257,6 +263,157 @@ def infer_class_from_work_language(text: str) -> str | None:
     from app.services.robot_ontology import find_class_from_work_language
 
     return find_class_from_work_language(text)
+
+
+GENERIC_CATEGORY_CLASSES = frozenset({"service_robot", "service", "robot", "commercial"})
+
+_HUMANOID_MORPH = re.compile(r"\b(humanoid|bipedal)", re.I)
+_QUADRUPED_MORPH = re.compile(
+    r"\b(quadruped|four[- ]legged|robot\s+dog|bionic\s+quadruped)\b",
+    re.I,
+)
+_DRONE_MORPH = re.compile(r"\b(drone|uav|unmanned aerial)\b", re.I)
+_CLEANING_DRONE_WORK = re.compile(
+    r"\b(cleaning|facade|soft[- ]wash|pressure[- ]wash)\b",
+    re.I,
+)
+
+
+def infer_morphology_class(text: str) -> str | None:
+    """Hardware/morphology class from product copy. Not a company dump."""
+    blob = text or ""
+    if _HUMANOID_MORPH.search(blob):
+        return "humanoid"
+    if _QUADRUPED_MORPH.search(blob):
+        return "quadruped"
+    if _DRONE_MORPH.search(blob):
+        return "drone"
+    return None
+
+
+def classify_product_from_evidence(
+    text: str,
+    catalog_class: str | None = None,
+    *,
+    name: str = "",
+) -> str | None:
+    """Per-product FIND class: work language, then morphology, then a non-generic catalog class.
+
+    Never company → category. Generic ``service_robot`` is not a FIND class.
+    True humanoids (Walker / AgiBot) stay humanoid unless distinctive serving /
+    cleaning / hospital work copy outranks a torso. A waiter SKU stays serving;
+    a scrubber stays cleaning.
+    """
+    blob = " ".join(x for x in (name, text) if x)
+    work = infer_class_from_work_language(blob)
+    morph = infer_morphology_class(blob)
+    cat = (catalog_class or "").strip().lower().replace(" ", "_").replace("-", "_") or None
+    # Named SKU configuration (LaserWeeder, X10, Vulcan) stays itself — not the
+    # parent FIND tile — when work language is that family.
+    _sku_keep = {
+        "agricultural_robot": ("agriculture", "agricultural_robot"),
+        "farm_robot": ("agriculture", "agricultural_robot"),
+        "weeder": ("agriculture", "agricultural_robot"),
+        "weeding": ("agriculture", "agricultural_robot"),
+        "combine": ("agriculture", "agricultural_robot"),
+        "tractor": ("agriculture", "agricultural_robot"),
+        "autonomous_tractor": ("agriculture", "agricultural_robot"),
+        "autonomous_combine": ("agriculture", "agricultural_robot"),
+        "drone": ("avionics", "drone"),
+        "uav": ("avionics", "drone"),
+        "evtol": ("avionics", "evtol"),
+        "e_vtol": ("avionics", "evtol"),
+        "flying_car": ("avionics", "evtol"),
+        "autonomous_aircraft": ("avionics", "autonomous_aircraft"),
+        "autonomous_plane": ("avionics", "autonomous_aircraft"),
+        "construction_robot": ("construction", "construction_robot"),
+        "homebuilding": ("construction", "construction_robot"),
+        "homebuilder": ("construction", "construction_robot"),
+        "cleaning_drone": ("cleaning", "cleaning_drone"),
+        "window_washing_drone": ("cleaning", "cleaning_drone"),
+        "facade_cleaning_drone": ("cleaning", "cleaning_drone"),
+    }
+    if morph == "drone" and (
+        work in {"cleaning", "cleaning_drone"} or _CLEANING_DRONE_WORK.search(blob)
+    ):
+        return "cleaning_drone"
+    if work == "cleaning_drone":
+        return "cleaning_drone"
+    if work:
+        keep = _sku_keep.get(cat or "")
+        if keep and work == keep[0]:
+            return keep[1]
+        if morph == "humanoid":
+            from app.services.robot_ontology import work_language_outranks_morphology
+
+            if work_language_outranks_morphology(blob, "humanoid"):
+                return work
+            return "humanoid"
+        return work
+    if morph:
+        return morph
+    cat = (catalog_class or "").strip().lower() or None
+    if not cat or cat in GENERIC_CATEGORY_CLASSES:
+        return None
+    # Workbook dump classes → FIND classes. Do not call normalize_class_id
+    # here: that collapses agricultural_robot / drone configurations to tiles.
+    _catalog_find = {
+        "cleaning_robot": "cleaning",
+        "janitorial": "cleaning",
+        "custodial": "cleaning",
+    }
+    mapped = _catalog_find.get(cat)
+    if mapped:
+        return mapped
+    return cat
+
+
+def prefer_work_language_class(
+    text: str,
+    catalog_class: str | None = None,
+    *,
+    name: str = "",
+) -> str | None:
+    """Work language outranks a generic vendor category (service_robot).
+
+    Per product: a waiter blurb is serving, a scrubber blurb is cleaning.
+    Morphology (humanoid / quadruped) outranks a silent service_robot dump.
+    Never company → category. Catalog class wins only when work language and
+    morphology are silent and the catalog class is not a dump category.
+    """
+    return classify_product_from_evidence(text, catalog_class, name=name)
+
+
+def keep_claimed_display_class(
+    existing: str | None,
+    claimed: str | None,
+    *,
+    name: str = "",
+    description: str = "",
+) -> str | None:
+    """Stamp FIND display_class from a product_class fact without restoring dumps.
+
+    Listing already drops generic ``service_robot``. FIND must not put it back
+    with ``prefer(...) or claimed``. Work language and a non-generic existing
+    class still win. A real claimed class (humanoid, serving, warehouse) stays.
+    """
+    claimed_s = (claimed or "").strip()
+    existing_s = (existing or "").strip() or None
+    if not claimed_s:
+        return existing_s
+    evidence = " ".join(x for x in (name, description, claimed_s) if x)
+    kept = prefer_work_language_class(evidence, claimed_s, name=name)
+    if kept:
+        return kept
+    claimed_l = claimed_s.lower()
+    existing_l = (existing_s or "").lower()
+    if claimed_l in GENERIC_CATEGORY_CLASSES:
+        if existing_s and existing_l not in GENERIC_CATEGORY_CLASSES:
+            return existing_s
+        return None
+    if existing_s and existing_l not in GENERIC_CATEGORY_CLASSES:
+        return existing_s
+    return claimed_s
 
 
 # FIND tiles the operator picks with no SKU. A named SKU class is not a tile.
@@ -287,6 +444,9 @@ _CONFIGURATION_PRODUCT_CLASSES: dict[str, tuple[str, str]] = {
     "construction_print": ("construction_robot", "Construction robot"),
     "construction_block": ("construction_robot", "Construction robot"),
     "construction_layout": ("construction_robot", "Construction robot"),
+    "cleaning_drone": ("cleaning_drone", "Cleaning drone"),
+    "window_washing_drone": ("cleaning_drone", "Cleaning drone"),
+    "facade_cleaning_drone": ("cleaning_drone", "Cleaning drone"),
 }
 
 

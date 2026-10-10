@@ -89,7 +89,14 @@
         "food_processing_automation": {
           "label": "Food Processing Automation",
           "subject": "food processing",
-          "modifiers": ["plant", "factory", "packaging", "sorting", "prep", "manufacturing"],
+          "modifiers": [
+            "plant",
+            "factory",
+            "packaging",
+            "sorting",
+            "prep",
+            "manufacturing"
+          ],
           "terms": [
             "food processing automation",
             "food plant automation",
@@ -140,7 +147,13 @@
         "parts_logistics": {
           "label": "Parts Logistics",
           "subject": "parts",
-          "modifiers": ["logistics", "transport", "delivery", "warehouse", "distribution"],
+          "modifiers": [
+            "logistics",
+            "transport",
+            "delivery",
+            "warehouse",
+            "distribution"
+          ],
           "terms": [
             "parts logistics",
             "parts logistics automation",
@@ -162,7 +175,13 @@
         "service_automation": {
           "label": "Service Automation",
           "subject": "service",
-          "modifiers": ["repair", "maintenance", "dealership", "aftermarket", "bay"],
+          "modifiers": [
+            "repair",
+            "maintenance",
+            "dealership",
+            "aftermarket",
+            "bay"
+          ],
           "terms": [
             "service automation",
             "service repair automation",
@@ -184,7 +203,13 @@
         "dealership_automation": {
           "label": "Auto Dealership Automation",
           "subject": "dealership",
-          "modifiers": ["auto dealership", "car dealer", "showroom", "service bay", "sales floor"],
+          "modifiers": [
+            "auto dealership",
+            "car dealer",
+            "showroom",
+            "service bay",
+            "sales floor"
+          ],
           "terms": [
             "auto dealership automation",
             "dealership automation",
@@ -330,7 +355,11 @@
     {
       "id": "food_service",
       "label": "Food Service",
-      "canonical_industries": ["Food Service", "Food & Beverage", "Hospitality"],
+      "canonical_industries": [
+        "Food Service",
+        "Food & Beverage",
+        "Hospitality"
+      ],
       "root_aliases": [
         "restaurant",
         "restaurants",
@@ -387,7 +416,14 @@
         "quick_serve": {
           "label": "Quick Serve Automation",
           "subject": "quick serve",
-          "modifiers": ["qsr", "fast food", "fast casual", "drive-thru", "drive thru", "counter service"],
+          "modifiers": [
+            "qsr",
+            "fast food",
+            "fast casual",
+            "drive-thru",
+            "drive thru",
+            "counter service"
+          ],
           "terms": [
             "quick serve automation",
             "qsr automation",
@@ -400,7 +436,11 @@
     {
       "id": "hospitality",
       "label": "Hospitality",
-      "canonical_industries": ["Hospitality", "Casinos & Gaming", "Cruise Lines"],
+      "canonical_industries": [
+        "Hospitality",
+        "Casinos & Gaming",
+        "Cruise Lines"
+      ],
       "root_aliases": [
         "hospitality",
         "hotel",
@@ -461,7 +501,11 @@
     {
       "id": "facilities",
       "label": "Facilities & Building Services",
-      "canonical_industries": ["Real Estate & Facilities", "Hospitality", "Healthcare"],
+      "canonical_industries": [
+        "Real Estate & Facilities",
+        "Hospitality",
+        "Healthcare"
+      ],
       "root_aliases": [
         "facilities",
         "facility services",
@@ -474,7 +518,13 @@
         "janitorial_cleaning": {
           "label": "Janitorial & Commercial Cleaning",
           "subject": "commercial cleaning",
-          "modifiers": ["janitorial", "custodial", "floor care", "night cleaning", "contract cleaning"],
+          "modifiers": [
+            "janitorial",
+            "custodial",
+            "floor care",
+            "night cleaning",
+            "contract cleaning"
+          ],
           "terms": [
             "janitorial automation",
             "commercial cleaning automation",
@@ -490,7 +540,14 @@
         "commercial_laundry": {
           "label": "Commercial Laundry Automation",
           "subject": "laundry",
-          "modifiers": ["commercial laundry", "industrial laundry", "linen", "flatwork", "uniform", "hospitality laundry"],
+          "modifiers": [
+            "commercial laundry",
+            "industrial laundry",
+            "linen",
+            "flatwork",
+            "uniform",
+            "hospitality laundry"
+          ],
           "terms": [
             "commercial laundry automation",
             "industrial laundry automation",
@@ -543,7 +600,13 @@
         "hospital_automation": {
           "label": "Hospital Automation",
           "subject": "hospital",
-          "modifiers": ["operations", "logistics", "delivery", "resupply", "internal"],
+          "modifiers": [
+            "operations",
+            "logistics",
+            "delivery",
+            "resupply",
+            "internal"
+          ],
           "terms": [
             "hospital automation",
             "hospital resupply automation",
@@ -564,7 +627,13 @@
         "senior_care": {
           "label": "Senior Care Automation",
           "subject": "senior care",
-          "modifiers": ["living", "assisted", "nursing", "memory care", "resident"],
+          "modifiers": [
+            "living",
+            "assisted",
+            "nursing",
+            "memory care",
+            "resident"
+          ],
           "terms": [
             "senior care automation",
             "senior living automation",
@@ -575,7 +644,14 @@
         "patient_automation": {
           "label": "Patient Automation",
           "subject": "patient",
-          "modifiers": ["transport", "mobility", "care", "delivery", "room", "rounding"],
+          "modifiers": [
+            "transport",
+            "mobility",
+            "care",
+            "delivery",
+            "room",
+            "rounding"
+          ],
           "exclusions": ["patient capital", "patient investor", "patiently"],
           "terms": [
             "patient automation",
@@ -598,8 +674,20 @@
         "lab_automation": {
           "label": "Lab Automation",
           "subject": "lab",
-          "modifiers": ["delivery", "specimen", "clinical", "pathology", "diagnostics", "sample"],
-          "exclusions": ["collaborative", "collaboration", "scalable", "availability"],
+          "modifiers": [
+            "delivery",
+            "specimen",
+            "clinical",
+            "pathology",
+            "diagnostics",
+            "sample"
+          ],
+          "exclusions": [
+            "collaborative",
+            "collaboration",
+            "scalable",
+            "availability"
+          ],
           "terms": [
             "lab automation",
             "lab delivery automation",
@@ -611,7 +699,13 @@
         "icu_automation": {
           "label": "ICU Automation",
           "subject": "icu",
-          "modifiers": ["delivery", "supply", "medication", "critical care", "intensive care"],
+          "modifiers": [
+            "delivery",
+            "supply",
+            "medication",
+            "critical care",
+            "intensive care"
+          ],
           "terms": [
             "icu automation",
             "intensive care automation",
@@ -655,7 +749,14 @@
         "pharmacy_automation": {
           "label": "Pharmacy Automation",
           "subject": "pharmacy",
-          "modifiers": ["hospital", "central", "iv", "compounding", "dispensing", "medication"],
+          "modifiers": [
+            "hospital",
+            "central",
+            "iv",
+            "compounding",
+            "dispensing",
+            "medication"
+          ],
           "terms": [
             "pharmacy automation",
             "hospital pharmacy automation",
@@ -666,7 +767,13 @@
         "bulk_medication_picking": {
           "label": "Bulk Medication Picking",
           "subject": "medication",
-          "modifiers": ["picking", "dispensing", "bulk", "unit dose", "cart fill"],
+          "modifiers": [
+            "picking",
+            "dispensing",
+            "bulk",
+            "unit dose",
+            "cart fill"
+          ],
           "terms": [
             "bulk medication picking automation",
             "medication picking robot",
@@ -677,7 +784,12 @@
         "biomedical_automation": {
           "label": "Biomedical Automation",
           "subject": "biomedical",
-          "modifiers": ["engineering", "equipment", "device", "clinical engineering"],
+          "modifiers": [
+            "engineering",
+            "equipment",
+            "device",
+            "clinical engineering"
+          ],
           "terms": [
             "biomedical automation",
             "clinical engineering robotics",
@@ -697,7 +809,13 @@
         "rehabilitation_automation": {
           "label": "Rehabilitation Automation",
           "subject": "rehabilitation",
-          "modifiers": ["rehab", "physical therapy", "pt", "recovery", "mobility"],
+          "modifiers": [
+            "rehab",
+            "physical therapy",
+            "pt",
+            "recovery",
+            "mobility"
+          ],
           "terms": [
             "rehabilitation automation",
             "rehab robot",
@@ -753,7 +871,13 @@
         "airport_cleaning": {
           "label": "Airport Cleaning Automation",
           "subject": "airport",
-          "modifiers": ["cleaning", "custodial", "floor care", "scrubber", "evs"],
+          "modifiers": [
+            "cleaning",
+            "custodial",
+            "floor care",
+            "scrubber",
+            "evs"
+          ],
           "terms": [
             "airport cleaning automation",
             "terminal cleaning robot",
@@ -763,7 +887,13 @@
         "airport_resupply": {
           "label": "Airport Resupply Automation",
           "subject": "airport",
-          "modifiers": ["resupply", "restock", "supply", "replenishment", "concession"],
+          "modifiers": [
+            "resupply",
+            "restock",
+            "supply",
+            "replenishment",
+            "concession"
+          ],
           "terms": [
             "airport resupply automation",
             "terminal resupply robot",
@@ -793,7 +923,12 @@
         "airport_service": {
           "label": "Airport Service Automation",
           "subject": "airport",
-          "modifiers": ["service", "passenger assistance", "concierge", "wayfinding"],
+          "modifiers": [
+            "service",
+            "passenger assistance",
+            "concierge",
+            "wayfinding"
+          ],
           "terms": [
             "airport service automation",
             "passenger service robot",
@@ -803,7 +938,12 @@
         "airport_food_court": {
           "label": "Airport Food Court Automation",
           "subject": "food court",
-          "modifiers": ["airport", "concession", "terminal dining", "restaurant"],
+          "modifiers": [
+            "airport",
+            "concession",
+            "terminal dining",
+            "restaurant"
+          ],
           "terms": [
             "airport food court automation",
             "terminal food service robot",
@@ -813,7 +953,13 @@
         "airport_wheelchair": {
           "label": "Airport Wheelchair Automation",
           "subject": "wheelchair",
-          "modifiers": ["airport", "passenger", "mobility", "prm", "accessibility"],
+          "modifiers": [
+            "airport",
+            "passenger",
+            "mobility",
+            "prm",
+            "accessibility"
+          ],
           "terms": [
             "airport wheelchair automation",
             "wheelchair escort robot",
@@ -859,8 +1005,22 @@
         "datacenter_automation": {
           "label": "Data Center Automation",
           "subject": "data center",
-          "modifiers": ["datacenter", "server farm", "hyperscale", "colo", "facility operations", "maintenance"],
-          "exclusions": ["housekeeping", "f&b", "food and beverage", "vacancy rate", "casino", "hotel"],
+          "modifiers": [
+            "datacenter",
+            "server farm",
+            "hyperscale",
+            "colo",
+            "facility operations",
+            "maintenance"
+          ],
+          "exclusions": [
+            "housekeeping",
+            "f&b",
+            "food and beverage",
+            "vacancy rate",
+            "casino",
+            "hotel"
+          ],
           "terms": [
             "data center automation",
             "datacenter automation",
@@ -880,7 +1040,14 @@
         "car_wash_automation": {
           "label": "Car Wash Automation",
           "subject": "car wash",
-          "modifiers": ["tunnel", "conveyor", "express", "self-serve", "fleet wash", "carwash"],
+          "modifiers": [
+            "tunnel",
+            "conveyor",
+            "express",
+            "self-serve",
+            "fleet wash",
+            "carwash"
+          ],
           "terms": [
             "car wash automation",
             "automated car wash",
@@ -905,7 +1072,15 @@
         "truck_stop_automation": {
           "label": "Truck Stop Automation",
           "subject": "truck stop",
-          "modifiers": ["travel center", "fuel stop", "fleet services", "highway", "pilot", "loves", "ta petro"],
+          "modifiers": [
+            "travel center",
+            "fuel stop",
+            "fleet services",
+            "highway",
+            "pilot",
+            "loves",
+            "ta petro"
+          ],
           "terms": [
             "truck stop automation",
             "travel center automation",
@@ -931,7 +1106,14 @@
         "energy_storage": {
           "label": "Energy Storage Automation",
           "subject": "energy storage",
-          "modifiers": ["battery", "bess", "grid scale", "storage facility", "lithium", "megapack"],
+          "modifiers": [
+            "battery",
+            "bess",
+            "grid scale",
+            "storage facility",
+            "lithium",
+            "megapack"
+          ],
           "terms": [
             "energy storage automation",
             "battery storage automation",
@@ -942,7 +1124,14 @@
         "grid_automation": {
           "label": "Grid Automation",
           "subject": "grid",
-          "modifiers": ["power grid", "substation", "transmission", "distribution", "utility", "smart grid"],
+          "modifiers": [
+            "power grid",
+            "substation",
+            "transmission",
+            "distribution",
+            "utility",
+            "smart grid"
+          ],
           "exclusions": ["off-grid", "off grid", "gridiron", "storyboard"],
           "terms": [
             "grid automation",
@@ -977,7 +1166,14 @@
         "system_integrator": {
           "label": "System Integrator",
           "subject": "integrator",
-          "modifiers": ["robotics", "automation", "industrial", "warehouse", "amr", "cobot"],
+          "modifiers": [
+            "robotics",
+            "automation",
+            "industrial",
+            "warehouse",
+            "amr",
+            "cobot"
+          ],
           "terms": [
             "system integrator",
             "robotics integrator",
@@ -991,7 +1187,14 @@
         "robotics_distributor": {
           "label": "Robotics Distributor",
           "subject": "distributor",
-          "modifiers": ["robot", "robotics", "automation", "amr", "cobot", "authorized"],
+          "modifiers": [
+            "robot",
+            "robotics",
+            "automation",
+            "amr",
+            "cobot",
+            "authorized"
+          ],
           "terms": [
             "robot distributor",
             "robotics distributor",
@@ -1006,7 +1209,14 @@
         "robot_oem": {
           "label": "Robot OEM",
           "subject": "robot",
-          "modifiers": ["oem", "manufacturer", "maker", "vendor", "startup", "humanoid"],
+          "modifiers": [
+            "oem",
+            "manufacturer",
+            "maker",
+            "vendor",
+            "startup",
+            "humanoid"
+          ],
           "terms": [
             "robot oem",
             "robotics oem",
@@ -1035,7 +1245,16 @@
         "defense_automation": {
           "label": "Defense Automation",
           "subject": "defense",
-          "modifiers": ["military", "army", "navy", "air force", "warfighter", "autonomous systems", "ugv", "uav"],
+          "modifiers": [
+            "military",
+            "army",
+            "navy",
+            "air force",
+            "warfighter",
+            "autonomous systems",
+            "ugv",
+            "uav"
+          ],
           "terms": [
             "defense automation",
             "military automation",
@@ -1046,7 +1265,15 @@
         "defense_logistics": {
           "label": "Defense Logistics Automation",
           "subject": "defense",
-          "modifiers": ["logistics", "supply", "resupply", "sustainment", "warehouse", "distribution", "material handling"],
+          "modifiers": [
+            "logistics",
+            "supply",
+            "resupply",
+            "sustainment",
+            "warehouse",
+            "distribution",
+            "material handling"
+          ],
           "terms": [
             "defense logistics automation",
             "military logistics robot",

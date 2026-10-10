@@ -81,6 +81,8 @@ export type MatchJob = {
   text?: string | null;
   /** SKU this card is for. Set on the Jobs terminal, carried onto the pipeline list. */
   forRobot?: string;
+  applicants_count?: number;
+  posted_at?: string;
 };
 
 export type ClassOption = {
@@ -115,10 +117,19 @@ export type RobotJobMatchResult = {
   /** Durable submitter ledger id — stamped onto funnel events for attribution. */
   robot_submission_id?: number | null;
   /** Truthful zero-state explainer (set only when job_count === 0). */
-  zero_reason?: "insufficient_profile_evidence" | "no_compatible_jobs" | "corpus_gap" | null;
+  zero_reason?:
+    | "insufficient_profile_evidence"
+    | "no_compatible_jobs"
+    | "corpus_gap"
+    | null;
 };
 
-export type RecoveryChip = "moves_materials" | "manipulates" | "cleans" | "inspects" | "other";
+export type RecoveryChip =
+  | "moves_materials"
+  | "manipulates"
+  | "cleans"
+  | "inspects"
+  | "other";
 
 export async function fetchRobotJobMatch(opts: {
   url?: string;

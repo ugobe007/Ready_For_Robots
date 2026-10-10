@@ -11,7 +11,8 @@ const EMERALD = "#10b981";
 
 const inputClass =
   "w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2.5 text-sm text-slate-100 outline-none placeholder:text-slate-500 transition-colors focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/15";
-const labelClass = "mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-400";
+const labelClass =
+  "mb-1.5 block text-[10px] font-bold uppercase tracking-widest text-slate-400";
 
 const ROBOT_TYPES = [
   { value: "humanoid", label: "Humanoid" },
@@ -59,14 +60,19 @@ export default function FindRobots() {
     }
     setSubmitting(true);
     try {
-      const res = await fetch(`${api}/api/robot-buyer-leads`, liveFetchInit({
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...form, source: "find_robots" }),
-      }));
+      const res = await fetch(
+        `${api}/api/robot-buyer-leads`,
+        liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...form, source: "find_robots" }),
+        })
+      );
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error((data as { detail?: string }).detail || "Could not submit request");
+        throw new Error(
+          (data as { detail?: string }).detail || "Could not submit request"
+        );
       }
       trackRobotSearch({
         source: "find_robots",
@@ -78,7 +84,9 @@ export default function FindRobots() {
       setForm(emptyForm);
       toast.success("Request received — we'll follow up shortly.");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Something went wrong. Try again.");
+      toast.error(
+        err instanceof Error ? err.message : "Something went wrong. Try again."
+      );
     } finally {
       setSubmitting(false);
     }
@@ -89,9 +97,18 @@ export default function FindRobots() {
       <Header />
 
       <section className="relative overflow-hidden px-4 pt-24 pb-16 sm:pt-28 sm:pb-20">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/90 to-transparent" aria-hidden />
-        <div className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" aria-hidden />
-        <div className="pointer-events-none absolute right-0 top-40 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl" aria-hidden />
+        <div
+          className="pointer-events-none absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-slate-950/90 to-transparent"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute -left-24 top-24 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl"
+          aria-hidden
+        />
+        <div
+          className="pointer-events-none absolute right-0 top-40 h-64 w-64 rounded-full bg-sky-400/10 blur-3xl"
+          aria-hidden
+        />
 
         <div className="relative mx-auto max-w-3xl rounded-3xl border border-white/10 bg-white/[0.04] px-5 py-6 shadow-2xl shadow-black/30 backdrop-blur sm:px-8 sm:py-8">
           <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">
@@ -101,22 +118,32 @@ export default function FindRobots() {
             Find the right robots for your operation
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-300">
-            Tell us what you are automating, which type of robot you need, and when you plan to deploy.
-            Ready For Robots matches your use case to vendors, pilots, and deployment examples from our index.
+            Tell us what you are automating, which type of robot you need, and
+            when you plan to deploy. Ready For Robots matches your use case to
+            vendors, pilots, and deployment examples from our index.
           </p>
 
           {submitted ? (
             <div className="mt-10 rounded-2xl border border-emerald-400/20 bg-emerald-400/8 px-6 py-8 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-300" />
-              <h2 className="mt-4 text-lg font-bold text-white">Thank you — request received</h2>
+              <h2 className="mt-4 text-lg font-bold text-white">
+                Thank you — request received
+              </h2>
               <p className="mt-2 text-sm text-slate-300">
-                Our team will review your use case and reach out with matched robots and next steps.
+                Our team will review your use case and reach out with matched
+                robots and next steps.
               </p>
               <div className="mt-6 flex flex-wrap justify-center gap-4 text-sm">
-                <Link href="/robots" className="text-emerald-300 hover:text-emerald-200 underline underline-offset-4">
+                <Link
+                  href="/robots"
+                  className="text-emerald-300 hover:text-emerald-200 underline underline-offset-4"
+                >
                   Browse humanoid index
                 </Link>
-                <Link href="/" className="text-slate-300 hover:text-white underline underline-offset-4">
+                <Link
+                  href="/"
+                  className="text-slate-300 hover:text-white underline underline-offset-4"
+                >
                   Scan your operation
                 </Link>
               </div>
@@ -132,7 +159,7 @@ export default function FindRobots() {
                     required
                     autoComplete="email"
                     value={form.email}
-                    onChange={(e) => setForm({ ...form, email: e.target.value })}
+                    onChange={e => setForm({ ...form, email: e.target.value })}
                     placeholder="you@company.com"
                   />
                 </label>
@@ -142,7 +169,7 @@ export default function FindRobots() {
                     className={inputClass}
                     autoComplete="name"
                     value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onChange={e => setForm({ ...form, name: e.target.value })}
                     placeholder="Jane Smith"
                   />
                 </label>
@@ -151,7 +178,9 @@ export default function FindRobots() {
                   <input
                     className={inputClass}
                     value={form.jobTitle}
-                    onChange={(e) => setForm({ ...form, jobTitle: e.target.value })}
+                    onChange={e =>
+                      setForm({ ...form, jobTitle: e.target.value })
+                    }
                     placeholder="VP Operations"
                   />
                 </label>
@@ -162,7 +191,9 @@ export default function FindRobots() {
                     required
                     autoComplete="organization"
                     value={form.company}
-                    onChange={(e) => setForm({ ...form, company: e.target.value })}
+                    onChange={e =>
+                      setForm({ ...form, company: e.target.value })
+                    }
                     placeholder="Acme Logistics"
                   />
                 </label>
@@ -173,24 +204,28 @@ export default function FindRobots() {
                     type="tel"
                     autoComplete="tel"
                     value={form.phone}
-                    onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                    onChange={e => setForm({ ...form, phone: e.target.value })}
                     placeholder="+1 555 000 0000"
                   />
                 </label>
               </div>
 
               <label className="block">
-                <span className={labelClass}>Robot type you are looking for *</span>
+                <span className={labelClass}>
+                  Robot type you are looking for *
+                </span>
                 <select
                   className={inputClass}
                   required
                   value={form.robotType}
-                  onChange={(e) => setForm({ ...form, robotType: e.target.value })}
+                  onChange={e =>
+                    setForm({ ...form, robotType: e.target.value })
+                  }
                 >
                   <option value="" disabled>
                     Select category
                   </option>
-                  {ROBOT_TYPES.map((t) => (
+                  {ROBOT_TYPES.map(t => (
                     <option key={t.value} value={t.value}>
                       {t.label}
                     </option>
@@ -206,23 +241,27 @@ export default function FindRobots() {
                   minLength={10}
                   rows={5}
                   value={form.useCase}
-                  onChange={(e) => setForm({ ...form, useCase: e.target.value })}
+                  onChange={e => setForm({ ...form, useCase: e.target.value })}
                   placeholder="Describe the task, facility, throughput goals, and any constraints (safety, shifts, integration with WMS/ERP, etc.)"
                 />
               </label>
 
               <label className="block">
-                <span className={labelClass}>When do you plan to implement automation? *</span>
+                <span className={labelClass}>
+                  When do you plan to implement automation? *
+                </span>
                 <select
                   className={inputClass}
                   required
                   value={form.implementationTimeline}
-                  onChange={(e) => setForm({ ...form, implementationTimeline: e.target.value })}
+                  onChange={e =>
+                    setForm({ ...form, implementationTimeline: e.target.value })
+                  }
                 >
                   <option value="" disabled>
                     Select timeline
                   </option>
-                  {TIMELINES.map((t) => (
+                  {TIMELINES.map(t => (
                     <option key={t.value} value={t.value}>
                       {t.label}
                     </option>
@@ -238,7 +277,7 @@ export default function FindRobots() {
                 className="hidden"
                 aria-hidden
                 value={form.website}
-                onChange={(e) => setForm({ ...form, website: e.target.value })}
+                onChange={e => setForm({ ...form, website: e.target.value })}
               />
 
               <button
@@ -252,8 +291,9 @@ export default function FindRobots() {
               </button>
 
               <p className="text-[11px] text-slate-400">
-                By submitting, you agree we may contact you about robotics vendors and deployment options.
-                We do not sell your information to third-party lists.
+                By submitting, you agree we may contact you about robotics
+                vendors and deployment options. We do not sell your information
+                to third-party lists.
               </p>
             </form>
           )}

@@ -47,6 +47,8 @@ _LEADING_COMPANY = re.compile(
     r"^(the\s+)?(inc|llc|ltd|gmbh|corp|co|ag|plc)\b",
     re.I,
 )
+# Per-product copy ends when the next named SKU is introduced.
+_NEXT_PRODUCT_HEAD = re.compile(r"\b(?:Meet|Introducing)\s+[A-Z]")
 
 
 def brand_token(company: str) -> str:
@@ -145,6 +147,23 @@ def _clean_product_name(name: str, company: str) -> str | None:
     return name
 
 
+def product_range_classes(rows: list[dict[str, Any]]) -> list[str]:
+    """Distinct per-SKU FIND classes on a company hub. Never company → category."""
+    from app.services.robot_class_qualify import GENERIC_CATEGORY_CLASSES
+
+    out: list[str] = []
+    seen: set[str] = set()
+    for row in rows:
+        raw = (row.get("display_class") or "").strip().lower()
+        if not raw or raw in GENERIC_CATEGORY_CLASSES:
+            continue
+        if raw in seen:
+            continue
+        seen.add(raw)
+        out.append(raw)
+    return out
+
+
 def format_listing_blurb(row: dict[str, Any] | None) -> str | None:
     """Description, then spec fragments. Never invent numbers."""
     row = row or {}
@@ -183,19 +202,36 @@ def listing_from_catalog(
             continue
         seen.add(key)
         desc = (robot.get("description") or "").strip()
-        if not desc:
-            for claim in robot.get("catalog_claims") or []:
-                span = str((claim or {}).get("evidence_span") or "").strip()
-                if span:
-                    desc = span
-                    break
+        claim_spans = [
+            str((c or {}).get("evidence_span") or "").strip()
+            for c in (robot.get("catalog_claims") or [])
+            if isinstance(c, dict) and str((c or {}).get("evidence_span") or "").strip()
+        ]
+        if not desc and claim_spans:
+            desc = claim_spans[0]
         specs = robot.get("specs") if isinstance(robot.get("specs"), dict) else {}
         slim = {k: v for k, v in specs.items() if v not in (None, "", 0, False)}
+        catalog_class = (robot.get("primary_class") or "").strip() or None
+        evidence = " ".join(
+            x
+            for x in (
+                name,
+                desc,
+                " ".join(claim_spans),
+                str(robot.get("task") or ""),
+                str(robot.get("setting") or ""),
+                str(robot.get("listed_class") or ""),
+            )
+            if x
+        )
+        from app.services.robot_class_qualify import prefer_work_language_class
+
+        display_class = prefer_work_language_class(evidence, catalog_class, name=name)
         rows.append(
             {
                 "name": name,
                 "description": desc or None,
-                "display_class": (robot.get("primary_class") or "").strip() or None,
+                "display_class": display_class,
                 "specs": slim or None,
             }
         )
@@ -219,24 +255,33 @@ def listing_from_page(
     chosen = kept if limit is None else kept[:limit]
     for name in chosen:
         window = _window_around(name, blob)
+        from app.services.robot_class_qualify import prefer_work_language_class
+
         rows.append(
             {
                 "name": name,
                 "description": _blurb_near(name, window),
-                "display_class": None,
+                "display_class": prefer_work_language_class(
+                    f"{name} {window}", name=name
+                ),
                 "specs": _specs_near(window),
             }
         )
     return rows
 
 
-def _window_around(name: str, text: str, radius: int = 420) -> str:
+def _window_around(name: str, text: str, radius: int = 280) -> str:
     if not name or not text:
         return text[:800]
     idx = text.lower().find(name.lower())
     if idx < 0:
         return text[:800]
-    return text[max(0, idx) : idx + radius]
+    chunk = text[idx : idx + radius]
+    rest = chunk[len(name) :]
+    nxt = _NEXT_PRODUCT_HEAD.search(rest)
+    if nxt:
+        chunk = chunk[: len(name) + nxt.start()]
+    return chunk
 
 
 def _blurb_near(name: str, window: str) -> str | None:
@@ -298,6 +343,8 @@ def listing_payload_for_url(url: str) -> dict[str, Any]:
             "vendor_name": None,
             "vendor_url": None,
             "robots": [],
+            "product_range": [],
+            "mixed_range": False,
         }
     robots = listing_from_catalog(vendor)
     for row in robots:
@@ -308,10 +355,15 @@ def listing_payload_for_url(url: str) -> dict[str, Any]:
             "vendor_name": None,
             "vendor_url": None,
             "robots": [],
+            "product_range": [],
+            "mixed_range": False,
         }
+    range_classes = product_range_classes(robots)
     return {
         "matched": True,
         "vendor_name": (vendor.get("vendor_name") or "").strip() or None,
         "vendor_url": (vendor.get("vendor_url") or "").strip() or None,
         "robots": robots,
+        "product_range": range_classes,
+        "mixed_range": len(range_classes) > 1,
     }

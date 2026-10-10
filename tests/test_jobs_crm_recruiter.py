@@ -125,6 +125,110 @@ def test_upload_attach_and_apply_snapshot(db_session):
     assert find_application_by_employer_token(db_session, row.employer_token) is row
 
 
+def test_included_sheet_rides_with_each_submission(db_session):
+    robot = "https://www.bostondynamics.com/spot"
+    keep_jobs(db_session, _user(), [_job(1)], robot_name="Spot", robot_url=robot)
+    doc = store_user_document(
+        db_session,
+        _user(),
+        filename="spot-brochure.pdf",
+        content=b"%PDF-1.4 brochure",
+        mime_type="application/pdf",
+        kind="brochure",
+        robot_url=robot,
+        robot_name="Spot",
+        include_with_submissions=True,
+    )
+    assert doc["include_with_submissions"] is True
+    assert doc["robot_url"] == "https://bostondynamics.com/spot"
+    app = apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="Spot",
+        selected_models=["Spot"],
+        monthly_price="4800 / month",
+        poc_skipped=True,
+        send=False,
+    )
+    assert any(row["filename"] == "spot-brochure.pdf" for row in app["documents"])
+    assert "Material from the robot company" in (app["draft"]["body"] or "")
+    assert "job qualification" in (app["draft"]["body"] or "")
+
+
+def test_sheet_for_another_robot_stays_off_the_submission(db_session):
+    keep_jobs(
+        db_session,
+        _user(),
+        [_job(1)],
+        robot_name="Spot",
+        robot_url="https://bostondynamics.com/spot",
+    )
+    store_user_document(
+        db_session,
+        _user(),
+        filename="stretch.pdf",
+        content=b"%PDF-1.4 other",
+        mime_type="application/pdf",
+        kind="spec",
+        robot_url="https://bostondynamics.com/stretch",
+        include_with_submissions=True,
+    )
+    app = apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="Spot",
+        robot_url="https://bostondynamics.com/spot",
+        selected_models=["Spot"],
+        monthly_price="4800",
+        poc_skipped=True,
+        send=False,
+    )
+    assert app["documents"] == []
+
+
+def test_explicit_selection_can_leave_a_sheet_off_one_submission(db_session):
+    robot = "https://bostondynamics.com/spot"
+    keep_jobs(db_session, _user(), [_job(1)], robot_name="Spot", robot_url=robot)
+    store_user_document(
+        db_session,
+        _user(),
+        filename="spot-spec.pdf",
+        content=b"%PDF-1.4 spec",
+        mime_type="application/pdf",
+        kind="certificate",
+        robot_url=robot,
+        include_with_submissions=True,
+    )
+    app = apply_to_job(
+        db_session,
+        _user(),
+        job_key="job-1",
+        robot_name="Spot",
+        robot_url=robot,
+        selected_models=["Spot"],
+        monthly_price="4800",
+        poc_skipped=True,
+        document_ids=[],
+        documents_selected=True,
+        send=False,
+    )
+    assert app["documents"] == []
+
+
+def test_include_requires_one_robot(db_session):
+    with pytest.raises(ValueError, match="one robot"):
+        store_user_document(
+            db_session,
+            _user(),
+            filename="company-deck.pdf",
+            content=b"%PDF-1.4 deck",
+            mime_type="application/pdf",
+            include_with_submissions=True,
+        )
+
+
 def test_token_accept_and_interview(db_session, monkeypatch):
     sent = []
 

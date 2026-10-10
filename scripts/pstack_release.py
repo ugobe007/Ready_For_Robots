@@ -13,10 +13,10 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import time
 from datetime import datetime, timezone
-from http.client import HTTPException
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -24,9 +24,13 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
 FLY_API = os.getenv("RFR_FLY_API", "https://ready-2-robot.fly.dev").rstrip("/")
 WORKSPACE = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "RobotJobsWorkspace.tsx"
 CRM_DESK = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "JobsCrmDesk.tsx"
+CAL_DESK_UI = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "CalJobsDesk.tsx"
+CAL_DESK_PY = ROOT / "app" / "services" / "phelan_jobs_desk.py"
 IDENTITY = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "robotUrlIdentity.ts"
 FIND_RESEARCH = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "findResearch.ts"
 CRM_ACCOUNT = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsCrmAccount.ts"
@@ -56,6 +60,7 @@ HEALTHCARE_CLASSES = frozenset(
 REQUIRED_CRITIC_GATE_IDS = (
     "find",
     "find_abort",
+    "find_no_home",
     "find_identity",
     "crm_leftover",
     "job_cards",
@@ -65,6 +70,7 @@ REQUIRED_CRITIC_GATE_IDS = (
     "class_picker",
     "healthcare_class",
     "ontology_industry_language",
+    "url_workflow",
 )
 CLASS_OPTIONS_TS = (
     ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "robotClassOptions.ts"
@@ -105,17 +111,175 @@ def _check(cid: str, ok: bool, prove: str, detail: str = "") -> dict[str, Any]:
 
 
 TRANSIENT_HTTP = frozenset({0, 502, 503, 504})
+SCRAPE_ONLY_FILES = frozenset(
+    {
+        "app/services/robot_job_extract.py",
+        "app/services/job_board_scraper_runner.py",
+        "app/services/robot_job_scrape_params.py",
+        "app/services/robot_job_lifecycle.py",
+        "app/services/robot_job_live_corpus.py",
+        "tests/test_job_board_scraper_pipeline.py",
+        "tests/test_robot_job_extract.py",
+        "tests/test_robot_job_scrape_params.py",
+        "tests/test_robot_job_live_corpus.py",
+        "fly.toml",
+    }
+)
+SCRAPE_ONLY_PREFIXES = ("app/scrapers/",)
+# Live Fly FIND is for PRs that change FIND / Job Cards / ontology / matcher.
+# Scraper URL lists, extract stems, fly.toml, and this gate script are not FIND.
+LIVE_FIND_PATH_MARKERS = (
+    "readyforrobots-new/",
+    "frontend/",
+    "ontology/",
+    "app/services/robot_job_capability_match.py",
+    "app/services/robot_class_qualify.py",
+    "app/services/jobs_terminal.py",
+    "app/services/capability_inference.py",
+    "app/services/robot_inference_engine.py",
+    "app/services/robot_requirement_match.py",
+    "app/api/robot_job_search.py",
+    "app/routers/public_jobs.py",
+    "app/routers/job_cards.py",
+    "app/services/pstack_protocol.py",
+    "docs/CAPABILITY_MODEL.md",
+    "docs/EXPERIMENT_MODE.md",
+    "docs/robot_understanding",
+    "tests/test_jobs_terminal",
+    "tests/test_capability",
+    "tests/test_robot_match",
+    "tests/test_find_",
+    "tests/test_healthcare_class_jobs.py",
+    "tests/test_food_prep_class_jobs.py",
+    "tests/test_industry_class_jobs.py",
+    "tests/test_ontology_industry_language.py",
+    "tests/test_url_workflow_critic.py",
+    "app/services/url_workflow_critic.py",
+    "scripts/url_workflow_critic.py",
+    "pstack/release.yaml",
+)
+
+
+def _normalize_repo_path(path: str) -> str:
+    return path.replace("\\", "/").lstrip("./")
+
+
+def path_is_scrape_only(path: str) -> bool:
+    rel = _normalize_repo_path(path)
+    if rel in SCRAPE_ONLY_FILES:
+        return True
+    return any(rel.startswith(prefix) for prefix in SCRAPE_ONLY_PREFIXES)
+
+
+def paths_are_scrape_only(files: list[str]) -> bool:
+    rows = [f.strip() for f in files if f.strip() and not f.strip().endswith(".md")]
+    return bool(rows) and all(path_is_scrape_only(f) for f in rows)
+
+
+def path_touches_live_find(path: str) -> bool:
+    rel = _normalize_repo_path(path)
+    return any(marker in rel for marker in LIVE_FIND_PATH_MARKERS)
+
+
+def _git_output(args: list[str]) -> str:
+    try:
+        return subprocess.check_output(
+            ["git", *args],
+            cwd=ROOT,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        ).strip()
+    except (subprocess.CalledProcessError, FileNotFoundError, OSError):
+        return ""
+
+
+def _files_from_github_event() -> list[str]:
+    """Actions pull_request payload has base.sha; two-dot diff needs that object."""
+    raw = os.getenv("GITHUB_EVENT_PATH")
+    if not raw:
+        return []
+    path = Path(raw)
+    if not path.is_file():
+        return []
+    try:
+        event = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return []
+    pr = event.get("pull_request") if isinstance(event, dict) else None
+    if not isinstance(pr, dict):
+        return []
+    base_sha = str((pr.get("base") or {}).get("sha") or "").strip()
+    if not base_sha:
+        return []
+    _git_output(["fetch", "--no-tags", "--depth=1", "origin", base_sha])
+    diff = _git_output(["diff", "--name-only", base_sha, "HEAD"])
+    return [ln.strip() for ln in diff.splitlines() if ln.strip()]
+
+
+def pr_changed_files() -> list[str]:
+    """PR file list. Prefer GitHub event base.sha (Actions fetch-depth: 1 merge)."""
+    event_files = _files_from_github_event()
+    if event_files:
+        return event_files
+    if os.getenv("GITHUB_ACTIONS"):
+        base_ref = os.getenv("GITHUB_BASE_REF") or "main"
+        _git_output(
+            [
+                "fetch",
+                "--no-tags",
+                "--depth=1",
+                "origin",
+                f"+refs/heads/{base_ref}:refs/remotes/origin/{base_ref}",
+            ]
+        )
+        # Two-dot tree compare. Three-dot needs merge-base, which shallow clones lack.
+        for spec in (f"origin/{base_ref}", base_ref):
+            diff = _git_output(["diff", "--name-only", spec, "HEAD"])
+            files = [ln.strip() for ln in diff.splitlines() if ln.strip()]
+            if files:
+                return files
+    parents = _git_output(["rev-list", "--parents", "-n", "1", "HEAD"]).split()
+    if len(parents) >= 3:
+        diff = _git_output(["diff", "--name-only", "HEAD^1", "HEAD"])
+        files = [ln.strip() for ln in diff.splitlines() if ln.strip()]
+        if files:
+            return files
+    for spec in ("origin/main...HEAD", "main...HEAD"):
+        diff = _git_output(["diff", "--name-only", spec])
+        files = [ln.strip() for ln in diff.splitlines() if ln.strip()]
+        if files:
+            return files
+    return []
+
+
+def skip_live_find_drives(files: list[str] | None = None) -> tuple[bool, str]:
+    """Skip Fly FIND unless this PR changes FIND / UI / ontology / matcher.
+
+    scrape-only was too narrow: this PR also edits scripts/pstack_release.py, so
+    CI still drove Dexmate and failed on production 503.
+    """
+    listed = files if files is not None else pr_changed_files()
+    rows = [_normalize_repo_path(f) for f in listed if str(f).strip()]
+    if not rows:
+        if os.getenv("GITHUB_ACTIONS"):
+            return True, "CI PR file list empty; skip live FIND"
+        return False, ""
+    live = [f for f in rows if path_touches_live_find(f)]
+    if live:
+        return False, ""
+    preview = ",".join(rows[:20])
+    return True, f"PR does not change FIND/UI/ontology ({preview})"
 
 
 def _http_retries() -> int:
-    return max(1, int(os.getenv("PSTACK_HTTP_RETRIES", "6")))
+    return max(1, int(os.getenv("PSTACK_HTTP_RETRIES", "3")))
 
 
 def _http_retry_sleep(attempt: int) -> float:
     raw = os.getenv("PSTACK_HTTP_RETRY_SLEEP")
     if raw is not None and raw != "":
         return max(0.0, float(raw))
-    return min(20.0, 3.0 * (2 ** attempt))
+    return 2.0 * (attempt + 1)
 
 
 def _post_json_once(url: str, payload: dict[str, Any], *, timeout: float) -> tuple[int, Any]:
@@ -139,7 +303,7 @@ def _post_json_once(url: str, payload: dict[str, Any], *, timeout: float) -> tup
             return int(exc.code), json.loads(raw.decode())
         except Exception:
             return int(exc.code), {"_raw": raw[:400].decode("utf-8", "replace")}
-    except (URLError, TimeoutError, OSError, HTTPException) as exc:
+    except (URLError, TimeoutError, OSError) as exc:
         return 0, {"error": str(exc)}
 
 
@@ -156,7 +320,7 @@ def _post_json(url: str, payload: dict[str, Any], *, timeout: float = 90.0) -> t
     return last
 
 
-def _get_once(url: str, *, timeout: float) -> tuple[int, Any]:
+def _get(url: str, *, timeout: float = 25.0) -> tuple[int, Any]:
     req = Request(url, headers={"Accept": "application/json"})
     try:
         with urlopen(req, timeout=timeout) as resp:
@@ -171,34 +335,8 @@ def _get_once(url: str, *, timeout: float) -> tuple[int, Any]:
             return int(exc.code), json.loads(raw.decode())
         except Exception:
             return int(exc.code), {"_raw": raw[:400].decode("utf-8", "replace")}
-    except (URLError, TimeoutError, OSError, HTTPException) as exc:
+    except Exception as exc:
         return 0, {"error": str(exc)}
-
-
-def _get(url: str, *, timeout: float = 25.0) -> tuple[int, Any]:
-    last: tuple[int, Any] = (0, {"error": "no attempt"})
-    retries = _http_retries()
-    for attempt in range(retries):
-        last = _get_once(url, timeout=timeout)
-        code = int(last[0] or 0)
-        if code not in TRANSIENT_HTTP:
-            return last
-        if attempt + 1 < retries:
-            time.sleep(_http_retry_sleep(attempt))
-    return last
-
-
-def wait_for_fly_health(api: str, *, timeout: float = 45.0) -> bool:
-    """Poll /health until 200 so a transient 503 does not fail FIND-tile PRs."""
-    base = api.rstrip("/")
-    deadline = time.monotonic() + max(0.0, timeout)
-    while True:
-        code, _body = _get_once(f"{base}/health", timeout=8.0)
-        if code == 200:
-            return True
-        if time.monotonic() >= deadline:
-            return False
-        time.sleep(2.0)
 
 
 def phase_how() -> dict[str, Any]:
@@ -206,6 +344,8 @@ def phase_how() -> dict[str, Any]:
     owners = {
         "workspace": WORKSPACE,
         "crm_desk": CRM_DESK,
+        "cal_desk_ui": CAL_DESK_UI,
+        "cal_desk_py": CAL_DESK_PY,
         "identity": IDENTITY,
         "find_research": FIND_RESEARCH,
         "crm_account": CRM_ACCOUNT,
@@ -230,14 +370,18 @@ def phase_how() -> dict[str, Any]:
     )
 
     jobs_page = _read(JOBS_PAGE) if JOBS_PAGE.is_file() else ""
-    find_is_home = "RobotJobsWorkspace" in jobs_page and not re.search(
-        r'["\']\/experiment["\']', jobs_page
+    find_is_home = (
+        "RobotJobsWorkspace" in jobs_page
+        and "JobsLanding" in jobs_page
+        and 'visit === "landing"' in jobs_page
+        and "heroHome" in jobs_page
+        and not re.search(r'["\']\/experiment["\']', jobs_page)
     )
     checks.append(
         _check(
             "find_route",
             find_is_home,
-            "FIND is / via RobotJobsWorkspace on pages/Jobs.tsx",
+            "Home hero is /; FIND stays RobotJobsWorkspace on /?visit=jobs",
         )
     )
 
@@ -279,6 +423,8 @@ def phase_act() -> dict[str, Any]:
     account = _read(CRM_ACCOUNT) if CRM_ACCOUNT.is_file() else ""
     handoff = _read(HANDOFF) if HANDOFF.is_file() else ""
     desk = _read(CRM_DESK) if CRM_DESK.is_file() else ""
+    cal_desk = _read(CAL_DESK_UI) if CAL_DESK_UI.is_file() else ""
+    cal_py = _read(CAL_DESK_PY) if CAL_DESK_PY.is_file() else ""
     release_ts = _read(PSTACK_RELEASE_TS) if PSTACK_RELEASE_TS.is_file() else ""
 
     checks.append(
@@ -309,6 +455,7 @@ def phase_act() -> dict[str, Any]:
         and "isAbortError(err, ac.signal)" in submit
         and "FIND_RESEARCH_INTERRUPTED_MESSAGE" in submit
         and "lookupFailedMessage" in submit
+        and "ensureFindStayVisit" in submit
     )
     checks.append(
         _check(
@@ -365,6 +512,44 @@ def phase_act() -> dict[str, Any]:
         )
     )
 
+    workflow = _read(WORKFLOW_TS) if WORKFLOW_TS.is_file() else ""
+    jobs_action = _slice(
+        workflow,
+        "export function jobsProcessActionLabel",
+        "export const JOBS_ACTIVATE_SRC",
+    )
+    crm_first = (
+        'if (step === "jobs") return JOBS_APPLY_HERO_CTA' not in jobs_action
+        and "function goToApply" not in workspace
+        and "JOBS_APPLY_SELECTED_CTA" not in workspace
+        and "jobsCrmOfferHref" not in workspace
+        and "JobsProcessNav" not in workspace
+        and "function goToActivate" in workspace
+        and "JOBS_APPLY_SELECTED_CTA" in desk
+        and "WorkTaskModelQuestion" in desk
+        and "saveWorkTaskModelOnAccount" in account
+    )
+    checks.append(
+        _check(
+            "crm_first_cta",
+            crm_first,
+            "Jobs-for-robot list Open CRM is the only primary CTA; Apply and the task-model question live on the CRM desk",
+        )
+    )
+    checks.append(
+        _check(
+            "phelan_jobs_desk",
+            "CalJobsDesk" in desk
+            and "data-cal-jobs-desk" in cal_desk
+            and "save_task_model" in cal_py
+            and "prepare_apply" in cal_py
+            and "send_buyer_intro" in cal_py
+            and "CalJobsDesk" not in workspace
+            and "find_jobs" in cal_py,
+            "Cal lives on Jobs CRM after Open CRM with desk tools; not FIND; not buyer mail",
+        )
+    )
+
     qualify = _slice(workspace, "async function qualifyActive", "function revealJobs")
     class_picker_act = (
         "fetchRobotJobSearch" in qualify
@@ -394,8 +579,9 @@ def phase_act() -> dict[str, Any]:
             and "CRM_LEFTOVER_FIXTURE" in release_ts
             and "CLASS_PICKER_FIXTURE" in release_ts
             and "HEALTHCARE_CLASS_FIXTURE" in release_ts
+            and "URL_WORKFLOW_FIXTURE" in release_ts
             and "diligentMustNotBeHumanoidEmpty" in release_ts,
-            "pstackRelease.ts encodes abort, leftover, class-picker, and Diligent healthcare fixtures",
+            "pstackRelease.ts encodes abort, leftover, class-picker, Diligent healthcare, and URL workflow fixtures",
         )
     )
 
@@ -676,9 +862,6 @@ REQUIRED_INDUSTRY_ONTOLOGY_WORDS = {
         "ingredient dosing",
         "tortilla",
         "assembly line kitchen",
-        "hotel kitchen",
-        "casino kitchen",
-        "airport kitchen",
     ),
     "serving": (
         "table service",
@@ -689,6 +872,11 @@ REQUIRED_INDUSTRY_ONTOLOGY_WORDS = {
         "cocktail server",
         "hotel dining",
         "mall food court",
+        "tray delivery",
+        "restaurant delivery",
+        "food delivery amr",
+        "food service",
+        "restaurants",
     ),
     "cleaning": (
         "janitor",
@@ -699,6 +887,10 @@ REQUIRED_INDUSTRY_ONTOLOGY_WORDS = {
         "commercial cleaning",
         "floor scrubbing",
         "data center janitor",
+        "vacuuming",
+        "scrubbing",
+        "mopping",
+        "commercial floors",
     ),
 }
 
@@ -803,6 +995,21 @@ def ontology_industry_language_fixture() -> tuple[bool, str]:
     if '"id": "mining"' not in blob_qualify:
         misses.append("FIND class qualify missing mining tile")
     return (not misses, "; ".join(misses))
+
+
+def url_workflow_fixture() -> tuple[bool, str]:
+    """Critic: FIND URL agent detects range/product/capability breaks on fixtures."""
+    from app.services.url_workflow_critic import run_fixture_suite
+
+    suite = run_fixture_suite()
+    if suite.get("ok"):
+        return True, "fixture suite green"
+    failed = [
+        f"{c.get('id')} kinds={c.get('got_kinds')}"
+        for c in (suite.get("cases") or [])
+        if not c.get("ok")
+    ]
+    return False, "; ".join(failed) or "url workflow fixture suite failed"
 
 
 def drive_diligent_healthcare(*, api: str) -> dict[str, Any]:
@@ -917,6 +1124,34 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
             "AbortError and Failed to fetch do not become Research failed",
         )
     )
+    research_ts = _read(FIND_RESEARCH) if FIND_RESEARCH.is_file() else ""
+    jobs_page = _read(JOBS_PAGE) if JOBS_PAGE.is_file() else ""
+    workspace_src = _read(WORKSPACE) if WORKSPACE.is_file() else ""
+    submit = _slice(
+        workspace_src, "async function submitFind", "async function confirmSelection"
+    )
+    no_home = (
+        "ensureFindStayVisit" in submit
+        and "goJobsFreshHome" not in submit
+        and "JOBS_FRESH_HOME_EVENT" not in submit
+        and "?new=1" not in submit
+        and 'setLocation("/")' not in submit
+        and "findLookupFailureOutcome" in research_ts
+        and "findFailureBouncesHome" in research_ts
+        and "RobotJobsWorkspace" in jobs_page
+        and "JobsLanding" in jobs_page
+        and "findFailureStayHref" in research_ts
+        and "FIND_NO_HOME_FIXTURE" in release_ts
+        and "find_no_home" in site
+        and "find_no_home" in protocol
+    )
+    checks.append(
+        _check(
+            "find_no_home",
+            no_home,
+            "FIND timeout / 500 / abort stays on FIND, never employer MATCH",
+        )
+    )
     checks.append(
         _check(
             "find_identity",
@@ -993,27 +1228,45 @@ def phase_critic(*, api: str, local: bool) -> dict[str, Any]:
             ont_detail,
         )
     )
+    wf_ok, wf_detail = url_workflow_fixture()
+    checks.append(
+        _check(
+            "url_workflow",
+            wf_ok
+            and "url_workflow" in site
+            and "url_workflow" in protocol
+            and "URL_WORKFLOW_FIXTURE" in release_ts,
+            "FIND URL critic reports product range, named SKUs, and per-product capabilities",
+            wf_detail,
+        )
+    )
 
     drives: list[dict[str, Any]] = []
-    if local:
-        checks.append(
-            _check(
-                "find_drive",
-                True,
-                "FIND URL drive skipped (--local)",
-                "skipped",
-            )
+    changed = pr_changed_files()
+    skip_live, skip_reason = skip_live_find_drives(changed)
+    if not local:
+        print(
+            f"pstack skip_live_find={skip_live} files={changed[:24]!r} reason={skip_reason!r}",
+            file=sys.stderr,
         )
+    if local or skip_live:
+        prove = (
+            "FIND URL drive skipped (--local)"
+            if local
+            else "FIND URL drive skipped (PR does not change FIND/UI/ontology)"
+        )
+        checks.append(_check("find_drive", True, prove, skip_reason or "skipped"))
         checks.append(
             _check(
                 "healthcare_class:live",
                 True,
-                "Diligent FIND drive skipped (--local)",
-                "skipped",
+                "Diligent FIND drive skipped (--local)"
+                if local
+                else "Diligent FIND drive skipped (PR does not change FIND/UI/ontology)",
+                skip_reason or "skipped",
             )
         )
     else:
-        wait_for_fly_health(api)
         for url in (DEXMATE, GREENFIELD):
             drive = drive_find_url(url, api=api)
             drives.append(drive)

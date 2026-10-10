@@ -81,7 +81,8 @@ export default function WhileYouWereAway({
   onOpen,
 }: WhileYouWereAwayProps) {
   const [, navigate] = useLocation();
-  const actionable = highlights.length > 0 ? highlights : (summary.highlights ?? []);
+  const actionable =
+    highlights.length > 0 ? highlights : (summary.highlights ?? []);
   const topAction = actionable[0];
 
   const goToAction = (action: NextAction) => {
@@ -130,7 +131,9 @@ export default function WhileYouWereAway({
                     <h3 className="text-sm font-semibold text-neutral-950">
                       While You Were Away
                     </h3>
-                    <p className="text-xs text-neutral-400">Last 24 hours · tap to act</p>
+                    <p className="text-xs text-neutral-400">
+                      Last 24 hours · tap to act
+                    </p>
                   </div>
                 </div>
                 <Button
@@ -193,8 +196,12 @@ export default function WhileYouWereAway({
                       >
                         <Icon className={`h-3.5 w-3.5 ${item.color}`} />
                       </div>
-                      <p className="text-xs text-neutral-500 flex-1">{item.label}</p>
-                      <span className="font-mono text-sm font-bold text-neutral-950">{value}</span>
+                      <p className="text-xs text-neutral-500 flex-1">
+                        {item.label}
+                      </p>
+                      <span className="font-mono text-sm font-bold text-neutral-950">
+                        {value}
+                      </span>
                     </motion.div>
                   );
                 })}

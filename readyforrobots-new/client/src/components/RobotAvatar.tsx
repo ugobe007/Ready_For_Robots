@@ -40,12 +40,21 @@ function LogoGlow({ size }: { size: NonNullable<RobotAvatarProps["size"]> }) {
   );
 }
 
-function InitialsFallback({ vendor, size }: { vendor: string; size: NonNullable<RobotAvatarProps["size"]> }) {
+function InitialsFallback({
+  vendor,
+  size,
+}: {
+  vendor: string;
+  size: NonNullable<RobotAvatarProps["size"]>;
+}) {
   const s = SIZE[size];
   return (
     <span
       className={`${s.text} relative shrink-0 font-bold text-white/40`}
-      style={{ textShadow: "0 0 10px rgba(167,139,250,0.35), 0 0 18px rgba(3,218,197,0.12)" }}
+      style={{
+        textShadow:
+          "0 0 10px rgba(167,139,250,0.35), 0 0 18px rgba(3,218,197,0.12)",
+      }}
       aria-hidden
     >
       {vendorInitials(vendor)}
@@ -64,7 +73,9 @@ function LogoImage({
 }) {
   const s = SIZE[size];
   return (
-    <span className={`relative inline-flex shrink-0 items-center justify-center ${s.img}`}>
+    <span
+      className={`relative inline-flex shrink-0 items-center justify-center ${s.img}`}
+    >
       <LogoGlow size={size} />
       <img
         src={meta.src}
@@ -91,7 +102,12 @@ export default function RobotAvatar({
   size = "md",
   className = "",
 }: RobotAvatarProps) {
-  const primary = resolveHumanoidLogo({ vendor, modelSlug, productUrl, imageUrl });
+  const primary = resolveHumanoidLogo({
+    vendor,
+    modelSlug,
+    productUrl,
+    imageUrl,
+  });
   const [stage, setStage] = useState<"primary" | "cdn" | "initials">("primary");
 
   if (stage === "initials") {
@@ -102,7 +118,8 @@ export default function RobotAvatar({
     );
   }
 
-  const meta = stage === "cdn" ? resolveHumanoidLogoFallbackCdn(vendor) : primary;
+  const meta =
+    stage === "cdn" ? resolveHumanoidLogoFallbackCdn(vendor) : primary;
 
   if (!meta) {
     return (

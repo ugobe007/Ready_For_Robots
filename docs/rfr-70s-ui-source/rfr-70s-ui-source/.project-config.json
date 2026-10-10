@@ -1,0 +1,34 @@
+{
+  "build_command": "pnpm run build",
+  "capabilities": [],
+  "dev_command": "pnpm run dev",
+  "env_vars": {},
+  "experiments": null,
+  "git_remote": {
+    "repo_url": "https://7f0548f6b28a1758d9bf7be630d36cb4.artifacts.cloudflare.net/git/prod/wipjpxme4ajkqivnawmfrs.git",
+    "expiration": "2026-09-02T19:45:46.742Z",
+    "token": "art_v2_x_3ea5224d553f960356cdb2aed2d15e7e750d76bc?expires=1788378346",
+    "backend": "GIT_BACKEND_ARTIFACTS"
+  },
+  "name": "rfr-70s-ui",
+  "path": "/home/ubuntu/rfr-70s-ui",
+  "port": 3000,
+  "secrets": {
+    "BUILT_IN_FORGE_API_KEY": "JhyRTWoxgLTh5zHmDhB98A",
+    "BUILT_IN_FORGE_API_URL": "https://forge.manus.ai",
+    "JWT_SECRET": "ZGAn7QsJU68QX5caE6iXM8",
+    "OAUTH_SERVER_URL": "https://api.manus.im",
+    "OWNER_NAME": "Bob Christopher",
+    "OWNER_OPEN_ID": "Xra57kEiCTfHJdWZaTP5Z7",
+    "VITE_ANALYTICS_ENDPOINT": "https://manus-analytics.com",
+    "VITE_ANALYTICS_WEBSITE_ID": "5754d01e-5e97-4fe7-a062-20611454500b",
+    "VITE_APP_ID": "WipJPXmE4AJkQiVnAwMfRs",
+    "VITE_APP_LOGO": "",
+    "VITE_APP_TITLE": "ReadyForRobots — 1970s UI Concepts",
+    "VITE_FRONTEND_FORGE_API_KEY": "TBHmEJvEvhGJvrFZ7qSTdu",
+    "VITE_FRONTEND_FORGE_API_URL": "https://forge.manus.ai",
+    "VITE_OAUTH_PORTAL_URL": "https://manus.im"
+  },
+  "template_id": "web-static",
+  "test_command": "pnpm test"
+}

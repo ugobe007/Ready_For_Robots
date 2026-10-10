@@ -42,14 +42,16 @@ const TASK_MODEL_WHY_HOLE =
 
 function shortModelLinkName(dest: TaskModelLookup): string {
   const url = (dest.url || "").toLowerCase();
-  if (url.includes("openvla.github.io") || url.includes("openvla")) return "OpenVLA";
+  if (url.includes("openvla.github.io") || url.includes("openvla"))
+    return "OpenVLA";
   if (url.includes("pi.website") || url.includes("physicalintelligence")) {
     return "π0.5";
   }
   if (url.includes("gr00t")) return "GR00T N1.5";
   if (url.includes("huggingface.co/lerobot")) return "LeRobot";
   if (url.includes("huggingface.co")) return "Hugging Face robotics";
-  if (url.includes("nvidia.com/isaac") || url.includes("/isaac")) return "NVIDIA Isaac";
+  if (url.includes("nvidia.com/isaac") || url.includes("/isaac"))
+    return "NVIDIA Isaac";
   return dest.name.replace(/\s+[—–-]\s+.*$/, "").trim() || dest.name;
 }
 
@@ -167,7 +169,11 @@ export type JobCardPayEstimate = {
 
 function usdBand(low: number, high: number): string {
   const fmt = (n: number) =>
-    n.toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 });
+    n.toLocaleString("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    });
   return `${fmt(low)}–${fmt(high)}`;
 }
 
@@ -199,9 +205,14 @@ function jobDescriptionFromMatch(job: {
     .trim();
   if (raw && raw.toLowerCase() !== title.toLowerCase()) {
     if (raw.length <= 420) return raw;
-    return `${raw.slice(0, 420).replace(/\s+\S*$/, "").trim()}…`;
+    return `${raw
+      .slice(0, 420)
+      .replace(/\s+\S*$/, "")
+      .trim()}…`;
   }
-  const why = (job.why || []).find(line => String(line || "").trim().length >= 12);
+  const why = (job.why || []).find(
+    line => String(line || "").trim().length >= 12
+  );
   return why ? String(why).trim() : null;
 }
 
@@ -214,7 +225,8 @@ export const QUALIFICATION_LABEL: Record<RobotJobQualification, string> = {
 
 export const QUALIFICATION_HINT: Record<RobotJobQualification, string> = {
   qualified: "Confirmed by you or the employer.",
-  conditional: "Pending your review, a site assessment, and a task model for this work.",
+  conditional:
+    "Pending your review, a site assessment, and a task model for this work.",
   not_qualified: "A required capability or task model is unmet.",
   pending_robot: "Submit this robot’s URL to evaluate it against the job.",
 };
@@ -222,7 +234,7 @@ export const QUALIFICATION_HINT: Record<RobotJobQualification, string> = {
 export function qualificationFromVerdict(
   verdict?: string | null,
   blockers?: string[] | null,
-  taskModels?: { presence?: string | null }[] | null,
+  taskModels?: { presence?: string | null }[] | null
 ): RobotJobQualification {
   if (verdict === "NOT_A_MATCH" || (blockers && blockers.length > 0)) {
     return "not_qualified";
@@ -252,27 +264,31 @@ type MatchTaskModelIn = {
   hardware_not_enough?: string | null;
   candidate_families?: string[] | null;
   where_to_look?: MatchLookupIn[] | null;
-  qualify_filters?: {
-    id?: string | null;
-    label?: string | null;
-    name?: string | null;
-    note?: string | null;
-  }[] | null;
-  pricing_lookups?: MatchLookupIn[] | null;
-    card_contract?: {
-      headline?: string | null;
-      layer?: string | null;
-      who_trains?: string | null;
-      time?: string | null;
-      you_provide?: string | null;
-      field_feedback?: string | null;
-      list_line?: string | null;
-      steps?: {
-        n?: number | null;
+  qualify_filters?:
+    | {
+        id?: string | null;
         label?: string | null;
-        body?: string | null;
-      }[] | null;
-    } | null;
+        name?: string | null;
+        note?: string | null;
+      }[]
+    | null;
+  pricing_lookups?: MatchLookupIn[] | null;
+  card_contract?: {
+    headline?: string | null;
+    layer?: string | null;
+    who_trains?: string | null;
+    time?: string | null;
+    you_provide?: string | null;
+    field_feedback?: string | null;
+    list_line?: string | null;
+    steps?:
+      | {
+          n?: number | null;
+          label?: string | null;
+          body?: string | null;
+        }[]
+      | null;
+  } | null;
 };
 
 function mapLookups(raw?: MatchLookupIn[] | null): TaskModelLookup[] {
@@ -289,13 +305,15 @@ export function cardModelLinks(lookups: TaskModelLookup[]): TaskModelLookup[] {
   const withUrl = lookups.filter(d => d.url && d.name);
   const preferred = withUrl
     .filter(
-      d => CARD_LINK_PREFER_KINDS.has(d.kind) && !CARD_LINK_SKIP_KINDS.has(d.kind),
+      d =>
+        CARD_LINK_PREFER_KINDS.has(d.kind) && !CARD_LINK_SKIP_KINDS.has(d.kind)
     )
     .sort((a, b) => cardLinkRank(a.url || "") - cardLinkRank(b.url || ""));
   const ranked = [
     ...preferred,
     ...withUrl.filter(
-      d => !CARD_LINK_PREFER_KINDS.has(d.kind) && !CARD_LINK_SKIP_KINDS.has(d.kind),
+      d =>
+        !CARD_LINK_PREFER_KINDS.has(d.kind) && !CARD_LINK_SKIP_KINDS.has(d.kind)
     ),
   ];
   const out: TaskModelLookup[] = [];
@@ -330,7 +348,7 @@ function shortLayer(layer: string): string {
 function shortTime(time: string): string {
   const t = stripPrefix(time, /^Typical time:\s*/i);
   const m = t.match(
-    /(\d+\s*[–-]\s*\d+\s*weeks|Days to ~2 weeks|Months to years)/i,
+    /(\d+\s*[–-]\s*\d+\s*weeks|Days to ~2 weeks|Months to years)/i
   );
   if (m) return m[1].replace(/-/g, "–");
   return t.split(" after")[0].trim();
@@ -379,7 +397,7 @@ function defaultPlacementSteps(opts: {
 
 function mapPlacementSteps(
   raw: MatchTaskModelIn["card_contract"],
-  fallback: TaskModelPlacementStep[],
+  fallback: TaskModelPlacementStep[]
 ): TaskModelPlacementStep[] {
   const steps = (raw?.steps || [])
     .map(row => ({
@@ -393,7 +411,7 @@ function mapPlacementSteps(
 
 function mapCardContract(
   raw?: MatchTaskModelIn["card_contract"],
-  slotLabel = "",
+  slotLabel = ""
 ): TaskModelCardContract | null {
   if (!raw) return null;
   const headline = (raw.headline || "").trim();
@@ -416,7 +434,7 @@ function mapCardContract(
       time: timeShort,
       youProvide,
       fieldFeedback,
-    }),
+    })
   );
   return {
     headline: headline || "To place this job",
@@ -430,7 +448,9 @@ function mapCardContract(
   };
 }
 
-function normalizeTaskModels(raw?: MatchTaskModelIn[] | null): RequiredTaskModel[] {
+function normalizeTaskModels(
+  raw?: MatchTaskModelIn[] | null
+): RequiredTaskModel[] {
   const out: RequiredTaskModel[] = [];
   for (const row of raw || []) {
     const id = (row.id || "").trim();
@@ -472,7 +492,9 @@ export function robotJobCardFromMatch(job: {
 }): RobotJobCardView {
   const taskModels = normalizeTaskModels(job.required_task_models);
   const modelLinks = cardModelLinks(
-    (job.required_task_models || []).flatMap(row => mapLookups(row.where_to_look)),
+    (job.required_task_models || []).flatMap(row =>
+      mapLookups(row.where_to_look)
+    )
   );
   const open = unique([
     ...(job.still_unknown || []),
@@ -481,7 +503,7 @@ export function robotJobCardFromMatch(job: {
   const qualification = qualificationFromVerdict(
     job.verdict,
     job.blockers,
-    taskModels,
+    taskModels
   );
   const title = (job.title || "").trim() || "Untitled job";
   const description = jobDescriptionFromMatch(job);
@@ -509,7 +531,7 @@ export function robotJobCardFromMatch(job: {
 
 /** Collapsed list / CRM taste — training burden without inventing a price. */
 export function jobModelListLine(
-  job: Parameters<typeof robotJobCardFromMatch>[0],
+  job: Parameters<typeof robotJobCardFromMatch>[0]
 ): string {
   return robotJobCardFromMatch(job).modelContract?.listLine || "";
 }
@@ -531,7 +553,8 @@ export function robcoPackHonesty(pack = robcoPack): string[] {
       errors.push(`${job.id} must point at a corpus/ledger job_key`);
     }
     if (job.workVolume != null) errors.push(`${job.id} invented workVolume`);
-    if (job.currentLabor != null) errors.push(`${job.id} invented currentLabor`);
+    if (job.currentLabor != null)
+      errors.push(`${job.id} invented currentLabor`);
     if (job.qualification !== "pending_robot") {
       errors.push(`${job.id} must stay pending_robot until a RobCo URL exists`);
     }

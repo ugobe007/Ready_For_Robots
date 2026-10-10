@@ -1,0 +1,2677 @@
+{
+  "ontology_id": "mixed_oem_sku_catalog_v1",
+  "version": "1.0.0",
+  "generated_at": "2026-09-01T14:30:00+00:00",
+  "source": "missions/2026-08-31-mixed-oem-product-range",
+  "rule": "COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES. Never company → category.",
+  "notes": [
+    "Evidence-backed named SKUs only. Empty specs stay UNKNOWN. Not Job Card employers.",
+    "These OEMs ship mixed morphology: humanoid AND serving AND cleaning AND/OR quadruped.",
+    "Live page extract still wins when it contradicts this cache.",
+    "PUDU D9 official page: full-sized bipedal humanoid. BellaBot/CC1 already have workbook tasks.",
+    "Keenon C55/C40/C20 named as floor cleaners on the KLEENBOT C55 page; T11 is DINERBOT catering delivery.",
+    "UBTECH Walker official page: Humanoid Service Robot, bipedal walking.",
+    "Deep Robotics homepage is quadruped; DR02 page is industrial humanoid; X20/X30 are official quadruped pages.",
+    "MagicLab /en/x1 MagicBot X1 humanoid; /en/dog MagicDog quadruped. Do not invent SKUs without a page.",
+    "AgiBot homepage names G1 and X2 as embodied/humanoid. Do not invent A3 Ultra here — index already has it.",
+    "2026-08-31 cleaning + mixed F&B operator list: named SKUs from live pages only.",
+    "Lucidbots Sherpa is a cleaning drone, not a floor scrubber.",
+    "Kaercher: robotic KIRA line only — not mop/pressure-washer SKUs.",
+    "Tennant robotics hub names X6 ROVR and X16 SWEEP; T7AMR / T380AMR / T16AMR product pages name those SKUs. Not AMR scrubbers.",
+    "Richtech homepage 429 (Vercel checkpoint) — reclass existing ADAM/Scotty only.",
+    "SEER lifting/forklift/controller pages name AMB / SFL / SCB / SRC SKUs. Not Seer Humanoid.",
+    "VinMotion homepage Product menu names Motion 1 and Motion 2. Motion 1 is a humanoid robot on the homepage. Motion 2 launching page is thin — no invented class.",
+    "Live page extract still wins. Empty specs stay UNKNOWN. Not Job Card employers.",
+    "2026-08-31 more OEMs: booster.tech, lumosbot.tech, galbot.com, unix-group.ai, noetixrobotics.com, thirdwave.ai, dexory.com, primebot.cn, limxdynamics.com. Named products from live pages or product JS only. Thin pages stay unclassified. DexoryView is the named product; public pages do not name the robots. Third Wave Reach Trucks is named on the Armada case study, not TWA Reach.",
+    "2026-09-01 more AMR OEMs: galaxea-dynamics.com, xpeng.com (IRON only, not the EV catalog), ararobotics.eu, cartken.com, mobile-industrial-robots.com, teradyne.com/robotics/autonomous-mobile-robots. Named products from live pages only. A1 Z / Lite-T / G1 Gripper / VLA unit are arms or accessories, not FIND robots. Petek is a named docking station, unclassified. Cartken Mover is named as coming soon with pallet-truck copy. Teradyne hub names MiR1200 Pallet Jack; do not invent MiR250 on that page. XPENG Humanoid / PX5 stay out."
+  ],
+  "companies": [
+    {
+      "name": "Pudu Robotics",
+      "slug": "pudu-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "pudurobotics.com"
+      ],
+      "source_urls": [
+        "https://www.pudurobotics.com/en"
+      ],
+      "products": [
+        {
+          "name": "BellaBot",
+          "slug": "pudu-robotics-bellabot",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Tray delivery and guest interaction",
+          "setting": "Restaurants · hotels",
+          "lookup_host": "pudurobotics.com",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "HolaBot",
+          "slug": "pudu-robotics-holabot",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Tray delivery and dish return",
+          "setting": "Restaurants · hospitality",
+          "lookup_host": "pudurobotics.com",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "KettyBot",
+          "slug": "pudu-robotics-kettybot",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Front-of-house delivery and greeting",
+          "setting": "Restaurants · cafés",
+          "lookup_host": "pudurobotics.com",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "CC1",
+          "slug": "pudu-robotics-cc1",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial cleaning robot",
+          "task": "Vacuuming, scrubbing, mopping",
+          "setting": "Commercial floors",
+          "lookup_host": "pudurobotics.com",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "PuduBot 2",
+          "slug": "pudu-robotics-pudubot-2",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Food and beverage delivery",
+          "setting": "Restaurants",
+          "lookup_host": "pudurobotics.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.pudurobotics.com/product/pudubot2",
+          "url_status": "verified"
+        },
+        {
+          "name": "MT1",
+          "slug": "pudu-robotics-mt1",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial cleaning robot",
+          "task": "Outdoor sweeping and cleaning",
+          "setting": "Campuses · public spaces",
+          "lookup_host": "pudurobotics.com",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "PUDU T300",
+          "slug": "pudu-robotics-pudu-t300",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial cleaning robot",
+          "task": "Commercial floor cleaning",
+          "setting": "Public · commercial floors",
+          "lookup_host": "pudurobotics.com",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "D9",
+          "slug": "pudu-robotics-d9",
+          "company_name": "Pudu Robotics",
+          "company_slug": "pudu-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid",
+          "task": "Full-sized bipedal humanoid for object manipulation and customer engagement",
+          "setting": "Public spaces",
+          "product_url": "https://www.pudurobotics.com/en/products/d9",
+          "lookup_host": "pudurobotics.com",
+          "url_status": "verified",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        }
+      ]
+    },
+    {
+      "name": "Keenon Robotics",
+      "slug": "keenon-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "keenon.com"
+      ],
+      "source_urls": [
+        "https://www.keenon.com/"
+      ],
+      "products": [
+        {
+          "name": "Dinerbot T10",
+          "slug": "keenon-robotics-dinerbot-t10",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "serving",
+          "listed_class": "DINERBOT catering delivery robot",
+          "task": "Food and beverage service",
+          "setting": "Restaurants · hotels",
+          "lookup_host": "keenon.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "capability_confidence": "UNKNOWN",
+          "product_url": "https://www.keenon.com/en/product/T10",
+          "url_status": "verified"
+        },
+        {
+          "name": "Dinerbot T5",
+          "slug": "keenon-robotics-dinerbot-t5",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "serving",
+          "listed_class": "DINERBOT catering delivery robot",
+          "task": "Table delivery and reception",
+          "setting": "Restaurants",
+          "lookup_host": "keenon.com",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "T11",
+          "slug": "keenon-robotics-t11",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "serving",
+          "listed_class": "DINERBOT catering delivery robot",
+          "task": "Narrow-aisle catering delivery",
+          "setting": "Restaurants",
+          "product_url": "https://www.keenon.com/en/product/T11",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "Butlerbot W3",
+          "slug": "keenon-robotics-butlerbot-w3",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "hospitality",
+          "listed_class": "BUTLERBOT hotel delivery robot",
+          "task": "Hotel room-service delivery",
+          "setting": "Hotels",
+          "lookup_host": "keenon.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "capability_confidence": "UNKNOWN",
+          "product_url": "https://www.keenon.com/en/product/W3",
+          "url_status": "verified"
+        },
+        {
+          "name": "Keenon C30",
+          "slug": "keenon-robotics-keenon-c30",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "KLEENBOT cleaning robot",
+          "task": "3-in-1 dry cleaning",
+          "setting": "Public buildings",
+          "lookup_host": "keenon.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "capability_confidence": "UNKNOWN",
+          "product_url": "https://www.keenon.com/en/product/C30",
+          "url_status": "verified"
+        },
+        {
+          "name": "C55",
+          "slug": "keenon-robotics-c55",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "KLEENBOT floor cleaner",
+          "task": "Integrated sweeping and washing on commercial floors",
+          "setting": "Medium to large public floors",
+          "product_url": "https://www.keenon.com/en/product/C55",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "C40",
+          "slug": "keenon-robotics-c40",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "KLEENBOT floor cleaner",
+          "task": "4-in-1 robot floor cleaner",
+          "setting": "Commercial floors",
+          "product_url": "https://www.keenon.com/en/product/C40",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "C20",
+          "slug": "keenon-robotics-c20",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "KLEENBOT floor cleaner",
+          "task": "Compact robot floor cleaner for small spaces",
+          "setting": "Small commercial floors",
+          "product_url": "https://www.keenon.com/en/product/C20",
+          "lookup_host": "keenon.com",
+          "url_status": "verified",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "T8",
+          "slug": "keenon-robotics-t8",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "serving",
+          "listed_class": "DINERBOT catering delivery robot",
+          "task": "Compact catering delivery",
+          "setting": "Restaurants",
+          "lookup_host": "keenon.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.keenon.com/en/product/T8",
+          "url_status": "verified"
+        },
+        {
+          "name": "T9",
+          "slug": "keenon-robotics-t9",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "serving",
+          "listed_class": "DINERBOT catering delivery robot",
+          "task": "High-load catering delivery",
+          "setting": "Restaurants",
+          "lookup_host": "keenon.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.keenon.com/en/product/T9",
+          "url_status": "verified"
+        },
+        {
+          "name": "T3",
+          "slug": "keenon-robotics-t3",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "serving",
+          "listed_class": "DINERBOT catering delivery robot",
+          "task": "Hygienic catering delivery",
+          "setting": "Restaurants",
+          "lookup_host": "keenon.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.keenon.com/en/product/T3",
+          "url_status": "verified"
+        },
+        {
+          "name": "XMAN-R1",
+          "slug": "keenon-robotics-xman-r1",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid service robot",
+          "task": "Embodied humanoid service",
+          "setting": "Public spaces",
+          "lookup_host": "keenon.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.keenon.com/en/product/XMAN-R1",
+          "url_status": "verified"
+        },
+        {
+          "name": "XMAN-F1",
+          "slug": "keenon-robotics-xman-f1",
+          "company_name": "Keenon Robotics",
+          "company_slug": "keenon-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid service robot",
+          "task": "Embodied humanoid service",
+          "setting": "Public spaces",
+          "lookup_host": "keenon.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.keenon.com/en/product/XMAN-F1",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "UBTECH",
+      "slug": "ubtech",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "ubtrobot.com"
+      ],
+      "source_urls": [
+        "https://www.ubtrobot.com/"
+      ],
+      "products": [
+        {
+          "name": "Walker",
+          "slug": "ubtech-walker",
+          "company_name": "UBTECH",
+          "company_slug": "ubtech",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid service robot",
+          "task": "Bipedal walking, object manipulation, household and office service",
+          "setting": "Homes · offices",
+          "product_url": "https://www.ubtrobot.com/en/humanoid/products/walker",
+          "lookup_host": "ubtrobot.com",
+          "url_status": "verified",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "Walker X",
+          "slug": "ubtech-walker-x",
+          "company_name": "UBTECH",
+          "company_slug": "ubtech",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid",
+          "task": "Bipedal service and interaction",
+          "setting": "Public spaces",
+          "lookup_host": "ubtrobot.com",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "Walker S2",
+          "slug": "ubtech-walker-s2",
+          "company_name": "UBTECH",
+          "company_slug": "ubtech",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid",
+          "task": "Bipedal humanoid",
+          "lookup_host": "ubtrobot.com",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "Alpha 1E",
+          "slug": "ubtech-alpha-1e",
+          "company_name": "UBTECH",
+          "company_slug": "ubtech",
+          "primary_class": "humanoid",
+          "listed_class": "Consumer humanoid robot",
+          "task": "Bipedal consumer humanoid",
+          "product_url": "https://www.ubtrobot.com/en/consumer/humanoid-robots/alpha-series/alpha-1e",
+          "lookup_host": "ubtrobot.com",
+          "url_status": "verified",
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        }
+      ]
+    },
+    {
+      "name": "AgiBot",
+      "slug": "agibot",
+      "vendor_role": "robot_oem",
+      "regions": "China",
+      "domains": [
+        "agibot.com"
+      ],
+      "source_urls": [
+        "https://www.agibot.com/"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "AGIBOT G1",
+          "slug": "agibot-g1",
+          "company_name": "AgiBot",
+          "company_slug": "agibot",
+          "primary_class": "humanoid",
+          "listed_class": "Embodied intelligent humanoid",
+          "task": "Universal embodied intelligent robot",
+          "setting": "Industrial · research",
+          "product_url": "https://www.agibot.com/",
+          "lookup_host": "agibot.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "AGIBOT X2",
+          "slug": "agibot-x2",
+          "company_name": "AgiBot",
+          "company_slug": "agibot",
+          "primary_class": "humanoid",
+          "listed_class": "Embodied intelligent humanoid",
+          "task": "Fully intelligent and agile humanoid",
+          "setting": "Industrial · research",
+          "product_url": "https://www.agibot.com/",
+          "lookup_host": "agibot.com",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        }
+      ],
+      "verified_urls": [
+        "https://www.agibot.com/"
+      ]
+    },
+    {
+      "name": "MagicLab",
+      "slug": "magiclab",
+      "vendor_role": "robot_oem",
+      "regions": "China",
+      "domains": [
+        "magiclab.top"
+      ],
+      "source_urls": [
+        "https://www.magiclab.top/"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "MagicBot X1",
+          "slug": "magiclab-magicbot-x1",
+          "company_name": "MagicLab",
+          "company_slug": "magiclab",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid robot",
+          "task": "Humanoid patrol, inspection, and material delivery",
+          "setting": "Parks · scenic areas",
+          "product_url": "https://www.magiclab.top/en/x1",
+          "lookup_host": "magiclab.top",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "MagicBot Gen1",
+          "slug": "magiclab-humanoid",
+          "company_name": "MagicLab",
+          "company_slug": "magiclab",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid robot",
+          "task": "Bipedal humanoid",
+          "product_url": "https://www.magiclab.top/en/human",
+          "lookup_host": "magiclab.top",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "MagicDog",
+          "slug": "magiclab-magicdog",
+          "company_name": "MagicLab",
+          "company_slug": "magiclab",
+          "primary_class": "quadruped",
+          "listed_class": "Bionic quadruped",
+          "task": "Quadruped robot dog locomotion and patrol",
+          "product_url": "https://www.magiclab.top/en/dog",
+          "lookup_host": "magiclab.top",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        }
+      ],
+      "verified_urls": [
+        "https://www.magiclab.top/en/x1",
+        "https://www.magiclab.top/en/human",
+        "https://www.magiclab.top/en/dog"
+      ]
+    },
+    {
+      "name": "Deep Robotics",
+      "slug": "deep-robotics",
+      "vendor_role": "robot_oem",
+      "regions": "China",
+      "domains": [
+        "deeprobotics.cn"
+      ],
+      "source_urls": [
+        "https://www.deeprobotics.cn/en"
+      ],
+      "price_indication": "Quote required / not publicly disclosed",
+      "products": [
+        {
+          "name": "X20",
+          "slug": "deep-robotics-x20",
+          "company_name": "Deep Robotics",
+          "company_slug": "deep-robotics",
+          "primary_class": "quadruped",
+          "listed_class": "Industrial quadruped",
+          "task": "Industrial patrol inspection on a quadruped",
+          "setting": "Power · utilities · outdoor industry",
+          "product_url": "https://www.deeprobotics.cn/en/index/product.html",
+          "lookup_host": "deeprobotics.cn",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "X30",
+          "slug": "deep-robotics-x30",
+          "company_name": "Deep Robotics",
+          "company_slug": "deep-robotics",
+          "primary_class": "quadruped",
+          "listed_class": "Industrial quadruped",
+          "task": "Industrial inspection and rescue on a quadruped",
+          "setting": "Power stations · factories · emergency",
+          "product_url": "https://www.deeprobotics.cn/en/index/product3.html",
+          "lookup_host": "deeprobotics.cn",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        },
+        {
+          "name": "DR02",
+          "slug": "deep-robotics-dr02",
+          "company_name": "Deep Robotics",
+          "company_slug": "deep-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Industrial humanoid",
+          "task": "All-weather outdoor bipedal humanoid for cargo transport",
+          "setting": "Outdoor industry",
+          "product_url": "https://www.deeprobotics.cn/en/index/dr02.html",
+          "lookup_host": "deeprobotics.cn",
+          "url_status": "verified",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "source": "mission-2026-08-31-mixed-oem-product-range"
+        }
+      ],
+      "verified_urls": [
+        "https://www.deeprobotics.cn/en/index/product.html",
+        "https://www.deeprobotics.cn/en/index/product3.html",
+        "https://www.deeprobotics.cn/en/index/dr02.html"
+      ]
+    },
+    {
+      "name": "Pringle Robotics",
+      "slug": "pringle-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "pringlerobotics.ai"
+      ],
+      "source_urls": [
+        "https://pringlerobotics.ai/"
+      ],
+      "products": [
+        {
+          "name": "BellaBot",
+          "slug": "pringle-robotics-bellabot",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Tray delivery and guest interaction",
+          "setting": "Restaurants",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-BellaBot",
+          "url_status": "verified"
+        },
+        {
+          "name": "BellaBot PRO",
+          "slug": "pringle-robotics-bellabot-pro",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Tray delivery and guest interaction",
+          "setting": "Restaurants",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-BellaBoTPRO",
+          "url_status": "verified"
+        },
+        {
+          "name": "KettyBot",
+          "slug": "pringle-robotics-kettybot",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Front-of-house delivery and greeting",
+          "setting": "Restaurants · cafés",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-KettyBot",
+          "url_status": "verified"
+        },
+        {
+          "name": "HolaBot",
+          "slug": "pringle-robotics-holabot",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Tray delivery and dish return",
+          "setting": "Restaurants · hospitality",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-HolaBot",
+          "url_status": "verified"
+        },
+        {
+          "name": "PuduBot 2",
+          "slug": "pringle-robotics-pudubot-2",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Food and beverage delivery",
+          "setting": "Restaurants",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-PuduBot2",
+          "url_status": "verified"
+        },
+        {
+          "name": "CC1",
+          "slug": "pringle-robotics-cc1",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial cleaning robot",
+          "task": "Vacuuming, scrubbing, mopping",
+          "setting": "Commercial floors",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-cc1",
+          "url_status": "verified"
+        },
+        {
+          "name": "CC1 PRO",
+          "slug": "pringle-robotics-cc1-pro",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial cleaning robot",
+          "task": "Vacuuming, scrubbing, mopping",
+          "setting": "Commercial floors",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-pudu-cc1-pro",
+          "url_status": "verified"
+        },
+        {
+          "name": "CC3",
+          "slug": "pringle-robotics-cc3",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial cleaning robot",
+          "task": "Commercial floor cleaning",
+          "setting": "Commercial floors",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-cc3",
+          "url_status": "verified"
+        },
+        {
+          "name": "CC5",
+          "slug": "pringle-robotics-cc5",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial cleaning robot",
+          "task": "Commercial floor cleaning",
+          "setting": "Commercial floors",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-cc5",
+          "url_status": "verified"
+        },
+        {
+          "name": "PUDU T300",
+          "slug": "pringle-robotics-pudu-t300",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial cleaning robot",
+          "task": "Commercial floor cleaning",
+          "setting": "Public · commercial floors",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-T300Bot",
+          "url_status": "verified"
+        },
+        {
+          "name": "MT-1",
+          "slug": "pringle-robotics-mt-1",
+          "company_name": "Pringle Robotics",
+          "company_slug": "pringle-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial cleaning robot",
+          "task": "Outdoor sweeping and cleaning",
+          "setting": "Campuses · public spaces",
+          "lookup_host": "pringlerobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://pringlerobotics.ai/TheBots-MT1Bot",
+          "url_status": "verified"
+        }
+      ],
+      "verified_urls": [
+        "https://pringlerobotics.ai/",
+        "https://pringlerobotics.ai/bots"
+      ]
+    },
+    {
+      "name": "Bear Robotics",
+      "slug": "bear-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "bearrobotics.ai"
+      ],
+      "source_urls": [
+        "https://www.bearrobotics.ai/"
+      ],
+      "products": [
+        {
+          "name": "Servi",
+          "slug": "bear-robotics-servi",
+          "company_name": "Bear Robotics",
+          "company_slug": "bear-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "AI robot waiter assistant. Table service and food delivery.",
+          "setting": "Restaurants · hospitality",
+          "lookup_host": "bearrobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.bearrobotics.ai/servi",
+          "url_status": "verified"
+        },
+        {
+          "name": "Servi Plus",
+          "slug": "bear-robotics-servi-plus",
+          "company_name": "Bear Robotics",
+          "company_slug": "bear-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "High-capacity food delivery",
+          "setting": "Restaurants · hospitality",
+          "lookup_host": "bearrobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.bearrobotics.ai/servi-plus",
+          "url_status": "verified"
+        },
+        {
+          "name": "Servi Q",
+          "slug": "bear-robotics-servi-q",
+          "company_name": "Bear Robotics",
+          "company_slug": "bear-robotics",
+          "primary_class": "serving",
+          "listed_class": "Restaurant serving robot",
+          "task": "Compact food-delivery AMR for narrow paths",
+          "setting": "Restaurants",
+          "lookup_host": "bearrobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.bearrobotics.ai/servi-q",
+          "url_status": "verified"
+        },
+        {
+          "name": "Servi Clean",
+          "slug": "bear-robotics-servi-clean",
+          "company_name": "Bear Robotics",
+          "company_slug": "bear-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial floor cleaning robot",
+          "task": "Commercial floor cleaning. Vacuuming and scrubbing.",
+          "setting": "Restaurants · hospitality floors",
+          "lookup_host": "bearrobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.bearrobotics.ai/servi-clean",
+          "url_status": "verified"
+        },
+        {
+          "name": "Servi Clean Max",
+          "slug": "bear-robotics-servi-clean-max",
+          "company_name": "Bear Robotics",
+          "company_slug": "bear-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial floor cleaning robot",
+          "task": "Commercial floor cleaning",
+          "setting": "Hospitality floors",
+          "lookup_host": "bearrobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.bearrobotics.ai/servi-clean",
+          "url_status": "verified"
+        },
+        {
+          "name": "Carti 100",
+          "slug": "bear-robotics-carti-100",
+          "company_name": "Bear Robotics",
+          "company_slug": "bear-robotics",
+          "primary_class": "serving",
+          "listed_class": "Autonomous cart transport",
+          "task": "Autonomous cart transport in restaurants and hotels",
+          "setting": "Restaurants · hotels",
+          "lookup_host": "bearrobotics.ai",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.bearrobotics.ai/carti100",
+          "url_status": "verified"
+        }
+      ],
+      "verified_urls": [
+        "https://www.bearrobotics.ai/servi",
+        "https://www.bearrobotics.ai/servi-clean"
+      ]
+    },
+    {
+      "name": "AotingBots",
+      "slug": "aotingbots",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "aotingbot.com"
+      ],
+      "source_urls": [
+        "https://www.aotingbot.com/"
+      ],
+      "products": [
+        {
+          "name": "SW80 A",
+          "slug": "aotingbots-sw80-a",
+          "company_name": "AotingBots",
+          "company_slug": "aotingbots",
+          "primary_class": "cleaning",
+          "listed_class": "Waterless commercial cleaning robot",
+          "task": "3-in-1 mopping, sweeping, and vacuuming on commercial floors",
+          "setting": "Malls · factories · conference halls",
+          "lookup_host": "aotingbot.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.aotingbot.com/product/sw80-a",
+          "url_status": "verified"
+        },
+        {
+          "name": "SW55 A",
+          "slug": "aotingbots-sw55-a",
+          "company_name": "AotingBots",
+          "company_slug": "aotingbots",
+          "primary_class": "cleaning",
+          "listed_class": "Waterless commercial cleaning robot",
+          "task": "4-in-1 mopping, sweeping, vacuuming, and dust pushing",
+          "setting": "Commercial interiors",
+          "lookup_host": "aotingbot.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.aotingbot.com/product/sw55-a",
+          "url_status": "verified"
+        }
+      ],
+      "verified_urls": [
+        "https://www.aotingbot.com/product/sw80-a",
+        "https://www.aotingbot.com/product/sw55-a"
+      ]
+    },
+    {
+      "name": "Kärcher",
+      "slug": "karcher",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "kaercher.com"
+      ],
+      "source_urls": [
+        "https://www.kaercher.com/us/commercial/autonomous-cleaning-equipment.html"
+      ],
+      "products": [
+        {
+          "name": "KIRA B 50",
+          "slug": "karcher-kira-b-50",
+          "company_name": "Kärcher",
+          "company_slug": "karcher",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous floor scrubber",
+          "task": "Autonomous scrubbing on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "kaercher.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.kaercher.com/us/commercial/autonomous-cleaning-equipment.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "KIRA B 200",
+          "slug": "karcher-kira-b-200",
+          "company_name": "Kärcher",
+          "company_slug": "karcher",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous floor scrubber",
+          "task": "Autonomous scrubbing on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "kaercher.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.kaercher.com/us/commercial/autonomous-cleaning-equipment/kira-br-200-15330130.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "KIRA CV 50",
+          "slug": "karcher-kira-cv-50",
+          "company_name": "Kärcher",
+          "company_slug": "karcher",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous vacuum",
+          "task": "Autonomous vacuuming on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "kaercher.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.kaercher.com/us/commercial/autonomous-cleaning-equipment/kira-cv-50-bp-98105800.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "KIRA CV 60/1",
+          "slug": "karcher-kira-cv-60-1",
+          "company_name": "Kärcher",
+          "company_slug": "karcher",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous vacuum",
+          "task": "Autonomous vacuuming on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "kaercher.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.kaercher.com/us/commercial/autonomous-cleaning-equipment/kira-cv-60-1-10121060.html",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Richtech Robotics",
+      "slug": "richtech-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "richtechrobotics.com"
+      ],
+      "source_urls": [
+        "https://richtechrobotics.com/"
+      ],
+      "products": [
+        {
+          "name": "ADAM",
+          "slug": "richtech-robotics-adam",
+          "company_name": "Richtech Robotics",
+          "company_slug": "richtech-robotics",
+          "primary_class": "food_prep",
+          "listed_class": "Beverage and cocktail robot",
+          "task": "Beverage and cocktail preparation",
+          "setting": "Restaurants · bars",
+          "lookup_host": "richtechrobotics.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "unverified"
+        },
+        {
+          "name": "Scotty",
+          "slug": "richtech-robotics-scotty",
+          "company_name": "Richtech Robotics",
+          "company_slug": "richtech-robotics",
+          "primary_class": "serving",
+          "listed_class": "Food and beverage delivery robot",
+          "task": "Food and beverage delivery",
+          "setting": "Restaurants",
+          "lookup_host": "richtechrobotics.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "unverified"
+        }
+      ]
+    },
+    {
+      "name": "CenoBots",
+      "slug": "cenobots",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "cenobots.com"
+      ],
+      "source_urls": [
+        "https://www.cenobots.com/"
+      ],
+      "products": [
+        {
+          "name": "S5",
+          "slug": "cenobots-s5",
+          "company_name": "CenoBots",
+          "company_slug": "cenobots",
+          "primary_class": "cleaning",
+          "listed_class": "Industrial robotic sweeper",
+          "task": "Autonomous industrial floor sweeping",
+          "setting": "Factories · warehouses",
+          "lookup_host": "cenobots.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.cenobots.com/products/s5",
+          "url_status": "verified"
+        },
+        {
+          "name": "L3",
+          "slug": "cenobots-l3",
+          "company_name": "CenoBots",
+          "company_slug": "cenobots",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous cleaning robot",
+          "task": "Commercial floor cleaning",
+          "setting": "Commercial floors",
+          "lookup_host": "cenobots.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.cenobots.com/products/l3",
+          "url_status": "verified"
+        },
+        {
+          "name": "L4",
+          "slug": "cenobots-l4",
+          "company_name": "CenoBots",
+          "company_slug": "cenobots",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous cleaning robot",
+          "task": "Commercial floor cleaning",
+          "setting": "Commercial floors",
+          "lookup_host": "cenobots.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.cenobots.com/products/l4",
+          "url_status": "verified"
+        },
+        {
+          "name": "L50",
+          "slug": "cenobots-l50",
+          "company_name": "CenoBots",
+          "company_slug": "cenobots",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous cleaning robot",
+          "task": "Commercial floor cleaning",
+          "setting": "Commercial floors",
+          "lookup_host": "cenobots.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.cenobots.com/products/l50",
+          "url_status": "verified"
+        },
+        {
+          "name": "SP50",
+          "slug": "cenobots-sp50",
+          "company_name": "CenoBots",
+          "company_slug": "cenobots",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous cleaning robot",
+          "task": "Commercial floor cleaning",
+          "setting": "Commercial floors",
+          "lookup_host": "cenobots.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.cenobots.com/products/sp50",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Lucid Bots",
+      "slug": "lucid-bots",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "lucidbots.com"
+      ],
+      "source_urls": [
+        "https://www.lucidbots.com/"
+      ],
+      "products": [
+        {
+          "name": "Sherpa Drone",
+          "slug": "lucid-bots-sherpa-drone",
+          "company_name": "Lucid Bots",
+          "company_slug": "lucid-bots",
+          "primary_class": "cleaning_drone",
+          "listed_class": "Commercial cleaning drone",
+          "task": "Exterior window, facade, and building washing from a cleaning drone. Not a floor scrubber.",
+          "setting": "Building exteriors · windows · facades",
+          "lookup_host": "lucidbots.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.lucidbots.com/sherpa-drone",
+          "url_status": "verified"
+        },
+        {
+          "name": "Sherpa Drone NDAA",
+          "slug": "lucid-bots-sherpa-drone-ndaa",
+          "company_name": "Lucid Bots",
+          "company_slug": "lucid-bots",
+          "primary_class": "cleaning_drone",
+          "listed_class": "Commercial cleaning drone",
+          "task": "NDAA-compliant exterior cleaning drone for window and facade washing",
+          "setting": "Building exteriors",
+          "lookup_host": "lucidbots.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.lucidbots.com/sherpa-drone-ndaa",
+          "url_status": "verified"
+        }
+      ],
+      "verified_urls": [
+        "https://www.lucidbots.com/sherpa-drone",
+        "https://www.lucidbots.com/sherpa-drone-ndaa"
+      ]
+    },
+    {
+      "name": "ECOVACS Commercial",
+      "slug": "ecovacs-commercial",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "ecovacscommercial.com"
+      ],
+      "source_urls": [
+        "https://www.ecovacscommercial.com/"
+      ],
+      "products": [
+        {
+          "name": "DEEBOT PRO M1",
+          "slug": "ecovacs-commercial-deebot-pro-m1",
+          "company_name": "ECOVACS Commercial",
+          "company_slug": "ecovacs-commercial",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial robotic floor scrubber",
+          "task": "Scrub, sweep, and mop commercial floors",
+          "setting": "Hospitality · malls · offices",
+          "lookup_host": "ecovacscommercial.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.ecovacscommercial.com/ecovacs-commercial-robotic-floor-scrubber-deebot-pro-m1",
+          "url_status": "verified"
+        },
+        {
+          "name": "DEEBOT PRO K1 VAC",
+          "slug": "ecovacs-commercial-deebot-pro-k1-vac",
+          "company_name": "ECOVACS Commercial",
+          "company_slug": "ecovacs-commercial",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial robot vacuum",
+          "task": "Autonomous vacuuming on commercial floors",
+          "setting": "Offices · public buildings",
+          "lookup_host": "ecovacscommercial.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.ecovacscommercial.com/ecovacs-commercial-robot-vacuum-deebot-pro-k1-vac",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Avidbots",
+      "slug": "avidbots",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "avidbots.com"
+      ],
+      "source_urls": [
+        "https://avidbots.com/"
+      ],
+      "products": [
+        {
+          "name": "Neo",
+          "slug": "avidbots-neo",
+          "company_name": "Avidbots",
+          "company_slug": "avidbots",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous floor scrubber",
+          "task": "Fully autonomous commercial floor scrubbing",
+          "setting": "Airports · warehouses · retail",
+          "lookup_host": "avidbots.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://avidbots.com/robots/meet-neo/",
+          "url_status": "verified"
+        },
+        {
+          "name": "Neo 2W",
+          "slug": "avidbots-neo-2w",
+          "company_name": "Avidbots",
+          "company_slug": "avidbots",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous floor scrubber",
+          "task": "Autonomous commercial floor scrubbing",
+          "setting": "Commercial floors",
+          "lookup_host": "avidbots.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://avidbots.com/robots/meet-neo-2w/",
+          "url_status": "verified"
+        },
+        {
+          "name": "Kas",
+          "slug": "avidbots-kas",
+          "company_name": "Avidbots",
+          "company_slug": "avidbots",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous floor scrubber",
+          "task": "Commercial-grade cleaning in tight spaces",
+          "setting": "Tight commercial floors",
+          "lookup_host": "avidbots.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://avidbots.com/robots/meet-kas/",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Gausium",
+      "slug": "gausium",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "gausium.com"
+      ],
+      "source_urls": [
+        "https://gausium.com/"
+      ],
+      "products": [
+        {
+          "name": "Phantas",
+          "slug": "gausium-phantas",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous cleaning robot",
+          "task": "Commercial vacuum cleaning",
+          "setting": "Shopping centers · offices",
+          "lookup_host": "gausium.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://gausium.com/products/phantas/",
+          "url_status": "verified"
+        },
+        {
+          "name": "Vacuum 40",
+          "slug": "gausium-vacuum-40",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous vacuum",
+          "task": "Autonomous vacuuming on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "gausium.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://gausium.com/products/vacuum40/",
+          "url_status": "verified"
+        },
+        {
+          "name": "Scrubber 75",
+          "slug": "gausium-scrubber-75",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous floor scrubber",
+          "task": "Autonomous scrubbing on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "gausium.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://gausium.com/products/scrubber-75/",
+          "url_status": "verified"
+        },
+        {
+          "name": "Beetle",
+          "slug": "gausium-beetle",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning",
+          "listed_class": "Heavy-duty autonomous sweeper",
+          "task": "Indoor and outdoor autonomous sweeping",
+          "setting": "Indoor · outdoor commercial",
+          "lookup_host": "gausium.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://gausium.com/products/beetle/",
+          "url_status": "verified"
+        },
+        {
+          "name": "Mira",
+          "slug": "gausium-mira",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial robot floor cleaner",
+          "task": "Autonomous floor cleaning for mid-sized spaces",
+          "setting": "Mid-sized commercial floors",
+          "lookup_host": "gausium.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://gausium.com/products/mira/",
+          "url_status": "verified"
+        },
+        {
+          "name": "Marvel",
+          "slug": "gausium-marvel",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning",
+          "listed_class": "Commercial robot floor cleaner",
+          "task": "Autonomous floor cleaning for large complex spaces",
+          "setting": "Large commercial floors",
+          "lookup_host": "gausium.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://gausium.com/products/marvel/",
+          "url_status": "verified"
+        },
+        {
+          "name": "Omnie",
+          "slug": "gausium-omnie",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning",
+          "listed_class": "AI commercial cleaning robot",
+          "task": "Autonomous commercial floor cleaning",
+          "setting": "Commercial floors",
+          "lookup_host": "gausium.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://gausium.com/products/omnie/",
+          "url_status": "verified"
+        },
+        {
+          "name": "PhanShop",
+          "slug": "gausium-phanshop",
+          "company_name": "Gausium",
+          "company_slug": "gausium",
+          "primary_class": "cleaning",
+          "listed_class": "Retail cleaning robot",
+          "task": "Cleans a store while selling stock",
+          "setting": "Retail floors",
+          "lookup_host": "gausium.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://gausium.com/products/phanshop/",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "PolarX Robotics",
+      "slug": "polarx-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "polarxrobotics.com"
+      ],
+      "source_urls": [
+        "https://www.polarxrobotics.com/"
+      ],
+      "products": [
+        {
+          "name": "Star50",
+          "slug": "polarx-robotics-star50",
+          "company_name": "PolarX Robotics",
+          "company_slug": "polarx-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Industrial waterless sweeping robot",
+          "task": "Industrial waterless sweeping and dust control",
+          "setting": "Warehouses · logistics",
+          "lookup_host": "polarxrobotics.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.polarxrobotics.com/products/star50",
+          "url_status": "verified"
+        },
+        {
+          "name": "Star60",
+          "slug": "polarx-robotics-star60",
+          "company_name": "PolarX Robotics",
+          "company_slug": "polarx-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Waterless commercial floor-care robot",
+          "task": "Waterless commercial floor care on hard floors",
+          "setting": "Healthcare · retail · hospitality",
+          "lookup_host": "polarxrobotics.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.polarxrobotics.com/products/star60",
+          "url_status": "verified"
+        },
+        {
+          "name": "Star40",
+          "slug": "polarx-robotics-star40",
+          "company_name": "PolarX Robotics",
+          "company_slug": "polarx-robotics",
+          "primary_class": "cleaning",
+          "listed_class": "Compact waterless cleaning robot",
+          "task": "Compact commercial floor care",
+          "setting": "Commercial interiors",
+          "lookup_host": "polarxrobotics.com",
+          "source": "mission-2026-08-31-cleaning-oem-catalog",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.polarxrobotics.com/products/star40",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Tennant",
+      "slug": "tennant",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "tennantco.com"
+      ],
+      "source_urls": [
+        "https://www.tennantco.com/en_us.html",
+        "https://www.tennantco.com/en_us/robotics.html"
+      ],
+      "products": [
+        {
+          "name": "X6 ROVR",
+          "slug": "tennant-x6-rovr",
+          "company_name": "Tennant",
+          "company_slug": "tennant",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous floor scrubber",
+          "task": "Autonomous scrubbing on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "tennantco.com",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.x6-rovr.autonomous-floor-scrubber.m-x6rovr.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "X16 SWEEP",
+          "slug": "tennant-x16-sweep",
+          "company_name": "Tennant",
+          "company_slug": "tennant",
+          "primary_class": "cleaning",
+          "listed_class": "Autonomous floor sweeper",
+          "task": "Autonomous sweeping on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "tennantco.com",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.tennantco.com/en_us/1/machines/sweepers/product.X16-sweep.autonomous-floor-sweeper.2000309.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "T7AMR",
+          "slug": "tennant-t7amr",
+          "company_name": "Tennant",
+          "company_slug": "tennant",
+          "primary_class": "cleaning",
+          "listed_class": "Robotic floor scrubber",
+          "task": "Robotic floor scrubbing on commercial floors",
+          "setting": "Commercial floors",
+          "lookup_host": "tennantco.com",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t7amr.robotic-floor-scrubber.2000056.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "T380AMR",
+          "slug": "tennant-t380amr",
+          "company_name": "Tennant",
+          "company_slug": "tennant",
+          "primary_class": "cleaning",
+          "listed_class": "Robotic floor scrubber",
+          "task": "Robotic floor scrubbing in compact spaces",
+          "setting": "Commercial interiors",
+          "lookup_host": "tennantco.com",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t380amr.robotic-floor-scrubber.2000055.html",
+          "url_status": "verified"
+        },
+        {
+          "name": "T16AMR",
+          "slug": "tennant-t16amr",
+          "company_name": "Tennant",
+          "company_slug": "tennant",
+          "primary_class": "cleaning",
+          "listed_class": "Industrial robotic floor scrubber",
+          "task": "Industrial robotic floor scrubbing",
+          "setting": "Industrial floors",
+          "lookup_host": "tennantco.com",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t16amr.industrial-robotic-floor-scrubber.2000054.html",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "SEER Robotics",
+      "slug": "seer-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "seer-robotics.ai"
+      ],
+      "source_urls": [
+        "https://seer-robotics.ai/",
+        "https://seer-robotics.ai/amr/liftingrobot"
+      ],
+      "products": [
+        {
+          "name": "AMB-300JZ",
+          "slug": "seer-robotics-amb-300jz",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Laser SLAM lifting robot",
+          "task": "Lifting AMR for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/AMB-300JZ",
+          "url_status": "verified"
+        },
+        {
+          "name": "AMB-300XS",
+          "slug": "seer-robotics-amb-300xs",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Lifting robot chassis",
+          "task": "Lifting AMR chassis for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/AMB-300XS",
+          "url_status": "verified"
+        },
+        {
+          "name": "SJV-SW600",
+          "slug": "seer-robotics-sjv-sw600",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Rotary lifting robot",
+          "task": "Rotary lifting AMR for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/SJV-SW600",
+          "url_status": "verified"
+        },
+        {
+          "name": "SFL-CBD15",
+          "slug": "seer-robotics-sfl-cbd15",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Autonomous pallet truck",
+          "task": "Autonomous pallet truck for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SFL-CBD15",
+          "url_status": "verified"
+        },
+        {
+          "name": "SFL-300L",
+          "slug": "seer-robotics-sfl-300l",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Autonomous forklift",
+          "task": "Single-fork autonomous forklift for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SFL-300L",
+          "url_status": "verified"
+        },
+        {
+          "name": "SCB-1400",
+          "slug": "seer-robotics-scb-1400",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "amr",
+          "listed_class": "Autonomous counterbalance truck",
+          "task": "Autonomous counterbalance truck for warehouse logistics",
+          "setting": "Warehouses",
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SCB-1400",
+          "url_status": "verified"
+        },
+        {
+          "name": "SRC-880",
+          "slug": "seer-robotics-src-880",
+          "company_name": "SEER Robotics",
+          "company_slug": "seer-robotics",
+          "primary_class": "service_robot",
+          "listed_class": null,
+          "task": null,
+          "setting": null,
+          "lookup_host": "seer-robotics.ai",
+          "source": "mission-2026-08-31-url-workflow-critic",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://seer-robotics.ai/amr-controllers/SRC-880",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "VinMotion",
+      "slug": "vinmotion",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "vinmotion.net"
+      ],
+      "source_urls": [
+        "https://vinmotion.net/"
+      ],
+      "products": [
+        {
+          "name": "Motion 1",
+          "slug": "vinmotion-motion-1",
+          "company_name": "VinMotion",
+          "company_slug": "vinmotion",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid robot",
+          "task": "Humanoid robot",
+          "setting": null,
+          "lookup_host": "vinmotion.net",
+          "source": "mission-2026-08-31-vinmotion",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://vinmotion.net/product/motion-1",
+          "url_status": "verified"
+        },
+        {
+          "name": "Motion 2",
+          "slug": "vinmotion-motion-2",
+          "company_name": "VinMotion",
+          "company_slug": "vinmotion",
+          "primary_class": "service_robot",
+          "listed_class": null,
+          "task": "Launching",
+          "setting": null,
+          "lookup_host": "vinmotion.net",
+          "source": "mission-2026-08-31-vinmotion",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://vinmotion.net/product/motion-2",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Booster Robotics",
+      "slug": "booster-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "booster.tech"
+      ],
+      "source_urls": [
+        "https://www.booster.tech/"
+      ],
+      "products": [
+        {
+          "name": "Booster K1",
+          "slug": "booster-robotics-booster-k1",
+          "company_name": "Booster Robotics",
+          "company_slug": "booster-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid robot",
+          "task": "Introductory embodied development platform",
+          "setting": null,
+          "lookup_host": "booster.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.booster.tech/booster-k1",
+          "url_status": "verified"
+        },
+        {
+          "name": "Booster T1",
+          "slug": "booster-robotics-booster-t1",
+          "company_name": "Booster Robotics",
+          "company_slug": "booster-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid robot",
+          "task": "Made for developers. RoboCup AdultSize champion model",
+          "setting": null,
+          "lookup_host": "booster.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.booster.tech/booster-t1",
+          "url_status": "verified"
+        },
+        {
+          "name": "Booster T2",
+          "slug": "booster-robotics-booster-t2",
+          "company_name": "Booster Robotics",
+          "company_slug": "booster-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Humanoid robot",
+          "task": "Flagship embodied development platform",
+          "setting": null,
+          "lookup_host": "booster.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.booster.tech/booster-t2",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Lumos Robotics",
+      "slug": "lumos-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "lumosbot.tech"
+      ],
+      "source_urls": [
+        "https://www.lumosbot.tech/"
+      ],
+      "products": [
+        {
+          "name": "Lumos LUS 2",
+          "slug": "lumos-robotics-lumos-lus-2",
+          "company_name": "Lumos Robotics",
+          "company_slug": "lumos-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Full-size bipedal humanoid robot",
+          "task": "Full-size humanoid platform for research, education, and commercial applications",
+          "setting": null,
+          "lookup_host": "lumosbot.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.lumosbot.tech/products/lus2",
+          "url_status": "verified"
+        },
+        {
+          "name": "Lumos NIX S3",
+          "slug": "lumos-robotics-lumos-nix-s3",
+          "company_name": "Lumos Robotics",
+          "company_slug": "lumos-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "AI mini bipedal humanoid robot",
+          "task": "Compact humanoid for agile motion and companionship",
+          "setting": null,
+          "lookup_host": "lumosbot.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.lumosbot.tech/products/luxiaoming",
+          "url_status": "verified"
+        },
+        {
+          "name": "Lumos MOS 2",
+          "slug": "lumos-robotics-lumos-mos-2",
+          "company_name": "Lumos Robotics",
+          "company_slug": "lumos-robotics",
+          "primary_class": "mobile_manipulator",
+          "listed_class": "Heavy-duty wheeled mobile manipulation robot",
+          "task": "Wheeled mobile manipulation for industrial handling and inspection",
+          "setting": null,
+          "lookup_host": "lumosbot.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.lumosbot.tech/products/mos",
+          "url_status": "verified"
+        },
+        {
+          "name": "Lumos LUD",
+          "slug": "lumos-robotics-lumos-lud",
+          "company_name": "Lumos Robotics",
+          "company_slug": "lumos-robotics",
+          "primary_class": "service_robot",
+          "listed_class": "Wheeled-legged robot",
+          "task": "Wheeled-legged platform for challenging terrain",
+          "setting": null,
+          "lookup_host": "lumosbot.tech",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.lumosbot.tech/products/lud",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Galbot",
+      "slug": "galbot",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "galbot.com"
+      ],
+      "source_urls": [
+        "https://www.galbot.com/"
+      ],
+      "products": [
+        {
+          "name": "Galbot G1",
+          "slug": "galbot-galbot-g1",
+          "company_name": "Galbot",
+          "company_slug": "galbot",
+          "primary_class": "mobile_manipulator",
+          "listed_class": "Mobile dual-arm robot",
+          "task": "Mobile dual-arm robot with generalizable manipulation",
+          "setting": null,
+          "lookup_host": "galbot.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.galbot.com/g1",
+          "url_status": "verified"
+        },
+        {
+          "name": "Galbot S1",
+          "slug": "galbot-galbot-s1",
+          "company_name": "Galbot",
+          "company_slug": "galbot",
+          "primary_class": "mobile_manipulator",
+          "listed_class": "Heavy-duty robot",
+          "task": "Heavy-duty dual-arm handling, 50kg payload",
+          "setting": null,
+          "lookup_host": "galbot.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.galbot.com/s1",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "UniX AI",
+      "slug": "unix-ai",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "unix-group.ai"
+      ],
+      "source_urls": [
+        "https://www.unix-group.ai/"
+      ],
+      "products": [
+        {
+          "name": "Wanda 2.0",
+          "slug": "unix-ai-wanda-2-0",
+          "company_name": "UniX AI",
+          "company_slug": "unix-ai",
+          "primary_class": "humanoid",
+          "listed_class": "Wheeled dual-arm humanoid robot",
+          "task": "Full-size general-purpose humanoid robot",
+          "setting": null,
+          "lookup_host": "unix-group.ai",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.unix-group.ai/Wanda",
+          "url_status": "verified"
+        },
+        {
+          "name": "Panther",
+          "slug": "unix-ai-panther",
+          "company_name": "UniX AI",
+          "company_slug": "unix-ai",
+          "primary_class": "humanoid",
+          "listed_class": "Next-gen full-size wheeled dual-arm humanoid robot",
+          "task": "Full-size wheeled humanoid robot",
+          "setting": null,
+          "lookup_host": "unix-group.ai",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.unix-group.ai/Panther",
+          "url_status": "verified"
+        },
+        {
+          "name": "Martian",
+          "slug": "unix-ai-martian",
+          "company_name": "UniX AI",
+          "company_slug": "unix-ai",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid robot",
+          "task": "Bipedal humanoid robot",
+          "setting": null,
+          "lookup_host": "unix-group.ai",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.unix-group.ai/Martian",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Noetix Robotics",
+      "slug": "noetix-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "noetixrobotics.com"
+      ],
+      "source_urls": [
+        "https://www.noetixrobotics.com/en"
+      ],
+      "products": [
+        {
+          "name": "Bumi",
+          "slug": "noetix-robotics-bumi",
+          "company_name": "Noetix Robotics",
+          "company_slug": "noetix-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid robot",
+          "task": "Bipedal humanoid robot",
+          "setting": null,
+          "lookup_host": "noetixrobotics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.noetixrobotics.com/en/detail/Bumi",
+          "url_status": "verified"
+        },
+        {
+          "name": "N2",
+          "slug": "noetix-robotics-n2",
+          "company_name": "Noetix Robotics",
+          "company_slug": "noetix-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid robot",
+          "task": "Bipedal humanoid robot",
+          "setting": null,
+          "lookup_host": "noetixrobotics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.noetixrobotics.com/en/detail/N2",
+          "url_status": "verified"
+        },
+        {
+          "name": "E1",
+          "slug": "noetix-robotics-e1",
+          "company_name": "Noetix Robotics",
+          "company_slug": "noetix-robotics",
+          "primary_class": "humanoid",
+          "listed_class": "Bipedal humanoid robot",
+          "task": "Bipedal humanoid robot",
+          "setting": null,
+          "lookup_host": "noetixrobotics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.noetixrobotics.com/en/detail/E1",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "PrimeBOT",
+      "slug": "primebot",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "primebot.cn"
+      ],
+      "source_urls": [
+        "https://www.primebot.cn/"
+      ],
+      "products": [
+        {
+          "name": "Q1",
+          "slug": "primebot-q1",
+          "company_name": "PrimeBOT",
+          "company_slug": "primebot",
+          "primary_class": "humanoid",
+          "listed_class": "Full-body force-controlled humanoid robot",
+          "task": "PrimeBOT Q1 full-body force-controlled humanoid robot",
+          "setting": null,
+          "lookup_host": "primebot.cn",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.primebot.cn/product/en",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "LimX Dynamics",
+      "slug": "limx-dynamics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "limxdynamics.com"
+      ],
+      "source_urls": [
+        "https://www.limxdynamics.com/en"
+      ],
+      "products": [
+        {
+          "name": "Luna",
+          "slug": "limx-dynamics-luna",
+          "company_name": "LimX Dynamics",
+          "company_slug": "limx-dynamics",
+          "primary_class": "humanoid",
+          "listed_class": "Full-size interactive humanoid robot",
+          "task": "Full-size interactive humanoid robot",
+          "setting": null,
+          "lookup_host": "limxdynamics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.limxdynamics.com/en/products/luna",
+          "url_status": "verified"
+        },
+        {
+          "name": "Oli",
+          "slug": "limx-dynamics-oli",
+          "company_name": "LimX Dynamics",
+          "company_slug": "limx-dynamics",
+          "primary_class": "humanoid",
+          "listed_class": "Full-size general-purpose humanoid robot",
+          "task": "Full-size general-purpose humanoid robot",
+          "setting": null,
+          "lookup_host": "limxdynamics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.limxdynamics.com/en/products/oli",
+          "url_status": "verified"
+        },
+        {
+          "name": "TRON 1",
+          "slug": "limx-dynamics-tron-1",
+          "company_name": "LimX Dynamics",
+          "company_slug": "limx-dynamics",
+          "primary_class": "humanoid",
+          "listed_class": "Multi-modal biped robot",
+          "task": "The gateway to humanoid RL research",
+          "setting": null,
+          "lookup_host": "limxdynamics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.limxdynamics.com/en/products/tron1",
+          "url_status": "verified"
+        },
+        {
+          "name": "TRON 2",
+          "slug": "limx-dynamics-tron-2",
+          "company_name": "LimX Dynamics",
+          "company_slug": "limx-dynamics",
+          "primary_class": "mobile_manipulator",
+          "listed_class": "Autonomous mobile manipulation kit",
+          "task": "Dual arms and wheeled legs. Multi-form embodied robot",
+          "setting": null,
+          "lookup_host": "limxdynamics.com",
+          "source": "mission-2026-08-31-more-oems",
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "product_url": "https://www.limxdynamics.com/en/products/tron2",
+          "url_status": "verified"
+        }
+      ]
+    },
+    {
+      "name": "Third Wave Automation",
+      "slug": "third-wave-automation",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "thirdwave.ai"
+      ],
+      "source_urls": [
+        "https://thirdwave.ai/",
+        "https://thirdwave.ai/armada-case-study/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-08-31-more-oems",
+          "setting": null,
+          "name": "Third Wave Reach Trucks",
+          "slug": "third-wave-automation-third-wave-reach-trucks",
+          "company_name": "Third Wave Automation",
+          "company_slug": "third-wave-automation",
+          "primary_class": "amr",
+          "listed_class": "Autonomous forklift",
+          "task": "Autonomous reach truck with shared autonomy",
+          "lookup_host": "thirdwave.ai",
+          "product_url": "https://thirdwave.ai/armada-case-study/"
+        }
+      ]
+    },
+    {
+      "name": "Dexory",
+      "slug": "dexory",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "dexory.com"
+      ],
+      "source_urls": [
+        "https://www.dexory.com/",
+        "https://www.dexory.com/solutions"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-08-31-more-oems",
+          "setting": null,
+          "name": "DexoryView",
+          "slug": "dexory-dexoryview",
+          "company_name": "Dexory",
+          "company_slug": "dexory",
+          "primary_class": null,
+          "listed_class": null,
+          "task": null,
+          "lookup_host": "dexory.com",
+          "product_url": "https://www.dexory.com/solutions"
+        }
+      ]
+    },
+    {
+      "name": "Galaxea Dynamics",
+      "slug": "galaxea-dynamics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "galaxea-dynamics.com"
+      ],
+      "source_urls": [
+        "https://galaxea-dynamics.com/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": null,
+          "listed_class": "7-DOF dual-arm wheeled humanoid robot",
+          "task": "7-DOF dual-arm wheeled humanoid robot",
+          "primary_class": "humanoid",
+          "name": "R1 Pro",
+          "slug": "galaxea-dynamics-r1-pro",
+          "company_name": "Galaxea Dynamics",
+          "company_slug": "galaxea-dynamics",
+          "lookup_host": "galaxea-dynamics.com",
+          "product_url": "https://galaxea-dynamics.com/products/galaxea-r1-pro-universal-humanoid-robot"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": null,
+          "listed_class": "6-DOF general mobile manipulation platform",
+          "task": "Wheeled mobile manipulation platform",
+          "primary_class": "mobile_manipulator",
+          "name": "R1 Lite",
+          "slug": "galaxea-dynamics-r1-lite",
+          "company_name": "Galaxea Dynamics",
+          "company_slug": "galaxea-dynamics",
+          "lookup_host": "galaxea-dynamics.com",
+          "product_url": "https://galaxea-dynamics.com/products/6-dof-general-mobile-manipulation-platform"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": null,
+          "listed_class": "Embodied AI bipedal robot",
+          "task": "Bipedal humanoid robot",
+          "primary_class": "humanoid",
+          "name": "Kengo",
+          "slug": "galaxea-dynamics-kengo",
+          "company_name": "Galaxea Dynamics",
+          "company_slug": "galaxea-dynamics",
+          "lookup_host": "galaxea-dynamics.com",
+          "product_url": "https://galaxea-dynamics.com/products/galaxea-s-proprietary-embodied-ai-bipedal-robot"
+        }
+      ]
+    },
+    {
+      "name": "XPENG",
+      "slug": "xpeng",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "xpeng.com"
+      ],
+      "source_urls": [
+        "https://www.xpeng.com/",
+        "https://www.xpeng.com/au/explore/xpeng_ai_robot_iron"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": null,
+          "listed_class": "Humanoid AI robot",
+          "task": "Next-generation humanoid robot for human spaces",
+          "primary_class": "humanoid",
+          "name": "IRON",
+          "slug": "xpeng-iron",
+          "company_name": "XPENG",
+          "company_slug": "xpeng",
+          "lookup_host": "xpeng.com",
+          "product_url": "https://www.xpeng.com/au/explore/xpeng_ai_robot_iron"
+        }
+      ]
+    },
+    {
+      "name": "ARA Robotics",
+      "slug": "ara-robotics",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "ararobotics.eu"
+      ],
+      "source_urls": [
+        "https://ararobotics.eu/",
+        "https://ararobotics.eu/en/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Commercial and industrial floors",
+          "listed_class": "Autonomous floor maintenance robot",
+          "task": "AI-powered autonomous floor maintenance",
+          "primary_class": "cleaning",
+          "name": "ARI",
+          "slug": "ara-robotics-ari",
+          "company_name": "ARA Robotics",
+          "company_slug": "ara-robotics",
+          "lookup_host": "ararobotics.eu",
+          "product_url": "https://ararobotics.eu/en/ari/"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": null,
+          "listed_class": null,
+          "task": "Smart maintenance station. Charging and water refill for ARI",
+          "primary_class": null,
+          "name": "Petek",
+          "slug": "ara-robotics-petek",
+          "company_name": "ARA Robotics",
+          "company_slug": "ara-robotics",
+          "lookup_host": "ararobotics.eu",
+          "product_url": "https://ararobotics.eu/en/petek/"
+        }
+      ]
+    },
+    {
+      "name": "Cartken",
+      "slug": "cartken",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "cartken.com"
+      ],
+      "source_urls": [
+        "https://www.cartken.com/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · labs · campuses",
+          "listed_class": "Heavy-duty outdoor AMR",
+          "task": "Outdoor material transport on mixed indoor and outdoor routes",
+          "primary_class": "amr",
+          "name": "Cartken Hauler",
+          "slug": "cartken-cartken-hauler",
+          "company_name": "Cartken",
+          "company_slug": "cartken",
+          "lookup_host": "cartken.com",
+          "product_url": "https://www.cartken.com/#hauler"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · campuses",
+          "listed_class": "Outdoor AMR",
+          "task": "Lightweight outdoor AMR for secured deliveries",
+          "primary_class": "amr",
+          "name": "Cartken Courier",
+          "slug": "cartken-cartken-courier",
+          "company_name": "Cartken",
+          "company_slug": "cartken",
+          "lookup_host": "cartken.com",
+          "product_url": "https://www.cartken.com/#courier"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · campuses",
+          "listed_class": "Autonomous outdoor pallet truck",
+          "task": "Outdoor pallet pick and putaway for heavy loads",
+          "primary_class": "amr",
+          "name": "Cartken Mover",
+          "slug": "cartken-cartken-mover",
+          "company_name": "Cartken",
+          "company_slug": "cartken",
+          "lookup_host": "cartken.com",
+          "product_url": "https://www.cartken.com/#mover"
+        }
+      ]
+    },
+    {
+      "name": "Mobile Industrial Robots",
+      "slug": "mobile-industrial-robots",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "mobile-industrial-robots.com"
+      ],
+      "source_urls": [
+        "https://mobile-industrial-robots.com/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · warehouses",
+          "listed_class": "AMR",
+          "task": "Internal material transport up to 250 kg",
+          "primary_class": "amr",
+          "name": "MiR250",
+          "slug": "mobile-industrial-robots-mir250",
+          "company_name": "Mobile Industrial Robots",
+          "company_slug": "mobile-industrial-robots",
+          "lookup_host": "mobile-industrial-robots.com",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir250"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · warehouses",
+          "listed_class": "AMR",
+          "task": "Autonomous pallet transport up to 600 kg",
+          "primary_class": "amr",
+          "name": "MiR600",
+          "slug": "mobile-industrial-robots-mir600",
+          "company_name": "Mobile Industrial Robots",
+          "company_slug": "mobile-industrial-robots",
+          "lookup_host": "mobile-industrial-robots.com",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir600"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · warehouses",
+          "listed_class": "AMR pallet jack",
+          "task": "Autonomous pallet detection, transport, and delivery",
+          "primary_class": "amr",
+          "name": "MiR1200 Pallet Jack",
+          "slug": "mobile-industrial-robots-mir1200-pallet-jack",
+          "company_name": "Mobile Industrial Robots",
+          "company_slug": "mobile-industrial-robots",
+          "lookup_host": "mobile-industrial-robots.com",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir1200-pallet-jack"
+        },
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Factories · logistics",
+          "listed_class": "AMR",
+          "task": "Heavy internal transport up to 1350 kg",
+          "primary_class": "amr",
+          "name": "MiR1350",
+          "slug": "mobile-industrial-robots-mir1350",
+          "company_name": "Mobile Industrial Robots",
+          "company_slug": "mobile-industrial-robots",
+          "lookup_host": "mobile-industrial-robots.com",
+          "product_url": "https://mobile-industrial-robots.com/products/robots/mir1350"
+        }
+      ]
+    },
+    {
+      "name": "Teradyne",
+      "slug": "teradyne",
+      "vendor_role": "robot_oem",
+      "domains": [
+        "teradyne.com"
+      ],
+      "source_urls": [
+        "https://www.teradyne.com/robotics/autonomous-mobile-robots/"
+      ],
+      "products": [
+        {
+          "specs": {},
+          "capability_confidence": "UNKNOWN",
+          "flags": [],
+          "url_status": "verified",
+          "source": "mission-2026-09-01-more-amr-oems",
+          "setting": "Manufacturing · logistics",
+          "listed_class": "AMR pallet jack",
+          "task": "Autonomous pallet movement with AI-based pallet detection",
+          "primary_class": "amr",
+          "name": "MiR1200 Pallet Jack",
+          "slug": "teradyne-mir1200-pallet-jack",
+          "company_name": "Teradyne",
+          "company_slug": "teradyne",
+          "lookup_host": "teradyne.com",
+          "product_url": "https://www.teradyne.com/robotics/autonomous-mobile-robots/"
+        }
+      ]
+    }
+  ],
+  "company_count": 35,
+  "product_count": 131
+}

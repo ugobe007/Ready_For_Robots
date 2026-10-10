@@ -3,8 +3,6 @@ import {
   JOBS_APPLY_OFFER_CTA,
   JOBS_APPLY_SEQUENCE,
   JOBS_CONTACTS_EMPTY_NOTE,
-  JOBS_DOCS_HEADING,
-  JOBS_DOCS_HINT,
   JOBS_MODEL_SELECT_HINT,
   JOBS_MODEL_SELECT_LABEL,
   JOBS_PROPOSED_PRICE_HINT,
@@ -18,18 +16,13 @@ import {
   companyHintFromRobotUrl,
   fetchApplyPrep,
   fetchCatalogSkus,
-  fetchRobotDocuments,
   sendPreparedApplication,
-  uploadRobotDocument,
   type CatalogSku,
   type JobsCrmApplication,
-  type RobotDocument,
 } from "@/lib/jobsCrmAccount";
+import RobotSalesMaterial from "@/components/RobotSalesMaterial";
 import { JOBS_APPLY_CTA_BUTTON_CLASS } from "@/lib/jobsWorkflow";
-import {
-  JOBS_POC_PREFER_HINT,
-  JOBS_POC_SKIP_CTA,
-} from "@/lib/jobsApply";
+import { JOBS_POC_PREFER_HINT, JOBS_POC_SKIP_CTA } from "@/lib/jobsApply";
 import {
   JOBS_POC_VIDEO_HINT,
   JOBS_POC_VIDEO_LABEL,
@@ -56,7 +49,9 @@ export default function JobsCrmNextSteps({
   token: string;
   onApplied: (app: JobsCrmApplication) => void;
 }) {
-  const selectedJobs = (jobs && jobs.length ? jobs : [job]).filter(j => j?.job_key);
+  const selectedJobs = (jobs && jobs.length ? jobs : [job]).filter(
+    j => j?.job_key
+  );
   const oemCompany = companyHintFromRobotUrl(robotUrl) || robotName;
   const card = robotJobCardFromMatch(job);
   const [skus, setSkus] = useState<CatalogSku[]>([]);
@@ -69,8 +64,8 @@ export default function JobsCrmNextSteps({
   const [videoNote, setVideoNote] = useState("");
   const [videoSearchUrl, setVideoSearchUrl] = useState("");
   const [drafts, setDrafts] = useState<JobsCrmApplication[]>([]);
-  const [docs, setDocs] = useState<RobotDocument[]>([]);
   const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [docsReady, setDocsReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const videoIssue = pocVideoUrlIssue(pocVideoUrl);
@@ -89,6 +84,10 @@ export default function JobsCrmNextSteps({
     }) && !videoIssue;
 
   useEffect(() => {
+    setDocsReady(false);
+  }, [robotUrl]);
+
+  useEffect(() => {
     let cancelled = false;
     fetchCatalogSkus(token, {
       url: robotUrl,
@@ -99,13 +98,6 @@ export default function JobsCrmNextSteps({
       })
       .catch(() => {
         if (!cancelled) setSkus([]);
-      });
-    fetchRobotDocuments(token)
-      .then(rows => {
-        if (!cancelled) setDocs(rows);
-      })
-      .catch(() => {
-        if (!cancelled) setDocs([]);
       });
     fetchApplyPrep(token, {
       robot: robotName,
@@ -165,7 +157,8 @@ export default function JobsCrmNextSteps({
     setBusy(true);
     setError(null);
     try {
-      const skipped = pocSkipped || (!pocEvidence.trim() && !pocVideoUrl.trim());
+      const skipped =
+        pocSkipped || (!pocEvidence.trim() && !pocVideoUrl.trim());
       if (selectedJobs.length > 1) {
         const result = await applySelectedJobsOnAccount(token, {
           jobs: selectedJobs,
@@ -178,6 +171,8 @@ export default function JobsCrmNextSteps({
           why,
           companyName: oemCompany,
           documentIds: selectedDocs,
+          documentsSelected: docsReady,
+          robotUrl,
         });
         for (const app of result.applied) onApplied(app);
         setDrafts(result.applied);
@@ -197,6 +192,8 @@ export default function JobsCrmNextSteps({
           companyName: oemCompany,
           job,
           documentIds: selectedDocs,
+          documentsSelected: docsReady,
+          robotUrl,
         });
         onApplied(app);
         setDrafts([app]);
@@ -211,19 +208,25 @@ export default function JobsCrmNextSteps({
   return (
     <section
       id="jobs-next-steps"
-      aria-label="Next steps"
+      aria-label="Automate Job Applications"
       className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-6 sm:px-6"
     >
-      <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>Next steps</p>
+      <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>
+        Automate Job Applications
+      </p>
       <h2 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">
-        Offer for {selectedJobs.length > 1 ? `${selectedJobs.length} selected jobs` : card.jobTitle}
+        {selectedJobs.length > 1
+          ? `Apply to ${selectedJobs.length} Selected Jobs`
+          : `Apply to ${card.jobTitle}`}
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-slate-300">
         {crmOfferBlurb(robotName)}
       </p>
 
       <label className="mt-6 block">
-        <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>Robot name</span>
+        <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+          Robot name
+        </span>
         <input
           type="text"
           readOnly
@@ -349,70 +352,13 @@ export default function JobsCrmNextSteps({
         </p>
       ) : null}
 
-      <fieldset className="mt-6">
-        <legend className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
-          {JOBS_DOCS_HEADING}
-        </legend>
-        <p className="mt-1 text-sm text-slate-400">{JOBS_DOCS_HINT}</p>
-        <input
-          type="file"
-          accept="application/pdf,image/jpeg,image/png,image/webp,image/gif"
-          aria-label="Upload brochure or product spec"
-          className="mt-3 block w-full text-sm text-slate-300"
-          onChange={event => {
-            const file = event.target.files?.[0];
-            if (!file || busy) return;
-            setBusy(true);
-            setError(null);
-            void uploadRobotDocument(token, file, "spec")
-              .then(doc => {
-                setDocs(prev => [doc, ...prev]);
-                setSelectedDocs(prev =>
-                  prev.includes(doc.id) ? prev : [...prev, doc.id],
-                );
-              })
-              .catch(err => {
-                setError(
-                  err instanceof Error ? err.message : "Could not upload spec.",
-                );
-              })
-              .finally(() => setBusy(false));
-            event.target.value = "";
-          }}
-        />
-        {docs.length ? (
-          <ul className="mt-3 space-y-2">
-            {docs.map(doc => (
-              <li key={doc.id}>
-                <label className="flex items-center gap-2 text-sm text-slate-200">
-                  <input
-                    type="checkbox"
-                    checked={selectedDocs.includes(doc.id)}
-                    onChange={e =>
-                      setSelectedDocs(prev =>
-                        e.target.checked
-                          ? [...prev, doc.id]
-                          : prev.filter(id => id !== doc.id),
-                      )
-                    }
-                    className="h-4 w-4 accent-emerald-400"
-                  />
-                  {doc.filename}
-                  {doc.kind ? (
-                    <span className="font-mono text-xs uppercase text-slate-500">
-                      {doc.kind}
-                    </span>
-                  ) : null}
-                </label>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="mt-3 text-sm text-slate-500">
-            No specs on this account yet.
-          </p>
-        )}
-      </fieldset>
+      <RobotSalesMaterial
+        token={token}
+        robotUrl={robotUrl}
+        robotName={robotName}
+        onIncludedIds={setSelectedDocs}
+        onReady={() => setDocsReady(true)}
+      />
 
       <label className="mt-6 block">
         <span className="block font-display text-xl font-bold text-white">
@@ -431,16 +377,15 @@ export default function JobsCrmNextSteps({
         />
       </label>
 
-      {error ? (
-        <p className="mt-4 text-sm text-amber-200">{error}</p>
-      ) : null}
+      {error ? <p className="mt-4 text-sm text-amber-200">{error}</p> : null}
 
       <label className="mt-6 block">
         <span className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
           Why you are applying
         </span>
         <span className="mt-1 block text-sm text-slate-400">
-          Short recruiter note. We draft one if you leave this blank. You can edit it.
+          Short recruiter note. We draft one if you leave this blank. You can
+          edit it.
         </span>
         <textarea
           aria-label="Why you are applying"
@@ -466,14 +411,22 @@ export default function JobsCrmNextSteps({
       </button>
 
       {drafts.length ? (
-        <div className="mt-6 border border-violet-500/40 bg-[#12082a] px-4 py-4" data-apply-draft="1">
-          <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>Application draft</p>
+        <div
+          className="mt-6 border border-violet-500/40 bg-[#12082a] px-4 py-4"
+          data-apply-draft="1"
+        >
+          <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>
+            Application draft
+          </p>
           <p className="mt-2 text-sm text-slate-300">{JOBS_SEND_DRAFT_HINT}</p>
           {drafts.map(app => {
             const draft = app.draft;
             const contacts = app.contacts || draft?.contacts || [];
             return (
-              <article key={app.id} className="mt-4 border border-slate-700 px-3 py-3">
+              <article
+                key={app.id}
+                className="mt-4 border border-slate-700 px-3 py-3"
+              >
                 <p className="font-mono text-xs uppercase tracking-[0.08em] text-violet-200">
                   {app.work_title} · {app.employer_name}
                 </p>
@@ -486,7 +439,9 @@ export default function JobsCrmNextSteps({
                   <p className="mt-2 text-sm text-slate-300">{draft.why}</p>
                 ) : null}
                 {draft?.clip_description ? (
-                  <p className="mt-2 text-sm text-slate-400">{draft.clip_description}</p>
+                  <p className="mt-2 text-sm text-slate-400">
+                    {draft.clip_description}
+                  </p>
                 ) : null}
                 {app.poc_video_url || draft?.video_url ? (
                   <p className="mt-2 text-sm text-violet-200">
@@ -523,13 +478,15 @@ export default function JobsCrmNextSteps({
                         .then(row => {
                           onApplied(row);
                           setDrafts(prev =>
-                            prev.map(item => (item.id === row.id ? row : item)),
+                            prev.map(item => (item.id === row.id ? row : item))
                           );
                         })
                         .catch(err =>
                           setError(
-                            err instanceof Error ? err.message : "Could not send.",
-                          ),
+                            err instanceof Error
+                              ? err.message
+                              : "Could not send."
+                          )
                         )
                         .finally(() => setBusy(false));
                     }}

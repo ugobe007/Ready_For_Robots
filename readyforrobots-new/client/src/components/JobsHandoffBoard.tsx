@@ -3,10 +3,7 @@
  * Do not render a second save-confirmation page.
  */
 import { useEffect } from "react";
-import {
-  isJobsAutomateSrc,
-  jobsCrmOpenHref,
-} from "@/lib/jobsWorkflow";
+import { isJobsAutomateSrc, jobsCrmOpenHref } from "@/lib/jobsWorkflow";
 
 export default function JobsHandoffBoard(props: {
   robotUrl: string;
@@ -18,7 +15,9 @@ export default function JobsHandoffBoard(props: {
 }) {
   useEffect(() => {
     if (isJobsAutomateSrc(props.src)) return;
-    window.location.replace(jobsCrmOpenHref(props.signedIn, props.submissionId));
+    window.location.replace(
+      jobsCrmOpenHref(props.signedIn, props.submissionId)
+    );
   }, [props.src, props.submissionId]);
 
   return (

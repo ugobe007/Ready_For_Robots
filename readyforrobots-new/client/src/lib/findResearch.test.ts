@@ -2,14 +2,15 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  FetchTimeoutError,
-  fetchWithTimeout,
-} from "./apiBase";
+import { FetchTimeoutError, fetchWithTimeout } from "./apiBase";
 import {
   beginFindResearch,
   FIND_RESEARCH_INTERRUPTED_MESSAGE,
   FIND_RESEARCH_TIMEOUT_MESSAGE,
+  ensureFindStayVisit,
+  findFailureBouncesHome,
+  findFailureStayHref,
+  findLookupFailureOutcome,
   findResearchFailureMessage,
   isFailedToFetchError,
   isFindAbortError,
@@ -31,7 +32,7 @@ describe("beginFindResearch never aborts the submit it just started", () => {
     expect(first.controller.signal.aborted).toBe(false);
     expect(isLiveFindResearch(first, first)).toBe(true);
     expect(shouldIgnoreStaleFindError({ current: first, handle: first })).toBe(
-      false,
+      false
     );
   });
 
@@ -44,12 +45,12 @@ describe("beginFindResearch never aborts the submit it just started", () => {
     expect(isLiveFindResearch(second, first)).toBe(false);
     expect(isLiveFindResearch(second, second)).toBe(true);
     expect(shouldIgnoreStaleFindError({ current: second, handle: first })).toBe(
-      true,
+      true
     );
     const safariFail = new TypeError("Failed to fetch");
-    expect(
-      shouldIgnoreStaleFindError({ current: second, handle: first }),
-    ).toBe(true);
+    expect(shouldIgnoreStaleFindError({ current: second, handle: first })).toBe(
+      true
+    );
     expect(isFindAbortError(safariFail, first.controller.signal)).toBe(true);
     expect(isFindAbortError(safariFail, second.controller.signal)).toBe(false);
   });
@@ -62,15 +63,15 @@ describe("beginFindResearch never aborts the submit it just started", () => {
     expect(retry.generation).toBe(2);
     expect(isLiveFindResearch(retry, first)).toBe(false);
     expect(shouldIgnoreStaleFindError({ current: retry, handle: first })).toBe(
-      true,
+      true
     );
     const failedToFetch = new TypeError("Failed to fetch");
     expect(findResearchFailureMessage(failedToFetch, "Research failed.")).toBe(
-      FIND_RESEARCH_TIMEOUT_MESSAGE,
+      FIND_RESEARCH_TIMEOUT_MESSAGE
     );
-    expect(findResearchFailureMessage(failedToFetch, "Research failed.")).not.toMatch(
-      /Failed to fetch/i,
-    );
+    expect(
+      findResearchFailureMessage(failedToFetch, "Research failed.")
+    ).not.toMatch(/Failed to fetch/i);
   });
 
   it("listing timeout on a live submit continues to composed search", () => {
@@ -83,7 +84,7 @@ describe("beginFindResearch never aborts the submit it just started", () => {
         current: handle,
         handle,
         err: timeout,
-      }),
+      })
     ).toBe(true);
   });
 
@@ -95,7 +96,7 @@ describe("beginFindResearch never aborts the submit it just started", () => {
         current: second,
         handle: first,
         err: new TypeError("Failed to fetch"),
-      }),
+      })
     ).toBe(false);
     expect(first.controller.signal.aborted).toBe(true);
   });
@@ -107,14 +108,14 @@ describe("FIND failure copy never surfaces Failed to fetch", () => {
     expect(
       findResearchFailureMessage(
         new TypeError("Failed to fetch"),
-        "Research failed. Check the URL and try again.",
-      ),
+        "Research failed. Check the URL and try again."
+      )
     ).toBe(FIND_RESEARCH_TIMEOUT_MESSAGE);
     expect(
       findResearchFailureMessage(
         new DOMException("The operation was aborted.", "AbortError"),
-        "Research failed. Check the URL and try again.",
-      ),
+        "Research failed. Check the URL and try again."
+      )
     ).toBe(FIND_RESEARCH_TIMEOUT_MESSAGE);
     expect(FIND_RESEARCH_INTERRUPTED_MESSAGE).not.toMatch(/Failed to fetch/i);
   });
@@ -128,7 +129,7 @@ describe("canStartFindSubmit allows retry after a failed Greenfield submit", () 
         inFlight: false,
         stage: "research",
         currentUrl: B,
-      }),
+      })
     ).toBe(true);
     expect(
       canStartFindSubmit({
@@ -136,7 +137,7 @@ describe("canStartFindSubmit allows retry after a failed Greenfield submit", () 
         inFlight: true,
         stage: "research",
         currentUrl: B,
-      }),
+      })
     ).toBe(false);
     expect(
       canStartFindSubmit({
@@ -144,7 +145,7 @@ describe("canStartFindSubmit allows retry after a failed Greenfield submit", () 
         inFlight: true,
         stage: "research",
         currentUrl: A,
-      }),
+      })
     ).toBe(true);
   });
 });
@@ -161,7 +162,7 @@ describe("fetchWithTimeout distinguishes parent abort from timeout", () => {
     const ac = new AbortController();
     ac.abort();
     await expect(
-      fetchWithTimeout("https://example.test/api", { signal: ac.signal }, 5_000),
+      fetchWithTimeout("https://example.test/api", { signal: ac.signal }, 5_000)
     ).rejects.toMatchObject({ name: "AbortError" });
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -173,16 +174,18 @@ describe("fetchWithTimeout distinguishes parent abort from timeout", () => {
       vi.fn((_url: string, init?: RequestInit) => {
         return new Promise((_resolve, reject) => {
           init?.signal?.addEventListener("abort", () => {
-            reject(new DOMException("The operation was aborted.", "AbortError"));
+            reject(
+              new DOMException("The operation was aborted.", "AbortError")
+            );
           });
         });
-      }),
+      })
     );
     const ac = new AbortController();
     const pending = fetchWithTimeout(
       "https://example.test/api",
       { signal: ac.signal },
-      50,
+      50
     );
     const assertion = expect(pending).rejects.toBeInstanceOf(FetchTimeoutError);
     await vi.advanceTimersByTimeAsync(60);
@@ -195,13 +198,15 @@ describe("FIND workspace canaries — no self-abort after bind", () => {
   it("submitFind uses the controller bindSubmittedRobot just created", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const submitFind = workspace.slice(
       workspace.indexOf("async function submitFind"),
-      workspace.indexOf("async function confirmSelection"),
+      workspace.indexOf("async function confirmSelection")
     );
-    expect(submitFind).toMatch(/const research = bindSubmittedRobot\(submitUrl\)/);
+    expect(submitFind).toMatch(
+      /const research = bindSubmittedRobot\(submitUrl\)/
+    );
     expect(submitFind).toMatch(/const ac = research\.controller/);
     expect(submitFind).not.toMatch(/researchAbortRef\.current\?\.abort\(\)/);
     expect(submitFind).not.toMatch(/new AbortController/);
@@ -212,8 +217,59 @@ describe("FIND workspace canaries — no self-abort after bind", () => {
     const listing = readFileSync(join(here, "./robotProfile.ts"), "utf8");
     const search = readFileSync(join(here, "./robotJobSearch.ts"), "utf8");
     expect(listing).toMatch(/getApiBase\(\)/);
-    expect(search).toMatch(/getApiBase\(\)/);
-    expect(listing).not.toMatch(/getPublicReadApiBase/);
-    expect(search).not.toMatch(/getPublicReadApiBase/);
+    expect(search).toMatch(/getPublicReadApiBase\(\)/);
+    expect(search).not.toMatch(/getApiBase\(\)/);
+    expect(submitFind).toMatch(/ensureFindStayVisit\(\)/);
+    expect(submitFind).not.toMatch(/goJobsFreshHome/);
+    expect(submitFind).not.toMatch(/JOBS_FRESH_HOME_EVENT/);
+    expect(submitFind).not.toMatch(/\?new=1/);
+    expect(submitFind).not.toMatch(/setLocation\("\/"\)/);
+  });
+});
+
+describe("FIND timeout / 500 / abort stay on /?visit=jobs", () => {
+  it("does not bounce timeout, 500, or Failed to fetch to landing", () => {
+    expect(findFailureStayHref()).toBe("/?visit=jobs");
+    expect(findFailureBouncesHome(null)).toBe(false);
+    expect(findFailureBouncesHome("/?visit=jobs")).toBe(false);
+    expect(findFailureBouncesHome("/")).toBe(true);
+    expect(findFailureBouncesHome("/?new=1")).toBe(true);
+    expect(findFailureBouncesHome("/?visit=candidates")).toBe(true);
+    for (const err of [
+      new FetchTimeoutError(8_000),
+      new TypeError("Failed to fetch"),
+      new Error("robot-job-search 500"),
+      new DOMException("The operation was aborted.", "AbortError"),
+    ]) {
+      const out = findLookupFailureOutcome(err);
+      expect(out.stage).toBe("find");
+      expect(out.href).toBe("/?visit=jobs");
+      expect(out.bounceHome).toBe(false);
+      expect(out.error.length).toBeGreaterThan(0);
+      expect(out.error).not.toMatch(/Failed to fetch/i);
+      expect(findFailureBouncesHome(out.href)).toBe(false);
+    }
+  });
+
+  it("rewrites a stripped visit back to FIND step 1", () => {
+    const replaced: string[] = [];
+    const loc = { pathname: "/", search: "?new=1", hash: "" };
+    Object.defineProperty(globalThis, "window", {
+      value: {
+        location: loc,
+        history: {
+          state: null,
+          replaceState: (_s: unknown, _t: string, url: string) => {
+            replaced.push(String(url));
+            const q = String(url).indexOf("?");
+            loc.search = q >= 0 ? String(url).slice(q) : "";
+          },
+        },
+      },
+      configurable: true,
+    });
+    expect(ensureFindStayVisit()).toBe(true);
+    expect(replaced[0]).toContain("visit=jobs");
+    expect(ensureFindStayVisit()).toBe(false);
   });
 });

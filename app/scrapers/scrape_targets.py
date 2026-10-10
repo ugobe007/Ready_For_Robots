@@ -3,20 +3,32 @@ scrape_targets.py -- Scrape target registry for Ready for Robots.
 
 PURPOSE: Find Robot Jobs — human work a robot could be hired to do.
 
+Ontology: COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES →
+TASK MODELS → JOB REQUIREMENTS → MATCH. Never company → category → jobs.
+
 Fields we extract when the posting states them (unknown if not):
   - job function / title
+  - product class from the work (serving vs cleaning vs food_prep), not OEM dump
+  - required capabilities grounded in that work
+  - task-model requirement: named source vs self-train vs unknown
+    (same field names as CRM: work_task_model_kind / work_task_model_source)
   - compensation (wage range, signing bonus)
   - performance specs (throughput, payload, shift, openings)
+  - named employer (not chrome: Impact, Farmers, Product)
 
 Close-out: re-read public evidence. If a robot now performs that work at
 that employer, mark the Robot Job filled_by_robot (not a CRM closed-won).
 
 We are NOT interested in:
   - Robotics engineers / AMR software developers (builders)
-  - Invented wages or FTE economics
+  - Invented wages, invented SKUs (Seer Humanoid, AMR scrubbers, Galbot G2, TWA Reach)
+  - Class-dump titles as jobs
+  - Apollo / SIGNAL contacts (page-only mailto and JSON-LD)
 
 Target verticals:
     Hospitality . Logistics . Healthcare . Food Service . Retail . Manufacturing
+Venues for food prep / serve / clean: hotels, restaurants, casinos, airports,
+offices, malls, data centers — not QSR-only.
 """
 
 from dataclasses import dataclass, field
@@ -296,6 +308,14 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         notes="Floor/restroom cleaning in data centers — not hospital EVS",
     ),
     ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=window+washer+facade+cleaner+drone+cleaning&l=United+States&sort=date",
+        label="Indeed - Facade / window-wash / drone-cleaning",
+        scraper="job_board", cadence="daily",
+        industries=["Hospitality"],
+        signal_types=["robot_job"],
+        notes="Exterior/window/drone cleaning. Not hard_floor_scrub. Keep venue coverage, not hotel-only.",
+    ),
+    ScrapeTarget(
         url="https://www.indeed.com/jobs?q=grill+cook+ingredient+dosing+tortilla+assembly+line+kitchen&l=United+States&sort=date",
         label="Indeed - Grill / tortilla / ingredient-dosing kitchen line",
         scraper="job_board", cadence="daily",
@@ -314,6 +334,147 @@ JOB_BOARD_TARGETS: List[ScrapeTarget] = [
         label="SimplyHired - Kitchen automation / fast-casual prep cooks",
         scraper="job_board", cadence="daily",
         industries=["Food Service"],
+        signal_types=["robot_job"],
+    ),
+
+    # === FOOD PREP / SERVE / CLEAN venues beyond QSR:
+    # hotels, restaurants, casinos, airports, offices, malls, data centers ===
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=hotel+casino+airport+kitchen+cook+prep+cook&l=United+States&sort=date",
+        label="Indeed - Hotel / casino / airport kitchen cooks",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+        notes="Food prep in hotel, casino, and airport kitchens — not hotel housekeeping",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=banquet+server+room+service+hotel+casino&l=United+States&sort=date",
+        label="Indeed - Hotel / casino banquet and room-service servers",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+        notes="Table/drink/bussing-style serving (ADAM / Matradee / Bear Servi work)",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=casino+cocktail+server+food+runner+busser&l=United+States&sort=date",
+        label="Indeed - Casino cocktail / food runner / busser",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=airport+restaurant+food+court+server+busser&l=United+States&sort=date",
+        label="Indeed - Airport restaurant / food-court servers",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=office+cafeteria+food+service+worker+server&l=United+States&sort=date",
+        label="Indeed - Office cafeteria food service / servers",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=shopping+mall+food+court+server+busser&l=United+States&sort=date",
+        label="Indeed - Shopping mall food-court servers / bussers",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=hotel+floor+technician+restroom+attendant+housekeeper&l=United+States&sort=date",
+        label="Indeed - Hotel floor tech / restroom attendant",
+        scraper="job_board", cadence="daily",
+        industries=["Hospitality"],
+        signal_types=["robot_job"],
+        notes="Floor / vacuum / restroom cleaning at hotels",
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=restaurant+janitor+kitchen+floor+cleaner&l=United+States&sort=date",
+        label="Indeed - Restaurant janitor / kitchen floor cleaner",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=casino+janitor+EVS+custodian+housekeeper&l=United+States&sort=date",
+        label="Indeed - Casino EVS / janitor / custodian",
+        scraper="job_board", cadence="daily",
+        industries=["Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=airport+janitor+custodian+restroom+attendant&l=United+States&sort=date",
+        label="Indeed - Airport janitor / restroom attendant",
+        scraper="job_board", cadence="daily",
+        industries=["Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=office+janitor+custodian+floor+vacuum+cleaner&l=United+States&sort=date",
+        label="Indeed - Office janitor / custodian / vacuum",
+        scraper="job_board", cadence="daily",
+        industries=["Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=shopping+mall+janitor+custodian+restroom&l=United+States&sort=date",
+        label="Indeed - Shopping mall janitor / restroom cleaner",
+        scraper="job_board", cadence="daily",
+        industries=["Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.indeed.com/jobs?q=data+center+janitor+custodian+facility+cleaner&l=United+States&sort=date",
+        label="Indeed - Data center janitor / facility cleaner",
+        scraper="job_board", cadence="daily",
+        industries=["Hospitality"],
+        signal_types=["robot_job"],
+        notes="Floor/restroom cleaning in data centers — not QSR",
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=hotel+cook+kitchen&l=United+States",
+        label="SimplyHired - Hotel kitchen cooks",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+        notes="Shorter query — AND-ing hotel+casino+airport returns zero on SimplyHired",
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=casino+cook+kitchen&l=United+States",
+        label="SimplyHired - Casino kitchen cooks",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=banquet+server&l=United+States",
+        label="SimplyHired - Banquet servers",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=casino+server+busser&l=United+States",
+        label="SimplyHired - Casino servers / bussers",
+        scraper="job_board", cadence="daily",
+        industries=["Food Service", "Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=janitor+custodian&l=United+States",
+        label="SimplyHired - Janitor / custodian",
+        scraper="job_board", cadence="daily",
+        industries=["Hospitality"],
+        signal_types=["robot_job"],
+    ),
+    ScrapeTarget(
+        url="https://www.simplyhired.com/search?q=data+center+janitor&l=United+States",
+        label="SimplyHired - Data center janitor",
+        scraper="job_board", cadence="daily",
+        industries=["Hospitality"],
         signal_types=["robot_job"],
     ),
 

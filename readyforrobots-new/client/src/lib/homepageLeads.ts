@@ -1,4 +1,8 @@
-import { fetchWithTimeoutRetry, getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
+import {
+  fetchWithTimeoutRetry,
+  getPublicReadApiBase,
+  liveFetchInit,
+} from "@/lib/apiBase";
 
 export const HOMEPAGE_SPOTLIGHT_CACHE_KEY = "homepage_spotlight_leads_v2";
 /** Match server daily edition — rolls at 6am America/Los_Angeles. */
@@ -10,7 +14,12 @@ const HOMEPAGE_POOL_BREAKER_OPEN_MS = 45 * 1000;
 const HOMEPAGE_POOL_BREAKER_FAIL_STREAK = 3;
 
 type HomepagePoolResult = {
-  leads: Array<{ id?: number; company_name?: string; website?: string | null; website_domain?: string | null }>;
+  leads: Array<{
+    id?: number;
+    company_name?: string;
+    website?: string | null;
+    website_domain?: string | null;
+  }>;
   live: boolean;
   summary?: { total?: number; hot?: number };
 };
@@ -34,7 +43,11 @@ function publishHomepagePoolTelemetry() {
   if (typeof window === "undefined") return;
   const attempts = homepagePoolTelemetry.attempts;
   const failures = homepagePoolTelemetry.failures;
-  (window as Window & { __rfrHomepageLeadPoolTelemetry?: Record<string, unknown> }).__rfrHomepageLeadPoolTelemetry = {
+  (
+    window as Window & {
+      __rfrHomepageLeadPoolTelemetry?: Record<string, unknown>;
+    }
+  ).__rfrHomepageLeadPoolTelemetry = {
     ...homepagePoolTelemetry,
     failRate: attempts > 0 ? Number((failures / attempts).toFixed(3)) : 0,
     breakerOpen: Date.now() < homepagePoolBreakerOpenUntil,
@@ -60,10 +73,15 @@ function normalizeWebsiteDomain(website?: string | null): string {
   const raw = (website || "").trim().toLowerCase();
   if (!raw) return "";
   try {
-    const host = raw.includes("://") ? new URL(raw).hostname : raw.split("/")[0].split("?")[0];
+    const host = raw.includes("://")
+      ? new URL(raw).hostname
+      : raw.split("/")[0].split("?")[0];
     return host.replace(/^www\./, "");
   } catch {
-    return raw.replace(/^www\./, "").split("/")[0].split("?")[0];
+    return raw
+      .replace(/^www\./, "")
+      .split("/")[0]
+      .split("?")[0];
   }
 }
 
@@ -75,7 +93,7 @@ function normalizeCompanyNameKey(name?: string | null): string {
   s = s
     .replace(
       /(?:,?\s*(?:inc\.?|llc\.?|ltd\.?|corp\.?|corporation|co\.?|plc\.?|gmbh|bv|nv|ag|sa|srl)|\s+(?:international|holdings|group|enterprises))$/gi,
-      "",
+      ""
     )
     .trim();
   s = s.replace(/\bairline\b/g, "airlines");
@@ -91,7 +109,9 @@ function companyEntityDedupeKeys(lead: {
   const keys = new Set<string>();
   const nameKey = normalizeCompanyNameKey(lead.company_name);
   if (nameKey) keys.add(`name:${nameKey}`);
-  const dom = normalizeWebsiteDomain(lead.website) || (lead.website_domain || "").trim().toLowerCase();
+  const dom =
+    normalizeWebsiteDomain(lead.website) ||
+    (lead.website_domain || "").trim().toLowerCase();
   if (dom) {
     keys.add(`dom:${dom}`);
     const mapped = DOMAIN_ENTITY_NAME_KEYS[dom];
@@ -102,11 +122,16 @@ function companyEntityDedupeKeys(lead: {
 
 /** Collapse duplicate buyer rows for homepage spotlight / sales panel rotation. */
 export function dedupeHomepageLeads<
-  T extends { id?: number; company_name?: string; website?: string | null; website_domain?: string | null },
+  T extends {
+    id?: number;
+    company_name?: string;
+    website?: string | null;
+    website_domain?: string | null;
+  },
 >(leads: T[] | null | undefined): T[] {
   if (!Array.isArray(leads)) return [];
   const seen = new Set<string>();
-  return leads.filter((lead) => {
+  return leads.filter(lead => {
     const keys = companyEntityDedupeKeys(lead);
     if (!keys.size) return Boolean(lead.company_name || lead.id != null);
     for (const key of Array.from(keys)) {
@@ -119,13 +144,34 @@ export function dedupeHomepageLeads<
 
 /** Merge homepage spotlight + HOT feed for hero / live pipeline rotation. */
 export async function fetchHomepageLeadPool<
-  T extends { id?: number; company_name?: string; website?: string | null; website_domain?: string | null },
->(fallback: T[]): Promise<{ leads: T[]; live: boolean; summary?: { total?: number; hot?: number } }> {
-  const toTyped = (result: HomepagePoolResult | null): { leads: T[]; live: boolean; summary?: { total?: number; hot?: number } } => {
+  T extends {
+    id?: number;
+    company_name?: string;
+    website?: string | null;
+    website_domain?: string | null;
+  },
+>(
+  fallback: T[]
+): Promise<{
+  leads: T[];
+  live: boolean;
+  summary?: { total?: number; hot?: number };
+}> {
+  const toTyped = (
+    result: HomepagePoolResult | null
+  ): {
+    leads: T[];
+    live: boolean;
+    summary?: { total?: number; hot?: number };
+  } => {
     if (!result || !Array.isArray(result.leads) || result.leads.length === 0) {
       return { leads: fallback, live: false };
     }
-    return { leads: result.leads as T[], live: result.live, summary: result.summary };
+    return {
+      leads: result.leads as T[],
+      live: result.live,
+      summary: result.summary,
+    };
   };
 
   if (homepagePoolInFlight) {
@@ -156,18 +202,20 @@ export async function fetchHomepageLeadPool<
           `${getPublicReadApiBase()}/api/leads/homepage`,
           liveFetchInit(),
           HOMEPAGE_POOL_TIMEOUT_MS,
-          { retries: 1, retryDelayMs: 800 },
+          { retries: 1, retryDelayMs: 800 }
         );
       } catch (e) {
         homepagePoolTelemetry.lastError =
-          e instanceof Error ? `homepage: ${e.message}` : "homepage fetch failed";
+          e instanceof Error
+            ? `homepage: ${e.message}`
+            : "homepage fetch failed";
       }
       try {
         hotRes = await fetchWithTimeoutRetry(
           `${getPublicReadApiBase()}/api/leads?limit=24&tier=HOT&sort=score&exclude_junk=true`,
           liveFetchInit(),
           HOMEPAGE_POOL_TIMEOUT_MS,
-          { retries: 0, retryDelayMs: 0 },
+          { retries: 0, retryDelayMs: 0 }
         );
       } catch {
         /* optional enrichment — ignore */
@@ -185,11 +233,16 @@ export async function fetchHomepageLeadPool<
       }
       if (hotRes?.ok) {
         const hotData = await hotRes.json();
-        if (Array.isArray(hotData)) merged.push(...(hotData as HomepagePoolResult["leads"]));
+        if (Array.isArray(hotData))
+          merged.push(...(hotData as HomepagePoolResult["leads"]));
       }
       const deduped = dedupeHomepageLeads(merged);
       if (!deduped.length) throw new Error("homepage pool returned no leads");
-      const result: HomepagePoolResult = { leads: deduped, live: true, summary };
+      const result: HomepagePoolResult = {
+        leads: deduped,
+        live: true,
+        summary,
+      };
       homepagePoolLastSuccess = result;
       homepagePoolFailStreak = 0;
       homepagePoolCooldownUntil = 0;
@@ -199,11 +252,13 @@ export async function fetchHomepageLeadPool<
       return result;
     } catch (e) {
       homepagePoolTelemetry.failures += 1;
-      homepagePoolTelemetry.lastError = e instanceof Error ? e.message : "homepage pool fetch failed";
+      homepagePoolTelemetry.lastError =
+        e instanceof Error ? e.message : "homepage pool fetch failed";
       homepagePoolFailStreak += 1;
       homepagePoolCooldownUntil = Date.now() + HOMEPAGE_POOL_COOLDOWN_MS;
       if (homepagePoolFailStreak >= HOMEPAGE_POOL_BREAKER_FAIL_STREAK) {
-        homepagePoolBreakerOpenUntil = Date.now() + HOMEPAGE_POOL_BREAKER_OPEN_MS;
+        homepagePoolBreakerOpenUntil =
+          Date.now() + HOMEPAGE_POOL_BREAKER_OPEN_MS;
         homepagePoolTelemetry.breakerOpenCount += 1;
         homepagePoolFailStreak = 0;
       }

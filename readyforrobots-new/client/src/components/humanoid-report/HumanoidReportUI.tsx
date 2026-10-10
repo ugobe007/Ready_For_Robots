@@ -14,7 +14,13 @@ export function ReportKicker({ children }: { children: ReactNode }) {
   );
 }
 
-export function ReportTitle({ children, id }: { children: ReactNode; id?: string }) {
+export function ReportTitle({
+  children,
+  id,
+}: {
+  children: ReactNode;
+  id?: string;
+}) {
   return (
     <h2
       id={id}
@@ -43,7 +49,11 @@ type PanelProps = {
   className?: string;
 };
 
-export function ReportPanel({ children, accent = "purple", className = "" }: PanelProps) {
+export function ReportPanel({
+  children,
+  accent = "purple",
+  className = "",
+}: PanelProps) {
   const borderLeft =
     accent === "teal"
       ? `3px solid ${RR.teal}`
@@ -56,7 +66,8 @@ export function ReportPanel({ children, accent = "purple", className = "" }: Pan
     accent === "emerald"
       ? "linear-gradient(135deg, rgba(16,185,129,0.14) 0%, rgba(16,185,129,0.08) 55%, rgba(16,185,129,0.14) 100%)"
       : RR.bgElevated;
-  const borderColor = accent === "emerald" ? "rgba(16,185,129,0.35)" : RR.border;
+  const borderColor =
+    accent === "emerald" ? "rgba(16,185,129,0.35)" : RR.border;
   return (
     <div
       className={`rounded-lg border px-4 py-3.5 ${className}`}
@@ -124,8 +135,9 @@ export function ReportBtnDownload({
         throw new Error("Server did not return a PDF");
       }
       const name =
-        filenameFromContentDisposition(res.headers.get("Content-Disposition")) ||
-        "Humanoid_Intelligence_Report.pdf";
+        filenameFromContentDisposition(
+          res.headers.get("Content-Disposition")
+        ) || "Humanoid_Intelligence_Report.pdf";
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -159,7 +171,10 @@ export function ReportBtnDownload({
         {busy ? "Generating…" : label}
       </button>
       {err ? (
-        <span className="max-w-[220px] text-right text-[10px] leading-tight" style={{ color: RR.textDim }}>
+        <span
+          className="max-w-[220px] text-right text-[10px] leading-tight"
+          style={{ color: RR.textDim }}
+        >
           Opened in new tab — {err}
         </span>
       ) : null}
@@ -188,15 +203,30 @@ export function ReportLink({
   );
 }
 
-export function ReportBodyText({ children, className = "" }: { children: ReactNode; className?: string }) {
+export function ReportBodyText({
+  children,
+  className = "",
+}: {
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <p className={`text-[13px] leading-relaxed ${className}`} style={{ color: RR.textMuted }}>
+    <p
+      className={`text-[13px] leading-relaxed ${className}`}
+      style={{ color: RR.textMuted }}
+    >
       {children}
     </p>
   );
 }
 
-export function ReportFindingCard({ title, body }: { title: string; body: string }) {
+export function ReportFindingCard({
+  title,
+  body,
+}: {
+  title: string;
+  body: string;
+}) {
   return (
     <div
       className="rounded-md border px-3 py-2.5"
@@ -205,23 +235,38 @@ export function ReportFindingCard({ title, body }: { title: string; body: string
       <p className="text-[12px] font-bold" style={{ color: RR.teal }}>
         {title}
       </p>
-      <p className="mt-1 text-[13px] leading-snug" style={{ color: RR.textMuted }}>
+      <p
+        className="mt-1 text-[13px] leading-snug"
+        style={{ color: RR.textMuted }}
+      >
         {body}
       </p>
     </div>
   );
 }
 
-export function ReportMetric({ label, value }: { label: string; value: string }) {
+export function ReportMetric({
+  label,
+  value,
+}: {
+  label: string;
+  value: string;
+}) {
   return (
     <div
       className="rounded-md border px-3 py-2 text-center"
       style={{ borderColor: RR.border, background: "rgba(124,58,237,0.06)" }}
     >
-      <p className="text-[9px] font-bold uppercase tracking-wider" style={{ color: RR.textDim }}>
+      <p
+        className="text-[9px] font-bold uppercase tracking-wider"
+        style={{ color: RR.textDim }}
+      >
         {label}
       </p>
-      <p className="mt-0.5 text-lg font-black tabular-nums" style={{ color: RR.teal }}>
+      <p
+        className="mt-0.5 text-lg font-black tabular-nums"
+        style={{ color: RR.teal }}
+      >
         {value}
       </p>
     </div>
@@ -236,11 +281,19 @@ type TableProps = {
 
 export function ReportTable({ headers, rows, minWidth = "480px" }: TableProps) {
   return (
-    <div className="overflow-x-auto rounded-md border" style={{ borderColor: RR.border }}>
+    <div
+      className="overflow-x-auto rounded-md border"
+      style={{ borderColor: RR.border }}
+    >
       <table className="w-full text-left text-[11px]" style={{ minWidth }}>
         <thead>
-          <tr style={{ background: RR.purpleMuted, borderBottom: `1px solid ${RR.border}` }}>
-            {headers.map((h) => (
+          <tr
+            style={{
+              background: RR.purpleMuted,
+              borderBottom: `1px solid ${RR.border}`,
+            }}
+          >
+            {headers.map(h => (
               <th
                 key={h}
                 className="px-2.5 py-2 text-[9px] font-bold uppercase tracking-wider"
@@ -258,11 +311,16 @@ export function ReportTable({ headers, rows, minWidth = "480px" }: TableProps) {
               className="border-b last:border-0"
               style={{
                 borderColor: RR.border,
-                background: i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
+                background:
+                  i % 2 === 0 ? "transparent" : "rgba(255,255,255,0.015)",
               }}
             >
               {cells.map((cell, j) => (
-                <td key={j} className="px-2.5 py-2 align-top" style={{ color: RR.textMuted }}>
+                <td
+                  key={j}
+                  className="px-2.5 py-2 align-top"
+                  style={{ color: RR.textMuted }}
+                >
                   {cell}
                 </td>
               ))}
@@ -293,7 +351,10 @@ export function ReportDetails({
         {summary}
         <ChevronDown className="h-4 w-4 shrink-0 opacity-40 transition-transform group-open:rotate-180" />
       </summary>
-      <div className="border-t px-3.5 pb-3.5 pt-3" style={{ borderColor: RR.border }}>
+      <div
+        className="border-t px-3.5 pb-3.5 pt-3"
+        style={{ borderColor: RR.border }}
+      >
         {children}
       </div>
     </details>
