@@ -174,4 +174,6 @@ def test_industry_work_language_loads_and_healthcare_outranks_humanoid():
     assert "mining_haulage_policy" in slots
     assert "hotel_guest_service_policy" in slots
     assert "food_prep_station_policy" in slots
+    assert "dining_floor_service_policy" in slots
+    assert "commercial_cleaning_policy" in slots
 

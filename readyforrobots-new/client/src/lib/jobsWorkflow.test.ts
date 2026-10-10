@@ -1387,6 +1387,11 @@ describe("jobsWorkflow", () => {
     expect(normalizeRobotClass("table_service")).toBe("serving");
     expect(normalizeRobotClass("janitorial")).toBe("cleaning");
     expect(normalizeRobotClass("qsr")).toBe("food_prep");
+    expect(normalizeRobotClass("hotel_kitchen")).toBe("food_prep");
+    expect(normalizeRobotClass("serving")).toBe("serving");
+    expect(normalizeRobotClass("table_service")).toBe("serving");
+    expect(normalizeRobotClass("cleaning")).toBe("cleaning");
+    expect(normalizeRobotClass("janitorial")).toBe("cleaning");
     expect(normalizeRobotClass("mining")).toBe("mining");
     expect(skuLookupGrain("humanoid")).toBe("robot_type");
     expect(robotClassTitle("evtol")).toBe("eVTOL");

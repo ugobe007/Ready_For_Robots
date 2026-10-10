@@ -41,6 +41,13 @@ TITLES_BY_FUNCTION: dict[str, list[str]] = {
         "Director of Facilities",
         "Director of Facilities Operations",
     ],
+    "cleaning": [
+        "Director of Environmental Services",
+        "Director of EVS",
+        "EVS Manager",
+        "Director of Facilities",
+        "Director of Facilities Operations",
+    ],
     "housekeeping": [
         "Director of Housekeeping",
         "Director of Rooms Operations",
@@ -158,6 +165,16 @@ DISTINCTIVE_TOKENS: dict[str, tuple[str, ...]] = {
     "pharmacy": ("pharmacy", "medication", "pharma", "materials management"),
     "patient_transport": ("patient transport", "support services", "patient experience"),
     "environmental_services": (
+        "evs",
+        "environmental",
+        "facilit",
+        "custodial",
+        "janitor",
+        "housekeep",
+        "property operations",
+        "building operations",
+    ),
+    "cleaning": (
         "evs",
         "environmental",
         "facilit",
@@ -302,13 +319,13 @@ def plan_for_job(row: Any) -> DecisionMakerPlan:
     function = function_for_job(row)
     titles = list(TITLES_BY_FUNCTION.get(function) or DEFAULT_TITLES)
     blob = job_text(row).lower()
-    if "airport" in blob and function == "environmental_services":
+    if "airport" in blob and function in {"environmental_services", "cleaning"}:
         titles = [
             "Director of Airport Operations",
             "Director of Facilities",
             *titles,
         ]
-    if "mall" in blob and function == "environmental_services":
+    if "mall" in blob and function in {"environmental_services", "cleaning"}:
         titles = ["Property Operations Manager", "Director of Facilities", *titles]
     # Dedupe, keep order.
     seen: set[str] = set()

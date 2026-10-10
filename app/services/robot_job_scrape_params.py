@@ -75,6 +75,7 @@ JOB_FUNCTION_PRODUCT_CLASS = {
     "food_prep": "food_prep",
     "warewash": "food_prep",
     "environmental_services": "cleaning",
+    "cleaning": "cleaning",
     "facade_cleaning": "cleaning_drone",
     "housekeeping": "hospitality",
     "front_desk": "hospitality",

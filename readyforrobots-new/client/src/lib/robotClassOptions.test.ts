@@ -83,9 +83,11 @@ describe("robot class picker options", () => {
     expect(byId.factory.label).toBe("Factory");
     expect(byId.factory.hint).toMatch(/machine tend|cnc|assembly/i);
     expect(byId.hospitality.label).toBe("Hospitality");
-    expect(byId.hospitality.hint).toMatch(/hotel|guest|serving|housekeep/i);
+    expect(byId.hospitality.hint).toMatch(/hotel|guest|housekeep/i);
     expect(byId.hospitality.hint).not.toMatch(/food prep|make-line|qsr/i);
+    expect(byId.hospitality.hint).not.toMatch(/table|bussing|janitor/i);
     expect(byId.food_prep.label).toBe("Food prep");
+    expect(byId.food_prep.hint).toMatch(/hotel|casino|airport/i);
     expect(byId.food_prep.hint).toMatch(/make-line|bowl|grill|kitchen/i);
     expect(byId.serving.label).toBe("Serving");
     expect(byId.serving.hint).toMatch(/table|bussing|delivery/i);

@@ -116,19 +116,19 @@ CLASS_OPTIONS: list[dict[str, str]] = [
         "id": "food_prep",
         "product_class": "food_prep",
         "label": "Food prep",
-        "hint": "QSR make-line, bowl assembly, grill, kitchen automation",
+        "hint": "Hotel, casino, airport, and QSR kitchens — make-line, grill, prep",
     },
     {
         "id": "serving",
         "product_class": "serving",
         "label": "Serving",
-        "hint": "Table, drinks, bussing, food-delivery AMR — restaurants, hotels, public venues",
+        "hint": "Table, drinks, bussing — ADAM, Matradee, Servi in restaurants, hotels, casinos, airports, offices, malls",
     },
     {
         "id": "cleaning",
         "product_class": "cleaning",
         "label": "Cleaning",
-        "hint": "Floor scrubbing, vacuum, mopping — F&B and public venues",
+        "hint": "Floor, vacuum, restroom — hotels, restaurants, casinos, airports, offices, malls, data centers",
     },
 ]
 
@@ -230,6 +230,9 @@ def normalize_class_id(raw: str | None) -> str | None:
         "kitchen_automation": "food_prep",
         "make_line": "food_prep",
         "bowl_assembly": "food_prep",
+        "hotel_kitchen": "food_prep",
+        "casino_kitchen": "food_prep",
+        "airport_kitchen": "food_prep",
         "serving": "serving",
         "table_service": "serving",
         "food_running": "serving",

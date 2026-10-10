@@ -5,28 +5,48 @@
   "internal_nickname": "certificate",
   "ui_term": "task model",
   "note": "A task model is a trained policy/skill pack for a specific physical job. Hardware capability is not enough. Do not call these certificates in product UI.",
-  "presence_states": ["unknown", "present", "absent"],
+  "presence_states": [
+    "unknown",
+    "present",
+    "absent"
+  ],
   "honesty": "Chat LLMs (GPT, Claude, Gemini, Llama, Mistral) are not warehouse pick, hospital logistics, or CNC tending policies. Search vision-language-action families and OEM packs. Token API prices are not robot-policy prices. Field traces do not automatically cut the model price.",
-  "candidate_families": ["OpenVLA", "Octo", "LeRobot", "ACT", "GR00T", "π0.5"],
+  "candidate_families": [
+    "OpenVLA",
+    "Octo",
+    "LeRobot",
+    "ACT",
+    "GR00T",
+    "\u03c00.5"
+  ],
   "model_layers": [
     {
       "id": "foundation_vla",
       "label": "Foundation VLA / generalist policy",
-      "who_trains": ["lab", "oem"],
+      "who_trains": [
+        "lab",
+        "oem"
+      ],
       "typical_time_band": "months_to_years",
-      "note": "OpenVLA, π0.5, GR00T, Octo, ACT, LeRobot. Pretrained on many robots and tasks. Not qualified for this workplace. Distributors do not train this layer."
+      "note": "OpenVLA, \u03c00.5, GR00T, Octo, ACT, LeRobot. Pretrained on many robots and tasks. Not qualified for this workplace. Distributors do not train this layer."
     },
     {
       "id": "task_library",
       "label": "Task library / skill pack",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "licensed_days_to_weeks",
       "note": "OEM application store: warehouse pick, hospital linen, floor scrub, kitchen dish. Specific libraries for specific tasks. Usually licensed, not trained from scratch by the distributor."
     },
     {
       "id": "site_adapted",
       "label": "Site-adapted policy",
-      "who_trains": ["integrator", "oem_field", "customer_ops"],
+      "who_trains": [
+        "integrator",
+        "oem_field",
+        "customer_ops"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "note": "Fine-tune or program this floorplate, SKU mix, fixture, SOP. This is the unpaid hole when a channel only resells the chassis."
     }
@@ -39,17 +59,17 @@
     },
     {
       "id": "1_to_4_weeks",
-      "label": "1–4 weeks",
+      "label": "1\u20134 weeks",
       "meaning": "Site map, coverage program, or a small fine-tune when demonstration traces already exist."
     },
     {
       "id": "2_to_8_weeks",
-      "label": "2–8 weeks",
+      "label": "2\u20138 weeks",
       "meaning": "Collect demos, fine-tune, evaluate, and qualify on this cell. Typical pick/AMR adapt."
     },
     {
       "id": "4_to_12_weeks",
-      "label": "4–12 weeks",
+      "label": "4\u201312 weeks",
       "meaning": "Custom cell, fixture, clinical SOP, or kitchen menu. Integrator SOW, not a download."
     },
     {
@@ -88,7 +108,7 @@
       }
     ],
     "you_do_not_owe": [
-      "A foundation VLA pretrain dataset — that is the lab/OEM layer",
+      "A foundation VLA pretrain dataset \u2014 that is the lab/OEM layer",
       "Invented wages or FTE economics for the Job Card"
     ]
   },
@@ -117,7 +137,7 @@
     {
       "id": "task_family",
       "label": "Is it a robot policy (VLA / OEM pack), not a chat LLM?",
-      "note": "OpenVLA, π0.5, Octo, LeRobot, ACT, GR00T N1.5, or an OEM application pack. GPT/Claude/Gemini/Llama text APIs do not pick cases or run hospital linens."
+      "note": "OpenVLA, \u03c00.5, Octo, LeRobot, ACT, GR00T N1.5, or an OEM application pack. GPT/Claude/Gemini/Llama text APIs do not pick cases or run hospital linens."
     },
     {
       "id": "commercial_license",
@@ -149,9 +169,9 @@
     },
     {
       "kind": "physical_compute",
-      "name": "Axe Compute — physical AI compute stack",
+      "name": "Axe Compute \u2014 physical AI compute stack",
       "url": "https://axecompute.com/physical-ai-compute-stack/",
-      "note": "Why robot policies cost more than LLMs: simulation, synthetic data, VLA training, and continuous on-robot inference. Quote GPU hours here — do not invent a dollar figure."
+      "note": "Why robot policies cost more than LLMs: simulation, synthetic data, VLA training, and continuous on-robot inference. Quote GPU hours here \u2014 do not invent a dollar figure."
     },
     {
       "kind": "managed_api",
@@ -199,7 +219,7 @@
     },
     {
       "kind": "foundation_robotics",
-      "name": "Physical Intelligence π0.5",
+      "name": "Physical Intelligence \u03c00.5",
       "url": "https://www.pi.website/blog/pi05",
       "note": "VLA with open-world generalization (April 2025). Not a site-qualified warehouse or hospital pack."
     },
@@ -217,7 +237,7 @@
     },
     {
       "kind": "open_weights",
-      "name": "Hugging Face — OpenVLA checkpoints",
+      "name": "Hugging Face \u2014 OpenVLA checkpoints",
       "url": "https://huggingface.co/models?search=openvla",
       "note": "Downloadable OpenVLA weights. The project page is the canonical lookup; this is the checkpoint index."
     },
@@ -241,13 +261,13 @@
     },
     {
       "kind": "benchmarks",
-      "name": "Papers with Code — robotics / manipulation",
+      "name": "Papers with Code \u2014 robotics / manipulation",
       "url": "https://paperswithcode.com/task/robot-manipulation",
-      "note": "Academic leaderboards mapped to code and weights. Best-on-benchmark ≠ qualified on this workplace."
+      "note": "Academic leaderboards mapped to code and weights. Best-on-benchmark \u2260 qualified on this workplace."
     },
     {
       "kind": "github",
-      "name": "GitHub — foundation-model codebases",
+      "name": "GitHub \u2014 foundation-model codebases",
       "url": "https://github.com/topics/foundation-models",
       "note": "Cutting-edge weights often land here before commercial platforms. Search Awesome Foundation Models / Awesome robotics VLAs."
     },
@@ -259,7 +279,7 @@
     },
     {
       "kind": "sim_to_real",
-      "name": "World Labs — real-to-sim-to-real (SceniX)",
+      "name": "World Labs \u2014 real-to-sim-to-real (SceniX)",
       "url": "https://www.worldlabs.ai/blog/real-to-sim-to-real",
       "note": "Train and evaluate robot policies in reconstructed scenes, then transfer back to the physical cell. Simulation success is not workplace qualification."
     },
@@ -267,7 +287,7 @@
       "kind": "talent",
       "name": "Mercor",
       "url": "https://www.mercor.com/",
-      "note": "People who can train, fine-tune, or host a robot policy. This is who builds the task model — not SIGNAL buyers and not a price list."
+      "note": "People who can train, fine-tune, or host a robot policy. This is who builds the task model \u2014 not SIGNAL buyers and not a price list."
     }
   ],
   "slots": [
@@ -276,11 +296,32 @@
       "label": "Warehouse pick-and-place policy",
       "vertical": "warehouse",
       "layer": "task_library",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Pick, place, and stow SKUs or totes in a fulfillment cell",
-      "tape_families": ["gripper", "pallet", "transport"],
-      "keywords": ["warehouse", "fulfillment", "distribution center", "asin", "pick station", "pallet", "case", "carton", "conveyor", "palletiz", "logistics", "3pl", "cross-dock"],
+      "tape_families": [
+        "gripper",
+        "pallet",
+        "transport"
+      ],
+      "keywords": [
+        "warehouse",
+        "fulfillment",
+        "distribution center",
+        "asin",
+        "pick station",
+        "pallet",
+        "case",
+        "carton",
+        "conveyor",
+        "palletiz",
+        "logistics",
+        "3pl",
+        "cross-dock"
+      ],
       "hardware_not_enough": "A mobile manipulator can exist in the DC and still lack the pick policy for that SKU mix.",
       "where_to_look": [
         {
@@ -297,7 +338,7 @@
         },
         {
           "kind": "foundation_robotics",
-          "name": "Physical Intelligence π0.5",
+          "name": "Physical Intelligence \u03c00.5",
           "url": "https://www.pi.website/blog/pi05",
           "note": "Open-world VLA. Still must be qualified on this workplace."
         },
@@ -320,11 +361,30 @@
       "label": "Warehouse AMR navigation / fleet policy",
       "vertical": "warehouse",
       "layer": "task_library",
-      "who_trains": ["oem", "customer_ops"],
+      "who_trains": [
+        "oem",
+        "customer_ops"
+      ],
       "typical_time_band": "1_to_4_weeks",
       "physical_task": "Navigate aisles, docks, and human traffic while moving goods",
-      "tape_families": ["transport", "cart"],
-      "keywords": ["amr", "agv", "warehouse", "fulfillment", "dock", "tote", "cart", "aisle", "zone", "logistics", "3pl", "cross-dock"],
+      "tape_families": [
+        "transport",
+        "cart"
+      ],
+      "keywords": [
+        "amr",
+        "agv",
+        "warehouse",
+        "fulfillment",
+        "dock",
+        "tote",
+        "cart",
+        "aisle",
+        "zone",
+        "logistics",
+        "3pl",
+        "cross-dock"
+      ],
       "hardware_not_enough": "A drive base is not a site-qualified navigation model for that map and traffic mix.",
       "where_to_look": [
         {
@@ -346,11 +406,28 @@
       "label": "Machine-tending load/unload policy",
       "vertical": "manufacturing",
       "layer": "site_adapted",
-      "who_trains": ["integrator"],
+      "who_trains": [
+        "integrator"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Load and unload parts on CNC / process machines without crashing the fixture",
-      "tape_families": ["gripper"],
-      "keywords": ["cnc", "machine tend", "machine-tend", "lathe", "mill", "workpiece", "fixture", "load/unload", "tending", "factory", "assembly line", "plant"],
+      "tape_families": [
+        "gripper"
+      ],
+      "keywords": [
+        "cnc",
+        "machine tend",
+        "machine-tend",
+        "lathe",
+        "mill",
+        "workpiece",
+        "fixture",
+        "load/unload",
+        "tending",
+        "factory",
+        "assembly line",
+        "plant"
+      ],
       "hardware_not_enough": "Reach and payload do not encode fixture geometry or cycle interlocks.",
       "where_to_look": [
         {
@@ -372,10 +449,16 @@
       "label": "Hospital logistics transport policy",
       "vertical": "healthcare",
       "layer": "task_library",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Move linens, meals, meds, or samples through clinical corridors under hospital rules",
-      "tape_families": ["clinical_delivery", "transport", "cart"],
+      "tape_families": [
+        "clinical_delivery",
+        "transport",
+        "cart"
+      ],
       "keywords": [
         "hospital",
         "healthcare",
@@ -401,7 +484,7 @@
           "kind": "oem_runtime",
           "name": "Clinical AMR OEM application pack",
           "url": null,
-          "note": "Aethon, Diligent, and similar ship hospital-specific behaviors — not warehouse AMR software."
+          "note": "Aethon, Diligent, and similar ship hospital-specific behaviors \u2014 not warehouse AMR software."
         },
         {
           "kind": "open_weights",
@@ -416,11 +499,20 @@
       "label": "Autonomous floor-cleaning policy",
       "vertical": "commercial",
       "layer": "task_library",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "1_to_4_weeks",
       "physical_task": "Cover and reclean floors to a specified soil standard without colliding with people",
-      "tape_families": ["scrub"],
-      "keywords": ["scrub", "floor clean", "janitorial", "custodial"],
+      "tape_families": [
+        "scrub"
+      ],
+      "keywords": [
+        "scrub",
+        "floor clean",
+        "janitorial",
+        "custodial"
+      ],
       "hardware_not_enough": "A scrub deck is not the coverage policy for that floorplate.",
       "where_to_look": [
         {
@@ -436,11 +528,20 @@
       "label": "Inspection-route policy",
       "vertical": "utilities",
       "layer": "task_library",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Follow a route and capture the right observations (leak, thermal, visual)",
-      "tape_families": ["inspect"],
-      "keywords": ["inspect", "patrol", "thermal", "leak"],
+      "tape_families": [
+        "inspect"
+      ],
+      "keywords": [
+        "inspect",
+        "patrol",
+        "thermal",
+        "leak"
+      ],
       "hardware_not_enough": "Cameras plus legs/wheels are not an inspection checklist model.",
       "where_to_look": [
         {
@@ -456,13 +557,29 @@
       "label": "Kitchen / hospitality task policy",
       "vertical": "hospitality",
       "layer": "site_adapted",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Prepare food or drinks, run dishes, or clean up a kitchen under that site's rules",
-      "tape_families": ["serve", "food_prep", "beverage"],
+      "tape_families": [
+        "serve",
+        "food_prep",
+        "beverage"
+      ],
       "keywords": [
-        "kitchen", "restaurant", "cafe", "hotel", "dining", "espresso",
-        "barista", "dishwasher", "hospitality", "cafeteria", "cocktail"
+        "kitchen",
+        "restaurant",
+        "cafe",
+        "hotel",
+        "dining",
+        "espresso",
+        "barista",
+        "dishwasher",
+        "hospitality",
+        "cafeteria",
+        "cocktail"
       ],
       "hardware_not_enough": "A kitchen-capable chassis is not a trained policy for this site's menu, dish mix, or layout.",
       "where_to_look": [
@@ -470,7 +587,7 @@
           "kind": "oem_runtime",
           "name": "OEM kitchen / hospitality skill pack",
           "url": null,
-          "note": "Ask which food, drink, or dish policy they ship for this workplace — not only which robot."
+          "note": "Ask which food, drink, or dish policy they ship for this workplace \u2014 not only which robot."
         },
         {
           "kind": "open_weights",
@@ -480,7 +597,7 @@
         },
         {
           "kind": "foundation_robotics",
-          "name": "Physical Intelligence π0.5",
+          "name": "Physical Intelligence \u03c00.5",
           "url": "https://www.pi.website/blog/pi05",
           "note": "Open-world VLA. Still must be qualified on this kitchen."
         },
@@ -497,11 +614,20 @@
       "label": "Restroom cleaning policy",
       "vertical": "commercial",
       "layer": "task_library",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "1_to_4_weeks",
       "physical_task": "Clean restroom fixtures and floors to that facility's standard",
-      "tape_families": ["restroom"],
-      "keywords": ["restroom", "bathroom", "toilet", "urinal"],
+      "tape_families": [
+        "restroom"
+      ],
+      "keywords": [
+        "restroom",
+        "bathroom",
+        "toilet",
+        "urinal"
+      ],
       "hardware_not_enough": "A mobile cleaner is not the restroom coverage policy for this floorplate.",
       "where_to_look": [
         {
@@ -517,11 +643,26 @@
       "label": "Crop weeding policy",
       "vertical": "agriculture",
       "layer": "task_library",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Remove weeds in row crops with laser or mechanical tools without damaging the crop",
-      "tape_families": ["agriculture"],
-      "keywords": ["weed", "weeding", "laserweed", "laser weeder", "row crop", "vegetable row", "field", "agriculture", "crop"],
+      "tape_families": [
+        "agriculture"
+      ],
+      "keywords": [
+        "weed",
+        "weeding",
+        "laserweed",
+        "laser weeder",
+        "row crop",
+        "vegetable row",
+        "field",
+        "agriculture",
+        "crop"
+      ],
       "hardware_not_enough": "A field robot is not a trained weeding policy for that crop, spacing, and soil.",
       "where_to_look": [
         {
@@ -537,18 +678,30 @@
       "label": "Field spray / harvest policy",
       "vertical": "agriculture",
       "layer": "task_library",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Spray, seed, or harvest a named crop under that field's map and season rules",
-      "tape_families": ["agriculture"],
-      "keywords": ["harvest", "spray", "seed", "orchard", "vineyard", "crop"],
+      "tape_families": [
+        "agriculture"
+      ],
+      "keywords": [
+        "harvest",
+        "spray",
+        "seed",
+        "orchard",
+        "vineyard",
+        "crop"
+      ],
       "hardware_not_enough": "A tractor or gantry is not the spray/harvest policy for this crop mix.",
       "where_to_look": [
         {
           "kind": "oem_runtime",
           "name": "Agriculture OEM application pack",
           "url": null,
-          "note": "Ask which field policy they ship for this crop — not only which chassis."
+          "note": "Ask which field policy they ship for this crop \u2014 not only which chassis."
         }
       ]
     },
@@ -557,11 +710,23 @@
       "label": "Hull / port / underwater work policy",
       "vertical": "marine",
       "layer": "task_library",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Inspect or clean a hull, quay, or underwater structure along a named route",
-      "tape_families": ["marine"],
-      "keywords": ["hull", "port", "underwater", "quay", "shipyard", "ballast"],
+      "tape_families": [
+        "marine"
+      ],
+      "keywords": [
+        "hull",
+        "port",
+        "underwater",
+        "quay",
+        "shipyard",
+        "ballast"
+      ],
       "hardware_not_enough": "A wet chassis is not a qualified hull-inspection or quay policy.",
       "where_to_look": [
         {
@@ -577,11 +742,23 @@
       "label": "Hangar / airside aircraft work policy",
       "vertical": "aviation",
       "layer": "task_library",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Inspect or service an aircraft in a hangar or on the ramp under airside rules",
-      "tape_families": ["avionics"],
-      "keywords": ["hangar", "airside", "aircraft", "fuselage", "ramp", "aviation"],
+      "tape_families": [
+        "avionics"
+      ],
+      "keywords": [
+        "hangar",
+        "airside",
+        "aircraft",
+        "fuselage",
+        "ramp",
+        "aviation"
+      ],
       "hardware_not_enough": "A mobile platform is not an airside-qualified aircraft inspection policy. A drone may do this work; satellites are aerospace, not this slot.",
       "where_to_look": [
         {
@@ -597,11 +774,26 @@
       "label": "Jobsite layout / earthwork / finishing policy",
       "vertical": "construction",
       "layer": "site_adapted",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Print layout, move earth, or finish surfaces on this jobsite under that GC's rules",
-      "tape_families": ["construction"],
-      "keywords": ["jobsite", "layout", "drywall", "earthwork", "rebar", "grade", "framing", "construction", "bricklaying"],
+      "tape_families": [
+        "construction"
+      ],
+      "keywords": [
+        "jobsite",
+        "layout",
+        "drywall",
+        "earthwork",
+        "rebar",
+        "grade",
+        "framing",
+        "construction",
+        "bricklaying"
+      ],
       "hardware_not_enough": "A construction chassis is not the layout or finishing policy for this floorplate.",
       "where_to_look": [
         {
@@ -617,11 +809,23 @@
       "label": "Combine harvest policy",
       "vertical": "agriculture",
       "layer": "task_library",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Autonomously harvest grain with a combine header under that field's map and crop moisture rules",
-      "tape_families": ["agriculture"],
-      "keywords": ["combine", "x9", "lexion", "grain harvest", "header", "thresh"],
+      "tape_families": [
+        "agriculture"
+      ],
+      "keywords": [
+        "combine",
+        "x9",
+        "lexion",
+        "grain harvest",
+        "header",
+        "thresh"
+      ],
       "hardware_not_enough": "A combine chassis is not the harvest policy for this crop, header, and moisture band.",
       "where_to_look": [
         {
@@ -637,11 +841,22 @@
       "label": "Tractor planting / harvest policy",
       "vertical": "agriculture",
       "layer": "task_library",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Plant or support harvest with an autonomous tractor under that field's AB lines and season rules",
-      "tape_families": ["agriculture"],
-      "keywords": ["tractor", "planting", "autonomous tractor", "mk-v", "8r"],
+      "tape_families": [
+        "agriculture"
+      ],
+      "keywords": [
+        "tractor",
+        "planting",
+        "autonomous tractor",
+        "mk-v",
+        "8r"
+      ],
       "hardware_not_enough": "A tractor is not the plant/harvest policy for this crop mix and implement set.",
       "where_to_look": [
         {
@@ -657,11 +872,23 @@
       "label": "Tractor-implement work policy",
       "vertical": "agriculture",
       "layer": "task_library",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Run a named implement on a tractor host (weed, see-and-spray, precision spray) without treating the implement as its own company class",
-      "tape_families": ["agriculture"],
-      "keywords": ["implement", "three-point", "hitch", "see & spray", "see-and-spray", "ara sprayer"],
+      "tape_families": [
+        "agriculture"
+      ],
+      "keywords": [
+        "implement",
+        "three-point",
+        "hitch",
+        "see & spray",
+        "see-and-spray",
+        "ara sprayer"
+      ],
       "hardware_not_enough": "An implement on a tractor is a configuration. The host plus the implement still need the field policy for this crop.",
       "where_to_look": [
         {
@@ -677,11 +904,23 @@
       "label": "Residential home construction policy",
       "vertical": "construction",
       "layer": "site_adapted",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Frame, print, or finish a house under that builder's plans and site rules",
-      "tape_families": ["construction"],
-      "keywords": ["home", "house", "residential", "framing", "3d print home", "vulcan"],
+      "tape_families": [
+        "construction"
+      ],
+      "keywords": [
+        "home",
+        "house",
+        "residential",
+        "framing",
+        "3d print home",
+        "vulcan"
+      ],
       "hardware_not_enough": "A construction chassis is not the home-building policy for this floorplan.",
       "where_to_look": [
         {
@@ -697,11 +936,23 @@
       "label": "Building construction policy",
       "vertical": "construction",
       "layer": "site_adapted",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Lay block, print, or finish a commercial or multi-story building under that GC's rules",
-      "tape_families": ["construction"],
-      "keywords": ["building", "commercial building", "hadrian", "bod2", "bricklay", "block laying"],
+      "tape_families": [
+        "construction"
+      ],
+      "keywords": [
+        "building",
+        "commercial building",
+        "hadrian",
+        "bod2",
+        "bricklay",
+        "block laying"
+      ],
       "hardware_not_enough": "A building robot is not the layout or masonry policy for this structure.",
       "where_to_look": [
         {
@@ -717,11 +968,21 @@
       "label": "Drone inspection policy",
       "vertical": "aviation",
       "layer": "task_library",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "1_to_4_weeks",
       "physical_task": "Fly an inspection route and capture the right observations (airframe, utility, site)",
-      "tape_families": ["avionics"],
-      "keywords": ["drone inspect", "uav inspect", "skydio", "aerial inspect", "airframe inspect"],
+      "tape_families": [
+        "avionics"
+      ],
+      "keywords": [
+        "drone inspect",
+        "uav inspect",
+        "skydio",
+        "aerial inspect",
+        "airframe inspect"
+      ],
       "hardware_not_enough": "A drone airframe is not the inspection checklist model for that asset.",
       "where_to_look": [
         {
@@ -737,11 +998,20 @@
       "label": "Drone delivery policy",
       "vertical": "aviation",
       "layer": "task_library",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Fly a delivery route and drop or dock a payload under that corridor's rules",
-      "tape_families": ["avionics"],
-      "keywords": ["drone delivery", "zipline", "wing delivery", "medical drone"],
+      "tape_families": [
+        "avionics"
+      ],
+      "keywords": [
+        "drone delivery",
+        "zipline",
+        "wing delivery",
+        "medical drone"
+      ],
       "hardware_not_enough": "A delivery airframe is not the corridor and drop policy for this route.",
       "where_to_look": [
         {
@@ -757,11 +1027,23 @@
       "label": "eVTOL flight policy",
       "vertical": "aviation",
       "layer": "task_library",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Fly an eVTOL (flying-car class) route under that vertiport and airspace rule set",
-      "tape_families": ["avionics"],
-      "keywords": ["evtol", "e-vtol", "flying car", "joby", "archer", "wisk", "beta alia"],
+      "tape_families": [
+        "avionics"
+      ],
+      "keywords": [
+        "evtol",
+        "e-vtol",
+        "flying car",
+        "joby",
+        "archer",
+        "wisk",
+        "beta alia"
+      ],
       "hardware_not_enough": "An eVTOL airframe is not the type-certified route policy for this city pair.",
       "where_to_look": [
         {
@@ -777,11 +1059,21 @@
       "label": "Autonomous airplane flight policy",
       "vertical": "aviation",
       "layer": "task_library",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Fly an airplane-like robot under that IFR route and airport pair",
-      "tape_families": ["avionics"],
-      "keywords": ["autonomous aircraft", "autonomous plane", "optionally piloted", "reliable robotics"],
+      "tape_families": [
+        "avionics"
+      ],
+      "keywords": [
+        "autonomous aircraft",
+        "autonomous plane",
+        "optionally piloted",
+        "reliable robotics"
+      ],
       "hardware_not_enough": "An airplane airframe is not the autonomous flight policy for this pair of airports.",
       "where_to_look": [
         {
@@ -797,11 +1089,21 @@
       "label": "Satellite servicing policy",
       "vertical": "aerospace",
       "layer": "task_library",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "months_to_years",
       "physical_task": "Rendezvous, dock, or service a named satellite on orbit",
-      "tape_families": ["aerospace"],
-      "keywords": ["satellite servicing", "elsa-d", "on-orbit servicing", "mission extension", "refuel satellite"],
+      "tape_families": [
+        "aerospace"
+      ],
+      "keywords": [
+        "satellite servicing",
+        "elsa-d",
+        "on-orbit servicing",
+        "mission extension",
+        "refuel satellite"
+      ],
       "hardware_not_enough": "A servicing bus is not the rendezvous policy for that client satellite.",
       "where_to_look": [
         {
@@ -817,11 +1119,22 @@
       "label": "Orbital debris removal policy",
       "vertical": "aerospace",
       "layer": "task_library",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "months_to_years",
       "physical_task": "Capture or deorbit debris with a robot attached to a servicing satellite",
-      "tape_families": ["aerospace"],
-      "keywords": ["space debris", "orbital debris", "debris capture", "adras-j", "clearspace", "debris removal"],
+      "tape_families": [
+        "aerospace"
+      ],
+      "keywords": [
+        "space debris",
+        "orbital debris",
+        "debris capture",
+        "adras-j",
+        "clearspace",
+        "debris removal"
+      ],
       "hardware_not_enough": "A capture arm on a satellite is a configuration. The debris-capture policy is still unknown until named.",
       "where_to_look": [
         {
@@ -837,11 +1150,21 @@
       "label": "Launch / rocket ground-support policy",
       "vertical": "aerospace",
       "layer": "site_adapted",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Handle, inspect, or service a launch vehicle or payload on the pad under that range's rules",
-      "tape_families": ["aerospace"],
-      "keywords": ["launch pad", "ground support", "rocket", "payload processing"],
+      "tape_families": [
+        "aerospace"
+      ],
+      "keywords": [
+        "launch pad",
+        "ground support",
+        "rocket",
+        "payload processing"
+      ],
       "hardware_not_enough": "A ground robot is not the pad policy for this vehicle and range.",
       "where_to_look": [
         {
@@ -857,10 +1180,15 @@
       "label": "Mine / quarry haulage policy",
       "vertical": "mining",
       "layer": "task_library",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "2_to_8_weeks",
       "physical_task": "Haul ore or overburden on a named pit, stope, or underground route under that mine's traffic rules",
-      "tape_families": ["mining"],
+      "tape_families": [
+        "mining"
+      ],
       "keywords": [
         "mining",
         "mine",
@@ -885,13 +1213,18 @@
     },
     {
       "id": "hotel_guest_service_policy",
-      "label": "Hotel / guest delivery and serving policy",
+      "label": "Hotel / guest delivery and housekeeping policy",
       "vertical": "hospitality",
       "layer": "task_library",
-      "who_trains": ["oem"],
+      "who_trains": [
+        "oem"
+      ],
       "typical_time_band": "1_to_4_weeks",
-      "physical_task": "Deliver amenities, luggage, or table items through hotel or dining floors under that property's guest rules",
-      "tape_families": ["serve", "cart"],
+      "physical_task": "Deliver amenities or luggage and support housekeeping through hotel guest floors under that property's guest rules",
+      "tape_families": [
+        "hospitality",
+        "cart"
+      ],
       "keywords": [
         "hotel",
         "resort",
@@ -900,10 +1233,6 @@
         "bellhop",
         "room service",
         "housekeeping",
-        "table service",
-        "food running",
-        "bussing",
-        "serving",
         "hospitality"
       ],
       "hardware_not_enough": "Indoor mobility is not a guest-service policy for this property's floors and SOPs.",
@@ -912,7 +1241,7 @@
           "kind": "oem_runtime",
           "name": "Hospitality OEM guest-service pack",
           "url": null,
-          "note": "Ask which hotel or serving policy they ship for this property — not only which chassis."
+          "note": "Ask which hotel or serving policy they ship for this property \u2014 not only which chassis."
         }
       ]
     },
@@ -921,10 +1250,15 @@
       "label": "Food-prep station policy",
       "vertical": "restaurant",
       "layer": "site_adapted",
-      "who_trains": ["oem", "integrator"],
+      "who_trains": [
+        "oem",
+        "integrator"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Cook or prep named menu items at a fry, grill, or prep station under that kitchen's recipes",
-      "tape_families": ["food_prep"],
+      "tape_families": [
+        "food_prep"
+      ],
       "keywords": [
         "food prep",
         "food preparation",
@@ -942,7 +1276,12 @@
         "kitchen automation",
         "ingredient dosing",
         "tortilla",
-        "assembly line kitchen"
+        "assembly line kitchen",
+        "hotel kitchen",
+        "casino kitchen",
+        "airport kitchen",
+        "banquet cook",
+        "commissary kitchen"
       ],
       "hardware_not_enough": "A kitchen-capable arm is not the recipe and station policy for this menu.",
       "where_to_look": [
@@ -955,11 +1294,90 @@
       ]
     },
     {
+      "id": "dining_floor_service_policy",
+      "label": "Dining-floor table / drink / bussing policy",
+      "vertical": "restaurant",
+      "layer": "task_library",
+      "who_trains": [
+        "oem"
+      ],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Run food and drinks to tables and bus dining floors in restaurants, hotels, casinos, airports, offices, or malls \u2014 not hotel housekeeping",
+      "tape_families": [
+        "serve"
+      ],
+      "keywords": [
+        "table service",
+        "food running",
+        "food runner",
+        "bussing",
+        "waitstaff",
+        "dining room",
+        "cocktail server",
+        "busser",
+        "drink running",
+        "banquet server",
+        "hotel dining",
+        "casino cocktail",
+        "airport restaurant",
+        "office cafeteria",
+        "mall food court"
+      ],
+      "hardware_not_enough": "Indoor mobility is not a table-service policy for this dining floor.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Serving OEM floor policy",
+          "url": null,
+          "note": "Ask which table/drink/bussing policy they ship for this floor \u2014 not only which chassis."
+        }
+      ]
+    },
+    {
+      "id": "commercial_cleaning_policy",
+      "label": "Commercial floor / vacuum / restroom cleaning policy",
+      "vertical": "hospitality",
+      "layer": "task_library",
+      "who_trains": [
+        "oem"
+      ],
+      "typical_time_band": "1_to_4_weeks",
+      "physical_task": "Scrub floors, vacuum, and clean restrooms at hotels, restaurants, casinos, airports, offices, malls, and data centers \u2014 not hospital EVS",
+      "tape_families": [
+        "restroom",
+        "scrub"
+      ],
+      "keywords": [
+        "janitor",
+        "custodian",
+        "restroom attendant",
+        "floor cleaning",
+        "vacuum",
+        "restroom",
+        "commercial cleaning",
+        "data center",
+        "shopping mall",
+        "office building"
+      ],
+      "hardware_not_enough": "A scrubber chassis is not the restroom and floor policy for this building.",
+      "where_to_look": [
+        {
+          "kind": "oem_runtime",
+          "name": "Cleaning OEM route policy",
+          "url": null,
+          "note": "Ask which floor/restroom route they ship for this site \u2014 not only which chassis."
+        }
+      ]
+    },
+    {
       "id": "site_task_policy",
       "label": "Site-specific task policy",
       "vertical": "any",
       "layer": "site_adapted",
-      "who_trains": ["integrator", "oem_field"],
+      "who_trains": [
+        "integrator",
+        "oem_field"
+      ],
       "typical_time_band": "4_to_12_weeks",
       "physical_task": "Perform this job's physical tasks under this workplace's rules",
       "tape_families": [],
@@ -970,7 +1388,7 @@
           "kind": "oem_runtime",
           "name": "OEM skill / application store",
           "url": null,
-          "note": "Ask which task policy they ship for this work — not only which chassis."
+          "note": "Ask which task policy they ship for this work \u2014 not only which chassis."
         },
         {
           "kind": "integrator_cell",

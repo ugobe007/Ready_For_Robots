@@ -31,8 +31,10 @@ def test_picker_includes_healthcare_not_a_duplicate_medical_tile():
     assert ids.count("healthcare") == 1
     assert "medical" not in ids
     assert "healthcare" in FIND_TILE_CLASSES
-    assert ids[-1] == "food_prep"
+    assert ids[-1] == "cleaning"
     assert "food_prep" in ids
+    assert "serving" in ids
+    assert "cleaning" in ids
     assert "healthcare" in ids
     assert ids.count("healthcare") == 1
     by_id = {row["id"]: row for row in rows}

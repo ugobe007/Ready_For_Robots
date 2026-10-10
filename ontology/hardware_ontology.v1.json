@@ -58,6 +58,5 @@
     {"predicate": "claims_beverage_prep", "category": "food", "type": "bool"},
     {"predicate": "warehouse_or_factory_deployment", "category": "deployment", "type": "bool"}
   ],
-  "numeric_scopes": ["whole_robot", "per_tray", "per_shelf", "per_deck", "per_arm", "accessory"],
   "numeric_scope_rule": "per_tray/per_shelf/per_deck/accessory values are rejected as whole-robot payload"
 }

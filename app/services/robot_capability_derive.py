@@ -410,7 +410,8 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
     # Food preparation / cooking (kitchen robots). Distinct dexterous capability —
     # deliberately NOT generic `manipulate`, so a fry/assembly robot maps to food
     # work rather than falsely matching industrial CNC/case handling.
-    # FIND class food_prep is QSR make-line work, not hotel guest delivery.
+    # FIND class food_prep is kitchen prep (QSR + hotel/casino/airport kitchens),
+    # not hotel guest delivery.
     food_prep = _truthy(facts, "claims_food_prep")
     food_prep_class = next((c for c in classes if c in FOOD_PREP_CLASSES), None)
     if food_prep:
@@ -672,6 +673,15 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
             derivation="inferred",
             derived_from=["product_class"],
             evidence="autonomous_scrubber class",
+        )
+    elif cleaning_class:
+        caps["hard_floor_scrub"] = DerivedCapability(
+            key="hard_floor_scrub",
+            label="hard-floor scrubbing",
+            present=True,
+            derivation="inferred",
+            derived_from=["product_class"],
+            evidence=f"{cleaning_class} class",
         )
     else:
         caps["hard_floor_scrub"] = DerivedCapability(

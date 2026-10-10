@@ -34,6 +34,8 @@ def test_picker_adds_industry_tiles_including_food_prep_serving_cleaning():
     assert "medical" not in ids
     assert normalize_class_id("hotel") == "hospitality"
     assert normalize_class_id("food_prep") == "food_prep"
+    assert normalize_class_id("serving") == "serving"
+    assert normalize_class_id("cleaning") == "cleaning"
     assert normalize_class_id("3pl") == "logistics"
 
 
