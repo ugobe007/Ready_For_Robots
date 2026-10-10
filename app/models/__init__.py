@@ -71,6 +71,7 @@ from app.models.jobs_crm import (
 )
 from app.models.site_analytics_event import SiteAnalyticsEvent
 from app.models.humanoid_report_snapshot import HumanoidReportSnapshot
+from app.models.daily_jobs_report_edition import DailyJobsReportEdition
 from app.models.special_project import (
     SpecialProject,
     SpecialProjectTarget,

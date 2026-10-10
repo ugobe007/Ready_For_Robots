@@ -182,8 +182,9 @@ describe("landing fork", () => {
       "utf8"
     );
     expect(report).toMatch(/Decision maker:/);
-    expect(report).toMatch(/Job card/);
-    expect(report).toMatch(/card_href/);
+    expect(report).toMatch(/Download CSV/);
+    expect(report).not.toMatch(/Job card/);
+    expect(report).not.toMatch(/card_href/);
     expect(report).not.toMatch(/\[1\] Job type and description/);
     const inbox = readFileSync(join(here, "../pages/Inbox.tsx"), "utf8");
     expect(inbox).toMatch(/folder=all/);

@@ -1,11 +1,15 @@
-"""Daily top-25 Robot Job sales cards — operator email + admin list.
+"""Daily top-25 leads — inline text email, Supabase row, CSV attachment.
 
 Named employers and real work only. Not SIGNAL buyers. No paid LLM.
 Never invent a decision-maker name or an operations@company.com mailbox.
+The email is the lead text. It does not link each row to a job card.
 """
 from __future__ import annotations
 
+import base64
+import csv
 import html
+import io
 import json
 import logging
 import os
@@ -572,8 +576,6 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
         lines.append(f"    {_job_name_line(job)}")
         lines.append(f"    Decision maker: {_decision_maker_inline(job)}")
         lines.append(f"    Contact: {job.get('contact') or CONTACT_EMPTY}")
-        href = str(job.get("card_href") or job_card_href(str(job.get("job_key") or "")))
-        lines.append(f"    Job card: {href}")
         intro = str(job.get("intro") or intro_from_sales_card(job) or "").strip()
         if intro:
             lines.append("    [5] Intro to the robot company")
@@ -587,7 +589,9 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
             for intro_line in employer_intro.splitlines():
                 lines.append(f"        {intro_line}")
         lines.append("")
+    day_name = str(report.get("date") or day)
     lines += [
+        f"CSV of these leads is attached ({_csv_filename(day_name)}).",
         f"FIND: {report.get('find_href') or f'{_SITE}/?visit=jobs'}",
         f"Admin: {report.get('admin_href') or f'{_SITE}/admin#daily-jobs-report'}",
         "",
@@ -596,77 +600,111 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _mailto_or_link(value: str) -> str:
-    raw = str(value or "").strip()
-    if not raw:
-        return ""
-    if "@" in raw and "://" not in raw and " " not in raw:
-        href = html.escape(f"mailto:{raw}")
-        return f'<a href="{href}">{html.escape(raw)}</a>'
-    if raw.startswith(("http://", "https://")):
-        href = html.escape(raw)
-        return f'<a href="{href}">{html.escape(raw)}</a>'
-    return html.escape(raw)
+_CSV_COLUMNS = (
+    "rank",
+    "employer",
+    "locality",
+    "job_type",
+    "description",
+    "decision_maker",
+    "contact",
+    "employer_email",
+    "apply_url",
+    "intro",
+    "employer_intro",
+)
 
 
-def _contact_html(job: dict[str, Any]) -> str:
-    bits = [
-        _mailto_or_link(str(job.get("employer_email") or "")),
-        _mailto_or_link(str(job.get("contact_url") or "")),
-        _mailto_or_link(str(job.get("apply_url") or "")),
-    ]
-    bits = [b for b in bits if b]
-    if bits:
-        return " · ".join(bits)
-    return html.escape(str(job.get("contact") or CONTACT_EMPTY))
+def _csv_filename(day: str) -> str:
+    clean = str(day or "jobs").strip()[:10] or "jobs"
+    return f"daily-jobs-{clean}.csv"
+
+
+def render_daily_jobs_report_csv(report: dict[str, Any]) -> str:
+    """Spreadsheet of the same 25 leads. No job-card URL column."""
+    buf = io.StringIO()
+    writer = csv.DictWriter(
+        buf,
+        fieldnames=_CSV_COLUMNS,
+        extrasaction="ignore",
+        lineterminator="\n",
+    )
+    writer.writeheader()
+    for job in list(report.get("jobs") or []):
+        writer.writerow(
+            {
+                "rank": job.get("rank") or "",
+                "employer": job.get("employer") or "",
+                "locality": job.get("locality") or "",
+                "job_type": job.get("job_type") or job.get("title") or "",
+                "description": job.get("description") or "",
+                "decision_maker": _decision_maker_inline(job),
+                "contact": job.get("contact") or "",
+                "employer_email": job.get("employer_email") or "",
+                "apply_url": job.get("apply_url") or "",
+                "intro": job.get("intro") or "",
+                "employer_intro": job.get("employer_intro") or "",
+            }
+        )
+    return buf.getvalue()
+
+
+def daily_jobs_csv_attachment(report: dict[str, Any], csv_text: str) -> dict[str, str]:
+    day = str(report.get("date") or datetime.now(timezone.utc).date().isoformat())
+    return {
+        "filename": _csv_filename(day),
+        "content": base64.b64encode(csv_text.encode("utf-8")).decode("ascii"),
+        "content_type": "text/csv",
+    }
+
+
+def store_daily_jobs_report_edition(
+    db: Session,
+    report: dict[str, Any],
+    *,
+    body_text: str,
+    csv_text: str,
+) -> bool:
+    """Upsert the day's inline text and CSV. A missing table must not block the email."""
+    day = str(report.get("date") or "")[:10]
+    if not day:
+        return False
+    try:
+        from app.models.daily_jobs_report_edition import DailyJobsReportEdition
+
+        with db.begin_nested():
+            row = (
+                db.query(DailyJobsReportEdition)
+                .filter(DailyJobsReportEdition.report_date == day)
+                .one_or_none()
+            )
+            if row is None:
+                row = DailyJobsReportEdition(report_date=day)
+                db.add(row)
+            row.body_text = body_text
+            row.csv_text = csv_text
+            row.job_count = int(report.get("count") or len(report.get("jobs") or []))
+            row.stored_at = datetime.now(timezone.utc)
+        db.commit()
+        return True
+    except Exception:
+        logger.warning("daily jobs report text was not stored", exc_info=True)
+        try:
+            db.rollback()
+        except Exception:
+            logger.warning("daily jobs report store rollback failed", exc_info=True)
+        return False
 
 
 def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
-    day = html.escape(str(report.get("date") or datetime.now(timezone.utc).date().isoformat()))
-    limit = int(report.get("limit") or TOP_N)
-    jobs = list(report.get("jobs") or [])
-    find_href = html.escape(str(report.get("find_href") or f"{_SITE}/?visit=jobs"))
-    admin_href = html.escape(
-        str(report.get("admin_href") or f"{_SITE}/admin#daily-jobs-report")
-    )
-    rows: list[str] = []
-    for job in jobs:
-        rank = int(job.get("rank") or 0)
-        employer = html.escape(str(job.get("employer") or "Employer"))
-        locality = html.escape(str(job.get("locality") or "").strip())
-        head = f"{rank:02d} {employer}"
-        if locality:
-            head = f"{head} · {locality}"
-        href = str(job.get("card_href") or job_card_href(str(job.get("job_key") or "")))
-        card = html.escape(href)
-        rows.append(
-            "<p style=\"margin:0 0 12px;padding:0;font-size:14px;line-height:1.45\">"
-            f"<strong>{head}</strong><br>"
-            f"{html.escape(_job_name_line(job))}<br>"
-            f"Decision maker: {html.escape(_decision_maker_inline(job))}<br>"
-            f"Contact: {_contact_html(job)}<br>"
-            f"<a href=\"{card}\">Job card</a>"
-            "</p>"
-        )
-    listing = (
-        "<p style=\"margin:0;padding:0\">No named-employer jobs in the live table yet.</p>"
-        if not jobs
-        else "".join(rows)
-    )
+    """Same words as the plain-text body. No per-lead job-card link."""
+    body = html.escape(render_daily_jobs_report_text(report))
     return (
         "<div style=\"font-family:Georgia,serif;max-width:640px;color:#111827;"
         "margin:0;padding:0\">"
-        f"<p style=\"font-size:16px;font-weight:700;margin:0 0 8px;padding:0\">"
-        f"Top {limit} hot job opportunities — {day}</p>"
-        "<p style=\"color:#4b5563;font-size:13px;margin:0 0 12px;padding:0\">"
-        "Named-employer Robot Jobs. Decision maker and contact as stored. "
-        "We do not invent people or emails.</p>"
-        f"{listing}"
-        f"<p style=\"margin:12px 0 0;padding:0;font-size:13px\">"
-        f"<a href=\"{find_href}\">FIND</a> · "
-        f"<a href=\"{admin_href}\">Admin</a></p>"
-        "<p style=\"color:#6b7280;font-size:12px;margin:8px 0 0;padding:0\">"
-        "You receive this once per day. Email now on Admin sends a catch-up.</p>"
+        "<pre style=\"margin:0;padding:0;white-space:pre-wrap;font-family:Georgia,serif;"
+        "font-size:14px;line-height:1.45\">"
+        f"{body}</pre>"
         "</div>"
     )
 
@@ -675,7 +713,7 @@ def _idempotency_key(day: str, *, force: bool) -> str:
     if force:
         stamp = datetime.now(timezone.utc).strftime("%H%M%S")
         return f"daily-jobs-report-{day}-force-{stamp}"
-    return f"daily-jobs-report-{day}-cards-v2"
+    return f"daily-jobs-report-{day}-text-csv-v1"
 
 
 def _already_sent_response(
@@ -730,6 +768,10 @@ def send_daily_jobs_report(
         subject = f"Top {report['limit']} hot job opportunities — {report['date']}"
         body = render_daily_jobs_report_text(report)
         html_body = render_daily_jobs_report_html(report)
+        csv_text = render_daily_jobs_report_csv(report)
+        store_daily_jobs_report_edition(
+            db, report, body_text=body, csv_text=csv_text
+        )
         from app.services.resend_email import ResendEmailError, send_email_via_resend
 
         try:
@@ -739,6 +781,7 @@ def send_daily_jobs_report(
                 body_text=body,
                 body_html=html_body,
                 from_display_name="Ready For Robots · Jobs ops",
+                attachments=[daily_jobs_csv_attachment(report, csv_text)],
                 idempotency_key=_idempotency_key(today, force=force),
             )
         except ResendEmailError as exc:
