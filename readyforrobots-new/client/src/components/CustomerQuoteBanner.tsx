@@ -1,6 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { ChevronRight, ChevronLeft, ArrowUpRight } from "lucide-react";
-import { FEATURED_BUYER_QUOTES, type BuyerQuote } from "@/lib/buyerQuotes";
+import {
+  FEATURED_BUYER_QUOTES,
+  quoteShowsSourceLink,
+  quoteSourceHost,
+  type BuyerQuote,
+} from "@/lib/buyerQuotes";
 import { jobsFindHref } from "@/lib/jobsLanding";
 import { FIND_JOBS_CTA } from "@/lib/jobsWorkflow";
 import { Link } from "wouter";
@@ -9,6 +14,8 @@ export default function CustomerQuoteBanner() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const activeQuote: BuyerQuote = FEATURED_BUYER_QUOTES[currentIndex];
+  const showSource =
+    quoteShowsSourceLink(activeQuote.id) && Boolean(activeQuote.sourceUrl);
 
   const handleNext = useCallback(() => {
     setCurrentIndex(prev => (prev + 1) % FEATURED_BUYER_QUOTES.length);
@@ -37,7 +44,18 @@ export default function CustomerQuoteBanner() {
     >
       <div className="flex flex-col gap-1.5">
         <p className="text-xs sm:text-sm italic font-medium text-slate-200 leading-relaxed">
-          &ldquo;{activeQuote.quote}&rdquo;
+          {showSource ? (
+            <a
+              href={activeQuote.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-slate-500/70 underline-offset-2 hover:text-white"
+            >
+              &ldquo;{activeQuote.quote}&rdquo;
+            </a>
+          ) : (
+            <>&ldquo;{activeQuote.quote}&rdquo;</>
+          )}
         </p>
 
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs">
@@ -49,6 +67,16 @@ export default function CustomerQuoteBanner() {
             <strong className="text-slate-200">{activeQuote.company}</strong>
           </span>
           <span className="text-slate-500">{activeQuote.date}</span>
+          {showSource ? (
+            <a
+              href={activeQuote.sourceUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-slate-400 underline underline-offset-2 hover:text-slate-200"
+            >
+              {quoteSourceHost(activeQuote.sourceUrl)}
+            </a>
+          ) : null}
           <span className="text-slate-600">·</span>
 
           <Link

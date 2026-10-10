@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link } from "wouter";
+import { readableNewsletterHeadline } from "@/lib/newsletterHeadline";
 import { cleanScrapedText } from "@/lib/text";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 
@@ -76,9 +77,10 @@ export default function MarketingDailyBrief({
     }
   }
 
-  const briefHeadline =
-    cleanScrapedText(dailyBrief?.latestEdition?.headline) ||
-    "Fresh robot demand signals, updated daily.";
+  const rawHeadline = dailyBrief?.latestEdition?.headline;
+  const briefHeadline = rawHeadline
+    ? readableNewsletterHeadline(rawHeadline)
+    : "Fresh robot demand signals, updated daily.";
   const briefSubheadline =
     cleanScrapedText(dailyBrief?.latestEdition?.subheadline) ||
     "A daily scan of sales triggers, partnership motion, and automation buying intent from the ReadyForRobots signal engine.";
