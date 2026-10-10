@@ -1,6 +1,8 @@
 """pstack site protocol: roles, matcher ownership, refusals."""
 from pathlib import Path
 
+import pytest
+
 from app.services.pstack_protocol import (
     CRM_WALL_REQUIRED,
     CRITIC_HELDOUT_FIND_URLS,
@@ -95,6 +97,17 @@ def test_sales_plan_agent_uses_pstack_not_gateway():
     assert "Do not set SCOUT_PLAN_PROVIDER=ai-gateway" in src
     assert "Send Cal intro" not in src
     assert "Do not scrape Apollo" in src
+
+
+def test_fastapi_app_imports_for_fly_health():
+    """Cal→Phelan leftovers must not crash uvicorn (Fly /health 502)."""
+    pytest.importorskip("fastapi")
+    from fastapi import FastAPI
+
+    from app.main import app
+
+    assert isinstance(app, FastAPI)
+    assert any(getattr(route, "path", "") == "/health" for route in app.routes)
 
 
 def test_cal_jobs_desk_is_not_find_or_buyer_mail():

@@ -66,6 +66,7 @@ from app.api.gpt_actions import router as gpt_actions_router
 from app.api.v1 import router as v1_router
 from app.api.v1.errors import V1HTTPException, error_response
 from app.database import get_db
+from app.spa_fallback import is_api_catchall_path
 import app.models
 import app.models.shared_calculation
 import app.models.site_analytics_event
@@ -1416,6 +1417,10 @@ if os.path.exists(STATIC_DIR):
     async def serve_frontend(full_path: str):
         # 0. 404 for probe-like paths (middleware also catches, but belt-and-suspenders)
         if _PROBE_PATTERNS.search(full_path):
+            return JSONResponse(status_code=404, content={"detail": "Not found"})
+        # Unknown /api/* must be JSON 404, never the Vite shell. HTML 200 made
+        # FIND home treat a missing preview route as an empty job table.
+        if is_api_catchall_path(full_path):
             return JSONResponse(status_code=404, content={"detail": "Not found"})
         # 1. Exact file (e.g. favicon.ico)
         candidate = os.path.join(STATIC_DIR, full_path)

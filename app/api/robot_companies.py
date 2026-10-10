@@ -34,11 +34,11 @@ from app.models.outreach import OutreachMessage
 from app.models.robot_company import RobotCompany
 from app.models.supply_outreach import SupplyOutreachMessage
 from app.services.agent_messaging import (
-    CAL_VENDOR_OFFRAMP_LINE,
-    CAL_VENDOR_STRATEGY_CALL_CTA,
+    PHELAN_VENDOR_OFFRAMP_LINE,
+    PHELAN_VENDOR_STRATEGY_CALL_CTA,
     VEGAS_DISTRIBUTION_LINE,
     phelan_signature,
-    cal_vendor_match_paragraph,
+    phelan_vendor_match_paragraph,
 )
 from app.services.phelan_insights import pick_cal_insight
 from app.services.company_domain import normalize_website_domain
@@ -1233,11 +1233,9 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]], *, for
         robot_type=getattr(rc, "robot_type", None),
         allow_humor=True,
     )
-    from app.services.agent_messaging import phelan_vendor_match_paragraph
-
     body = f"""Hi,
 
-{cal_vendor_match_paragraph(rc.company_name, industry=focus)}
+{phelan_vendor_match_paragraph(rc.company_name, industry=focus)}
 
 {insight}
 
@@ -1251,9 +1249,9 @@ I'm not assuming each one is a fit. PoCs fail when capabilities don't match buye
 
 If you're pushing West Coast expansion or hospitality adoption, we can map a channel strategy around {possessive} hardware. {VEGAS_DISTRIBUTION_LINE}
 
-{CAL_VENDOR_OFFRAMP_LINE}
+{PHELAN_VENDOR_OFFRAMP_LINE}
 
-{CAL_VENDOR_STRATEGY_CALL_CTA}
+{PHELAN_VENDOR_STRATEGY_CALL_CTA}
 
 {phelan_signature()}"""
     return {"subject": subject, "body": body}
