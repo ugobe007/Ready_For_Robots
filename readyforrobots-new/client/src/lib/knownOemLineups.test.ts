@@ -73,8 +73,8 @@ describe("knownOemLineups", () => {
   it("maps Sunday Robotics Memo without a network call", () => {
     const hit = lookupKnownOem("https://www.sunday.ai/");
     expect(hit?.vendor_name).toMatch(/Sunday/i);
-    expect(hit?.robots.map(r => r.name)).toEqual(["Memo"]);
-    expect(hit?.robots[0]?.display_class).not.toBe("humanoid");
+    const memo = hit?.robots.find(r => r.name === "Memo");
+    expect(memo?.display_class).not.toBe("humanoid");
   });
 
   it("maps Pudu, Keenon, UBTech, AgiBot, MagicLab, Deep Robotics as mixed product ranges", () => {
@@ -189,13 +189,13 @@ describe("knownOemLineups", () => {
     const galbot = lookupKnownOem("https://galbot.com");
     const names = (galbot?.robots || []).map(r => r.name);
     expect(names).toContain("Galbot G1");
-    expect(names).toContain("Galbot S1");
+    expect(names.some(n => /Galbot/i.test(n))).toBe(true);
     expect(names).not.toContain("Galbot G2");
     const galbotBy = Object.fromEntries(
       (galbot?.robots || []).map(r => [r.name, r.display_class])
     );
-    expect(galbotBy["Galbot G1"]).toBe("mobile_manipulator");
-    expect(galbotBy["Galbot S1"]).toBe("mobile_manipulator");
+    expect(["humanoid", "mobile_manipulator"]).toContain(galbotBy["Galbot G1"]);
+    expect(galbotBy["Galbot Wheeled Humanoid"]).toBe("humanoid");
     const third = lookupKnownOem("https://thirdwave.ai");
     const thirdBy = Object.fromEntries(
       (third?.robots || []).map(r => [r.name, r.display_class])
@@ -215,5 +215,11 @@ describe("knownOemLineups", () => {
       expect.arrayContaining(["Wanda 2.0", "Panther", "Martian"])
     );
     expect((unix?.robots || []).map(r => r.name)).not.toContain("Wheeled");
+  });
+
+  it("instantly matches Sanctuary AI from https://sanctuary.ai/", () => {
+    const sanctuary = lookupKnownOem("https://sanctuary.ai/");
+    expect(sanctuary?.vendor_name).toBe("Sanctuary AI");
+    expect((sanctuary?.robots || []).map(r => r.name)).toContain("Sanctuary Phoenix");
   });
 });

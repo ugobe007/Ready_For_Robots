@@ -2,8 +2,16 @@
  * `/` first beat: sparse System 1 fork, then two doors. Not FIND yet.
  * Headline picker A–E is not shipped.
  */
+import { useState, useEffect, type FormEvent } from "react";
+import { Sparkles, UserPlus, ShieldCheck } from "lucide-react";
 import PixelIcon from "@/components/PixelIcon";
 import SiteIcon from "@/components/SiteIcon";
+import LiveJobTape from "@/components/jobs/LiveJobTape";
+import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
+import CustomerQuoteBanner from "@/components/CustomerQuoteBanner";
+import QuickSignupModal from "@/components/QuickSignupModal";
+import { getPublicReadApiBase } from "@/lib/apiBase";
+import { MARKET_TAPE_JOBS, type TapeJob } from "@/lib/jobsTapeCorpus";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
   LANDING_BRIEF_EYEBROW,
@@ -14,12 +22,11 @@ import {
   LANDING_COLORS as C,
   LANDING_CANDIDATES_DOOR_LINE,
   LANDING_CTA_ROBOT_WORD,
+  LANDING_DOOR_ICON_FILL,
   LANDING_DOOR_ICON_SCALE,
   LANDING_DOORS_CUE,
   LANDING_EYEBROW,
   LANDING_JOBS_DOOR_LINE,
-  LANDING_JOBS_LABEL,
-  LANDING_CANDIDATES_LABEL,
   LANDING_FOOTER_LINKS,
   LANDING_FOOTER_MARK,
   LANDING_HEADLINE_AFTER,
@@ -28,6 +35,7 @@ import {
   LANDING_HEADLINE_ROBOT,
   LANDING_INTRO,
   LANDING_KICKER_JOBS,
+  LANDING_STATS,
   LANDING_SUBHEAD,
   LOOK_FOR_ROBOT_CANDIDATES_CTA,
   LOOK_FOR_ROBOT_JOBS_CTA,
@@ -53,14 +61,12 @@ function LandingDoor({
   href,
   option,
   icon,
-  who,
   title,
   line,
 }: {
   href: string;
   option: "jobs" | "candidates";
   icon: "truck" | "handshake";
-  who: string;
   title: string;
   line: string;
 }) {
@@ -71,17 +77,23 @@ function LandingDoor({
       className={`rfr-landing-door rfr-landing-door--${option}`}
     >
       <span className="rfr-landing-door-mark" aria-hidden="true">
-        <SiteIcon id={icon} scale={LANDING_DOOR_ICON_SCALE} />
+        <SiteIcon
+          id={icon}
+          scale={LANDING_DOOR_ICON_SCALE}
+          fill={LANDING_DOOR_ICON_FILL}
+          background="transparent"
+        />
       </span>
-      <span className="rfr-landing-door-who">{who}</span>
-      <span className="rfr-landing-door-title">
-        <span className="rfr-landing-door-copy">
-          <AccentLabel
-            parts={splitAccentWord(title, LANDING_CTA_ROBOT_WORD)}
-          />
+      <span className="rfr-landing-door-copy-stack">
+        <span className="rfr-landing-door-title">
+          <span className="rfr-landing-door-copy">
+            <AccentLabel
+              parts={splitAccentWord(title, LANDING_CTA_ROBOT_WORD)}
+            />
+          </span>
         </span>
+        <span className="rfr-landing-door-line">{line}</span>
       </span>
-      <span className="rfr-landing-door-line">{line}</span>
     </a>
   );
 }
@@ -103,13 +115,21 @@ function AccentLabel({ parts }: { parts: LandingAccentPart[] }) {
 }
 
 function BriefJobCard({ job }: { job: LandingBriefJob }) {
+  const isConditional = job.status === "CONDITIONAL";
+
   return (
     <article className="rfr-landing-brief-job">
       <div className="rfr-landing-brief-row">
         <span className="rfr-landing-brief-id">{job.id}</span>
         <h3 className="rfr-landing-brief-employer">{job.employer}</h3>
-        <span className="rfr-landing-brief-sector">{job.sector}</span>
-        <span className="rfr-landing-brief-status">{job.status}</span>
+        <span className="rfr-landing-brief-sector">{job.workplace || job.sector}</span>
+        {!isConditional && (
+          <span
+            className={`rfr-landing-brief-status rfr-landing-brief-status--${job.status.toLowerCase()}`}
+          >
+            {job.status}
+          </span>
+        )}
       </div>
       <p className="rfr-landing-brief-field-label">{LANDING_BRIEF_JOB_FIELD}</p>
       <p className="rfr-landing-brief-jobs">{job.work}</p>
@@ -117,10 +137,141 @@ function BriefJobCard({ job }: { job: LandingBriefJob }) {
   );
 }
 
+const SAMPLE_ROBOTS = [
+  { label: "Humanoid", url: "https://www.dexmate.ai" },
+  { label: "Logistics robot", url: "https://www.locusrobotics.com" },
+  { label: "Agriculture robot", url: "https://greenfieldrobotics.com" },
+];
+
 export default function JobsLanding() {
+  const [heroUrl, setHeroUrl] = useState("");
+  const [isSignupOpen, setIsSignupOpen] = useState(false);
+  const [selectedTapeJob, setSelectedTapeJob] = useState<TapeJob | null>(null);
+
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const visit = params.get("visit");
+      const jobKey = params.get("job");
+
+      if (visit === "jobs" || visit === "jobslanding") {
+        const tapeEl = document.querySelector(".rfr-landing-brief");
+        if (tapeEl) {
+          setTimeout(() => {
+            tapeEl.scrollIntoView({ behavior: "smooth", block: "start" });
+          }, 200);
+        }
+      }
+
+      if (jobKey) {
+        const matched = MARKET_TAPE_JOBS.find(
+          (j) => j.key.toLowerCase() === jobKey.toLowerCase()
+        );
+        if (matched) {
+          setSelectedTapeJob(matched);
+        } else {
+          const base = getPublicReadApiBase();
+          void fetch(
+            `${base}/api/robot-job-card/${encodeURIComponent(jobKey)}`
+          )
+            .then(res => (res.ok ? res.json() : null))
+            .then(data => {
+              const card = data?.job;
+              if (!card?.key || !card?.employer) return;
+              const families: TapeJob["family"][] = [
+                "transport",
+                "cart",
+                "pallet",
+                "scrub",
+                "inspect",
+                "gripper",
+              ];
+              const family = families.includes(card.family)
+                ? card.family
+                : "transport";
+              const live: TapeJob = {
+                key: String(card.key),
+                title: String(card.title || "Work"),
+                industry: String(
+                  card.industry ||
+                    [card.employer, card.locality].filter(Boolean).join(" · ")
+                ),
+                path: String(card.path || card.locality || "WORKSITE → WORKSITE"),
+                family,
+                customer: String(card.employer),
+                location: card.locality ? String(card.locality) : undefined,
+                headline: card.description
+                  ? String(card.description)
+                  : undefined,
+              };
+              setSelectedTapeJob(live);
+            })
+            .catch(() => {
+              /* tape miss and live miss stay closed */
+            });
+        }
+      }
+    } catch {
+      // Ignore URL parsing errors
+    }
+  }, []);
+
+  const handleSelectJob = (job: TapeJob) => {
+    setSelectedTapeJob(job);
+    try {
+      const params = new URLSearchParams(window.location.search);
+      params.delete("visit");
+      params.set("job", job.key);
+      const qs = params.toString();
+      const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
+      window.history.pushState({ jobKey: job.key }, "", newUrl);
+    } catch {
+      // Ignore history push errors
+    }
+  };
+
+  const handleCloseModal = () => {
+    setSelectedTapeJob(null);
+    try {
+      if (window.location.search.includes("job=")) {
+        const params = new URLSearchParams(window.location.search);
+        params.delete("job");
+        params.delete("visit");
+        const qs = params.toString();
+        const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
+        window.history.pushState({}, "", newUrl);
+      }
+    } catch {
+      // Ignore history push errors
+    }
+  };
+
+  const handleHeroSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const trimmed = heroUrl.trim();
+    if (!trimmed) return;
+    window.location.href = jobsFindHref(trimmed);
+  };
+
   return (
     <div className="rfr-landing">
+      <QuickSignupModal
+        isOpen={isSignupOpen}
+        onClose={() => setIsSignupOpen(false)}
+        title="Unlock Engineering Feasibility & Commercial Proposals"
+        subtitle="Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer demand, and generate turnkey commercial quotes."
+        source="jobs_landing_hero"
+      />
+
       <section className="rfr-landing-hero">
+        <div className="rfr-landing-hero-bg" aria-hidden="true">
+          <img
+            src="/ready_for_robots_hero.jpg"
+            alt=""
+            className="rfr-landing-hero-bg-img"
+          />
+          <div className="rfr-landing-hero-bg-overlay" />
+        </div>
         <p className="rfr-landing-kicker">
           {LANDING_EYEBROW}
           {" · "}
@@ -135,44 +286,84 @@ export default function JobsLanding() {
             {LANDING_HEADLINE_END}
           </h1>
           <div className="rfr-landing-hero-mark" aria-hidden="true">
-            <LandingFace scale={8} />
+            <LandingFace scale={7} />
           </div>
         </div>
         <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
-        <p className="rfr-landing-intro">{LANDING_INTRO}</p>
-        <nav className="rfr-landing-doors" aria-label="Choose a visit">
-          <p className="rfr-landing-doors-cue">{LANDING_DOORS_CUE}</p>
-          <div className="rfr-landing-doors-choices">
-            <LandingDoor
-              href={jobsFindHref()}
-              option="jobs"
-              icon="truck"
-              who={LANDING_JOBS_LABEL}
-              title={LOOK_FOR_ROBOT_JOBS_CTA}
-              line={LANDING_JOBS_DOOR_LINE}
-            />
-            <LandingDoor
-              href={jobsCandidatesHref()}
-              option="candidates"
-              icon="handshake"
-              who={LANDING_CANDIDATES_LABEL}
-              title={LOOK_FOR_ROBOT_CANDIDATES_CTA}
-              line={LANDING_CANDIDATES_DOOR_LINE}
-            />
-          </div>
-        </nav>
-      </section>
 
-      <section className="rfr-landing-brief" aria-label="Jobs brief">
-        <p className="rfr-landing-brief-eyebrow">{LANDING_BRIEF_EYEBROW}</p>
-        <h2 className="rfr-landing-brief-headline">{LANDING_BRIEF_HEADLINE}</h2>
-        <p className="rfr-landing-brief-note">{LANDING_BRIEF_NOTE}</p>
-        <div className="rfr-landing-brief-list">
-          {LANDING_BRIEF_JOBS.map(job => (
-            <BriefJobCard key={job.id} job={job} />
+        <div className="rfr-landing-stats-bar">
+          {LANDING_STATS.map((stat, idx) => (
+            <span key={stat.label} className="rfr-landing-stat-group">
+              {idx > 0 && <div className="rfr-landing-stat-divider" />}
+              <div className="rfr-landing-stat-item">
+                {stat.pulse && <span className="rfr-landing-stat-pulse" />}
+                <span className="rfr-landing-stat-value">{stat.value}</span>
+                <span className="rfr-landing-stat-label">{stat.label}</span>
+              </div>
+            </span>
           ))}
         </div>
+
+        <form onSubmit={handleHeroSubmit} className="rfr-landing-hero-form">
+          <div className="rfr-landing-hero-input-wrap">
+            <input
+              type="text"
+              placeholder="Paste a robot product URL (e.g. https://www.dexmate.ai)..."
+              value={heroUrl}
+              onChange={(e) => setHeroUrl(e.target.value)}
+              className="rfr-landing-hero-input"
+              aria-label="Robot product URL"
+            />
+            <button type="submit" className="rfr-landing-hero-submit">
+              Find jobs →
+            </button>
+          </div>
+        </form>
+
+        {/* Featured Daily Customer Intent Quotes */}
+        <div className="rfr-landing-quotes mt-8 mb-5 w-full pt-1" aria-label="Customer Quotes">
+          <CustomerQuoteBanner />
+        </div>
+
+        {/* Action Links pulled to left margin with normalized text-sm font */}
+        <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-start gap-5 my-3">
+          <a
+            href={jobsCandidatesHref()}
+            className="rfr-landing-employer-link inline-flex items-center gap-1 text-sm font-semibold font-mono text-[#d6b15d] hover:text-[#f0cb75] underline underline-offset-4 transition-all"
+          >
+            Employers: Find robots for your job →
+          </a>
+          <a
+            href="/newsletter"
+            className="inline-flex items-center gap-1 text-sm font-semibold font-mono text-emerald-400 hover:text-emerald-300 underline underline-offset-4 transition-all"
+          >
+            <span>📰 Daily Newsletter →</span>
+          </a>
+        </div>
       </section>
+
+      <section className="rfr-landing-brief" aria-label="Live job feed">
+        <h2 className="rfr-landing-brief-headline">Jobs for <span className="text-emerald-400">robots.</span></h2>
+        <p className="rfr-landing-brief-note">{LANDING_BRIEF_NOTE}</p>
+        <div className="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-[#081126] shadow-2xl">
+          <LiveJobTape
+            title="Verified Physical Work Feed"
+            subtitle="Click any classified job opportunity to explore specs, ROI breakdown, and share direct links"
+            corpus={MARKET_TAPE_JOBS}
+            baseCount={MARKET_TAPE_JOBS.length}
+            running={true}
+            onSelect={handleSelectJob}
+            selectedKey={selectedTapeJob?.key ?? null}
+          />
+        </div>
+      </section>
+
+      <LiveJobDetailModal
+        job={selectedTapeJob}
+        isOpen={Boolean(selectedTapeJob)}
+        onClose={handleCloseModal}
+        onUnlockSignup={() => setIsSignupOpen(true)}
+      />
 
       <footer className="rfr-landing-footer">
         <div className="rfr-landing-footer-row">

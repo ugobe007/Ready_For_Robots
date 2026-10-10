@@ -11,7 +11,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 logger = logging.getLogger(__name__)
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse, PlainTextResponse
 from app.api import leads, companies, scoring
 from app.api.analyze import router as analyze_router
 from app.api.scraper_health import router as scraper_health_router
@@ -61,6 +61,7 @@ from app.api.robot_job_match import router as robot_job_match_router
 from app.api.robot_profile import router as robot_profile_router
 from app.api.robot_job_search import router as robot_job_search_router
 from app.api.employer_jobs import router as employer_jobs_router
+from app.api.gpt_actions import router as gpt_actions_router
 from app.api.v1 import router as v1_router
 from app.api.v1.errors import V1HTTPException, error_response
 from app.database import get_db
@@ -231,6 +232,7 @@ def _run_web_startup() -> None:
     # CAL_DAILY_DIGEST_WEB_BACKUP=1 (default off) so SKIP_CELERY=1 does not
     # double-send with the worker at 15:00 UTC. GHA remains the late backup.
     _start_scheduled_cal_daily_digest()
+    _start_scheduled_daily_jobs_report()
 
 
 def _web_cache_rehydrate_loop() -> None:
@@ -326,6 +328,7 @@ def _run_worker_startup() -> None:
     _start_scheduled_data_quality()
     _start_scheduled_cal_autonomy()
     _start_scheduled_cal_daily_digest()
+    _start_scheduled_daily_jobs_report()
     _start_scheduled_communication_learning()
     _start_scheduled_supply_autonomy()
     _start_scheduled_newsletter_publish()
@@ -475,6 +478,12 @@ _RATE_MAX = 300   # requests per window per IP (generous for real users)
 @app.middleware("http")
 async def rate_limit_and_block_probes(request: Request, call_next):
     path = request.url.path
+    # The plugin lists https://ready-2-robot.fly.dev/mcp. The mount only
+    # receives /mcp/, and the SPA catch-all would otherwise answer GET /mcp.
+    if path == "/mcp":
+        request.scope["path"] = "/mcp/"
+        request.scope["raw_path"] = b"/mcp/"
+        path = "/mcp/"
     # 404 immediately for obvious scanner probes
     if _PROBE_PATTERNS.search(path):
         return JSONResponse(status_code=404, content={"detail": "Not found"})
@@ -485,6 +494,7 @@ async def rate_limit_and_block_probes(request: Request, call_next):
         and not path.startswith("/_next/")
         and path != "/health"
         and path != "/"
+        and not path.startswith("/.well-known/")
     ):
         ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -548,6 +558,7 @@ app.include_router(robot_job_match_router, prefix="/api", tags=["robot-job-match
 app.include_router(robot_profile_router, prefix="/api", tags=["robot-profile"])
 app.include_router(robot_job_search_router, prefix="/api", tags=["robot-job-search"])
 app.include_router(employer_jobs_router, prefix="/api", tags=["employer-jobs"])
+app.include_router(gpt_actions_router)
 app.include_router(v1_router, prefix="/api/v1", tags=["v1"])
 # Alias under /api/v1 for clients that prefer v1 namespace (no feature flag — same handler)
 app.include_router(robot_job_match_router, prefix="/api/v1", tags=["robot-job-match"])
@@ -576,6 +587,15 @@ if _mcp_asgi is not None:
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/.well-known/openai-apps-challenge", include_in_schema=False)
+def openai_apps_challenge():
+    """Plain-text domain challenge for the plugin scanner. Body is only the token."""
+    token = (os.getenv("OPENAI_APPS_CHALLENGE_TOKEN") or "").strip()
+    if not token:
+        return PlainTextResponse("", status_code=404)
+    return PlainTextResponse(token)
 
 
 @app.get("/health/db")
@@ -1018,6 +1038,85 @@ def _scheduled_cal_daily_digest_loop():
         next_run = next_digest_run_utc(hour=hour, minute=minute)
         sleep_sec = max(300, int((next_run - datetime.now(timezone.utc)).total_seconds()))
         time.sleep(sleep_sec)
+
+
+def _scheduled_daily_jobs_report_loop():
+    from datetime import datetime, timezone
+
+    from app.database import SessionLocal
+    from app.services.daily_jobs_report import (
+        daily_jobs_report_enabled,
+        maybe_send_missed_daily_jobs_report,
+        next_report_run_utc,
+        send_daily_jobs_report,
+    )
+
+    hour = int(os.getenv("DAILY_JOBS_REPORT_HOUR_UTC", "14") or "14")
+    minute = int(os.getenv("DAILY_JOBS_REPORT_MINUTE_UTC", "0") or "0")
+    try:
+        if daily_jobs_report_enabled():
+            with SessionLocal() as db:
+                catch_up = maybe_send_missed_daily_jobs_report(db)
+            logger.info(
+                "Daily jobs report catch-up: sent=%s reason=%s count=%s",
+                catch_up.get("sent"),
+                catch_up.get("reason"),
+                catch_up.get("count"),
+            )
+    except Exception as exc:
+        logger.exception("Daily jobs report catch-up failed: %s", exc)
+    first = next_report_run_utc(hour=hour, minute=minute)
+    delay = max(60, int((first - datetime.now(timezone.utc)).total_seconds()))
+    time.sleep(delay)
+    while True:
+        if not daily_jobs_report_enabled():
+            time.sleep(3600)
+            continue
+        try:
+            with SessionLocal() as db:
+                result = send_daily_jobs_report(db)
+            logger.info(
+                "Daily jobs report: sent=%s recipients=%s reason=%s count=%s",
+                result.get("sent"),
+                result.get("recipients"),
+                result.get("reason"),
+                result.get("count"),
+            )
+        except Exception as exc:
+            logger.exception("Daily jobs report failed: %s", exc)
+        next_run = next_report_run_utc(hour=hour, minute=minute)
+        sleep_sec = max(300, int((next_run - datetime.now(timezone.utc)).total_seconds()))
+        time.sleep(sleep_sec)
+
+
+def _start_scheduled_daily_jobs_report():
+    from app.services.daily_jobs_report import report_in_process_owner
+
+    owner = report_in_process_owner()
+    if not owner:
+        logger.info(
+            "In-app daily jobs report skipped on this process "
+            "(worker owns it; set DAILY_JOBS_REPORT_WEB_BACKUP=1 for web backup)"
+        )
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_DAILY_JOBS_REPORT", "").lower() in ("1", "true", "yes")
+    )
+    if not enabled:
+        return
+    t = threading.Thread(
+        target=_scheduled_daily_jobs_report_loop,
+        daemon=True,
+        name="daily-jobs-report",
+    )
+    t.start()
+    print("[daily-jobs-report] scheduler thread started", flush=True)
+    logger.info(
+        "In-app daily jobs report thread started (daily at %s:%02d UTC)",
+        os.getenv("DAILY_JOBS_REPORT_HOUR_UTC", "14"),
+        int(os.getenv("DAILY_JOBS_REPORT_MINUTE_UTC", "0") or "0"),
+    )
 
 
 def _start_scheduled_cal_daily_digest():

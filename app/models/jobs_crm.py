@@ -4,6 +4,7 @@ from __future__ import annotations
 import uuid
 
 from sqlalchemy import (
+    Boolean,
     Column,
     DateTime,
     ForeignKey,
@@ -122,7 +123,7 @@ class ApplicationMessage(Base):
 
 
 class UserRobotDocument(Base):
-    """OEM brochure / product spec stored on the signed-in account (not a public dump)."""
+    """Spec sheet, brochure, or certificate for one robot on the signed-in account."""
 
     __tablename__ = "user_robot_documents"
 
@@ -134,6 +135,11 @@ class UserRobotDocument(Base):
     size_bytes = Column(Integer, nullable=False, server_default="0")
     storage_path = Column(Text, nullable=False)
     kind = Column(String(32), nullable=False, server_default="spec")
+    robot_url = Column(String(2048), nullable=True, index=True)
+    robot_name = Column(String(240), nullable=True)
+    include_with_submissions = Column(
+        Boolean, nullable=False, default=False, server_default="false"
+    )
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False, index=True)
 
 

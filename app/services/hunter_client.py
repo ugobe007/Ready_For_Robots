@@ -18,6 +18,25 @@ HUNTER_EMAIL_FINDER_PATH = "/email-finder"
 # status (below) is also enforced so addresses it flags "invalid" are rejected.
 MIN_FINDER_SCORE = int(os.getenv("HUNTER_MIN_FINDER_SCORE", "85") or "85")
 MIN_DOMAIN_CONFIDENCE = int(os.getenv("HUNTER_MIN_DOMAIN_CONFIDENCE", "80") or "80")
+_MULTI_PART_TLDS = frozenset(
+    {
+        "com.au",
+        "net.au",
+        "org.au",
+        "edu.au",
+        "co.uk",
+        "org.uk",
+        "ac.uk",
+        "gov.uk",
+        "co.nz",
+        "com.br",
+        "co.za",
+        "co.jp",
+        "com.mx",
+        "co.in",
+        "com.sg",
+    }
+)
 
 
 class HunterConfigError(Exception):
@@ -53,7 +72,7 @@ class HunterClient:
         last_name: str,
         max_duration: int = 10,
     ) -> dict[str, Any] | None:
-        clean_domain = _clean_domain(domain)
+        clean_domain = registrable_domain(domain)
         params: dict[str, Any] = {
             "first_name": first_name.strip(),
             "last_name": last_name.strip(),
@@ -61,9 +80,9 @@ class HunterClient:
         }
         if clean_domain:
             params["domain"] = clean_domain
-        elif company:
-            params["company"] = company.strip()
-        else:
+        if company and str(company).strip():
+            params["company"] = str(company).strip()
+        if "domain" not in params and "company" not in params:
             raise HunterConfigError("domain or company is required for email finder")
 
         data = self._get(HUNTER_EMAIL_FINDER_PATH, params)
@@ -85,27 +104,34 @@ class HunterClient:
         domain: str | None = None,
         company: str | None = None,
         department: str | None = "operations,management,executive",
+        seniority: str | None = None,
         limit: int = 10,
     ) -> dict[str, Any]:
-        clean_domain = _clean_domain(domain)
+        clean_domain = registrable_domain(domain)
         params: dict[str, Any] = {"limit": max(1, min(int(limit or 10), 10))}
         if clean_domain:
             params["domain"] = clean_domain
-        elif company:
-            params["company"] = company.strip()
+        elif company and str(company).strip():
+            params["company"] = str(company).strip()
         else:
             raise HunterConfigError("domain or company is required for domain search")
         if department:
             params["department"] = department
+        if seniority:
+            params["seniority"] = seniority
 
         data = self._get(HUNTER_DOMAIN_SEARCH_PATH, params)
         emails = []
+        block: dict[str, Any] = {}
         if isinstance(data, dict):
-            block = data.get("data")
-            if isinstance(block, dict):
+            maybe = data.get("data")
+            if isinstance(maybe, dict):
+                block = maybe
                 emails = block.get("emails") or []
         return {
             "emails": [_normalize_domain_email(row) for row in emails if isinstance(row, dict)],
+            "domain": registrable_domain(block.get("domain")),
+            "organization": block.get("organization"),
             "meta": data.get("meta") if isinstance(data, dict) else {},
         }
 
@@ -197,9 +223,28 @@ def _normalize_domain_email(row: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def _clean_domain(value: str | None) -> str | None:
+def _host_from_value(value: str | None) -> str | None:
     if not value:
         return None
     raw = value.strip().lower()
     raw = raw.removeprefix("https://").removeprefix("http://").removeprefix("www.")
-    return raw.split("/", 1)[0] or None
+    host = raw.split("/", 1)[0].split("?", 1)[0].split(":", 1)[0]
+    return host or None
+
+
+def registrable_domain(value: str | None) -> str | None:
+    """Hunter wants the email domain (geodis.com), not about.geodis.com."""
+    host = _host_from_value(value)
+    if not host or "." not in host:
+        return None
+    labels = [part for part in host.split(".") if part]
+    if len(labels) < 2:
+        return None
+    last_two = ".".join(labels[-2:])
+    if last_two in _MULTI_PART_TLDS and len(labels) >= 3:
+        return ".".join(labels[-3:])
+    return last_two
+
+
+def _clean_domain(value: str | None) -> str | None:
+    return registrable_domain(value)

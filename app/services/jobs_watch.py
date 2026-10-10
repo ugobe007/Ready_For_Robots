@@ -18,6 +18,9 @@ JOBS_WATCH_FREE_ROBOTS = 1
 JOBS_WATCH_FREE_ALERTS = 2
 JOBS_WATCH_FREE_VISIBLE_EVENTS = 3
 _SITE = (os.getenv("PUBLIC_SITE_URL") or "https://readyforrobots.com").rstrip("/")
+# Customer report links stay on Jobs CRM / FIND. Never SIGNAL /crm.
+JOBS_WATCH_CRM_PATH = "/pipeline?src=jobs_activate"
+JOBS_WATCH_FIND_PATH = "/?visit=jobs"
 
 
 def jobs_watch_limits(plan: str) -> dict[str, Any]:
@@ -36,6 +39,13 @@ def jobs_watch_limits(plan: str) -> dict[str, Any]:
         "visible_events": JOBS_WATCH_FREE_VISIBLE_EVENTS,
         "upgrade_url": "/pricing",
     }
+
+
+def usable_watch_product_name(name: Optional[str]) -> Optional[str]:
+    raw = str(name or "").strip()
+    if not raw or raw.lower() == "your robot":
+        return None
+    return raw[:240]
 
 
 def can_email_watch(watch: JobsWatch, plan: str) -> bool:
@@ -246,10 +256,11 @@ def upsert_watch(
     if opted_in and cap is not None and existing is not None and not existing.opted_in and active_count >= cap:
         raise PermissionError("Free watches 1 robot. Pro keeps every SKU on the cron.")
 
+    sku = usable_watch_product_name(product_name)
     submission = record_robot_submission(
         db,
         url=safe,
-        product_name=product_name,
+        product_name=sku,
         source="jobs_watch",
     )
     if existing is None:
@@ -258,7 +269,7 @@ def upsert_watch(
             email=email,
             robot_url=safe,
             website_domain=domain,
-            product_name=(product_name or "")[:240] or None,
+            product_name=sku,
             robot_submission_id=submission.id if submission else None,
             opted_in=opted_in,
             last_job_keys=[],
@@ -269,7 +280,8 @@ def upsert_watch(
     else:
         existing.email = email
         existing.robot_url = safe
-        existing.product_name = (product_name or existing.product_name or "")[:240] or None
+        if sku:
+            existing.product_name = sku
         existing.opted_in = opted_in
         if submission is not None:
             existing.robot_submission_id = submission.id
@@ -284,17 +296,24 @@ def build_watch_email(watch: JobsWatch, events: list[JobsWatchEvent], *, plan: s
     product = watch.product_name or watch.website_domain
     subject = f"New jobs for {product}"
     lines = [
-        f"We checked {product} and found new work.",
+        f"New jobs for {product}. Named employers and the work:",
         "",
     ]
     show = events[: 3 if plan == PLAN_PAID else 1]
     for event in show:
-        place = f" — {event.company_name}" if event.company_name else ""
-        lines.append(f"• {event.title}{place}")
+        employer = (event.company_name or "").strip()
+        title = (event.title or "").strip() or "New work"
+        if employer:
+            lines.append(f"• {employer} — {title}")
+        else:
+            lines.append(f"• {title}")
+    hidden = max(0, len(events) - len(show))
+    if hidden:
+        lines.append(f"• {hidden} more on the CRM desk")
     lines += [
         "",
-        f"Open CRM: {_SITE}/crm",
-        f"Open jobs: {_SITE}/",
+        f"Open CRM: {_SITE}{JOBS_WATCH_CRM_PATH}",
+        f"Find jobs: {_SITE}{JOBS_WATCH_FIND_PATH}",
     ]
     if plan != PLAN_PAID:
         lines += [

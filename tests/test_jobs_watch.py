@@ -10,11 +10,14 @@ from app.database import Base
 from app.models.jobs_watch import JobsWatch, JobsWatchEvent
 from app.models.robot_submission import RobotSubmission
 from app.services.jobs_watch import (
+    JOBS_WATCH_CRM_PATH,
+    JOBS_WATCH_FIND_PATH,
     JOBS_WATCH_FREE_ALERTS,
     apply_search_result,
     build_watch_email,
     run_jobs_watch_cycle,
     upsert_watch,
+    usable_watch_product_name,
     watch_status,
 )
 from app.services.plan_entitlements import PLAN_FREE, PLAN_PAID
@@ -223,6 +226,28 @@ def test_watch_status_locks_extra_free_events(db_session):
     assert locked[0]["title"] == "New work for your robot"
 
 
+def test_upsert_keeps_sku_when_desk_sends_placeholder(db_session):
+    user = _user()
+    first = upsert_watch(
+        db_session,
+        user=user,
+        robot_url="https://robot.example/sku",
+        product_name="Relay",
+        opted_in=True,
+    )
+    assert first.product_name == "Relay"
+    again = upsert_watch(
+        db_session,
+        user=user,
+        robot_url="https://robot.example/sku",
+        product_name="your robot",
+        opted_in=True,
+    )
+    assert again.product_name == "Relay"
+    assert usable_watch_product_name("your robot") is None
+    assert usable_watch_product_name("TUG") == "TUG"
+
+
 def test_build_watch_email_mentions_upgrade_for_free():
     watch = JobsWatch(
         user_id=uuid4(),
@@ -244,7 +269,48 @@ def test_build_watch_email_mentions_upgrade_for_free():
     subject, body = build_watch_email(watch, [event], plan=PLAN_FREE)
     assert "Relay" in subject
     assert "Pallet move" in body
+    assert "Acme" in body
+    assert "Acme — Pallet move" in body
+    assert JOBS_WATCH_CRM_PATH in body
+    assert JOBS_WATCH_FIND_PATH in body
+    assert "Open CRM: https://readyforrobots.com/crm" not in body
+    assert "Find jobs:" in body
     assert "Upgrade" in body
     paid_subject, paid_body = build_watch_email(watch, [event], plan=PLAN_PAID)
     assert "Upgrade" not in paid_body
     assert paid_subject.startswith("New jobs")
+    assert JOBS_WATCH_CRM_PATH in paid_body
+    assert JOBS_WATCH_FIND_PATH in paid_body
+
+
+def test_build_watch_email_free_names_extra_jobs_on_desk():
+    watch = JobsWatch(
+        user_id=uuid4(),
+        email="buyer@example.com",
+        robot_url="https://robot.example/sku",
+        website_domain="robot.example",
+        product_name="Relay",
+        opted_in=True,
+        last_job_keys=[],
+        notify_count=0,
+    )
+    events = [
+        JobsWatchEvent(
+            watch_id=uuid4(),
+            job_key="pallet",
+            title="Pallet move",
+            company_name="Acme",
+            kind="new",
+        ),
+        JobsWatchEvent(
+            watch_id=uuid4(),
+            job_key="inspect",
+            title="Inspect lines",
+            company_name="Globex",
+            kind="new",
+        ),
+    ]
+    _, body = build_watch_email(watch, events, plan=PLAN_FREE)
+    assert "Acme — Pallet move" in body
+    assert "Globex" not in body
+    assert "1 more on the CRM desk" in body

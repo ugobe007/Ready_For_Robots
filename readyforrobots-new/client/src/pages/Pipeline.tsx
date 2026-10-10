@@ -13,6 +13,7 @@ import {
   type SetStateAction,
 } from "react";
 import {
+  X,
   AlertTriangle,
   MapPin,
   Filter,
@@ -43,6 +44,8 @@ import AdminNav from "@/components/AdminNav";
 import ProposalPdfModal, {
   type ProposalData,
 } from "@/components/ProposalPdfModal";
+import LeadEmailDisplay, { maskEmail } from "@/components/LeadEmailDisplay";
+import { useIsPaidUser } from "@/hooks/useIsPaidUser";
 import { Link, useLocation, useSearch } from "wouter";
 import { openWorkspaceHref } from "@/lib/adminNavLinks";
 import { useAuth } from "@/contexts/AuthContext";
@@ -86,6 +89,7 @@ import {
 } from "@/lib/robotWorkspaceProfile";
 import { trackFirstSave, trackMarketingEvent } from "@/lib/siteAnalytics";
 import LeadShareBar from "@/components/LeadShareBar";
+import RobotJobCardUnit from "@/components/pipeline/RobotJobCardUnit";
 import PipelineCrmMotion from "@/components/pipeline/PipelineCrmMotion";
 import PipelineLeadActionMeta from "@/components/pipeline/PipelineLeadActionMeta";
 import PipelineOutreachValuePanel from "@/components/pipeline/PipelineOutreachValuePanel";
@@ -1069,12 +1073,12 @@ type PipelineEntitlements = {
   };
 };
 
-const PIPELINE_LIMIT_ANONYMOUS = 5;
-const PIPELINE_LIMIT_FREE = 15;
+const PIPELINE_LIMIT_ANONYMOUS = 25;
+const PIPELINE_LIMIT_FREE = 25;
 const PIPELINE_LIMIT_PAID = PIPELINE_FEED_TOTAL;
 /** Target curated working list after Results → Pipeline onboarding. */
-const BUILD_PIPELINE_ANON = 5;
-const BUILD_PIPELINE_SIGNED_IN = 15;
+const BUILD_PIPELINE_ANON = 25;
+const BUILD_PIPELINE_SIGNED_IN = 25;
 /** Time each lead stays in the CRM detail panel during auto-rotation (anonymous browse). */
 const PIPELINE_LEAD_READ_MS = 7_000;
 const PIPELINE_SESSION_KEY = "pipeline_feed_v7";
@@ -1084,12 +1088,24 @@ const PIPELINE_STALE_PAINT_MS = 7 * 24 * 60 * 60 * 1000;
 
 function parsePipelineLeadIdFromSearch(search: string): number | null {
   const params = new URLSearchParams(search);
-  const leadParam = params.get("lead");
+  const leadParam =
+    params.get("lead") ||
+    params.get("job") ||
+    params.get("account") ||
+    params.get("id") ||
+    params.get("lead_id") ||
+    params.get("job_id");
   if (leadParam) {
     const id = Number.parseInt(leadParam, 10);
     if (Number.isFinite(id) && id > 0) return id;
   }
   return null;
+}
+
+function parsePipelineCompanyNameFromSearch(search: string): string | null {
+  const params = new URLSearchParams(search);
+  const co = params.get("co") || params.get("company");
+  return co ? co.trim() : null;
 }
 
 /** Newsletter/homepage deep links use ?lead= or legacy #id. */
@@ -2035,6 +2051,7 @@ function PipelineContactIntelligencePanel({ deal }: { deal: Deal }) {
 
 export default function Pipeline() {
   const { session, loading: authLoading } = useAuth();
+  const isPaidUser = useIsPaidUser();
   const isSignedIn = Boolean(session?.access_token);
   const BUILD_PIPELINE_TARGET = isSignedIn
     ? BUILD_PIPELINE_SIGNED_IN
@@ -2100,8 +2117,8 @@ export default function Pipeline() {
     if (hasReviewedFiveLeads()) return;
     clearBuild15UnlockFlags();
     const dest = workflowResultsPath(
-      { company_url: submittedUrlFromQuery, src: "pipeline_needs_5_review" },
-      `/results?url=${encodeURIComponent(submittedUrlFromQuery)}&limit=5`
+      { company_url: submittedUrlFromQuery, src: "pipeline_needs_25_review" },
+      `/results?url=${encodeURIComponent(submittedUrlFromQuery)}&limit=25`
     );
     window.location.replace(dest);
   }, [arrivedFromResultsScan, submittedUrlFromQuery, isSignedIn]);
@@ -2151,6 +2168,14 @@ export default function Pipeline() {
         .trim();
     }
   }, [submittedUrl]);
+  const companyNameFromQuery = useMemo(
+    () => parsePipelineCompanyNameFromSearch(search),
+    [search]
+  );
+  const searchQueryFromQuery = useMemo(() => {
+    const params = new URLSearchParams(search);
+    return (params.get("q") || params.get("search") || "").trim();
+  }, [search]);
   const [scopeToSubmittedUrl, setScopeToSubmittedUrl] = useState(false);
   const [submittedUrlMatches, setSubmittedUrlMatches] = useState<ApiLead[]>([]);
   const [submittedUrlMatchLoading, setSubmittedUrlMatchLoading] = useState(() =>
@@ -2172,7 +2197,27 @@ export default function Pipeline() {
   );
   const [activations, setActivations] = useState<ScoutActivation[]>([]);
   const [filter, setFilter] = useState<string>("All");
-  const [industryQuery, setIndustryQuery] = useState("");
+  const [industryQuery, setIndustryQuery] = useState(
+    () => companyNameFromQuery || searchQueryFromQuery || ""
+  );
+
+  const [deepLinkModalOpen, setDeepLinkModalOpen] = useState(() =>
+    Boolean(deepLinkLeadId || companyNameFromQuery)
+  );
+
+  useEffect(() => {
+    if (deepLinkLeadId || companyNameFromQuery) {
+      setDeepLinkModalOpen(true);
+    }
+  }, [deepLinkLeadId, companyNameFromQuery]);
+
+  useEffect(() => {
+    const target = companyNameFromQuery || searchQueryFromQuery || "";
+    if (target) {
+      setIndustryQuery(target);
+    }
+  }, [companyNameFromQuery, searchQueryFromQuery]);
+
   const [qualityBandFilter, setQualityBandFilter] =
     useState<QualityBandFilter>("all");
   const [qualitySort, setQualitySort] = useState<QualitySort>("default");
@@ -2194,6 +2239,21 @@ export default function Pipeline() {
   const [cadenceNote, setCadenceNote] = useState("");
   const [loadErr, setLoadErr] = useState("");
   const [serverSearchDeals, setServerSearchDeals] = useState<Deal[]>([]);
+
+  useEffect(() => {
+    const target = (companyNameFromQuery || searchQueryFromQuery || "").trim().toLowerCase();
+    if (!target) return;
+    const pool = [...serverSearchDeals, ...deals];
+    if (pool.length === 0) return;
+    const found = pool.find(d =>
+      d.company.toLowerCase().includes(target) ||
+      (d.shareSummary || "").toLowerCase().includes(target) ||
+      (d.shareBlurb || "").toLowerCase().includes(target)
+    );
+    if (found && selectedId !== found.id) {
+      setSelectedId(found.id);
+    }
+  }, [companyNameFromQuery, searchQueryFromQuery, deals, serverSearchDeals, selectedId]);
   const [serverSearchLoading, setServerSearchLoading] = useState(false);
   const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [activationErr, setActivationErr] = useState("");
@@ -2274,8 +2334,10 @@ export default function Pipeline() {
 
   // Always land at the top of the pipeline page — never mid-page or restored scroll.
   // Production previously scrolled to #pipeline-step3-guide; keep forcing top until layout settles.
+  // Skip jumpTop if user arrived via a shared lead deep link so the Job Card can be viewed.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (deepLinkLeadId != null) return;
     try {
       if ("scrollRestoration" in window.history) {
         window.history.scrollRestoration = "manual";
@@ -2312,7 +2374,7 @@ export default function Pipeline() {
       timers.forEach(t => window.clearTimeout(t));
       window.removeEventListener("load", onLoad);
     };
-  }, [search, step3Intro, build25Started]);
+  }, [search, step3Intro, build25Started, deepLinkLeadId]);
 
   const pipelineLeadsLoading =
     loadingLeads || serverSearchLoading || submittedUrlMatchLoading;
@@ -2962,6 +3024,18 @@ export default function Pipeline() {
         });
         if (cancelled) return;
         if (!mapped) {
+          const coName = parsePipelineCompanyNameFromSearch(search);
+          if (coName) {
+            const foundByCo = dealsRef.current.find(d =>
+              d.company.toLowerCase().includes(coName.toLowerCase())
+            );
+            if (foundByCo) {
+              setSelectedId(foundByCo.id);
+              deepLinkInflightRef.current = null;
+              setDeepLinkLoadFailed(false);
+              return;
+            }
+          }
           deepLinkInflightRef.current = null;
           setDeepLinkLoadFailed(true);
           return;
@@ -3453,7 +3527,7 @@ export default function Pipeline() {
 
   const pendingDeepLink =
     selectedId != null &&
-    deepLinkLeadId === selectedId &&
+    (deepLinkLeadId === selectedId || deals.some(d => d.id === selectedId)) &&
     !displayedDeals.some(d => d.id === selectedId);
   const effectiveSelectedId =
     selectedId != null &&
@@ -3462,9 +3536,30 @@ export default function Pipeline() {
       : (displayedDeals[0]?.id ?? null);
   const selected =
     displayedDeals.find(d => d.id === effectiveSelectedId) ??
-    (pendingDeepLink && effectiveSelectedId != null
+    (effectiveSelectedId != null
       ? (deals.find(d => d.id === effectiveSelectedId) ?? null)
       : null);
+
+  // Auto-scroll directly to the Job Card detail panel when a shared deep link resolves.
+  const deepLinkAutoScrolledRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (
+      !deepLinkLeadId ||
+      deepLinkAutoScrolledRef.current === deepLinkLeadId ||
+      typeof window === "undefined"
+    )
+      return;
+    if (selected && selected.id === deepLinkLeadId) {
+      deepLinkAutoScrolledRef.current = deepLinkLeadId;
+      const timer = window.setTimeout(() => {
+        const el = document.getElementById("pipeline-detail");
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }, 150);
+      return () => window.clearTimeout(timer);
+    }
+  }, [deepLinkLeadId, selected]);
   const selectedActivation =
     activations.find(a => a.id === selectedActivationId) ??
     activations[0] ??
@@ -3476,13 +3571,13 @@ export default function Pipeline() {
   const nextStepsTitle = arrivedFromResultsScan
     ? !build25Started
       ? "Step 4 · Provide customer name and information"
-      : "Step 5 of 5 · 15 sales leads"
+      : "Step 5 of 5 · 25 sales leads"
     : crmActivated
       ? "Your next CRM action"
       : "Activate CRM";
   const nextStepsHeadline = arrivedFromResultsScan
     ? !build25Started
-      ? "Provide customer name and information to unlock 15 sales leads"
+      ? "Provide customer name and information to unlock 25 sales leads"
       : "Curate sales leads & run outreach"
     : isFirstWorkspaceRun
       ? "Activate CRM — save a job, then work the draft"
@@ -3628,8 +3723,8 @@ export default function Pipeline() {
           : step5Phase === "save" && step5SaveTarget
             ? `Next: save a lead (${build25Progress + 1}/${BUILD_PIPELINE_TARGET}), then copy the draft and send.`
             : build25Progress >= BUILD_PIPELINE_TARGET
-              ? "All 15 slots filled. Keep sending from saved leads, or open CRM to track replies."
-              : "Pick a lead on the left, then use the yellow button for the next action."
+              ? "All 25 slots filled. Keep sending from saved leads, or open CRM to track replies."
+              : "Pick a lead on the left, then use the button for the next action."
       : null;
 
   // Manual lead click = engagement. Pin the selection and stop auto-rotation so the
@@ -3637,6 +3732,14 @@ export default function Pipeline() {
   const selectLead = (id: number) => {
     setRotationPaused(true);
     setSelectedId(id);
+    if (typeof window !== "undefined" && window.innerWidth < 1024) {
+      window.setTimeout(() => {
+        document.getElementById("pipeline-detail")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }, 50);
+    }
   };
 
   const moveStage = (id: number, direction: 1 | -1) => {
@@ -4976,6 +5079,23 @@ export default function Pipeline() {
           </div>
         ) : null}
         <div className="mx-auto flex max-w-[1500px] flex-col gap-3">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-[#120826] via-[#1b1035] to-[#0d162d] px-5 py-3.5 shadow-lg">
+            <div className="flex items-center gap-2.5">
+              <span className="text-lg">🤖</span>
+              <div>
+                <p className="text-xs font-bold text-white">Find Jobs for Your Robot</p>
+                <p className="text-[11px] text-slate-300">Scan any robot URL to build your 25-lead buyer pipeline.</p>
+              </div>
+            </div>
+            <a
+              href="/?visit=jobs"
+              className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl bg-purple-600 px-4 py-2 text-xs font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
+            >
+              <span>Go to Robot Jobs (/?visit=jobs)</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </a>
+          </div>
+
           <div className="border border-slate-600 bg-[#0b162f] px-5 py-5 sm:px-6">
             <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>
               ReadyForRobots
@@ -5137,9 +5257,9 @@ export default function Pipeline() {
                     <p className="text-sm text-slate-400 sm:max-w-xs">
                       {workspaceProfileComplete
                         ? isSignedIn
-                          ? "Opens your 15 URL-matched sales leads — not the global market feed."
-                          : "Details saved — next create your free account to unlock 15 sales leads."
-                        : "Fill the three fields above, then unlock 15 sales leads."}
+                          ? "Opens your 25 URL-matched sales leads — not the global market feed."
+                          : "Details saved — next create your free account to unlock 25 sales leads."
+                        : "Fill the three fields above, then unlock 25 sales leads."}
                     </p>
                   </div>
                 </div>
@@ -5280,17 +5400,17 @@ export default function Pipeline() {
           )}
 
           {step3Intro ? (
-            <div className="pipeline-workspace overflow-hidden rounded-2xl border border-amber-400/40 bg-gradient-to-b from-slate-50 to-white shadow-[0_20px_50px_-30px_rgba(15,23,42,0.45)]">
-              <div className="border-b border-amber-200/80 bg-amber-50/80 px-5 py-4 sm:px-8">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-800">
+            <div className="pipeline-workspace overflow-hidden rounded-2xl border border-amber-400/40 bg-[#0a1226] shadow-[0_20px_50px_-30px_rgba(0,0,0,0.7)]">
+              <div className="border-b border-slate-700/60 bg-[#060c1c] px-5 py-4 sm:px-8">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-amber-400">
                   URL-matched queue · locked
                 </p>
-                <p className="mt-1 text-xl font-bold text-slate-900 sm:text-2xl">
+                <p className="mt-1 text-xl font-bold text-slate-100 sm:text-2xl">
                   {scopeMatchesCount > 0
                     ? `${Math.min(scopeMatchesCount, BUILD_PIPELINE_TARGET)} buyers matched to your robot profile`
                     : `${BUILD_PIPELINE_TARGET} matched sales leads waiting`}
                 </p>
-                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+                <p className="mt-1 max-w-2xl text-sm leading-relaxed text-slate-300 sm:text-base">
                   Step 5 unlocks these {BUILD_PIPELINE_TARGET} sales leads after
                   you provide customer name and information above.
                 </p>
@@ -5302,19 +5422,19 @@ export default function Pipeline() {
                     .map(deal => (
                       <li
                         key={deal.id}
-                        className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3"
+                        className="flex items-center justify-between rounded-xl border border-slate-700/60 bg-[#0d1a33] px-4 py-3"
                       >
-                        <span className="truncate text-sm font-semibold text-slate-800">
+                        <span className="truncate text-sm font-semibold text-slate-100">
                           {deal.company}
                         </span>
-                        <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                        <span className="text-xs font-bold uppercase tracking-wide text-slate-400">
                           {deal.priorityTier || deal.stage}
                         </span>
                       </li>
                     ))}
                   {(displayedDeals.length > 0 ? displayedDeals : deals)
                     .length === 0 ? (
-                    <li className="rounded-xl border border-dashed border-emerald-200 bg-emerald-50/60 px-4 py-8 text-center">
+                    <li className="rounded-xl border border-dashed border-emerald-500/40 bg-emerald-500/10 px-4 py-8 text-center">
                       <div className="flex items-center justify-center gap-3">
                         <PixelIcon
                           map={KARE_FACE}
@@ -5322,16 +5442,16 @@ export default function Pipeline() {
                           fill="#3ecf8e"
                           background="transparent"
                         />
-                        <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-600">
+                        <span className="font-mono text-2xl font-extrabold tabular-nums text-emerald-400">
                           {loadCountdown}s
                         </span>
                       </div>
-                      <p className="mt-3 text-sm font-semibold text-emerald-900">
+                      <p className="mt-3 text-sm font-semibold text-emerald-300">
                         Loading matched opportunities…
                       </p>
                     </li>
                   ) : loadUiVisible ? (
-                    <li className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3">
+                    <li className="rounded-xl border border-emerald-500/40 bg-emerald-500/10 px-4 py-3">
                       <div className="flex items-center justify-center gap-3">
                         <PixelIcon
                           map={KARE_FACE}
@@ -5339,26 +5459,26 @@ export default function Pipeline() {
                           fill="#3ecf8e"
                           background="transparent"
                         />
-                        <span className="text-sm font-bold text-emerald-950">
+                        <span className="text-sm font-bold text-emerald-200">
                           Loading jobs…
                         </span>
-                        <span className="font-mono text-xl font-extrabold tabular-nums text-emerald-600">
+                        <span className="font-mono text-xl font-extrabold tabular-nums text-emerald-400">
                           {loadCountdown}s
                         </span>
                       </div>
                     </li>
                   ) : null}
                 </ul>
-                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-white via-white/85 to-white/40 px-4">
-                  <div className="w-full max-w-md rounded-2xl border border-amber-400/60 bg-white/95 p-5 text-center shadow-xl sm:p-6">
-                    <p className="text-sm font-semibold text-slate-800 sm:text-base">
+                <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-t from-[#081126] via-[#081126]/90 to-transparent px-4">
+                  <div className="w-full max-w-md rounded-2xl border border-amber-400/60 bg-[#0a1226]/95 p-5 text-center shadow-xl sm:p-6 text-slate-100">
+                    <p className="text-sm font-semibold text-slate-100 sm:text-base">
                       {workspaceProfileComplete
                         ? isSignedIn
                           ? `Your ${BUILD_PIPELINE_TARGET} sales leads unlock after you save customer details above.`
                           : `Free account unlocks ${BUILD_PIPELINE_TARGET} sales leads after customer details above.`
                         : "Provide customer name and information in the form above."}
                     </p>
-                    <p className="mt-3 text-xs font-medium text-slate-500">
+                    <p className="mt-3 text-xs font-medium text-slate-400">
                       Use the yellow button in the Step 4 panel above — one
                       action only.
                     </p>
@@ -5923,8 +6043,8 @@ export default function Pipeline() {
 
                           {/* Inline deal rows */}
                           {stageDeals.length === 0 ? (
-                            <div className="mx-1 mb-2 rounded-xl border border-dashed border-gray-200 bg-gray-50/80 px-4 py-3">
-                              <p className="text-[11px] text-gray-400 italic">
+                            <div className="mx-1 mb-2 rounded-xl border border-dashed border-slate-700 bg-[#060c1c] px-4 py-3">
+                              <p className="text-[11px] text-slate-400 italic">
                                 No deals in this stage
                               </p>
                             </div>
@@ -5975,7 +6095,7 @@ export default function Pipeline() {
                                             In CRM
                                           </span>
                                         ) : null}
-                                        <span className="text-sm text-slate-400 shrink-0">
+                                        <span className="text-sm text-slate-300 shrink-0">
                                           {deal.location}
                                         </span>
                                         <span
@@ -6074,11 +6194,11 @@ export default function Pipeline() {
                                           />
                                         </span>
                                       )}
-                                      <span className="text-[10px] text-gray-400 font-mono-data hidden sm:block">
+                                      <span className="text-[10px] text-slate-300 font-mono-data hidden sm:block">
                                         {deal.updatedAt}
                                       </span>
                                       <ChevronRight
-                                        className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-600" : "text-gray-300 group-hover:text-emerald-500"}`}
+                                        className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-400" : "text-slate-400 group-hover:text-emerald-400"}`}
                                       />
                                     </div>
                                   </div>
@@ -6108,7 +6228,7 @@ export default function Pipeline() {
                             <span className="pipeline-tier-title">
                               {userBucketLabel(bucket)}
                             </span>
-                            <span className="ml-0.5 text-[10px] font-medium text-slate-600">
+                            <span className="ml-0.5 text-[10px] font-medium text-slate-300">
                               — {meta.desc}
                             </span>
                             <span
@@ -6177,7 +6297,7 @@ export default function Pipeline() {
                                             In CRM
                                           </span>
                                         ) : null}
-                                        <span className="text-sm text-slate-400 shrink-0">
+                                        <span className="text-sm text-slate-300 shrink-0">
                                           {deal.industry}
                                         </span>
                                         <span
@@ -6262,7 +6382,7 @@ export default function Pipeline() {
                                         {deal.signalType}
                                       </span>
                                       <ChevronRight
-                                        className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-600" : "text-gray-300 group-hover:text-emerald-500"}`}
+                                        className={`h-3.5 w-3.5 transition-colors ${isSelected ? "text-emerald-400" : "text-slate-400 group-hover:text-emerald-400"}`}
                                       />
                                     </div>
                                   </div>
@@ -6295,9 +6415,36 @@ export default function Pipeline() {
                 </div>
 
                 {/* RIGHT: selected lead detail */}
-                <div className="pipeline-detail-shell flex min-h-[36rem] w-full shrink-0 flex-col lg:min-h-[calc(100vh-5rem)] lg:w-[440px] xl:w-[480px]">
+                <div
+                  id="pipeline-detail"
+                  className="pipeline-detail-shell flex min-h-[36rem] w-full shrink-0 flex-col lg:min-h-[calc(100vh-5rem)] lg:w-[440px] xl:w-[480px]"
+                >
                   {selected ? (
-                    <div className="flex min-h-0 flex-1 flex-col">
+                    <div className="flex min-h-0 flex-1 flex-col space-y-4">
+                      {/* Explicit 7-Point Robot Job Card Unit */}
+                      <RobotJobCardUnit
+                        deal={{
+                          ...selected,
+                          projectTiming: selected.projectTiming
+                            ? {
+                                label:
+                                  selected.projectTiming.label ||
+                                  selected.projectTiming.display_phrase,
+                                day_min: selected.projectTiming.day_min,
+                                day_max: selected.projectTiming.day_max,
+                                source: selected.projectTiming.source,
+                              }
+                            : undefined,
+                        }}
+                        savedInCrm={Boolean(crmAccountIdByCompanyId[selected.id])}
+                        hasSession={Boolean(session?.access_token)}
+                        advancing={advancingLeadId === selected.id}
+                        onSaveLead={
+                          canSaveSelected ? () => void handleSaveLead(selected) : undefined
+                        }
+                        onCopyDraft={copyDraft}
+                        copiedDraft={copied}
+                      />
                       {/* Detail header */}
                       <div className="pipeline-detail-header">
                         <div className="pipeline-detail-header-inner">
@@ -6382,11 +6529,9 @@ export default function Pipeline() {
                               </span>
                             )}
                             {selected.contact && (
-                              <span className="text-[11px] text-gray-500">
-                                <span className="text-gray-600 font-medium">
-                                  {selected.contact}
-                                </span>{" "}
-                                · {selected.contactTitle}
+                              <span className="text-[11px] text-gray-500 flex items-center gap-1.5">
+                                <LeadEmailDisplay email={selected.contact} variant="inline" />
+                                {selected.contactTitle ? <span>· {selected.contactTitle}</span> : null}
                               </span>
                             )}
                           </div>
@@ -6409,7 +6554,7 @@ export default function Pipeline() {
                                 type="button"
                                 onClick={() => void handleSaveLead(selected)}
                                 disabled={advancingLeadId === selected.id}
-                                className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-amber-300 disabled:opacity-60"
+                                className="inline-flex items-center justify-center rounded-lg bg-purple-600 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500 disabled:opacity-60"
                               >
                                 {advancingLeadId === selected.id
                                   ? "Saving…"
@@ -6418,7 +6563,7 @@ export default function Pipeline() {
                             ) : (
                               <Link
                                 href="/crm"
-                                className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-amber-300"
+                                className="inline-flex items-center justify-center rounded-lg bg-purple-600 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
                               >
                                 Open native CRM
                               </Link>
@@ -6430,7 +6575,7 @@ export default function Pipeline() {
                                 selected.company,
                                 { src: "pipeline_crm_activate" }
                               )}
-                              className="inline-flex items-center justify-center rounded-lg border-2 border-amber-400 bg-amber-400 px-3 py-2 text-sm font-bold text-slate-950 hover:bg-amber-300"
+                              className="inline-flex items-center justify-center rounded-lg bg-purple-600 px-3.5 py-2 text-sm font-bold text-white shadow-md shadow-purple-500/25 transition hover:bg-purple-500"
                             >
                               Start free workspace
                             </Link>
@@ -6577,17 +6722,17 @@ export default function Pipeline() {
                               >
                                 {selected.signalType}
                               </p>
-                              <p className="break-words text-[12px] leading-relaxed text-gray-800">
+                              <p className="break-words text-[12px] leading-relaxed text-slate-200">
                                 {selected.signal}
                               </p>
                             </div>
                           </div>
                           {(selected.projectTiming?.label ||
                             selected.projectTiming?.day_min != null) && (
-                            <div className="mt-1.5 flex items-center gap-2 text-[11px] text-gray-600">
-                              <Clock className="h-3 w-3 shrink-0 text-emerald-600/90" />
+                            <div className="mt-1.5 flex items-center gap-2 text-[11px] text-slate-300">
+                              <Clock className="h-3 w-3 shrink-0 text-emerald-400" />
                               <span>
-                                <span className="font-semibold text-gray-700">
+                                <span className="font-semibold text-slate-200">
                                   Project window:{" "}
                                 </span>
                                 {selected.projectTiming?.day_min != null &&
@@ -6596,7 +6741,7 @@ export default function Pipeline() {
                                   : selected.projectTiming?.label}
                                 {selected.projectTiming?.source ===
                                   "estimated" && (
-                                  <span className="text-gray-500">
+                                  <span className="text-slate-400">
                                     {" "}
                                     · estimated from signals
                                   </span>
@@ -6619,36 +6764,36 @@ export default function Pipeline() {
                                 action: selected.pipelineAction,
                                 company: selected.company,
                                 industry: selected.industry,
-                                title: selected.signals?.[0]?.display_text,
+                                title: (typeof selected.signal?.[0] === 'string' ? selected.signal[0] : (selected.signal?.[0] as any)?.display_text) || (selected as any).signals?.[0]?.display_text,
                               }) ||
                               "This is the work — inspect the station, shift, and robot fit.";
                             return (
-                              <div className="rounded-xl border border-emerald-200/70 bg-gradient-to-br from-emerald-50 via-white to-emerald-50/70 p-2.5 shadow-[0_1px_0_rgba(16,185,129,0.06)]">
+                              <div className="rounded-xl border border-emerald-500/30 bg-[#0d1e3d] p-3 shadow-md">
                                 <div className="flex items-start justify-between gap-2">
                                   <div>
-                                    <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-800">
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-emerald-300">
                                       The job
                                     </p>
-                                    <p className="mt-0.5 text-[11px] leading-snug text-slate-600">
+                                    <p className="mt-0.5 text-[11px] leading-snug text-slate-300">
                                       What the robot would do here.
                                     </p>
                                   </div>
                                   <div className="flex flex-wrap items-center justify-end gap-1.5">
                                     {gapCount > 0 && (
-                                      <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-800">
+                                      <span className="inline-flex items-center rounded-full border border-amber-300/40 bg-amber-400/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-amber-300">
                                         {gapCount} gap
                                         {gapCount === 1 ? "" : "s"}
                                       </span>
                                     )}
                                     {evidence.researchState ===
                                       "researching" && (
-                                      <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800">
+                                      <span className="inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
                                         AI researching gaps
                                       </span>
                                     )}
                                   </div>
                                 </div>
-                                <p className="mt-2 text-[12px] leading-relaxed text-slate-700">
+                                <p className="mt-2 text-[12px] leading-relaxed text-slate-100">
                                   {summary}
                                 </p>
                               </div>
@@ -6660,8 +6805,8 @@ export default function Pipeline() {
                               !isSalesPlaceholder(
                                 selected.leadHighlights.specific_problem
                               ) && (
-                                <p className="break-words text-[12px] leading-relaxed text-gray-800">
-                                  <span className="font-semibold text-gray-900">
+                                <p className="break-words text-[12px] leading-relaxed text-slate-200">
+                                  <span className="font-semibold text-slate-100">
                                     Problem:{" "}
                                   </span>
                                   {cleanAndClampText(
@@ -6672,7 +6817,7 @@ export default function Pipeline() {
                               )}
                             {(selected.leadHighlights?.why_lead || []).length >
                               0 && (
-                              <ul className="list-disc pl-4 text-[11px] leading-relaxed text-gray-600 space-y-1">
+                              <ul className="list-disc pl-4 text-[11px] leading-relaxed text-slate-300 space-y-1">
                                 {(selected.leadHighlights?.why_lead || [])
                                   .slice(0, panelPlan === "anonymous" ? 2 : 3)
                                   .map((line, i) => (
@@ -6716,10 +6861,10 @@ export default function Pipeline() {
                                       : "Missing";
                                 const tone =
                                   state === "researching"
-                                    ? "border-emerald-300 bg-emerald-50 text-emerald-800"
+                                    ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-300"
                                     : state === "monitoring"
-                                      ? "border-slate-300 bg-slate-100 text-slate-700"
-                                      : "border-amber-300 bg-amber-50 text-amber-800";
+                                      ? "border-slate-500 bg-slate-800 text-slate-300"
+                                      : "border-amber-400/40 bg-amber-400/10 text-amber-300";
                                 return (
                                   <span
                                     className={`ml-1.5 inline-flex items-center rounded-full border px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide ${tone}`}
@@ -6735,18 +6880,18 @@ export default function Pipeline() {
                                     The job
                                     {evidence.researchState ===
                                     "researching" ? (
-                                      <span className="ml-2 inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-800">
+                                      <span className="ml-2 inline-flex items-center rounded-full border border-emerald-400/40 bg-emerald-400/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-300">
                                         AI researching gaps
                                       </span>
                                     ) : null}
                                   </p>
                                   <div className="mt-2 grid gap-2">
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Friction point
                                         {missingTag("friction_point")}
                                       </p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                      <p className="mt-1 text-[12px] leading-relaxed text-slate-200">
                                         {cleanAndClampText(
                                           evidence.frictionPoint ||
                                             "Not yet summarized",
@@ -6754,13 +6899,13 @@ export default function Pipeline() {
                                         )}
                                       </p>
                                     </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Workflow scope
                                         {missingTag("workflow_scope")}
                                       </p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
-                                        <span className="font-semibold text-slate-900">
+                                      <p className="mt-1 text-[12px] leading-relaxed text-slate-200">
+                                        <span className="font-semibold text-slate-100">
                                           {evidence.workflowLabel}:
                                         </span>{" "}
                                         {evidence.workflowItems.length > 0
@@ -6771,14 +6916,14 @@ export default function Pipeline() {
                                           : "workflow not yet identified"}
                                       </p>
                                     </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Timing and robot fit
                                         {missingTag("timing")}
                                         {missingTag("robot_type")}
                                       </p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
-                                        <span className="font-semibold text-slate-900">
+                                      <p className="mt-1 text-[12px] leading-relaxed text-slate-200">
+                                        <span className="font-semibold text-slate-100">
                                           Timing:
                                         </span>{" "}
                                         {cleanAndClampText(
@@ -6786,10 +6931,10 @@ export default function Pipeline() {
                                             "not yet clear",
                                           80
                                         )}
-                                        <span className="mx-1 text-gray-400">
+                                        <span className="mx-1 text-slate-500">
                                           ·
                                         </span>
-                                        <span className="font-semibold text-slate-900">
+                                        <span className="font-semibold text-slate-100">
                                           Robots:
                                         </span>{" "}
                                         {cleanAndClampText(
@@ -6799,14 +6944,14 @@ export default function Pipeline() {
                                         )}
                                       </p>
                                     </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Budget{missingTag("budget")}
                                       </p>
-                                      <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                      <p className="mt-1 text-[12px] leading-relaxed text-slate-200">
                                         {evidence.budgetTopAmount ? (
                                           <>
-                                            <span className="font-semibold text-slate-900">
+                                            <span className="font-semibold text-slate-100">
                                               {evidence.budgetTopAmount}
                                             </span>{" "}
                                             appears in the evidence set.
@@ -6816,7 +6961,7 @@ export default function Pipeline() {
                                         )}
                                       </p>
                                       {evidence.budgetSignals.length > 0 && (
-                                        <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-gray-600">
+                                        <ul className="mt-1.5 space-y-1 text-[11px] leading-relaxed text-slate-300">
                                           {evidence.budgetSignals
                                             .slice(0, 2)
                                             .map((signal, index) => (
@@ -6832,25 +6977,25 @@ export default function Pipeline() {
                                         </ul>
                                       )}
                                     </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Decision makers
                                         {missingTag("decision_makers")}
                                       </p>
                                       {evidence.decisionMakers.length > 0 ? (
-                                        <ul className="mt-1 space-y-1 text-[12px] leading-relaxed text-gray-800">
+                                        <ul className="mt-1 space-y-1 text-[12px] leading-relaxed text-slate-200">
                                           {evidence.decisionMakers
                                             .slice(0, 3)
                                             .map((person, index) => (
                                               <li key={index}>
-                                                <span className="font-semibold text-slate-900">
+                                                <span className="font-semibold text-slate-100">
                                                   {cleanAndClampText(
                                                     person.name || "Unknown",
                                                     60
                                                   )}
                                                 </span>
                                                 {person.title ? (
-                                                  <span className="text-gray-500">
+                                                  <span className="text-slate-400">
                                                     {" "}
                                                     ·{" "}
                                                     {cleanAndClampText(
@@ -6863,36 +7008,36 @@ export default function Pipeline() {
                                             ))}
                                         </ul>
                                       ) : (
-                                        <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                        <p className="mt-1 text-[12px] leading-relaxed text-slate-300">
                                           Decision owner not identified yet. Ask
                                           who signs off on operations
                                           automation.
                                         </p>
                                       )}
                                     </div>
-                                    <div className="rounded-lg border border-slate-200 bg-white/80 p-2.5">
-                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-500">
+                                    <div className="rounded-lg border border-slate-700/80 bg-[#070f23] p-2.5">
+                                      <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
                                         Similar deployments
                                         {missingTag("similar_deployments")}
                                       </p>
                                       {evidence.deploymentExamples.length >
                                       0 ? (
-                                        <ul className="mt-1 space-y-2 text-[12px] leading-relaxed text-gray-800">
+                                        <ul className="mt-1 space-y-2 text-[12px] leading-relaxed text-slate-200">
                                           {evidence.deploymentExamples
                                             .slice(0, 3)
                                             .map((example, index) => (
                                               <li
                                                 key={index}
-                                                className="rounded-md bg-slate-50 px-2 py-1.5"
+                                                className="rounded-md bg-[#0d1e3d] p-2"
                                               >
-                                                <p className="font-semibold text-slate-900">
+                                                <p className="font-semibold text-slate-100">
                                                   {cleanAndClampText(
                                                     example.title ||
                                                       "Deployment example",
                                                     120
                                                   )}
                                                 </p>
-                                                <p className="text-[11px] text-gray-600">
+                                                <p className="text-[11px] text-slate-300">
                                                   {cleanAndClampText(
                                                     example.summary || "",
                                                     150
@@ -6902,7 +7047,7 @@ export default function Pipeline() {
                                             ))}
                                         </ul>
                                       ) : (
-                                        <p className="mt-1 text-[12px] leading-relaxed text-gray-800">
+                                        <p className="mt-1 text-[12px] leading-relaxed text-slate-300">
                                           No matched deployment example yet.
                                           SIGNAL will add one as new evidence is
                                           published.
@@ -6914,7 +7059,7 @@ export default function Pipeline() {
                               );
                             })()}
                             {(selected.notes || selected.shareSummary) && (
-                              <p className="break-words text-[12px] leading-relaxed text-gray-700">
+                              <p className="break-words text-[12px] leading-relaxed text-slate-200">
                                 {cleanAndClampText(
                                   selected.notes || selected.shareSummary,
                                   panelPlan === "anonymous" ? 240 : 360
@@ -6927,7 +7072,7 @@ export default function Pipeline() {
                               !selected.notes &&
                               !selected.shareSummary &&
                               !selected.crmEvidence && (
-                                <p className="text-[11px] leading-relaxed text-gray-500">
+                                <p className="text-[11px] leading-relaxed text-slate-400">
                                   SIGNAL is monitoring this account and will
                                   surface friction, workflow scope, timing, and
                                   robot fit as new evidence arrives.
@@ -6959,8 +7104,8 @@ export default function Pipeline() {
                               )}
                             {panelPlan === "anonymous" && (
                               <p className="text-[10px] leading-relaxed text-emerald-700">
-                                Free workspace unlocks up to 15 leads, save up
-                                to 5 leads, and copy outreach drafts. Upgrade to
+                                Free workspace unlocks up to 25 leads, save up
+                                to 25 leads, and copy outreach drafts. Upgrade to
                                 Pro to unlock more leads and automate your sales
                                 pipeline.
                               </p>
@@ -7382,7 +7527,7 @@ export default function Pipeline() {
                                   )}
                                   {sendingLeadId === selected.id
                                     ? "Sending..."
-                                    : `Send outreach to ${selected.contact}`}
+                                    : `Send outreach to ${isPaidUser ? selected.contact : maskEmail(selected.contact)}`}
                                 </button>
                               )}
                             {!selected.contact && selected.outreachBody && (
@@ -7675,7 +7820,9 @@ export default function Pipeline() {
                 <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-1">
                   To
                 </p>
-                <p className="text-xs text-gray-600">{selected.contact}</p>
+                <p className="text-xs text-gray-600">
+                  <LeadEmailDisplay email={selected.contact} variant="inline" />
+                </p>
               </div>
             )}
             <div
@@ -7790,6 +7937,77 @@ export default function Pipeline() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Shared Job Card Deep-Link Modal Overlay */}
+      {deepLinkModalOpen && (deepLinkLeadId != null || Boolean(companyNameFromQuery)) && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 overflow-y-auto bg-slate-950/85 backdrop-blur-md">
+          <div className="relative w-full max-w-2xl rounded-2xl border-2 border-emerald-400 bg-[#081126] p-4 sm:p-6 shadow-2xl space-y-4 text-slate-100 max-h-[90vh] overflow-y-auto">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b border-slate-700/80 pb-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/50 bg-emerald-400/10 px-3 py-1 font-mono text-xs font-extrabold uppercase tracking-wider text-emerald-300">
+                  ✦ SHARED ROBOT JOB CARD
+                </span>
+                <span className="text-xs text-slate-400">
+                  Direct Lead Review
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDeepLinkModalOpen(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+                aria-label="Close Job Card Modal"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+
+            {selected ? (
+              <div className="space-y-4">
+                <RobotJobCardUnit
+                  deal={{
+                    ...selected,
+                    projectTiming: selected.projectTiming
+                      ? {
+                          label:
+                            selected.projectTiming.label ||
+                            selected.projectTiming.display_phrase,
+                          day_min: selected.projectTiming.day_min,
+                          day_max: selected.projectTiming.day_max,
+                          source: selected.projectTiming.source,
+                        }
+                      : undefined,
+                  }}
+                  savedInCrm={Boolean(crmAccountIdByCompanyId[selected.id])}
+                  hasSession={Boolean(session?.access_token)}
+                  advancing={advancingLeadId === selected.id}
+                  onSaveLead={
+                    canSaveSelected ? () => void handleSaveLead(selected) : undefined
+                  }
+                  onCopyDraft={copyDraft}
+                  copiedDraft={copied}
+                />
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setDeepLinkModalOpen(false)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 rounded-xl border border-slate-600 bg-slate-800/80 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-wider text-slate-200 hover:bg-slate-700 hover:text-white transition-all"
+                  >
+                    <span>Close & Explore Full Pipeline ({displayedDeals.length} Jobs) →</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="py-12 text-center space-y-3">
+                <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-emerald-400 border-t-transparent"></div>
+                <p className="font-mono text-sm font-semibold text-emerald-300">
+                  Loading shared job card details…
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

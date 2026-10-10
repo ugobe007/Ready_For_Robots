@@ -7,6 +7,7 @@ import { authHeader } from "@/lib/supabase";
 import {
   JOBS_ACTIVATE_SRC,
   JOBS_APPLY_HERO_CTA,
+  crmSaveJobsRobotLabel,
   jobsActivateHref,
   jobsCrmOpenHref,
   jobsSignupHref,
@@ -26,8 +27,8 @@ import type { MatchJob } from "@/lib/robotJobMatch";
 export const JOBS_KEEP_JOBS_CTA = "Keep jobs";
 export const JOBS_KEEP_YES_CTA = "Yes, keep them";
 export const JOBS_NEXT_STEPS_CTA = "Next steps →";
-export const JOBS_APPLY_NEXT_CTA = JOBS_APPLY_HERO_CTA;
-export const JOBS_APPLY_SELECTED_CTA = JOBS_APPLY_HERO_CTA;
+export const JOBS_APPLY_NEXT_CTA = "Automate Job Applications →";
+export const JOBS_APPLY_SELECTED_CTA = "Automate Job Applications →";
 export const JOBS_NEXT_STEPS_ANCHOR = "jobs-next-steps";
 export const JOBS_APPLY_SEQUENCE =
   "Apply to the job. We prepare a draft. You review and send. Then we help set up the interview.";
@@ -37,13 +38,19 @@ export const JOBS_SEND_DRAFT_HINT =
   "This is a draft. Review it. You send. We do not email the employer until you do.";
 export const JOBS_VIDEO_EMPTY_NOTE =
   "No public YouTube clip of this robot turned up. We left the video empty rather than guess.";
-export const JOBS_CONTACTS_EMPTY_NOTE =
-  "No employer email on this Job Card or stored public page. We will not invent one.";
+export const JOBS_CONTACTS_EMPTY_NOTE = "";
 export const JOBS_NEXT_STEPS_HINT =
   "Pick the model and say what you'll charge. Then we prepare a draft for you to send.";
-export const JOBS_DOCS_HEADING = "Brochures and product specs";
+export const JOBS_DOCS_HEADING = "Sales material";
 export const JOBS_DOCS_HINT =
-  "Upload a PDF or image spec for this robot. We attach what you select to the application — not a public dump.";
+  "Upload a spec sheet, brochure, or certificate for this robot. Files you include go to the employer with each job submission. They stay your material and do not change the job qualification.";
+export const JOBS_DOCS_INCLUDE_LABEL = "Include with each job submission";
+export const JOBS_DOCS_EMPTY = "No sales material for this robot yet.";
+export const JOBS_DOC_KINDS = [
+  { id: "spec", label: "Spec sheet" },
+  { id: "brochure", label: "Brochure" },
+  { id: "certificate", label: "Certificate" },
+] as const;
 export const JOBS_EMPLOYER_ACCEPT_CTA = "Accept";
 export const JOBS_EMPLOYER_DECLINE_CTA = "Decline";
 export const JOBS_EMPLOYER_INTERVIEW_CTA = "Set up interview";
@@ -147,8 +154,15 @@ export type RobotDocument = {
   mime_type?: string;
   size_bytes?: number;
   kind?: string;
+  robot_url?: string | null;
+  robot_name?: string | null;
+  include_with_submissions?: boolean;
   created_at?: string | null;
 };
+
+export function robotDocumentKindLabel(kind?: string | null): string {
+  return JOBS_DOC_KINDS.find(row => row.id === kind)?.label || "File";
+}
 
 export type JobsCrmMessage = {
   id: string;
@@ -189,7 +203,7 @@ export type WorkTaskModelAnswer =
   | { kind: "source"; source: string }
   | { kind: "self_train" };
 
-export const WORK_TASK_MODEL_QUESTION = "Do you have a model for this work?";
+export const WORK_TASK_MODEL_QUESTION = "Do you have a model for this work? (e.g. Phoenix v2, Sanctuary AI Biped, Unitree G1).";
 export const WORK_TASK_MODEL_SOURCE_OPTION = "Yes. Name the model source.";
 export const WORK_TASK_MODEL_SOURCE_HINT =
   "Product, vendor, or known policy. Your words. We will not guess a name.";
@@ -435,6 +449,57 @@ export function isJobsCrmOfferQuery(
   }
 }
 
+export type JobsWatchEventRow = {
+  id?: number;
+  kind?: string;
+  title?: string;
+  company_name?: string | null;
+  locked?: boolean;
+};
+
+export type JobsWatchStatus = {
+  opted_in: boolean;
+  plan?: string;
+  robot_url?: string | null;
+  product_name?: string | null;
+  last_checked_at?: string | null;
+  robots_used?: number;
+  robots_limit?: number | null;
+  alerts_sent?: number;
+  alerts_limit?: number | null;
+  events?: JobsWatchEventRow[];
+  upgrade_url?: string;
+  free_taste?: boolean;
+};
+
+export type JobsWatchSeedJob = {
+  job_key?: string;
+  title?: string;
+  company_name?: string | null;
+};
+
+export function jobsWatchCheckedLabel(iso?: string | null): string {
+  const raw = String(iso || "").trim();
+  if (!raw) return "First check runs on the daily cron";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return "Last check recorded";
+  const day = d.getUTCDate();
+  const month = d.toLocaleString("en-GB", { month: "short", timeZone: "UTC" });
+  return `Last check ${day} ${month}`;
+}
+
+/** Desk placeholder "your robot" must not overwrite a stored SKU on the watch. */
+export function jobsWatchProductName(
+  deskProduct?: string | null,
+  storedProduct?: string | null
+): string | undefined {
+  return (
+    crmSaveJobsRobotLabel(deskProduct) ||
+    crmSaveJobsRobotLabel(storedProduct) ||
+    undefined
+  );
+}
+
 async function jobsCrmFetch<T>(
   path: string,
   token: string,
@@ -462,6 +527,29 @@ async function jobsCrmFetch<T>(
     throw new Error(detail);
   }
   return (await res.json()) as T;
+}
+
+export async function fetchJobsWatch(token: string): Promise<JobsWatchStatus> {
+  return jobsCrmFetch<JobsWatchStatus>("/api/crm/jobs-watch", token);
+}
+
+export async function putJobsWatch(
+  token: string,
+  body: {
+    opted_in: boolean;
+    robot_url?: string;
+    product_name?: string;
+    seed_jobs?: JobsWatchSeedJob[];
+  }
+): Promise<JobsWatchStatus> {
+  const payload: Record<string, unknown> = { opted_in: body.opted_in };
+  if (body.robot_url) payload.robot_url = body.robot_url;
+  if (body.product_name) payload.product_name = body.product_name;
+  if (body.seed_jobs?.length) payload.seed_jobs = body.seed_jobs;
+  return jobsCrmFetch<JobsWatchStatus>("/api/crm/jobs-watch", token, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function keepJobsOnAccount(
@@ -554,6 +642,8 @@ export async function applyJobOnAccount(
     companyName?: string;
     job?: MatchJob;
     documentIds?: string[];
+    documentsSelected?: boolean;
+    robotUrl?: string;
   }
 ): Promise<JobsCrmApplication> {
   return jobsCrmFetch<JobsCrmApplication>("/api/jobs-crm/apply", token, {
@@ -570,6 +660,8 @@ export async function applyJobOnAccount(
       company_name: body.companyName || "",
       job: body.job || null,
       document_ids: body.documentIds || [],
+      documents_selected: Boolean(body.documentsSelected),
+      robot_url: body.robotUrl || "",
     }),
   });
 }
@@ -587,6 +679,8 @@ export async function applySelectedJobsOnAccount(
     why?: string;
     companyName?: string;
     documentIds?: string[];
+    documentsSelected?: boolean;
+    robotUrl?: string;
   }
 ): Promise<{
   applied: JobsCrmApplication[];
@@ -606,6 +700,8 @@ export async function applySelectedJobsOnAccount(
       why: body.why || "",
       company_name: body.companyName || "",
       document_ids: body.documentIds || [],
+      documents_selected: Boolean(body.documentsSelected),
+      robot_url: body.robotUrl || "",
     }),
   });
 }
@@ -653,10 +749,14 @@ export async function saveApplicationMeetingUrl(
 }
 
 export async function fetchRobotDocuments(
-  token: string
+  token: string,
+  robotUrl?: string
 ): Promise<RobotDocument[]> {
+  const q = new URLSearchParams();
+  if (robotUrl) q.set("robot_url", robotUrl);
+  const suffix = q.toString() ? `?${q.toString()}` : "";
   const data = await jobsCrmFetch<{ documents: RobotDocument[] }>(
-    "/api/jobs-crm/documents",
+    `/api/jobs-crm/documents${suffix}`,
     token
   );
   return data.documents || [];
@@ -665,11 +765,20 @@ export async function fetchRobotDocuments(
 export async function uploadRobotDocument(
   token: string,
   file: File,
-  kind = "spec"
+  kind = "spec",
+  opts?: {
+    robotUrl?: string;
+    robotName?: string;
+    includeWithSubmissions?: boolean;
+  }
 ): Promise<RobotDocument> {
   const base = getApiBase();
   const form = new FormData();
+  const include = opts?.includeWithSubmissions ?? Boolean(opts?.robotUrl);
   form.append("kind", kind);
+  form.append("robot_url", opts?.robotUrl || "");
+  form.append("robot_name", opts?.robotName || "");
+  form.append("include_with_submissions", include ? "true" : "false");
   form.append("file", file);
   const res = await fetch(
     `${base}/api/jobs-crm/documents`,
@@ -693,6 +802,33 @@ export async function uploadRobotDocument(
     throw new Error(detail);
   }
   return (await res.json()) as RobotDocument;
+}
+
+export async function updateRobotDocument(
+  token: string,
+  documentId: string,
+  body: { includeWithSubmissions?: boolean; kind?: string }
+): Promise<RobotDocument> {
+  return jobsCrmFetch<RobotDocument>(
+    `/api/jobs-crm/documents/${documentId}`,
+    token,
+    {
+      method: "PATCH",
+      body: JSON.stringify({
+        include_with_submissions: body.includeWithSubmissions,
+        kind: body.kind,
+      }),
+    }
+  );
+}
+
+export async function deleteRobotDocument(
+  token: string,
+  documentId: string
+): Promise<void> {
+  await jobsCrmFetch(`/api/jobs-crm/documents/${documentId}`, token, {
+    method: "DELETE",
+  });
 }
 
 export async function confirmInterviewOnAccount(
@@ -850,17 +986,89 @@ const EMPTY_CRM_DESK: CrmDeskForRobot = {
   savedCount: 0,
 };
 
+import { FEATURED_BUYER_QUOTES, type BuyerQuote } from "@/lib/buyerQuotes";
+
+export function buyerQuoteToMatchJob(quote: BuyerQuote): MatchJob {
+  return {
+    job_key: quote.id,
+    title: quote.matchedJobTitle,
+    industry: `${quote.company} · ${quote.location}`,
+    company_name: quote.company,
+    locality: quote.location,
+    path: `${quote.company.toUpperCase().replace(/[^A-Z0-9]+/g, "_")} → JOB_OPPORTUNITY`,
+    tape_family: quote.targetRobotTypes[0]?.toLowerCase().includes("pallet")
+      ? "pallet"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("scrub") || quote.targetRobotTypes[0]?.toLowerCase().includes("clean")
+      ? "scrub"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("inspect")
+      ? "inspect"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("cart")
+      ? "cart"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("cobot") || quote.targetRobotTypes[0]?.toLowerCase().includes("manipulat")
+      ? "gripper"
+      : "transport",
+    verdict: "POSSIBLE_MATCH",
+    why: [
+      `Verified customer requirement from ${quote.author} (${quote.title}): "${quote.quote}"`,
+      `Target timeline: ${quote.timeline}`,
+    ],
+  };
+}
+
 /**
  * Desk identity + jobs for the robot FIND just ran.
- * The submitted URL is the only key. No snap URL → honest empty, never
- * accountRows[0] / first saved robot / leftover class jobs.
+ * The submitted URL is the primary key. If no snap URL exists, fallback
+ * to the quote job corpus matching the target company.
  */
 export function crmDeskForCurrentRobot(opts: {
   snap: JobsHandoffSnapshot | null;
   accountRows: KeptJobRow[];
 }): CrmDeskForRobot {
   const snapUrl = canonicalRobotUrl(opts.snap?.url || "");
-  if (!snapUrl) return EMPTY_CRM_DESK;
+  if (!snapUrl) {
+    const search =
+      typeof window !== "undefined" ? window.location?.search || "" : "";
+    const params = new URLSearchParams(search);
+    const coQuery = (
+      params.get("co") ||
+      params.get("q") ||
+      params.get("company") ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+    if (coQuery) {
+      const quoteJobs = FEATURED_BUYER_QUOTES.map(buyerQuoteToMatchJob);
+      const foundQuote = FEATURED_BUYER_QUOTES.find(
+        q =>
+          q.company.toLowerCase().includes(coQuery) ||
+          q.matchedJobTitle.toLowerCase().includes(coQuery) ||
+          q.industry.toLowerCase().includes(coQuery)
+      );
+      if (foundQuote) {
+        quoteJobs.sort((a, b) =>
+          a.job_key === foundQuote.id ? -1 : b.job_key === foundQuote.id ? 1 : 0
+        );
+        return {
+          product: foundQuote.targetRobotTypes.join(" / ") || "your robot",
+          robotUrl: "",
+          rows: [],
+          jobs: quoteJobs,
+          savedCount: quoteJobs.length,
+        };
+      }
+    }
+
+    return {
+      product: "your robot",
+      robotUrl: "",
+      rows: [],
+      jobs: [],
+      savedCount: 0,
+    };
+  }
+
   const snap = opts.snap as JobsHandoffSnapshot;
   const current = { url: snapUrl, name: snap.productName };
   const handoffJobs = snap.jobs || [];

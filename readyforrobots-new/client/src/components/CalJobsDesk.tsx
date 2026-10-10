@@ -122,6 +122,8 @@ export default function CalJobsDesk({
   const [priceDraft, setPriceDraft] = useState("");
   const [pocDraft, setPocDraft] = useState("");
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
   const focus = useMemo(() => {
     const jobs = desk?.jobs || [];
     return (
@@ -156,7 +158,7 @@ export default function CalJobsDesk({
         setThread([{ who: "cal", text: opening }]);
       })
       .catch(() => {
-        if (!cancelled) setError("Sign in to work this desk with Cal.");
+        if (!cancelled) setError("Sign in to prepare job proposals.");
       });
     return () => {
       cancelled = true;
@@ -276,63 +278,110 @@ export default function CalJobsDesk({
   const catalog = focus?.catalog_skus || [];
   const draft = focus?.application?.draft;
 
+  const toggleCollapse = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsCollapsed(prev => !prev);
+  };
+
   return (
     <section
-      className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-5 sm:px-6"
+      className="mt-4 rounded-xl border border-emerald-500/40 bg-[#0a1226] p-4 sm:p-5 shadow-lg transition-colors"
       data-cal-jobs-desk="1"
-      aria-label={OEM_CAL_DESK_EYEBROW}
+      aria-label="Automate Job Applications"
     >
-      <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>
-        {OEM_CAL_DESK_EYEBROW}
-      </p>
-      <h2 className="mt-2 font-display text-2xl font-bold text-white">Cal</h2>
-      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-slate-300">
-        {OEM_CAL_DESK_LEAD}
-      </p>
-
-      {desk?.jobs.length ? (
-        <ul className="mt-4 space-y-1 text-sm text-slate-200">
-          {desk.jobs.map(job => (
-            <li key={job.job_key}>
-              <span className="text-emerald-400">
-                {job.employer_name || "Unnamed employer"}
-              </span>
-              {" · "}
-              {job.work_title || "this job"}
-              {" · "}
-              <span className="text-slate-400">
-                {jobStatusLine(job, pendingByJob[job.job_key])}
-              </span>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="mt-4 text-sm text-slate-400">{desk?.greeting}</p>
-      )}
-
-      <ol className="mt-4 space-y-2" aria-live="polite">
-        {thread.slice(-8).map((line, i) => (
-          <li
-            key={`${line.who}-${i}-${line.text.slice(0, 20)}`}
-            className={
-              line.who === "cal"
-                ? "text-sm leading-relaxed text-slate-100"
-                : "text-sm leading-relaxed text-emerald-200"
-            }
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className={`${JOBS_EYEBROW_CLASS} font-semibold text-emerald-400`}>
+            AUTOMATE JOB APPLICATIONS
+          </p>
+          <h2 className="mt-1 font-display text-xl font-bold text-white sm:text-2xl">
+            Automate Job Applications
+          </h2>
+          <p className="mt-1 text-sm leading-relaxed text-slate-300">
+            Select target jobs below, name your robot model or training plan, and set your monthly quote. We auto-generate tailored outreach proposals for enterprise buyers.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setIsCollapsed(false);
+              const form = document.getElementById("jobs-next-steps");
+              if (form) {
+                form.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            className="inline-flex items-center justify-center bg-violet-600 hover:bg-violet-500 px-5 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-white transition shadow-md"
           >
-            <span className={`${JOBS_EYEBROW_CLASS} text-slate-500`}>
-              {line.who === "cal" ? "Cal" : "You"}
-            </span>
-            <span className="mt-0.5 block">{line.text}</span>
-          </li>
-        ))}
-      </ol>
+            Automate Job Applications →
+          </button>
+          <button
+            type="button"
+            onClick={toggleCollapse}
+            className="inline-flex items-center gap-1.5 rounded border border-slate-700 bg-[#111c38] px-2.5 py-3 text-xs font-semibold text-slate-300 hover:border-emerald-400 hover:text-white"
+            aria-label={isCollapsed ? "Expand panel" : "Collapse panel"}
+          >
+            <span>{isCollapsed ? "▼" : "▲"}</span>
+          </button>
+        </div>
+      </div>
 
-      {focus?.contacts_note ? (
-        <p className="mt-3 text-sm text-slate-400">
-          {JOBS_CONTACTS_EMPTY_NOTE}
-        </p>
-      ) : null}
+      {!isCollapsed ? (
+        <div className="mt-4 border-t border-emerald-500/20 pt-4">
+          <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-slate-300 sm:text-sm">
+            {OEM_CAL_DESK_LEAD}
+          </p>
+
+          {desk?.jobs.length ? (
+            <div className="mt-3 grid gap-2.5 sm:grid-cols-3">
+              {desk.jobs.slice(0, 3).map(job => {
+                const isFocused = focus?.job_key === job.job_key;
+                return (
+                  <div
+                    key={job.job_key}
+                    className={`rounded-md border p-3 text-left transition ${
+                      isFocused
+                        ? "border-emerald-400/80 bg-emerald-950/20 text-white"
+                        : "border-slate-700/60 bg-[#101b38] text-slate-300"
+                    }`}
+                  >
+                    <span className="block truncate text-xs font-bold text-emerald-300">
+                      {job.employer_name || "Employer"}
+                    </span>
+                    <span className="line-clamp-2 mt-1 block text-xs text-slate-200">
+                      {job.work_title || "Job match"}
+                    </span>
+                    <span className="mt-2 block text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {jobStatusLine(job, pendingByJob[job.job_key])}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="mt-3 text-xs text-slate-400">{desk?.greeting}</p>
+          )}
+
+          <ol className="mt-3 space-y-2" aria-live="polite">
+            {thread.slice(-4).map((line, i) => (
+              <li
+                key={`${line.who}-${i}-${line.text.slice(0, 20)}`}
+                className={
+                  line.who === "cal"
+                    ? "text-xs leading-relaxed text-slate-100 sm:text-sm"
+                    : "text-xs leading-relaxed text-emerald-200 sm:text-sm"
+                }
+              >
+                <span className={`${JOBS_EYEBROW_CLASS} text-slate-500`}>
+                  {line.who === "cal" ? "Recruiter" : "You"}
+                </span>
+                <span className="mt-0.5 block">{line.text}</span>
+              </li>
+            ))}
+          </ol>
+
+
 
       {fact === "task_model" && focus ? (
         <div className="mt-4 space-y-3">
@@ -535,6 +584,8 @@ export default function CalJobsDesk({
       ) : null}
 
       {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
+        </div>
+      ) : null}
     </section>
   );
 }

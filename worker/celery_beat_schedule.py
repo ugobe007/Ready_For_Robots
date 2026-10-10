@@ -262,6 +262,12 @@ CELERYBEAT_SCHEDULE = {
         'schedule': crontab(minute=15),
         'kwargs': {'limit': 50},
     },
+    # Operator top-25 Robot Jobs email (before Cal digest).
+    'daily-jobs-report': {
+        'task': 'worker.tasks.send_daily_jobs_report_task',
+        'schedule': crontab(hour=14, minute=0),
+        'kwargs': {'force': False, 'limit': 25},
+    },
     # Fly-owned Cal digest. Hermes AI Gateway must not send this email.
     'cal-daily-digest': {
         'task': 'worker.tasks.send_cal_daily_digest_task',

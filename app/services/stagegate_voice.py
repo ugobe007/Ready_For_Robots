@@ -41,10 +41,12 @@ def stagegate_signature() -> str:
 
 def _greeting(company_name: str, contact_name: Optional[str] = None) -> str:
     name = (contact_name or "").strip()
-    if name and "@" not in name:
-        return f"Hi {name},"
-    company = (company_name or "your team").strip() or "your team"
-    return f"Hi {company} team,"
+    if name and "@" not in name and not any(j in name.lower() for j in ["decision maker", "unknown", "leadership"]):
+        return f"Hi {name.split()[0]},"
+    company = (company_name or "").strip()
+    if company and company.lower() != "your team":
+        return f"Hi {company} Leadership Team,"
+    return "Hi,"
 
 
 def _show_ask_paragraph(company_name: str, trade_show: Optional[str]) -> str:

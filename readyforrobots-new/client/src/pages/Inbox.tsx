@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
+import { Mail } from "lucide-react";
 import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
+import ResendEmailModal from "@/components/ResendEmailModal";
 
 type InboxItem = {
   id: string;
-  thread_id: string;
+  thread_id: string | null;
   opportunity_type: "crm" | "supply";
   title: string;
   current_stage: string;
@@ -17,6 +19,7 @@ type InboxItem = {
   body_text?: string | null;
   detected_intent?: string | null;
   received_at?: string | null;
+  folder?: "main" | "test";
   next_best_action?: { recommendation?: string; intent?: string };
   latest_action?: {
     id?: string;
@@ -31,6 +34,9 @@ function formatDate(value?: string | null) {
 }
 
 function scheduleHref(item: InboxItem) {
+  if (!item.thread_id) {
+    return "#";
+  }
   const params = new URLSearchParams({
     opportunity_id: item.thread_id,
     title: `Meeting with ${item.title}`,
@@ -42,10 +48,12 @@ function scheduleHref(item: InboxItem) {
 
 export default function Inbox() {
   const { session, loading } = useAuth();
-  const [items, setItems] = useState<InboxItem[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [replyModalOpen, setReplyModalOpen] = useState(false);
+  const [folderTab, setFolderTab] = useState<"all" | "main" | "test">("all");
+  const [allItems, setAllItems] = useState<InboxItem[]>([]);
 
   const loadInbox = useCallback(async () => {
     if (!session?.access_token) return;
@@ -53,16 +61,13 @@ export default function Inbox() {
     setErr("");
     try {
       const response = await fetch(
-        `${getApiBase()}/api/sales/inbox`,
+        `${getApiBase()}/api/sales/inbox?folder=all`,
         liveFetchInit({ headers: authHeader(session.access_token) })
       );
       if (!response.ok) throw new Error(await response.text());
       const data = await response.json();
       const list = Array.isArray(data) ? data : [];
-      setItems(list);
-      setSelectedId(current =>
-        list.some(item => item.id === current) ? current : list[0]?.id || ""
-      );
+      setAllItems(list);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Could not load inbox");
     } finally {
@@ -73,6 +78,20 @@ export default function Inbox() {
   useEffect(() => {
     void loadInbox();
   }, [loadInbox]);
+
+  const items = useMemo(() => {
+    if (folderTab === "all") return allItems;
+    return allItems.filter(item => (item.folder || "main") === folderTab);
+  }, [allItems, folderTab]);
+  const mainCount = allItems.filter(item => (item.folder || "main") === "main")
+    .length;
+  const testCount = allItems.filter(item => item.folder === "test").length;
+
+  useEffect(() => {
+    setSelectedId(current =>
+      items.some(item => item.id === current) ? current : items[0]?.id || ""
+    );
+  }, [items]);
 
   if (loading)
     return <div className="min-h-screen bg-slate-50 text-gray-900" />;
@@ -155,6 +174,42 @@ export default function Inbox() {
               </p>
               <span className="text-xs text-gray-400">{items.length}</span>
             </div>
+
+            <div className="mt-3 flex items-center rounded-xl bg-gray-100 p-1">
+              <button
+                type="button"
+                onClick={() => setFolderTab("all")}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
+                  folderTab === "all"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                All ({allItems.length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFolderTab("main")}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
+                  folderTab === "main"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                Customer ({mainCount})
+              </button>
+              <button
+                type="button"
+                onClick={() => setFolderTab("test")}
+                className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
+                  folderTab === "test"
+                    ? "bg-white text-gray-900 shadow-sm"
+                    : "text-gray-500 hover:text-gray-900"
+                }`}
+              >
+                System ({testCount})
+              </button>
+            </div>
             <div className="mt-4 space-y-2">
               {items.map(item => (
                 <button
@@ -185,7 +240,9 @@ export default function Inbox() {
               ))}
               {!items.length && !busy && (
                 <p className="rounded-2xl border border-gray-200 p-4 text-sm text-gray-500">
-                  No inbound replies yet.
+                  {allItems.length
+                    ? "No messages in this folder."
+                    : "No inbound replies stored yet. Replies need the Resend inbound webhook on /api/webhooks/resend/inbound."}
                 </p>
               )}
             </div>
@@ -207,12 +264,14 @@ export default function Inbox() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    <Link
-                      href={`/sales-console?opportunity_id=${encodeURIComponent(selected.thread_id)}`}
-                      className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600"
-                    >
-                      Open in Sales Console
-                    </Link>
+                    {selected.thread_id ? (
+                      <Link
+                        href={`/sales-console?opportunity_id=${encodeURIComponent(selected.thread_id)}`}
+                        className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600"
+                      >
+                        Open in Sales Console
+                      </Link>
+                    ) : null}
                     {selected.latest_action?.id &&
                     (selected.latest_action.status === "pending" ||
                       selected.latest_action.status === "drafted") ? (
@@ -227,12 +286,22 @@ export default function Inbox() {
                         Approve &amp; send reply
                       </button>
                     ) : null}
-                    <Link
-                      href={scheduleHref(selected)}
-                      className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black text-[#111827]"
+                    <button
+                      type="button"
+                      onClick={() => setReplyModalOpen(true)}
+                      className="rounded-lg bg-emerald-600 border border-emerald-500 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition flex items-center gap-1.5"
                     >
-                      Schedule meeting
-                    </Link>
+                      <Mail className="w-3.5 h-3.5" />
+                      Reply via Resend
+                    </button>
+                    {selected.thread_id ? (
+                      <Link
+                        href={scheduleHref(selected)}
+                        className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black text-[#111827]"
+                      >
+                        Schedule meeting
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
                 <div className="mt-5 rounded-2xl border border-gray-300 bg-gray-50 p-4">
@@ -260,6 +329,22 @@ export default function Inbox() {
                     </pre>
                   )}
                 </div>
+
+                {selected && (
+                  <ResendEmailModal
+                    isOpen={replyModalOpen}
+                    onClose={() => setReplyModalOpen(false)}
+                    defaultTo={selected.from_email || ""}
+                    defaultSubject={
+                      selected.subject?.toLowerCase().startsWith("re:")
+                        ? selected.subject
+                        : `Re: ${selected.subject || selected.title}`
+                    }
+                    defaultBody={selected.latest_action?.draft_body || ""}
+                    companyName={selected.title}
+                    onSent={() => void loadInbox()}
+                  />
+                )}
               </>
             ) : (
               <p className="text-sm text-gray-500">Select a reply to review.</p>

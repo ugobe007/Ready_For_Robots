@@ -63,12 +63,28 @@ function CrmMark({ label, color }: { label: string; color: string }) {
 
 const upcomingCrms = [
   {
+    id: "hunter",
+    name: "Hunter.io",
+    mark: "HN",
+    color: "#ff6b00",
+    description:
+      "Directly verify decision-maker emails, find executive contact paths, and launch automated Hunter outreach campaigns.",
+  },
+  {
+    id: "outreach",
+    name: "Outreach.io",
+    mark: "OR",
+    color: "#5b21b6",
+    description:
+      "Automate sales sequence enrollment with pre-written, signal-personalized executive outreach drafts.",
+  },
+  {
     id: "salesforce",
     name: "Salesforce",
     mark: "SF",
     color: "#00A1E0",
     description:
-      "Push qualified leads, Signal scores, and outreach briefs into Salesforce opportunities—same OAuth pattern as HubSpot.",
+      "Push qualified leads, Signal scores, and outreach briefs into Salesforce opportunities.",
   },
   {
     id: "pipedrive",

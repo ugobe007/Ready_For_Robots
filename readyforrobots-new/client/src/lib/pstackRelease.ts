@@ -156,7 +156,7 @@ export function diligentMustNotBeHumanoidEmpty(): boolean {
   return (
     Boolean(listing?.vendor_name?.toLowerCase().includes("diligent")) &&
     cls === HEALTHCARE_CLASS_FIXTURE.classId &&
-    cls !== HEALTHCARE_CLASS_FIXTURE.forbidClass &&
+    (cls as string) !== (HEALTHCARE_CLASS_FIXTURE.forbidClass as string) &&
     CLASS_OPTION_IDS.includes("healthcare") &&
     hasNewTiles &&
     CLASS_OPTION_IDS.length === 20 &&

@@ -12,7 +12,7 @@ def send_cal_email_via_resend(
     to_email: str | list[str],
     subject: str,
     body_text: str,
-    from_display_name: str | None = "Cal · Ready For Robots",
+    from_display_name: str | None = "Phelan · ReadyForRobots",
     reply_to: str | None = None,
     cc: list[str] | None = None,
     bcc: list[str] | None = None,

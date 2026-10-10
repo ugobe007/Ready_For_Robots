@@ -60,9 +60,11 @@ def ensure_engagement_for_opportunity(
 ) -> CrmEngagement | None:
     if not opportunity.crm_account_id or not opportunity.team_id:
         return None
+    acct_id = uuid.UUID(str(opportunity.crm_account_id)) if isinstance(opportunity.crm_account_id, str) and len(str(opportunity.crm_account_id)) == 36 else opportunity.crm_account_id
+    team_id = uuid.UUID(str(opportunity.team_id)) if isinstance(opportunity.team_id, str) and len(str(opportunity.team_id)) == 36 else opportunity.team_id
     acct = account
     if not acct:
-        acct = db.query(CrmAccount).filter(CrmAccount.id == opportunity.crm_account_id).first()
+        acct = db.query(CrmAccount).filter(CrmAccount.id == acct_id).first()
     if not acct:
         return None
 
@@ -70,7 +72,7 @@ def ensure_engagement_for_opportunity(
         db.query(CrmEngagement)
         .filter(
             CrmEngagement.crm_account_id == acct.id,
-            CrmEngagement.team_id == opportunity.team_id,
+            CrmEngagement.team_id == team_id,
             CrmEngagement.status == "open",
         )
         .order_by(CrmEngagement.created_at.desc())
@@ -78,7 +80,7 @@ def ensure_engagement_for_opportunity(
     )
     if not engagement:
         engagement = CrmEngagement(
-            team_id=opportunity.team_id,
+            team_id=team_id,
             crm_account_id=acct.id,
             name=f"{acct.name} — automation pursuit",
             stage=engagement_stage_for_opportunity(opportunity.current_stage),

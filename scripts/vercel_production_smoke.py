@@ -20,7 +20,14 @@ import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Callable
+
+_root = Path(__file__).resolve().parents[1]
+if str(_root) not in sys.path:
+    sys.path.insert(0, str(_root))
+
+from scripts.vercel_pack_static_output import SPA_SHELL_PATHS
 
 STALE_JS = "/assets/index-bxLpnQiT.js"
 JS_PATH_RE = re.compile(r"/assets/index-[A-Za-z0-9_-]+\.js")
@@ -42,6 +49,21 @@ def extract_deploy_url(log: str) -> str | None:
     return matches[-1] if matches else None
 
 
+def _get_ssl_context() -> ssl.SSLContext | None:
+    try:
+        import ssl
+        try:
+            import certifi
+            return ssl.create_default_context(cafile=certifi.where())
+        except Exception:
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+            return ctx
+    except Exception:
+        return None
+
+
 def http_get(url: str, timeout: float = 30.0) -> tuple[int, bytes]:
     req = urllib.request.Request(
         url,
@@ -53,8 +75,9 @@ def http_get(url: str, timeout: float = 30.0) -> tuple[int, bytes]:
         },
         method="GET",
     )
+    context = _get_ssl_context()
     try:
-        with urllib.request.urlopen(req, timeout=timeout) as resp:
+        with urllib.request.urlopen(req, timeout=timeout, context=context) as resp:
             return int(resp.status), resp.read()
     except urllib.error.HTTPError as err:
         try:
@@ -111,6 +134,27 @@ def check_origin(origin: str, *, get: Getter | None = None, nonce: str = "n") ->
             False, base, js_status, js_path, js_bytes, f"missing canary {missing[0]!r}"
         )
     return BundleCheck(True, base, js_status, js_path, js_bytes, "ok")
+
+
+def check_spa_shell(origin: str, path: str, *, get: Getter | None = None) -> BundleCheck:
+    """Jobs CRM and other wouter routes must serve index.html, not Vercel JSON 404."""
+    getter = get or http_get
+    base = origin.rstrip("/")
+    href = path if path.startswith("/") else f"/{path}"
+    status, raw = getter(f"{base}{href}")
+    body = raw.decode("utf-8", errors="replace")
+    js_path = js_path_from_html(body)
+    if status != 200:
+        return BundleCheck(False, base, status, js_path, len(raw), f"{href} HTTP {status}")
+    if "page could not be found" in body:
+        return BundleCheck(False, base, status, js_path, len(raw), f"{href} vercel 404 json")
+    if "<html" not in body.lower() or not js_path:
+        return BundleCheck(False, base, status, js_path, len(raw), f"{href} not app shell")
+    return BundleCheck(True, base, status, js_path, len(raw), f"{href} ok")
+
+
+def check_spa_shells(origin: str, *, get: Getter | None = None) -> list[BundleCheck]:
+    return [check_spa_shell(origin, path, get=get) for path in SPA_SHELL_PATHS]
 
 
 def format_check(result: BundleCheck) -> str:
@@ -170,14 +214,25 @@ def main(argv: list[str] | None = None) -> int:
         attempts=args.attempts,
         sleep_s=args.sleep,
     )
-    if result.ok:
-        print("Custom domain matches new bundle.", flush=True)
-        return 0
-    print(
-        f"::error::{args.domain} still serving a stale or unreachable bundle after alias",
-        flush=True,
-    )
-    return 1
+    if not result.ok:
+        print(
+            f"::error::{args.domain} still serving a stale or unreachable bundle after alias",
+            flush=True,
+        )
+        return 1
+    print("Custom domain matches new bundle.", flush=True)
+    shells = check_spa_shells(args.domain)
+    for shell in shells:
+        print(format_check(shell), flush=True)
+    failed = [s for s in shells if not s.ok]
+    if failed:
+        print(
+            f"::error::{args.domain} SPA shell 404: {failed[0].reason}",
+            flush=True,
+        )
+        return 1
+    print("SPA shells serve the app, not Vercel 404.", flush=True)
+    return 0
 
 
 if __name__ == "__main__":
