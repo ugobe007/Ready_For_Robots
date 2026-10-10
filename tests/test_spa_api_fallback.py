@@ -24,3 +24,13 @@ def test_fly_spa_catchall_rejects_unknown_api():
     main = (ROOT / "app" / "main.py").read_text(encoding="utf-8")
     assert "from app.spa_fallback import is_api_catchall_path" in main
     assert "if is_api_catchall_path(full_path):" in main
+
+
+def test_preview_endpoint_falls_back_to_named_employer_corpus():
+    preview = (ROOT / "app" / "api" / "robot_jobs_preview.py").read_text(
+        encoding="utf-8"
+    )
+    assert "def corpus_preview_jobs" in preview
+    assert 'source = "corpus"' in preview
+    assert "DECISION_MAKER_EMPTY" in preview
+    assert "operations@" not in preview.split("def corpus_preview_jobs")[1][:800]
