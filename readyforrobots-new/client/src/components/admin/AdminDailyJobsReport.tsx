@@ -1,6 +1,6 @@
 /**
- * Operator top-25 Robot Job sales cards — same cards emailed daily.
- * Named employers and work. Not SIGNAL buyers. No invented people.
+ * Operator top-25 hot job opportunities — same inline list emailed daily.
+ * Named employers, stored decision maker and contact, link to the Job Card.
  */
 import { useState } from "react";
 import { Copy, Mail } from "lucide-react";
@@ -19,6 +19,7 @@ export type DailyJobsReportJob = {
   job_type?: string;
   description?: string;
   decision_maker?: string;
+  decision_maker_name?: string | null;
   timing?: string;
   contact?: string;
   employer_email?: string | null;
@@ -29,6 +30,7 @@ export type DailyJobsReportJob = {
   match_why?: string | null;
   intro?: string | null;
   employer_intro?: string | null;
+  card_href?: string;
 };
 
 export type DailyJobsReportHunter = {
@@ -62,15 +64,20 @@ type Props = {
   onEnrich?: () => void;
 };
 
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400">
-        {label}
-      </p>
-      <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-100">{value}</p>
-    </div>
-  );
+function jobNameLine(job: DailyJobsReportJob): string {
+  const title = job.title || job.job_type || "Work";
+  const description = job.description || "";
+  if (description && description !== title) return `${title} — ${description}`;
+  return title;
+}
+
+function decisionMakerLine(job: DailyJobsReportJob): string {
+  const parts = [job.decision_maker || "Not named on the posting"];
+  if (!job.decision_maker_name && job.target_titles?.length) {
+    parts.push(`Looked for: ${job.target_titles.slice(0, 3).join(", ")}`);
+  }
+  if (job.match_why) parts.push(job.match_why);
+  return parts.join(" · ");
 }
 
 function IntroField({ label, value }: { label: string; value: string }) {
@@ -116,14 +123,14 @@ export default function AdminDailyJobsReport({
   return (
     <section
       id="daily-jobs-report"
-      className="mb-6 scroll-mt-28 rounded-2xl border border-emerald-500/40 bg-[#0c192e] px-5 py-5 shadow-xl"
+      className="mb-6 scroll-mt-28 border border-emerald-500/40 bg-[#0c192e] px-3 py-2"
     >
-      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <Mail size={16} className="text-emerald-400" />
           <div>
             <h2 className="text-sm font-bold text-white">
-              Top 25 robot job sales cards
+              Top 25 hot job opportunities
             </h2>
             <p className="text-[11px] text-slate-400">
               UTC {today}
@@ -150,94 +157,84 @@ export default function AdminDailyJobsReport({
             disabled={sending || enriching || loading}
             className="inline-flex items-center justify-center bg-emerald-500 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-[#090d16] hover:bg-emerald-400 disabled:opacity-50"
           >
-            {sending ? "Sending…" : "Email the 25 cards now"}
+            {sending ? "Sending…" : "Email the 25 jobs now"}
           </button>
         </div>
       </div>
       {sendError ? (
-        <p className="mb-3 text-sm text-red-300">{sendError}</p>
+        <p className="mt-2 text-sm text-red-300">{sendError}</p>
       ) : null}
       {loading ? (
-        <p className="py-2 text-sm text-slate-400">Loading jobs…</p>
+        <p className="mt-2 text-sm text-slate-400">Loading jobs…</p>
       ) : jobs.length === 0 ? (
-        <p className="text-sm text-slate-400">
+        <p className="mt-2 text-sm text-slate-400">
           No named-employer jobs in the live table yet.
         </p>
       ) : (
-        <ol className="space-y-3">
+        <ol className="mt-3">
           {jobs.map(job => {
-            const jobType = job.job_type || job.title || "Work";
-            const description = job.description || job.title || "";
-            const typeBlock =
-              description && description !== jobType
-                ? `${jobType}\n${description}`
-                : jobType;
+            const href = job.job_key
+              ? `/?job=${encodeURIComponent(job.job_key)}`
+              : job.card_href || "/?visit=jobs";
+            const place = [job.employer, job.locality].filter(Boolean).join(" · ");
+            const robotIntro =
+              job.intro ||
+              composeRobotCompanyIntro({
+                title: job.title || job.job_type,
+                employer: job.employer,
+                locality: job.locality,
+                requirements: job.description || job.title,
+                decisionMakerName: job.decision_maker,
+              });
+            const employerIntro =
+              job.employer_intro ||
+              composeEmployerNeedIntro({
+                contactName: job.decision_maker,
+                announcedNeed: job.title || job.job_type,
+                automationTasks: job.description,
+              });
             return (
               <li
                 key={job.job_key || `${job.rank}-${job.employer}`}
-                className="border border-slate-700/60 bg-[#060c1c] px-3 py-3"
+                className="mt-2 text-sm leading-snug text-slate-200 first:mt-0"
               >
-                <p className="text-[11px] font-mono text-slate-500">
+                <span className="font-mono text-slate-500">
                   {String(job.rank || 0).padStart(2, "0")}
-                </p>
-                <p className="font-display text-base font-bold text-emerald-400">
-                  {job.employer}
-                </p>
-                {job.locality ? (
-                  <p className="text-[12px] text-slate-400">{job.locality}</p>
+                </span>{" "}
+                <span className="font-bold text-emerald-400">{place}</span>
+                <br />
+                {jobNameLine(job)}
+                <br />
+                Decision maker: {decisionMakerLine(job)}
+                <br />
+                Contact:{" "}
+                {job.contact ||
+                  "No page email or apply URL. We will not invent one."}
+                <br />
+                <a
+                  href={href}
+                  className="text-emerald-300 underline decoration-emerald-500/40 hover:text-emerald-200"
+                >
+                  Job card
+                </a>
+                {robotIntro ? (
+                  <>
+                    <br />
+                    <IntroField
+                      label="[5] Intro to the robot company"
+                      value={robotIntro}
+                    />
+                  </>
                 ) : null}
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <Field label="[1] Job type and description" value={typeBlock} />
-                  <Field
-                    label="[2] Decision maker"
-                    value={
-                      [
-                        job.decision_maker || "Not named on the posting",
-                        job.target_titles?.length
-                          ? `Looked for: ${job.target_titles.slice(0, 3).join(", ")}`
-                          : "",
-                        job.match_why || "",
-                      ]
-                        .filter(Boolean)
-                        .join("\n")
-                    }
-                  />
-                  <Field
-                    label="[3] Timing"
-                    value={job.timing || "Timing not on the posting"}
-                  />
-                  <Field
-                    label="[4] Contact information"
-                    value={
-                      job.contact ||
-                      "No page email or apply URL. We will not invent one."
-                    }
-                  />
-                  <IntroField
-                    label="[5] Intro to the robot company"
-                    value={
-                      job.intro ||
-                      composeRobotCompanyIntro({
-                        title: job.title || job.job_type,
-                        employer: job.employer,
-                        locality: job.locality,
-                        requirements: job.description || job.title,
-                        decisionMakerName: job.decision_maker,
-                      })
-                    }
-                  />
-                  <IntroField
-                    label="[6] Intro to the employer"
-                    value={
-                      job.employer_intro ||
-                      composeEmployerNeedIntro({
-                        contactName: job.decision_maker,
-                        announcedNeed: job.title || job.job_type,
-                        automationTasks: job.description,
-                      })
-                    }
-                  />
-                </div>
+                {employerIntro ? (
+                  <>
+                    <br />
+                    <IntroField
+                      label="[6] Intro to the employer"
+                      value={employerIntro}
+                    />
+                  </>
+                ) : null}
               </li>
             );
           })}
@@ -255,10 +252,10 @@ export default function AdminDailyJobsReport({
         </p>
       ) : null}
       <p className="mt-2 text-[11px] text-slate-500">
-        A decision-maker agent maps each job to the titles that own that work,
-        then scores real Hunter.io (and Apollo, when enabled) people against
-        those titles. We do not invent people. Daily email at 14:00 UTC to
-        ugobe07@gmail.com. FIND stays <code>/?visit=jobs</code>.
+        Look up companies reads the employer leadership page, then asks
+        Hunter.io for that person&apos;s email (name, company, and site domain).
+        We do not invent people. Daily email at 14:00 UTC to ugobe07@gmail.com.
+        Each line opens the Job Card on the site.
       </p>
     </section>
   );

@@ -253,3 +253,24 @@ def test_agent_rejects_junior_titles_even_when_the_word_matches():
             "confidence": 82,
         },
     )
+
+
+def test_serving_accepts_hotel_general_manager():
+    from app.services.job_decision_maker_agent import pick_candidate, plan_for_job
+
+    plan = plan_for_job(
+        {"action": "serving", "robot_compatible_task": "Banquet Server"}
+    )
+    picked = pick_candidate(
+        plan,
+        [
+            {
+                "name": "Kalani Spaccarelli",
+                "title": "General Manager",
+                "email": "kspaccarelli@caesars.com",
+                "confidence": 83,
+            }
+        ],
+    )
+    assert picked is not None
+    assert picked["name"] == "Kalani Spaccarelli"

@@ -99,7 +99,7 @@ type AdminActivity = {
 
 type CalInboxItem = {
   id: string;
-  thread_id: string;
+  thread_id?: string | null;
   opportunity_type: "crm" | "supply";
   title?: string;
   current_stage?: string;
@@ -1637,7 +1637,7 @@ export default function Admin() {
     if (!session?.access_token || !me?.is_admin) return;
     setCalInboxLoading(true);
     try {
-      const res = await adminFetch("/api/sales/inbox");
+      const res = await adminFetch("/api/sales/inbox?folder=all");
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       const rows = Array.isArray(data) ? (data as CalInboxItem[]) : [];
@@ -3222,7 +3222,7 @@ export default function Admin() {
               Command center
             </h1>
             <p className="mt-0.5 text-[11px] text-slate-400">
-              Top 25 robot job sales cards · Phelan · Ready For Robots
+              Top 25 hot job opportunities · Phelan · Ready For Robots
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -3804,13 +3804,17 @@ export default function Admin() {
                       >
                         Review
                       </Link>
-                      <span className="text-slate-600">·</span>
-                      <Link
-                        href={`/sales-console?opportunity_id=${encodeURIComponent(item.thread_id)}`}
-                        className="font-semibold text-sky-300 underline underline-offset-2 hover:text-sky-200"
-                      >
-                        Thread
-                      </Link>
+                      {item.thread_id && (
+                        <>
+                          <span className="text-slate-600">·</span>
+                          <Link
+                            href={`/sales-console?opportunity_id=${encodeURIComponent(item.thread_id)}`}
+                            className="font-semibold text-sky-300 underline underline-offset-2 hover:text-sky-200"
+                          >
+                            Thread
+                          </Link>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))
