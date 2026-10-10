@@ -456,12 +456,12 @@ def daily_brief(db: Session = Depends(get_db)):
         .scalar() or 0
     )
     cal_queue_pending = int(cal_queue.get("pending_draft") or 0) if cal_queue else 0
-    add_step("Cal autopilot — ready to send", sendable, "/admin#cal-outreach", "high")
+    add_step("Phelan autopilot — ready to send", sendable, "/admin#cal-outreach", "high")
     if cal_queue_pending:
-        add_step("Cal leads need drafting", cal_queue_pending, "/admin#cal-outreach", "high")
+        add_step("Phelan leads need drafting", cal_queue_pending, "/admin#cal-outreach", "high")
     if cal_needs_approval:
-        add_step("Cal drafts need approval", cal_needs_approval, "/admin#cal-outreach", "high")
-    add_step("Review Cal replies & follow-up", replied_count or emails_sent_total, "/sales-workflow", "high")
+        add_step("Phelan drafts need approval", cal_needs_approval, "/admin#cal-outreach", "high")
+    add_step("Review Phelan replies & follow-up", replied_count or emails_sent_total, "/sales-workflow", "high")
     add_step("HOT leads not yet emailed", hot_unsent, "/admin#cal-outreach", "medium")
     add_step("Sales actions need approval", needs_approval, "/sales-console", "high")
     add_step("SIGNAL drafts awaiting send", scout_drafted, "/admin#workflow", "medium")

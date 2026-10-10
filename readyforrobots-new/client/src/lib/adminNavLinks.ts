@@ -53,7 +53,7 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
       {
         label: "Command center",
         href: "/admin",
-        shortLabel: "Daily brief · Cal queue",
+        shortLabel: "Daily brief · Phelan queue",
         adminOnly: true,
       },
       {
@@ -186,7 +186,7 @@ export function openWorkspaceHref(
 }
 
 export const ADMIN_QUICK_ACTIONS: AdminNavLink[] = [
-  { label: "Command center", href: "/admin", shortLabel: "Cal queue" },
+  { label: "Command center", href: "/admin", shortLabel: "Phelan queue" },
   {
     label: "Top 25 robot jobs",
     href: "/admin#daily-jobs-report",

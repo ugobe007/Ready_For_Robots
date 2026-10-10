@@ -191,13 +191,13 @@ export default function CalProposalQuoteDrawer({
     });
     setQuotes(updated);
     toast.success(
-      "Cal Autopilot: Auto-dispatched OEM tee-up emails and approved buyer quotes for all active matches!"
+      "Phelan Autopilot: Auto-dispatched OEM tee-up emails and approved buyer quotes for all active matches!"
     );
   };
 
   const handleRunNurtureCycle = () => {
     toast.success(
-      "Cal Multi-Touch Nurture Engine: Triggered OEM Day-3 Nudges & Buyer Day-4 Follow-ups across all active quotes!"
+      "Phelan Multi-Touch Nurture Engine: Triggered OEM Day-3 Nudges & Buyer Day-4 Follow-ups across all active quotes!"
     );
   };
 
@@ -216,7 +216,7 @@ export default function CalProposalQuoteDrawer({
     });
     setQuotes(updated);
     toast.success(
-      `🎉 Employer accepted quote ${id}! Cal notified the OEM and prepared site onboarding.`
+      `🎉 Employer accepted quote ${id}! Phelan notified the OEM and prepared site onboarding.`
     );
   };
 
@@ -482,7 +482,7 @@ export default function CalProposalQuoteDrawer({
               {/* OEM Tee-Up Email Preview Snippet */}
               <div className="p-4 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-2 text-xs">
                 <div className="flex items-center justify-between text-amber-400 font-mono font-bold text-[11px]">
-                  <span>Cal OEM Tee-Up Email (Supply Side Outreach)</span>
+                  <span>Phelan OEM Tee-Up Email (Supply Side Outreach)</span>
                   <span className="text-slate-400">
                     To: {currentQuote.matched_robot.oem_name} Partner
                     Engineering
@@ -528,7 +528,7 @@ export default function CalProposalQuoteDrawer({
         {/* Drawer Footer */}
         <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between text-xs text-slate-400">
           <span className="font-mono">
-            Cal Autopilot Engine v2.4 • OEM Gate
+            Phelan Autopilot Engine v2.4 • OEM Gate
           </span>
           <button
             onClick={onClose}
