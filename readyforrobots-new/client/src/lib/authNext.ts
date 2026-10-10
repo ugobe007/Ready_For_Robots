@@ -98,7 +98,9 @@ export function clearPendingNext(): void {
 }
 
 /** Read intended post-auth path without clearing stored intent. */
-export function postAuthRedirectTarget(defaultPath = "/welcome?registered=1"): string {
+export function postAuthRedirectTarget(
+  defaultPath = "/welcome?registered=1"
+): string {
   const fromUrl = readNextParam();
   if (fromUrl) return fromUrl;
   const pending = peekPendingNext();
@@ -107,7 +109,9 @@ export function postAuthRedirectTarget(defaultPath = "/welcome?registered=1"): s
 }
 
 /** Resolve where to send the user after auth; clears stored intent when used. */
-export function resolvePostAuthPath(defaultPath = "/welcome?registered=1"): string {
+export function resolvePostAuthPath(
+  defaultPath = "/welcome?registered=1"
+): string {
   const dest = postAuthRedirectTarget(defaultPath);
   if (dest !== defaultPath || readNextParam() || peekPendingNext()) {
     clearPendingNext();

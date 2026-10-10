@@ -103,7 +103,9 @@ function IntroField({ label, value }: { label: string; value: string }) {
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
-      <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-100">{value}</p>
+      <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-100">
+        {value}
+      </p>
     </div>
   );
 }
@@ -149,7 +151,9 @@ export default function AdminDailyJobsReport({
             disabled={sending || enriching || loading}
             className="inline-flex items-center justify-center border border-emerald-500/60 px-3 py-2 text-[11px] font-bold uppercase tracking-[0.08em] text-emerald-300 hover:bg-emerald-500/10 disabled:opacity-50"
           >
-            {enriching ? "Looking up companies…" : "Look up companies on Hunter.io"}
+            {enriching
+              ? "Looking up companies…"
+              : "Look up companies on Hunter.io"}
           </button>
           <button
             type="button"
@@ -176,7 +180,9 @@ export default function AdminDailyJobsReport({
             const href = job.job_key
               ? `/?job=${encodeURIComponent(job.job_key)}`
               : job.card_href || "/?visit=jobs";
-            const place = [job.employer, job.locality].filter(Boolean).join(" · ");
+            const place = [job.employer, job.locality]
+              .filter(Boolean)
+              .join(" · ");
             const robotIntro =
               job.intro ||
               composeRobotCompanyIntro({
@@ -244,7 +250,9 @@ export default function AdminDailyJobsReport({
         <p className="mt-3 text-[11px] text-slate-400">
           Hunter.io
           {typeof hunter.filled === "number" ? ` filled ${hunter.filled}` : ""}
-          {typeof hunter.missed === "number" ? ` · missed ${hunter.missed}` : ""}
+          {typeof hunter.missed === "number"
+            ? ` · missed ${hunter.missed}`
+            : ""}
           {typeof hunter.skipped === "number"
             ? ` · already had ${hunter.skipped}`
             : ""}

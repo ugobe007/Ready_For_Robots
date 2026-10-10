@@ -11,7 +11,12 @@
       "OnRobot"
     ],
     "robot_categories": ["cobot", "amr", "scara", "gripper"],
-    "services": ["Automation Integration", "Custom End-Effectors", "Safety Audits", "PLC Programming"],
+    "services": [
+      "Automation Integration",
+      "Custom End-Effectors",
+      "Safety Audits",
+      "PLC Programming"
+    ],
     "product_mix": [
       {
         "brand": "Universal Robots",
@@ -52,7 +57,12 @@
       "MiR"
     ],
     "robot_categories": ["6-axis", "cobot", "amr", "scara", "palletizer"],
-    "services": ["Turnkey Automation Systems", "Robot Cell Design", "Vision Guided Robotics", "Sub-System Assembly"],
+    "services": [
+      "Turnkey Automation Systems",
+      "Robot Cell Design",
+      "Vision Guided Robotics",
+      "Sub-System Assembly"
+    ],
     "product_mix": [
       {
         "brand": "FANUC",
@@ -92,7 +102,12 @@
       "Robotiq"
     ],
     "robot_categories": ["cobot", "amr", "scara", "6-axis"],
-    "services": ["Machine Vision", "Robot Cell Safety", "Motion Control", "System Proof-of-Concept Testing"],
+    "services": [
+      "Machine Vision",
+      "Robot Cell Safety",
+      "Motion Control",
+      "System Proof-of-Concept Testing"
+    ],
     "product_mix": [
       {
         "brand": "Universal Robots",
@@ -126,7 +141,12 @@
       "Cognex Vision"
     ],
     "robot_categories": ["cobot", "amr", "scara", "linear"],
-    "services": ["Industrial Automation", "Pneumatic Control", "Machine Safety", "Vision Inspection"],
+    "services": [
+      "Industrial Automation",
+      "Pneumatic Control",
+      "Machine Safety",
+      "Vision Inspection"
+    ],
     "product_mix": [
       {
         "brand": "Yamaha Robotics",
@@ -160,7 +180,11 @@
       "Robotiq"
     ],
     "robot_categories": ["cobot", "amr", "scara", "feeder"],
-    "services": ["Mechatronics Engineering", "Vision & Robotics Integration", "Proof-of-Concept Lab"],
+    "services": [
+      "Mechatronics Engineering",
+      "Vision & Robotics Integration",
+      "Proof-of-Concept Lab"
+    ],
     "product_mix": [
       {
         "brand": "Universal Robots",
@@ -186,14 +210,13 @@
     "distributor_name": "RG Group Robotics & Automation",
     "domain": "rg-group.com",
     "territory": "North America (Mid-Atlantic)",
-    "supported_brands": [
-      "Doosan Robotics",
-      "MiR",
-      "Festo",
-      "OnRobot"
-    ],
+    "supported_brands": ["Doosan Robotics", "MiR", "Festo", "OnRobot"],
     "robot_categories": ["cobot", "amr", "gripper"],
-    "services": ["Fluid Power & Motion", "Collaborative Workcells", "Custom Automation Solutions"],
+    "services": [
+      "Fluid Power & Motion",
+      "Collaborative Workcells",
+      "Custom Automation Solutions"
+    ],
     "product_mix": [
       {
         "brand": "Doosan Robotics",
@@ -220,7 +243,11 @@
       "Kawasaki Robotics"
     ],
     "robot_categories": ["6-axis", "cobot", "amr", "scara"],
-    "services": ["PLC Programming", "Motion Control Engineering", "Robotic Workcell Integration"],
+    "services": [
+      "PLC Programming",
+      "Motion Control Engineering",
+      "Robotic Workcell Integration"
+    ],
     "product_mix": [
       {
         "brand": "Mitsubishi Electric",
@@ -253,8 +280,20 @@
       "Keenon Robotics",
       "Unitree Robotics"
     ],
-    "robot_categories": ["humanoid", "delivery", "cleaning", "quadruped", "kitchen", "amr"],
-    "services": ["Robot Rental & Leasing", "Fleet Deployment", "Enterprise Integration", "Maintenance & Operator Training"],
+    "robot_categories": [
+      "humanoid",
+      "delivery",
+      "cleaning",
+      "quadruped",
+      "kitchen",
+      "amr"
+    ],
+    "services": [
+      "Robot Rental & Leasing",
+      "Fleet Deployment",
+      "Enterprise Integration",
+      "Maintenance & Operator Training"
+    ],
     "product_mix": [
       {
         "brand": "AgiBot",
@@ -313,8 +352,18 @@
       "Viggo",
       "iKitBot"
     ],
-    "robot_categories": ["humanoid", "delivery", "cleaning", "quadruped", "amr"],
-    "services": ["Robot Rental & Leasing", "Fleet Deployment", "Enterprise Integration"],
+    "robot_categories": [
+      "humanoid",
+      "delivery",
+      "cleaning",
+      "quadruped",
+      "amr"
+    ],
+    "services": [
+      "Robot Rental & Leasing",
+      "Fleet Deployment",
+      "Enterprise Integration"
+    ],
     "product_mix": [
       {
         "brand": "AgiBot",

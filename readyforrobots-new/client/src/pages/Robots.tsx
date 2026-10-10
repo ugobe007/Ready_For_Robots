@@ -419,7 +419,9 @@ function AiStackPanel({ stack }: { stack: AiStack }) {
       ) : null}
       {stack.third_party && stack.third_party.length > 0 ? (
         <p className="text-[11px] text-slate-400 mt-1">
-          <span className="text-slate-400 font-medium">Partners / platform: </span>
+          <span className="text-slate-400 font-medium">
+            Partners / platform:{" "}
+          </span>
           {stack.third_party.join(", ")}
         </p>
       ) : null}
@@ -1041,56 +1043,95 @@ export default function Robots() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1.5 rounded-full bg-purple-500/20 px-3.5 py-1 text-xs font-mono font-bold text-purple-300 border border-purple-500/30 hover:bg-purple-500/30 transition-colors"
             >
-              Featured Partner: Skild AI <ExternalLink className="h-3.5 w-3.5" />
+              Featured Partner: Skild AI{" "}
+              <ExternalLink className="h-3.5 w-3.5" />
             </a>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
             <div className="rounded-xl border border-purple-500/40 bg-[#081126] p-4.5 shadow-lg">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-slate-100 font-display text-base">Skild AI</h3>
-                <a href="https://www.skild.ai/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">
+                <h3 className="font-bold text-slate-100 font-display text-base">
+                  Skild AI
+                </h3>
+                <a
+                  href="https://www.skild.ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-400 hover:text-purple-300"
+                >
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
-              <p className="text-xs text-purple-300 font-mono font-bold mb-2">Skild Brain · Embodied Foundation Model</p>
+              <p className="text-xs text-purple-300 font-mono font-bold mb-2">
+                Skild Brain · Embodied Foundation Model
+              </p>
               <p className="text-xs leading-relaxed text-slate-300">
-                Scalable general-purpose AI brain for robotics. Enables cross-robot manipulation, locomotion, and rapid task adaptation across diverse physical form factors.
+                Scalable general-purpose AI brain for robotics. Enables
+                cross-robot manipulation, locomotion, and rapid task adaptation
+                across diverse physical form factors.
               </p>
             </div>
 
             <div className="rounded-xl border border-purple-500/30 bg-[#081126] p-4.5">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-slate-100 font-display text-base">Kinetix</h3>
-                <a href="https://kinetix.tech/" target="_blank" rel="noopener noreferrer" className="text-purple-400 hover:text-purple-300">
+                <h3 className="font-bold text-slate-100 font-display text-base">
+                  Kinetix
+                </h3>
+                <a
+                  href="https://kinetix.tech/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-400 hover:text-purple-300"
+                >
                   <ExternalLink className="h-4 w-4" />
                 </a>
               </div>
-              <p className="text-xs text-cyan-300 font-mono font-bold mb-2">Motion AI · 3D Human Motion Intelligence</p>
+              <p className="text-xs text-cyan-300 font-mono font-bold mb-2">
+                Motion AI · 3D Human Motion Intelligence
+              </p>
               <p className="text-xs leading-relaxed text-slate-300">
-                Frontier 3D and human motion intelligence. Generative AI for physics-guided 3D movement, motion synthesis, and humanoid teleoperation.
+                Frontier 3D and human motion intelligence. Generative AI for
+                physics-guided 3D movement, motion synthesis, and humanoid
+                teleoperation.
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-slate-100 font-display text-base">Physical Intelligence</h3>
-                <span className="text-xs font-mono text-slate-400">Universal Control</span>
+                <h3 className="font-bold text-slate-100 font-display text-base">
+                  Physical Intelligence
+                </h3>
+                <span className="text-xs font-mono text-slate-400">
+                  Universal Control
+                </span>
               </div>
-              <p className="text-xs text-emerald-300 font-mono font-bold mb-2">pi0 · Foundation Model</p>
+              <p className="text-xs text-emerald-300 font-mono font-bold mb-2">
+                pi0 · Foundation Model
+              </p>
               <p className="text-xs leading-relaxed text-slate-300">
-                Brings high-level reasoning and physical dexterity to general-purpose hardware through large multimodal physical models.
+                Brings high-level reasoning and physical dexterity to
+                general-purpose hardware through large multimodal physical
+                models.
               </p>
             </div>
 
             <div className="rounded-xl border border-slate-700/60 bg-[#081126] p-4.5">
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-bold text-slate-100 font-display text-base">Covariant</h3>
-                <span className="text-xs font-mono text-slate-400">Logistics RFM</span>
+                <h3 className="font-bold text-slate-100 font-display text-base">
+                  Covariant
+                </h3>
+                <span className="text-xs font-mono text-slate-400">
+                  Logistics RFM
+                </span>
               </div>
-              <p className="text-xs text-amber-300 font-mono font-bold mb-2">RFM-1 · Robotics Foundation Model</p>
+              <p className="text-xs text-amber-300 font-mono font-bold mb-2">
+                RFM-1 · Robotics Foundation Model
+              </p>
               <p className="text-xs leading-relaxed text-slate-300">
-                Language-guided manipulation intelligence designed for autonomous bin picking, sorting, and warehouse fulfillment automation.
+                Language-guided manipulation intelligence designed for
+                autonomous bin picking, sorting, and warehouse fulfillment
+                automation.
               </p>
             </div>
           </div>

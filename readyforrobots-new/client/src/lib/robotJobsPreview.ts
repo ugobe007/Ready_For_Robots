@@ -25,9 +25,7 @@ export function formatInlineJobLine(job: PreviewJob): string {
   return [head, work, ...facts].filter(Boolean).join(" — ");
 }
 
-export async function fetchRobotJobsPreview(
-  limit = 3
-): Promise<PreviewJob[]> {
+export async function fetchRobotJobsPreview(limit = 3): Promise<PreviewJob[]> {
   const cap = Math.max(1, Math.min(limit, 8));
   const base = getPublicReadApiBase();
   const res = await fetch(

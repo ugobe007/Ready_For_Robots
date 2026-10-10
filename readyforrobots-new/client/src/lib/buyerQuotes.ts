@@ -110,7 +110,10 @@ export const FEATURED_BUYER_QUOTES: BuyerQuote[] = [
     industry: "Fast Casual & Food Prep",
     quote:
       "Kitchen prep labor bottlenecks are where we see immediate automation ROI. We're evaluating produce prep manipulators and portioning units to increase store kitchen throughput.",
-    targetRobotTypes: ["Produce Prep Manipulators", "Automated Portioning Units"],
+    targetRobotTypes: [
+      "Produce Prep Manipulators",
+      "Automated Portioning Units",
+    ],
     timeline: "3–6 Months Pilot",
     verified: true,
     date: "2 days ago",
@@ -161,7 +164,10 @@ export const FEATURED_BUYER_QUOTES: BuyerQuote[] = [
     industry: "Multi-Brand Food Delivery",
     quote:
       "Scaling multi-brand meal assembly across suburban hub kitchens requires high-precision mobile manipulators that can switch between diverse menu SKUs smoothly.",
-    targetRobotTypes: ["Multi-Step Assembly AMRs", "Automated Cooking Stations"],
+    targetRobotTypes: [
+      "Multi-Step Assembly AMRs",
+      "Automated Cooking Stations",
+    ],
     timeline: "0–3 Months",
     verified: true,
     date: "3 days ago",
@@ -178,7 +184,10 @@ export const FEATURED_BUYER_QUOTES: BuyerQuote[] = [
     industry: "E-Commerce & Retail Distribution",
     quote:
       "High-bay palletizing and automated tote consolidation in regional fulfillment centers are active CapEx priority projects with rapid vendor evaluation windows.",
-    targetRobotTypes: ["High-Bay Palletizing Cobots", "Tote Consolidation AMRs"],
+    targetRobotTypes: [
+      "High-Bay Palletizing Cobots",
+      "Tote Consolidation AMRs",
+    ],
     timeline: "Active Procurement",
     verified: true,
     date: "Today",
@@ -280,7 +289,10 @@ export const FEATURED_BUYER_QUOTES: BuyerQuote[] = [
     industry: "Retail & E-Commerce Fulfillment",
     quote:
       "Sorting mixed-sku cartons onto outbound pallets at our regional fulfillment hubs requires vision-guided cobots and autonomous tuggers.",
-    targetRobotTypes: ["Mixed-SKU Palletizing Cobots", "Autonomous Tow Tractors"],
+    targetRobotTypes: [
+      "Mixed-SKU Palletizing Cobots",
+      "Autonomous Tow Tractors",
+    ],
     timeline: "Immediate Procurement",
     verified: true,
     date: "Today",
@@ -314,7 +326,10 @@ export const FEATURED_BUYER_QUOTES: BuyerQuote[] = [
     industry: "3PL & Freight Forwarding",
     quote:
       "Deploying mobile sortation robots across our multi-tenant logistics centers has reduced order processing lag by 40% during flash sale spikes.",
-    targetRobotTypes: ["Parcel Sortation AMRs", "Goods-to-Person Mobile Robots"],
+    targetRobotTypes: [
+      "Parcel Sortation AMRs",
+      "Goods-to-Person Mobile Robots",
+    ],
     timeline: "Active Evaluation",
     verified: true,
     date: "Today",
@@ -331,7 +346,10 @@ export const FEATURED_BUYER_QUOTES: BuyerQuote[] = [
     industry: "Automotive & Battery Production",
     quote:
       "Heavy battery module positioning and sub-assembly transport between cell lines require 500kg+ payload AMRs with sub-millimeter dock alignment.",
-    targetRobotTypes: ["Heavy-Payload Battery AMRs", "Precision Mobile Manipulators"],
+    targetRobotTypes: [
+      "Heavy-Payload Battery AMRs",
+      "Precision Mobile Manipulators",
+    ],
     timeline: "Immediate RFP",
     verified: true,
     date: "Yesterday",
@@ -382,7 +400,10 @@ export const FEATURED_BUYER_QUOTES: BuyerQuote[] = [
     industry: "Food & Beverage Production",
     quote:
       "High-speed cereal box casing and pallet wrapping require IP65-rated cobots capable of multi-shift continuous duty without thermal throttling.",
-    targetRobotTypes: ["Food-Grade Packaging Cobots", "Pallet Wrapping Manipulators"],
+    targetRobotTypes: [
+      "Food-Grade Packaging Cobots",
+      "Pallet Wrapping Manipulators",
+    ],
     timeline: "Active Evaluation",
     verified: true,
     date: "Yesterday",
@@ -416,7 +437,10 @@ export const FEATURED_BUYER_QUOTES: BuyerQuote[] = [
     industry: "Agricultural Equipment Manufacturing",
     quote:
       "Autonomous chassis painting and cab sub-assembly transport are central CapEx initiatives as we expand our smart manufacturing facilities.",
-    targetRobotTypes: ["Chassis Painting Robots", "Sub-Assembly Transport AMRs"],
+    targetRobotTypes: [
+      "Chassis Painting Robots",
+      "Sub-Assembly Transport AMRs",
+    ],
     timeline: "Active Procurement",
     verified: true,
     date: "Today",
@@ -450,7 +474,10 @@ export const FEATURED_BUYER_QUOTES: BuyerQuote[] = [
     industry: "Medical Devices & Diagnostic Imaging",
     quote:
       "Automated optical inspection and sub-millimeter component placement cobots ensure zero-defect assembly for diagnostic imaging sensors.",
-    targetRobotTypes: ["Optical Inspection Cobots", "Precision Assembly Manipulators"],
+    targetRobotTypes: [
+      "Optical Inspection Cobots",
+      "Precision Assembly Manipulators",
+    ],
     timeline: "0–3 Months Pilot",
     verified: true,
     date: "Today",

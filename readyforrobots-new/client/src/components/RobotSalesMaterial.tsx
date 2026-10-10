@@ -28,9 +28,8 @@ export default function RobotSalesMaterial({
   onReady?: () => void;
 }) {
   const [docs, setDocs] = useState<RobotDocument[]>([]);
-  const [kind, setKind] = useState<(typeof JOBS_DOC_KINDS)[number]["id"]>(
-    "spec"
-  );
+  const [kind, setKind] =
+    useState<(typeof JOBS_DOC_KINDS)[number]["id"]>("spec");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -158,7 +157,9 @@ export default function RobotSalesMaterial({
                     })
                       .then(updated =>
                         publish(
-                          docs.map(row => (row.id === updated.id ? updated : row))
+                          docs.map(row =>
+                            row.id === updated.id ? updated : row
+                          )
                         )
                       )
                       .catch(err => {

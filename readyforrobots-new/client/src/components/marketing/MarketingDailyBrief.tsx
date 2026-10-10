@@ -38,8 +38,8 @@ export default function MarketingDailyBrief({
   >("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  const emailValue = onEmailChange ? newsletterEmail ?? "" : internalEmail;
-  const statusValue = onSubmit ? newsletterStatus ?? "idle" : internalStatus;
+  const emailValue = onEmailChange ? (newsletterEmail ?? "") : internalEmail;
+  const statusValue = onSubmit ? (newsletterStatus ?? "idle") : internalStatus;
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -61,14 +61,17 @@ export default function MarketingDailyBrief({
         })
       );
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+        const data = (await res.json().catch(() => null)) as {
+          detail?: string;
+        } | null;
         throw new Error(data?.detail || "Could not subscribe");
       }
       setInternalStatus("success");
       setInternalEmail("");
     } catch (err: unknown) {
       setInternalStatus("error");
-      const msg = err instanceof Error ? err.message : "Could not subscribe. Try again.";
+      const msg =
+        err instanceof Error ? err.message : "Could not subscribe. Try again.";
       setErrorMsg(msg);
     }
   }

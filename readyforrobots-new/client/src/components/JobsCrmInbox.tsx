@@ -227,7 +227,11 @@ export default function JobsCrmInbox({
               <span>Contact:</span>
               <div className="flex flex-wrap gap-2">
                 {(app.contacts || app.draft.contacts || []).map((c, idx) => (
-                  <LeadEmailDisplay key={idx} email={c.email} variant="inline" />
+                  <LeadEmailDisplay
+                    key={idx}
+                    email={c.email}
+                    variant="inline"
+                  />
                 ))}
               </div>
             </div>

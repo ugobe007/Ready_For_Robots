@@ -50,15 +50,17 @@ describe("work spec", () => {
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) return;
     expect(qualifyWork(parsed.spec).economics).toBeNull();
-    expect(laborPayback({ robotCostUsd: 0, laborRateUsd: 28.5, hoursPerDay: 8 })).toBeNull();
+    expect(
+      laborPayback({ robotCostUsd: 0, laborRateUsd: 28.5, hoursPerDay: 8 })
+    ).toBeNull();
   });
 
   it("asks for the missing work facts", () => {
     expect(parseWorkSpec({ ...palletInput, workflowId: "" }).ok).toBe(false);
     expect(parseWorkSpec({ ...palletInput, loadLb: "" }).ok).toBe(false);
     expect(parseWorkSpec({ ...palletInput, hoursPerDay: "0" }).ok).toBe(false);
-    expect(
-      parseWorkSpec({ ...palletInput, alongsideHumans: "" }).ok
-    ).toBe(false);
+    expect(parseWorkSpec({ ...palletInput, alongsideHumans: "" }).ok).toBe(
+      false
+    );
   });
 });

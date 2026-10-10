@@ -139,8 +139,7 @@ export function findLookupFailureOutcome(err: unknown): {
 export function ensureFindStayVisit(): boolean {
   if (typeof window === "undefined") return false;
   const params = new URLSearchParams(window.location.search);
-  const already =
-    params.get("visit") === "jobs" && params.get("new") !== "1";
+  const already = params.get("visit") === "jobs" && params.get("new") !== "1";
   if (already) return false;
   params.delete("new");
   params.set("visit", "jobs");

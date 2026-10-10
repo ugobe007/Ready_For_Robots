@@ -42,7 +42,13 @@ export type TopLeadItem = {
 
 const HUNTER_EXECUTIVE_MAP: Record<
   string,
-  { name: string; title: string; email: string; confidence: number; linkedin?: string }
+  {
+    name: string;
+    title: string;
+    email: string;
+    confidence: number;
+    linkedin?: string;
+  }
 > = {
   "thompson hospitality": {
     name: "Zandrique Harrold",
@@ -90,7 +96,7 @@ const HUNTER_EXECUTIVE_MAP: Record<
     email: "james.patterson@hcahealthcare.com",
     confidence: 85,
   },
-  "united": {
+  united: {
     name: "Holden Shannon",
     title: "Senior Vice President of Operations",
     email: "holden.shannon@united.com",
@@ -132,13 +138,13 @@ const HUNTER_EXECUTIVE_MAP: Record<
     email: "karen.mcguigan@aimbridge.com",
     confidence: 85,
   },
-  "aimbridge": {
+  aimbridge: {
     name: "Tim Pruiett",
     title: "Senior Vice President of Operations",
     email: "tim.pruiett@aimbridge.com",
     confidence: 83,
   },
-  "cloudkitchens": {
+  cloudkitchens: {
     name: "Justin Futterman",
     title: "Director of Operations",
     email: "justin.futterman@cloudkitchens.com",
@@ -156,13 +162,13 @@ const HUNTER_EXECUTIVE_MAP: Record<
     email: "jose.ramirez@reeftechnology.com",
     confidence: 98,
   },
-  "chipotle": {
+  chipotle: {
     name: "Michael Thoms",
     title: "Vice President of Operations",
     email: "mthoms@chipotle.com",
     confidence: 97,
   },
-  "sweetgreen": {
+  sweetgreen: {
     name: "Jenny Sang",
     title: "Director of Operations",
     email: "jenny.sang@sweetgreen.com",
@@ -198,7 +204,7 @@ const HUNTER_EXECUTIVE_MAP: Record<
     email: "bhecode.lula@dominos.com",
     confidence: 94,
   },
-  "sysco": {
+  sysco: {
     name: "Scott Chute",
     title: "VP Culinary & Fulfillment Operations",
     email: "scott.chute@sysco.com",
@@ -210,13 +216,13 @@ const HUNTER_EXECUTIVE_MAP: Record<
     email: "neil.chapman@compass-group.com",
     confidence: 95,
   },
-  "aramark": {
+  aramark: {
     name: "Brian Sibiski",
     title: "VP Operations",
     email: "sibiski-brian@aramark.com",
     confidence: 95,
   },
-  "sodexo": {
+  sodexo: {
     name: "Amarnath Mishra",
     title: "Director of Operational Excellence",
     email: "amarnath.mishra@sodexo.com",
@@ -224,7 +230,10 @@ const HUNTER_EXECUTIVE_MAP: Record<
   },
 };
 
-import { buildPhelanExecutiveEmail, buildPhelanExecutiveEmail as buildBobExecutiveEmail } from "@/lib/executiveEmailGenerator";
+import {
+  buildPhelanExecutiveEmail,
+  buildPhelanExecutiveEmail as buildBobExecutiveEmail,
+} from "@/lib/executiveEmailGenerator";
 export { buildPhelanExecutiveEmail, buildBobExecutiveEmail };
 
 const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
@@ -236,17 +245,22 @@ const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
     robot_types_needed: ["Meal Assembly Cobots", "Kitchen Prep Manipulators"],
     inferred_contact_email: "justin.futterman@cloudkitchens.com",
     inferred_contact_role: "Director of Operations",
-    specific_problem: "Nationwide ghost-kitchen network under high order volume; automated meal portioning and prep.",
+    specific_problem:
+      "Nationwide ghost-kitchen network under high order volume; automated meal portioning and prep.",
   },
   {
     id: "fresh-2",
     company_name: "Wonder Group",
     priority_score: 97,
     primary_link_url: "https://wonder.com",
-    robot_types_needed: ["Multi-Step Assembly AMRs", "Automated Cooking Stations"],
+    robot_types_needed: [
+      "Multi-Step Assembly AMRs",
+      "Automated Cooking Stations",
+    ],
     inferred_contact_email: "duzel@wonder.com",
     inferred_contact_role: "Vice President of Operations",
-    specific_problem: "Multi-brand meal assembly scaling across suburban hub kitchens following Grubhub acquisition.",
+    specific_problem:
+      "Multi-brand meal assembly scaling across suburban hub kitchens following Grubhub acquisition.",
   },
   {
     id: "fresh-3",
@@ -256,17 +270,22 @@ const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
     robot_types_needed: ["Portioning Cobots", "Mobile Kitchen Conveyors"],
     inferred_contact_email: "jose.ramirez@reeftechnology.com",
     inferred_contact_role: "Director of Operations",
-    specific_problem: "Unit-economics pressure on mobile kitchen vessel footprint requiring automated food prep.",
+    specific_problem:
+      "Unit-economics pressure on mobile kitchen vessel footprint requiring automated food prep.",
   },
   {
     id: "fresh-4",
     company_name: "Chipotle",
     priority_score: 95,
     primary_link_url: "https://chipotle.com",
-    robot_types_needed: ["Produce Prep Manipulators", "Automated Guacamole Cobots"],
+    robot_types_needed: [
+      "Produce Prep Manipulators",
+      "Automated Guacamole Cobots",
+    ],
     inferred_contact_email: "mthoms@chipotle.com",
     inferred_contact_role: "Vice President of Operations",
-    specific_problem: "Cultivate Next automation drive targeting prep labor bottlenecks and kitchen throughput.",
+    specific_problem:
+      "Cultivate Next automation drive targeting prep labor bottlenecks and kitchen throughput.",
   },
   {
     id: "fresh-5",
@@ -276,7 +295,8 @@ const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
     robot_types_needed: ["Bowl Assembly Lines", "Ingredient Portioning AMRs"],
     inferred_contact_email: "jenny.sang@sweetgreen.com",
     inferred_contact_role: "Director of Operations",
-    specific_problem: "Infinite Kitchen automated assembly line deployment across high-density metro locations.",
+    specific_problem:
+      "Infinite Kitchen automated assembly line deployment across high-density metro locations.",
   },
   {
     id: "fresh-6",
@@ -286,7 +306,8 @@ const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
     robot_types_needed: ["Fryer & Griddle Cobots", "Automated Busing AMRs"],
     inferred_contact_email: "nationf@whitecastle.com",
     inferred_contact_role: "Operating Partner & Automation Lead",
-    specific_problem: "Commercial expansion of griddle and frying automation to eliminate night-shift kitchen strain.",
+    specific_problem:
+      "Commercial expansion of griddle and frying automation to eliminate night-shift kitchen strain.",
   },
   {
     id: "fresh-7",
@@ -296,7 +317,8 @@ const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
     robot_types_needed: ["Order Assembly AMRs", "Underground Parcel Movers"],
     inferred_contact_email: "kelly.warnock@wendys.com",
     inferred_contact_role: "Director of Field Operations",
-    specific_problem: "Drive-thru and kitchen labor optimization under rising state minimum wage thresholds.",
+    specific_problem:
+      "Drive-thru and kitchen labor optimization under rising state minimum wage thresholds.",
   },
   {
     id: "fresh-8",
@@ -306,17 +328,22 @@ const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
     robot_types_needed: ["Tray Prep Cobots", "Kitchen Logistics AMRs"],
     inferred_contact_email: "ken.ball@chick-fil-a.com",
     inferred_contact_role: "Operations Lead",
-    specific_problem: "High-volume drive-thru and kitchen throughput automation pilot for peak meal rushes.",
+    specific_problem:
+      "High-volume drive-thru and kitchen throughput automation pilot for peak meal rushes.",
   },
   {
     id: "fresh-9",
     company_name: "Panera Bread",
     priority_score: 89,
     primary_link_url: "https://panerabread.com",
-    robot_types_needed: ["Beverage & Bakery AMRs", "Automated Dispensing Units"],
+    robot_types_needed: [
+      "Beverage & Bakery AMRs",
+      "Automated Dispensing Units",
+    ],
     inferred_contact_email: "toni.tucker@panerabread.com",
     inferred_contact_role: "Director of Operations",
-    specific_problem: "Menu simplification and automated beverage/bakery logistics in suburban cafes.",
+    specific_problem:
+      "Menu simplification and automated beverage/bakery logistics in suburban cafes.",
   },
   {
     id: "fresh-10",
@@ -326,7 +353,8 @@ const COHORT_B_FRESH_LEADS: TopLeadItem[] = [
     robot_types_needed: ["Dough Prep Manipulators", "Store Dispatch AMRs"],
     inferred_contact_email: "bhecode.lula@dominos.com",
     inferred_contact_role: "Director of Store Operations",
-    specific_problem: "Peak order volume pizza assembly and kitchen dispatch automation target.",
+    specific_problem:
+      "Peak order volume pizza assembly and kitchen dispatch automation target.",
   },
 ];
 
@@ -340,7 +368,8 @@ const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
     inferred_contact_email: "zandrique.harrold@thompsonhospitality.com",
     inferred_contact_role: "Vice President of Operations",
     inferred_contact_phone: "+1 (703) 255-6800",
-    specific_problem: "High labor turnover across dining halls and corporate hospitality venues needing tray busing automation.",
+    specific_problem:
+      "High labor turnover across dining halls and corporate hospitality venues needing tray busing automation.",
   },
   {
     id: "prior-2",
@@ -351,7 +380,8 @@ const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
     inferred_contact_email: "david.perillat@fedex.com",
     inferred_contact_role: "Regional Operations Director",
     inferred_contact_phone: "+1 (901) 369-3600",
-    specific_problem: "Peak season package throughput and heavy pallet staging automation across regional hub facilities.",
+    specific_problem:
+      "Peak season package throughput and heavy pallet staging automation across regional hub facilities.",
   },
   {
     id: "prior-3",
@@ -362,7 +392,8 @@ const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
     inferred_contact_email: "neal_medeiros@ryder.com",
     inferred_contact_role: "Director of Customer Logistics",
     inferred_contact_phone: "+1 (305) 500-3726",
-    specific_problem: "Dedicated logistics customer fulfillment centers targeting dock-to-stock cycle time reduction.",
+    specific_problem:
+      "Dedicated logistics customer fulfillment centers targeting dock-to-stock cycle time reduction.",
   },
   {
     id: "prior-4",
@@ -373,7 +404,8 @@ const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
     inferred_contact_email: "sandersc@mgmresorts.com",
     inferred_contact_role: "Chief Operating Officer",
     inferred_contact_phone: "+1 (702) 693-7120",
-    specific_problem: "Large-square-footage casino floor maintenance and room-service elevator transport integration.",
+    specific_problem:
+      "Large-square-footage casino floor maintenance and room-service elevator transport integration.",
   },
   {
     id: "prior-5",
@@ -384,7 +416,8 @@ const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
     inferred_contact_email: "ralph.sica@abm.com",
     inferred_contact_role: "Vice President of Operations",
     inferred_contact_phone: "+1 (212) 297-9700",
-    specific_problem: "Commercial janitorial staffing deficits across airport terminals and enterprise facility sites.",
+    specific_problem:
+      "Commercial janitorial staffing deficits across airport terminals and enterprise facility sites.",
   },
   {
     id: "prior-6",
@@ -395,7 +428,8 @@ const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
     inferred_contact_email: "richard.pcihoda@pennentertainment.com",
     inferred_contact_role: "Vice President of Risk & Operations",
     inferred_contact_phone: "+1 (610) 373-2400",
-    specific_problem: "Hospitality and gaming venue labor automation for off-peak floor maintenance and tray return.",
+    specific_problem:
+      "Hospitality and gaming venue labor automation for off-peak floor maintenance and tray return.",
   },
   {
     id: "prior-7",
@@ -406,7 +440,8 @@ const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
     inferred_contact_email: "james.patterson@hcahealthcare.com",
     inferred_contact_role: "Throughput & Logistics Director",
     inferred_contact_phone: "+1 (615) 344-9551",
-    specific_problem: "Hospital internal logistics and sterile supply transport across multi-tower facility networks.",
+    specific_problem:
+      "Hospital internal logistics and sterile supply transport across multi-tower facility networks.",
   },
   {
     id: "prior-8",
@@ -417,7 +452,8 @@ const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
     inferred_contact_email: "holden.shannon@united.com",
     inferred_contact_role: "Senior Vice President of Operations",
     inferred_contact_phone: "+1 (800) 864-8331",
-    specific_problem: "Airport ramp and baggage area automated tugging to reduce turnaround times.",
+    specific_problem:
+      "Airport ramp and baggage area automated tugging to reduce turnaround times.",
   },
   {
     id: "prior-9",
@@ -428,7 +464,8 @@ const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
     inferred_contact_email: "apletcher@wishfarms.com",
     inferred_contact_role: "Director of Operations",
     inferred_contact_phone: "+1 (813) 752-5111",
-    specific_problem: "Berry harvesting and cold-storage packhouse automated transport during peak season harvests.",
+    specific_problem:
+      "Berry harvesting and cold-storage packhouse automated transport during peak season harvests.",
   },
   {
     id: "prior-10",
@@ -439,7 +476,8 @@ const COHORT_A_PRIOR_LEADS: TopLeadItem[] = [
     inferred_contact_email: "tyler.morrissey@marriott.com",
     inferred_contact_role: "Director of Engineering & Facilities",
     inferred_contact_phone: "+1 (301) 380-3000",
-    specific_problem: "Multi-property autonomous room delivery and guest amenities transport pilot.",
+    specific_problem:
+      "Multi-property autonomous room delivery and guest amenities transport pilot.",
   },
 ];
 
@@ -448,7 +486,9 @@ export default function AdminTopLeadsPanel() {
   const [leads, setLeads] = useState<TopLeadItem[]>(COHORT_B_FRESH_LEADS);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [previewEmailId, setPreviewEmailId] = useState<string | number | null>(null);
+  const [previewEmailId, setPreviewEmailId] = useState<string | number | null>(
+    null
+  );
   const [copiedId, setCopiedId] = useState<string | number | null>(null);
   const [emailModal, setEmailModal] = useState<{
     isOpen: boolean;
@@ -458,37 +498,40 @@ export default function AdminTopLeadsPanel() {
     companyName: string;
   } | null>(null);
 
-  const fetchTopLeads = useCallback(async (targetCohort?: "b" | "a") => {
-    const cohort = targetCohort ?? activeCohort;
-    setLoading(true);
-    setError(null);
+  const fetchTopLeads = useCallback(
+    async (targetCohort?: "b" | "a") => {
+      const cohort = targetCohort ?? activeCohort;
+      setLoading(true);
+      setError(null);
 
-    if (cohort === "b") {
-      setLeads(COHORT_B_FRESH_LEADS);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const base = getPublicReadApiBase();
-      const res = await fetch(
-        `${base}/api/leads?limit=10&tier=HOT&sort=score&exclude_junk=true`,
-        liveFetchInit()
-      );
-      if (res.ok) {
-        const data = await res.json();
-        if (Array.isArray(data) && data.length > 0) {
-          setLeads(data.slice(0, 10));
-          return;
-        }
+      if (cohort === "b") {
+        setLeads(COHORT_B_FRESH_LEADS);
+        setLoading(false);
+        return;
       }
-      setLeads(COHORT_A_PRIOR_LEADS);
-    } catch {
-      setLeads(COHORT_A_PRIOR_LEADS);
-    } finally {
-      setLoading(false);
-    }
-  }, [activeCohort]);
+
+      try {
+        const base = getPublicReadApiBase();
+        const res = await fetch(
+          `${base}/api/leads?limit=10&tier=HOT&sort=score&exclude_junk=true`,
+          liveFetchInit()
+        );
+        if (res.ok) {
+          const data = await res.json();
+          if (Array.isArray(data) && data.length > 0) {
+            setLeads(data.slice(0, 10));
+            return;
+          }
+        }
+        setLeads(COHORT_A_PRIOR_LEADS);
+      } catch {
+        setLeads(COHORT_A_PRIOR_LEADS);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [activeCohort]
+  );
 
   useEffect(() => {
     void fetchTopLeads();
@@ -531,7 +574,9 @@ ${emailData.body}`;
       dmName,
       robotTypes: lead.robot_types_needed,
     });
-    void navigator.clipboard.writeText(`SUBJECT: ${emailData.subject}\n\n${emailData.body}`);
+    void navigator.clipboard.writeText(
+      `SUBJECT: ${emailData.subject}\n\n${emailData.body}`
+    );
     setCopiedId(`email-${lead.id}`);
     setTimeout(() => setCopiedId(null), 2500);
   };
@@ -556,7 +601,8 @@ ${emailData.body}`;
             Top 10 Executive Customer Opportunities
           </h2>
           <p className="mt-1 text-xs text-slate-300">
-            Enriched with Hunter.io verified decision-makers, direct email, phone, and high-converting peer advisory pitch scripts.
+            Enriched with Hunter.io verified decision-makers, direct email,
+            phone, and high-converting peer advisory pitch scripts.
           </p>
         </div>
 
@@ -598,7 +644,9 @@ ${emailData.body}`;
             disabled={loading}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-bold text-slate-200 transition disabled:opacity-50 border border-slate-700 shadow-sm"
           >
-            <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`}
+            />
             Refresh
           </button>
         </div>
@@ -628,17 +676,21 @@ ${emailData.body}`;
             const primaryDm = lead.hermes_decision_makers?.[0];
 
             const dmName = hunterMatch?.name || primaryDm?.name;
-            const dmTitle = hunterMatch?.title || primaryDm?.title || lead.inferred_contact_role;
+            const dmTitle =
+              hunterMatch?.title ||
+              primaryDm?.title ||
+              lead.inferred_contact_role;
 
             const dmText = dmName
               ? `${dmName}${dmTitle ? ` (${dmTitle})` : ""}`
               : dmTitle
-              ? `${dmTitle} Lead`
-              : "Executive Lead";
+                ? `${dmTitle} Lead`
+                : "Executive Lead";
 
             const email =
               hunterMatch?.email ||
-              (lead.inferred_contact_email && !lead.inferred_contact_email.startsWith("operations@")
+              (lead.inferred_contact_email &&
+              !lead.inferred_contact_email.startsWith("operations@")
                 ? lead.inferred_contact_email
                 : `contact@${lead.company_name.toLowerCase().replace(/[^a-z0-9]/g, "")}.com`);
 
@@ -748,7 +800,9 @@ ${emailData.body}`;
 
                   {/* Why Now Rationale */}
                   <p className="mt-3 text-[11px] leading-relaxed text-slate-200 line-clamp-2">
-                    <strong className="text-emerald-400 font-bold">Why Now: </strong>
+                    <strong className="text-emerald-400 font-bold">
+                      Why Now:{" "}
+                    </strong>
                     {whyNow}
                   </p>
 
@@ -766,7 +820,8 @@ ${emailData.body}`;
                         >
                           {copiedId === `email-${lead.id}` ? (
                             <>
-                              <Check className="h-3 w-3 text-emerald-400" /> Copied Text
+                              <Check className="h-3 w-3 text-emerald-400" />{" "}
+                              Copied Text
                             </>
                           ) : (
                             <>
@@ -802,7 +857,9 @@ ${emailData.body}`;
                   <div className="flex items-center gap-3">
                     <button
                       type="button"
-                      onClick={() => setPreviewEmailId(isEmailPreviewOpen ? null : lead.id)}
+                      onClick={() =>
+                        setPreviewEmailId(isEmailPreviewOpen ? null : lead.id)
+                      }
                       className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 hover:text-emerald-300"
                     >
                       {isEmailPreviewOpen ? (

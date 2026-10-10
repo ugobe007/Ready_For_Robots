@@ -75,8 +75,7 @@ export const LANDING_STATS = [
 export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
 export const LANDING_BRIEF_HEADLINE = "Jobs for robots.";
 export const LANDING_BRIEF_JOB_FIELD = "Jobs";
-export const LANDING_BRIEF_NOTE =
-  "Evidence shown on every verified match.";
+export const LANDING_BRIEF_NOTE = "Evidence shown on every verified match.";
 
 export type LandingBriefJob = {
   id: string;
@@ -319,7 +318,8 @@ export function landingVisitFromSearch(
   // remounts the 01/02/03 process bar on top of the card.
   if (params.get("job")) return "landing";
   if (visit === LANDING_VISIT_JOBS || visit === "jobs") return "jobs";
-  return "landing";
+  // Bare `/`, `?new=1`, and `?restore=1` are FIND.
+  return "jobs";
 }
 
 export function isEmployerVisit(search: string | null | undefined): boolean {

@@ -517,7 +517,8 @@ function trendTone(delta?: number): "up" | "down" | "flat" {
 
 function trendPillClass(delta?: number) {
   const tone = trendTone(delta);
-  if (tone === "up") return "border-emerald-500/30 bg-emerald-950/30 text-emerald-400";
+  if (tone === "up")
+    return "border-emerald-500/30 bg-emerald-950/30 text-emerald-400";
   if (tone === "down") return "border-red-500/30 bg-red-950/30 text-red-400";
   return "border-slate-700/60 bg-[#060c1c] text-slate-400";
 }
@@ -582,14 +583,10 @@ function RobotBenchmarkPanel({
   };
 
   return (
-    <div
-      className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-5 mb-4 shadow-xl"
-    >
+    <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-5 mb-4 shadow-xl">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <div>
-          <p
-            className="text-[10px] font-bold uppercase tracking-widest mb-0.5 text-emerald-400"
-          >
+          <p className="text-[10px] font-bold uppercase tracking-widest mb-0.5 text-emerald-400">
             Robot Benchmark Index
           </p>
           <p className="text-[12px] font-medium text-slate-300">
@@ -1005,7 +1002,9 @@ export default function Admin() {
   const [meLoading, setMeLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [activeMetricModal, setActiveMetricModal] = useState<"signups" | "active_users" | "visitors" | "searches" | null>(null);
+  const [activeMetricModal, setActiveMetricModal] = useState<
+    "signups" | "active_users" | "visitors" | "searches" | null
+  >(null);
   const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
   const [timeRange, setTimeRange] =
     useState<(typeof TIME_RANGES)[number]["value"]>("30d");
@@ -1184,7 +1183,9 @@ export default function Admin() {
       const res = await adminFetch("/api/admin/daily-jobs-report/enrich", {
         method: "POST",
       });
-      const payload = (await res.json().catch(() => ({}))) as DailyJobsReportData & {
+      const payload = (await res
+        .json()
+        .catch(() => ({}))) as DailyJobsReportData & {
         hunter?: { reason?: string | null; filled?: number };
         detail?: string;
       };
@@ -1215,7 +1216,9 @@ export default function Admin() {
         method: "POST",
         body: JSON.stringify({ force: true, limit: 25 }),
       });
-      const payload = (await res.json().catch(() => ({}))) as DailyJobsReportData & {
+      const payload = (await res
+        .json()
+        .catch(() => ({}))) as DailyJobsReportData & {
         sent?: boolean;
         reason?: string;
       };
@@ -1585,7 +1588,9 @@ export default function Admin() {
         body: JSON.stringify({ enabled }),
       });
       if (res.ok) {
-        const data = (await res.json().catch(() => ({}))) as { enabled?: boolean };
+        const data = (await res.json().catch(() => ({}))) as {
+          enabled?: boolean;
+        };
         setCalAutonomy(prev => ({ ...prev, enabled: data.enabled ?? enabled }));
       } else {
         setCalAutonomy(prev => ({ ...prev, enabled }));
@@ -2033,7 +2038,10 @@ export default function Admin() {
         method: "POST",
         body: JSON.stringify(payload),
       });
-      const parsed = await parseJsonResponse<{ added?: number; skipped?: number }>(res);
+      const parsed = await parseJsonResponse<{
+        added?: number;
+        skipped?: number;
+      }>(res);
       if (!parsed.ok) throw new Error(parsed.error || "URL import failed.");
       const data = parsed.data || {};
       setMessage(
@@ -2059,7 +2067,10 @@ export default function Admin() {
         method: "POST",
         body: JSON.stringify({ companies }),
       });
-      const parsed = await parseJsonResponse<{ added?: number; skipped?: number }>(res);
+      const parsed = await parseJsonResponse<{
+        added?: number;
+        skipped?: number;
+      }>(res);
       if (!parsed.ok) throw new Error(parsed.error || "Company import failed.");
       const data = parsed.data || {};
       setMessage(
@@ -2090,8 +2101,15 @@ export default function Admin() {
           industry: triggerIndustry || undefined,
         }),
       });
-      const parsed = await parseJsonResponse<{ status?: string; reason?: string; message?: string }>(res);
-      if (!parsed.ok) throw new Error(parsed.error || `Scraper trigger failed (${res.status}).`);
+      const parsed = await parseJsonResponse<{
+        status?: string;
+        reason?: string;
+        message?: string;
+      }>(res);
+      if (!parsed.ok)
+        throw new Error(
+          parsed.error || `Scraper trigger failed (${res.status}).`
+        );
       const data = parsed.data || {};
       setMessage(
         data.status === "queued" || data.status === "started"
@@ -2117,7 +2135,11 @@ export default function Admin() {
             ? "/api/admin/system/cleanup-junk-leads"
             : "/api/admin/system/reindex";
       const res = await adminFetch(path, { method: "POST" });
-      const parsed = await parseJsonResponse<{ task_id?: string; detail?: string; message?: string }>(res);
+      const parsed = await parseJsonResponse<{
+        task_id?: string;
+        detail?: string;
+        message?: string;
+      }>(res);
       if (!parsed.ok) throw new Error(parsed.error || `${kind} action failed.`);
       const data = parsed.data || {};
       setMessage(
@@ -2166,12 +2188,16 @@ export default function Admin() {
         const notice = regenerate
           ? "Redrafted pending leads in outreach queue."
           : "Drafted outreach emails for pending leads in queue.";
-        setMessage("Cal processed pending leads. Intros are ready for review in CRM editor & Sales Console.");
+        setMessage(
+          "Cal processed pending leads. Intros are ready for review in CRM editor & Sales Console."
+        );
         setCalWorkflowNotice(notice);
       }
       await refreshOperatorView();
     } catch {
-      setMessage("Cal processed pending leads. Intros are ready for review in CRM editor & Sales Console.");
+      setMessage(
+        "Cal processed pending leads. Intros are ready for review in CRM editor & Sales Console."
+      );
       setCalWorkflowNotice("Drafts ready in outreach queue.");
     } finally {
       setActionBusy("");
@@ -2246,11 +2272,15 @@ export default function Admin() {
           `Enriched ${d.resolved_emails ?? 0} emails (Apollo ${d.apollo_hits ?? 0}, inferred ${d.inferred_hits ?? 0}, unresolved ${d.unresolved ?? 0}).`
         );
       } else {
-        setMessage("Contact email enricher completed: Checked outreach queue and verified all lead contact emails.");
+        setMessage(
+          "Contact email enricher completed: Checked outreach queue and verified all lead contact emails."
+        );
       }
       void refreshOperatorView();
     } catch {
-      setMessage("Contact email enricher completed: Checked outreach queue and verified all lead contact emails.");
+      setMessage(
+        "Contact email enricher completed: Checked outreach queue and verified all lead contact emails."
+      );
     } finally {
       setActionBusy("");
     }
@@ -2269,17 +2299,23 @@ export default function Admin() {
         };
         const issues = d.issues ?? [];
         if (issues.length) {
-          setMessage(`Cal delivery diagnostic (${d.health ?? "healthy"}): ${issues.join(" · ")}`);
+          setMessage(
+            `Cal delivery diagnostic (${d.health ?? "healthy"}): ${issues.join(" · ")}`
+          );
         } else {
           setMessage(
             `Cal delivery healthy — from ${d.config?.from_email ?? "ugobe07@gmail.com"}, API key set.`
           );
         }
       } else {
-        setMessage("Cal delivery healthy — webhooks, SMTP relay, and open tracking operational.");
+        setMessage(
+          "Cal delivery healthy — webhooks, SMTP relay, and open tracking operational."
+        );
       }
     } catch {
-      setMessage("Cal delivery healthy — webhooks, SMTP relay, and open tracking operational.");
+      setMessage(
+        "Cal delivery healthy — webhooks, SMTP relay, and open tracking operational."
+      );
     }
   }
 
@@ -3061,7 +3097,9 @@ export default function Admin() {
 
   if ((authLoading || meLoading) && !hasCachedUi) {
     return (
-      <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <div
+        className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+      >
         <ExperimentHeader />
         <main className="mx-auto max-w-6xl px-6 pt-16 text-slate-400">
           Loading admin...
@@ -3072,7 +3110,9 @@ export default function Admin() {
 
   if (!session) {
     return (
-      <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <div
+        className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+      >
         <ExperimentHeader />
         <main className="mx-auto max-w-xl px-6 pt-20 text-center">
           <Shield
@@ -3099,7 +3139,9 @@ export default function Admin() {
 
   if (me && !me.is_admin) {
     return (
-      <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <div
+        className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+      >
         <ExperimentHeader />
         <main className="mx-auto max-w-xl px-6 pt-20 text-center">
           <AlertTriangle className="mx-auto mb-4 h-7 w-7 text-red-400" />
@@ -3132,7 +3174,9 @@ export default function Admin() {
   }
 
   return (
-    <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+    <div
+      className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+    >
       <ExperimentHeader />
       <main className="admin-workspace mx-auto max-w-[1500px] px-4 pb-20 pt-8 lg:px-6">
         <AdminNav variant="dark" />
@@ -3183,7 +3227,9 @@ export default function Admin() {
                         className="rounded-full px-2 py-0.5 text-[10px] font-bold uppercase"
                         style={{
                           color: breakerOpen ? "#fca5a5" : "#4ade80",
-                          background: breakerOpen ? "rgba(153,27,27,0.4)" : "rgba(20,83,45,0.4)",
+                          background: breakerOpen
+                            ? "rgba(153,27,27,0.4)"
+                            : "rgba(20,83,45,0.4)",
                         }}
                       >
                         {breakerOpen ? "breaker open" : "healthy"}
@@ -3643,7 +3689,8 @@ export default function Admin() {
                 </span>
               </div>
               <p className="mt-1 text-xs text-slate-300">
-                Phelan prepares job quotes and routes to robot OEMs for pricing approval before enterprise buyer outreach.
+                Phelan prepares job quotes and routes to robot OEMs for pricing
+                approval before enterprise buyer outreach.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -3651,7 +3698,8 @@ export default function Admin() {
                 href="/proposal/oem-review?id=PROP-8842-APEX"
                 className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1 transition-all"
               >
-                Open OEM Portal <ExternalLink className="w-3 h-3 text-cyan-400" />
+                Open OEM Portal{" "}
+                <ExternalLink className="w-3 h-3 text-cyan-400" />
               </Link>
               <button
                 onClick={() => setIsProposalDrawerOpen(true)}
@@ -3668,10 +3716,10 @@ export default function Admin() {
                 Alert: sends with zero opens
               </p>
               <p className="mt-1 text-[11px] text-rose-200/90">
-                Phelan sent {formatNumber(calSentCount)} emails in this window with
-                open rate {pct(calOpenRate)} and reply rate {pct(calReplyRate)}.
-                This usually means deliverability friction, webhook gaps, or
-                open tracking misconfiguration.
+                Phelan sent {formatNumber(calSentCount)} emails in this window
+                with open rate {pct(calOpenRate)} and reply rate{" "}
+                {pct(calReplyRate)}. This usually means deliverability friction,
+                webhook gaps, or open tracking misconfiguration.
               </p>
               <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px]">
                 <SupabaseInlineLink
@@ -4284,8 +4332,10 @@ export default function Admin() {
             </span>
           </summary>
           <p className="mt-3 text-xs text-slate-400">
-            <strong className="text-slate-200">Workflow ({formatNumber(workflowCounts?.total)})</strong> =
-            sales agent actions, research updates, SIGNAL drafts, supply
+            <strong className="text-slate-200">
+              Workflow ({formatNumber(workflowCounts?.total)})
+            </strong>{" "}
+            = sales agent actions, research updates, SIGNAL drafts, supply
             outreach — separate from Phelan&apos;s HOT/WARM queue (
             {formatNumber(calMetrics.total)}).
             <strong className="text-slate-200">
@@ -4303,8 +4353,8 @@ export default function Admin() {
               {" "}
               Need approve ({formatNumber(workflowCounts?.needs_approval)})
             </strong>{" "}
-            = items waiting for you in those other queues (Phelan uses autopilot;
-            pending draft ≠ approval).
+            = items waiting for you in those other queues (Phelan uses
+            autopilot; pending draft ≠ approval).
           </p>
           <div className="mt-3 flex flex-wrap gap-2 text-xs">
             <Link
@@ -4366,14 +4416,16 @@ export default function Admin() {
                         </span>
                       </div>
                       <p className="mt-1 text-[11px] text-slate-400">
-                        Review reason: <span className="text-slate-300">{reason}</span>
+                        Review reason:{" "}
+                        <span className="text-slate-300">{reason}</span>
                       </p>
                     </div>
                     <Link
                       href={targetUrl}
                       className="inline-flex items-center justify-center shrink-0 rounded-lg border border-emerald-500/40 bg-emerald-950/40 px-3 py-1.5 text-xs font-bold text-emerald-300 hover:bg-emerald-900/60 hover:text-white transition shadow-sm"
                     >
-                      {item.state === "needs_approval" || item.state === "needs_review"
+                      {item.state === "needs_approval" ||
+                      item.state === "needs_review"
                         ? "Review & approve"
                         : item.next_action_label || "Open panel"}
                     </Link>
@@ -4394,8 +4446,10 @@ export default function Admin() {
             <p>
               Worker runs every {calAutonomy?.every_hours ?? 3}h — drafts,
               refreshes stale copy, sends up to{" "}
-              <strong className="text-slate-100">{calAutonomy?.send_limit ?? 25}</strong> verified emails
-              per cycle when autopilot is ON.
+              <strong className="text-slate-100">
+                {calAutonomy?.send_limit ?? 25}
+              </strong>{" "}
+              verified emails per cycle when autopilot is ON.
             </p>
             <p>
               Status:{" "}
@@ -4409,7 +4463,9 @@ export default function Admin() {
                 <>
                   {" "}
                   · ops inbox:{" "}
-                  <span className="font-mono text-slate-200">{calAutonomy.review_email}</span>
+                  <span className="font-mono text-slate-200">
+                    {calAutonomy.review_email}
+                  </span>
                 </>
               ) : null}
             </p>
@@ -4452,8 +4508,11 @@ export default function Admin() {
           <div className="mt-3 space-y-3 text-[11px] leading-relaxed text-slate-300">
             <p>
               Vendor signup emails (score ≥ {supplyAutonomy?.min_score ?? 60}) —
-              up to <strong className="text-slate-100">{supplyAutonomy?.send_limit ?? 6}</strong> per{" "}
-              {supplyAutonomy?.every_hours ?? 6}h cycle.
+              up to{" "}
+              <strong className="text-slate-100">
+                {supplyAutonomy?.send_limit ?? 6}
+              </strong>{" "}
+              per {supplyAutonomy?.every_hours ?? 6}h cycle.
             </p>
             <div className="flex flex-wrap gap-2">
               <Link
@@ -4529,9 +4588,7 @@ export default function Admin() {
             <section className="mb-8">
               <div className="mb-3 flex items-center gap-2">
                 <Users className="h-4 w-4 text-amber-500" />
-                <p
-                  className="text-[10px] font-normal uppercase tracking-[0.18em] text-amber-500"
-                >
+                <p className="text-[10px] font-normal uppercase tracking-[0.18em] text-amber-500">
                   Users and accounts
                 </p>
               </div>
@@ -4565,9 +4622,7 @@ export default function Admin() {
             <section id="robot-benchmark" className="mb-8 scroll-mt-28">
               <div className="mb-3 flex items-center gap-2">
                 <span style={{ color: "#10b981", fontSize: 16 }}>🤖</span>
-                <p
-                  className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400"
-                >
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
                   Robot Benchmark Index
                 </p>
               </div>
@@ -4603,9 +4658,7 @@ export default function Admin() {
             <section className="mb-8 rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <p
-                    className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400"
-                  >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
                     Home conversion snapshot
                   </p>
                   <p className="text-xs text-slate-400">
@@ -4698,9 +4751,7 @@ export default function Admin() {
             <section className="mb-8 rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
-                  <p
-                    className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400"
-                  >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
                     Day 3 conversion panel
                   </p>
                   <p className="text-xs text-slate-400">
@@ -5183,9 +5234,7 @@ export default function Admin() {
             <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl">
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <p
-                    className="text-[10px] font-normal uppercase tracking-[0.18em] text-emerald-400"
-                  >
+                  <p className="text-[10px] font-normal uppercase tracking-[0.18em] text-emerald-400">
                     Recent users
                   </p>
                   <span className="rounded-full border border-slate-700/60 bg-[#0a1226] px-2.5 py-1 text-[10px] text-slate-400">
@@ -5231,9 +5280,7 @@ export default function Admin() {
               <div className="rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl">
                 <div className="mb-4 flex items-center gap-2">
                   <Activity className="h-4 w-4 text-amber-400" />
-                  <p
-                    className="text-[10px] font-normal uppercase tracking-[0.18em] text-amber-400"
-                  >
+                  <p className="text-[10px] font-normal uppercase tracking-[0.18em] text-amber-400">
                     Recent activity
                   </p>
                 </div>
@@ -5276,12 +5323,8 @@ export default function Admin() {
             </section>
 
             {analytics?.insights && (
-              <section
-                className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-950/20 p-5 text-slate-100 shadow-xl"
-              >
-                <p
-                  className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400"
-                >
+              <section className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-950/20 p-5 text-slate-100 shadow-xl">
+                <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
                   Operator notes
                 </p>
                 <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -5305,9 +5348,7 @@ export default function Admin() {
 
             <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1fr]">
               <div className="rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl">
-                <p
-                  className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400"
-                >
+                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
                   System controls
                 </p>
                 <p className="mb-4 text-xs leading-relaxed text-slate-400">
@@ -5382,9 +5423,7 @@ export default function Admin() {
 
             <section className="mb-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
               <div className="rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl">
-                <p
-                  className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400"
-                >
+                <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
                   Industry mix
                 </p>
                 <div className="space-y-2">
@@ -5404,9 +5443,7 @@ export default function Admin() {
                 </div>
               </div>
               <div className="rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl">
-                <p
-                  className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400"
-                >
+                <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
                   Signal types
                 </p>
                 <div className="space-y-2">
@@ -5432,9 +5469,7 @@ export default function Admin() {
                 onSubmit={importUrls}
                 className="rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl"
               >
-                <UploadCloud
-                  className="mb-4 h-5 w-5 text-amber-400"
-                />
+                <UploadCloud className="mb-4 h-5 w-5 text-amber-400" />
                 <p className="text-sm font-bold text-slate-100">Import URLs</p>
                 <textarea
                   value={urls}
@@ -5475,9 +5510,7 @@ export default function Admin() {
                 onSubmit={importCompanies}
                 className="rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl"
               >
-                <DownloadCloud
-                  className="mb-4 h-5 w-5 text-emerald-400"
-                />
+                <DownloadCloud className="mb-4 h-5 w-5 text-emerald-400" />
                 <p className="text-sm font-bold text-slate-100">
                   Import Companies
                 </p>
@@ -5539,14 +5572,15 @@ export default function Admin() {
 
             <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_1.2fr]">
               <div className="rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl">
-                <p
-                  className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400"
-                >
+                <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-amber-400">
                   Recent companies
                 </p>
                 <div className="space-y-3">
                   {(stats?.recent_companies || []).map(company => (
-                    <div key={company.id} className="admin-table-row rounded-lg border border-slate-800 bg-[#0a1226]/80 px-3 py-2 text-slate-100">
+                    <div
+                      key={company.id}
+                      className="admin-table-row rounded-lg border border-slate-800 bg-[#0a1226]/80 px-3 py-2 text-slate-100"
+                    >
                       <p className="text-sm font-semibold text-slate-100">
                         {company.name}
                       </p>
@@ -5559,9 +5593,7 @@ export default function Admin() {
               </div>
 
               <div className="rounded-2xl border border-slate-700/60 bg-[#060c1c] p-5 text-slate-100 shadow-xl">
-                <p
-                  className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400"
-                >
+                <p className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-400">
                   Scrape targets
                 </p>
                 <div className="mb-4 flex flex-wrap gap-2">
@@ -5612,10 +5644,14 @@ export default function Admin() {
                     Command Center Audit
                   </p>
                   <h2 className="text-2xl font-black text-white mt-1">
-                    {activeMetricModal === "signups" && "Sign Ups & Registered User Accounts"}
-                    {activeMetricModal === "active_users" && "7-Day Active Users & Engagement"}
-                    {activeMetricModal === "visitors" && "Site Traffic & Conversion Funnel Analysis"}
-                    {activeMetricModal === "searches" && "Robot Searches & ROI Calculation Activity"}
+                    {activeMetricModal === "signups" &&
+                      "Sign Ups & Registered User Accounts"}
+                    {activeMetricModal === "active_users" &&
+                      "7-Day Active Users & Engagement"}
+                    {activeMetricModal === "visitors" &&
+                      "Site Traffic & Conversion Funnel Analysis"}
+                    {activeMetricModal === "searches" &&
+                      "Robot Searches & ROI Calculation Activity"}
                   </h2>
                 </div>
                 <button
@@ -5632,19 +5668,25 @@ export default function Admin() {
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="rounded-2xl border border-emerald-500/30 bg-[#081126] p-4">
-                      <p className="text-xs font-bold uppercase text-slate-400">Total Registered</p>
+                      <p className="text-xs font-bold uppercase text-slate-400">
+                        Total Registered
+                      </p>
                       <p className="text-3xl font-black text-emerald-400 mt-1">
                         {userStats?.total_users ?? users.length ?? 16}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-amber-500/30 bg-[#081126] p-4">
-                      <p className="text-xs font-bold uppercase text-slate-400">Waitlist Signups</p>
+                      <p className="text-xs font-bold uppercase text-slate-400">
+                        Waitlist Signups
+                      </p>
                       <p className="text-3xl font-black text-amber-400 mt-1">
                         {userStats?.waitlist_signups ?? 0}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-blue-500/30 bg-[#081126] p-4">
-                      <p className="text-xs font-bold uppercase text-slate-400">7-Day Active</p>
+                      <p className="text-xs font-bold uppercase text-slate-400">
+                        7-Day Active
+                      </p>
                       <p className="text-3xl font-black text-blue-400 mt-1">
                         {userStats?.active_users ?? 1}
                       </p>
@@ -5655,24 +5697,63 @@ export default function Admin() {
                     <p className="font-bold uppercase tracking-wider text-amber-400 mb-1">
                       Conversion Warning
                     </p>
-                    Out of {formatNumber(analytics?.site_visits ?? 7859)} site visitors, only 16 sign-ups are registered (mostly test/admin accounts). The public site traffic is not converting to registered accounts due to landing page sign-up friction.
+                    Out of {formatNumber(analytics?.site_visits ?? 7859)} site
+                    visitors, only 16 sign-ups are registered (mostly test/admin
+                    accounts). The public site traffic is not converting to
+                    registered accounts due to landing page sign-up friction.
                   </div>
 
                   <div>
                     <h3 className="text-sm font-bold uppercase tracking-wider text-slate-300 mb-3">
-                      Registered Accounts &amp; Activity Log ({users.length || 16})
+                      Registered Accounts &amp; Activity Log (
+                      {users.length || 16})
                     </h3>
                     <div className="max-h-72 overflow-y-auto rounded-2xl border border-slate-800 bg-[#081126] p-3 space-y-2">
-                      {(users.length ? users : [
-                        { id: "1", email: "ugobe07@gmail.com", created_at: new Date().toISOString(), last_active: "Just now", saved_count: 5, reports_count: 2 },
-                        { id: "2", email: "test_buyer1@readyforrobots.com", created_at: new Date(Date.now() - 86400000 * 2).toISOString(), last_active: "2 days ago", saved_count: 1, reports_count: 0 },
-                        { id: "3", email: "test_distributor@readyforrobots.com", created_at: new Date(Date.now() - 86400000 * 5).toISOString(), last_active: "5 days ago", saved_count: 0, reports_count: 0 },
-                      ]).map(user => (
-                        <div key={user.id || user.email} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-xl border border-slate-800/80 bg-slate-900/60 text-xs">
+                      {(users.length
+                        ? users
+                        : [
+                            {
+                              id: "1",
+                              email: "ugobe07@gmail.com",
+                              created_at: new Date().toISOString(),
+                              last_active: "Just now",
+                              saved_count: 5,
+                              reports_count: 2,
+                            },
+                            {
+                              id: "2",
+                              email: "test_buyer1@readyforrobots.com",
+                              created_at: new Date(
+                                Date.now() - 86400000 * 2
+                              ).toISOString(),
+                              last_active: "2 days ago",
+                              saved_count: 1,
+                              reports_count: 0,
+                            },
+                            {
+                              id: "3",
+                              email: "test_distributor@readyforrobots.com",
+                              created_at: new Date(
+                                Date.now() - 86400000 * 5
+                              ).toISOString(),
+                              last_active: "5 days ago",
+                              saved_count: 0,
+                              reports_count: 0,
+                            },
+                          ]
+                      ).map(user => (
+                        <div
+                          key={user.id || user.email}
+                          className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-3 rounded-xl border border-slate-800/80 bg-slate-900/60 text-xs"
+                        >
                           <div>
                             <p className="font-bold text-white">{user.email}</p>
                             <p className="text-[11px] text-slate-400 mt-0.5">
-                              Signed up: {user.created_at ? new Date(user.created_at).toLocaleDateString() : "Recent"} · Last active: {user.last_active || "Inactive"}
+                              Signed up:{" "}
+                              {user.created_at
+                                ? new Date(user.created_at).toLocaleDateString()
+                                : "Recent"}{" "}
+                              · Last active: {user.last_active || "Inactive"}
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
@@ -5680,7 +5761,9 @@ export default function Admin() {
                               {user.saved_count ?? 0} saved
                             </span>
                             <span className="rounded-full border border-emerald-500/40 bg-emerald-950/40 px-2.5 py-1 text-[10px] text-emerald-300 font-bold">
-                              {user.email === "ugobe07@gmail.com" ? "Admin / Test" : "Buyer Lead"}
+                              {user.email === "ugobe07@gmail.com"
+                                ? "Admin / Test"
+                                : "Buyer Lead"}
                             </span>
                           </div>
                         </div>
@@ -5695,34 +5778,63 @@ export default function Admin() {
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="rounded-2xl border border-blue-500/30 bg-[#081126] p-4">
-                      <p className="text-xs font-bold uppercase text-slate-400">7-Day Active Users</p>
+                      <p className="text-xs font-bold uppercase text-slate-400">
+                        7-Day Active Users
+                      </p>
                       <p className="text-3xl font-black text-blue-400 mt-1">
                         {userStats?.active_users ?? 1}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-indigo-500/30 bg-[#081126] p-4">
-                      <p className="text-xs font-bold uppercase text-slate-400">Total Site Visitors</p>
+                      <p className="text-xs font-bold uppercase text-slate-400">
+                        Total Site Visitors
+                      </p>
                       <p className="text-3xl font-black text-indigo-400 mt-1">
                         {formatNumber(analytics?.site_visits ?? 7859)}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-rose-500/30 bg-[#081126] p-4">
-                      <p className="text-xs font-bold uppercase text-slate-400">Active Conversion Rate</p>
+                      <p className="text-xs font-bold uppercase text-slate-400">
+                        Active Conversion Rate
+                      </p>
                       <p className="text-3xl font-black text-rose-400 mt-1">
-                        {(((userStats?.active_users ?? 1) / (analytics?.site_visits ?? 7859)) * 100).toFixed(2)}%
+                        {(
+                          ((userStats?.active_users ?? 1) /
+                            (analytics?.site_visits ?? 7859)) *
+                          100
+                        ).toFixed(2)}
+                        %
                       </p>
                     </div>
                   </div>
 
                   <div className="rounded-2xl border border-slate-800 bg-[#081126] p-5 space-y-3">
-                    <h3 className="text-sm font-bold text-white">Active Session Log &amp; User Retention Audit</h3>
+                    <h3 className="text-sm font-bold text-white">
+                      Active Session Log &amp; User Retention Audit
+                    </h3>
                     <p className="text-xs text-slate-300 leading-relaxed">
-                      Only <strong className="text-white">1 active user</strong> ({me?.email || "ugobe07@gmail.com"}) has returned to the workspace in the past 7 days.
+                      Only <strong className="text-white">1 active user</strong>{" "}
+                      ({me?.email || "ugobe07@gmail.com"}) has returned to the
+                      workspace in the past 7 days.
                     </p>
                     <div className="p-3 rounded-xl border border-slate-800 bg-slate-950 text-xs text-slate-400 space-y-1">
-                      <p><strong className="text-slate-200">Active User:</strong> {me?.email || "ugobe07@gmail.com"} (Admin / Operator)</p>
-                      <p><strong className="text-slate-200">Last Activity:</strong> {new Date().toLocaleString()}</p>
-                      <p><strong className="text-slate-200">Primary Actions:</strong> SCOUT pipeline runs, Sales Console edits, CRM draft reviews</p>
+                      <p>
+                        <strong className="text-slate-200">Active User:</strong>{" "}
+                        {me?.email || "ugobe07@gmail.com"} (Admin / Operator)
+                      </p>
+                      <p>
+                        <strong className="text-slate-200">
+                          Last Activity:
+                        </strong>{" "}
+                        {new Date().toLocaleString()}
+                      </p>
+                      <p>
+                        <strong className="text-slate-200">
+                          Primary Actions:
+                        </strong>{" "}
+                        SCOUT pipeline runs, Sales Console edits, CRM draft
+                        reviews
+                      </p>
                     </div>
                   </div>
 
@@ -5730,9 +5842,14 @@ export default function Admin() {
                     <p className="font-bold uppercase tracking-wider text-emerald-400 mb-1">
                       Action Plan to Drive Active User Retention
                     </p>
-                    1. Enable instant unauthenticated robot matching on homepage.<br />
-                    2. Send automated weekly email digests to waitlist signups when new robot models or prices are updated.<br />
-                    3. Offer 1-click Google OAuth sign-in to eliminate password friction.
+                    1. Enable instant unauthenticated robot matching on
+                    homepage.
+                    <br />
+                    2. Send automated weekly email digests to waitlist signups
+                    when new robot models or prices are updated.
+                    <br />
+                    3. Offer 1-click Google OAuth sign-in to eliminate password
+                    friction.
                   </div>
                 </div>
               )}
@@ -5742,25 +5859,35 @@ export default function Admin() {
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                     <div className="rounded-2xl border border-indigo-500/30 bg-[#081126] p-4">
-                      <p className="text-[11px] font-bold uppercase text-slate-400">Total Visitors</p>
+                      <p className="text-[11px] font-bold uppercase text-slate-400">
+                        Total Visitors
+                      </p>
                       <p className="text-2xl font-black text-indigo-400 mt-1">
                         {formatNumber(analytics?.site_visits ?? 7859)}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-amber-500/30 bg-[#081126] p-4">
-                      <p className="text-[11px] font-bold uppercase text-slate-400">Funnel Entrants</p>
+                      <p className="text-[11px] font-bold uppercase text-slate-400">
+                        Funnel Entrants
+                      </p>
                       <p className="text-2xl font-black text-amber-400 mt-1">
-                        {formatNumber(analytics?.signup_funnel?.signup_start ?? 120)}
+                        {formatNumber(
+                          analytics?.signup_funnel?.signup_start ?? 120
+                        )}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-emerald-500/30 bg-[#081126] p-4">
-                      <p className="text-[11px] font-bold uppercase text-slate-400">Sign-Ups</p>
+                      <p className="text-[11px] font-bold uppercase text-slate-400">
+                        Sign-Ups
+                      </p>
                       <p className="text-2xl font-black text-emerald-400 mt-1">
                         {userStats?.total_users ?? 16}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-blue-500/30 bg-[#081126] p-4">
-                      <p className="text-[11px] font-bold uppercase text-slate-400">Active Users</p>
+                      <p className="text-[11px] font-bold uppercase text-slate-400">
+                        Active Users
+                      </p>
                       <p className="text-2xl font-black text-blue-400 mt-1">
                         {userStats?.active_users ?? 1}
                       </p>
@@ -5768,23 +5895,41 @@ export default function Admin() {
                   </div>
 
                   <div className="rounded-2xl border border-slate-800 bg-[#081126] p-5 space-y-4">
-                    <h3 className="text-sm font-bold text-white">Traffic Source &amp; Conversion Leak Audit</h3>
+                    <h3 className="text-sm font-bold text-white">
+                      Traffic Source &amp; Conversion Leak Audit
+                    </h3>
                     <div className="space-y-2 text-xs">
                       <div className="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-900/60">
-                        <span className="font-semibold text-slate-200">Google News &amp; Organic Search</span>
-                        <span className="font-mono text-emerald-400 font-bold">5,420 visits (69%)</span>
+                        <span className="font-semibold text-slate-200">
+                          Google News &amp; Organic Search
+                        </span>
+                        <span className="font-mono text-emerald-400 font-bold">
+                          5,420 visits (69%)
+                        </span>
                       </div>
                       <div className="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-900/60">
-                        <span className="font-semibold text-slate-200">Direct Traffic (readyforrobots.com)</span>
-                        <span className="font-mono text-indigo-400 font-bold">1,840 visits (23%)</span>
+                        <span className="font-semibold text-slate-200">
+                          Direct Traffic (readyforrobots.com)
+                        </span>
+                        <span className="font-mono text-indigo-400 font-bold">
+                          1,840 visits (23%)
+                        </span>
                       </div>
                       <div className="flex items-center justify-between p-3 rounded-xl border border-slate-800 bg-slate-900/60">
-                        <span className="font-semibold text-slate-200">Referrals &amp; Social Media</span>
-                        <span className="font-mono text-amber-400 font-bold">599 visits (8%)</span>
+                        <span className="font-semibold text-slate-200">
+                          Referrals &amp; Social Media
+                        </span>
+                        <span className="font-mono text-amber-400 font-bold">
+                          599 visits (8%)
+                        </span>
                       </div>
                     </div>
                     <div className="p-4 rounded-xl border border-amber-500/30 bg-amber-950/20 text-xs text-amber-200 leading-relaxed">
-                      <strong className="text-amber-400">Diagnosis:</strong> 7,859 visitors land on the homepage and news articles, but only 120 click into SCOUT/ROI tools and only 16 complete registration. The primary drop-off occurs between reading content and creating an account.
+                      <strong className="text-amber-400">Diagnosis:</strong>{" "}
+                      7,859 visitors land on the homepage and news articles, but
+                      only 120 click into SCOUT/ROI tools and only 16 complete
+                      registration. The primary drop-off occurs between reading
+                      content and creating an account.
                     </div>
                   </div>
                 </div>
@@ -5795,19 +5940,29 @@ export default function Admin() {
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                     <div className="rounded-2xl border border-amber-500/30 bg-[#081126] p-4">
-                      <p className="text-xs font-bold uppercase text-slate-400">Total Robot Searches</p>
+                      <p className="text-xs font-bold uppercase text-slate-400">
+                        Total Robot Searches
+                      </p>
                       <p className="text-3xl font-black text-amber-400 mt-1">
-                        {formatNumber(analytics?.robot_searches ?? analytics?.total_calculations ?? 140)}
+                        {formatNumber(
+                          analytics?.robot_searches ??
+                            analytics?.total_calculations ??
+                            140
+                        )}
                       </p>
                     </div>
                     <div className="rounded-2xl border border-emerald-500/30 bg-[#081126] p-4">
-                      <p className="text-xs font-bold uppercase text-slate-400">Top Category</p>
+                      <p className="text-xs font-bold uppercase text-slate-400">
+                        Top Category
+                      </p>
                       <p className="text-lg font-bold text-emerald-300 mt-1">
                         Logistics &amp; AMRs
                       </p>
                     </div>
                     <div className="rounded-2xl border border-blue-500/30 bg-[#081126] p-4">
-                      <p className="text-xs font-bold uppercase text-slate-400">Searches / Visitor Session</p>
+                      <p className="text-xs font-bold uppercase text-slate-400">
+                        Searches / Visitor Session
+                      </p>
                       <p className="text-3xl font-black text-blue-400 mt-1">
                         1.2
                       </p>
@@ -5820,16 +5975,43 @@ export default function Admin() {
                     </h3>
                     <div className="rounded-2xl border border-slate-800 bg-[#081126] p-4 space-y-2 text-xs">
                       {[
-                        { term: "Autonomous Mobile Robots (AMR)", count: 48, topMatch: "Locus Robotics, Geek+" },
-                        { term: "Humanoid Inspection Robots", count: 35, topMatch: "Unitree G1, AgiBot" },
-                        { term: "Hospital Transport Robots", count: 29, topMatch: "Diligent Robotics (Moxi)" },
-                        { term: "Wall-Climbing NDT Inspection", count: 18, topMatch: "Gecko Robotics" },
-                        { term: "Commercial Kitchen Automation", count: 10, topMatch: "Miso Robotics (Flippy)" },
+                        {
+                          term: "Autonomous Mobile Robots (AMR)",
+                          count: 48,
+                          topMatch: "Locus Robotics, Geek+",
+                        },
+                        {
+                          term: "Humanoid Inspection Robots",
+                          count: 35,
+                          topMatch: "Unitree G1, AgiBot",
+                        },
+                        {
+                          term: "Hospital Transport Robots",
+                          count: 29,
+                          topMatch: "Diligent Robotics (Moxi)",
+                        },
+                        {
+                          term: "Wall-Climbing NDT Inspection",
+                          count: 18,
+                          topMatch: "Gecko Robotics",
+                        },
+                        {
+                          term: "Commercial Kitchen Automation",
+                          count: 10,
+                          topMatch: "Miso Robotics (Flippy)",
+                        },
                       ].map((item, idx) => (
-                        <div key={item.term} className="flex items-center justify-between p-3 rounded-xl border border-slate-800/80 bg-slate-900/60">
+                        <div
+                          key={item.term}
+                          className="flex items-center justify-between p-3 rounded-xl border border-slate-800/80 bg-slate-900/60"
+                        >
                           <div>
-                            <p className="font-bold text-white">{idx + 1}. {item.term}</p>
-                            <p className="text-[11px] text-slate-400 mt-0.5">Top match: {item.topMatch}</p>
+                            <p className="font-bold text-white">
+                              {idx + 1}. {item.term}
+                            </p>
+                            <p className="text-[11px] text-slate-400 mt-0.5">
+                              Top match: {item.topMatch}
+                            </p>
                           </div>
                           <span className="font-mono font-bold text-amber-400 text-xs">
                             {item.count} searches

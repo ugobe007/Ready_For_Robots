@@ -211,7 +211,9 @@ export default function JobsCrmNextSteps({
       aria-label="Automate Job Applications"
       className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-6 sm:px-6"
     >
-      <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>Automate Job Applications</p>
+      <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>
+        Automate Job Applications
+      </p>
       <h2 className="mt-2 font-display text-2xl font-bold text-white sm:text-3xl">
         {selectedJobs.length > 1
           ? `Apply to ${selectedJobs.length} Selected Jobs`

@@ -1,9 +1,6 @@
 import { useEffect, useState } from "react";
 import InlineJobLine from "@/components/jobs/InlineJobLine";
-import {
-  fetchRobotJobsPreview,
-  type PreviewJob,
-} from "@/lib/robotJobsPreview";
+import { fetchRobotJobsPreview, type PreviewJob } from "@/lib/robotJobsPreview";
 
 export default function FindProofJobs() {
   const [jobs, setJobs] = useState<PreviewJob[] | null>(null);

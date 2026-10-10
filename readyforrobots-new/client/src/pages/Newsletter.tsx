@@ -174,7 +174,12 @@ function cleanSubheadline(text?: string): string {
 function cleanCompanyTitle(companyRaw?: string, headlineRaw?: string): string {
   const company = cleanScrapedText(companyRaw || "");
   const headline = cleanScrapedText(headlineRaw || "");
-  if (company && company.length > 3 && !company.toLowerCase().includes("airline") && !company.toLowerCase().includes("logistics")) {
+  if (
+    company &&
+    company.length > 3 &&
+    !company.toLowerCase().includes("airline") &&
+    !company.toLowerCase().includes("logistics")
+  ) {
     return company;
   }
   if (headline) {
@@ -293,9 +298,15 @@ function StoryDataPanel({
   story: NewsletterStory;
   featured?: boolean;
 }) {
-  const fleet = story.economics || (featured ? "10–25 Humanoids / Trial Fleet" : "5–15 Humanoids / Pilot Fleet");
+  const fleet =
+    story.economics ||
+    (featured
+      ? "10–25 Humanoids / Trial Fleet"
+      : "5–15 Humanoids / Pilot Fleet");
   const timeline = "Q3 2026 (Capital Program Phase)";
-  const roi = story.roi || "Est. 9.4-mo payback · $8.5k/mo RaaS vs $120k CapEx · 34% OpEx savings";
+  const roi =
+    story.roi ||
+    "Est. 9.4-mo payback · $8.5k/mo RaaS vs $120k CapEx · 34% OpEx savings";
 
   return (
     <div className="mt-4 rounded-xl border border-slate-700/60 bg-[#081126] p-3.5 text-xs">
@@ -316,7 +327,10 @@ function StoryDataPanel({
           <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-slate-400">
             💰 ROI & Economics
           </p>
-          <p className="mt-0.5 font-semibold text-amber-300 truncate" title={roi}>
+          <p
+            className="mt-0.5 font-semibold text-amber-300 truncate"
+            title={roi}
+          >
             {roi}
           </p>
         </div>
@@ -355,16 +369,24 @@ function MarketIntelligenceDashboard() {
                 <span className="text-purple-400 font-mono font-bold">42%</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-                <div className="h-full bg-purple-500 rounded-full" style={{ width: "42%" }} />
+                <div
+                  className="h-full bg-purple-500 rounded-full"
+                  style={{ width: "42%" }}
+                />
               </div>
             </div>
             <div>
               <div className="flex justify-between text-slate-200 font-semibold mb-1">
                 <span>Mobile Dual-Arm Manipulators</span>
-                <span className="text-emerald-400 font-mono font-bold">28%</span>
+                <span className="text-emerald-400 font-mono font-bold">
+                  28%
+                </span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full" style={{ width: "28%" }} />
+                <div
+                  className="h-full bg-emerald-500 rounded-full"
+                  style={{ width: "28%" }}
+                />
               </div>
             </div>
             <div>
@@ -373,7 +395,10 @@ function MarketIntelligenceDashboard() {
                 <span className="text-amber-400 font-mono font-bold">18%</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-                <div className="h-full bg-amber-500 rounded-full" style={{ width: "18%" }} />
+                <div
+                  className="h-full bg-amber-500 rounded-full"
+                  style={{ width: "18%" }}
+                />
               </div>
             </div>
             <div>
@@ -382,7 +407,10 @@ function MarketIntelligenceDashboard() {
                 <span className="text-cyan-400 font-mono font-bold">12%</span>
               </div>
               <div className="h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-                <div className="h-full bg-cyan-500 rounded-full" style={{ width: "12%" }} />
+                <div
+                  className="h-full bg-cyan-500 rounded-full"
+                  style={{ width: "12%" }}
+                />
               </div>
             </div>
           </div>
@@ -395,20 +423,36 @@ function MarketIntelligenceDashboard() {
           </h3>
           <ul className="space-y-2.5 text-xs text-slate-300">
             <li className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="font-semibold text-slate-100">Aviation & Airport Logistics</span>
-              <span className="text-emerald-400 font-mono text-[11px] font-bold">8 Open Trials</span>
+              <span className="font-semibold text-slate-100">
+                Aviation & Airport Logistics
+              </span>
+              <span className="text-emerald-400 font-mono text-[11px] font-bold">
+                8 Open Trials
+              </span>
             </li>
             <li className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="font-semibold text-slate-100">Automotive Assembly</span>
-              <span className="text-emerald-400 font-mono text-[11px] font-bold">12 Open Trials</span>
+              <span className="font-semibold text-slate-100">
+                Automotive Assembly
+              </span>
+              <span className="text-emerald-400 font-mono text-[11px] font-bold">
+                12 Open Trials
+              </span>
             </li>
             <li className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <span className="font-semibold text-slate-100">3PL E-Commerce Fulfillment</span>
-              <span className="text-emerald-400 font-mono text-[11px] font-bold">11 Open Trials</span>
+              <span className="font-semibold text-slate-100">
+                3PL E-Commerce Fulfillment
+              </span>
+              <span className="text-emerald-400 font-mono text-[11px] font-bold">
+                11 Open Trials
+              </span>
             </li>
             <li className="flex items-center justify-between pb-1">
-              <span className="font-semibold text-slate-100">Healthcare Campus Logistics</span>
-              <span className="text-emerald-400 font-mono text-[11px] font-bold">6 Open Trials</span>
+              <span className="font-semibold text-slate-100">
+                Healthcare Campus Logistics
+              </span>
+              <span className="text-emerald-400 font-mono text-[11px] font-bold">
+                6 Open Trials
+              </span>
             </li>
           </ul>
         </div>
@@ -421,17 +465,32 @@ function MarketIntelligenceDashboard() {
           <ul className="space-y-2.5 text-xs text-slate-300">
             <li className="border-b border-slate-800 pb-2">
               <strong className="text-white">
-                <a href="https://www.skild.ai/" target="_blank" rel="noopener noreferrer" className="text-purple-300 hover:underline">Skild AI</a> Brain:
-              </strong> Scalable general-purpose foundation model for robot manipulation & cross-hardware task training.
+                <a
+                  href="https://www.skild.ai/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-purple-300 hover:underline"
+                >
+                  Skild AI
+                </a>{" "}
+                Brain:
+              </strong>{" "}
+              Scalable general-purpose foundation model for robot manipulation &
+              cross-hardware task training.
             </li>
             <li className="border-b border-slate-800 pb-2">
-              <strong className="text-white">Helix & VLA Models:</strong> Vision-Language-Action foundation models trained directly on human teleoperation.
+              <strong className="text-white">Helix & VLA Models:</strong>{" "}
+              Vision-Language-Action foundation models trained directly on human
+              teleoperation.
             </li>
             <li className="border-b border-slate-800 pb-2">
-              <strong className="text-white">High-Torque Actuators:</strong> Integrated planetary gearing delivering 300+ Nm torque density.
+              <strong className="text-white">High-Torque Actuators:</strong>{" "}
+              Integrated planetary gearing delivering 300+ Nm torque density.
             </li>
             <li className="pb-1">
-              <strong className="text-white">1-Click RaaS Underwriting:</strong> Instant equipment lease financing for $8.5k/mo humanoid deployments.
+              <strong className="text-white">1-Click RaaS Underwriting:</strong>{" "}
+              Instant equipment lease financing for $8.5k/mo humanoid
+              deployments.
             </li>
           </ul>
         </div>
@@ -480,17 +539,19 @@ function StoryCard({
           ) : null}
         </div>
         <h3 className="font-display text-2xl font-bold tracking-tight text-white sm:text-3xl">
-          <Link href={href} className="hover:text-emerald-400 transition-colors">
+          <Link
+            href={href}
+            className="hover:text-emerald-400 transition-colors"
+          >
             {company}
           </Link>
         </h3>
-        <p className="mt-4 text-base leading-relaxed text-slate-300">{summary}</p>
+        <p className="mt-4 text-base leading-relaxed text-slate-300">
+          {summary}
+        </p>
         <StoryDataPanel story={story} featured />
         <div className="mt-4">
-          <BlurredContactCard
-            companyName={company}
-            leadId={story.company_id}
-          />
+          <BlurredContactCard companyName={company} leadId={story.company_id} />
         </div>
         {bullets.length > 0 && (
           <ul className="mt-5 space-y-2 border-t border-slate-700/60 pt-4">
@@ -506,7 +567,9 @@ function StoryCard({
           </ul>
         )}
         <div className="mt-6 flex flex-wrap gap-4">
-          <InlineLink href={href} color="#34d399">Open in pipeline</InlineLink>
+          <InlineLink href={href} color="#34d399">
+            Open in pipeline
+          </InlineLink>
           <InlineLink href="/results?url=" color={AMBER}>
             Find similar buyers
           </InlineLink>
@@ -530,10 +593,14 @@ function StoryCard({
           {company}
         </Link>
       </h3>
-      <p className="mt-2 flex-1 text-xs leading-relaxed text-slate-300">{summary}</p>
+      <p className="mt-2 flex-1 text-xs leading-relaxed text-slate-300">
+        {summary}
+      </p>
       <StoryDataPanel story={story} />
       <div className="mt-4 pt-3 border-t border-slate-700/60">
-        <InlineLink href={href} color="#34d399">Pipeline →</InlineLink>
+        <InlineLink href={href} color="#34d399">
+          Pipeline →
+        </InlineLink>
       </div>
     </article>
   );
@@ -622,18 +689,26 @@ export default function Newsletter() {
         liveFetchInit({
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: cleanEmail, source: "newsletter_page" }),
+          body: JSON.stringify({
+            email: cleanEmail,
+            source: "newsletter_page",
+          }),
         })
       );
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+        const data = (await res.json().catch(() => null)) as {
+          detail?: string;
+        } | null;
         throw new Error(data?.detail || "Subscribe failed");
       }
       setSubStatus("success");
       setEmail("");
     } catch (err: unknown) {
       setSubStatus("error");
-      const msg = err instanceof Error ? err.message : "Could not subscribe. Try again in a moment.";
+      const msg =
+        err instanceof Error
+          ? err.message
+          : "Could not subscribe. Try again in a moment.";
       setSubErrorMessage(msg);
     }
   }
@@ -824,7 +899,9 @@ export default function Newsletter() {
                   >
                     <div className="mb-2 flex items-center gap-2">
                       <TrendingUp className="h-4 w-4 text-emerald-400" />
-                      <p className="text-sm font-bold text-slate-100 font-display">{title}</p>
+                      <p className="text-sm font-bold text-slate-100 font-display">
+                        {title}
+                      </p>
                     </div>
                     {detail ? (
                       <p className="text-xs leading-relaxed text-slate-300">

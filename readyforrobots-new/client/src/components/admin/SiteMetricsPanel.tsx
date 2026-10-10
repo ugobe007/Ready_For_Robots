@@ -164,9 +164,7 @@ export default function SiteMetricsPanel({
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 rounded-xl border border-slate-700/60 bg-[#0a1226] px-4 py-3 text-sm">
-        <span className="font-semibold text-white">
-          Pipeline backing data
-        </span>
+        <span className="font-semibold text-white">Pipeline backing data</span>
         <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-bold text-emerald-300">
           {formatCount(data.hotCount)} hot
         </span>

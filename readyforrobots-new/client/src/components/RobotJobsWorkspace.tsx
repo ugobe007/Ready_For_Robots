@@ -27,7 +27,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { Mail, ArrowRight, Lock } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getJobLifecycleState } from "@/lib/jobLifecycle";
 import DailyMatchBriefModal from "@/components/DailyMatchBriefModal";
@@ -61,10 +61,8 @@ import type {
 } from "@/lib/robotJobMatch";
 import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import RobotJobCardUnit from "@/components/pipeline/RobotJobCardUnit";
-import LiveJobTape from "@/components/jobs/LiveJobTape";
-import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
+import FindProofJobs from "@/components/jobs/FindProofJobs";
 import JobQueryModal from "@/components/jobs/JobQueryModal";
-import { MARKET_TAPE_JOBS, uniqueTapeJobCount, type TapeJob } from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
@@ -196,7 +194,6 @@ type ProductChoice = {
 };
 type RestoreView = "review" | "jobs" | "portfolio";
 
-const MARKET_FOUND_BASE = uniqueTapeJobCount();
 const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
 const eyebrow = JOBS_EYEBROW_CLASS;
@@ -210,7 +207,9 @@ function FindJobsCtaLabel({ text }: { text: string }) {
     return (
       <span className="inline-flex items-center gap-1.5 leading-none">
         <span className="leading-none">{parts[0].trim()}</span>
-        <span className="text-emerald-400 font-extrabold text-base sm:text-lg leading-none">→</span>
+        <span className="text-emerald-400 font-extrabold text-base sm:text-lg leading-none">
+          →
+        </span>
         {parts.slice(1).join("→")}
       </span>
     );
@@ -535,80 +534,6 @@ function pickSelectedJobKey(
   return jobs[0]?.job_key ?? null;
 }
 
-function FindShowcaseSection({ onSelectJob }: { onSelectJob?: (job: TapeJob) => void }) {
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const jobs = MARKET_TAPE_JOBS;
-
-  useEffect(() => {
-    if (paused || jobs.length === 0) return;
-    const timer = window.setInterval(() => {
-      setIndex(prev => (prev + 1) % jobs.length);
-    }, 6000);
-    return () => window.clearInterval(timer);
-  }, [paused, jobs.length]);
-
-  const currentJob = jobs[index % jobs.length];
-  if (!currentJob) return null;
-
-  const parts = (currentJob.industry || "").split(" · ");
-  const customer = currentJob.customer || parts[0] || "Enterprise Buyer";
-  const location = currentJob.location || parts[1] || "Automation Facility";
-  const robotClass = currentJob.robotClass || "Industrial Cobot / AMR";
-  const valueText = currentJob.valueText || "$60,000–$90,000/yr";
-
-  return (
-    <div
-      className="p-4 sm:p-5 border-b border-slate-700/80 bg-[#070f22] transition-colors hover:bg-[#09142d]"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <div className="flex items-center justify-between mb-2.5 px-0.5">
-        <span className="inline-flex items-center gap-2 text-[11px] font-mono font-extrabold uppercase tracking-wider text-purple-300">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-          </span>
-          Showcase Opportunity ({index + 1} of {jobs.length})
-        </span>
-        <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
-          Auto-rotating live buyer demand · Hover to pause
-        </span>
-      </div>
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg border border-slate-800 bg-[#09152e]/90 shadow-sm">
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex items-center gap-2 text-[12px] font-mono text-emerald-400 font-semibold truncate">
-            <span>{customer}</span>
-            <span className="text-slate-600">•</span>
-            <span className="text-slate-300 font-normal">{location}</span>
-          </div>
-          <h4 className="text-sm sm:text-base font-bold text-slate-100 truncate">
-            {currentJob.title}
-          </h4>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 pt-0.5">
-            <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono bg-slate-800 text-slate-200 border border-slate-700">
-              {robotClass}
-            </span>
-            <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 font-semibold">
-              {valueText}
-            </span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => onSelectJob?.(currentJob)}
-          className="self-start sm:self-center shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-emerald-600 text-slate-950 text-xs font-mono font-bold hover:bg-emerald-400 transition-colors shadow-sm"
-        >
-          <span>Inspect Job</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* Component                                                           */
 /* ------------------------------------------------------------------ */
@@ -670,7 +595,6 @@ export default function RobotJobsWorkspace() {
   const [keepSavedCount, setKeepSavedCount] = useState(0);
   const [showAllJobs, setShowAllJobs] = useState(false);
   const [lineupPreview, setLineupPreview] = useState(false);
-  const [selectedTapeModalJob, setSelectedTapeModalJob] = useState<TapeJob | null>(null);
   const [showJobQueryModal, setShowJobQueryModal] = useState(false);
 
   function handleJobQuerySubmit({
@@ -1025,7 +949,9 @@ export default function RobotJobsWorkspace() {
         );
         if (lineup.length > 0) {
           const lowerUrl = submitUrl.toLowerCase();
-          const matchedProduct = lineup.find(p => lowerUrl.includes(p.name.toLowerCase())) || lineup[0];
+          const matchedProduct =
+            lineup.find(p => lowerUrl.includes(p.name.toLowerCase())) ||
+            lineup[0];
           const name = matchedProduct.name;
           const displayClass = matchedProduct.displayClass;
           const cls = configurationClassForLookup(displayClass);
@@ -1256,7 +1182,12 @@ export default function RobotJobsWorkspace() {
               timeoutMs: 5000,
             });
             const analysis = analysisForSelectedSku(res, name, displayClass);
-            openJobsFromAnalyses([analysis], submitUrl, name ? [name] : [], research);
+            openJobsFromAnalyses(
+              [analysis],
+              submitUrl,
+              name ? [name] : [],
+              research
+            );
             return;
           } catch {
             /* proceed to class picker fallback */
@@ -1267,7 +1198,8 @@ export default function RobotJobsWorkspace() {
       // Fallback to Class Picker for the domain name so user can select robot type and view jobs
       const host = hostFromOemUrl(submitUrl);
       const rawDomain = host.split(".")[0] || "Robot";
-      const inferredName = rawDomain.charAt(0).toUpperCase() + rawDomain.slice(1);
+      const inferredName =
+        rawDomain.charAt(0).toUpperCase() + rawDomain.slice(1);
       setCompanyName(inferredName);
       setProducts([]);
       const fallbackAnalysis: RobotAnalysis = {
@@ -1283,7 +1215,12 @@ export default function RobotJobsWorkspace() {
         zeroReason: null,
         lookupGrain: "product",
       };
-      openJobsFromAnalyses([fallbackAnalysis], submitUrl, [inferredName], research);
+      openJobsFromAnalyses(
+        [fallbackAnalysis],
+        submitUrl,
+        [inferredName],
+        research
+      );
       return;
     } finally {
       if (live()) findInFlightRef.current = false;
@@ -1741,7 +1678,8 @@ export default function RobotJobsWorkspace() {
         kind: "dump",
         label: "Kept from FIND",
         jobKey: job.job_key,
-        company: (job as any).company || (job as any).employer_name || undefined,
+        company:
+          (job as any).company || (job as any).employer_name || undefined,
         robotUrl: submittedUrlRef.current,
       });
     }
@@ -2256,7 +2194,6 @@ export default function RobotJobsWorkspace() {
         <section className="rfr-find-pane min-w-0">
           {stage === "find" && (
             <div>
-              <FindShowcaseSection onSelectJob={job => setSelectedTapeModalJob(job)} />
               <div className="rfr-jobs-start-bar border-b border-slate-600 px-6 py-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <button
@@ -2273,26 +2210,13 @@ export default function RobotJobsWorkspace() {
                   />
                 </div>
                 <p className="mt-2 text-[12px] text-slate-400">
-                  Paste a robot URL on the left, then find jobs. Or query a job type.
+                  Paste a robot URL on the left, then find jobs. Or query a job
+                  type.
                 </p>
               </div>
-              <LiveJobTape
-                title="Live Robot Jobs"
-                subtitle="Click any job opportunity to explore specs, ROI, and share direct links"
-                corpus={MARKET_TAPE_JOBS}
-                baseCount={MARKET_FOUND_BASE}
-                running
-                statusLines={[]}
-                revealTarget={null}
-                onRevealComplete={() => undefined}
-                onSelect={(job) => setSelectedTapeModalJob(job)}
-                selectedKey={selectedTapeModalJob?.key ?? null}
-              />
-              <LiveJobDetailModal
-                job={selectedTapeModalJob}
-                isOpen={Boolean(selectedTapeModalJob)}
-                onClose={() => setSelectedTapeModalJob(null)}
-              />
+              <div className="px-6 py-4">
+                <FindProofJobs />
+              </div>
             </div>
           )}
 
@@ -2373,7 +2297,6 @@ export default function RobotJobsWorkspace() {
         onSubmitQuery={handleJobQuerySubmit}
         currentRobotName={active?.productName}
       />
-
     </div>
   );
 }
@@ -2450,8 +2373,12 @@ function FindRail({
         <>
           <p className={FIND_JOBS_SUBHEAD_CLASS}>{FIND_JOBS_HOME_SUBHEAD}</p>
           <div className="mt-3 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-[12px] leading-relaxed text-emerald-200">
-            <strong className="block font-semibold text-emerald-300">Jobs for robots workspace:</strong>
-            Match your robot specs to real employer demand. Enter a product URL above to find jobs tailored to your hardware, or select a Job Definition / Industry below.
+            <strong className="block font-semibold text-emerald-300">
+              Jobs for robots workspace:
+            </strong>
+            Match your robot specs to real employer demand. Enter a product URL
+            above to find jobs tailored to your hardware, or select a Job
+            Definition / Industry below.
           </div>
         </>
       )}
@@ -2478,7 +2405,9 @@ function FindRail({
           disabled={stage === "select" || !url.trim() || sameSubmit}
           className={`${ctaClass} mt-3 w-full`}
         >
-          <FindJobsCtaLabel text={researching ? "Researching…" : FIND_JOBS_CTA} />
+          <FindJobsCtaLabel
+            text={researching ? "Researching…" : FIND_JOBS_CTA}
+          />
         </button>
       </form>
 
@@ -2497,7 +2426,8 @@ function FindRail({
             Job Definition / Industry
           </label>
           <p className="mt-2 text-[13px] leading-snug text-slate-400">
-            Select a standard job definition (10 available) or enter a custom industry to find matching robot job opportunities.
+            Select a standard job definition (10 available) or enter a custom
+            industry to find matching robot job opportunities.
           </p>
           <select
             id="job-definition"
@@ -3015,7 +2945,11 @@ function PortfolioPanel({
                 onClick={() => onView(idx)}
                 className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300 hover:text-emerald-200"
               >
-                <FindJobsCtaLabel text={a.matched ? "View matches →" : "Find jobs for this robot →"} />
+                <FindJobsCtaLabel
+                  text={
+                    a.matched ? "View matches →" : "Find jobs for this robot →"
+                  }
+                />
               </button>
               <button
                 type="button"
@@ -3212,7 +3146,11 @@ function ReviewPanel({
           disabled={matching}
           className={ctaClass}
         >
-          <FindJobsCtaLabel text={matching ? "Matching…" : `Find jobs for ${analysis.productName} →`} />
+          <FindJobsCtaLabel
+            text={
+              matching ? "Matching…" : `Find jobs for ${analysis.productName} →`
+            }
+          />
         </button>
         <p className="mt-2 text-[11px] text-slate-500">
           Confirm we understood {analysis.productName} — then we match jobs
@@ -3263,23 +3201,65 @@ function JobsActivateBar({
 }
 
 const TEN_JOB_DEFINITIONS = [
-  { id: "logistics", label: "Logistics & Freight Handling", hint: "Material movement, parcel sortation, 3PL cross-dock" },
-  { id: "cobot", label: "Case Palletizing & Packing", hint: "Palletizing cobots, carton casing, end-of-line" },
-  { id: "factory", label: "Manufacturing & Assembly", hint: "CNC machine tend, sub-assembly, part placement" },
-  { id: "autonomous_scrubber", label: "Commercial Cleaning & Janitorial", hint: "Autonomous floor scrubbers, vacuuming, terminal care" },
-  { id: "hospitality", label: "Hospitality & Guest Services", hint: "Hotel linen transport, bussing, room service delivery" },
-  { id: "healthcare", label: "Healthcare & Hospital Logistics", hint: "Specimen delivery, pharmacy carts, clinical assist" },
-  { id: "food_prep", label: "Food Processing & Kitchen Prep", hint: "IP69K washdown cobots, food portioning, kitchen prep" },
-  { id: "machine_tending", label: "Machine Tending & Metal Fab", hint: "Press brake load, CNC feeding, welding cell assist" },
-  { id: "agriculture", label: "Agriculture & Farm Automation", hint: "Autonomous tractors, weeding, crop monitoring" },
-  { id: "construction", label: "Construction & Site Inspection", hint: "Jobsite scanning, 3D printing, layout marking" },
+  {
+    id: "logistics",
+    label: "Logistics & Freight Handling",
+    hint: "Material movement, parcel sortation, 3PL cross-dock",
+  },
+  {
+    id: "cobot",
+    label: "Case Palletizing & Packing",
+    hint: "Palletizing cobots, carton casing, end-of-line",
+  },
+  {
+    id: "factory",
+    label: "Manufacturing & Assembly",
+    hint: "CNC machine tend, sub-assembly, part placement",
+  },
+  {
+    id: "autonomous_scrubber",
+    label: "Commercial Cleaning & Janitorial",
+    hint: "Autonomous floor scrubbers, vacuuming, terminal care",
+  },
+  {
+    id: "hospitality",
+    label: "Hospitality & Guest Services",
+    hint: "Hotel linen transport, bussing, room service delivery",
+  },
+  {
+    id: "healthcare",
+    label: "Healthcare & Hospital Logistics",
+    hint: "Specimen delivery, pharmacy carts, clinical assist",
+  },
+  {
+    id: "food_prep",
+    label: "Food Processing & Kitchen Prep",
+    hint: "IP69K washdown cobots, food portioning, kitchen prep",
+  },
+  {
+    id: "machine_tending",
+    label: "Machine Tending & Metal Fab",
+    hint: "Press brake load, CNC feeding, welding cell assist",
+  },
+  {
+    id: "agriculture",
+    label: "Agriculture & Farm Automation",
+    hint: "Autonomous tractors, weeding, crop monitoring",
+  },
+  {
+    id: "construction",
+    label: "Construction & Site Inspection",
+    hint: "Jobsite scanning, 3D printing, layout marking",
+  },
 ];
 
 function mapShowcaseJobToDeal(job: any, index: number) {
-  const company = job.employer || job.company || job.customer || "Enterprise Buyer";
+  const company =
+    job.employer || job.company || job.customer || "Enterprise Buyer";
   const location = job.workplace || job.location || "North America";
   const industry = job.sector || job.industry || "Robotics & Automation";
-  const title = job.work || job.title || job.headline || "Robot Automation Opportunity";
+  const title =
+    job.work || job.title || job.headline || "Robot Automation Opportunity";
   return {
     id: index + 1000,
     company,
@@ -3290,7 +3270,9 @@ function mapShowcaseJobToDeal(job: any, index: number) {
     signalType: job.status || "HOT BUYER",
     signalColor: "#34d399",
     pipelineAction: title,
-    robotTypesNeeded: job.targetRobotTypes || (job.forRobot ? [job.forRobot] : ["Industrial Cobot / AMR"]),
+    robotTypesNeeded:
+      job.targetRobotTypes ||
+      (job.forRobot ? [job.forRobot] : ["Industrial Cobot / AMR"]),
     projectTiming: {
       label: "30–90 days (Active Buying Window)",
       day_min: 30,
@@ -3303,9 +3285,13 @@ function mapShowcaseJobToDeal(job: any, index: number) {
       friction_point: title,
       workflow_scope: { label: "1 workflow", items: [title] },
       timing: { label: "Q3 Buying Window" },
-      robot_type: { label: job.forRobot || "Industrial Cobot / High-Payload AMR" },
+      robot_type: {
+        label: job.forRobot || "Industrial Cobot / High-Payload AMR",
+      },
       budget: { top_amount: "$60,000–$90,000/yr" },
-      decision_makers: [{ name: "Operations Director", title: "Plant Automation Owner" }],
+      decision_makers: [
+        { name: "Operations Director", title: "Plant Automation Owner" },
+      ],
     },
     verdict: "VERIFIED_BUYER",
   };
@@ -3361,8 +3347,14 @@ function JobsPanel({
   onOpenQueryModal?: () => void;
 }) {
   const { session } = useAuth();
-  const appMeta = (session?.user?.app_metadata || {}) as Record<string, unknown>;
-  const userMeta = (session?.user?.user_metadata || {}) as Record<string, unknown>;
+  const appMeta = (session?.user?.app_metadata || {}) as Record<
+    string,
+    unknown
+  >;
+  const userMeta = (session?.user?.user_metadata || {}) as Record<
+    string,
+    unknown
+  >;
   const planTier = String(
     appMeta.billing_tier || appMeta.plan_tier || userMeta.plan_tier || ""
   ).toLowerCase();
@@ -3387,7 +3379,9 @@ function JobsPanel({
   const showPicker = shouldQualify(analysis);
   const showCrmCtas = !showPicker && !qualifying;
   const [showBriefModal, setShowBriefModal] = useState(false);
-  const [jobFilterTab, setJobFilterTab] = useState<"all" | "pending" | "archived">("all");
+  const [jobFilterTab, setJobFilterTab] = useState<
+    "all" | "pending" | "archived"
+  >("all");
 
   const rawBaseJobs = (analysis.jobs || []).map(job => ({
     ...job,
@@ -3395,10 +3389,15 @@ function JobsPanel({
   }));
 
   const allActiveJobs = rawBaseJobs.filter(
-    j => !getJobLifecycleState(j).isArchived && !getJobLifecycleState(j).isPending
+    j =>
+      !getJobLifecycleState(j).isArchived && !getJobLifecycleState(j).isPending
   );
-  const allPendingJobs = rawBaseJobs.filter(j => getJobLifecycleState(j).isPending);
-  const allArchivedJobs = rawBaseJobs.filter(j => getJobLifecycleState(j).isArchived);
+  const allPendingJobs = rawBaseJobs.filter(
+    j => getJobLifecycleState(j).isPending
+  );
+  const allArchivedJobs = rawBaseJobs.filter(
+    j => getJobLifecycleState(j).isArchived
+  );
 
   // Surface top 3 active jobs by default (pad with non-archived if active pool has < 3)
   const defaultActiveJobs =
@@ -3407,7 +3406,8 @@ function JobsPanel({
       : [
           ...allActiveJobs,
           ...rawBaseJobs.filter(
-            j => !allActiveJobs.includes(j) && !getJobLifecycleState(j).isArchived
+            j =>
+              !allActiveJobs.includes(j) && !getJobLifecycleState(j).isArchived
           ),
         ].slice(0, 3);
 
@@ -3441,7 +3441,10 @@ function JobsPanel({
     return () => window.clearInterval(timer);
   }, [showcasePaused, rawBaseJobs.length]);
 
-  const showcaseJob = rawBaseJobs.length > 0 ? rawBaseJobs[showcaseIndex % rawBaseJobs.length] : null;
+  const showcaseJob =
+    rawBaseJobs.length > 0
+      ? rawBaseJobs[showcaseIndex % rawBaseJobs.length]
+      : null;
 
   return (
     <div id="jobs-list" className="p-6 sm:p-8">
@@ -3449,7 +3452,9 @@ function JobsPanel({
         <h2 className={`${FIND_JOBS_HEADLINE_CLASS} text-white`}>{heading}</h2>
         <span className="font-mono text-base font-bold text-emerald-300">
           {jobsCountEyebrow({
-            visibleCount: isPaidUser ? rawBaseJobs.length : Math.min(3, rawBaseJobs.length),
+            visibleCount: isPaidUser
+              ? rawBaseJobs.length
+              : Math.min(3, rawBaseJobs.length),
             productName: analysis.productName,
             companyName: companyName || analysis.companyName,
             robotCount,
@@ -3474,8 +3479,10 @@ function JobsPanel({
           <span>✦</span> Jobs for robots — How to use this feed
         </p>
         <p className="text-xs leading-relaxed text-slate-200">
-          Select your job definition category below or enter your industry to match your robot to active buyer demand.
-          Click any job card to expand full operational requirements, equipment specs, and estimated contract value.
+          Select your job definition category below or enter your industry to
+          match your robot to active buyer demand. Click any job card to expand
+          full operational requirements, equipment specs, and estimated contract
+          value.
         </p>
       </div>
       {rawBaseJobs.length > 0 && (
@@ -3542,7 +3549,7 @@ function JobsPanel({
         <>
           {/* TOP OF FUNNEL SHOWCASE JOB CARD (Auto-rotates dynamically) */}
           {showcaseJob && (
-            <div 
+            <div
               className="mt-6 mb-4"
               onMouseEnter={() => setShowcasePaused(true)}
               onMouseLeave={() => setShowcasePaused(false)}
@@ -3553,7 +3560,8 @@ function JobsPanel({
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                   </span>
-                  Showcase Opportunity ({showcaseIndex + 1} of {rawBaseJobs.length})
+                  Showcase Opportunity ({showcaseIndex + 1} of{" "}
+                  {rawBaseJobs.length})
                 </span>
                 <span className="text-[10px] font-mono text-slate-400">
                   Auto-rotating live demand · Hover to pause
@@ -3579,7 +3587,8 @@ function JobsPanel({
                     : "text-slate-300 hover:text-white"
                 }`}
               >
-                Active Jobs ({isPaidUser ? allActiveJobs.length : defaultActiveJobs.length})
+                Active Jobs (
+                {isPaidUser ? allActiveJobs.length : defaultActiveJobs.length})
               </button>
               <button
                 type="button"
@@ -3619,7 +3628,10 @@ function JobsPanel({
                 Job Archive Access is Reserved for Paid Workspaces
               </h3>
               <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-slate-300">
-                Job opportunities automatically age after 2 weeks and move to the Archive after 8 weeks (56 days). Upgrade to a Paid Workspace to access archived postings, historical buyer demand, and direct enterprise contact info.
+                Job opportunities automatically age after 2 weeks and move to
+                the Archive after 8 weeks (56 days). Upgrade to a Paid Workspace
+                to access archived postings, historical buyer demand, and direct
+                enterprise contact info.
               </p>
               <a
                 href="/signup?next=/pipeline&src=jobs_archive_lock"
@@ -3630,22 +3642,27 @@ function JobsPanel({
             </div>
           ) : (
             <ol className="mt-6 space-y-3">
-              {(isPaidUser ? displayedJobs : displayedJobs.slice(0, 3)).map((job, i) => (
-                <JobCard
-                  key={`${job.forRobot}:${job.job_key}`}
-                  index={i + 1}
-                  job={job}
-                  selected={expandedJob === job.job_key}
-                  checked={checkedJobKeys.includes(job.job_key)}
-                  onSelect={() => onSelectJob(job)}
-                  onToggle={() => {
-                    if (!isPaidUser && !defaultActiveJobs.some(j => j.job_key === job.job_key)) {
-                      return;
-                    }
-                    onToggleJob(job);
-                  }}
-                />
-              ))}
+              {(isPaidUser ? displayedJobs : displayedJobs.slice(0, 3)).map(
+                (job, i) => (
+                  <JobCard
+                    key={`${job.forRobot}:${job.job_key}`}
+                    index={i + 1}
+                    job={job}
+                    selected={expandedJob === job.job_key}
+                    checked={checkedJobKeys.includes(job.job_key)}
+                    onSelect={() => onSelectJob(job)}
+                    onToggle={() => {
+                      if (
+                        !isPaidUser &&
+                        !defaultActiveJobs.some(j => j.job_key === job.job_key)
+                      ) {
+                        return;
+                      }
+                      onToggleJob(job);
+                    }}
+                  />
+                )
+              )}
             </ol>
           )}
 
@@ -3672,10 +3689,12 @@ function JobsPanel({
                   <Lock className="h-6 w-6 text-emerald-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white font-display">
-                  Unlock {Math.max(1, rawBaseJobs.length - 3)}+ More Job Opportunities
+                  Unlock {Math.max(1, rawBaseJobs.length - 3)}+ More Job
+                  Opportunities
                 </h3>
                 <p className="mt-2 max-w-md text-xs leading-relaxed text-slate-300 sm:text-sm">
-                  Free users can view up to 3 active job opportunities. Upgrade your workspace to unlock all verified employer job matches.
+                  Free users can view up to 3 active job opportunities. Upgrade
+                  your workspace to unlock all verified employer job matches.
                 </p>
                 <a
                   href="/signup?next=/pipeline&src=jobs_free_cap_blur"
@@ -3884,7 +3903,9 @@ function JobCard({
       <div className="flex items-start">
         <label
           className={`flex shrink-0 flex-col items-center gap-1 px-3 pt-4 ${
-            lifecycle.isPending ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
+            lifecycle.isPending
+              ? "opacity-50 cursor-not-allowed"
+              : "cursor-pointer"
           }`}
           onClick={e => e.stopPropagation()}
         >
@@ -3905,7 +3926,11 @@ function JobCard({
                   : "text-slate-500"
             }`}
           >
-            {lifecycle.isPending ? "FULL" : checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL}
+            {lifecycle.isPending
+              ? "FULL"
+              : checked
+                ? JOBS_KEEP_LABEL
+                : JOBS_SKIP_LABEL}
           </span>
         </label>
         <button
@@ -3916,7 +3941,9 @@ function JobCard({
           <span className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className={JOBS_ROBOT_NAME_CLASS}>{card.jobTitle}</span>
-              <span className={`inline-flex items-center gap-1 rounded px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-wider border ${lifecycle.badgeClass}`}>
+              <span
+                className={`inline-flex items-center gap-1 rounded px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-wider border ${lifecycle.badgeClass}`}
+              >
                 {lifecycle.statusLabel}
               </span>
             </div>
@@ -3928,7 +3955,9 @@ function JobCard({
             </div>
             {lifecycle.isPending && (
               <p className="mt-1.5 text-xs font-medium text-amber-300/90 bg-amber-950/40 border border-amber-500/30 px-2.5 py-1.5 rounded">
-                ⚠️ Applicants under review (3/3 spots filled). No further proposals are currently accepted to avoid spamming the opportunity.
+                ⚠️ Applicants under review (3/3 spots filled). No further
+                proposals are currently accepted to avoid spamming the
+                opportunity.
               </p>
             )}
             {card.modelContract?.listLine ? (

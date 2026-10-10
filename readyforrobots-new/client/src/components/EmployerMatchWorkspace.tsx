@@ -512,9 +512,7 @@ export default function EmployerMatchWorkspace() {
                     <div className="flex flex-wrap gap-3">
                       <button
                         type="button"
-                        onClick={() =>
-                          setChecked(robots.map(employerRobotKey))
-                        }
+                        onClick={() => setChecked(robots.map(employerRobotKey))}
                         className="font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300 hover:text-emerald-200"
                       >
                         {EMPLOYER_CHOOSE_ALL}
@@ -850,14 +848,20 @@ function WorkQualification({ card }: { card: QualifiedWork }) {
       </h2>
       <dl className="mt-4 space-y-2 text-sm">
         {card.requirements.map(row => (
-          <div key={row.label} className="grid grid-cols-[9rem_minmax(0,1fr)] gap-3">
+          <div
+            key={row.label}
+            className="grid grid-cols-[9rem_minmax(0,1fr)] gap-3"
+          >
             <dt className="text-slate-500">{row.label}</dt>
             <dd className="text-slate-100">{row.value}</dd>
           </div>
         ))}
         <div className="grid grid-cols-[9rem_minmax(0,1fr)] gap-3">
           <dt className="text-slate-500">Qualification</dt>
-          <dd className="font-bold text-emerald-300" data-qualification="Conditional">
+          <dd
+            className="font-bold text-emerald-300"
+            data-qualification="Conditional"
+          >
             Conditional
           </dd>
         </div>
@@ -896,14 +900,16 @@ function WorkQualification({ card }: { card: QualifiedWork }) {
         </div>
       ) : (
         <p className="mt-5 text-sm text-slate-400">
-          No payback example. Enter a robot price and a wage on the work step
-          if you want one.
+          No payback example. Enter a robot price and a wage on the work step if
+          you want one.
         </p>
       )}
       <h3 className="mt-5 font-display text-sm font-bold text-slate-100">
         Evidence limit
       </h3>
-      <p className="mt-2 text-sm leading-snug text-slate-300">{card.evidence}</p>
+      <p className="mt-2 text-sm leading-snug text-slate-300">
+        {card.evidence}
+      </p>
     </article>
   );
 }

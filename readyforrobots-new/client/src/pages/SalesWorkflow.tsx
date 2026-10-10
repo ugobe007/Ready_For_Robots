@@ -235,16 +235,26 @@ export default function SalesWorkflow() {
   );
 
   if (authLoading) {
-    return <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`} />;
+    return (
+      <div
+        className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+      />
+    );
   }
 
   if (!session) {
     return (
-      <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <div
+        className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+      >
         <ExperimentHeader />
         <main className="max-w-3xl mx-auto px-4 py-32 text-center text-slate-400">
-          <h1 className="text-2xl font-bold text-white mb-2">Sales Workflow Dashboard</h1>
-          <p className="mb-6 text-sm text-slate-400">Sign in to view your live sales workflow and activity feed.</p>
+          <h1 className="text-2xl font-bold text-white mb-2">
+            Sales Workflow Dashboard
+          </h1>
+          <p className="mb-6 text-sm text-slate-400">
+            Sign in to view your live sales workflow and activity feed.
+          </p>
           <Link
             href="/login?next=/sales-workflow"
             className="inline-flex rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 text-sm font-bold shadow-lg transition"
@@ -260,7 +270,9 @@ export default function SalesWorkflow() {
     !loading && actions.length === 0 && activities.length === 0;
 
   return (
-    <div className={`admin-workspace min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+    <div
+      className={`admin-workspace min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+    >
       <ExperimentHeader />
       <main className="max-w-6xl mx-auto px-4 pt-8 pb-12">
         <AdminNav variant="dark" />
@@ -270,7 +282,9 @@ export default function SalesWorkflow() {
               <p className="text-xs font-extrabold uppercase tracking-[0.25em] text-emerald-400">
                 Activity feed
               </p>
-              <h1 className="mt-2 text-3xl font-black tracking-tight text-white">What happened</h1>
+              <h1 className="mt-2 text-3xl font-black tracking-tight text-white">
+                What happened
+              </h1>
               <p className="mt-2 text-sm text-slate-400 max-w-xl">
                 Live progress across your pipeline — drafts, sends, and replies.{" "}
                 <Link
@@ -296,7 +310,8 @@ export default function SalesWorkflow() {
         ) : showEmptyState ? (
           <div className="rounded-2xl border border-slate-700/60 bg-[#0c192e] p-8 text-center text-slate-400">
             <p className="text-sm">
-              No workflow activity yet — save leads to CRM or run SCOUT to populate this view.
+              No workflow activity yet — save leads to CRM or run SCOUT to
+              populate this view.
             </p>
           </div>
         ) : (

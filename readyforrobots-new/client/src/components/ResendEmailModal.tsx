@@ -78,7 +78,10 @@ export function ResendEmailModal({
       };
 
       if (cc.trim()) {
-        payload.cc = cc.split(",").map(s => s.trim()).filter(Boolean);
+        payload.cc = cc
+          .split(",")
+          .map(s => s.trim())
+          .filter(Boolean);
       }
 
       const headers: Record<string, string> = {
@@ -120,7 +123,8 @@ export function ResendEmailModal({
         setSentSuccess(false);
       }, 1500);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : "Failed to send email via Resend.";
+      const msg =
+        err instanceof Error ? err.message : "Failed to send email via Resend.";
       setErrorMsg(msg);
       toast.error(msg);
     } finally {
@@ -151,7 +155,10 @@ export function ResendEmailModal({
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
-                Phelan | Robot Job Analyst &bull; <span className="font-mono text-emerald-400">readyforrobots.com</span>
+                Phelan | Robot Job Analyst &bull;{" "}
+                <span className="font-mono text-emerald-400">
+                  readyforrobots.com
+                </span>
               </p>
             </div>
           </div>
@@ -175,7 +182,10 @@ export function ResendEmailModal({
         {sentSuccess && (
           <div className="flex items-center gap-2 rounded-xl border border-emerald-500/50 bg-emerald-950/60 p-3 text-xs text-emerald-300 font-semibold">
             <Check className="h-4 w-4 text-emerald-400" />
-            <span>Email successfully sent via Resend! Inbound replies route directly to your ReadyForRobots inbox.</span>
+            <span>
+              Email successfully sent via Resend! Inbound replies route directly
+              to your ReadyForRobots inbox.
+            </span>
           </div>
         )}
 
@@ -244,7 +254,9 @@ export function ResendEmailModal({
               <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-400">
                 Email Body Text *
               </label>
-              <span className="text-[10px] text-slate-400">Phelan Outreach Copy</span>
+              <span className="text-[10px] text-slate-400">
+                Phelan Outreach Copy
+              </span>
             </div>
             <textarea
               required
@@ -260,7 +272,9 @@ export function ResendEmailModal({
           <div className="flex items-center justify-between pt-2">
             <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
               <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-              <span>Sends directly via Resend — no external mail client needed.</span>
+              <span>
+                Sends directly via Resend — no external mail client needed.
+              </span>
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -273,7 +287,12 @@ export function ResendEmailModal({
               </button>
               <button
                 type="submit"
-                disabled={sending || !toEmail.trim() || !subject.trim() || !bodyText.trim()}
+                disabled={
+                  sending ||
+                  !toEmail.trim() ||
+                  !subject.trim() ||
+                  !bodyText.trim()
+                }
                 className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 border border-emerald-500 px-5 py-2 text-xs font-extrabold text-white hover:bg-emerald-500 transition shadow-lg shadow-emerald-950/50 disabled:opacity-50"
               >
                 {sending ? (

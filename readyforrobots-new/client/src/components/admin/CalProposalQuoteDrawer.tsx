@@ -47,7 +47,8 @@ const DEFAULT_QUOTES: ProposalQuoteData[] = [
       projected_annual_savings: 103800,
       payback_period_months: 7.2,
     },
-    oem_technical_notes: "Unit standard equipped with high-grip EOAT pallet gripper and laser safety scanner suite. Fully compatible with Apex's SAP EWM warehouse management system via REST API.",
+    oem_technical_notes:
+      "Unit standard equipped with high-grip EOAT pallet gripper and laser safety scanner suite. Fully compatible with Apex's SAP EWM warehouse management system via REST API.",
     status: "awaiting_oem_approval",
     buyer_contact: {
       name: "Marcus Vance",
@@ -77,7 +78,8 @@ const DEFAULT_QUOTES: ProposalQuoteData[] = [
       projected_annual_savings: 77200,
       payback_period_months: 6.8,
     },
-    oem_technical_notes: "Configured with vision-guided sorting software module. Tested up to 1,400 picks/hr.",
+    oem_technical_notes:
+      "Configured with vision-guided sorting software module. Tested up to 1,400 picks/hr.",
     status: "oem_approved",
     buyer_contact: {
       name: "Sarah Jenkins",
@@ -107,7 +109,8 @@ const DEFAULT_QUOTES: ProposalQuoteData[] = [
       projected_annual_savings: 142800,
       payback_period_months: 8.1,
     },
-    oem_technical_notes: "Dual-gripper configuration for simultaneous loading/unloading of CNC chucks.",
+    oem_technical_notes:
+      "Dual-gripper configuration for simultaneous loading/unloading of CNC chucks.",
     status: "awaiting_oem_approval",
     buyer_contact: {
       name: "David Sterling",
@@ -115,7 +118,7 @@ const DEFAULT_QUOTES: ProposalQuoteData[] = [
       email: "d.sterling@nexusprecision-demo.com",
     },
     created_at: new Date(Date.now() - 3600000 * 48).toISOString(),
-  }
+  },
 ];
 
 export default function CalProposalQuoteDrawer({
@@ -150,7 +153,10 @@ export default function CalProposalQuoteDrawer({
   const currentQuote = quotes.find(q => q.id === activeQuoteId) || quotes[0];
 
   const handleCopyOemLink = (id: string) => {
-    const origin = typeof window !== "undefined" ? window.location.origin : "https://readyforrobots.com";
+    const origin =
+      typeof window !== "undefined"
+        ? window.location.origin
+        : "https://readyforrobots.com";
     const url = `${origin}/proposal/oem-review?id=${id}`;
     navigator.clipboard.writeText(url);
     toast.success("OEM Approval Link copied to clipboard!");
@@ -159,7 +165,11 @@ export default function CalProposalQuoteDrawer({
   const handleForceApprove = (id: string) => {
     const updated = quotes.map(q => {
       if (q.id === id) {
-        const u = { ...q, status: "oem_approved" as const, updated_at: new Date().toISOString() };
+        const u = {
+          ...q,
+          status: "oem_approved" as const,
+          updated_at: new Date().toISOString(),
+        };
         localStorage.setItem(`cal_proposal_quote_${id}`, JSON.stringify(u));
         return u;
       }
@@ -171,29 +181,43 @@ export default function CalProposalQuoteDrawer({
 
   const handleAutoDispatchAll = () => {
     const updated = quotes.map(q => {
-      const u = { ...q, status: "oem_approved" as const, updated_at: new Date().toISOString() };
+      const u = {
+        ...q,
+        status: "oem_approved" as const,
+        updated_at: new Date().toISOString(),
+      };
       localStorage.setItem(`cal_proposal_quote_${q.id}`, JSON.stringify(u));
       return u;
     });
     setQuotes(updated);
-    toast.success("Cal Autopilot: Auto-dispatched OEM tee-up emails and approved buyer quotes for all active matches!");
+    toast.success(
+      "Cal Autopilot: Auto-dispatched OEM tee-up emails and approved buyer quotes for all active matches!"
+    );
   };
 
   const handleRunNurtureCycle = () => {
-    toast.success("Cal Multi-Touch Nurture Engine: Triggered OEM Day-3 Nudges & Buyer Day-4 Follow-ups across all active quotes!");
+    toast.success(
+      "Cal Multi-Touch Nurture Engine: Triggered OEM Day-3 Nudges & Buyer Day-4 Follow-ups across all active quotes!"
+    );
   };
 
   const handleSimulateBuyerAcceptance = (id: string) => {
     const updated = quotes.map(q => {
       if (q.id === id) {
-        const u = { ...q, status: "buyer_accepted" as const, updated_at: new Date().toISOString() };
+        const u = {
+          ...q,
+          status: "buyer_accepted" as const,
+          updated_at: new Date().toISOString(),
+        };
         localStorage.setItem(`cal_proposal_quote_${id}`, JSON.stringify(u));
         return u;
       }
       return q;
     });
     setQuotes(updated);
-    toast.success(`🎉 Employer accepted quote ${id}! Cal notified the OEM and prepared site onboarding.`);
+    toast.success(
+      `🎉 Employer accepted quote ${id}! Cal notified the OEM and prepared site onboarding.`
+    );
   };
 
   return (
@@ -245,7 +269,8 @@ export default function CalProposalQuoteDrawer({
                 </span>
               </div>
               <p className="text-xs text-slate-300 mt-1">
-                Phelan automatically matches job openings, sends OEM tee-ups, and triggers Day-3 OEM nudges and Day-4 buyer follow-ups.
+                Phelan automatically matches job openings, sends OEM tee-ups,
+                and triggers Day-3 OEM nudges and Day-4 buyer follow-ups.
               </p>
             </div>
 
@@ -284,11 +309,19 @@ export default function CalProposalQuoteDrawer({
                   >
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold font-mono text-cyan-400">{q.id}</span>
-                        <span className="text-xs text-slate-400">• {q.matched_robot.oem_name}</span>
+                        <span className="text-xs font-bold font-mono text-cyan-400">
+                          {q.id}
+                        </span>
+                        <span className="text-xs text-slate-400">
+                          • {q.matched_robot.oem_name}
+                        </span>
                       </div>
-                      <div className="text-xs font-semibold text-slate-200 line-clamp-1">{q.job_title}</div>
-                      <div className="text-[11px] text-slate-400">{q.company_name} ({q.location})</div>
+                      <div className="text-xs font-semibold text-slate-200 line-clamp-1">
+                        {q.job_title}
+                      </div>
+                      <div className="text-[11px] text-slate-400">
+                        {q.company_name} ({q.location})
+                      </div>
                     </div>
 
                     <div className="flex flex-col items-end gap-1.5 ml-3">
@@ -303,9 +336,11 @@ export default function CalProposalQuoteDrawer({
                           <CheckCircle2 className="w-3 h-3" /> OEM Approved
                         </span>
                       )}
-                      {(q.status === "buyer_accepted" || q.status === "oem_notified_buyer_accepted") && (
+                      {(q.status === "buyer_accepted" ||
+                        q.status === "oem_notified_buyer_accepted") && (
                         <span className="text-[10px] font-mono font-bold text-emerald-300 bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 rounded-full flex items-center gap-1">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Buyer Accepted (YES!)
+                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />{" "}
+                          Buyer Accepted (YES!)
                         </span>
                       )}
                       <span className="text-xs font-mono font-bold text-slate-200">
@@ -327,10 +362,14 @@ export default function CalProposalQuoteDrawer({
                   <span className="text-[10px] font-mono text-cyan-400 uppercase tracking-wider block">
                     Active Proposal Inspector
                   </span>
-                  <h3 className="text-base font-extrabold text-white mt-0.5">{currentQuote.job_title}</h3>
-                  <p className="text-xs text-slate-300 font-medium">{currentQuote.company_name}</p>
+                  <h3 className="text-base font-extrabold text-white mt-0.5">
+                    {currentQuote.job_title}
+                  </h3>
+                  <p className="text-xs text-slate-300 font-medium">
+                    {currentQuote.company_name}
+                  </p>
                 </div>
-                
+
                 <Link
                   href={`/proposal/oem-review?id=${currentQuote.id}`}
                   className="px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 border border-cyan-500/30 text-xs font-bold flex items-center gap-1.5 transition-colors"
@@ -342,17 +381,29 @@ export default function CalProposalQuoteDrawer({
               {/* Matched Hardware */}
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-                  <span className="text-slate-400 text-[10px] font-mono block">Robot OEM & Model</span>
-                  <span className="text-slate-200 font-bold block mt-0.5">{currentQuote.matched_robot.oem_name}</span>
-                  <span className="text-slate-400 text-[11px] block">{currentQuote.matched_robot.model_name}</span>
+                  <span className="text-slate-400 text-[10px] font-mono block">
+                    Robot OEM & Model
+                  </span>
+                  <span className="text-slate-200 font-bold block mt-0.5">
+                    {currentQuote.matched_robot.oem_name}
+                  </span>
+                  <span className="text-slate-400 text-[11px] block">
+                    {currentQuote.matched_robot.model_name}
+                  </span>
                 </div>
 
                 <div className="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
-                  <span className="text-slate-400 text-[10px] font-mono block">Financial Structuring</span>
-                  <span className="text-emerald-400 font-extrabold font-mono text-sm block mt-0.5">
-                    ${currentQuote.pricing.raas_monthly_rate.toLocaleString()}/mo
+                  <span className="text-slate-400 text-[10px] font-mono block">
+                    Financial Structuring
                   </span>
-                  <span className="text-slate-400 text-[11px] block">Turnkey Buyout: ${currentQuote.pricing.hardware_cost.toLocaleString()}</span>
+                  <span className="text-emerald-400 font-extrabold font-mono text-sm block mt-0.5">
+                    ${currentQuote.pricing.raas_monthly_rate.toLocaleString()}
+                    /mo
+                  </span>
+                  <span className="text-slate-400 text-[11px] block">
+                    Turnkey Buyout: $
+                    {currentQuote.pricing.hardware_cost.toLocaleString()}
+                  </span>
                 </div>
               </div>
 
@@ -360,15 +411,18 @@ export default function CalProposalQuoteDrawer({
               <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-3">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-mono text-slate-400 uppercase flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-cyan-400" /> Pre-Send OEM Approval Gate
+                    <ShieldCheck className="w-4 h-4 text-cyan-400" /> Pre-Send
+                    OEM Approval Gate
                   </span>
                   {currentQuote.status === "awaiting_oem_approval" ? (
                     <span className="text-amber-400 font-semibold font-mono text-[11px]">
                       Pending OEM Sign-Off
                     </span>
-                  ) : currentQuote.status === "buyer_accepted" || currentQuote.status === "oem_notified_buyer_accepted" ? (
+                  ) : currentQuote.status === "buyer_accepted" ||
+                    currentQuote.status === "oem_notified_buyer_accepted" ? (
                     <span className="text-emerald-400 font-bold font-mono text-[11px] flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Buyer Accepted (YES!)
+                      <CheckCircle2 className="w-3.5 h-3.5" /> Buyer Accepted
+                      (YES!)
                     </span>
                   ) : (
                     <span className="text-emerald-400 font-semibold font-mono text-[11px]">
@@ -378,7 +432,17 @@ export default function CalProposalQuoteDrawer({
                 </div>
 
                 <p className="text-xs text-slate-300 leading-relaxed">
-                  Send this link to <strong className="text-cyan-300">{currentQuote.matched_robot.oem_name}</strong> partner engineering team so they can confirm equipment lead time and approve proposal pricing before dispatch to enterprise buyer <strong className="text-white">{currentQuote.buyer_contact.name}</strong>.
+                  Send this link to{" "}
+                  <strong className="text-cyan-300">
+                    {currentQuote.matched_robot.oem_name}
+                  </strong>{" "}
+                  partner engineering team so they can confirm equipment lead
+                  time and approve proposal pricing before dispatch to
+                  enterprise buyer{" "}
+                  <strong className="text-white">
+                    {currentQuote.buyer_contact.name}
+                  </strong>
+                  .
                 </p>
 
                 <div className="flex flex-wrap items-center gap-2 pt-2">
@@ -386,7 +450,8 @@ export default function CalProposalQuoteDrawer({
                     onClick={() => handleCopyOemLink(currentQuote.id)}
                     className="px-3 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors"
                   >
-                    <Copy className="w-3.5 h-3.5 text-cyan-400" /> Copy OEM Review Link
+                    <Copy className="w-3.5 h-3.5 text-cyan-400" /> Copy OEM
+                    Review Link
                   </button>
 
                   {currentQuote.status === "awaiting_oem_approval" && (
@@ -394,18 +459,23 @@ export default function CalProposalQuoteDrawer({
                       onClick={() => handleForceApprove(currentQuote.id)}
                       className="px-3.5 py-2 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5 transition-colors"
                     >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Override & Mark OEM Approved
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />{" "}
+                      Override & Mark OEM Approved
                     </button>
                   )}
 
-                  {currentQuote.status !== "buyer_accepted" && currentQuote.status !== "oem_notified_buyer_accepted" && (
-                    <button
-                      onClick={() => handleSimulateBuyerAcceptance(currentQuote.id)}
-                      className="px-3.5 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center gap-1.5 transition-colors"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" /> Simulate Employer 'YES'
-                    </button>
-                  )}
+                  {currentQuote.status !== "buyer_accepted" &&
+                    currentQuote.status !== "oem_notified_buyer_accepted" && (
+                      <button
+                        onClick={() =>
+                          handleSimulateBuyerAcceptance(currentQuote.id)
+                        }
+                        className="px-3.5 py-2 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 border border-cyan-500/40 text-xs font-bold flex items-center gap-1.5 transition-colors"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />{" "}
+                        Simulate Employer 'YES'
+                      </button>
+                    )}
                 </div>
               </div>
 
@@ -413,19 +483,40 @@ export default function CalProposalQuoteDrawer({
               <div className="p-4 rounded-xl bg-slate-900/90 border border-amber-500/30 space-y-2 text-xs">
                 <div className="flex items-center justify-between text-amber-400 font-mono font-bold text-[11px]">
                   <span>Cal OEM Tee-Up Email (Supply Side Outreach)</span>
-                  <span className="text-slate-400">To: {currentQuote.matched_robot.oem_name} Partner Engineering</span>
+                  <span className="text-slate-400">
+                    To: {currentQuote.matched_robot.oem_name} Partner
+                    Engineering
+                  </span>
                 </div>
                 <div className="font-mono text-[11px] text-slate-300 bg-slate-950 p-3 rounded-lg border border-slate-800 space-y-1.5 leading-relaxed">
-                  <p className="font-semibold text-white">Hi {currentQuote.matched_robot.oem_name} Team,</p>
-                  <p className="font-bold text-amber-300">I find jobs for robot companies.</p>
-                  <p>We identified an active job opening at <strong>{currentQuote.company_name}</strong> in {currentQuote.location} for the <strong>{currentQuote.job_title}</strong> role.</p>
-                  <p className="text-slate-400">Matched Hardware: {currentQuote.matched_robot.oem_name} {currentQuote.matched_robot.model_name} (${currentQuote.pricing.raas_monthly_rate.toLocaleString()}/mo RaaS / ${currentQuote.pricing.hardware_cost.toLocaleString()} buyout)</p>
+                  <p className="font-semibold text-white">
+                    Hi {currentQuote.matched_robot.oem_name} Team,
+                  </p>
+                  <p className="font-bold text-amber-300">
+                    I find jobs for robot companies.
+                  </p>
+                  <p>
+                    We identified an active job opening at{" "}
+                    <strong>{currentQuote.company_name}</strong> in{" "}
+                    {currentQuote.location} for the{" "}
+                    <strong>{currentQuote.job_title}</strong> role.
+                  </p>
+                  <p className="text-slate-400">
+                    Matched Hardware: {currentQuote.matched_robot.oem_name}{" "}
+                    {currentQuote.matched_robot.model_name} ($
+                    {currentQuote.pricing.raas_monthly_rate.toLocaleString()}/mo
+                    RaaS / $
+                    {currentQuote.pricing.hardware_cost.toLocaleString()}{" "}
+                    buyout)
+                  </p>
                 </div>
               </div>
 
               {/* Technical Notes Summary */}
               <div className="text-xs space-y-1.5">
-                <span className="font-mono text-slate-400 text-[10px] uppercase">OEM Technical Integration Notes:</span>
+                <span className="font-mono text-slate-400 text-[10px] uppercase">
+                  OEM Technical Integration Notes:
+                </span>
                 <p className="font-mono text-[11px] text-slate-300 bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
                   {currentQuote.oem_technical_notes}
                 </p>
@@ -436,7 +527,9 @@ export default function CalProposalQuoteDrawer({
 
         {/* Drawer Footer */}
         <div className="px-6 py-4 border-t border-slate-800 bg-slate-950/90 flex items-center justify-between text-xs text-slate-400">
-          <span className="font-mono">Cal Autopilot Engine v2.4 • OEM Gate</span>
+          <span className="font-mono">
+            Cal Autopilot Engine v2.4 • OEM Gate
+          </span>
           <button
             onClick={onClose}
             className="px-4 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-semibold transition-colors"

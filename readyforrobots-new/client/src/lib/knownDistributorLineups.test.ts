@@ -32,7 +32,9 @@ describe("knownDistributorLineups dataset & lookup engine", () => {
   });
 
   it("returns null for unknown domain", () => {
-    const dist = lookupKnownDistributor("https://unknown-random-distributor-12345.com");
+    const dist = lookupKnownDistributor(
+      "https://unknown-random-distributor-12345.com"
+    );
     expect(dist).toBeNull();
   });
 
@@ -46,7 +48,9 @@ describe("knownDistributorLineups dataset & lookup engine", () => {
   });
 
   it("resolves AlphaRobotics from exact domain alpharoboticsai.com and subpages", () => {
-    const dist = lookupKnownDistributor("https://alpharoboticsai.com/marketplace/agibot-a2");
+    const dist = lookupKnownDistributor(
+      "https://alpharoboticsai.com/marketplace/agibot-a2"
+    );
     expect(dist).not.toBeNull();
     expect(dist?.distributor_name).toBe("AlphaRobotics");
     expect(dist?.supported_brands).toContain("AgiBot");

@@ -198,9 +198,9 @@ export default function Crm() {
         const list = (await authFetch("/api/crm/teams")) as Team[];
         setTeams(Array.isArray(list) ? list : []);
         setTeamId(prev => prev || (list[0]?.id ?? ""));
-        const userSettings = (await authFetch(
-          "/api/user/settings"
-        ).catch(() => null)) as UserSettings | null;
+        const userSettings = (await authFetch("/api/user/settings").catch(
+          () => null
+        )) as UserSettings | null;
         if (userSettings) {
           setSettings(userSettings);
           setCcEmails(userSettings.scout_default_cc || "");
@@ -279,9 +279,7 @@ export default function Crm() {
           }
           if (coParam) {
             const matchedByCo = rows.find(a =>
-              (a.name || "")
-                .toLowerCase()
-                .includes(coParam.toLowerCase())
+              (a.name || "").toLowerCase().includes(coParam.toLowerCase())
             );
             if (matchedByCo) return matchedByCo.id;
           }

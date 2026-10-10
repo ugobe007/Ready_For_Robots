@@ -8,7 +8,9 @@ const EMPTY_CONTACT = /not named|hunter\.io found no|will not invent/i;
 const INVENTED_LEAD = /^operational lead\b/i;
 
 function clean(value: unknown, limit = 360): string {
-  const text = String(value || "").replace(/\s+/g, " ").trim();
+  const text = String(value || "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!text) return "";
   return text.length <= limit ? text : `${text.slice(0, limit - 1).trimEnd()}…`;
 }
@@ -31,16 +33,22 @@ function clause(value: unknown): string {
 
 /** Lowercase Title Case fill-ins so they read mid-sentence. Keep ALLCAPS. */
 function insertWords(text: string): string {
-  if (!text || text === OEM_INTRO_BLANK || text === OEM_INTRO_PAY_BLANK || text === OEM_INTRO_TERM_BLANK) {
+  if (
+    !text ||
+    text === OEM_INTRO_BLANK ||
+    text === OEM_INTRO_PAY_BLANK ||
+    text === OEM_INTRO_TERM_BLANK
+  ) {
     return text;
   }
   return text
     .split(" ")
     .filter(Boolean)
-    .map((token) => {
+    .map(token => {
       const core = token.replace(/[.,;:]+$/g, "");
-      const letters = [...core].filter((c) => /[A-Za-z]/.test(c));
-      if (letters.length >= 2 && letters.every((c) => c === c.toUpperCase())) return token;
+      const letters = [...core].filter(c => /[A-Za-z]/.test(c));
+      if (letters.length >= 2 && letters.every(c => c === c.toUpperCase()))
+        return token;
       return token.toLowerCase();
     })
     .join(" ");
@@ -89,7 +97,8 @@ export function composeRobotCompanyIntro(opts: {
   const workTitle = insertWords(clean(opts.title, 240));
   const place = clean(opts.locality, 160);
   let work = workTitle;
-  if (workTitle && company && place) work = `${workTitle} at ${company} in ${place}`;
+  if (workTitle && company && place)
+    work = `${workTitle} at ${company} in ${place}`;
   else if (workTitle && company) work = `${workTitle} at ${company}`;
   else if (!workTitle && company) work = `work at ${company}`;
   work = work || OEM_INTRO_BLANK;
@@ -98,7 +107,9 @@ export function composeRobotCompanyIntro(opts: {
   const reqs = insertWords(clean(opts.requirements, 360)) || OEM_INTRO_BLANK;
   const person = firstName(opts.decisionMakerName);
   const callWith =
-    person && company ? `${person} at ${company}` : company || person || OEM_INTRO_BLANK;
+    person && company
+      ? `${person} at ${company}`
+      : company || person || OEM_INTRO_BLANK;
   return [
     `Hi ${hi}, nice to meet you. My name is Phelan and I am a robot coordinator for ReadyForRobots. My job is to help identify and place robots into robot automation jobs. On that note I found a few job opportunities for your ${robot} robot that I would like to discuss with you. The job is ${work} with an expected comp level of $${monthly} per month for ${term}. The job requirements of ${reqs} match up with your ${robot} robot(s). If interested in the job I can arrange a call with ${callWith} to discuss their requirements and how your robots are an ideal match. Let me know you are interested and available for a quick chat on the job for more specifics. Thanks and look forward to speaking with you.`,
     "",

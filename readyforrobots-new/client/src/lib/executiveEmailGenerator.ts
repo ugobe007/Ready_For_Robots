@@ -12,11 +12,15 @@ export type ExecutiveEmailOpts = {
   senderMode?: "cal" | "bob" | "ai" | "phelan";
 };
 
-export function buildPhelanExecutiveEmail(opts: ExecutiveEmailOpts): { subject: string; body: string } {
+export function buildPhelanExecutiveEmail(opts: ExecutiveEmailOpts): {
+  subject: string;
+  body: string;
+} {
   const rawName = (opts.dmName || "").trim();
   const firstName = rawName ? rawName.split(" ")[0] : "";
   const company = opts.companyName.trim();
-  const robotJob = opts.taskType || opts.robotTypes?.[0] || "facility automation";
+  const robotJob =
+    opts.taskType || opts.robotTypes?.[0] || "facility automation";
   const shortlistUrl = `https://readyforrobots.com/pipeline?company=${encodeURIComponent(company)}`;
 
   const greeting = firstName ? `Hi ${firstName},` : `Hi Operations Team,`;
@@ -44,15 +48,23 @@ readyforrobots.com`;
   return { subject, body };
 }
 
-export function buildSalesAiExecutiveEmail(opts: ExecutiveEmailOpts): { subject: string; body: string } {
+export function buildSalesAiExecutiveEmail(opts: ExecutiveEmailOpts): {
+  subject: string;
+  body: string;
+} {
   return buildPhelanExecutiveEmail(opts);
 }
 
-export function buildCalSalesEmail(opts: ExecutiveEmailOpts): { subject: string; body: string } {
+export function buildCalSalesEmail(opts: ExecutiveEmailOpts): {
+  subject: string;
+  body: string;
+} {
   return buildPhelanExecutiveEmail(opts);
 }
 
-export function buildBobExecutiveEmail(opts: ExecutiveEmailOpts): { subject: string; body: string } {
+export function buildBobExecutiveEmail(opts: ExecutiveEmailOpts): {
+  subject: string;
+  body: string;
+} {
   return buildPhelanExecutiveEmail(opts);
 }
-

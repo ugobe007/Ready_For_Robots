@@ -268,7 +268,9 @@ export async function fetchWithTimeoutRetry(
  * Safely parse JSON from a fetch Response, guarding against non-200 status codes
  * and HTML responses (e.g. 404/502 gateway timeouts or Vercel fallbacks).
  */
-export async function parseJsonResponse<T = any>(res: Response): Promise<{
+export async function parseJsonResponse<T = any>(
+  res: Response
+): Promise<{
   ok: boolean;
   status: number;
   data: T | null;
@@ -276,7 +278,8 @@ export async function parseJsonResponse<T = any>(res: Response): Promise<{
 }> {
   const text = await res.text();
   const trimmed = text.trim();
-  const isHtml = trimmed.startsWith("<") || trimmed.toLowerCase().startsWith("<!doctype");
+  const isHtml =
+    trimmed.startsWith("<") || trimmed.toLowerCase().startsWith("<!doctype");
 
   if (isHtml) {
     return {
@@ -319,4 +322,3 @@ export async function parseJsonResponse<T = any>(res: Response): Promise<{
     data,
   };
 }
-

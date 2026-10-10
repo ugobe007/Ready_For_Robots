@@ -57,7 +57,9 @@ export default function LeadEmailDisplay({
       return (
         <input
           value={email || ""}
-          onChange={onEmailChange ? e => onEmailChange(e.target.value) : undefined}
+          onChange={
+            onEmailChange ? e => onEmailChange(e.target.value) : undefined
+          }
           placeholder={placeholder}
           className={`sb-input w-full ${className}`}
         />
@@ -84,7 +86,9 @@ export default function LeadEmailDisplay({
   }
 
   if (!email) {
-    return <span className={`text-slate-500 ${className}`}>{fallbackText}</span>;
+    return (
+      <span className={`text-slate-500 ${className}`}>{fallbackText}</span>
+    );
   }
 
   if (paid) {

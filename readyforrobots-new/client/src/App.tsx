@@ -109,8 +109,14 @@ function Router() {
       <Route path="/design/:shareId" component={DesignShare} />
       <Route path="/benchmark" component={Benchmark} />
       <Route path="/robots/report" component={HumanoidComparisonReport} />
-      <Route path="/reports/benchmarking/:industry" component={IndustryBenchmarkingReport} />
-      <Route path="/reports/benchmarking" component={IndustryBenchmarkingReport} />
+      <Route
+        path="/reports/benchmarking/:industry"
+        component={IndustryBenchmarkingReport}
+      />
+      <Route
+        path="/reports/benchmarking"
+        component={IndustryBenchmarkingReport}
+      />
       <Route path="/robots" component={Robots} />
       <Route path="/find-robots" component={FindRobots} />
       <Route path="/pricing" component={Pricing} />

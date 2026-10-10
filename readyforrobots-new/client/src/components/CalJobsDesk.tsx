@@ -299,7 +299,9 @@ export default function CalJobsDesk({
             Automate Job Applications
           </h2>
           <p className="mt-1 text-sm leading-relaxed text-slate-300">
-            Select target jobs below, name your robot model or training plan, and set your monthly quote. We auto-generate tailored outreach proposals for enterprise buyers.
+            Select target jobs below, name your robot model or training plan,
+            and set your monthly quote. We auto-generate tailored outreach
+            proposals for enterprise buyers.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -381,209 +383,211 @@ export default function CalJobsDesk({
             ))}
           </ol>
 
+          {fact === "task_model" && focus ? (
+            <div className="mt-4 space-y-3">
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => setSourceDraft(sourceDraft ? sourceDraft : " ")}
+                className="block w-full border border-emerald-400/50 bg-[#081126] px-3 py-3 text-left text-sm text-slate-100"
+              >
+                {WORK_TASK_MODEL_SOURCE_OPTION}
+                <span className="mt-1 block text-slate-400">
+                  {WORK_TASK_MODEL_SOURCE_HINT}
+                </span>
+              </button>
+              {sourceDraft !== "" ? (
+                <form
+                  onSubmit={e => {
+                    e.preventDefault();
+                    void saveTaskModel("source", sourceDraft);
+                  }}
+                >
+                  <input
+                    type="text"
+                    value={sourceDraft === " " ? "" : sourceDraft}
+                    onChange={e => setSourceDraft(e.target.value)}
+                    placeholder={WORK_TASK_MODEL_SOURCE_PLACEHOLDER}
+                    aria-label={WORK_TASK_MODEL_SOURCE_OPTION}
+                    className="w-full border border-emerald-400/50 bg-[#081126] px-3 py-3 text-base text-slate-100"
+                  />
+                  <button
+                    type="submit"
+                    disabled={busy}
+                    className="mt-2 bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a]"
+                  >
+                    Save model source
+                  </button>
+                </form>
+              ) : null}
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void saveTaskModel("self_train")}
+                className="block w-full border border-slate-500 px-3 py-3 text-left text-sm font-semibold text-slate-100"
+              >
+                {WORK_TASK_MODEL_SELF_OPTION}
+              </button>
+            </div>
+          ) : null}
 
+          {fact === "selected_models" && focus ? (
+            <div className="mt-4 space-y-2">
+              {catalog.length ? (
+                catalog.map(sku => (
+                  <button
+                    key={sku.name}
+                    type="button"
+                    disabled={busy}
+                    onClick={() => {
+                      const next = { ...pending, selectedModels: [sku.name] };
+                      remember(focus.job_key, { selectedModels: [sku.name] });
+                      afterLocal(focus, next, sku.name);
+                    }}
+                    className="block w-full border border-slate-500 px-3 py-3 text-left text-sm text-slate-200"
+                  >
+                    {sku.name}
+                  </button>
+                ))
+              ) : (
+                <p className="text-sm text-slate-300">
+                  No catalogued SKU on file. I'll use{" "}
+                  {focus.robot_name || "this robot"}. I will not invent a name.
+                </p>
+              )}
+              {!catalog.length ? (
+                <button
+                  type="button"
+                  disabled={busy || !focus.robot_name}
+                  onClick={() => {
+                    const name = focus.robot_name || "";
+                    const next = { ...pending, selectedModels: [name] };
+                    remember(focus.job_key, { selectedModels: [name] });
+                    afterLocal(focus, next, `SKU: ${name}`);
+                  }}
+                  className="bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a]"
+                >
+                  Use {focus.robot_name || "this robot"}
+                </button>
+              ) : null}
+            </div>
+          ) : null}
 
-      {fact === "task_model" && focus ? (
-        <div className="mt-4 space-y-3">
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => setSourceDraft(sourceDraft ? sourceDraft : " ")}
-            className="block w-full border border-emerald-400/50 bg-[#081126] px-3 py-3 text-left text-sm text-slate-100"
-          >
-            {WORK_TASK_MODEL_SOURCE_OPTION}
-            <span className="mt-1 block text-slate-400">
-              {WORK_TASK_MODEL_SOURCE_HINT}
-            </span>
-          </button>
-          {sourceDraft !== "" ? (
+          {fact === "monthly_price" && focus ? (
             <form
+              className="mt-4"
               onSubmit={e => {
                 e.preventDefault();
-                void saveTaskModel("source", sourceDraft);
+                const price = priceDraft.replace(/\s+/g, " ").trim();
+                if (!price) {
+                  setError(
+                    "Enter the monthly price you will charge. I will not invent it."
+                  );
+                  return;
+                }
+                const next = { ...pending, monthlyPrice: price };
+                remember(focus.job_key, { monthlyPrice: price });
+                afterLocal(focus, next, `Monthly price: ${price}`);
+                setPriceDraft("");
               }}
             >
+              <label className="block text-sm font-semibold text-white">
+                {JOBS_PROPOSED_PRICE_LABEL}
+                <span className="mt-1 block font-normal text-slate-400">
+                  {JOBS_PROPOSED_PRICE_HINT}
+                </span>
+              </label>
               <input
                 type="text"
-                value={sourceDraft === " " ? "" : sourceDraft}
-                onChange={e => setSourceDraft(e.target.value)}
-                placeholder={WORK_TASK_MODEL_SOURCE_PLACEHOLDER}
-                aria-label={WORK_TASK_MODEL_SOURCE_OPTION}
-                className="w-full border border-emerald-400/50 bg-[#081126] px-3 py-3 text-base text-slate-100"
+                value={priceDraft}
+                onChange={e => setPriceDraft(e.target.value)}
+                className="mt-2 w-full border border-emerald-400/50 bg-[#081126] px-3 py-3 text-base text-slate-100"
               />
               <button
                 type="submit"
                 disabled={busy}
                 className="mt-2 bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a]"
               >
-                Save model source
+                Save price
               </button>
             </form>
           ) : null}
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void saveTaskModel("self_train")}
-            className="block w-full border border-slate-500 px-3 py-3 text-left text-sm font-semibold text-slate-100"
-          >
-            {WORK_TASK_MODEL_SELF_OPTION}
-          </button>
-        </div>
-      ) : null}
 
-      {fact === "selected_models" && focus ? (
-        <div className="mt-4 space-y-2">
-          {catalog.length ? (
-            catalog.map(sku => (
+          {fact === "poc" && focus ? (
+            <div className="mt-4 space-y-3">
+              <p className="text-sm text-slate-300">{JOBS_POC_PREFER_HINT}</p>
+              <textarea
+                value={pocDraft}
+                onChange={e => setPocDraft(e.target.value)}
+                rows={3}
+                className="w-full border border-emerald-400/50 bg-[#081126] px-3 py-3 text-sm text-slate-100"
+                aria-label="Proof of concept"
+              />
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={busy || !pocDraft.trim()}
+                  onClick={() => {
+                    const next = { ...pending, pocEvidence: pocDraft.trim() };
+                    remember(focus.job_key, { pocEvidence: pocDraft.trim() });
+                    afterLocal(focus, next, "PoC noted");
+                    setPocDraft("");
+                  }}
+                  className="bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a]"
+                >
+                  Save PoC
+                </button>
+                <button
+                  type="button"
+                  disabled={busy}
+                  onClick={() => {
+                    const next = { ...pending, pocSkipped: true };
+                    remember(focus.job_key, { pocSkipped: true });
+                    afterLocal(focus, next, JOBS_POC_SKIP_CTA);
+                  }}
+                  className="border border-slate-500 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-slate-200"
+                >
+                  {JOBS_POC_SKIP_CTA}
+                </button>
+              </div>
+            </div>
+          ) : null}
+
+          {fact === "prepare_apply" && focus ? (
+            <div className="mt-4">
+              <p className="text-sm text-slate-300">{OEM_CAL_OPERATOR_SENDS}</p>
               <button
-                key={sku.name}
                 type="button"
                 disabled={busy}
-                onClick={() => {
-                  const next = { ...pending, selectedModels: [sku.name] };
-                  remember(focus.job_key, { selectedModels: [sku.name] });
-                  afterLocal(focus, next, sku.name);
-                }}
-                className="block w-full border border-slate-500 px-3 py-3 text-left text-sm text-slate-200"
+                onClick={() => void prepareDraft()}
+                className="mt-2 bg-violet-500 px-4 py-3 text-sm font-bold uppercase tracking-[0.06em] text-white"
               >
-                {sku.name}
+                {JOBS_PREPARE_CTA}
               </button>
-            ))
-          ) : (
-            <p className="text-sm text-slate-300">
-              No catalogued SKU on file. I'll use{" "}
-              {focus.robot_name || "this robot"}. I will not invent a name.
-            </p>
-          )}
-          {!catalog.length ? (
-            <button
-              type="button"
-              disabled={busy || !focus.robot_name}
-              onClick={() => {
-                const name = focus.robot_name || "";
-                const next = { ...pending, selectedModels: [name] };
-                remember(focus.job_key, { selectedModels: [name] });
-                afterLocal(focus, next, `SKU: ${name}`);
-              }}
-              className="bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a]"
-            >
-              Use {focus.robot_name || "this robot"}
-            </button>
+            </div>
           ) : null}
-        </div>
-      ) : null}
 
-      {fact === "monthly_price" && focus ? (
-        <form
-          className="mt-4"
-          onSubmit={e => {
-            e.preventDefault();
-            const price = priceDraft.replace(/\s+/g, " ").trim();
-            if (!price) {
-              setError(
-                "Enter the monthly price you will charge. I will not invent it."
-              );
-              return;
-            }
-            const next = { ...pending, monthlyPrice: price };
-            remember(focus.job_key, { monthlyPrice: price });
-            afterLocal(focus, next, `Monthly price: ${price}`);
-            setPriceDraft("");
-          }}
-        >
-          <label className="block text-sm font-semibold text-white">
-            {JOBS_PROPOSED_PRICE_LABEL}
-            <span className="mt-1 block font-normal text-slate-400">
-              {JOBS_PROPOSED_PRICE_HINT}
-            </span>
-          </label>
-          <input
-            type="text"
-            value={priceDraft}
-            onChange={e => setPriceDraft(e.target.value)}
-            className="mt-2 w-full border border-emerald-400/50 bg-[#081126] px-3 py-3 text-base text-slate-100"
-          />
-          <button
-            type="submit"
-            disabled={busy}
-            className="mt-2 bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a]"
-          >
-            Save price
-          </button>
-        </form>
-      ) : null}
-
-      {fact === "poc" && focus ? (
-        <div className="mt-4 space-y-3">
-          <p className="text-sm text-slate-300">{JOBS_POC_PREFER_HINT}</p>
-          <textarea
-            value={pocDraft}
-            onChange={e => setPocDraft(e.target.value)}
-            rows={3}
-            className="w-full border border-emerald-400/50 bg-[#081126] px-3 py-3 text-sm text-slate-100"
-            aria-label="Proof of concept"
-          />
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              disabled={busy || !pocDraft.trim()}
-              onClick={() => {
-                const next = { ...pending, pocEvidence: pocDraft.trim() };
-                remember(focus.job_key, { pocEvidence: pocDraft.trim() });
-                afterLocal(focus, next, "PoC noted");
-                setPocDraft("");
-              }}
-              className="bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a]"
+          {draft ? (
+            <div
+              className="mt-4 border border-violet-500/40 bg-[#12082a] px-4 py-4"
+              data-apply-draft="1"
             >
-              Save PoC
-            </button>
-            <button
-              type="button"
-              disabled={busy}
-              onClick={() => {
-                const next = { ...pending, pocSkipped: true };
-                remember(focus.job_key, { pocSkipped: true });
-                afterLocal(focus, next, JOBS_POC_SKIP_CTA);
-              }}
-              className="border border-slate-500 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-slate-200"
-            >
-              {JOBS_POC_SKIP_CTA}
-            </button>
-          </div>
-        </div>
-      ) : null}
+              <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>
+                Apply draft
+              </p>
+              <p className="mt-2 text-sm font-semibold text-white">
+                {draft.subject}
+              </p>
+              <pre className="mt-2 whitespace-pre-wrap text-sm text-slate-200">
+                {draft.body}
+              </pre>
+              <p className="mt-3 text-sm text-slate-400">
+                {JOBS_SEND_DRAFT_HINT}
+              </p>
+            </div>
+          ) : null}
 
-      {fact === "prepare_apply" && focus ? (
-        <div className="mt-4">
-          <p className="text-sm text-slate-300">{OEM_CAL_OPERATOR_SENDS}</p>
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void prepareDraft()}
-            className="mt-2 bg-violet-500 px-4 py-3 text-sm font-bold uppercase tracking-[0.06em] text-white"
-          >
-            {JOBS_PREPARE_CTA}
-          </button>
-        </div>
-      ) : null}
-
-      {draft ? (
-        <div
-          className="mt-4 border border-violet-500/40 bg-[#12082a] px-4 py-4"
-          data-apply-draft="1"
-        >
-          <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>Apply draft</p>
-          <p className="mt-2 text-sm font-semibold text-white">
-            {draft.subject}
-          </p>
-          <pre className="mt-2 whitespace-pre-wrap text-sm text-slate-200">
-            {draft.body}
-          </pre>
-          <p className="mt-3 text-sm text-slate-400">{JOBS_SEND_DRAFT_HINT}</p>
-        </div>
-      ) : null}
-
-      {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
+          {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
         </div>
       ) : null}
     </section>

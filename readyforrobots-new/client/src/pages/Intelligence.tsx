@@ -4,7 +4,15 @@
  * responsive visual hierarchy, and smooth micro-animations.
  */
 import { useEffect, useState } from "react";
-import { ArrowRight, Building2, Check, FileText, Mail, Search, Sparkles } from "lucide-react";
+import {
+  ArrowRight,
+  Building2,
+  Check,
+  FileText,
+  Mail,
+  Search,
+  Sparkles,
+} from "lucide-react";
 import { Link } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import JobsPstackProtocol from "@/components/JobsPstackProtocol";
@@ -61,7 +69,8 @@ const JOBS_LOOP = [
   },
 ];
 
-const EYEBROW = "font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-400";
+const EYEBROW =
+  "font-mono text-[11px] font-semibold uppercase tracking-[0.16em] text-emerald-400";
 const JOBS_SIGNUP_HREF = jobsCrmOpenHref(false);
 
 export default function Intelligence() {
@@ -108,18 +117,24 @@ export default function Intelligence() {
         liveFetchInit({
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: cleanEmail, source: "intelligence_page" }),
+          body: JSON.stringify({
+            email: cleanEmail,
+            source: "intelligence_page",
+          }),
         })
       );
       if (!res.ok) {
-        const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+        const data = (await res.json().catch(() => null)) as {
+          detail?: string;
+        } | null;
         throw new Error(data?.detail || "Subscribe failed");
       }
       setNewsletterStatus("success");
       setEmail("");
     } catch (err: unknown) {
       setNewsletterStatus("error");
-      const msg = err instanceof Error ? err.message : "Could not subscribe. Try again.";
+      const msg =
+        err instanceof Error ? err.message : "Could not subscribe. Try again.";
       setNewsletterErrorMsg(msg);
     }
   }
@@ -172,13 +187,16 @@ export default function Intelligence() {
                 background="transparent"
               />
               <span className="font-display font-bold text-white tracking-tight">
-                <span className="text-emerald-400">Robots Need Jobs.</span> We Find the Work.
+                <span className="text-emerald-400">Robots Need Jobs.</span> We
+                Find the Work.
               </span>
             </span>
           }
           description={
             <p className="text-base sm:text-lg leading-relaxed text-slate-300">
-              We discover the physical work your machine is qualified to do — employer, workplace, and exact task — then turn matches directly into actionable CRM opportunities.
+              We discover the physical work your machine is qualified to do —
+              employer, workplace, and exact task — then turn matches directly
+              into actionable CRM opportunities.
             </p>
           }
           innerClassName="pb-10 pt-4"
@@ -193,7 +211,9 @@ export default function Intelligence() {
                     <span className="relative inline-flex h-3 w-3 rounded-full bg-emerald-500" />
                   </span>
                   <div>
-                    <span className="font-mono text-2xl font-black text-white sm:text-3xl">3,000+</span>
+                    <span className="font-mono text-2xl font-black text-white sm:text-3xl">
+                      3,000+
+                    </span>
                     <span className="ml-2 font-display text-sm font-bold uppercase tracking-wider text-emerald-400">
                       Verified Buyer Leads
                     </span>
@@ -206,12 +226,16 @@ export default function Intelligence() {
                   </div>
                   <span className="text-slate-600">•</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-emerald-400">42</span>
+                    <span className="font-mono font-bold text-emerald-400">
+                      42
+                    </span>
                     <span className="text-slate-400">Active Open Trials</span>
                   </div>
                   <span className="text-slate-600">•</span>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-amber-400">25</span>
+                    <span className="font-mono font-bold text-amber-400">
+                      25
+                    </span>
                     <span className="text-slate-400">Daily Action Signals</span>
                   </div>
                 </div>
@@ -236,7 +260,10 @@ export default function Intelligence() {
                     </div>
                   </div>
                   {idx < ABOUT_STATS.length - 1 ? (
-                    <div className="hidden sm:flex shrink-0 items-center justify-center px-1 text-emerald-400/60" aria-hidden="true">
+                    <div
+                      className="hidden sm:flex shrink-0 items-center justify-center px-1 text-emerald-400/60"
+                      aria-hidden="true"
+                    >
                       <ArrowRight className="h-5 w-5 animate-pulse text-emerald-400" />
                     </div>
                   ) : null}
@@ -275,25 +302,26 @@ export default function Intelligence() {
 
       <main className="flex-1 px-4 sm:px-6 pb-20">
         <div className="max-w-6xl mx-auto space-y-12">
-
           {/* How Jobs Works & Vocabulary */}
           <section className="overflow-hidden rounded-2xl border border-slate-700/60 bg-[#0a1226]/90 shadow-2xl backdrop-blur-md">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.1fr]">
               <div className="border-b border-slate-700/60 p-6 sm:p-8 lg:border-b-0 lg:border-r">
-                <p className={`mb-3 ${EYEBROW}`}>
-                  Process Architecture
-                </p>
+                <p className={`mb-3 ${EYEBROW}`}>Process Architecture</p>
                 <h2 className="font-display text-2xl font-bold leading-tight text-white lg:text-3xl">
                   {JOBS_FOR_YOUR_ROBOT_HEADING}
                 </h2>
                 <p className="mt-3.5 text-sm leading-relaxed text-slate-300">
-                  Companies have physical work. Robots need qualified jobs. Paste a product URL,
-                  inspect matched opportunities, and manage your pipeline in your native CRM.
+                  Companies have physical work. Robots need qualified jobs.
+                  Paste a product URL, inspect matched opportunities, and manage
+                  your pipeline in your native CRM.
                 </p>
 
                 <div className="mt-6 flex flex-col gap-2 rounded-xl border border-slate-700/60 bg-[#060c1c] p-2.5 sm:flex-row sm:items-center sm:justify-between">
                   {JOBS_PROCESS_STEPS.map((step, idx) => (
-                    <div key={step.id} className="flex flex-1 items-center gap-2">
+                    <div
+                      key={step.id}
+                      className="flex flex-1 items-center gap-2"
+                    >
                       <div className="flex-1 rounded-lg bg-[#0b162f] p-3 transition-colors hover:bg-[#101e3d]">
                         <p className="font-mono text-sm font-bold text-emerald-400">
                           {step.n}
@@ -303,7 +331,10 @@ export default function Intelligence() {
                         </p>
                       </div>
                       {idx < JOBS_PROCESS_STEPS.length - 1 ? (
-                        <div className="hidden sm:flex shrink-0 px-0.5 text-emerald-400/70" aria-hidden="true">
+                        <div
+                          className="hidden sm:flex shrink-0 px-0.5 text-emerald-400/70"
+                          aria-hidden="true"
+                        >
                           <ArrowRight className="h-4 w-4 text-emerald-400" />
                         </div>
                       ) : null}
@@ -313,9 +344,7 @@ export default function Intelligence() {
               </div>
 
               <div className="p-6 sm:p-8 bg-[#091022]/80">
-                <p className={`mb-4 ${EYEBROW}`}>
-                  Core Definitions
-                </p>
+                <p className={`mb-4 ${EYEBROW}`}>Core Definitions</p>
                 <div className="space-y-3">
                   {[
                     [
@@ -361,15 +390,13 @@ export default function Intelligence() {
           >
             <div className="grid grid-cols-1 lg:grid-cols-[1.1fr_380px]">
               <div className="p-6 sm:p-8 bg-[#0a1226]">
-                <p className={`mb-3 ${EYEBROW}`}>
-                  Work Briefing · 2026
-                </p>
+                <p className={`mb-3 ${EYEBROW}`}>Work Briefing · 2026</p>
                 <h2 className="font-display text-2xl font-bold leading-tight text-white lg:text-3xl">
                   Labor-intensive workplaces still have jobs robots can do.
                 </h2>
                 <p className="mt-3.5 text-sm leading-relaxed text-slate-300">
-                  A short briefing on where physical work is piling up — so robot
-                  companies show up with jobs, not a generic sales dump.
+                  A short briefing on where physical work is piling up — so
+                  robot companies show up with jobs, not a generic sales dump.
                 </p>
 
                 <div className="mt-8 grid grid-cols-1 gap-3.5 sm:grid-cols-3">
@@ -385,7 +412,9 @@ export default function Intelligence() {
                       <p className="text-sm font-bold text-emerald-300">
                         {label}
                       </p>
-                      <p className="mt-1 text-xs text-slate-400 leading-normal">{copy}</p>
+                      <p className="mt-1 text-xs text-slate-400 leading-normal">
+                        {copy}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -409,7 +438,10 @@ export default function Intelligence() {
                 {reportStatus === "success" ? (
                   <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-xs text-emerald-300 flex items-start gap-2.5">
                     <Check className="h-4 w-4 shrink-0 mt-0.5 text-emerald-400" />
-                    <span>Briefing requested. We saved your request and queued the follow-up email.</span>
+                    <span>
+                      Briefing requested. We saved your request and queued the
+                      follow-up email.
+                    </span>
                   </div>
                 ) : (
                   <form onSubmit={requestReport} className="relative space-y-3">
@@ -504,9 +536,7 @@ export default function Intelligence() {
           >
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_340px]">
               <div>
-                <p className={`mb-2.5 ${EYEBROW}`}>
-                  Weekly Intelligence
-                </p>
+                <p className={`mb-2.5 ${EYEBROW}`}>Weekly Intelligence</p>
                 <h2 className="font-display text-2xl font-bold leading-tight text-white">
                   A weekly look at work robots can take.
                 </h2>
