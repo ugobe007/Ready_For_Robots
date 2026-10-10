@@ -10,8 +10,8 @@ import LiveJobTape from "@/components/jobs/LiveJobTape";
 import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
 import CustomerQuoteBanner from "@/components/CustomerQuoteBanner";
 import QuickSignupModal from "@/components/QuickSignupModal";
-import { getPublicReadApiBase } from "@/lib/apiBase";
-import { MARKET_TAPE_JOBS, type TapeJob } from "@/lib/jobsTapeCorpus";
+import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
+import { useTapeJobCard } from "@/lib/tapeJobCard";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
   LANDING_BRIEF_EYEBROW,
@@ -148,14 +148,11 @@ const SAMPLE_ROBOTS = [
 export default function JobsLanding() {
   const [heroUrl, setHeroUrl] = useState("");
   const [isSignupOpen, setIsSignupOpen] = useState(false);
-  const [selectedTapeJob, setSelectedTapeJob] = useState<TapeJob | null>(null);
+  const { selectedTapeJob, handleSelectJob, handleCloseModal } = useTapeJobCard();
 
   useEffect(() => {
     try {
-      const params = new URLSearchParams(window.location.search);
-      const visit = params.get("visit");
-      const jobKey = params.get("job");
-
+      const visit = new URLSearchParams(window.location.search).get("visit");
       if (visit === "jobs" || visit === "jobslanding") {
         const tapeEl = document.querySelector(".rfr-landing-brief");
         if (tapeEl) {
@@ -164,89 +161,10 @@ export default function JobsLanding() {
           }, 200);
         }
       }
-
-      if (jobKey) {
-        const matched = MARKET_TAPE_JOBS.find(
-          j => j.key.toLowerCase() === jobKey.toLowerCase()
-        );
-        if (matched) {
-          setSelectedTapeJob(matched);
-        } else {
-          const base = getPublicReadApiBase();
-          void fetch(`${base}/api/robot-job-card/${encodeURIComponent(jobKey)}`)
-            .then(res => (res.ok ? res.json() : null))
-            .then(data => {
-              const card = data?.job;
-              if (!card?.key || !card?.employer) return;
-              const families: TapeJob["family"][] = [
-                "transport",
-                "cart",
-                "pallet",
-                "scrub",
-                "inspect",
-                "gripper",
-              ];
-              const family = families.includes(card.family)
-                ? card.family
-                : "transport";
-              const live: TapeJob = {
-                key: String(card.key),
-                title: String(card.title || "Work"),
-                industry: String(
-                  card.industry ||
-                    [card.employer, card.locality].filter(Boolean).join(" · ")
-                ),
-                path: String(
-                  card.path || card.locality || "WORKSITE → WORKSITE"
-                ),
-                family,
-                customer: String(card.employer),
-                location: card.locality ? String(card.locality) : undefined,
-                headline: card.description
-                  ? String(card.description)
-                  : undefined,
-              };
-              setSelectedTapeJob(live);
-            })
-            .catch(() => {
-              /* tape miss and live miss stay closed */
-            });
-        }
-      }
     } catch {
       // Ignore URL parsing errors
     }
   }, []);
-
-  const handleSelectJob = (job: TapeJob) => {
-    setSelectedTapeJob(job);
-    try {
-      const params = new URLSearchParams(window.location.search);
-      params.delete("visit");
-      params.set("job", job.key);
-      const qs = params.toString();
-      const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
-      window.history.pushState({ jobKey: job.key }, "", newUrl);
-    } catch {
-      // Ignore history push errors
-    }
-  };
-
-  const handleCloseModal = () => {
-    setSelectedTapeJob(null);
-    try {
-      if (window.location.search.includes("job=")) {
-        const params = new URLSearchParams(window.location.search);
-        params.delete("job");
-        params.delete("visit");
-        const qs = params.toString();
-        const newUrl = `${window.location.pathname}${qs ? `?${qs}` : ""}`;
-        window.history.pushState({}, "", newUrl);
-      }
-    } catch {
-      // Ignore history push errors
-    }
-  };
 
   const handleHeroSubmit = (e: FormEvent) => {
     e.preventDefault();

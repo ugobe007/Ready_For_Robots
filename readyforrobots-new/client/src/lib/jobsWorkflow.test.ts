@@ -325,7 +325,8 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/FindProofJobs/);
     expect(workspace).toMatch(/<LiveJobTape/);
     expect(workspace).toMatch(/MARKET_TAPE_JOBS/);
-    expect(workspace).not.toMatch(/LiveJobDetailModal/);
+    expect(workspace).toMatch(/onSelect=\{handleSelectJob\}/);
+    expect(workspace).toMatch(/LiveJobDetailModal/);
     expect(workspace).not.toMatch(/uniqueTapeJobCount/);
     expect(workspace).not.toMatch(/const MARKET_FOUND_BASE = 140/);
     expect(workspace).not.toMatch(/min-h-\[28rem\]/);

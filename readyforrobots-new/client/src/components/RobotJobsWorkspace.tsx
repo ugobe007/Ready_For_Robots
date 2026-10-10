@@ -63,8 +63,11 @@ import type {
 import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import RobotJobCardUnit from "@/components/pipeline/RobotJobCardUnit";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
+import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
 import JobQueryModal from "@/components/jobs/JobQueryModal";
+import QuickSignupModal from "@/components/QuickSignupModal";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
+import { useTapeJobCard } from "@/lib/tapeJobCard";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
@@ -200,7 +203,7 @@ const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
 const eyebrow = JOBS_EYEBROW_CLASS;
 const ctaClass =
-  "rfr-bevel inline-flex items-center justify-center gap-2.5 bg-transparent border-2 border-purple-500 px-6 py-3.5 text-base sm:text-lg font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 disabled:cursor-not-allowed disabled:opacity-45 rounded-lg";
+  "rfr-bevel inline-flex items-center justify-center gap-2.5 bg-transparent border border-purple-500 px-6 py-3.5 text-base sm:text-lg font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 disabled:cursor-not-allowed disabled:opacity-45 rounded-lg";
 
 function FindJobsCtaLabel({ text }: { text: string }) {
   if (!text) return null;
@@ -544,6 +547,8 @@ export default function RobotJobsWorkspace() {
   const { session } = useAuth();
   const [, setLocation] = useLocation();
   const search = useSearch();
+  const { selectedTapeJob, handleSelectJob, handleCloseModal } = useTapeJobCard();
+  const [tapeSignupOpen, setTapeSignupOpen] = useState(false);
   const [stage, setStage] = useState<Stage>(() => {
     if (typeof window === "undefined") return "find";
     if (isJobsFreshQuery(window.location.search)) {
@@ -2220,12 +2225,28 @@ export default function RobotJobsWorkspace() {
                 <div className="overflow-hidden border border-slate-700">
                   <LiveJobTape
                     title="Live jobs"
+                    subtitle="Click any classified job opportunity to explore specs, ROI breakdown, and share direct links"
                     corpus={MARKET_TAPE_JOBS}
                     baseCount={MARKET_TAPE_JOBS.length}
                     running
+                    onSelect={handleSelectJob}
+                    selectedKey={selectedTapeJob?.key ?? null}
                   />
                 </div>
               </div>
+              <LiveJobDetailModal
+                job={selectedTapeJob}
+                isOpen={Boolean(selectedTapeJob)}
+                onClose={handleCloseModal}
+                onUnlockSignup={() => setTapeSignupOpen(true)}
+              />
+              <QuickSignupModal
+                isOpen={tapeSignupOpen}
+                onClose={() => setTapeSignupOpen(false)}
+                title="Unlock Engineering Feasibility & Commercial Proposals"
+                subtitle="Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer demand, and generate turnkey commercial quotes."
+                source="jobs_find_tape"
+              />
             </div>
           )}
 
