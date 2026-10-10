@@ -57,8 +57,9 @@ INVENTED_SKU_NAMES = frozenset(
     }
 )
 
+# A digit in the name is a model code (Lift EL1 Amr), not a company+class dump.
 _COMPANY_CLASS_DUMP = re.compile(
-    r"^[A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]+)*\s+"
+    r"^(?!.*\d)[A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]+)*\s+"
     r"(?:Humanoid|Scrubber|AMR)s?$",
     re.I,
 )

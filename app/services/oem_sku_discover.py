@@ -83,6 +83,7 @@ _LISTING_HINTS = {
         "/en_us/1/machines/robotics.html",
         "/en_us/1/machines/scrubbers/robotic-scrubbers.html",
         "/en_us.html",
+        "/en_us/equipment/cleaning-machines/autonomous-floor-cleaning-machines.html",
     ),
     "seer-robotics.ai": (
         "/amr/liftingrobot",
@@ -504,9 +505,10 @@ _CATEGORY_BLOB = re.compile(
     r"systems?|platform|automation|equipment|scrubbers?|cleaners?)\s*$",
     re.I,
 )
-# "Seer Humanoid" / "Segway Humanoid" — company + morphology dump, not a model.
+# "Seer Humanoid" / "XPENG Humanoid" — company + morphology dump, not a model.
+# A digit in the name is a model code (Lift EL1 Amr), not a dump.
 _COMPANY_CLASS_DUMP = re.compile(
-    r"^[A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]+)*\s+(?:Humanoid|Scrubber|AMR)s?$",
+    r"^(?!.*\d)[A-Z][A-Za-z0-9]*(?:\s+[A-Z][A-Za-z0-9]+)*\s+(?:Humanoid|Scrubber|AMR)s?$",
     re.I,
 )
 # Title-case verbs that collide with SKU words (Handle the Routine).
