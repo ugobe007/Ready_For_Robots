@@ -2,7 +2,12 @@
  * Operator top-25 hot job opportunities — same inline list emailed daily.
  * Named employers, stored decision maker and contact, link to the Job Card.
  */
-import { Mail } from "lucide-react";
+import { useState } from "react";
+import { Copy, Mail } from "lucide-react";
+import {
+  composeEmployerNeedIntro,
+  composeRobotCompanyIntro,
+} from "@/lib/oemJobIntro";
 
 export type DailyJobsReportJob = {
   rank?: number;
@@ -23,6 +28,8 @@ export type DailyJobsReportJob = {
   contact_source?: string | null;
   target_titles?: string[];
   match_why?: string | null;
+  intro?: string | null;
+  employer_intro?: string | null;
   card_href?: string;
 };
 
@@ -71,6 +78,34 @@ function decisionMakerLine(job: DailyJobsReportJob): string {
   }
   if (job.match_why) parts.push(job.match_why);
   return parts.join(" · ");
+}
+
+function IntroField({ label, value }: { label: string; value: string }) {
+  const [copied, setCopied] = useState(false);
+  if (!value) return null;
+  return (
+    <div className="sm:col-span-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-emerald-400">
+          {label}
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            void navigator.clipboard.writeText(value).then(() => {
+              setCopied(true);
+              window.setTimeout(() => setCopied(false), 1500);
+            });
+          }}
+          className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-[0.08em] text-emerald-300 hover:text-emerald-200"
+        >
+          <Copy size={12} />
+          {copied ? "Copied" : "Copy"}
+        </button>
+      </div>
+      <p className="mt-0.5 whitespace-pre-wrap text-sm text-slate-100">{value}</p>
+    </div>
+  );
 }
 
 export default function AdminDailyJobsReport({
@@ -142,6 +177,22 @@ export default function AdminDailyJobsReport({
               ? `/?job=${encodeURIComponent(job.job_key)}`
               : job.card_href || "/?visit=jobs";
             const place = [job.employer, job.locality].filter(Boolean).join(" · ");
+            const robotIntro =
+              job.intro ||
+              composeRobotCompanyIntro({
+                title: job.title || job.job_type,
+                employer: job.employer,
+                locality: job.locality,
+                requirements: job.description || job.title,
+                decisionMakerName: job.decision_maker,
+              });
+            const employerIntro =
+              job.employer_intro ||
+              composeEmployerNeedIntro({
+                contactName: job.decision_maker,
+                announcedNeed: job.title || job.job_type,
+                automationTasks: job.description,
+              });
             return (
               <li
                 key={job.job_key || `${job.rank}-${job.employer}`}
@@ -166,6 +217,24 @@ export default function AdminDailyJobsReport({
                 >
                   Job card
                 </a>
+                {robotIntro ? (
+                  <>
+                    <br />
+                    <IntroField
+                      label="[5] Intro to the robot company"
+                      value={robotIntro}
+                    />
+                  </>
+                ) : null}
+                {employerIntro ? (
+                  <>
+                    <br />
+                    <IntroField
+                      label="[6] Intro to the employer"
+                      value={employerIntro}
+                    />
+                  </>
+                ) : null}
               </li>
             );
           })}

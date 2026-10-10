@@ -17,6 +17,11 @@ from urllib.parse import quote
 from sqlalchemy import case, desc
 from sqlalchemy.orm import Session
 
+from app.services.oem_job_intro import (
+    employer_intro_from_sales_card,
+    intro_from_sales_card,
+)
+
 logger = logging.getLogger(__name__)
 
 TOP_N = 25
@@ -417,7 +422,7 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
     contact = _contact_fields(row)
     hunter_checked = _hunter_checked(row)
     target_titles, match_why = _dm_agent_fields(row)
-    return {
+    card = {
         "rank": rank,
         "job_key": str(getattr(row, "job_key", "") or ""),
         "employer": _clean(getattr(row, "company_name", ""), limit=240),
@@ -443,6 +448,9 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
         "created_at": created.isoformat() if created else None,
         "card_href": job_card_href(str(getattr(row, "job_key", "") or "")),
     }
+    card["intro"] = intro_from_sales_card(card)
+    card["employer_intro"] = employer_intro_from_sales_card(card)
+    return card
 
 
 def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
@@ -559,6 +567,18 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
         lines.append(f"    Contact: {job.get('contact') or CONTACT_EMPTY}")
         href = str(job.get("card_href") or job_card_href(str(job.get("job_key") or "")))
         lines.append(f"    Job card: {href}")
+        intro = str(job.get("intro") or intro_from_sales_card(job) or "").strip()
+        if intro:
+            lines.append("    [5] Intro to the robot company")
+            for intro_line in intro.splitlines():
+                lines.append(f"        {intro_line}")
+        employer_intro = str(
+            job.get("employer_intro") or employer_intro_from_sales_card(job) or ""
+        ).strip()
+        if employer_intro:
+            lines.append("    [6] Intro to the employer")
+            for intro_line in employer_intro.splitlines():
+                lines.append(f"        {intro_line}")
         lines.append("")
     lines += [
         f"FIND: {report.get('find_href') or f'{_SITE}/?visit=jobs'}",
