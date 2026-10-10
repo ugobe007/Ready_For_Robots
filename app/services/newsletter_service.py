@@ -350,19 +350,17 @@ def _public_edition_headline(company: str, story_headline: str) -> str:
     name = (company or "").strip()
     inner = _strip_leading_company(text, name)
     inner = re.sub(r"(?i)^buyer persona hire:\s*", "", inner).strip()
-    first = re.split(r"[.!?]", inner)[0].strip(" -—–:")
-    if name:
-        idx = first.lower().find(name.lower())
-        if idx > 8:
-            first = first[:idx].strip(" -—–.")
+    # Split on sentence endings, but not abbreviations like U.S. or Inc.
+    first = re.split(r"(?<!\b[A-Z])(?<!\bInc)(?<!\bLtd)(?<!\bCorp)[.!?]", inner)[0].strip(" -—–:")
     if not first:
         return name or "Who is buying robots this week"
     if first.lower().startswith(name.lower()) and name:
         headline = first
-    elif first[0].islower():
+    elif first and first[0].islower():
         headline = f"{name} {first}".strip()
     else:
-        headline = f"{name} {first[0].lower()}{first[1:]}".strip() if name else first
+        # Don't lowercase if it starts with an uppercase letter (could be an acronym or proper noun)
+        headline = f"{name} {first}".strip() if name else first
     headline = re.sub(r"\s+", " ", headline).strip(" .")
     if headline and headline[0].islower():
         headline = headline[0].upper() + headline[1:]

@@ -11,10 +11,13 @@ export function readableNewsletterHeadline(text?: string): string {
   s = s.replace(/(?:\s*\.){2,}$/g, "").replace(/\.+$/g, "").trim();
   if (!s) return FALLBACK;
 
-  const split = s.match(/^(.{2,60}?)\s*[:\u2014\u2013]\s+(.+)$/);
+  // Only process colon/dash splits if it looks like "Name: to pilot..." format
+  // Don't rewrite already-complete headlines with em-dashes
+  const split = s.match(/^(.{2,60}?)\s*:\s+(.+)$/);
   if (split) {
     const left = split[1].trim();
-    const right = (split[2].split(/[.!?]/)[0] || split[2]).trim();
+    // Split on sentence endings, but not abbreviations like U.S. or Inc.
+    const right = (split[2].split(/(?<!\b[A-Z])(?<!\bInc)(?<!\bLtd)(?<!\bCorp)[.!?]/)[0] || split[2]).trim();
     const leftKey = left.slice(0, 4).toLowerCase();
     if (right && /^[a-z]/.test(right)) {
       s = `${left} ${right.charAt(0).toLowerCase()}${right.slice(1)}`;
@@ -27,7 +30,8 @@ export function readableNewsletterHeadline(text?: string): string {
       s = `${left}: ${right}`;
     }
   } else {
-    s = (s.split(/[.!?]/)[0] || s).trim();
+    // Split on sentence endings, but not abbreviations like U.S. or Inc.
+    s = (s.split(/(?<!\b[A-Z])(?<!\bInc)(?<!\bLtd)(?<!\bCorp)[.!?]/)[0] || s).trim();
   }
 
   s = s.replace(/\s+/g, " ").replace(/\.+$/g, "").trim();
