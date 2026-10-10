@@ -67,9 +67,7 @@ describe("landing fork", () => {
     expect(landingVisitFromSearch("?new=1")).toBe("landing");
     expect(landingVisitFromSearch("?visit=jobs")).toBe("jobs");
     expect(landingVisitFromSearch("?job=geodis-dock")).toBe("landing");
-    expect(landingVisitFromSearch("?visit=jobs&job=geodis-dock")).toBe(
-      "landing"
-    );
+    expect(landingVisitFromSearch("?visit=jobs&job=geodis-dock")).toBe("jobs");
     expect(landingVisitFromSearch("?visit=candidates")).toBe("candidates");
     expect(landingVisitFromSearch("?restore=1")).toBe("jobs");
     expect(landingVisitFromSearch("?visit=jobs&restore=1")).toBe("jobs");

@@ -148,7 +148,8 @@ const SAMPLE_ROBOTS = [
 export default function JobsLanding() {
   const [heroUrl, setHeroUrl] = useState("");
   const [isSignupOpen, setIsSignupOpen] = useState(false);
-  const { selectedTapeJob, handleSelectJob, handleCloseModal } = useTapeJobCard();
+  const { selectedTapeJob, handleSelectJob, handleCloseModal } =
+    useTapeJobCard();
 
   useEffect(() => {
     try {

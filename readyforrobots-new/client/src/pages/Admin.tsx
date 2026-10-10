@@ -1461,7 +1461,8 @@ export default function Admin() {
         setCalStatus(listData);
         if (listData.bootstrap_required) {
           setCalStatusError(
-            listData.bootstrap_message || "Phelan outreach team not initialized."
+            listData.bootstrap_message ||
+              "Phelan outreach team not initialized."
           );
         } else {
           setCalStatusError("");

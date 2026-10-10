@@ -10,10 +10,7 @@
  */
 import { clearJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { sameRobotUrl } from "@/lib/robotUrlIdentity";
-import {
-  LANDING_VISIT_QUERY,
-  jobsFindHref,
-} from "@/lib/jobsLanding";
+import { LANDING_VISIT_QUERY, jobsFindHref } from "@/lib/jobsLanding";
 
 export type JobsConfirmLanding = "review" | "jobs" | "portfolio";
 export type JobLookupGrain = "robot_type" | "product";

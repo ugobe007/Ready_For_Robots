@@ -314,10 +314,10 @@ export function landingVisitFromSearch(
   if (visit === LANDING_VISIT_CANDIDATES || visit === "candidates") {
     return "candidates";
   }
-  // A tape job key is a landing modal, not FIND. Pushing visit=jobs here
-  // remounts the 01/02/03 process bar on top of the card.
-  if (params.get("job")) return "landing";
+  // Explicit visit=jobs stays on FIND even with a tape job card open.
   if (visit === LANDING_VISIT_JOBS || visit === "jobs") return "jobs";
+  // A tape job key without visit=jobs is a landing modal.
+  if (params.get("job")) return "landing";
   // Auth return without a visit still opens FIND.
   if (params.get("restore") === "1") return "jobs";
   // Bare `/` and `?new=1` are the home hero.

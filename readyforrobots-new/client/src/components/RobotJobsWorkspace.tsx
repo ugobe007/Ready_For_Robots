@@ -547,7 +547,8 @@ export default function RobotJobsWorkspace() {
   const { session } = useAuth();
   const [, setLocation] = useLocation();
   const search = useSearch();
-  const { selectedTapeJob, handleSelectJob, handleCloseModal } = useTapeJobCard();
+  const { selectedTapeJob, handleSelectJob, handleCloseModal } =
+    useTapeJobCard();
   const [tapeSignupOpen, setTapeSignupOpen] = useState(false);
   const [stage, setStage] = useState<Stage>(() => {
     if (typeof window === "undefined") return "find";
