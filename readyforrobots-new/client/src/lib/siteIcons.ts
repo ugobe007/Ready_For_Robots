@@ -628,6 +628,11 @@ const WORK_CLASS_ICONS: Partial<Record<string, SiteIconId>> = {
   cleaning: "tools",
   food_prep: "box",
   mining: "factory",
+  pallets: "box",
+  pick_pack: "box",
+  delivery: "truck",
+  assembly: "factory",
+  industrial: "factory",
 };
 
 export function iconForWorkClass(

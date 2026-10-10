@@ -29,6 +29,8 @@ Web does **not** start a digest thread unless `CAL_DAILY_DIGEST_WEB_BACKUP=1`. A
 
 Copy is Jobs-path (matcher / kept jobs / applications) plus a Cal-frozen one-liner. Do not attach the SIGNAL industry brief.
 
+**Top 25 robot jobs** (separate send, 14:00 UTC): `app/services/daily_jobs_report.py` emails named-employer Job Cards to `ugobe07@gmail.com` and lists them on `/admin#daily-jobs-report`. Not SIGNAL HOT buyers. Manual: `POST /api/admin/daily-jobs-report/send` (`force` defaults true). GHA backup: `.github/workflows/daily-jobs-report.yml` (14:05 and 14:50 UTC). Skip only after Redis has a `resend_id` / `sent_at` for today — a claimed-but-unsent lock is a miss, not a delivery.
+
 ## Manual send (terminal only)
 
 ```bash

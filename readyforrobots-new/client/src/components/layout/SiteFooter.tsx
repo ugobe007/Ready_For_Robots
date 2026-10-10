@@ -3,8 +3,10 @@
  * Newsletter signup is optional (Home passes handlers; other pages omit).
  * Jobs chrome (header-matched) has no Pipeline / SIGNAL.
  */
+import { useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
 import { useAuth } from "@/contexts/AuthContext";
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import {
   jobsCrmOpenHref,
   jobsFreshHomeHref,
@@ -16,6 +18,7 @@ type Props = {
   newsletterStatus?: "idle" | "submitting" | "success" | "error";
   onEmailChange?: (v: string) => void;
   onNewsletterSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
+  hideNewsletter?: boolean;
 };
 
 const SUPPORT_LINKS = [
@@ -32,6 +35,8 @@ const COMPANY_LINKS = [
   { label: "Find Robots", href: "/find-robots" },
   { label: "Job site sketch", href: "/vendor/design" },
   { label: "Privacy Policy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+  { label: "Support", href: "/support" },
 ];
 
 function jobsProductLinks(signedIn: boolean) {
@@ -65,20 +70,61 @@ const SIGNAL_LINKS = {
 };
 
 export default function SiteFooter({
-  newsletterEmail = "",
-  newsletterStatus = "idle",
+  newsletterEmail,
+  newsletterStatus,
   onEmailChange,
   onNewsletterSubmit,
+  hideNewsletter = false,
 }: Props) {
   const [pathname] = useLocation();
   const search = useSearch();
   const { session } = useAuth();
   const jobsChrome = showJobsSiteChrome({ pathname, search });
   const links = jobsChrome ? jobsProductLinks(Boolean(session)) : SIGNAL_LINKS;
-  const showNewsletter = Boolean(onNewsletterSubmit && onEmailChange);
   const homeHref = jobsChrome ? jobsFreshHomeHref() : "/";
-  const signupHref = jobsChrome ? jobsCrmOpenHref(false) : "/signup";
-  const loginHref = jobsChrome ? "/login?next=%2F" : "/login";
+
+  const [internalEmail, setInternalEmail] = useState("");
+  const [internalStatus, setInternalStatus] = useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const emailValue = onEmailChange ? newsletterEmail ?? "" : internalEmail;
+  const statusValue = onNewsletterSubmit
+    ? newsletterStatus ?? "idle"
+    : internalStatus;
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (onNewsletterSubmit) {
+      onNewsletterSubmit(e);
+      return;
+    }
+    const val = internalEmail.trim();
+    if (!val) return;
+    setInternalStatus("submitting");
+    setErrorMsg("");
+    try {
+      const res = await fetch(
+        `${getApiBase()}/api/newsletter/subscribe`,
+        liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: val, source: "site_footer" }),
+        })
+      );
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { detail?: string } | null;
+        throw new Error(data?.detail || "Could not subscribe");
+      }
+      setInternalStatus("success");
+      setInternalEmail("");
+    } catch (err: unknown) {
+      setInternalStatus("error");
+      const msg = err instanceof Error ? err.message : "Could not subscribe. Try again.";
+      setErrorMsg(msg);
+    }
+  }
 
   return (
     <footer className="bg-slate-950 border-t border-white/5">
@@ -101,29 +147,37 @@ export default function SiteFooter({
                 ? "Find jobs for your robot. Robots need jobs. We find the work."
                 : "Robot sales intelligence — discover, develop, and close deals from live market signals."}
             </p>
-            {showNewsletter && (
+            {!hideNewsletter && (
               <>
-                <form
-                  onSubmit={onNewsletterSubmit}
-                  className="flex gap-2 max-w-sm"
-                >
+                <form onSubmit={handleSubmit} className="flex gap-2 max-w-sm">
                   <input
                     type="email"
-                    value={newsletterEmail}
-                    onChange={e => onEmailChange?.(e.target.value)}
+                    required
+                    value={emailValue}
+                    onChange={e => {
+                      if (onEmailChange) onEmailChange(e.target.value);
+                      else setInternalEmail(e.target.value);
+                    }}
                     placeholder="work email"
-                    className="flex-1 px-3 py-2 bg-white/5 border border-white/10 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors"
+                    className="flex-1 px-3 py-2 bg-white/5 border border-white/10 text-white text-sm placeholder-slate-600 focus:outline-none focus:border-emerald-500 transition-colors rounded-lg"
                   />
                   <button
                     type="submit"
-                    disabled={newsletterStatus === "submitting"}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors disabled:opacity-50"
+                    disabled={statusValue === "submitting"}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold transition-colors disabled:opacity-50 rounded-lg cursor-pointer"
                   >
-                    Subscribe
+                    {statusValue === "submitting" ? "Subscribing…" : "Subscribe"}
                   </button>
                 </form>
-                {newsletterStatus === "success" && (
-                  <p className="text-emerald-400 text-xs mt-2">Subscribed.</p>
+                {statusValue === "success" && (
+                  <p className="text-emerald-400 text-xs mt-2 font-medium">
+                    Subscribed! Check your inbox for the daily brief.
+                  </p>
+                )}
+                {statusValue === "error" && (
+                  <p className="text-red-400 text-xs mt-2 font-medium">
+                    {errorMsg || "Could not subscribe. Try again."}
+                  </p>
                 )}
                 <p className="text-slate-600 text-xs mt-2">
                   Weekly Robot Intelligence Brief. Free.
@@ -167,13 +221,25 @@ export default function SiteFooter({
               Privacy
             </Link>
             <Link
-              href={loginHref}
+              href="/terms"
+              className="text-slate-500 text-xs hover:text-white transition-colors"
+            >
+              Terms
+            </Link>
+            <Link
+              href="/support"
+              className="text-slate-500 text-xs hover:text-white transition-colors"
+            >
+              Support
+            </Link>
+            <Link
+              href="/login"
               className="text-slate-500 text-xs hover:text-white transition-colors"
             >
               Sign in
             </Link>
             <Link
-              href={signupHref}
+              href="/signup"
               className="text-slate-500 text-xs hover:text-white transition-colors"
             >
               Sign up

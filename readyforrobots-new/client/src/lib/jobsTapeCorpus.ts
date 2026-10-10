@@ -27,6 +27,11 @@ export type TapeJob = {
   industry: string;
   path: string;
   family: TapeFamily;
+  customer?: string;
+  location?: string;
+  headline?: string;
+  robotClass?: string;
+  valueText?: string;
 };
 
 export const TAPE_ICONS: Record<TapeFamily, PixelMap> = {

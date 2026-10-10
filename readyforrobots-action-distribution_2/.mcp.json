@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "readyforrobots": {
+      "type": "streamable-http",
+      "url": "https://ready-2-robot.fly.dev/mcp",
+      "headers": {}
+    }
+  }
+}

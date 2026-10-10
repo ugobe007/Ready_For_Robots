@@ -1,10 +1,10 @@
 /**
  * Jobs submit workflow — FIND on `/`.
  *
- * Step 01 FIND → step 02 JOBS → step 03 CRM.
- * Checking a job dumps it into CRM. Next / 03 opens the CRM desk
- * (quote → Place this job). Process chrome lives on the page. The document
- * scrolls. Do not trap the next step inside a clipped 100vh box.
+ * FIND → Job Cards → CRM. Checking a job dumps it into CRM. Next opens
+ * the CRM desk (quote → Place this job). FIND has no 01 / 02 / 03 process
+ * bar; that strip lives on the CRM desk. The document scrolls. Do not
+ * trap the next step inside a clipped 100vh box.
  *
  * Cap: 5 example jobs on `/`. Activate fills the live list to 15.
  */
@@ -39,6 +39,13 @@ const ROBOT_CLASS_ALIASES: Record<string, string> = {
   cobot: "cobot",
   arm: "cobot",
   collaborative: "cobot",
+  industrial_arm: "cobot",
+  scara: "cobot",
+  "6-axis": "cobot",
+  "6_axis": "cobot",
+  six_axis: "cobot",
+  robot_arm: "cobot",
+  articulated_arm: "cobot",
   quadruped: "quadruped",
   spot: "quadruped",
   scrubber: "autonomous_scrubber",
@@ -567,24 +574,24 @@ export function searchNamesForSegment(
     .slice(0, cap);
 }
 
-export const JOBS_EXAMPLE_CAP = 5;
-/** Lineup preview: one sample job per robot. Run each SKU for five jobs. */
+export const JOBS_EXAMPLE_CAP = 3;
+/** Lineup preview: one sample job per robot. Run each SKU for 25 jobs. */
 export const JOBS_LINEUP_JOBS_PER_ROBOT = 1;
-export const BUYER_LEADS_ANON_CAP = 5;
-/** See All on `/` — more than the 5-example cap, still the same page. */
-export const JOBS_PIPELINE_CAP = 15;
-/** Live list after Activate: checked jobs first, then fill to this cap. */
-export const JOBS_ACTIVATE_CAP = 15;
-/** Free CRM taste — keep in sync with `JOBS_CRM_FREE_BATCH` in plan_entitlements. */
-export const CRM_UNLOCKED_JOBS = 5;
+export const BUYER_LEADS_ANON_CAP = 3;
+/** See All on `/` — 25 verified jobs cap. */
+export const JOBS_PIPELINE_CAP = 25;
+/** Live list after Activate: checked jobs first, then fill to 25 cap. */
+export const JOBS_ACTIVATE_CAP = 25;
+/** Free CRM taste — 3 jobs. */
+export const CRM_UNLOCKED_JOBS = 3;
 /** Free FIND dump size. Paid skips the cap. Spec: docs/jobs_crm.md */
 export const CRM_FREE_BATCH = CRM_UNLOCKED_JOBS;
 export const CRM_FREE_BATCHES_PER_MONTH = 3;
 export const CRM_FREE_MONTHLY_CAP = CRM_FREE_BATCH * CRM_FREE_BATCHES_PER_MONTH;
 export const CRM_FREE_TTL_DAYS = 7;
-/** Free / anonymous: search this many SKUs per FIND. Paid unlocks five. */
+/** Free / anonymous: search this many SKUs per FIND. Paid unlocks 25. */
 export const JOBS_PRODUCT_CAP_FREE = 3;
-export const JOBS_PRODUCT_CAP_PAID = 5;
+export const JOBS_PRODUCT_CAP_PAID = 25;
 /** FIND shows this many robots per picker page. Not a company roster cap. */
 export const JOBS_LINEUP_DISPLAY_CAP = 3;
 export const OEM_LISTING_TIMEOUT_MS = 5_000;
@@ -886,8 +893,8 @@ export function crmEmptyDeskHint(productName?: string | null): string {
 export function crmOfferBlurb(productName?: string | null): string {
   const who = crmSaveJobsRobotLabel(productName);
   return who
-    ? `Here's the offer for ${who}. Pick the model and say what you'll charge.`
-    : "Pick the model and say what you'll charge. Then we prepare a draft for you to send.";
+    ? `Automate job applications for ${who}. Select your model and quote to generate proposals.`
+    : "Automate job applications and proposals. Select your model and quote to generate drafts.";
 }
 
 export const CRM_INSPECT_HINT = crmSaveJobsBlurb();
@@ -991,12 +998,12 @@ export function jobsListHint(opts: {
   productName: string;
 }): string {
   if (opts.robotCount > 1) {
-    return "One sample job per robot. Rows start checked. Run each robot by itself for five jobs, then Open CRM. Apply from the desk.";
+    return "One sample job per robot. Rows start checked. Run each robot by itself for 25 jobs, then Open CRM. Apply from the desk.";
   }
-  return `Five example jobs ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM. Apply from the desk.`;
+  return `25 example jobs ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM. Apply from the desk.`;
 }
 
-export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 5 jobs →";
+export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 25 jobs →";
 export const JOBS_SAVE_TO_CRM_CTA = "Open CRM →";
 export const JOBS_SAVE_TO_CRM_HINT =
   "Check a job to keep it. Open CRM to save the list. Apply from the desk.";
@@ -1006,9 +1013,12 @@ export const JOBS_SKIP_LABEL = "Skip";
 /** Jobs / results `src` values that continue the Jobs terminal. */
 export function isJobsHandoffSrc(src: string | null | undefined): boolean {
   const value = (src || "").trim();
+  if (!value) return false;
   return (
     value.startsWith("jobs_") ||
     value.startsWith("robot_jobs") ||
+    value.startsWith("quote_") ||
+    value.startsWith("home_") ||
     value === "jobs_all_robots" ||
     value === "robot_jobs_qualify"
   );
@@ -1079,6 +1089,8 @@ export function showJobsSiteChrome(opts: {
     path === "/vendor/design" ||
     path === "/pricing" ||
     path === "/privacy" ||
+    path === "/terms" ||
+    path === "/support" ||
     path === "/icons"
   )
     return true;
@@ -1096,7 +1108,7 @@ export const FIND_JOBS_CTA = "Find jobs →";
 /** Apply on the CRM desk. Violet, not neon green. Not a sibling of Open CRM on FIND. */
 export const JOBS_APPLY_HERO_CTA = "Apply to jobs →";
 export const JOBS_FIND_CTA_CLASS =
-  "rfr-bevel inline-flex items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300";
+  "rfr-bevel inline-flex items-center justify-center gap-2.5 bg-transparent border-2 border-purple-500 px-6 py-3.5 text-base sm:text-lg font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 rounded-lg";
 export const JOBS_APPLY_CTA_CLASS =
   "rfr-bevel rfr-jobs-apply-cta inline-flex items-center justify-center px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-white transition hover:bg-violet-700";
 export const JOBS_APPLY_CTA_BUTTON_CLASS =
@@ -1168,7 +1180,7 @@ export const JOBS_WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 export const JOBS_RESTORE_ONCE_KEY = "rfr_jobs_restore_once";
 
 export function jobsFreshHomeHref(): string {
-  return `/?${JOBS_FRESH_QUERY}=1`;
+  return "/";
 }
 
 export function isJobsFreshQuery(search: string | null | undefined): boolean {
@@ -1330,6 +1342,8 @@ export function isPlaceSrc(src: string | null | undefined): boolean {
   return (src || "").trim() === JOBS_PLACE_SRC;
 }
 
+export const JOBS_QUERY_SRC = "jobs_query";
+
 export function isJobsActivateSrc(src: string | null | undefined): boolean {
   return (src || "").trim() === JOBS_ACTIVATE_SRC;
 }
@@ -1338,10 +1352,24 @@ export function isJobsAutomateSrc(src: string | null | undefined): boolean {
   return (src || "").trim() === JOBS_AUTOMATE_SRC;
 }
 
+export function isJobsQuerySrc(src: string | null | undefined): boolean {
+  return (src || "").trim() === JOBS_QUERY_SRC;
+}
+
 /** CRM desk lives on Pipeline with Jobs src — never SIGNAL buyers, never the OEM as `url=`. */
 export function jobsActivateHref(submissionId?: number | null): string {
   const params = new URLSearchParams();
   params.set("src", JOBS_ACTIVATE_SRC);
+  if (submissionId && submissionId > 0)
+    params.set("submission", String(submissionId));
+  return `/pipeline?${params.toString()}`;
+}
+
+/** Queried jobs desk on Pipeline with query parameter and Return to Find jobs link. */
+export function jobsQueryHref(query: string, submissionId?: number | null): string {
+  const params = new URLSearchParams();
+  params.set("src", JOBS_QUERY_SRC);
+  if (query) params.set("query", query);
   if (submissionId && submissionId > 0)
     params.set("submission", String(submissionId));
   return `/pipeline?${params.toString()}`;

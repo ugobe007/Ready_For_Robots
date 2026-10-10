@@ -11,8 +11,11 @@ from __future__ import annotations
 
 from typing import Any, Literal, Optional
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
+
+from app.database import get_db
 
 from app.services.robot_job_capability_match import match_from_chip, match_robot_url
 from app.services.robot_requirement_match import match_jobs_from_profile
@@ -168,3 +171,14 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
         "matcher": result.get("matcher"),
         "zero_reason": zero_reason,
     }
+
+
+@router.get("/robot-job-card/{job_key}")
+def get_robot_job_card(job_key: str, db: Session = Depends(get_db)) -> dict[str, Any]:
+    """Public named-employer Job Card for `/?job=`. No invented people."""
+    from app.services.daily_jobs_report import public_job_card
+
+    card = public_job_card(db, job_key)
+    if not card:
+        return {"ok": False, "job": None}
+    return {"ok": True, "job": card}

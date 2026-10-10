@@ -86,7 +86,7 @@ def test_no_dexmate_hostname_shortcut():
 def test_scrape_error_does_not_invent_jobs_under_host_name():
     """Failed scrape must not synthesize tote/AMR jobs as Greenfieldincorporated."""
     result = match_robot_url(
-        "https://www.greenfieldincorporated.com/",
+        "https://www.greenfieldincorporated.example/",
         scraper=lambda _url: "Error scraping: timeout",
     )
     assert result["jobs"] == []

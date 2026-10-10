@@ -39,6 +39,7 @@ from app.services.jobs_crm_recruiter import (
     employer_public_payload,
     find_application_by_employer_token,
     find_application_by_oem_hold_token,
+    delete_user_document,
     get_user_document,
     hold_slot,
     list_user_documents,
@@ -48,6 +49,7 @@ from app.services.jobs_crm_recruiter import (
     release_hold_by_token,
     request_interview,
     store_user_document,
+    update_user_document,
 )
 
 router = APIRouter()
@@ -93,6 +95,8 @@ class ApplyBody(BaseModel):
     company_name: Optional[str] = Field(default=None, max_length=240)
     job: Optional[dict[str, Any]] = None
     document_ids: list[str] = Field(default_factory=list)
+    documents_selected: bool = False
+    robot_url: Optional[str] = Field(default=None, max_length=2048)
 
 
 class ApplySelectedBody(BaseModel):
@@ -106,10 +110,17 @@ class ApplySelectedBody(BaseModel):
     why: Optional[str] = Field(default=None, max_length=2000)
     company_name: Optional[str] = Field(default=None, max_length=240)
     document_ids: list[str] = Field(default_factory=list)
+    documents_selected: bool = False
+    robot_url: Optional[str] = Field(default=None, max_length=2048)
 
 
 class MeetingUrlBody(BaseModel):
     meeting_url: Optional[str] = Field(default=None, max_length=2000)
+
+
+class DocumentUpdateBody(BaseModel):
+    include_with_submissions: Optional[bool] = None
+    kind: Optional[str] = Field(default=None, max_length=32)
 
 
 class PresentationBody(BaseModel):
@@ -289,6 +300,8 @@ def post_apply(
             company_name=body.company_name,
             job=body.job,
             document_ids=body.document_ids,
+            documents_selected=body.documents_selected,
+            robot_url=body.robot_url,
             send=False,
         )
     except ValueError as exc:
@@ -315,6 +328,8 @@ def post_apply_selected(
             why=body.why or "",
             company_name=body.company_name,
             document_ids=body.document_ids,
+            documents_selected=body.documents_selected,
+            robot_url=body.robot_url,
             send=False,
         )
     except ValueError as exc:
@@ -423,13 +438,23 @@ def post_paste_inbound(
 
 
 @router.get("/documents")
-def get_documents(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
-    return {"documents": list_user_documents(db, user)}
+def get_documents(
+    robot_url: Optional[str] = Query(default=None, max_length=2048),
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return {"documents": list_user_documents(db, user, robot_url=robot_url)}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.post("/documents")
 def post_document(
     kind: str = Form("spec"),
+    robot_url: str = Form(""),
+    robot_name: str = Form(""),
+    include_with_submissions: str = Form("false"),
     file: UploadFile = File(...),
     user: dict = Depends(_require_user),
     db: Session = Depends(get_db),
@@ -443,9 +468,48 @@ def post_document(
             content=raw,
             mime_type=file.content_type,
             kind=kind,
+            robot_url=robot_url,
+            robot_name=robot_name,
+            include_with_submissions=include_with_submissions,
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.patch("/documents/{document_id}")
+def patch_document(
+    document_id: UUID,
+    body: DocumentUpdateBody,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        return update_user_document(
+            db,
+            user,
+            str(document_id),
+            include_with_submissions=body.include_with_submissions,
+            kind=body.kind,
+        )
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Document not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.delete("/documents/{document_id}")
+def delete_document(
+    document_id: UUID,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        delete_user_document(db, user, str(document_id))
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Document not found.")
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"ok": True}
 
 
 @router.get("/documents/{document_id}/file")

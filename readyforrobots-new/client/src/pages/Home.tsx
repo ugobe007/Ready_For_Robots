@@ -11,6 +11,7 @@ import { fetchHomepageLeadPool } from "@/lib/homepageLeads";
 import { getPublicReadApiBase } from "@/lib/apiBase";
 import { useAuth } from "@/contexts/AuthContext";
 import HomeMarketPulse from "@/components/HomeMarketPulse";
+import CustomerQuoteBanner from "@/components/CustomerQuoteBanner";
 import PixelIcon from "@/components/PixelIcon";
 import { KARE_FACE } from "@/lib/kareIcons";
 
@@ -837,6 +838,11 @@ export default function Home() {
                     -&gt; Sell
                   </p>
                 </div>
+              </div>
+
+              {/* Featured Daily Customer Intent Quote Banner */}
+              <div className="mt-10">
+                <CustomerQuoteBanner />
               </div>
 
               <h3 className="mt-10 text-[clamp(1.25rem,2.4vw,1.75rem)] font-semibold leading-tight tracking-[-0.02em] text-slate-50">

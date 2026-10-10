@@ -521,8 +521,8 @@ def phase_act() -> dict[str, Any]:
         and "function goToApply" not in workspace
         and "JOBS_APPLY_SELECTED_CTA" not in workspace
         and "jobsCrmOfferHref" not in workspace
-        and 'processCurrent === "jobs"' in workspace
-        and "goToActivate" in workspace
+        and "JobsProcessNav" not in workspace
+        and "function goToActivate" in workspace
         and "JOBS_APPLY_SELECTED_CTA" in desk
         and "WorkTaskModelQuestion" in desk
         and "saveWorkTaskModelOnAccount" in account

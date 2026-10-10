@@ -321,7 +321,7 @@ function initialSpotlightLeads(): HomepageLeadRow[] {
     HOMEPAGE_SPOTLIGHT_CACHE_TTL_MS
   );
   const rows = dedupeHomepageLeads(cached?.data);
-  return rows.length >= 2 ? rows.slice(0, 10) : [];
+  return rows.length >= 2 ? rows.slice(0, 25) : [];
 }
 
 export default function HeroSpotlightLeads() {
@@ -360,7 +360,7 @@ export default function HeroSpotlightLeads() {
           Array.isArray(data.hotLeads)
             ? data.hotLeads.filter(l => l.company_name)
             : []
-        ).slice(0, 10);
+        ).slice(0, 25);
         if (rows.length < 2 || cancelled) {
           if (panelModeRef.current === "loading" && !cancelled) {
             setPanelMode("demo");

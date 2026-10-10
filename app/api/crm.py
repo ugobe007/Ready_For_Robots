@@ -21,7 +21,7 @@ from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import text
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy.exc import (
     IntegrityError,
@@ -1731,6 +1731,152 @@ def send_account_outreach(
                 "https://ready-2-robot.fly.dev/api/webhooks/resend/inbound"
             )
         return result
+    except HTTPException:
+        raise
+    except (OperationalError, ProgrammingError, SQLAlchemyError) as e:
+        _raise_crm_db_error(e)
+
+
+class SendCustomEmailIn(BaseModel):
+    to_email: str = Field(..., max_length=320)
+    subject: str = Field(..., max_length=500)
+    body_text: str = Field(..., max_length=20000)
+    from_display_name: Optional[str] = Field("Phelan", max_length=120)
+    company_name: Optional[str] = Field(None, max_length=240)
+    crm_account_id: Optional[str] = Field(None, max_length=64)
+    cc: Optional[list[str]] = None
+    bcc: Optional[list[str]] = None
+
+
+@router.post("/send-custom-email")
+def send_custom_email(
+    body: SendCustomEmailIn,
+    user: dict = Depends(_require_user),
+    db: Session = Depends(get_db),
+):
+    """Send a custom outreach or lead email via Resend directly from the site."""
+    try:
+        uid = _uid_uuid(user)
+        to_email = body.to_email.strip()
+        if not to_email or "@" not in to_email:
+            raise HTTPException(status_code=400, detail="Valid recipient email required")
+        if not body.subject.strip():
+            raise HTTPException(status_code=400, detail="Subject line required")
+        if not body.body_text.strip():
+            raise HTTPException(status_code=400, detail="Email body text required")
+
+        try:
+            settings = _user_settings_row(db, uid)
+        except Exception:
+            settings = None
+        sender_name = body.from_display_name or (settings.sender_name if settings else None) or "Phelan"
+
+        reply_token = secrets.token_urlsafe(18)
+        reply_to = _reply_address(reply_token)
+
+        _inbound_missing = False
+        try:
+            send_result = send_email_via_resend(
+                to_email=to_email,
+                subject=body.subject.strip(),
+                body_text=body.body_text.strip(),
+                from_display_name=sender_name.strip(),
+                reply_to=reply_to,
+                cc=body.cc,
+                bcc=body.bcc,
+                idempotency_key=f"custom-email/{uid}/{to_email}/{secrets.token_hex(4)}",
+            )
+        except ResendEmailError as e:
+            err_text = str(e).lower()
+            if any(kw in err_text for kw in ("notification service", "notification_service", "notification url", "notification_url", "inbound", "not set", "not configured")):
+                _inbound_missing = True
+                try:
+                    send_result = send_email_via_resend(
+                        to_email=to_email,
+                        subject=body.subject.strip(),
+                        body_text=body.body_text.strip(),
+                        from_display_name=sender_name.strip(),
+                        reply_to=None,
+                        cc=body.cc,
+                        bcc=body.bcc,
+                        idempotency_key=f"custom-email/{uid}/{to_email}/{secrets.token_hex(4)}/no-inbound",
+                    )
+                except ResendEmailError as e2:
+                    raise HTTPException(status_code=502, detail=str(e2)) from e2
+            else:
+                raise HTTPException(status_code=502, detail=str(e)) from e
+
+        aid = None
+        if body.crm_account_id:
+            try:
+                aid = uuid.UUID(body.crm_account_id)
+            except ValueError:
+                aid = None
+
+        now = datetime.now(timezone.utc)
+        try:
+            team = _ensure_default_team(db, uid, str(user.get("email") or "admin@readyforrobots.com"))
+            acct = None
+            if aid:
+                acct = db.query(CrmAccount).filter(CrmAccount.id == aid).first()
+            if not acct:
+                acct = db.query(CrmAccount).filter(func.lower(CrmAccount.contact_email) == to_email.lower()).first()
+
+            if not acct:
+                company_label = (body.company_name or "").strip() or to_email.split("@")[0].capitalize()
+                acct = CrmAccount(
+                    team_id=team.id,
+                    name=company_label,
+                    contact_email=to_email,
+                    account_type="buyer",
+                    outreach_stage="intro_sent",
+                    outreach_sent_at=now,
+                )
+                db.add(acct)
+                db.flush()
+
+            msg = OutreachMessage(
+                team_id=acct.team_id or team.id,
+                crm_account_id=acct.id,
+                company_id=acct.company_id,
+                sender_user_id=uid,
+                to_email=to_email,
+                from_email=send_result.get("from_email"),
+                reply_to=reply_to if not _inbound_missing else None,
+                reply_token=reply_token if not _inbound_missing else None,
+                subject=body.subject.strip(),
+                body_text=body.body_text.strip(),
+                status="sent",
+                sent_at=now,
+                send_identity="scout",
+                resend_id=send_result.get("resend_id"),
+                payload={
+                    "custom_send": True,
+                    "company_name": body.company_name,
+                    "to": to_email,
+                    "resend_id": send_result.get("resend_id"),
+                },
+            )
+            db.add(msg)
+
+            acct.outreach_stage = "intro_sent"
+            acct.outreach_sent_at = now
+            acct.latest_outreach_message_id = msg.id
+
+            db.commit()
+        except Exception as db_err:
+            db.rollback()
+            logger.warning("CRM DB error while recording custom email: %s", db_err)
+
+        return {
+            "ok": True,
+            "resend_id": send_result.get("resend_id"),
+            "to": to_email,
+            "subject": body.subject.strip(),
+            "from_email": send_result.get("from_email"),
+            "sent_at": now.isoformat(),
+            "message": "Email sent successfully via Resend.",
+        }
     except HTTPException:
         raise
     except (OperationalError, ProgrammingError, SQLAlchemyError) as e:

@@ -97,19 +97,106 @@ def _catalog_robots_snapshot() -> tuple[dict[str, Any], ...]:
             seen.add(key)
             product_url = str(raw.get("product_url") or "").strip() or vendor_url
             desc = str(raw.get("description") or "").strip() or None
-            out.append(
-                {
-                    "name": name,
-                    "vendor_name": vendor_name or "Unknown OEM",
-                    "vendor_url": vendor_url,
-                    "robot_class": _robot_class(raw),
-                    "description": desc,
-                    "product_url": product_url,
-                    "task": str(raw.get("task") or ""),
-                    "setting": str(raw.get("setting") or ""),
-                }
-            )
+            row: dict[str, Any] = {
+                "name": name,
+                "vendor_name": vendor_name or "Unknown OEM",
+                "vendor_url": vendor_url,
+                "robot_class": _robot_class(raw),
+                "description": desc,
+                "product_url": product_url,
+                "task": str(raw.get("task") or "").strip() or None,
+                "setting": str(raw.get("setting") or "").strip() or None,
+            }
+            specs = _catalog_specs(raw)
+            if specs:
+                row["specs"] = specs
+            image_url = _catalog_image_url(raw)
+            if image_url:
+                row["image_url"] = image_url
+            out.append(row)
     return tuple(out)
+
+
+def _catalog_image_url(raw: dict[str, Any]) -> str | None:
+    """Stored catalog photo only. Never invent or scrape."""
+    url = str(raw.get("image_url") or "").strip()
+    if url.startswith("https://") or url.startswith("http://"):
+        return url
+    return None
+
+
+def _catalog_specs(raw: dict[str, Any]) -> dict[str, Any] | None:
+    """Pass through stored catalog specs. Empty stays empty. Never invent."""
+    specs = raw.get("specs")
+    if not isinstance(specs, dict):
+        return None
+    out: dict[str, Any] = {}
+    for key, val in specs.items():
+        if val in (None, "", [], {}):
+            continue
+        if isinstance(val, str):
+            text = val.strip()
+            if not text:
+                continue
+            out[str(key)] = text
+        elif isinstance(val, (int, float, bool)):
+            out[str(key)] = val
+    return out or None
+
+
+def public_matched_robot(robot: dict[str, Any]) -> dict[str, Any]:
+    """Catalog facts an employer can examine. No match%, ROI, or invented SKU."""
+    public: dict[str, Any] = {
+        "name": robot["name"],
+        "vendor_name": robot["vendor_name"],
+        "vendor_url": robot.get("vendor_url"),
+        "robot_class": robot.get("robot_class"),
+        "description": robot.get("description"),
+        "product_url": robot.get("product_url"),
+        "task": robot.get("task"),
+        "setting": robot.get("setting"),
+    }
+    specs = robot.get("specs")
+    if isinstance(specs, dict) and specs:
+        public["specs"] = specs
+    image_url = robot.get("image_url")
+    if isinstance(image_url, str) and image_url.startswith(("http://", "https://")):
+        public["image_url"] = image_url
+    return public
+
+
+def public_shortlisted_robots(rows: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    """Named catalog robots the employer chose. Several are allowed. Never invent."""
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for raw in rows or []:
+        if not isinstance(raw, dict):
+            continue
+        name = str(raw.get("name") or "").strip()
+        vendor = str(raw.get("vendor_name") or "").strip()
+        if not name or not vendor:
+            continue
+        key = (vendor.lower(), name.lower())
+        if key in seen:
+            continue
+        seen.add(key)
+        item: dict[str, Any] = {
+            "name": name[:240],
+            "vendor_name": vendor[:240],
+        }
+        cls = str(raw.get("robot_class") or "").strip()
+        if cls:
+            item["robot_class"] = cls[:40]
+        url = str(raw.get("vendor_url") or "").strip()
+        if url:
+            item["vendor_url"] = url[:2000]
+        product = str(raw.get("product_url") or "").strip()
+        if product:
+            item["product_url"] = product[:2000]
+        out.append(item)
+        if len(out) >= 24:
+            break
+    return out
 
 
 def iter_catalog_robots() -> list[dict[str, Any]]:
@@ -154,14 +241,7 @@ def match_catalog_robots(
         if desc_tokens:
             overlap = desc_tokens & _tokens(blob)
             score += min(3.0, 0.4 * len(overlap))
-        public = {
-            "name": robot["name"],
-            "vendor_name": robot["vendor_name"],
-            "vendor_url": robot.get("vendor_url"),
-            "robot_class": cls,
-            "description": robot.get("description"),
-            "product_url": robot.get("product_url"),
-        }
+        public = public_matched_robot({**robot, "robot_class": cls})
         scored.append((score, public))
     scored.sort(key=lambda item: (-item[0], item[1]["name"].lower()))
     robots = [row for _, row in scored[: max(1, min(limit, 24))]]

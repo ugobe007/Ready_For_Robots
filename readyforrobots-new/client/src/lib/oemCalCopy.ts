@@ -6,16 +6,16 @@
  * BuyerCal leftover notes stay in app/services/cal_persona.py and stay frozen.
  */
 
-export const OEM_CAL_NAME = "Cal";
-export const OEM_CAL_TITLE = "Jobs Recruiter";
+export const OEM_CAL_NAME = "Automate Job Applications";
+export const OEM_CAL_TITLE = "Automate Job Applications";
 export const OEM_CAL_JOB =
-  "Help me apply these kept jobs without sounding like a list broker.";
-export const OEM_CAL_DESK_EYEBROW = "Cal · Jobs recruiter";
+  "Automate your job applications and proposal submissions in one click.";
+export const OEM_CAL_DESK_EYEBROW = "Automate Job Applications";
 export const OEM_CAL_DESK_LEAD =
-  "I'm Cal. I work these kept jobs with you. I ask what's missing, prepare the apply draft, and you send.";
+  "Select target jobs below, name your robot model or training plan, and set your monthly quote. We auto-generate tailored outreach proposals for enterprise buyers.";
 export const OEM_CAL_PREPARE_CTA = "Prepare application →";
 export const OEM_CAL_OPERATOR_SENDS =
-  "This is a draft. Review it. You send. I do not email the employer until you do.";
+  "This is a draft proposal. Review it. You send.";
 
 /** SIGNAL /results — leftover buyer scan. Cal is not this matcher. */
 export function oemCalResultsAnonLine(matchCount: number): string {

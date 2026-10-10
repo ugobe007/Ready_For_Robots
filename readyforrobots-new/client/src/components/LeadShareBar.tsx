@@ -3,11 +3,17 @@
  */
 import { useState } from "react";
 import { Link2, Mail, Share2 } from "lucide-react";
+import { ResendEmailModal } from "@/components/ResendEmailModal";
 
-const SITE_URL =
-  typeof import.meta !== "undefined" && import.meta.env?.VITE_SITE_URL
-    ? String(import.meta.env.VITE_SITE_URL)
-    : "https://readyforrobots.com";
+function getShareBaseUrl(): string {
+  if (typeof window !== "undefined" && window.location.origin) {
+    return window.location.origin;
+  }
+  if (typeof import.meta !== "undefined" && import.meta.env?.VITE_SITE_URL) {
+    return String(import.meta.env.VITE_SITE_URL);
+  }
+  return "https://readyforrobots.com";
+}
 
 export type LeadShareInput = {
   id?: number | string;
@@ -54,7 +60,18 @@ export function buildLeadSharePost(lead: LeadShareInput): {
       ? body
       : body.slice(0, Math.max(30, maxBody - 1)).trim() + "…";
   const tweetText = trimmed ? `${headline}\n\n${trimmed}` : headline;
-  const shareUrl = `${SITE_URL}/pipeline${lead.id != null ? `?lead=${lead.id}` : ""}`;
+  const isCrmPath =
+    typeof window !== "undefined" && window.location.pathname.startsWith("/crm");
+  const basePath = isCrmPath ? "/crm" : "/pipeline";
+  const paramName = isCrmPath ? "account" : "lead";
+  const companyQuery = lead.company_name
+    ? `&co=${encodeURIComponent(lead.company_name)}`
+    : "";
+  const baseUrl = getShareBaseUrl();
+  const shareUrl =
+    lead.id != null
+      ? `${baseUrl}${basePath}?${paramName}=${encodeURIComponent(String(lead.id))}${companyQuery}`
+      : `${baseUrl}${basePath}`;
   const robotLines = robotShareLines(lead);
   const tweetWithRobots =
     robotLines.length > 0
@@ -168,18 +185,51 @@ export default function LeadShareBar({
 }: Props) {
   const v = VARIANT_STYLES[variant];
   const [copied, setCopied] = useState(false);
+  const [emailModalOpen, setEmailModalOpen] = useState(false);
   const { tweetText, shareUrl, fullSummary } = buildLeadSharePost(lead);
   const canNativeShare =
     typeof navigator !== "undefined" && typeof navigator.share === "function";
 
+  const fallbackCopyText = (text: string): boolean => {
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      const successful = document.execCommand("copy");
+      document.body.removeChild(textArea);
+      return successful;
+    } catch {
+      return false;
+    }
+  };
+
   const copyPost = (e: React.MouseEvent) => {
     e.stopPropagation();
-    void navigator.clipboard
-      ?.writeText(`${tweetText}\n\n${shareUrl}`)
-      .then(() => {
+    const textToCopy = `${tweetText}\n\n${shareUrl}`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      void navigator.clipboard.writeText(textToCopy).then(
+        () => {
+          setCopied(true);
+          window.setTimeout(() => setCopied(false), 1800);
+        },
+        () => {
+          if (fallbackCopyText(textToCopy)) {
+            setCopied(true);
+            window.setTimeout(() => setCopied(false), 1800);
+          }
+        }
+      );
+    } else {
+      if (fallbackCopyText(textToCopy)) {
         setCopied(true);
         window.setTimeout(() => setCopied(false), 1800);
-      });
+      }
+    }
   };
 
   const nativeShare = (e: React.MouseEvent) => {
@@ -192,10 +242,7 @@ export default function LeadShareBar({
   };
 
   const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}&url=${encodeURIComponent(shareUrl)}`;
-  const liTitle = encodeURIComponent(
-    `${lead.company_name || "Lead"} — ${lead.priority_tier || "Lead"} | Ready For Robots`
-  );
-  const linkedInUrl = `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${liTitle}&summary=${encodeURIComponent(fullSummary.slice(0, 700))}&source=readyforrobots.com`;
+  const linkedInUrl = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(shareUrl)}`;
   const mailSubject = encodeURIComponent(
     `${lead.company_name || "Lead"} — robot-ready buyer signal`
   );
@@ -231,13 +278,14 @@ export default function LeadShareBar({
         >
           <LinkedInIcon className="h-3.5 w-3.5" />
         </a>
-        <a
-          href={mailtoUrl}
-          title="Email to colleague"
+        <button
+          type="button"
+          onClick={() => setEmailModalOpen(true)}
+          title="Email to colleague via Resend"
           className={`rounded p-1 transition-colors ${v.iconMail}`}
         >
           <Mail className="h-3.5 w-3.5" />
-        </a>
+        </button>
         <a
           href={whatsappUrl}
           target="_blank"
@@ -296,13 +344,14 @@ export default function LeadShareBar({
             <LinkedInIcon className="h-3.5 w-3.5" />
             LinkedIn
           </a>
-          <a
-            href={mailtoUrl}
+          <button
+            type="button"
+            onClick={() => setEmailModalOpen(true)}
             className={`inline-flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-[11px] font-semibold transition-colors ${v.chipMail}`}
           >
             <Mail className="h-3.5 w-3.5" />
-            Email colleague
-          </a>
+            Email via Resend
+          </button>
           <a
             href={whatsappUrl}
             target="_blank"
@@ -362,12 +411,13 @@ export default function LeadShareBar({
         >
           LinkedIn
         </a>
-        <a
-          href={mailtoUrl}
+        <button
+          type="button"
+          onClick={() => setEmailModalOpen(true)}
           className={`inline-flex items-center gap-1.5 rounded border px-2 py-1 text-[10px] font-medium transition-colors ${v.chipMail}`}
         >
-          Email
-        </a>
+          Email via Resend
+        </button>
         <a
           href={whatsappUrl}
           target="_blank"
@@ -385,6 +435,14 @@ export default function LeadShareBar({
           {copied ? "Copied" : "Copy"}
         </button>
       </div>
+
+      <ResendEmailModal
+        isOpen={emailModalOpen}
+        onClose={() => setEmailModalOpen(false)}
+        defaultSubject={decodeURIComponent(mailSubject)}
+        defaultBody={decodeURIComponent(mailBody)}
+        companyName={lead.company_name}
+      />
     </div>
   );
 }

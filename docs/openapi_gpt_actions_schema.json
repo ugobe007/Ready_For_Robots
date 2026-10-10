@@ -1,0 +1,167 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ReadyForRobots Placement & Payback API",
+    "description": "API for matching physical robots to active commercial job openings, searching automation opportunities, recommending robot SKUs, and calculating labor ROI payback.",
+    "version": "v1.0"
+  },
+  "servers": [
+    {
+      "url": "https://ready-2-robot.fly.dev"
+    }
+  ],
+  "paths": {
+    "/api/v1/gpt-actions/match-jobs": {
+      "post": {
+        "operationId": "matchRobotJobs",
+        "summary": "Match a robot URL or model to available commercial jobs",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "url": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "Public URL containing specifications or information about the robot."
+                  },
+                  "robot_name": {
+                    "type": "string",
+                    "description": "Robot manufacturer/model name, such as UR10e."
+                  }
+                },
+                "anyOf": [
+                  {
+                    "required": [
+                      "url"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "robot_name"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Matched robot jobs"
+          }
+        }
+      }
+    },
+    "/api/v1/gpt-actions/calculate-payback": {
+      "post": {
+        "operationId": "calculatePayback",
+        "summary": "Calculate robot payback period and labor ROI",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "robot_cost": {
+                    "type": "number",
+                    "example": 45000
+                  },
+                  "hourly_labor_rate": {
+                    "type": "number",
+                    "example": 28.5
+                  },
+                  "shift_hours_per_day": {
+                    "type": "number",
+                    "example": 8
+                  }
+                },
+                "required": [
+                  "robot_cost",
+                  "hourly_labor_rate"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Payback calculation result"
+          }
+        }
+      }
+    },
+    "/api/v1/gpt-actions/search-opportunities": {
+      "post": {
+        "operationId": "searchOpportunities",
+        "summary": "Find companies and opportunities seeking robot automation ('who needs robot automation')",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "query": {
+                    "type": "string",
+                    "example": "machine tending"
+                  },
+                  "industry": {
+                    "type": "string",
+                    "example": "Manufacturing"
+                  },
+                  "location": {
+                    "type": "string",
+                    "example": "Ohio"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Automation opportunity search results"
+          }
+        }
+      }
+    },
+    "/api/v1/gpt-actions/recommend-robots": {
+      "post": {
+        "operationId": "recommendRobots",
+        "summary": "Recommend robot hardware SKUs and categories for a task description ('what type of robot should I use')",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "task_description": {
+                    "type": "string",
+                    "example": "moving 500lb pallets in warehouse"
+                  },
+                  "payload_capacity_kg": {
+                    "type": "number",
+                    "example": 250
+                  }
+                },
+                "required": [
+                  "task_description"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Robot hardware recommendations"
+          }
+        }
+      }
+    }
+  }
+}

@@ -81,6 +81,8 @@ export type MatchJob = {
   text?: string | null;
   /** SKU this card is for. Set on the Jobs terminal, carried onto the pipeline list. */
   forRobot?: string;
+  applicants_count?: number;
+  posted_at?: string;
 };
 
 export type ClassOption = {

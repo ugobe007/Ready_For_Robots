@@ -173,9 +173,16 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(next).toMatch(/canSubmitNextStepsOffer/);
     expect(next).toMatch(/JOBS_APPLY_OFFER_CTA/);
     expect(next).toMatch(/disabled=\{!ready/);
-    expect(next).toMatch(/JOBS_DOCS_HEADING/);
-    expect(next).toMatch(/uploadRobotDocument/);
+    const material = readFileSync(
+      join(here, "../components/RobotSalesMaterial.tsx"),
+      "utf8"
+    );
+    expect(material).toMatch(/JOBS_DOCS_HEADING/);
+    expect(material).toMatch(/uploadRobotDocument/);
+    expect(material).toMatch(/JOBS_DOCS_INCLUDE_LABEL/);
+    expect(next).toMatch(/RobotSalesMaterial/);
     expect(next).toMatch(/documentIds: selectedDocs/);
+    expect(desk).toMatch(/RobotSalesMaterial/);
     expect(next).toMatch(/id="jobs-next-steps"/);
     expect(inbox).toMatch(/JOBS_INBOX_HEADING/);
     expect(inbox).toMatch(/Paste employer reply/);
@@ -192,11 +199,10 @@ describe("jobs CRM keep / next-steps / apply", () => {
     expect(next).toMatch(/applySelectedJobsOnAccount/);
     expect(inbox).toMatch(/Save meeting URL/);
     expect(inbox).toMatch(/scheduling_label/);
-    expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
-    expect(JOBS_APPLY_SELECTED_CTA).toMatch(/Apply to jobs/);
+    expect(JOBS_APPLY_SELECTED_CTA).toMatch(/Automate Job Applications/);
     expect(keepTheseJobsPrompt(3)).toBe("Keep 3 jobs?");
     expect(JOBS_KEEP_YES_CTA).toBe("Yes, keep them");
-    expect(JOBS_APPLY_NEXT_CTA).toBe("Apply to jobs →");
+    expect(JOBS_APPLY_NEXT_CTA).toBe("Automate Job Applications →");
     expect(JOBS_APPLY_SEQUENCE).toMatch(/Apply to the job/);
     expect(JOBS_APPLY_SEQUENCE).toMatch(/prepare a draft/);
     expect(JOBS_APPLY_SEQUENCE).toMatch(/You review and send/);
@@ -477,7 +483,7 @@ describe("CRM desk binds to the FIND robot, not leftover totes", () => {
     expect(workTaskModelListLine({ kind: "self_train" })).toBe(
       "We'll train this"
     );
-    expect(WORK_TASK_MODEL_QUESTION).toBe("Do you have a model for this work?");
+    expect(WORK_TASK_MODEL_QUESTION).toMatch(/Do you have a model for this work\?/);
     expect(WORK_TASK_MODEL_SELF_OPTION).toMatch(
       /We'll train this for the job/i
     );
