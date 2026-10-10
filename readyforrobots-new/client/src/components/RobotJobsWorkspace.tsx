@@ -200,7 +200,7 @@ const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
 const eyebrow = JOBS_EYEBROW_CLASS;
 const ctaClass =
-  "rfr-bevel inline-flex items-center justify-center gap-2.5 bg-transparent border-2 border-purple-500 px-6 py-3.5 text-base sm:text-lg font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 disabled:cursor-not-allowed disabled:opacity-45 rounded-lg";
+  "rfr-bevel inline-flex items-center justify-center gap-2.5 bg-transparent border border-purple-500 px-6 py-3.5 text-base sm:text-lg font-extrabold uppercase tracking-[0.06em] text-purple-300 transition hover:bg-purple-950/30 hover:border-purple-400 hover:text-purple-200 disabled:cursor-not-allowed disabled:opacity-45 rounded-lg";
 
 function FindJobsCtaLabel({ text }: { text: string }) {
   if (!text) return null;

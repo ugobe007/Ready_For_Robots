@@ -240,7 +240,7 @@ export default function JobQueryModal({
             <button
               type="submit"
               disabled={!selectedCategory && !customQuery.trim()}
-              className="rfr-bevel inline-flex items-center justify-center gap-2.5 rounded-xl border-2 border-purple-500 bg-transparent px-6 py-3.5 text-base font-extrabold uppercase tracking-wider text-purple-300 transition hover:border-purple-400 hover:bg-purple-950/40 hover:text-purple-200 disabled:cursor-not-allowed disabled:opacity-40 sm:text-lg"
+              className="rfr-bevel inline-flex items-center justify-center gap-2.5 rounded-xl border border-purple-500 bg-transparent px-6 py-3.5 text-base font-extrabold uppercase tracking-wider text-purple-300 transition hover:border-purple-400 hover:bg-purple-950/40 hover:text-purple-200 disabled:cursor-not-allowed disabled:opacity-40 sm:text-lg"
             >
               <span>Run Job Query</span>
               <span className="text-emerald-400 font-extrabold text-lg">→</span>
