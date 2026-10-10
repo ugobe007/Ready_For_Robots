@@ -1,4 +1,4 @@
-"""Bounce-reason capture + address suppression for Cal outreach."""
+"""Bounce-reason capture + address suppression for Phelan outreach."""
 from app.api.webhooks import _delivery_payload, _extract_problem_detail
 from app.services.lead_enrichment import address_previously_bounced, recent_bounce_rate
 

@@ -48,7 +48,11 @@ const HASH_FOREGROUND: Record<string, AdminSectionName[]> = {
   workflow: ["workflow", "daily_brief"],
 };
 
-const DEFAULT_FOREGROUND: AdminSectionName[] = ["daily_brief", "cal", "analytics"];
+const DEFAULT_FOREGROUND: AdminSectionName[] = [
+  "daily_brief",
+  "cal",
+  "analytics",
+];
 
 /** Sections to check for deltas after first paint — rest load in idle time. */
 export function foregroundSectionsForHash(hash: string): AdminSectionName[] {
@@ -58,13 +62,46 @@ export function foregroundSectionsForHash(hash: string): AdminSectionName[] {
 
 export function deferredSectionsForHash(hash: string): AdminSectionName[] {
   const fg = new Set(foregroundSectionsForHash(hash));
-  return ADMIN_SECTION_ORDER.filter((name) => !fg.has(name));
+  return ADMIN_SECTION_ORDER.filter(name => !fg.has(name));
 }
 
 const HASH_SECTION_PRIORITY: Record<string, AdminSectionName[]> = {
-  "cal-outreach": ["cal", "daily_brief", "stats", "scout", "user_stats", "workflow", "activity", "users", "targets", "analytics"],
-  "scout-automation": ["scout", "cal", "daily_brief", "stats", "user_stats", "workflow", "activity", "users", "targets", "analytics"],
-  workflow: ["workflow", "daily_brief", "cal", "stats", "scout", "user_stats", "activity", "users", "targets", "analytics"],
+  "cal-outreach": [
+    "cal",
+    "daily_brief",
+    "stats",
+    "scout",
+    "user_stats",
+    "workflow",
+    "activity",
+    "users",
+    "targets",
+    "analytics",
+  ],
+  "scout-automation": [
+    "scout",
+    "cal",
+    "daily_brief",
+    "stats",
+    "user_stats",
+    "workflow",
+    "activity",
+    "users",
+    "targets",
+    "analytics",
+  ],
+  workflow: [
+    "workflow",
+    "daily_brief",
+    "cal",
+    "stats",
+    "scout",
+    "user_stats",
+    "activity",
+    "users",
+    "targets",
+    "analytics",
+  ],
 };
 
 export function sectionOrderForHash(hash: string): AdminSectionName[] {
@@ -96,7 +133,7 @@ export function mergeSectionIntoSnapshot(
   snapshot: AdminSnapshot,
   section: string,
   updatedAt: string,
-  data: unknown,
+  data: unknown
 ): AdminSnapshot {
   return {
     version: snapshot.version ?? 1,
@@ -109,12 +146,17 @@ export function mergeSectionIntoSnapshot(
 }
 
 export function snapshotLooksEmpty(snapshot: AdminSnapshot | null): boolean {
-  const stats = snapshot?.sections?.stats?.data as { totals?: { companies?: number } } | undefined;
+  const stats = snapshot?.sections?.stats?.data as
+    | { totals?: { companies?: number } }
+    | undefined;
   const companies = stats?.totals?.companies;
   return companies == null || companies === 0;
 }
 
-export function mergeServerSnapshot(local: AdminSnapshot | null, server: AdminSnapshot): AdminSnapshot {
+export function mergeServerSnapshot(
+  local: AdminSnapshot | null,
+  server: AdminSnapshot
+): AdminSnapshot {
   const merged: AdminSnapshot = {
     version: server.version ?? local?.version ?? 1,
     built_at: server.built_at ?? local?.built_at,
@@ -144,7 +186,9 @@ export type AdminSnapshotApplied = {
   analytics: unknown;
 };
 
-export function snapshotToApplied(snapshot: AdminSnapshot | null): AdminSnapshotApplied {
+export function snapshotToApplied(
+  snapshot: AdminSnapshot | null
+): AdminSnapshotApplied {
   const s = snapshot?.sections ?? {};
   const activityData = s.activity?.data as { activity?: unknown[] } | undefined;
   const usersData = s.users?.data as { users?: unknown[] } | undefined;
@@ -155,18 +199,23 @@ export function snapshotToApplied(snapshot: AdminSnapshot | null): AdminSnapshot
     scoutStatus: s.scout?.data ?? null,
     userStats: s.user_stats?.data ?? null,
     workflow: s.workflow?.data ?? null,
-    activity: activityData?.activity ?? (Array.isArray(s.activity?.data) ? s.activity.data as unknown[] : []),
+    activity:
+      activityData?.activity ??
+      (Array.isArray(s.activity?.data) ? (s.activity.data as unknown[]) : []),
     users: usersData?.users ?? [],
     targets: s.targets?.data ?? null,
     analytics: s.analytics?.data ?? null,
   };
 }
 
-export function sectionUpdatedAt(snapshot: AdminSnapshot | null, section: string): string | undefined {
+export function sectionUpdatedAt(
+  snapshot: AdminSnapshot | null,
+  section: string
+): string | undefined {
   return snapshot?.sections?.[section]?.updated_at;
 }
 
 /** Pause between sequential section fetches so the server never gets a parallel storm. */
 export function pause(ms = 80): Promise<void> {
-  return new Promise((resolve) => window.setTimeout(resolve, ms));
+  return new Promise(resolve => window.setTimeout(resolve, ms));
 }

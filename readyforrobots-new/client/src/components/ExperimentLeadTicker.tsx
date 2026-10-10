@@ -33,28 +33,131 @@ export type ExperimentLeadTickerProps = {
 };
 
 const FALLBACK_POOL: TickerLead[] = [
-  { id: -1, company_name: "Lineage Logistics", industry: "Logistics", priority_tier: "HOT", robot_types_needed: ["mobile robots (AMRs)", "warehouse automation"] },
-  { id: -2, company_name: "Hyatt Hotels Corp.", industry: "Hospitality", priority_tier: "HOT", robot_types_needed: ["service robots", "cleaning robots"] },
-  { id: -3, company_name: "Sysco Corporation", industry: "Food Service", priority_tier: "WARM", robot_types_needed: ["mobile robots (AMRs)", "palletizing robots"] },
-  { id: -4, company_name: "Marriott International", industry: "Hospitality", priority_tier: "HOT", robot_types_needed: ["service robots", "delivery robots"] },
-  { id: -5, company_name: "FedEx Supply Chain", industry: "Logistics", priority_tier: "HOT", robot_types_needed: ["sortation robots", "mobile robots (AMRs)"] },
-  { id: -6, company_name: "Pepsi Beverage Co.", industry: "Food Processing", priority_tier: "WARM", robot_types_needed: ["pick-and-place robots", "packaging automation"] },
-  { id: -7, company_name: "HCA Healthcare", industry: "Healthcare", priority_tier: "WARM", robot_types_needed: ["mobile robots (AMRs)", "service robots"] },
-  { id: -8, company_name: "Target Corporation", industry: "Retail", priority_tier: "HOT", robot_types_needed: ["mobile robots (AMRs)", "inventory robots"] },
-  { id: -9, company_name: "DHL Supply Chain", industry: "Logistics", priority_tier: "HOT", robot_types_needed: ["mobile robots (AMRs)", "conveyor automation"] },
-  { id: -10, company_name: "Chipotle Mexican Grill", industry: "Food Service", priority_tier: "WARM", robot_types_needed: ["kitchen automation", "service robots"] },
-  { id: -11, company_name: "Amazon Fulfillment", industry: "Logistics", priority_tier: "HOT", robot_types_needed: ["mobile robots (AMRs)", "sortation robots"] },
-  { id: -12, company_name: "Walmart", industry: "Retail", priority_tier: "HOT", robot_types_needed: ["inventory robots", "mobile robots (AMRs)"] },
-  { id: -13, company_name: "UPS", industry: "Logistics", priority_tier: "WARM", robot_types_needed: ["sortation robots", "mobile robots (AMRs)"] },
-  { id: -14, company_name: "Hilton Worldwide", industry: "Hospitality", priority_tier: "WARM", robot_types_needed: ["service robots", "cleaning robots"] },
-  { id: -15, company_name: "Costco Wholesale", industry: "Retail", priority_tier: "HOT", robot_types_needed: ["mobile robots (AMRs)", "palletizing robots"] },
+  {
+    id: -1,
+    company_name: "Lineage Logistics",
+    industry: "Logistics",
+    priority_tier: "HOT",
+    robot_types_needed: ["mobile robots (AMRs)", "warehouse automation"],
+  },
+  {
+    id: -2,
+    company_name: "Hyatt Hotels Corp.",
+    industry: "Hospitality",
+    priority_tier: "HOT",
+    robot_types_needed: ["service robots", "cleaning robots"],
+  },
+  {
+    id: -3,
+    company_name: "Sysco Corporation",
+    industry: "Food Service",
+    priority_tier: "WARM",
+    robot_types_needed: ["mobile robots (AMRs)", "palletizing robots"],
+  },
+  {
+    id: -4,
+    company_name: "Marriott International",
+    industry: "Hospitality",
+    priority_tier: "HOT",
+    robot_types_needed: ["service robots", "delivery robots"],
+  },
+  {
+    id: -5,
+    company_name: "FedEx Supply Chain",
+    industry: "Logistics",
+    priority_tier: "HOT",
+    robot_types_needed: ["sortation robots", "mobile robots (AMRs)"],
+  },
+  {
+    id: -6,
+    company_name: "Pepsi Beverage Co.",
+    industry: "Food Processing",
+    priority_tier: "WARM",
+    robot_types_needed: ["pick-and-place robots", "packaging automation"],
+  },
+  {
+    id: -7,
+    company_name: "HCA Healthcare",
+    industry: "Healthcare",
+    priority_tier: "WARM",
+    robot_types_needed: ["mobile robots (AMRs)", "service robots"],
+  },
+  {
+    id: -8,
+    company_name: "Target Corporation",
+    industry: "Retail",
+    priority_tier: "HOT",
+    robot_types_needed: ["mobile robots (AMRs)", "inventory robots"],
+  },
+  {
+    id: -9,
+    company_name: "DHL Supply Chain",
+    industry: "Logistics",
+    priority_tier: "HOT",
+    robot_types_needed: ["mobile robots (AMRs)", "conveyor automation"],
+  },
+  {
+    id: -10,
+    company_name: "Chipotle Mexican Grill",
+    industry: "Food Service",
+    priority_tier: "WARM",
+    robot_types_needed: ["kitchen automation", "service robots"],
+  },
+  {
+    id: -11,
+    company_name: "Amazon Fulfillment",
+    industry: "Logistics",
+    priority_tier: "HOT",
+    robot_types_needed: ["mobile robots (AMRs)", "sortation robots"],
+  },
+  {
+    id: -12,
+    company_name: "Walmart",
+    industry: "Retail",
+    priority_tier: "HOT",
+    robot_types_needed: ["inventory robots", "mobile robots (AMRs)"],
+  },
+  {
+    id: -13,
+    company_name: "UPS",
+    industry: "Logistics",
+    priority_tier: "WARM",
+    robot_types_needed: ["sortation robots", "mobile robots (AMRs)"],
+  },
+  {
+    id: -14,
+    company_name: "Hilton Worldwide",
+    industry: "Hospitality",
+    priority_tier: "WARM",
+    robot_types_needed: ["service robots", "cleaning robots"],
+  },
+  {
+    id: -15,
+    company_name: "Costco Wholesale",
+    industry: "Retail",
+    priority_tier: "HOT",
+    robot_types_needed: ["mobile robots (AMRs)", "palletizing robots"],
+  },
 ];
 
-const tierStyle: Record<string, { color: string; bg: string; border: string }> = {
-  HOT: { color: "#f87171", bg: "rgba(248,113,113,0.12)", border: "rgba(248,113,113,0.25)" },
-  WARM: { color: "#a78bfa", bg: "rgba(96,165,250,0.10)", border: "rgba(96,165,250,0.22)" },
-  COLD: { color: "#94a3b8", bg: "rgba(148,163,184,0.08)", border: "rgba(148,163,184,0.2)" },
-};
+const tierStyle: Record<string, { color: string; bg: string; border: string }> =
+  {
+    HOT: {
+      color: "#f87171",
+      bg: "rgba(248,113,113,0.12)",
+      border: "rgba(248,113,113,0.25)",
+    },
+    WARM: {
+      color: "#a78bfa",
+      bg: "rgba(96,165,250,0.10)",
+      border: "rgba(96,165,250,0.22)",
+    },
+    COLD: {
+      color: "#94a3b8",
+      bg: "rgba(148,163,184,0.08)",
+      border: "rgba(148,163,184,0.2)",
+    },
+  };
 
 function robotLine(lead: TickerLead): string {
   const types = lead.robot_types_needed?.filter(Boolean) ?? [];
@@ -74,7 +177,8 @@ function normalizePool(raw: unknown[], minVisible: number): TickerLead[] {
       id,
       company_name: name,
       industry: typeof r.industry === "string" ? r.industry : null,
-      priority_tier: typeof r.priority_tier === "string" ? r.priority_tier : null,
+      priority_tier:
+        typeof r.priority_tier === "string" ? r.priority_tier : null,
       robot_types_needed: Array.isArray(r.robot_types_needed)
         ? (r.robot_types_needed as string[]).filter(Boolean)
         : [],
@@ -82,7 +186,9 @@ function normalizePool(raw: unknown[], minVisible: number): TickerLead[] {
   }
 
   const deduped = dedupeHomepageLeads(mapped) as TickerLead[];
-  const withRobots = deduped.filter((l) => (l.robot_types_needed?.length ?? 0) > 0);
+  const withRobots = deduped.filter(
+    l => (l.robot_types_needed?.length ?? 0) > 0
+  );
   const pool = withRobots.length >= minVisible ? withRobots : deduped;
   return pool.length ? pool : FALLBACK_POOL;
 }
@@ -91,7 +197,7 @@ async function fetchLeadPool(minVisible: number): Promise<TickerLead[]> {
   const base = getApiBase();
   const res = await fetch(
     `${base}/api/leads?limit=50&sort=score&exclude_junk=true`,
-    liveFetchInit(),
+    liveFetchInit()
   );
   if (!res.ok) throw new Error("leads fetch failed");
   const raw = await res.text();
@@ -124,7 +230,7 @@ export default function ExperimentLeadTicker({
       poolIndex.current = initial.length % Math.max(nextPool.length, 1);
       setVisible(initial);
     },
-    [maxVisible],
+    [maxVisible]
   );
 
   useEffect(() => {
@@ -151,7 +257,7 @@ export default function ExperimentLeadTicker({
   useEffect(() => {
     const refresh = window.setInterval(() => {
       fetchLeadPool(maxVisible)
-        .then((nextPool) => {
+        .then(nextPool => {
           setPool(nextPool);
           setLive(true);
         })
@@ -166,7 +272,7 @@ export default function ExperimentLeadTicker({
       const idx = poolIndex.current % pool.length;
       const next = pool[idx];
       poolIndex.current = (idx + 1) % pool.length;
-      setVisible((prev) => {
+      setVisible(prev => {
         const row: TickerRow = { ...next, tickKey: tickKey.current++ };
         return [row, ...prev].slice(0, maxVisible);
       });
@@ -191,17 +297,29 @@ export default function ExperimentLeadTicker({
         <div className="min-w-0">
           <p
             className="text-[10px] font-bold uppercase tracking-[0.18em]"
-            style={{ color: "#a78bfa", fontFamily: "'Inter', system-ui, sans-serif" }}
+            style={{
+              color: "#a78bfa",
+              fontFamily: "'Inter', system-ui, sans-serif",
+            }}
           >
             {title}
           </p>
-          <p className="mt-0.5 truncate text-[11px] text-white/35">{subtitle}</p>
+          <p className="mt-0.5 truncate text-[11px] text-white/35">
+            {subtitle}
+          </p>
         </div>
         <span
           className="flex shrink-0 items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider"
-          style={{ color: "#03DAC5", background: "rgba(3,218,197,0.08)", borderColor: "rgba(3,218,197,0.28)" }}
+          style={{
+            color: "#03DAC5",
+            background: "rgba(3,218,197,0.08)",
+            borderColor: "rgba(3,218,197,0.28)",
+          }}
         >
-          <span className="h-1 w-1 animate-pulse rounded-full" style={{ background: "#03DAC5" }} />
+          <span
+            className="h-1 w-1 animate-pulse rounded-full"
+            style={{ background: "#03DAC5" }}
+          />
           {live ? "Live" : "Demo"}
         </span>
       </div>
@@ -210,9 +328,13 @@ export default function ExperimentLeadTicker({
         className="relative shrink-0 overflow-hidden"
         style={{ minHeight: `${maxVisible * ROW_HEIGHT_PX + 4}px` }}
       >
-        <ul className="relative overflow-hidden px-2 py-1.5" aria-live="polite" aria-label="Latest sales leads and robot types">
+        <ul
+          className="relative overflow-hidden px-2 py-1.5"
+          aria-live="polite"
+          aria-label="Latest sales leads and robot types"
+        >
           <AnimatePresence initial={false} mode="popLayout">
-            {visible.map((lead) => {
+            {visible.map(lead => {
               const tier = (lead.priority_tier || "WARM").toUpperCase();
               const st = tierStyle[tier] || tierStyle.WARM;
               return (
@@ -233,12 +355,18 @@ export default function ExperimentLeadTicker({
                       </p>
                       <span
                         className="shrink-0 rounded-full border px-1.5 py-px text-[8px] font-bold uppercase"
-                        style={{ color: st.color, background: st.bg, borderColor: st.border }}
+                        style={{
+                          color: st.color,
+                          background: st.bg,
+                          borderColor: st.border,
+                        }}
                       >
                         {tier}
                       </span>
                     </div>
-                    <p className="mt-0.5 truncate text-[10px] text-white/38">{robotLine(lead)}</p>
+                    <p className="mt-0.5 truncate text-[10px] text-white/38">
+                      {robotLine(lead)}
+                    </p>
                   </div>
                 </motion.li>
               );

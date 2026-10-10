@@ -80,11 +80,7 @@
       "workplace": "Charlotte, NC",
       "jobTitle": "CNC and manual-cell workpiece mover",
       "work": "Move workpieces to and from CNC and manual machining cells.",
-      "requirements": [
-        "Object: part",
-        "Placement: fixture",
-        "Machine: CNC"
-      ],
+      "requirements": ["Object: part", "Placement: fixture", "Machine: CNC"],
       "workVolume": null,
       "currentLabor": null,
       "evidence": "Manipulation ledger E2. Corpus manip_transtech_charlotte_nc.",

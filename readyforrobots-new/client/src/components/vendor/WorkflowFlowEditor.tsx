@@ -60,11 +60,15 @@ function isZoneNode(node: Node | null | undefined): node is Node<ZoneNodeData> {
   return node?.type === ZONE_NODE_TYPE;
 }
 
-function isRobotNode(node: Node | null | undefined): node is Node<RobotNodeData> {
+function isRobotNode(
+  node: Node | null | undefined
+): node is Node<RobotNodeData> {
   return node?.type === ROBOT_NODE_TYPE;
 }
 
-function isWorkflowEdge(edge: Edge | null | undefined): edge is Edge<WorkflowEdgeData> {
+function isWorkflowEdge(
+  edge: Edge | null | undefined
+): edge is Edge<WorkflowEdgeData> {
   return Boolean(edge);
 }
 
@@ -86,7 +90,12 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
   const syncToParent = useCallback(() => {
     syncingRef.current = true;
     onChange(
-      flowToLayout(nodesRef.current, edgesRef.current, layout.width, layout.height),
+      flowToLayout(
+        nodesRef.current,
+        edgesRef.current,
+        layout.width,
+        layout.height
+      )
     );
   }, [layout.height, layout.width, onChange]);
 
@@ -97,7 +106,7 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
       syncingRef.current = true;
       onChange(flowToLayout(nextNodes, nextEdges, layout.width, layout.height));
     },
-    [layout.height, layout.width, onChange],
+    [layout.height, layout.width, onChange]
   );
 
   useEffect(() => {
@@ -128,9 +137,13 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
   const onConnect = useCallback(
     (connection: Connection) => {
       if (!connection.source || !connection.target) return;
-      const sourceNode = nodes.find((n) => n.id === connection.source);
-      const targetNode = nodes.find((n) => n.id === connection.target);
-      if (sourceNode?.type !== ZONE_NODE_TYPE || targetNode?.type !== ZONE_NODE_TYPE) return;
+      const sourceNode = nodes.find(n => n.id === connection.source);
+      const targetNode = nodes.find(n => n.id === connection.target);
+      if (
+        sourceNode?.type !== ZONE_NODE_TYPE ||
+        targetNode?.type !== ZONE_NODE_TYPE
+      )
+        return;
 
       const nextEdge = createFlowEdge({
         source: connection.source,
@@ -142,7 +155,7 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
       setEdges(nextEdges);
       emitChange(nodes, nextEdges);
     },
-    [edges, emitChange, nodes, setEdges],
+    [edges, emitChange, nodes, setEdges]
   );
 
   function addZoneAtCenter(preset: (typeof ZONE_PRESETS)[number]) {
@@ -173,16 +186,16 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
 
   function deleteSelected() {
     if (selectedEdge) {
-      const nextEdges = edges.filter((e) => e.id !== selectedEdge.id);
+      const nextEdges = edges.filter(e => e.id !== selectedEdge.id);
       setEdges(nextEdges);
       setSelectedEdge(null);
       emitChange(nodes, nextEdges);
       return;
     }
     if (!selectedNode) return;
-    const nextNodes = nodes.filter((n) => n.id !== selectedNode.id);
+    const nextNodes = nodes.filter(n => n.id !== selectedNode.id);
     const nextEdges = edges.filter(
-      (e) => e.source !== selectedNode.id && e.target !== selectedNode.id,
+      e => e.source !== selectedNode.id && e.target !== selectedNode.id
     );
     setNodes(nextNodes);
     setEdges(nextEdges);
@@ -190,10 +203,12 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
     emitChange(nextNodes, nextEdges);
   }
 
-  function updateSelectedNodeData(patch: Partial<ZoneNodeData> | Partial<RobotNodeData>) {
+  function updateSelectedNodeData(
+    patch: Partial<ZoneNodeData> | Partial<RobotNodeData>
+  ) {
     if (!selectedNode) return;
-    const nextNodes = nodes.map((n) =>
-      n.id === selectedNode.id ? { ...n, data: { ...n.data, ...patch } } : n,
+    const nextNodes = nodes.map(n =>
+      n.id === selectedNode.id ? { ...n, data: { ...n.data, ...patch } } : n
     );
     setNodes(nextNodes);
     emitChange(nextNodes, edges);
@@ -203,7 +218,7 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
     if (!selectedEdge) return;
     const data = (selectedEdge.data || {}) as WorkflowEdgeData;
     const automated = !data.automated;
-    const nextEdges = edges.map((e) =>
+    const nextEdges = edges.map(e =>
       e.id === selectedEdge.id
         ? {
             ...e,
@@ -215,7 +230,7 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
               color: automated ? "#059669" : "#94a3b8",
             },
           }
-        : e,
+        : e
     );
     setEdges(nextEdges);
     emitChange(nodes, nextEdges);
@@ -229,7 +244,7 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
             Work zones
           </p>
           <div className="flex flex-wrap lg:flex-col gap-1.5">
-            {ZONE_PRESETS.map((preset) => (
+            {ZONE_PRESETS.map(preset => (
               <button
                 key={preset.label}
                 type="button"
@@ -247,7 +262,7 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
             Robots
           </p>
           <div className="flex flex-wrap lg:flex-col gap-1.5">
-            {ROBOT_PRESETS.map((preset) => (
+            {ROBOT_PRESETS.map(preset => (
               <button
                 key={preset.label}
                 type="button"
@@ -289,10 +304,13 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
             snapGrid={[12, 12]}
             connectionLineStyle={{ stroke: "#059669", strokeWidth: 2 }}
             defaultEdgeOptions={{ type: WORKFLOW_EDGE_TYPE }}
-            isValidConnection={(conn) => {
-              const source = nodes.find((n) => n.id === conn.source);
-              const target = nodes.find((n) => n.id === conn.target);
-              return source?.type === ZONE_NODE_TYPE && target?.type === ZONE_NODE_TYPE;
+            isValidConnection={conn => {
+              const source = nodes.find(n => n.id === conn.source);
+              const target = nodes.find(n => n.id === conn.target);
+              return (
+                source?.type === ZONE_NODE_TYPE &&
+                target?.type === ZONE_NODE_TYPE
+              );
             }}
             deleteKeyCode={["Backspace", "Delete"]}
             proOptions={{ hideAttribution: true }}
@@ -300,7 +318,9 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
             <Background gap={16} size={1} color="#334155" />
             <Controls showInteractive={false} />
             <MiniMap
-              nodeColor={(n) => (n.type === ROBOT_NODE_TYPE ? "#059669" : "#e2e8f0")}
+              nodeColor={n =>
+                n.type === ROBOT_NODE_TYPE ? "#059669" : "#e2e8f0"
+              }
               maskColor="rgba(0,0,0,0.06)"
               className="!bg-[#0b162f]/80"
             />
@@ -308,9 +328,9 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
         </div>
 
         <p className="text-[11px] text-slate-400">
-          <strong>Connect zones:</strong> drag from the green handle on one zone to another. Flows
-          stay linked when you move nodes. {edges.length} connection{edges.length === 1 ? "" : "s"}{" "}
-          active.
+          <strong>Connect zones:</strong> drag from the green handle on one zone
+          to another. Flows stay linked when you move nodes. {edges.length}{" "}
+          connection{edges.length === 1 ? "" : "s"} active.
         </p>
 
         {isZoneNode(selectedNode) && (
@@ -321,7 +341,9 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
               <input
                 className="mt-0.5 w-full border border-slate-600 bg-[#0b162f] px-2 py-1 text-slate-100"
                 value={selectedNode.data.label}
-                onChange={(e) => updateSelectedNodeData({ label: e.target.value })}
+                onChange={e =>
+                  updateSelectedNodeData({ label: e.target.value })
+                }
               />
             </label>
           </div>
@@ -335,7 +357,9 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
               <input
                 className="mt-0.5 w-full border border-slate-600 bg-[#0b162f] px-2 py-1 text-slate-100"
                 value={selectedNode.data.robot_label}
-                onChange={(e) => updateSelectedNodeData({ robot_label: e.target.value })}
+                onChange={e =>
+                  updateSelectedNodeData({ robot_label: e.target.value })
+                }
               />
             </label>
             <label className="block">
@@ -344,11 +368,12 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
                 type="number"
                 className="mt-0.5 w-full border border-slate-600 bg-[#0b162f] px-2 py-1 text-slate-100"
                 value={selectedNode.data.impact.labor_hours_saved_per_week ?? 0}
-                onChange={(e) =>
+                onChange={e =>
                   updateSelectedNodeData({
                     impact: {
                       ...selectedNode.data.impact,
-                      labor_hours_saved_per_week: parseFloat(e.target.value) || 0,
+                      labor_hours_saved_per_week:
+                        parseFloat(e.target.value) || 0,
                     },
                   })
                 }
@@ -365,12 +390,12 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
               <input
                 className="mt-0.5 w-full border border-slate-600 bg-[#0b162f] px-2 py-1 text-slate-100"
                 value={(selectedEdge.data as WorkflowEdgeData)?.label || ""}
-                onChange={(e) => {
+                onChange={e => {
                   const data = (selectedEdge.data || {}) as WorkflowEdgeData;
-                  const nextEdges = edges.map((edge) =>
+                  const nextEdges = edges.map(edge =>
                     edge.id === selectedEdge.id
                       ? { ...edge, data: { ...data, label: e.target.value } }
-                      : edge,
+                      : edge
                   );
                   setEdges(nextEdges);
                   emitChange(nodes, nextEdges);
@@ -380,7 +405,9 @@ function WorkflowFlowEditorInner({ layout, onChange, className = "" }: Props) {
             <label className="flex items-center gap-2">
               <input
                 type="checkbox"
-                checked={(selectedEdge.data as WorkflowEdgeData)?.automated !== false}
+                checked={
+                  (selectedEdge.data as WorkflowEdgeData)?.automated !== false
+                }
                 onChange={toggleEdgeAutomated}
               />
               <span className="text-slate-400">Automated (robot-handled)</span>

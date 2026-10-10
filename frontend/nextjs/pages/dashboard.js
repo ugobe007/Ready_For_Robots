@@ -9,6 +9,7 @@ import Image from 'next/image';
 import { useAuth } from './_app';
 import { authHeader, supabase } from '../lib/supabase';
 import LoginDropdown from '../components/LoginDropdown';
+import SiteHeader from '../components/SiteHeader';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 import { topSignalsForDisplay, MAX_SIGNALS_DISPLAY } from '../lib/signalsDisplay';
 import { AutomationSpecBlock } from '../lib/automationProfile';
@@ -2596,139 +2597,8 @@ export default function Dashboard() {
         limit={FREE_LIMIT}
       />
 
-      {selectedLead && (
-        <AIAnalysisModal
-          lead={selectedLead}
-          onClose={() => setSelectedLead(null)}
-          onSaveToggle={() => {
-            try {
-              const store = JSON.parse(localStorage.getItem('rfr_saved') || '{"companies":[]}');
-              setSavedIds(new Set((store.companies || []).map(c => c.id)));
-            } catch {}
-          }}
-        />
-      )}
-
-      {/* Top nav — docs/design/dashboard_design.html (inner centered to max-w main column) */}
-      <header className="rr-topnav w-full">
-        <div className="rr-topnav-inner">
-        <Link href="/" className="rr-topnav-brand group min-w-0">
-          <div className="rr-brand-logo overflow-hidden">
-            <Image src="/logo-r.png" alt="" width={34} height={34} className="!p-0.5 object-contain" priority />
-          </div>
-          <div className="min-w-0 hidden sm:block">
-            <div className="rr-brand-name leading-tight">Automation Projects Ready For Robots</div>
-            <div className="rr-brand-sub">with Signal Intelligence</div>
-          </div>
-        </Link>
-
-          {/* Mobile: hamburger */}
-          <div className="md:hidden relative ml-auto shrink-0">
-            <button 
-              onClick={() => setShowMenu(!showMenu)}
-              type="button"
-              className="rr-btn-signin px-3 text-lg leading-none">
-              ☰
-            </button>
-            {showMenu && (
-              <div className="absolute right-0 top-full mt-2 w-64 max-h-[min(80vh,520px)] overflow-y-auto border border-neutral-800 rounded-lg bg-neutral-950 shadow-xl z-50">
-                <div className="border-b border-neutral-800">
-                  <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Main</div>
-                  <Link href="/" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">🏠 Home</div>
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={() => { fetchData(); setShowMenu(false); }}
-                    className="w-full text-left px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 border-t border-neutral-800"
-                  >
-                    &#8635; Refresh data
-                  </button>
-                  <Link href="/dashboard" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer border-t border-neutral-800">📊 Pipeline</div>
-                  </Link>
-                </div>
-                <div className="border-b border-neutral-800">
-                  <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Pipeline</div>
-                  <Link href="/crm/" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">🗂️ CRM</div>
-                  </Link>
-                </div>
-                <div className="border-b border-neutral-800">
-                  <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Discover</div>
-                  <Link href="/search" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer">🔍 Search</div>
-                  </Link>
-                  <Link href="/market-insights" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer">📈 Market</div>
-                  </Link>
-                  <Link href="/about" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">⚡ Signals</div>
-                  </Link>
-                  <Link href="/newsletter" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-neutral-300 hover:bg-neutral-900 cursor-pointer">📰 Newsletter</div>
-                  </Link>
-                  <Link href="/social" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-neutral-300 hover:bg-neutral-900 cursor-pointer">🎨 Studio</div>
-                  </Link>
-                </div>
-                <div>
-                  <div className="px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-neutral-500">Tools</div>
-                  <Link href="/roi-calculator" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-yellow-400 hover:bg-neutral-900 cursor-pointer">💰 ROI</div>
-                  </Link>
-                  <Link href="/pilot-calculator" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer">🧪 Pilot</div>
-                  </Link>
-                  <Link href="/robot-ready" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">🤖 Robot Ready</div>
-                  </Link>
-                  <Link href="/brief" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-cyan-400 hover:bg-neutral-900 cursor-pointer">📋 Brief</div>
-                  </Link>
-                  <Link href="https://ready-2-robot.fly.dev/admin" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-emerald-400 hover:bg-neutral-900 cursor-pointer">⚙️ Admin</div>
-                  </Link>
-                  <Link href="/profile" onClick={() => setShowMenu(false)}>
-                    <div className="px-4 py-2.5 text-[13px] text-neutral-300 hover:bg-neutral-900 cursor-pointer pb-3">♡ Profile</div>
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-
-        <SiteNavPrimaryLinks
-          ariaLabel="Dashboard"
-          prepend={
-            <>
-              {!session && usageCount < FREE_LIMIT && (
-                <span className="rr-badge-free">{FREE_LIMIT - usageCount} free searches left</span>
-              )}
-              {lastRefresh && (
-                <span className="rr-topnav-time tabular-nums">{lastRefresh}</span>
-              )}
-            </>
-          }
-          extraAfterHome={
-            <button type="button" className="rr-nav-refresh" onClick={fetchData}>
-              Refresh
-            </button>
-          }
-        />
-        <div className="rr-topnav-right hidden md:flex items-center">
-          {session
-            ? <span className="text-sm text-[var(--rr-muted2)] max-w-[10rem] truncate">{session.user.email.split('@')[0]}</span>
-            : (
-              <div title="Browse freely — sign in only to save companies and reports">
-                <LoginDropdown
-                  label="sign in to save"
-                  className="[&_button]:rounded-md [&_button]:border [&_button]:border-[#1f2d42] [&_button]:px-3 [&_button]:py-1.5 [&_button]:text-sm [&_button]:text-[#94a3b8] [&_button]:hover:border-[#10b981] [&_button]:hover:text-[#10b981]"
-                />
-              </div>
-            )}
-        </div>
-        </div>
-      </header>
+      {/* Unified Site Header */}
+      <SiteHeader active="pipeline" session={session} />
 
       {error && (
         <div className="rr-error-strip max-w-[1400px] mx-auto w-full">

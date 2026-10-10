@@ -31,7 +31,7 @@ Observe → Orient → Decide → Act → Verify → Learn → Notify
 
 ## Autonomy
 
-**Autonomous:** Cal cycle, sequence steps, Hunter enrich, suppression normalize, safe auto-replies (scheduling), harness trigger when green.
+**Autonomous:** Phelan cycle, sequence steps, Hunter enrich, suppression normalize, safe auto-replies (scheduling), harness trigger when green.
 
 **Escalate:** breaker open >48h, billing failures, legal/pricing exceptions, webhook auth failures.
 

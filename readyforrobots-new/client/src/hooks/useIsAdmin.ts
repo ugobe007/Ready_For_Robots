@@ -15,8 +15,11 @@ export function useIsAdmin(): boolean {
       return;
     }
     let cancelled = false;
-    void fetch(`${getApiBase()}/api/user/me`, liveFetchInit({ headers: authHeader(token) }))
-      .then((res) => (res.ok ? res.json() : null))
+    void fetch(
+      `${getApiBase()}/api/user/me`,
+      liveFetchInit({ headers: authHeader(token) })
+    )
+      .then(res => (res.ok ? res.json() : null))
       .then((data: { is_admin?: boolean } | null) => {
         if (!cancelled) setIsAdmin(Boolean(data?.is_admin));
       })

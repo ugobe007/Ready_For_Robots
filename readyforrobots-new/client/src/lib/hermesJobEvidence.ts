@@ -17,18 +17,21 @@ export function isRealVendorName(value: string): boolean {
   if (t.length < 3 || t.length > 48) return false;
   if (t.includes("_")) return false;
   if (/^[a-z0-9]+$/.test(t)) return false;
-  if (/^(amr|agv|cobot|arm|humanoid|uav|drone|mobile.?manipulator)$/i.test(t)) return false;
+  if (/^(amr|agv|cobot|arm|humanoid|uav|drone|mobile.?manipulator)$/i.test(t))
+    return false;
   return /[A-Z]/.test(t) || /\s/.test(t);
 }
 
-export function humanizeOverlayRationale(raw: string | null | undefined): string {
+export function humanizeOverlayRationale(
+  raw: string | null | undefined
+): string {
   if (!raw) return "";
   const stripped = raw.replace(/^\[rfr_inference_v1\]\s*/i, "").trim();
   const parts = stripped
     .split(/;\s*/)
-    .map((p) => p.trim())
+    .map(p => p.trim())
     .filter(Boolean)
-    .filter((p) => !SIGNAL_RATIONALE_NOISE.some((re) => re.test(p)));
+    .filter(p => !SIGNAL_RATIONALE_NOISE.some(re => re.test(p)));
   const seen = new Set<string>();
   const unique: string[] = [];
   for (const p of parts) {
@@ -40,7 +43,9 @@ export function humanizeOverlayRationale(raw: string | null | undefined): string
   return unique.slice(0, 1).join("");
 }
 
-function vendorLabel(item: string | { vendor?: string | null } | null | undefined): string {
+function vendorLabel(
+  item: string | { vendor?: string | null } | null | undefined
+): string {
   if (!item) return "";
   if (typeof item === "string") return item.trim();
   return (item.vendor || "").trim();
@@ -54,25 +59,42 @@ export type HermesJobEvidence = {
   vendors: { vendor: string; model: string; why: string }[];
 };
 
-export function extractHermesJobEvidence(qualify: {
-  rationale?: string | null;
-  vendor_shortlist?: Array<string | { vendor?: string | null; model?: string | null; why?: string | null }> | null;
-  decision_makers?: { name?: string | null; title?: string | null }[] | null;
-  job_posts?: { title?: string | null; url?: string | null }[] | null;
-} | null | undefined): Pick<HermesJobEvidence, "rationale" | "vendors" | "decisionMakers" | "jobTitles"> {
+export function extractHermesJobEvidence(
+  qualify:
+    | {
+        rationale?: string | null;
+        vendor_shortlist?: Array<
+          | string
+          | {
+              vendor?: string | null;
+              model?: string | null;
+              why?: string | null;
+            }
+        > | null;
+        decision_makers?:
+          | { name?: string | null; title?: string | null }[]
+          | null;
+        job_posts?: { title?: string | null; url?: string | null }[] | null;
+      }
+    | null
+    | undefined
+): Pick<
+  HermesJobEvidence,
+  "rationale" | "vendors" | "decisionMakers" | "jobTitles"
+> {
   if (!qualify) {
     return { rationale: "", vendors: [], decisionMakers: [], jobTitles: [] };
   }
   const decisionMakers = (qualify.decision_makers || [])
-    .map((p) => ({ name: (p.name || "").trim(), title: (p.title || "").trim() }))
-    .filter((p) => p.name || p.title)
+    .map(p => ({ name: (p.name || "").trim(), title: (p.title || "").trim() }))
+    .filter(p => p.name || p.title)
     .slice(0, 3);
   const jobTitles = (qualify.job_posts || [])
-    .map((j) => (j.title || "").trim())
+    .map(j => (j.title || "").trim())
     .filter(Boolean)
     .slice(0, 3);
   const vendors = (qualify.vendor_shortlist || [])
-    .map((item) => {
+    .map(item => {
       if (typeof item === "string") {
         return { vendor: item.trim(), model: "", why: "" };
       }
@@ -82,7 +104,7 @@ export function extractHermesJobEvidence(qualify: {
         why: (item.why || "").trim(),
       };
     })
-    .filter((v) => isRealVendorName(v.vendor))
+    .filter(v => isRealVendorName(v.vendor))
     .slice(0, 4);
   return {
     rationale: humanizeOverlayRationale(qualify.rationale),
@@ -95,26 +117,45 @@ export function extractHermesJobEvidence(qualify: {
 export function pipelineHermesCard(deal: {
   hermesQualify?: {
     rationale?: string | null;
-    vendor_shortlist?: Array<{ vendor?: string | null; model?: string | null; why?: string | null }>;
+    vendor_shortlist?: Array<{
+      vendor?: string | null;
+      model?: string | null;
+      why?: string | null;
+    }>;
     decision_makers?: { name?: string | null; title?: string | null }[] | null;
   } | null;
   hermesJobTitles?: string[] | null;
-  hermesDecisionMakers?: Array<{ name?: string | null; title?: string | null }> | null;
-  hermesVideoEvidence?: Array<{ source_url?: string | null; title?: string | null }> | null;
+  hermesDecisionMakers?: Array<{
+    name?: string | null;
+    title?: string | null;
+  }> | null;
+  hermesVideoEvidence?: Array<{
+    source_url?: string | null;
+    title?: string | null;
+  }> | null;
 }): HermesJobEvidence | null {
   const fromQualify = extractHermesJobEvidence(deal.hermesQualify);
   const jobTitles = fromQualify.jobTitles.length
     ? fromQualify.jobTitles
-    : (deal.hermesJobTitles || []).map((t) => t.trim()).filter(Boolean).slice(0, 3);
+    : (deal.hermesJobTitles || [])
+        .map(t => t.trim())
+        .filter(Boolean)
+        .slice(0, 3);
   const decisionMakers = fromQualify.decisionMakers.length
     ? fromQualify.decisionMakers
     : (deal.hermesDecisionMakers || [])
-        .map((p) => ({ name: (p.name || "").trim(), title: (p.title || "").trim() }))
-        .filter((p) => p.name || p.title)
+        .map(p => ({
+          name: (p.name || "").trim(),
+          title: (p.title || "").trim(),
+        }))
+        .filter(p => p.name || p.title)
         .slice(0, 4);
   const videos = (deal.hermesVideoEvidence || [])
-    .map((v) => ({ url: (v.source_url || "").trim(), title: (v.title || "").trim() }))
-    .filter((v) => v.url)
+    .map(v => ({
+      url: (v.source_url || "").trim(),
+      title: (v.title || "").trim(),
+    }))
+    .filter(v => v.url)
     .slice(0, 4);
   if (
     fromQualify.vendors.length === 0 &&

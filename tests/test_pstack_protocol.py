@@ -1,6 +1,8 @@
 """pstack site protocol: roles, matcher ownership, refusals."""
 from pathlib import Path
 
+import pytest
+
 from app.services.pstack_protocol import (
     CRM_WALL_REQUIRED,
     CRITIC_HELDOUT_FIND_URLS,
@@ -26,6 +28,7 @@ def test_roles_and_matcher_source():
     assert critic_gate_ids() == [
         "find",
         "find_abort",
+        "find_no_home",
         "find_identity",
         "crm_leftover",
         "job_cards",
@@ -35,6 +38,7 @@ def test_roles_and_matcher_source():
         "class_picker",
         "healthcare_class",
         "ontology_industry_language",
+        "url_workflow",
     ]
     assert CRM_WALL_REQUIRED is True
 
@@ -91,3 +95,31 @@ def test_sales_plan_agent_uses_pstack_not_gateway():
     assert "refuse_gateway" in src
     assert "ai-gateway" in src
     assert "Do not set SCOUT_PLAN_PROVIDER=ai-gateway" in src
+    assert "Send Cal intro" not in src
+    assert "Do not scrape Apollo" in src
+
+
+def test_fastapi_app_imports_for_fly_health():
+    """Cal→Phelan leftovers must not crash uvicorn (Fly /health 502)."""
+    pytest.importorskip("fastapi")
+    from fastapi import FastAPI
+
+    from app.main import app
+
+    assert isinstance(app, FastAPI)
+    assert any(getattr(route, "path", "") == "/health" for route in app.routes)
+
+
+def test_cal_jobs_desk_is_not_find_or_buyer_mail():
+    from app.services.phelan_jobs_desk import phelan_jobs_desk_intent
+    from app.services.phelan_persona import CAL_JOBS_DESK_TOOLS, CAL_SURFACE
+
+    intent = phelan_jobs_desk_intent()
+    assert intent["not_the_matcher"] is True
+    assert intent["not_find_chat"] is True
+    assert intent["not_buyer_mail"] is True
+    assert intent["autonomy_enabled"] is False
+    assert intent["tools"] == list(CAL_JOBS_DESK_TOOLS)
+    assert CAL_SURFACE == "/pipeline?src=jobs_activate"
+    assert intent["wrap"]["ok"] is True
+    assert intent["wrap"]["surface"] == "jobs_crm_cal"

@@ -2,19 +2,18 @@ import { describe, expect, it, beforeEach } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  findUserFacingError,
-  isSilentFindError,
-} from "./robotUrlIdentity";
+import { findUserFacingError, isSilentFindError } from "./robotUrlIdentity";
 import {
   CLASS_PICKER_FIXTURE,
   CRM_LEFTOVER_FIXTURE,
   FIND_ABORT_FIXTURE,
+  FIND_NO_HOME_FIXTURE,
   HEALTHCARE_CLASS_FIXTURE,
   PSTACK_RELEASE_CHROME_REQUIRED,
   abortMustNotSurfaceAsResearchFailed,
   bindUrlFlushesPriorRobot,
   diligentMustNotBeHumanoidEmpty,
+  findErrorMustStayOnFind,
   leftoverCrmMustNotKeepPriorRobot,
 } from "./pstackRelease";
 import {
@@ -78,22 +77,19 @@ describe("pstack release — #173 self-abort FIND", () => {
   it("does not surface AbortError or Failed to fetch as Research failed", () => {
     expect(abortMustNotSurfaceAsResearchFailed()).toBe(true);
     expect(
-      findUserFacingError(
-        FIND_ABORT_FIXTURE.abort,
-        FIND_ABORT_FIXTURE.fallback,
-      ),
+      findUserFacingError(FIND_ABORT_FIXTURE.abort, FIND_ABORT_FIXTURE.fallback)
     ).toBeNull();
     expect(
       findUserFacingError(
         FIND_ABORT_FIXTURE.failedToFetch,
-        FIND_ABORT_FIXTURE.fallback,
-      ),
+        FIND_ABORT_FIXTURE.fallback
+      )
     ).toBeNull();
     expect(isSilentFindError(FIND_ABORT_FIXTURE.abort)).toBe(true);
     expect(isSilentFindError(FIND_ABORT_FIXTURE.failedToFetch)).toBe(true);
     const shown = findUserFacingError(
       new Error("robot-job-search 502"),
-      FIND_ABORT_FIXTURE.fallback,
+      FIND_ABORT_FIXTURE.fallback
     );
     expect(shown).toMatch(/Research failed/);
     expect(shown).not.toMatch(/Failed to fetch/i);
@@ -102,23 +98,50 @@ describe("pstack release — #173 self-abort FIND", () => {
   it("FIND catch returns on abort before setError", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
-      "utf8",
+      "utf8"
     );
     const submitFind = workspace.slice(
       workspace.indexOf("async function submitFind"),
-      workspace.indexOf("async function confirmSelection"),
+      workspace.indexOf("async function confirmSelection")
     );
-    const catchBlock = submitFind.slice(submitFind.lastIndexOf("} catch (err)"));
+    const catchBlock = submitFind.slice(
+      submitFind.lastIndexOf("} catch (err)")
+    );
     expect(catchBlock).toMatch(/shouldIgnoreStaleFindError/);
     expect(catchBlock).toMatch(/isAbortError\(err,\s*ac\.signal\)/);
     expect(catchBlock).toMatch(/FIND_RESEARCH_INTERRUPTED_MESSAGE/);
     expect(catchBlock).not.toMatch(/Failed to fetch/i);
+    expect(catchBlock).toMatch(/ensureFindStayVisit/);
+    expect(submitFind).not.toMatch(/goJobsFreshHome/);
     expect(submitFind).toMatch(/bindSubmittedRobot\(submitUrl\)/);
     const abortAt = catchBlock.indexOf("isAbortError");
     const failAt = catchBlock.indexOf("lookupFailedMessage");
     expect(abortAt).toBeGreaterThan(-1);
     expect(failAt).toBeGreaterThan(abortAt);
     expect(catchBlock.indexOf("setError")).toBeGreaterThan(abortAt);
+  });
+
+  it("FIND timeout and 500 stay on /?visit=jobs", () => {
+    expect(
+      findErrorMustStayOnFind({
+        name: FIND_NO_HOME_FIXTURE.timeout.name,
+        message: FIND_NO_HOME_FIXTURE.timeout.message,
+      })
+    ).toBe(true);
+    expect(
+      findErrorMustStayOnFind({
+        name: FIND_NO_HOME_FIXTURE.http500.name,
+        message: FIND_NO_HOME_FIXTURE.http500.message,
+      })
+    ).toBe(true);
+    expect(findErrorMustStayOnFind(FIND_ABORT_FIXTURE.failedToFetch)).toBe(
+      true
+    );
+    const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
+    expect(jobsPage).toMatch(/RobotJobsWorkspace/);
+    expect(jobsPage).toMatch(/JobsLanding/);
+    expect(jobsPage).toMatch(/visit === "landing"/);
+    expect(jobsPage).not.toMatch(/forcedLanding/);
   });
 });
 
@@ -135,7 +158,7 @@ describe("pstack release — #172 leftover CRM strawberry robot", () => {
     });
     beginJobsHandoffForUrl(
       CRM_LEFTOVER_FIXTURE.nextUrl,
-      CRM_LEFTOVER_FIXTURE.nextProduct,
+      CRM_LEFTOVER_FIXTURE.nextProduct
     );
     expect(bindUrlFlushesPriorRobot()).toBe(true);
     expect(
@@ -146,7 +169,7 @@ describe("pstack release — #172 leftover CRM strawberry robot", () => {
           jobs: [],
         },
         accountRows: [orchardRow()],
-      }),
+      })
     ).toBe(true);
   });
 });
@@ -157,6 +180,7 @@ describe("pstack release authority is not FIND/CRM chrome", () => {
     expect(criticGateIds()).toEqual([
       "find",
       "find_abort",
+      "find_no_home",
       "find_identity",
       "crm_leftover",
       "job_cards",
@@ -166,6 +190,7 @@ describe("pstack release authority is not FIND/CRM chrome", () => {
       "class_picker",
       "healthcare_class",
       "ontology_industry_language",
+      "url_workflow",
     ]);
     expect(CLASS_PICKER_FIXTURE.classId).toBe("agriculture");
     expect(CLASS_PICKER_FIXTURE.prompt).toBe("What type of robot?");
@@ -176,13 +201,13 @@ describe("pstack release authority is not FIND/CRM chrome", () => {
     expect(diligentMustNotBeHumanoidEmpty()).toBe(true);
     const desk = readFileSync(
       join(here, "../components/JobsCrmDesk.tsx"),
-      "utf8",
+      "utf8"
     );
     expect(desk).not.toMatch(/JobsPstackProtocol/);
     expect(desk).not.toMatch(/JOBS AGENT PROTOCOL/);
     const readme = readFileSync(
       join(here, "../../../../pstack/README.md"),
-      "utf8",
+      "utf8"
     );
     expect(readme).toMatch(/release gate/);
     expect(readme).toMatch(/not a banner/);

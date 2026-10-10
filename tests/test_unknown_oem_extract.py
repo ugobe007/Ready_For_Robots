@@ -230,11 +230,19 @@ def test_xpeng_cars_and_investors_are_not_robots():
     ):
         assert noise not in names
     found = {p.name.lower() for p in resolve_identity(f"{origin}/", home).products}
-    for noise in ("g6", "p7", "xpeng iron", "xpeng px5", "iron", "px5"):
+    for noise in ("g6", "p7", "xpeng px5", "px5"):
         assert noise not in found
     listing = listing_payload_for_url(f"{origin}/")
-    assert listing["matched"] is False
-    assert lookup_vendor_by_url(f"{origin}/") is None
+    assert listing["matched"] is True
+    by = {r["name"]: r.get("display_class") for r in listing.get("robots") or []}
+    assert by.get("IRON") == "humanoid", by
+    assert "G6" not in by
+    assert "P7" not in by
+    assert "XPeng PX5" not in by
+    assert "PX5" not in by
+    vendor = lookup_vendor_by_url(f"{origin}/")
+    assert vendor is not None
+    assert vendor.get("vendor_name") == "XPENG"
 
 
 def test_aandk_cruz_if_evidenced_not_product_nav():

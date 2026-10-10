@@ -1131,7 +1131,7 @@ _FACTORY_REQS = [
     {"id": "mobility", "label": "mobility along the cell (optional)", "necessity": "not_required"},
 ]
 _HOSPITALITY_REQS = [
-    {"id": "hospitality_task", "label": "hotel / guest / serving work", "necessity": "required"},
+    {"id": "hospitality_task", "label": "hotel / guest / housekeeping work", "necessity": "required"},
     {"id": "indoor_navigation", "label": "navigate guest floors and service corridors", "necessity": "required"},
     {"id": "mobility", "label": "mobility between rooms", "necessity": "required"},
 ]

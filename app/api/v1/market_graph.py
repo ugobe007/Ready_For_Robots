@@ -576,15 +576,36 @@ def market_graph_daily_digest_send(
     _auth: dict = Depends(_require_ingest_auth),
 ) -> dict[str, Any]:
     """Send the operator daily digest via Resend. No paid LLM / AI Gateway."""
-    from app.services.cal_daily_digest import send_cal_daily_digest
+    from app.services.phelan_daily_digest import send_phelan_daily_digest
 
-    result = send_cal_daily_digest(
+    result = send_phelan_daily_digest(
         db, period_hours=body.period_hours, force=body.force
     )
     result["engine"] = "local_inference"
     result["paid_llm"] = False
     result["auth"] = _auth.get("auth")
     result["doc"] = "docs/skills/rfr-daily-email-digest.SKILL.md"
+    return result
+
+
+class DailyJobsReportSendBody(BaseModel):
+    force: bool = False
+    limit: int = Field(25, ge=1, le=50)
+
+
+@router.post("/daily-jobs-report-send")
+def market_graph_daily_jobs_report_send(
+    body: DailyJobsReportSendBody,
+    db: Session = Depends(get_db),
+    _auth: dict = Depends(_require_ingest_auth),
+) -> dict[str, Any]:
+    """Send the operator top-25 Robot Jobs email via Resend. No paid LLM."""
+    from app.services.daily_jobs_report import send_daily_jobs_report
+
+    result = send_daily_jobs_report(db, force=body.force, limit=body.limit)
+    result["engine"] = "local_inference"
+    result["paid_llm"] = False
+    result["auth"] = _auth.get("auth")
     return result
 
 
@@ -746,7 +767,7 @@ def market_graph_buying_window_overlay(
                 urgency_0_100=item.urgency_0_100,
                 window_label=item.window_label,
                 factors=item.factors,
-                cal_hint=item.cal_hint,
+                phelan_hint=item.cal_hint,
                 confidence=item.confidence,
                 hermes_run_id=body.hermes_run_id,
                 dry_run=body.dry_run,
@@ -912,9 +933,9 @@ def market_graph_cal_status(
 ) -> dict[str, Any]:
     """Hermes-readable Cal autonomy snapshot (Redis heartbeat + toggle). Auth: admin/cron."""
     try:
-        from app.services.cal_autonomy import get_cal_autonomy_status
+        from app.services.phelan_autonomy import get_phelan_autonomy_status
 
-        status = get_cal_autonomy_status()
+        status = get_phelan_autonomy_status()
     except Exception as exc:
         return {"ok": False, "error": str(exc)[:240], "auth": _auth.get("auth")}
     return {

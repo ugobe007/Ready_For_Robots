@@ -56,7 +56,9 @@ export default function OemHold() {
       })
       .catch(err => {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : "This hold link is not valid.");
+          setError(
+            err instanceof Error ? err.message : "This hold link is not valid."
+          );
         }
       });
     return () => {
@@ -72,9 +74,12 @@ export default function OemHold() {
         `${api}/api/jobs-crm/oem-hold/${token}${path}`,
         liveFetchInit({
           method: "POST",
-          headers: { "Content-Type": "application/json", Accept: "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: "{}",
-        }),
+        })
       );
       if (!res.ok) {
         let detail = "Could not update this hold.";
@@ -88,24 +93,31 @@ export default function OemHold() {
       }
       setData((await res.json()) as HoldView);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update this hold.");
+      setError(
+        err instanceof Error ? err.message : "Could not update this hold."
+      );
     } finally {
       setBusy(false);
     }
   }
 
-  const windowLabel = data?.slot_label
-    || (data?.slot_start
+  const windowLabel =
+    data?.slot_label ||
+    (data?.slot_start
       ? `${new Date(data.slot_start).toLocaleString()}${
           data.slot_end ? ` – ${new Date(data.slot_end).toLocaleString()}` : ""
         }`
       : null);
 
   return (
-    <div className={`flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+    <div
+      className={`flex min-h-screen flex-col bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+    >
       <ExperimentHeader />
       <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-10">
-        <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>Robot company — held slot</p>
+        <p className={`${JOBS_EYEBROW_CLASS} text-emerald-400`}>
+          Robot company — held slot
+        </p>
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-4xl">
           {data?.work_title || "Held interview"}
         </h1>
@@ -130,7 +142,9 @@ export default function OemHold() {
               </p>
             ) : null}
             {data.interview_note ? (
-              <p className="mt-2 text-sm text-slate-400">{data.interview_note}</p>
+              <p className="mt-2 text-sm text-slate-400">
+                {data.interview_note}
+              </p>
             ) : null}
             <p className="mt-4 text-sm text-slate-400">
               Confirm books this window. Release frees it so the employer can

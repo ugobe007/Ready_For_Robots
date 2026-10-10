@@ -22,8 +22,12 @@ import {
   threadStateLabel,
   type JobsCrmApplication,
 } from "@/lib/jobsCrmAccount";
-import { JOBS_APPLY_CTA_BUTTON_CLASS, JOBS_EYEBROW_CLASS } from "@/lib/jobsWorkflow";
+import {
+  JOBS_APPLY_CTA_BUTTON_CLASS,
+  JOBS_EYEBROW_CLASS,
+} from "@/lib/jobsWorkflow";
 import PocVideoWatch from "@/components/PocVideoWatch";
+import LeadEmailDisplay from "@/components/LeadEmailDisplay";
 
 export default function JobsCrmInbox({
   applicationId,
@@ -91,7 +95,9 @@ export default function JobsCrmInbox({
       aria-label={JOBS_INBOX_HEADING}
       className="mt-6 border border-slate-600 bg-[#081126] px-4 py-5"
     >
-      <p className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>{JOBS_INBOX_HEADING}</p>
+      <p className={`${JOBS_EYEBROW_CLASS} text-slate-400`}>
+        {JOBS_INBOX_HEADING}
+      </p>
       <p className="mt-1 font-mono text-xs uppercase tracking-[0.08em] text-emerald-300">
         {applicationStatusLabel(app.status)}
         {" · "}
@@ -106,9 +112,11 @@ export default function JobsCrmInbox({
             : ""}
           {app.decline_note ? ` — ${app.decline_note}` : ""}
         </p>
-      ) : app.status === "interview_held" && (app.slot_label || app.slot_start) ? (
+      ) : app.status === "interview_held" &&
+        (app.slot_label || app.slot_start) ? (
         <p className="mt-2 text-sm text-slate-200">
-          Held slot: {app.slot_label || new Date(app.slot_start || "").toLocaleString()}
+          Held slot:{" "}
+          {app.slot_label || new Date(app.slot_start || "").toLocaleString()}
           {app.hold_expires_at
             ? ` · hold until ${new Date(app.hold_expires_at).toLocaleString()}`
             : ""}
@@ -116,7 +124,9 @@ export default function JobsCrmInbox({
       ) : app.interview_at ? (
         <p className="mt-2 text-sm text-slate-200">
           Interview: {new Date(app.interview_at).toLocaleString()}
-          {app.interview_mode ? ` · ${app.interview_mode.replace(/_/g, " ")}` : ""}
+          {app.interview_mode
+            ? ` · ${app.interview_mode.replace(/_/g, " ")}`
+            : ""}
         </p>
       ) : app.interview_mode === "connect_you" ? (
         <p className="mt-2 text-sm text-slate-200">
@@ -165,7 +175,11 @@ export default function JobsCrmInbox({
             saveApplicationMeetingUrl(token, applicationId, meetingUrl.trim())
               .then(row => setApp(row))
               .catch(err =>
-                setError(err instanceof Error ? err.message : "Could not save meeting URL."),
+                setError(
+                  err instanceof Error
+                    ? err.message
+                    : "Could not save meeting URL."
+                )
               )
               .finally(() => setBusy(false));
           }}
@@ -183,11 +197,18 @@ export default function JobsCrmInbox({
       ) : null}
       <PocVideoWatch url={app.poc_video_url} />
       {app.draft ? (
-        <div className="mt-4 border border-violet-500/30 bg-[#12082a] px-3 py-3" data-apply-draft="1">
-          <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>Application draft</p>
+        <div
+          className="mt-4 border border-violet-500/30 bg-[#12082a] px-3 py-3"
+          data-apply-draft="1"
+        >
+          <p className={`${JOBS_EYEBROW_CLASS} text-violet-300`}>
+            Application draft
+          </p>
           <p className="mt-1 text-sm text-slate-400">{JOBS_SEND_DRAFT_HINT}</p>
           {app.draft.subject ? (
-            <p className="mt-2 text-sm text-slate-200">Subject: {app.draft.subject}</p>
+            <p className="mt-2 text-sm text-slate-200">
+              Subject: {app.draft.subject}
+            </p>
           ) : null}
           {app.draft.why ? (
             <p className="mt-2 text-sm text-slate-300">{app.draft.why}</p>
@@ -202,11 +223,22 @@ export default function JobsCrmInbox({
             </p>
           )}
           {(app.contacts || app.draft.contacts || []).length ? (
-            <p className="mt-2 text-sm text-slate-200">
-              Contact: {(app.contacts || app.draft.contacts || []).map(c => c.email).join(", ")}
-            </p>
+            <div className="mt-2 text-sm text-slate-200 flex items-center gap-2">
+              <span>Contact:</span>
+              <div className="flex flex-wrap gap-2">
+                {(app.contacts || app.draft.contacts || []).map((c, idx) => (
+                  <LeadEmailDisplay
+                    key={idx}
+                    email={c.email}
+                    variant="inline"
+                  />
+                ))}
+              </div>
+            </div>
           ) : (
-            <p className="mt-2 text-sm text-amber-200/90">{JOBS_CONTACTS_EMPTY_NOTE}</p>
+            <p className="mt-2 text-sm text-amber-200/90">
+              {JOBS_CONTACTS_EMPTY_NOTE}
+            </p>
           )}
           {app.can_operator_send ? (
             <button
@@ -219,7 +251,9 @@ export default function JobsCrmInbox({
                 sendPreparedApplication(token, applicationId)
                   .then(row => setApp(row))
                   .catch(err =>
-                    setError(err instanceof Error ? err.message : "Could not send."),
+                    setError(
+                      err instanceof Error ? err.message : "Could not send."
+                    )
                   )
                   .finally(() => setBusy(false));
               }}
@@ -251,10 +285,15 @@ export default function JobsCrmInbox({
               key={msg.id}
               className="border border-slate-700 px-3 py-3 text-sm text-slate-200"
             >
-              <p className="font-mono text-xs uppercase tracking-[0.08em] text-slate-500">
-                {msg.direction === "inbound" ? "Employer" : "You"}
-                {msg.from_email ? ` · ${msg.from_email}` : ""}
-              </p>
+              <div className="font-mono text-xs uppercase tracking-[0.08em] text-slate-500 flex items-center gap-1.5">
+                <span>{msg.direction === "inbound" ? "Employer" : "You"}</span>
+                {msg.from_email ? (
+                  <>
+                    <span>·</span>
+                    <LeadEmailDisplay email={msg.from_email} variant="inline" />
+                  </>
+                ) : null}
+              </div>
               <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed text-slate-200">
                 {msg.body}
               </pre>
@@ -317,8 +356,10 @@ export default function JobsCrmInbox({
                 .then(setApp)
                 .catch(err =>
                   setError(
-                    err instanceof Error ? err.message : "Could not confirm this hold.",
-                  ),
+                    err instanceof Error
+                      ? err.message
+                      : "Could not confirm this hold."
+                  )
                 )
                 .finally(() => setBusy(false));
             }}
@@ -338,8 +379,10 @@ export default function JobsCrmInbox({
                 .then(setApp)
                 .catch(err =>
                   setError(
-                    err instanceof Error ? err.message : "Could not release this hold.",
-                  ),
+                    err instanceof Error
+                      ? err.message
+                      : "Could not release this hold."
+                  )
                 )
                 .finally(() => setBusy(false));
             }}
@@ -348,7 +391,8 @@ export default function JobsCrmInbox({
             {JOBS_OEM_RELEASE_HOLD_CTA}
           </button>
         ) : null}
-        {app.status === "interview_scheduled" || app.status === "interview_requested" ? (
+        {app.status === "interview_scheduled" ||
+        app.status === "interview_requested" ? (
           <button
             type="button"
             disabled={busy}
@@ -359,8 +403,10 @@ export default function JobsCrmInbox({
                 .then(setApp)
                 .catch(err =>
                   setError(
-                    err instanceof Error ? err.message : "Could not confirm interview.",
-                  ),
+                    err instanceof Error
+                      ? err.message
+                      : "Could not confirm interview."
+                  )
                 )
                 .finally(() => setBusy(false));
             }}
@@ -382,8 +428,10 @@ export default function JobsCrmInbox({
                   .then(setApp)
                   .catch(err =>
                     setError(
-                      err instanceof Error ? err.message : "Could not record outcome.",
-                    ),
+                      err instanceof Error
+                        ? err.message
+                        : "Could not record outcome."
+                    )
                   )
                   .finally(() => setBusy(false));
               }}
@@ -401,8 +449,10 @@ export default function JobsCrmInbox({
                   .then(setApp)
                   .catch(err =>
                     setError(
-                      err instanceof Error ? err.message : "Could not record outcome.",
-                    ),
+                      err instanceof Error
+                        ? err.message
+                        : "Could not record outcome."
+                    )
                   )
                   .finally(() => setBusy(false));
               }}

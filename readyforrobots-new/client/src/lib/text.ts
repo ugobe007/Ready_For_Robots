@@ -2,7 +2,7 @@ export function decodeBasicHtmlEntities(raw: string): string {
   return raw
     .replace(/&nbsp;/gi, " ")
     .replace(/&amp;/gi, "&")
-    .replace(/&quot;/gi, "\"")
+    .replace(/&quot;/gi, '"')
     .replace(/&#39;/g, "'")
     .replace(/&lt;/gi, "<")
     .replace(/&gt;/gi, ">");
@@ -10,6 +10,9 @@ export function decodeBasicHtmlEntities(raw: string): string {
 
 export function cleanScrapedText(raw: string | null | undefined): string {
   return decodeBasicHtmlEntities(raw || "")
+    .replace(/ROBOT_JOB\s*\|\s*/gi, "")
+    .replace(/\bunknown_function\b/gi, "Operational Task")
+    .replace(/\bunknown employer\b/gi, "Hiring Employer")
     .replace(/<\s*a\s*href\s*=\s*["'][^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1")
     .replace(/<\s*ahref\s*=\s*["'][^"']*["'][^>]*>([\s\S]*?)<\/a>/gi, "$1")
     .replace(/<a\b[^>]*>([\s\S]*?)<\/a>/gi, "$1")
@@ -29,7 +32,10 @@ export function cleanScrapedText(raw: string | null | undefined): string {
     .trim();
 }
 
-export function cleanAndClampText(raw: string | null | undefined, maxLength: number): string {
+export function cleanAndClampText(
+  raw: string | null | undefined,
+  maxLength: number
+): string {
   const text = cleanScrapedText(raw);
   if (!text || text.length <= maxLength) return text;
   const slice = text.slice(0, maxLength - 1);
@@ -39,10 +45,14 @@ export function cleanAndClampText(raw: string | null | undefined, maxLength: num
 }
 
 /** One or two complete sentences for card previews — never mid-word. */
-export function leadPreviewSentences(raw: string | null | undefined, maxSentences = 2, maxChars = 320): string {
+export function leadPreviewSentences(
+  raw: string | null | undefined,
+  maxSentences = 2,
+  maxChars = 320
+): string {
   const text = cleanScrapedText(raw);
   if (!text) return "";
-  const parts = text.split(/(?<=[.!?])\s+/).filter((p) => p.trim().length > 12);
+  const parts = text.split(/(?<=[.!?])\s+/).filter(p => p.trim().length > 12);
   if (!parts.length) return cleanAndClampText(text, maxChars);
   let out = "";
   for (const part of parts.slice(0, maxSentences)) {

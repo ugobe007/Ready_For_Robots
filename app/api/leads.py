@@ -1312,9 +1312,9 @@ def _fmt_pipeline_card(
     if isinstance(hermes_jobs, list) and hermes_jobs:
         hermes_job = str(hermes_jobs[0] or "").strip()
     try:
-        from app.services.cal_seller_brief import build_cal_seller_brief
+        from app.services.phelan_seller_brief import build_phelan_seller_brief
 
-        payload["cal_seller_brief"] = build_cal_seller_brief(
+        payload["phelan_seller_brief"] = build_phelan_seller_brief(
             company_name=str(payload.get("company_name") or c.name or ""),
             industry=str(industry_display or ""),
             signal_text=format_signal_for_sales(sig.signal_text) if sig else "",
@@ -1326,7 +1326,7 @@ def _fmt_pipeline_card(
         )
     except Exception:
         # Never break match-url / pipeline cards if seller-brief assembly fails.
-        payload["cal_seller_brief"] = None
+        payload["phelan_seller_brief"] = None
     return payload
 
 
@@ -1571,9 +1571,9 @@ def _fmt_company(
         elif isinstance(inf.get("specific_problem"), str):
             pitch_src = str(inf.get("specific_problem") or "").strip()
     try:
-        from app.services.cal_seller_brief import build_cal_seller_brief
+        from app.services.phelan_seller_brief import build_phelan_seller_brief
 
-        payload["cal_seller_brief"] = build_cal_seller_brief(
+        payload["phelan_seller_brief"] = build_phelan_seller_brief(
             company_name=str(payload.get("company_name") or c.name or ""),
             industry=str(payload.get("industry") or ""),
             signal_text=format_signal_for_sales(first_sig.signal_text) if first_sig else "",
@@ -1584,7 +1584,7 @@ def _fmt_company(
             hermes_job_title=hermes_job,
         )
     except Exception:
-        payload["cal_seller_brief"] = None
+        payload["phelan_seller_brief"] = None
 
     quality_profile = compute_lead_quality_profile(
         priority_tier=pri.tier,
@@ -1731,7 +1731,7 @@ def _hermes_pipeline_fields(crm_meta: Optional[dict]) -> dict:
             {
                 "urgency_0_100": buying.get("urgency_0_100"),
                 "window_label": (buying.get("window_label") or None),
-                "cal_hint": (buying.get("cal_hint") or "")[:280] or None,
+                "cal_hint": (buying.get("phelan_hint") or buying.get("cal_hint") or "")[:280] or None,
                 "confidence": buying.get("confidence"),
                 "factors": factor_preview,
                 "truth_state": buying.get("truth_state") or "HERMES_OVERLAY",
@@ -3154,7 +3154,7 @@ def _lead_snapshot_version(db: Session, company_id: int) -> Optional[str]:
 
 
 @router.get("/cal-drops")
-def get_cal_lead_drops(response: Response):
+def get_phelan_lead_drops(response: Response):
     """Shareable Cal buyer briefs — pre-built during pipeline cache refresh."""
     from app.services.content_surfaces import KEY_CAL_LEAD_DROPS
     from app.services.public_surface_cache import read_public_cache, schedule_public_cache_refresh
@@ -3176,11 +3176,11 @@ def get_cal_lead_drops(response: Response):
 
 
 @router.get("/cal-email-preview")
-def get_cal_email_preview():
+def get_phelan_email_preview():
     """HTML preview of Cal vendor email with inline demo GIF (for QA / marketing)."""
     from fastapi.responses import HTMLResponse
 
-    from app.services.cal_email_demo import enrich_cal_email_with_demo
+    from app.services.phelan_email_demo import enrich_cal_email_with_demo
 
     sample = """Hi,
 

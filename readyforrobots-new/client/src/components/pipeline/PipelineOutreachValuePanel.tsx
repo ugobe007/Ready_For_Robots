@@ -1,7 +1,14 @@
 /**
  * Outreach draft preview — prove value before signup (value-first principle).
  */
-import { ArrowRight, Copy, CheckCheck, Mail, Eye, LockKeyhole } from "lucide-react";
+import {
+  ArrowRight,
+  Copy,
+  CheckCheck,
+  Mail,
+  Eye,
+  LockKeyhole,
+} from "lucide-react";
 import { Link } from "wouter";
 import { cleanAndClampText } from "@/lib/text";
 import { signupHrefForLead } from "@/lib/signupHref";
@@ -64,13 +71,21 @@ export default function PipelineOutreachValuePanel({
         }
       >
         <div className="flex items-start gap-2">
-          <LockKeyhole className={`h-4 w-4 shrink-0 mt-0.5 ${dark ? "text-sky-300" : "text-blue-800"}`} />
+          <LockKeyhole
+            className={`h-4 w-4 shrink-0 mt-0.5 ${dark ? "text-sky-300" : "text-blue-800"}`}
+          />
           <div className="min-w-0 flex-1">
-            <p className={`text-[10px] font-bold uppercase tracking-widest ${dark ? "text-sky-200" : "text-blue-900"}`}>
+            <p
+              className={`text-[10px] font-bold uppercase tracking-widest ${dark ? "text-sky-200" : "text-blue-900"}`}
+            >
               Cal's note ready
             </p>
-            <p className={`mt-1 text-[11px] leading-relaxed ${dark ? "text-sky-100/90" : "text-blue-950"}`}>
-              A short, timely note for {deal.company} — market timing, not a hard sell. Sign up free to read the full draft, copy it, and save this lead.
+            <p
+              className={`mt-1 text-[11px] leading-relaxed ${dark ? "text-sky-100/90" : "text-blue-950"}`}
+            >
+              A short, timely note for {deal.company} — market timing, not a
+              hard sell. Sign up free to read the full draft, copy it, and save
+              this lead.
             </p>
             <Link
               href={signupHref}
@@ -80,7 +95,12 @@ export default function PipelineOutreachValuePanel({
                   : "mt-2 inline-flex items-center justify-center gap-1.5 rounded-lg bg-blue-700 px-3 py-2 text-[11px] font-bold text-white hover:bg-blue-800"
               }
             >
-              <PixelIcon map={KARE_FACE} scale={2} fill={dark ? "#05271e" : "#ffffff"} background="transparent" />
+              <PixelIcon
+                map={KARE_FACE}
+                scale={2}
+                fill={dark ? "#05271e" : "#ffffff"}
+                background="transparent"
+              />
               Unlock draft
               <ArrowRight className="h-3 w-3" />
             </Link>
@@ -104,7 +124,9 @@ export default function PipelineOutreachValuePanel({
     >
       <div className="mb-2 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5">
-          <Mail className={`h-3.5 w-3.5 ${dark ? "text-emerald-300" : "text-emerald-700"}`} />
+          <Mail
+            className={`h-3.5 w-3.5 ${dark ? "text-emerald-300" : "text-emerald-700"}`}
+          />
           <p
             className={
               dark
@@ -134,18 +156,33 @@ export default function PipelineOutreachValuePanel({
           )}
           {hasSession ? (
             <span className="inline-flex items-center gap-1">
-              <PixelIcon map={KARE_FACE} scale={2} fill="#3ecf8e" background="transparent" />
+              <PixelIcon
+                map={KARE_FACE}
+                scale={2}
+                fill="#3ecf8e"
+                background="transparent"
+              />
               <button
                 type="button"
                 onClick={onCopy}
                 className="flex items-center gap-1 rounded px-2 py-1 text-[10px] font-semibold"
                 style={
                   copied
-                    ? { background: "rgba(52,211,153,0.12)", color: dark ? "#6ee7b7" : "#047857" }
-                    : { background: "rgba(255,176,0,0.12)", color: dark ? "#fcd34d" : "#b45309" }
+                    ? {
+                        background: "rgba(52,211,153,0.12)",
+                        color: dark ? "#6ee7b7" : "#047857",
+                      }
+                    : {
+                        background: "rgba(255,176,0,0.12)",
+                        color: dark ? "#fcd34d" : "#b45309",
+                      }
                 }
               >
-                {copied ? <CheckCheck className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+                {copied ? (
+                  <CheckCheck className="h-3 w-3" />
+                ) : (
+                  <Copy className="h-3 w-3" />
+                )}
                 {copied ? "Copied" : "Copy"}
               </button>
             </span>
@@ -161,8 +198,16 @@ export default function PipelineOutreachValuePanel({
               : "mb-2 rounded-lg border border-amber-200/80 bg-white/80 px-2.5 py-2"
           }
         >
-          <p className={`text-[10px] uppercase tracking-wide ${dark ? "text-slate-500" : "text-gray-400"}`}>Subject</p>
-          <p className={`text-xs font-semibold ${dark ? "text-amber-200" : "text-amber-900"}`}>{deal.outreachSubject}</p>
+          <p
+            className={`text-[10px] uppercase tracking-wide ${dark ? "text-slate-500" : "text-gray-400"}`}
+          >
+            Subject
+          </p>
+          <p
+            className={`text-xs font-semibold ${dark ? "text-amber-200" : "text-amber-900"}`}
+          >
+            {deal.outreachSubject}
+          </p>
         </div>
       )}
 
@@ -186,14 +231,22 @@ export default function PipelineOutreachValuePanel({
 
       {!hasSession && (
         <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-          <p className={`text-[11px] leading-relaxed ${dark ? "text-emerald-200/90" : "text-emerald-800"}`}>
-            Notice the timing — this is market insight, not a pitch. Sign up free to copy, save, and track this lead.
+          <p
+            className={`text-[11px] leading-relaxed ${dark ? "text-emerald-200/90" : "text-emerald-800"}`}
+          >
+            Notice the timing — this is market insight, not a pitch. Sign up
+            free to copy, save, and track this lead.
           </p>
           <Link
             href={signupHref}
             className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-lg bg-emerald-500 px-3 py-2 text-[11px] font-bold text-[#05271e] hover:bg-emerald-400"
           >
-            <PixelIcon map={KARE_FACE} scale={2} fill="#05271e" background="transparent" />
+            <PixelIcon
+              map={KARE_FACE}
+              scale={2}
+              fill="#05271e"
+              background="transparent"
+            />
             Sign up free — copy draft
             <ArrowRight className="h-3 w-3" />
           </Link>

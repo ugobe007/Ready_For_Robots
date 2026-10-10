@@ -146,7 +146,12 @@ def test_mixed_overlay_file_does_not_invent_skus():
     forbidden = {"About", "News", "en", "Imprint", "Product", "Farmers"}
     assert forbidden.isdisjoint(names)
     assert "PuduBot 3" not in names
-    assert "T7AMR" not in names
+    assert "Seer Humanoid" not in names
+    assert "AMR scrubbers" not in names
+    assert "XPENG Humanoid" not in names
+    assert "XPeng PX5" not in names
+    assert "A1 Z" not in names
+    assert "Lite-T" not in names
     assert map_primary_class("Commercial", "Bipedal humanoid") == "humanoid"
     assert map_primary_class("Commercial", "Cleaning drone") == "cleaning_drone"
 
@@ -242,20 +247,233 @@ def test_kaercher_overlay_is_robotic_kira_not_mop_skus():
     assert "sc 3" not in blob
 
 
-def test_tennant_and_seer_do_not_invent_cleaner_skus():
+def test_tennant_and_seer_named_robots_not_class_dumps():
     import json
 
     data = json.loads(MIXED_OEM_CATALOG_PATH.read_text(encoding="utf-8"))
     slugs = {c["slug"] for c in data["companies"]}
-    assert "tennant" not in slugs
-    assert "seer-robotics" not in slugs
+    assert "tennant" in slugs
+    assert "seer-robotics" in slugs
     names = [p["name"] for c in data["companies"] for p in c["products"]]
-    assert "T7AMR" not in names
     assert "AMR scrubbers" not in names
+    assert "Seer Humanoid" not in names
     tennant = listing_payload_for_url("https://www.tennantco.com/en_us.html")
     tennant_names = [r["name"] for r in tennant.get("robots") or []]
     assert "AMR scrubbers" not in tennant_names
-    assert "T7AMR" not in tennant_names
+    assert "X6 ROVR" in tennant_names
+    assert "T7AMR" in tennant_names
+    assert all(r.get("display_class") == "cleaning" for r in tennant["robots"])
+    seer = listing_payload_for_url("https://seer-robotics.ai/")
+    seer_names = [r["name"] for r in seer.get("robots") or []]
+    assert "Seer Humanoid" not in seer_names
+    assert "AMB-300JZ" in seer_names
+    assert "SFL-CBD15" in seer_names
+    by = {r["name"]: r.get("display_class") for r in seer["robots"]}
+    assert by["AMB-300JZ"] == "amr"
+    assert by["SFL-CBD15"] == "amr"
+    assert by.get("SRC-880") is None
+
+
+def test_vinmotion_named_robots_from_page_evidence():
+    import json
+
+    data = json.loads(MIXED_OEM_CATALOG_PATH.read_text(encoding="utf-8"))
+    vin = next(c for c in data["companies"] if c["slug"] == "vinmotion")
+    names = [p["name"] for p in vin["products"]]
+    assert names == ["Motion 1", "Motion 2"]
+    assert "VinMotion Humanoid" not in names
+    assert "Product" not in names
+    payload = listing_payload_for_url("https://vinmotion.net/")
+    assert payload["matched"] is True
+    by = {r["name"]: r.get("display_class") for r in payload["robots"]}
+    assert by["Motion 1"] == "humanoid"
+    assert by.get("Motion 2") is None, by
+    assert "Product" not in by
+    assert "humanoid" in set(payload["product_range"])
+    assert payload["mixed_range"] is False
+
+
+def test_vinmotion_product_hrefs_and_next_f_menu():
+    from app.services.oem_sku_discover import (
+        classify_href_candidate,
+        next_f_product_candidates,
+    )
+
+    m1 = "https://vinmotion.net/product/motion-1"
+    m2 = "https://vinmotion.net/product/motion-2"
+    assert classify_href_candidate(m1, "Motion 1") == "product"
+    assert classify_href_candidate(m2, "Motion 2") == "product"
+    assert classify_href_candidate("https://vinmotion.net/product", "Product") != "product"
+    html = (
+        'self.__next_f.push([1,"{\\"ProductMenu\\":{\\"ProductPageSlug\\":\\"/product\\",'
+        '\\"ProductMenuItem\\":[{\\"Title\\":\\"Motion 1\\",\\"product_post\\":{\\"title\\":'
+        '\\"Motion 1\\",\\"slug\\":\\"motion-1\\"}},{\\"Title\\":\\"Motion 2\\",'
+        '\\"product_post\\":{\\"title\\":\\"Motion 2\\",\\"slug\\":\\"motion-2\\"}}]}}"])'
+    )
+    found = next_f_product_candidates(html, "https://vinmotion.net/")
+    by = {row["name"]: row["url"] for row in found}
+    assert by["Motion 1"] == m1
+    assert by["Motion 2"] == m2
+    assert "Product" not in by
+    assert "VinMotion Humanoid" not in by
+
+
+def test_more_oems_named_robots_from_page_evidence():
+    payload_by = {
+        "https://booster.tech": listing_payload_for_url("https://booster.tech"),
+        "https://lumosbot.tech": listing_payload_for_url("https://lumosbot.tech"),
+        "https://galbot.com": listing_payload_for_url("https://galbot.com"),
+        "https://unix-group.ai": listing_payload_for_url("https://unix-group.ai"),
+        "https://noetixrobotics.com/en": listing_payload_for_url("https://noetixrobotics.com/en"),
+        "https://primebot.cn": listing_payload_for_url("https://primebot.cn"),
+        "https://limxdynamics.com/en": listing_payload_for_url("https://limxdynamics.com/en"),
+    }
+    booster = {r["name"]: r.get("display_class") for r in payload_by["https://booster.tech"]["robots"]}
+    assert booster["Booster K1"] == "humanoid"
+    assert booster["Booster T1"] == "humanoid"
+    assert booster["Booster T2"] == "humanoid"
+    lumos = {r["name"]: r.get("display_class") for r in payload_by["https://lumosbot.tech"]["robots"]}
+    assert lumos["Lumos LUS 2"] == "humanoid"
+    assert lumos["Lumos NIX S3"] == "humanoid"
+    assert lumos["Lumos MOS 2"] == "mobile_manipulator"
+    assert lumos.get("Lumos LUD") is None, lumos
+    assert "Lumos Motor" not in lumos
+    galbot = {r["name"]: r.get("display_class") for r in payload_by["https://galbot.com"]["robots"]}
+    assert "Galbot G1" in galbot
+    assert "Galbot S1" in galbot
+    assert "Galbot G2" not in galbot
+    assert galbot["Galbot G1"] == "mobile_manipulator"
+    assert galbot["Galbot S1"] == "mobile_manipulator"
+    unix = {r["name"]: r.get("display_class") for r in payload_by["https://unix-group.ai"]["robots"]}
+    assert unix["Wanda 2.0"] == "humanoid"
+    assert unix["Panther"] == "humanoid"
+    assert unix["Martian"] == "humanoid"
+    assert "Wheeled" not in unix
+    noetix = {r["name"]: r.get("display_class") for r in payload_by["https://noetixrobotics.com/en"]["robots"]}
+    assert noetix["Bumi"] == "humanoid"
+    assert noetix["N2"] == "humanoid"
+    assert noetix["E1"] == "humanoid"
+    prime = {r["name"]: r.get("display_class") for r in payload_by["https://primebot.cn"]["robots"]}
+    assert prime["Q1"] == "humanoid"
+    assert "Qiyuan T1" not in prime
+    limx = {r["name"]: r.get("display_class") for r in payload_by["https://limxdynamics.com/en"]["robots"]}
+    assert limx["Luna"] == "humanoid"
+    assert limx["Oli"] == "humanoid"
+    assert limx["TRON 1"] == "humanoid"
+    assert limx["TRON 2"] == "mobile_manipulator"
+    third = listing_payload_for_url("https://thirdwave.ai")
+    third_by = {r["name"]: r.get("display_class") for r in third.get("robots") or []}
+    assert third_by["Third Wave Reach Trucks"] == "amr"
+    assert "TWA Reach" not in third_by
+    dexory = listing_payload_for_url("https://dexory.com")
+    dby = {r["name"]: r.get("display_class") for r in dexory.get("robots") or []}
+    assert "DexoryView" in dby
+    assert dby.get("DexoryView") is None, dby
+    assert "Powered by AI" not in dby
+
+
+def test_more_oem_product_hrefs():
+    from app.services.oem_sku_discover import classify_href_candidate
+
+    assert classify_href_candidate("https://www.booster.tech/booster-t2", "Booster T2") == "product"
+    assert classify_href_candidate("https://www.lumosbot.tech/products/lus2", "Lumos LUS 2") == "product"
+    assert classify_href_candidate("https://www.unix-group.ai/Wanda", "Wanda 2.0") == "product"
+    assert classify_href_candidate("https://www.limxdynamics.com/en/products/tron1", "TRON 1") == "product"
+
+
+def test_more_amr_oems_named_robots_from_page_evidence():
+    galaxea = listing_payload_for_url("https://galaxea-dynamics.com/")
+    gby = {r["name"]: r.get("display_class") for r in galaxea.get("robots") or []}
+    assert gby["R1 Pro"] == "humanoid"
+    assert gby["R1 Lite"] == "mobile_manipulator"
+    assert gby["Kengo"] == "humanoid"
+    assert "A1 Z" not in gby
+    assert "Lite-T" not in gby
+    assert "G1 Gripper" not in gby
+    assert galaxea["mixed_range"] is True
+    assert {"humanoid", "mobile_manipulator"} <= set(galaxea["product_range"])
+
+    xpeng = listing_payload_for_url("https://www.xpeng.com/")
+    xby = {r["name"]: r.get("display_class") for r in xpeng.get("robots") or []}
+    assert xby["IRON"] == "humanoid"
+    assert "XPeng PX5" not in xby
+    assert "PX5" not in xby
+    assert "G6" not in xby
+    assert "G9" not in xby
+    assert "XPENG Humanoid" not in xby
+    assert xpeng["mixed_range"] is False
+
+    ara = listing_payload_for_url("http://ararobotics.eu/")
+    aby = {r["name"]: r.get("display_class") for r in ara.get("robots") or []}
+    assert aby["ARI"] == "cleaning"
+    assert aby.get("Petek") is None, aby
+    assert "Robots" not in aby
+
+    cartken = listing_payload_for_url("https://www.cartken.com/")
+    cby = {r["name"]: r.get("display_class") for r in cartken.get("robots") or []}
+    assert cby["Cartken Hauler"] == "amr"
+    assert cby["Cartken Courier"] == "amr"
+    assert cby["Cartken Mover"] == "amr"
+    assert "Cartken" not in cby
+    assert all(c == "amr" for c in cby.values()), cby
+
+    mir = listing_payload_for_url("https://mobile-industrial-robots.com/")
+    mby = {r["name"]: r.get("display_class") for r in mir.get("robots") or []}
+    assert mby["MiR250"] == "amr"
+    assert mby["MiR600"] == "amr"
+    assert mby["MiR1350"] == "amr"
+    assert mby["MiR1200 Pallet Jack"] == "amr"
+    assert "MC250" not in mby
+    assert "MC600" not in mby
+
+    teradyne = listing_payload_for_url(
+        "https://www.teradyne.com/robotics/autonomous-mobile-robots/"
+    )
+    tby = {r["name"]: r.get("display_class") for r in teradyne.get("robots") or []}
+    assert tby["MiR1200 Pallet Jack"] == "amr"
+    assert "MiR250" not in tby
+    assert "J750" not in tby
+    assert "UltraFLEX" not in tby
+
+
+def test_more_amr_oem_product_hrefs():
+    from app.services.oem_sku_discover import classify_href_candidate
+
+    assert (
+        classify_href_candidate(
+            "https://galaxea-dynamics.com/products/galaxea-r1-pro-universal-humanoid-robot",
+            "R1 Pro",
+        )
+        == "product"
+    )
+    assert (
+        classify_href_candidate(
+            "https://www.xpeng.com/au/explore/xpeng_ai_robot_iron",
+            "IRON",
+        )
+        == "product"
+    )
+    assert classify_href_candidate(
+        "https://mobile-industrial-robots.com/products/robots/mir250",
+        "MiR250",
+    ) == "product"
+    assert classify_href_candidate("https://www.xpeng.com/model/g6", "G6") == "vehicle"
+
+
+def test_tennant_robotic_product_url_is_a_named_sku():
+    from app.services.oem_sku_discover import (
+        classify_href_candidate,
+        tennant_robotic_sku_from_url,
+    )
+    from app.services.robot_understanding_v1.resolve import _sku_from_product_href
+
+    x6 = "https://www.tennantco.com/en_us/1/machines/scrubbers/product.x6-rovr.autonomous-floor-scrubber.m-x6rovr.html"
+    mop = "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t7.ride-on-floor-scrubber.2000074.html"
+    assert tennant_robotic_sku_from_url(x6) == "X6 ROVR"
+    assert tennant_robotic_sku_from_url(mop) is None
+    assert classify_href_candidate(x6, "X6 ROVR") == "product"
+    assert _sku_from_product_href(x6) == "X6 ROVR"
+    assert _sku_from_product_href(mop) is None
 
 
 def test_discovered_sku_does_not_inherit_sibling_class():

@@ -25,13 +25,13 @@ INSPECT_CLASSES = frozenset({"quadruped"})
 AGRICULTURE_CLASSES = frozenset({"agriculture", "agricultural_robot", "farm_robot"})
 MARINE_CLASSES = frozenset({"marine", "marine_robot"})
 AVIONICS_CLASSES = frozenset(
-    {"avionics", "aviation_robot", "drone", "evtol", "uav", "autonomous_aircraft"}
+    {"avionics", "aviation_robot", "drone", "evtol", "uav", "autonomous_aircraft", "cleaning_drone"}
 )
 # Configuration splits inside avionics. Generic avionics/aviation_robot (FIND
 # tile) is the flying-work union. A named SKU class is not that union:
 # eVTOL is air-taxi flight, not Spot-like ramp walking.
 EVTOL_CLASSES = frozenset({"evtol"})
-DRONE_CLASSES = frozenset({"drone", "uav"})
+DRONE_CLASSES = frozenset({"drone", "uav", "cleaning_drone"})
 AUTONOMOUS_AIRCRAFT_CLASSES = frozenset({"autonomous_aircraft"})
 GENERIC_AVIONICS_CLASSES = frozenset({"avionics", "aviation_robot"})
 AEROSPACE_CLASSES = frozenset({"aerospace", "aerospace_robot"})
@@ -410,7 +410,8 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
     # Food preparation / cooking (kitchen robots). Distinct dexterous capability —
     # deliberately NOT generic `manipulate`, so a fry/assembly robot maps to food
     # work rather than falsely matching industrial CNC/case handling.
-    # FIND class food_prep is QSR make-line work, not hotel guest delivery.
+    # FIND class food_prep is kitchen prep (QSR + hotel/casino/airport kitchens),
+    # not hotel guest delivery.
     food_prep = _truthy(facts, "claims_food_prep")
     food_prep_class = next((c for c in classes if c in FOOD_PREP_CLASSES), None)
     if food_prep:
@@ -672,6 +673,15 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
             derivation="inferred",
             derived_from=["product_class"],
             evidence="autonomous_scrubber class",
+        )
+    elif cleaning_class:
+        caps["hard_floor_scrub"] = DerivedCapability(
+            key="hard_floor_scrub",
+            label="hard-floor scrubbing",
+            present=True,
+            derivation="inferred",
+            derived_from=["product_class"],
+            evidence=f"{cleaning_class} class",
         )
     else:
         caps["hard_floor_scrub"] = DerivedCapability(

@@ -8,10 +8,12 @@
     "Quote required is not a spec.",
     "product_url / lookup_host are set only after a live fetch verifies the page.",
     "Stretch-on-Spot and other sibling-SKU URLs are flagged, never stored.",
-    "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers."
+    "Discovered named SKUs from official OEM listing pages. Empty specs stay UNKNOWN. Not Job Card employers.",
+    "2026-08-31 more OEMs: booster.tech, lumosbot.tech, galbot.com, unix-group.ai, noetixrobotics.com, thirdwave.ai, dexory.com, primebot.cn, limxdynamics.com. Named products from live pages or product JS only. Thin pages stay unclassified. DexoryView is the named product; public pages do not name the robots. Third Wave Reach Trucks is named on the Armada case study, not TWA Reach.",
+    "2026-09-01 more AMR OEMs: galaxea-dynamics.com, xpeng.com (IRON only), ararobotics.eu, cartken.com, mobile-industrial-robots.com, teradyne.com AMR hub. Named page SKUs only. Live extract still wins."
   ],
-  "vendor_count": 119,
-  "robot_count": 292,
+  "vendor_count": 136,
+  "robot_count": 338,
   "vendors": [
     {
       "vendor_name": "1X",
@@ -2649,7 +2651,7 @@
           "primary_class": "amr",
           "status": "available",
           "country": "Denmark / Global",
-          "description": "MiR250: Internal material transport. Factories · warehouses.",
+          "description": "MiR250: Internal material transport up to 250 kg. Factories · warehouses.",
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
@@ -2672,7 +2674,7 @@
           "primary_class": "amr",
           "status": "available",
           "country": "Denmark / Global",
-          "description": "MiR600: Pallet transport. Factories · warehouses.",
+          "description": "MiR600: Autonomous pallet transport up to 600 kg. Factories · warehouses.",
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
@@ -2695,7 +2697,7 @@
           "primary_class": "amr",
           "status": "available",
           "country": "Denmark / Global",
-          "description": "MiR1200 Pallet Jack: Autonomous pallet movement. Distribution centers.",
+          "description": "MiR1200 Pallet Jack: Autonomous pallet detection, transport, and delivery. Factories · warehouses.",
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
@@ -2718,7 +2720,7 @@
           "primary_class": "amr",
           "status": "available",
           "country": "Denmark / Global",
-          "description": "MiR1350: Heavy internal transport. Factories · logistics.",
+          "description": "MiR1350: Heavy internal transport up to 1350 kg. Factories · logistics.",
           "lookup_host": "mobile-industrial-robots.com",
           "url_status": "verified",
           "capability_confidence": "UNKNOWN",
@@ -8776,6 +8778,1223 @@
               "predicate": "product_class",
               "value": "cleaning",
               "evidence_span": "Star40: Compact commercial floor care. Commercial interiors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Tennant",
+      "domains": [
+        "tennantco.com"
+      ],
+      "vendor_url": "https://tennantco.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "X6 ROVR",
+          "model_slug": "tennant-x6-rovr",
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.x6-rovr.autonomous-floor-scrubber.m-x6rovr.html",
+          "vendor_url": "https://tennantco.com",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "X6 ROVR: Autonomous scrubbing on commercial floors. Commercial floors.",
+          "lookup_host": "tennantco.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "X6 ROVR: Autonomous scrubbing on commercial floors. Commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "X16 SWEEP",
+          "model_slug": "tennant-x16-sweep",
+          "product_url": "https://www.tennantco.com/en_us/1/machines/sweepers/product.X16-sweep.autonomous-floor-sweeper.2000309.html",
+          "vendor_url": "https://tennantco.com",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "X16 SWEEP: Autonomous sweeping on commercial floors. Commercial floors.",
+          "lookup_host": "tennantco.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "X16 SWEEP: Autonomous sweeping on commercial floors. Commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "T7AMR",
+          "model_slug": "tennant-t7amr",
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t7amr.robotic-floor-scrubber.2000056.html",
+          "vendor_url": "https://tennantco.com",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "T7AMR: Robotic floor scrubbing on commercial floors. Commercial floors.",
+          "lookup_host": "tennantco.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "T7AMR: Robotic floor scrubbing on commercial floors. Commercial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "T380AMR",
+          "model_slug": "tennant-t380amr",
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t380amr.robotic-floor-scrubber.2000055.html",
+          "vendor_url": "https://tennantco.com",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "T380AMR: Robotic floor scrubbing in compact spaces. Commercial interiors.",
+          "lookup_host": "tennantco.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "T380AMR: Robotic floor scrubbing in compact spaces. Commercial interiors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "T16AMR",
+          "model_slug": "tennant-t16amr",
+          "product_url": "https://www.tennantco.com/en_us/1/machines/scrubbers/product.t16amr.industrial-robotic-floor-scrubber.2000054.html",
+          "vendor_url": "https://tennantco.com",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "T16AMR: Industrial robotic floor scrubbing. Industrial floors.",
+          "lookup_host": "tennantco.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "T16AMR: Industrial robotic floor scrubbing. Industrial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "SEER Robotics",
+      "domains": [
+        "seer-robotics.ai"
+      ],
+      "vendor_url": "https://seer-robotics.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "AMB-300JZ",
+          "model_slug": "seer-robotics-amb-300jz",
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/AMB-300JZ",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "AMB-300JZ: Lifting AMR for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "AMB-300JZ: Lifting AMR for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "AMB-300XS",
+          "model_slug": "seer-robotics-amb-300xs",
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/AMB-300XS",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "AMB-300XS: Lifting AMR chassis for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "AMB-300XS: Lifting AMR chassis for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "SJV-SW600",
+          "model_slug": "seer-robotics-sjv-sw600",
+          "product_url": "https://seer-robotics.ai/amr/liftingrobot/SJV-SW600",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "SJV-SW600: Rotary lifting AMR for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "SJV-SW600: Rotary lifting AMR for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "SFL-CBD15",
+          "model_slug": "seer-robotics-sfl-cbd15",
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SFL-CBD15",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "SFL-CBD15: Autonomous pallet truck for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "SFL-CBD15: Autonomous pallet truck for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "SFL-300L",
+          "model_slug": "seer-robotics-sfl-300l",
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SFL-300L",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "SFL-300L: Single-fork autonomous forklift for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "SFL-300L: Single-fork autonomous forklift for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "SCB-1400",
+          "model_slug": "seer-robotics-scb-1400",
+          "product_url": "https://seer-robotics.ai/amr/autonomousforklifts/SCB-1400",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "SCB-1400: Autonomous counterbalance truck for warehouse logistics. Warehouses.",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "SCB-1400: Autonomous counterbalance truck for warehouse logistics. Warehouses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "SRC-880",
+          "model_slug": "seer-robotics-src-880",
+          "product_url": "https://seer-robotics.ai/amr-controllers/SRC-880",
+          "vendor_url": "https://seer-robotics.ai",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "",
+          "lookup_host": "seer-robotics.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "SRC-880 indexed class service_robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "VinMotion",
+      "domains": [
+        "vinmotion.net"
+      ],
+      "vendor_url": "https://vinmotion.net",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Motion 1",
+          "model_slug": "vinmotion-motion-1",
+          "product_url": "https://vinmotion.net/product/motion-1",
+          "vendor_url": "https://vinmotion.net",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Motion 1: Humanoid robot.",
+          "lookup_host": "vinmotion.net",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Motion 1: Humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Motion 2",
+          "model_slug": "vinmotion-motion-2",
+          "product_url": "https://vinmotion.net/product/motion-2",
+          "vendor_url": "https://vinmotion.net",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "Motion 2: Launching.",
+          "lookup_host": "vinmotion.net",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Motion 2: Launching."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Booster Robotics",
+      "domains": [
+        "booster.tech"
+      ],
+      "vendor_url": "https://booster.tech",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Booster K1",
+          "model_slug": "booster-robotics-booster-k1",
+          "product_url": "https://www.booster.tech/booster-k1",
+          "vendor_url": "https://booster.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Booster K1: Introductory embodied development platform.",
+          "lookup_host": "booster.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Booster K1: Introductory embodied development platform."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Booster T1",
+          "model_slug": "booster-robotics-booster-t1",
+          "product_url": "https://www.booster.tech/booster-t1",
+          "vendor_url": "https://booster.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Booster T1: Made for developers. RoboCup AdultSize champion model.",
+          "lookup_host": "booster.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Booster T1: Made for developers. RoboCup AdultSize champion model."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Booster T2",
+          "model_slug": "booster-robotics-booster-t2",
+          "product_url": "https://www.booster.tech/booster-t2",
+          "vendor_url": "https://booster.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Booster T2: Flagship embodied development platform.",
+          "lookup_host": "booster.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Booster T2: Flagship embodied development platform."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Lumos Robotics",
+      "domains": [
+        "lumosbot.tech"
+      ],
+      "vendor_url": "https://lumosbot.tech",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Lumos LUS 2",
+          "model_slug": "lumos-robotics-lumos-lus-2",
+          "product_url": "https://www.lumosbot.tech/products/lus2",
+          "vendor_url": "https://lumosbot.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Lumos LUS 2: Full-size humanoid platform for research, education, and commercial applications.",
+          "lookup_host": "lumosbot.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Lumos LUS 2: Full-size humanoid platform for research, education, and commercial applications."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Lumos NIX S3",
+          "model_slug": "lumos-robotics-lumos-nix-s3",
+          "product_url": "https://www.lumosbot.tech/products/luxiaoming",
+          "vendor_url": "https://lumosbot.tech",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Lumos NIX S3: Compact humanoid for agile motion and companionship.",
+          "lookup_host": "lumosbot.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Lumos NIX S3: Compact humanoid for agile motion and companionship."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Lumos MOS 2",
+          "model_slug": "lumos-robotics-lumos-mos-2",
+          "product_url": "https://www.lumosbot.tech/products/mos",
+          "vendor_url": "https://lumosbot.tech",
+          "primary_class": "mobile_manipulator",
+          "status": "available",
+          "country": null,
+          "description": "Lumos MOS 2: Wheeled mobile manipulation for industrial handling and inspection.",
+          "lookup_host": "lumosbot.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "mobile_manipulator",
+              "evidence_span": "Lumos MOS 2: Wheeled mobile manipulation for industrial handling and inspection."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Lumos LUD",
+          "model_slug": "lumos-robotics-lumos-lud",
+          "product_url": "https://www.lumosbot.tech/products/lud",
+          "vendor_url": "https://lumosbot.tech",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "Lumos LUD: Wheeled-legged platform for challenging terrain.",
+          "lookup_host": "lumosbot.tech",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "service_robot",
+              "evidence_span": "Lumos LUD: Wheeled-legged platform for challenging terrain."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Galbot",
+      "domains": [
+        "galbot.com"
+      ],
+      "vendor_url": "https://galbot.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Galbot G1",
+          "model_slug": "galbot-galbot-g1",
+          "product_url": "https://www.galbot.com/g1",
+          "vendor_url": "https://galbot.com",
+          "primary_class": "mobile_manipulator",
+          "status": "available",
+          "country": null,
+          "description": "Galbot G1: Mobile dual-arm robot with generalizable manipulation.",
+          "lookup_host": "galbot.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "mobile_manipulator",
+              "evidence_span": "Galbot G1: Mobile dual-arm robot with generalizable manipulation."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Galbot S1",
+          "model_slug": "galbot-galbot-s1",
+          "product_url": "https://www.galbot.com/s1",
+          "vendor_url": "https://galbot.com",
+          "primary_class": "mobile_manipulator",
+          "status": "available",
+          "country": null,
+          "description": "Galbot S1: Heavy-duty dual-arm handling, 50kg payload.",
+          "lookup_host": "galbot.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "mobile_manipulator",
+              "evidence_span": "Galbot S1: Heavy-duty dual-arm handling, 50kg payload."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "UniX AI",
+      "domains": [
+        "unix-group.ai"
+      ],
+      "vendor_url": "https://unix-group.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Wanda 2.0",
+          "model_slug": "unix-ai-wanda-2-0",
+          "product_url": "https://www.unix-group.ai/Wanda",
+          "vendor_url": "https://unix-group.ai",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Wanda 2.0: Full-size general-purpose humanoid robot.",
+          "lookup_host": "unix-group.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Wanda 2.0: Full-size general-purpose humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Panther",
+          "model_slug": "unix-ai-panther",
+          "product_url": "https://www.unix-group.ai/Panther",
+          "vendor_url": "https://unix-group.ai",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Panther: Full-size wheeled humanoid robot.",
+          "lookup_host": "unix-group.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Panther: Full-size wheeled humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Martian",
+          "model_slug": "unix-ai-martian",
+          "product_url": "https://www.unix-group.ai/Martian",
+          "vendor_url": "https://unix-group.ai",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Martian: Bipedal humanoid robot.",
+          "lookup_host": "unix-group.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Martian: Bipedal humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Noetix Robotics",
+      "domains": [
+        "noetixrobotics.com"
+      ],
+      "vendor_url": "https://noetixrobotics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Bumi",
+          "model_slug": "noetix-robotics-bumi",
+          "product_url": "https://www.noetixrobotics.com/en/detail/Bumi",
+          "vendor_url": "https://noetixrobotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Bumi: Bipedal humanoid robot.",
+          "lookup_host": "noetixrobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Bumi: Bipedal humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "N2",
+          "model_slug": "noetix-robotics-n2",
+          "product_url": "https://www.noetixrobotics.com/en/detail/N2",
+          "vendor_url": "https://noetixrobotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "N2: Bipedal humanoid robot.",
+          "lookup_host": "noetixrobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "N2: Bipedal humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "E1",
+          "model_slug": "noetix-robotics-e1",
+          "product_url": "https://www.noetixrobotics.com/en/detail/E1",
+          "vendor_url": "https://noetixrobotics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "E1: Bipedal humanoid robot.",
+          "lookup_host": "noetixrobotics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "E1: Bipedal humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "PrimeBOT",
+      "domains": [
+        "primebot.cn"
+      ],
+      "vendor_url": "https://primebot.cn",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Q1",
+          "model_slug": "primebot-q1",
+          "product_url": "https://www.primebot.cn/product/en",
+          "vendor_url": "https://primebot.cn",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Q1: PrimeBOT Q1 full-body force-controlled humanoid robot.",
+          "lookup_host": "primebot.cn",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Q1: PrimeBOT Q1 full-body force-controlled humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "LimX Dynamics",
+      "domains": [
+        "limxdynamics.com"
+      ],
+      "vendor_url": "https://limxdynamics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Luna",
+          "model_slug": "limx-dynamics-luna",
+          "product_url": "https://www.limxdynamics.com/en/products/luna",
+          "vendor_url": "https://limxdynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Luna: Full-size interactive humanoid robot.",
+          "lookup_host": "limxdynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Luna: Full-size interactive humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Oli",
+          "model_slug": "limx-dynamics-oli",
+          "product_url": "https://www.limxdynamics.com/en/products/oli",
+          "vendor_url": "https://limxdynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Oli: Full-size general-purpose humanoid robot.",
+          "lookup_host": "limxdynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Oli: Full-size general-purpose humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "TRON 1",
+          "model_slug": "limx-dynamics-tron-1",
+          "product_url": "https://www.limxdynamics.com/en/products/tron1",
+          "vendor_url": "https://limxdynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "TRON 1: The gateway to humanoid RL research.",
+          "lookup_host": "limxdynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "TRON 1: The gateway to humanoid RL research."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "TRON 2",
+          "model_slug": "limx-dynamics-tron-2",
+          "product_url": "https://www.limxdynamics.com/en/products/tron2",
+          "vendor_url": "https://limxdynamics.com",
+          "primary_class": "mobile_manipulator",
+          "status": "available",
+          "country": null,
+          "description": "TRON 2: Dual arms and wheeled legs. Multi-form embodied robot.",
+          "lookup_host": "limxdynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "mobile_manipulator",
+              "evidence_span": "TRON 2: Dual arms and wheeled legs. Multi-form embodied robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Third Wave Automation",
+      "domains": [
+        "thirdwave.ai"
+      ],
+      "vendor_url": "https://thirdwave.ai",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Third Wave Reach Trucks",
+          "model_slug": "third-wave-automation-third-wave-reach-trucks",
+          "product_url": "https://thirdwave.ai/armada-case-study/",
+          "vendor_url": "https://thirdwave.ai",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "Third Wave Reach Trucks: Autonomous reach truck with shared autonomy.",
+          "lookup_host": "thirdwave.ai",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Third Wave Reach Trucks: Autonomous reach truck with shared autonomy."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Dexory",
+      "domains": [
+        "dexory.com"
+      ],
+      "vendor_url": "https://dexory.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "DexoryView",
+          "model_slug": "dexory-dexoryview",
+          "product_url": "https://www.dexory.com/solutions",
+          "vendor_url": "https://dexory.com",
+          "primary_class": null,
+          "status": "available",
+          "country": null,
+          "description": "",
+          "lookup_host": "dexory.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Galaxea Dynamics",
+      "domains": [
+        "galaxea-dynamics.com",
+        "galaxea.ai"
+      ],
+      "vendor_url": "https://galaxea-dynamics.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "R1 Pro",
+          "model_slug": "galaxea-dynamics-r1-pro",
+          "product_url": "https://galaxea-dynamics.com/products/galaxea-r1-pro-universal-humanoid-robot",
+          "vendor_url": "https://galaxea-dynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "R1 Pro: 7-DOF dual-arm wheeled humanoid robot.",
+          "lookup_host": "galaxea-dynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "R1 Pro: 7-DOF dual-arm wheeled humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "R1 Lite",
+          "model_slug": "galaxea-dynamics-r1-lite",
+          "product_url": "https://galaxea-dynamics.com/products/6-dof-general-mobile-manipulation-platform",
+          "vendor_url": "https://galaxea-dynamics.com",
+          "primary_class": "mobile_manipulator",
+          "status": "available",
+          "country": null,
+          "description": "R1 Lite: Wheeled mobile manipulation platform.",
+          "lookup_host": "galaxea-dynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "mobile_manipulator",
+              "evidence_span": "R1 Lite: Wheeled mobile manipulation platform."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Kengo",
+          "model_slug": "galaxea-dynamics-kengo",
+          "product_url": "https://galaxea-dynamics.com/products/galaxea-s-proprietary-embodied-ai-bipedal-robot",
+          "vendor_url": "https://galaxea-dynamics.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "Kengo: Bipedal humanoid robot.",
+          "lookup_host": "galaxea-dynamics.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "Kengo: Bipedal humanoid robot."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "XPENG",
+      "domains": [
+        "xpeng.com"
+      ],
+      "vendor_url": "https://xpeng.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "IRON",
+          "model_slug": "xpeng-iron",
+          "product_url": "https://www.xpeng.com/au/explore/xpeng_ai_robot_iron",
+          "vendor_url": "https://xpeng.com",
+          "primary_class": "humanoid",
+          "status": "available",
+          "country": null,
+          "description": "IRON: Next-generation humanoid robot for human spaces.",
+          "lookup_host": "xpeng.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "humanoid",
+              "evidence_span": "IRON: Next-generation humanoid robot for human spaces."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "ARA Robotics",
+      "domains": [
+        "ararobotics.eu"
+      ],
+      "vendor_url": "https://ararobotics.eu",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "ARI",
+          "model_slug": "ara-robotics-ari",
+          "product_url": "https://ararobotics.eu/en/ari/",
+          "vendor_url": "https://ararobotics.eu",
+          "primary_class": "cleaning",
+          "status": "available",
+          "country": null,
+          "description": "ARI: AI-powered autonomous floor maintenance. Commercial and industrial floors.",
+          "lookup_host": "ararobotics.eu",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "cleaning",
+              "evidence_span": "ARI: AI-powered autonomous floor maintenance. Commercial and industrial floors."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Petek",
+          "model_slug": "ara-robotics-petek",
+          "product_url": "https://ararobotics.eu/en/petek/",
+          "vendor_url": "https://ararobotics.eu",
+          "primary_class": "service_robot",
+          "status": "available",
+          "country": null,
+          "description": "Petek: Smart maintenance station. Charging and water refill for ARI.",
+          "lookup_host": "ararobotics.eu",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Cartken",
+      "domains": [
+        "cartken.com"
+      ],
+      "vendor_url": "https://cartken.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "Cartken Hauler",
+          "model_slug": "cartken-cartken-hauler",
+          "product_url": "https://www.cartken.com/#hauler",
+          "vendor_url": "https://cartken.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "Cartken Hauler: Outdoor material transport on mixed indoor and outdoor routes. Factories · labs · campuses.",
+          "lookup_host": "cartken.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Cartken Hauler: Outdoor material transport on mixed indoor and outdoor routes. Factories · labs · campuses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Cartken Courier",
+          "model_slug": "cartken-cartken-courier",
+          "product_url": "https://www.cartken.com/#courier",
+          "vendor_url": "https://cartken.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "Cartken Courier: Lightweight outdoor AMR for secured deliveries. Factories · campuses.",
+          "lookup_host": "cartken.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Cartken Courier: Lightweight outdoor AMR for secured deliveries. Factories · campuses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        },
+        {
+          "name": "Cartken Mover",
+          "model_slug": "cartken-cartken-mover",
+          "product_url": "https://www.cartken.com/#mover",
+          "vendor_url": "https://cartken.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "Cartken Mover: Outdoor pallet pick and putaway for heavy loads. Factories · campuses.",
+          "lookup_host": "cartken.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "Cartken Mover: Outdoor pallet pick and putaway for heavy loads. Factories · campuses."
+            }
+          ],
+          "specs": {},
+          "configuration_kind": "standalone",
+          "host_platform": "none"
+        }
+      ]
+    },
+    {
+      "vendor_name": "Teradyne",
+      "domains": [
+        "teradyne.com"
+      ],
+      "vendor_url": "https://teradyne.com",
+      "list_category": "oem_sku",
+      "robots": [
+        {
+          "name": "MiR1200 Pallet Jack",
+          "model_slug": "teradyne-mir1200-pallet-jack",
+          "product_url": "https://www.teradyne.com/robotics/autonomous-mobile-robots/",
+          "vendor_url": "https://teradyne.com",
+          "primary_class": "amr",
+          "status": "available",
+          "country": null,
+          "description": "MiR1200 Pallet Jack: Autonomous pallet movement with AI-based pallet detection. Manufacturing · logistics.",
+          "lookup_host": "teradyne.com",
+          "url_status": "verified",
+          "capability_confidence": "UNKNOWN",
+          "catalog_claims": [
+            {
+              "predicate": "product_class",
+              "value": "amr",
+              "evidence_span": "MiR1200 Pallet Jack: Autonomous pallet movement with AI-based pallet detection. Manufacturing · logistics."
             }
           ],
           "specs": {},

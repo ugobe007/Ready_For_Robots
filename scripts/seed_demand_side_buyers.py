@@ -272,7 +272,7 @@ def _enrich_contacts(db, summary: dict) -> None:
     """
     from app.models.company import Company
     from app.models.crm import CrmAccount
-    from app.services.cal_autonomy import resolve_cal_admin_context
+    from app.services.phelan_autonomy import resolve_cal_admin_context
     from app.services.lead_enrichment import outreach_recipient_trusted, resolve_outreach_email
 
     from app.services.lead_enrichment import _VERIFIED_EMAIL_SOURCES

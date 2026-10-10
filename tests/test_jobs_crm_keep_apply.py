@@ -17,6 +17,7 @@ from app.models.jobs_crm import ApplicationMessage, JobApplication, KeptJob
 from app.services.jobs_crm import (
     SEND_NOT_SENT_NO_EMAIL,
     SEND_PREPARED,
+    WORK_TASK_MODEL_SOURCE_REQUIRED,
     apply_selected_jobs,
     apply_to_job,
     capture_inbound_message,
@@ -24,9 +25,11 @@ from app.services.jobs_crm import (
     keep_jobs,
     list_kept_jobs,
     list_messages,
+    normalize_work_task_model,
     paste_inbound_reply,
     send_prepared_application,
     set_application_meeting_url,
+    set_kept_job_task_model,
 )
 from app.services.plan_entitlements import JOBS_CRM_FREE_BATCH, JOBS_CRM_FREE_MONTHLY_CAP
 
@@ -341,4 +344,44 @@ def test_meeting_url_paste_is_honest_schedule(db_session):
     )
     assert saved["scheduling_state"] == "meeting_url"
     assert saved["meeting_url"] == "https://employer.example/interview"
+
+
+def test_work_task_model_is_user_entered_never_invented(db_session):
+    assert normalize_work_task_model(None, None) == ("unknown", None)
+    assert normalize_work_task_model("self_train", "GR00T") == ("self_train", None)
+    assert normalize_work_task_model("source", "  NVIDIA GR00T  ") == (
+        "source",
+        "NVIDIA GR00T",
+    )
+    with pytest.raises(ValueError, match="will not guess"):
+        normalize_work_task_model("source", "  ")
+    keep_jobs(db_session, _user(), [_job(1)], robot_name="Spot")
+    listed = list_kept_jobs(db_session, _user())
+    assert listed[0]["work_task_model_kind"] == "unknown"
+    assert listed[0]["work_task_model_source"] is None
+    saved = set_kept_job_task_model(
+        db_session,
+        _user(),
+        job_key="job-1",
+        kind="source",
+        source="NVIDIA GR00T N1.5",
+    )
+    assert saved["work_task_model_kind"] == "source"
+    assert saved["work_task_model_source"] == "NVIDIA GR00T N1.5"
+    trained = set_kept_job_task_model(
+        db_session, _user(), job_key="job-1", kind="self_train", source="ignore me"
+    )
+    assert trained["work_task_model_kind"] == "self_train"
+    assert trained["work_task_model_source"] is None
+    again = keep_jobs(db_session, _user(), [_job(1)], robot_name="Spot")
+    assert again["jobs"][0]["work_task_model_kind"] == "self_train"
+    with pytest.raises(ValueError, match="will not guess"):
+        set_kept_job_task_model(
+            db_session, _user(), job_key="job-1", kind="source", source=""
+        )
+    with pytest.raises(KeyError):
+        set_kept_job_task_model(
+            db_session, _user(), job_key="job-missing", kind="self_train"
+        )
+    assert WORK_TASK_MODEL_SOURCE_REQUIRED
 

@@ -99,6 +99,12 @@ def passes_headline_name_shape(name: str) -> Tuple[bool, str]:
         return False, "empty name"
 
     name = str(name).strip()
+    if "<a " in name.lower() or "<" in name or ">" in name or "href=" in name.lower():
+        return False, "contains raw HTML / RSS markup"
+
+    if ":" in name:
+        return False, "contains colon (headline / event title)"
+
     name_lower = name.lower().translate(
         str.maketrans(
             {
@@ -121,6 +127,15 @@ def passes_headline_name_shape(name: str) -> Tuple[bool, str]:
 
     if "|" in name:
         return False, "pipe-delimited RSS metadata (not a company name)"
+
+    if re.search(r"\b(expo|tech expo|airshow|air show|conference|summit|symposium|trade show|forum|assembly|webinar)\b", name_lower):
+        return False, "contains event / trade show term (not a company name)"
+
+    if re.match(r"^(while|when|since|although|whereas|until|after|before)\b", name_lower):
+        return False, "starts with subordinate conjunction (headline fragment)"
+
+    if re.match(r"^(chinese|japanese|american|european|asian|german|french|british|foreign|global|local)\s+(factories|plants|warehouses|facilities|laborers|workers|robots|automation)$", name_lower):
+        return False, "generic country or category plural phrase"
 
     if re.match(r"(?i)^see\s+photos?\s+of\b", name_lower):
         return False, "editorial photo-gallery headline (not a company name)"

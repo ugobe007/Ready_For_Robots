@@ -3,7 +3,7 @@
 **Date:** 2026-08-31
 **Type:** build
 **Agents:** ProductSurface + ontology
-**Status:** complete on branch (Fly production not yet deployed)
+**Status:** in progress
 **Branch:** `cursor/mixed-oem-product-range-009b`
 
 ## Goal

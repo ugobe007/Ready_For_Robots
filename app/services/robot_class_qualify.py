@@ -116,19 +116,19 @@ CLASS_OPTIONS: list[dict[str, str]] = [
         "id": "food_prep",
         "product_class": "food_prep",
         "label": "Food prep",
-        "hint": "QSR make-line, bowl assembly, grill, kitchen automation",
+        "hint": "Hotel, casino, airport, and QSR kitchens — make-line, grill, prep",
     },
     {
         "id": "serving",
         "product_class": "serving",
         "label": "Serving",
-        "hint": "Table, drinks, bussing, food-delivery AMR — restaurants, hotels, public venues",
+        "hint": "Table, drinks, bussing — ADAM, Matradee, Servi in restaurants, hotels, casinos, airports, offices, malls",
     },
     {
         "id": "cleaning",
         "product_class": "cleaning",
         "label": "Cleaning",
-        "hint": "Floor scrubbing, vacuum, mopping — F&B and public venues",
+        "hint": "Floor, vacuum, restroom — hotels, restaurants, casinos, airports, offices, malls, data centers",
     },
 ]
 
@@ -230,6 +230,9 @@ def normalize_class_id(raw: str | None) -> str | None:
         "kitchen_automation": "food_prep",
         "make_line": "food_prep",
         "bowl_assembly": "food_prep",
+        "hotel_kitchen": "food_prep",
+        "casino_kitchen": "food_prep",
+        "airport_kitchen": "food_prep",
         "serving": "serving",
         "table_service": "serving",
         "food_running": "serving",
@@ -271,7 +274,7 @@ _QUADRUPED_MORPH = re.compile(
 )
 _DRONE_MORPH = re.compile(r"\b(drone|uav|unmanned aerial)\b", re.I)
 _CLEANING_DRONE_WORK = re.compile(
-    r"\b(facade\s+clean\w*|facade\s+wash\w*|window\s+wash\w*|window\s+clean\w*|exterior\s+clean\w*|exterior\s+wash\w*|building\s+wash\w*|soft[- ]wash|pressure[- ]wash)\b",
+    r"\b(cleaning|facade|soft[- ]wash|pressure[- ]wash)\b",
     re.I,
 )
 
@@ -279,12 +282,12 @@ _CLEANING_DRONE_WORK = re.compile(
 def infer_morphology_class(text: str) -> str | None:
     """Hardware/morphology class from product copy. Not a company dump."""
     blob = text or ""
+    if _HUMANOID_MORPH.search(blob):
+        return "humanoid"
     if _QUADRUPED_MORPH.search(blob):
         return "quadruped"
     if _DRONE_MORPH.search(blob):
         return "drone"
-    if _HUMANOID_MORPH.search(blob):
-        return "humanoid"
     return None
 
 
@@ -379,6 +382,38 @@ def prefer_work_language_class(
     morphology are silent and the catalog class is not a dump category.
     """
     return classify_product_from_evidence(text, catalog_class, name=name)
+
+
+def keep_claimed_display_class(
+    existing: str | None,
+    claimed: str | None,
+    *,
+    name: str = "",
+    description: str = "",
+) -> str | None:
+    """Stamp FIND display_class from a product_class fact without restoring dumps.
+
+    Listing already drops generic ``service_robot``. FIND must not put it back
+    with ``prefer(...) or claimed``. Work language and a non-generic existing
+    class still win. A real claimed class (humanoid, serving, warehouse) stays.
+    """
+    claimed_s = (claimed or "").strip()
+    existing_s = (existing or "").strip() or None
+    if not claimed_s:
+        return existing_s
+    evidence = " ".join(x for x in (name, description, claimed_s) if x)
+    kept = prefer_work_language_class(evidence, claimed_s, name=name)
+    if kept:
+        return kept
+    claimed_l = claimed_s.lower()
+    existing_l = (existing_s or "").lower()
+    if claimed_l in GENERIC_CATEGORY_CLASSES:
+        if existing_s and existing_l not in GENERIC_CATEGORY_CLASSES:
+            return existing_s
+        return None
+    if existing_s and existing_l not in GENERIC_CATEGORY_CLASSES:
+        return existing_s
+    return claimed_s
 
 
 # FIND tiles the operator picks with no SKU. A named SKU class is not a tile.

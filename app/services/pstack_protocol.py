@@ -55,6 +55,11 @@ CRITIC_GATES: tuple[dict[str, str], ...] = (
         "fail": "self-abort FIND shown as Research failed / Failed to fetch",
     },
     {
+        "id": "find_no_home",
+        "prove": "FIND timeout / 500 / abort stays on FIND (`/` or /?visit=jobs)",
+        "fail": "lookup failure dumps to employer MATCH",
+    },
+    {
         "id": "find_identity",
         "prove": "submitted URL is the identity key",
         "fail": "Greenfield shown as another OEM / leftover robot",
@@ -86,6 +91,11 @@ CRITIC_GATES: tuple[dict[str, str], ...] = (
         "id": "ontology_industry_language",
         "prove": "Industry work words live in the ontology and outrank humanoid morphology where R33 says so",
         "fail": "hospital/hotel/mining/warehouse work words missing from ontology files",
+    },
+    {
+        "id": "url_workflow",
+        "prove": "FIND URL critic reports product range, named SKUs, and per-product capabilities",
+        "fail": "mixed OEM flattened, chrome-as-SKU, cleaning-drone-as-scrubber, or company-class dump",
     },
 )
 

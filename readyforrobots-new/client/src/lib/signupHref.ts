@@ -16,7 +16,7 @@
 export function signupHrefForLead(
   leadId: number | string,
   company?: string | null,
-  opts?: { src?: string; nextParams?: Record<string, string> },
+  opts?: { src?: string; nextParams?: Record<string, string> }
 ): string {
   const nextParams = new URLSearchParams();
   nextParams.set("lead", String(leadId));

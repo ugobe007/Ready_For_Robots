@@ -5,7 +5,7 @@ About (`/intelligence`) explains the Jobs loop and sends the user back to FIND. 
 ## Sub-features
 
 - `about-loop` shows 01 robot → 02 jobs → 03 CRM.
-- `about-cta` Find jobs → goes to `/?new=1`.
+- `about-cta` Find jobs → goes to `/?visit=jobs`.
 - `about-chrome` Jobs header (no Pipeline).
 - `about-signup` signup carries `src=jobs_activate`.
 - `about-pstack` optional protocol explainer (`#jobs-protocol`). Merge proof is `scripts/pstack_release.py`, not this module.

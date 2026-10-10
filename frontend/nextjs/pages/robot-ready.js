@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from './_app';
+import RrSiteLayout from '../components/RrSiteLayout';
 import { getApiBase, liveFetchInit } from '../lib/apiBase';
 
 const API = getApiBase();
@@ -164,7 +165,8 @@ export default function RobotReady() {
   };
 
   return (
-    <div className="min-h-screen bg-neutral-950">
+    <RrSiteLayout active="robots">
+      <div className="min-h-screen bg-neutral-950">
       {/* Paywall Modal */}
       {showPaywall && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm" onClick={() => setShowPaywall(false)}>
@@ -695,5 +697,6 @@ export default function RobotReady() {
         )}
       </div>
     </div>
-  );
+  </RrSiteLayout>
+);
 }

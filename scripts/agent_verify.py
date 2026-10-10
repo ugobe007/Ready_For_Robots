@@ -20,6 +20,7 @@ import json
 import os
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 from datetime import datetime, timezone
@@ -39,6 +40,18 @@ LIVE_FIND_ACTION_LEGACY = "Start jobs →"
 JOBS_ACTIVATE = "jobs_activate"
 CANARY_JS = ("Jobs for", FIND_HEADLINE, JOBS_ACTIVATE)
 FIND_JOBS_WORKFLOW = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsWorkflow.ts"
+FIND_RESEARCH = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "findResearch.ts"
+FIND_WORKSPACE = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "RobotJobsWorkspace.tsx"
+JOBS_PAGE = ROOT / "readyforrobots-new" / "client" / "src" / "pages" / "Jobs.tsx"
+EMPLOYER_MATCH_PY = ROOT / "app" / "services" / "employer_robot_match.py"
+EMPLOYER_MATCH_UI = (
+    ROOT
+    / "readyforrobots-new"
+    / "client"
+    / "src"
+    / "components"
+    / "EmployerMatchWorkspace.tsx"
+)
 VEGA = ROOT / "tests" / "fixtures" / "m2_profiles" / "vega.json"
 SKILL_DIR = ROOT / ".cursor" / "skills" / "verify-readyforrobots"
 FEATURE_DIR = SKILL_DIR / "features"
@@ -172,6 +185,32 @@ def doctor(*, origin: str | None = None, fly: str | None = None) -> dict[str, An
         if not js_ok:
             alerts.append("Jobs JS missing FIND/activate canaries")
 
+    pcode, pbody, purl = _get(f"{api}/api/robot-jobs/preview?limit=3", timeout=20)
+    preview_json = False
+    preview_count = 0
+    try:
+        pdata = json.loads(pbody.decode()) if pbody else {}
+        jobs = pdata.get("jobs") if isinstance(pdata, dict) else None
+        preview_json = isinstance(pdata, dict) and isinstance(jobs, list)
+        preview_count = len(jobs) if isinstance(jobs, list) else 0
+    except json.JSONDecodeError:
+        pdata = {}
+    preview_ok = pcode == 200 and preview_json
+    checks.append(
+        {
+            "id": "fly_jobs_preview",
+            "ok": preview_ok,
+            "url": purl,
+            "status": pcode,
+            "json": preview_json,
+            "jobs_count": preview_count,
+        }
+    )
+    if not preview_ok:
+        alerts.append(
+            "Fly /api/robot-jobs/preview is not JSON — SPA catch-all or undeployed route"
+        )
+
     ok = health_ok and pipe_ok and page_ok and js_ok
     return {
         "ok": ok,
@@ -274,8 +313,6 @@ def jobs_chrome_hits(js_text: str, *, source: str | None = None) -> dict[str, bo
     return {
         "find_headline": FIND_HEADLINE in js_text,
         "jobs_activate": JOBS_ACTIVATE in js_text,
-        "process_01": "Show us your robot" in js_text,
-        "process_02": "Available jobs" in js_text,
         "find_jobs_live": FIND_JOBS_CTA in js_text or LIVE_FIND_ACTION_LEGACY in js_text,
         "find_jobs_source": repo_find_jobs_cta_ok(source),
     }
@@ -343,6 +380,116 @@ def drive_jobs_crm(*, origin: str | None = None) -> dict[str, Any]:
     }
 
 
+def drive_find_stay(*, origin: str | None = None, api: str | None = None) -> dict[str, Any]:
+    """FIND timeout / 500 / abort must remain on /?visit=jobs. Skip-green is a fail."""
+    site = (origin or SITE).rstrip("/")
+    fly = (api or FLY_API).rstrip("/")
+    workspace = FIND_WORKSPACE.read_text(encoding="utf-8") if FIND_WORKSPACE.is_file() else ""
+    submit = ""
+    start = workspace.find("async function submitFind")
+    end = workspace.find("async function confirmSelection")
+    if start >= 0 and end > start:
+        submit = workspace[start:end]
+    jobs_page = JOBS_PAGE.read_text(encoding="utf-8") if JOBS_PAGE.is_file() else ""
+    research = FIND_RESEARCH.read_text(encoding="utf-8") if FIND_RESEARCH.is_file() else ""
+    src_ok = (
+        "ensureFindStayVisit" in submit
+        and "goJobsFreshHome" not in submit
+        and "JOBS_FRESH_HOME_EVENT" not in submit
+        and "?new=1" not in submit
+        and 'setLocation("/")' not in submit
+        and "findFailureBouncesHome" in research
+        and "RobotJobsWorkspace" in jobs_page
+        and "JobsLanding" not in jobs_page
+        and "FIND_IDENTITY_TIMEOUT_MS = 8_000" in (
+            FIND_JOBS_WORKFLOW.read_text(encoding="utf-8") if FIND_JOBS_WORKFLOW.is_file() else ""
+        )
+    )
+    code, html, url = _get(f"{site}/", timeout=20)
+    html_s = html.decode("utf-8", "replace") if html else ""
+    js_m = JS_PATH_RE.search(html_s)
+    skip_green = bool(js_m and js_m.group(0) == STALE_JS)
+    # Invalid URL must 400 as JSON, never an HTML landing dump. Do not wait
+    # on a real OEM compose — that is find-url / pstack Critic, not bounce.
+    live_code, live_body = _post_json(
+        f"{fly}/api/robot-job-search",
+        {},
+        timeout=6,
+    )
+    raw = ""
+    if isinstance(live_body, dict):
+        raw = json.dumps(live_body)
+    elif live_body is not None:
+        raw = str(live_body)
+    html_dump = bool(re.search(r"<html|put your robot to work|robots need jobs", raw, re.I))
+    ok = src_ok and not skip_green and not html_dump
+    return {
+        "ok": ok,
+        "feature": "find-stay",
+        "skip_green": skip_green,
+        "src_ok": src_ok,
+        "html_dump": html_dump,
+        "search_status": live_code,
+        "url": url,
+        "error": None
+        if ok
+        else {
+            "skip_green": skip_green,
+            "src_ok": src_ok,
+            "html_dump": html_dump,
+            "search_status": live_code,
+        },
+    }
+
+
+def drive_employer_match(*, api: str | None = None) -> dict[str, Any]:
+    """Employer MATCH is catalog-only and has a 3s budget once the new field is live."""
+    fly = (api or FLY_API).rstrip("/")
+    py = EMPLOYER_MATCH_PY.read_text(encoding="utf-8") if EMPLOYER_MATCH_PY.is_file() else ""
+    ui = EMPLOYER_MATCH_UI.read_text(encoding="utf-8") if EMPLOYER_MATCH_UI.is_file() else ""
+    src_ok = (
+        "_catalog_robots_snapshot" in py
+        and "listing_from_catalog" not in py
+        and "build_robot_profile" not in py
+        and "scrape_robot_page" not in py
+        and "EmployerMatchedRobotModal" in ui
+        and "Examine ${robot.name}" in ui
+        and "toggleEmployerRobotKey" in ui
+        and "employerChosenCopy" in ui
+        and 'id="contact-name"' in ui
+        and "catalogHttpUrl(robot.image_url)" in ui
+    )
+    t0 = time.perf_counter()
+    code, data = _post_json(
+        f"{fly}/api/employer-robot-match",
+        {"work_class": "serving"},
+        timeout=3.2,
+    )
+    elapsed = time.perf_counter() - t0
+    live_ok = True
+    if isinstance(data, dict) and data.get("catalog_only") is True:
+        live_ok = (
+            code == 200
+            and elapsed < 3.0
+            and data.get("live_scrape") is False
+        )
+        if data.get("state") == "matches" and not data.get("robots"):
+            live_ok = False
+    elif code not in (0, 200, 400, 422):
+        live_ok = False
+    ok = src_ok and live_ok
+    return {
+        "ok": ok,
+        "feature": "employer-match",
+        "src_ok": src_ok,
+        "status": code,
+        "elapsed_s": round(elapsed, 3),
+        "catalog_only": data.get("catalog_only") if isinstance(data, dict) else None,
+        "robot_count": data.get("robot_count") if isinstance(data, dict) else None,
+        "error": None if ok else {"status": code, "elapsed_s": elapsed, "src_ok": src_ok},
+    }
+
+
 DRIVERS = {
     "find-jobs": drive_find_jobs,
     "find-url": drive_find_url,
@@ -350,6 +497,8 @@ DRIVERS = {
     "jobs-chrome": drive_jobs_chrome,
     "jobs-crm": drive_jobs_crm,
     "about": drive_about,
+    "find-stay": drive_find_stay,
+    "employer-match": drive_employer_match,
 }
 
 
@@ -383,6 +532,10 @@ def cmd_drive(args: argparse.Namespace) -> int:
         result = drive_about(origin=args.origin)
     elif args.feature == "jobs-crm":
         result = drive_jobs_crm(origin=args.origin)
+    elif args.feature == "find-stay":
+        result = drive_find_stay(origin=args.origin, api=args.fly)
+    elif args.feature == "employer-match":
+        result = drive_employer_match(api=args.fly)
     else:
         print(f"unknown feature {args.feature}", file=sys.stderr)
         return 2
@@ -401,13 +554,17 @@ def cmd_ci(args: argparse.Namespace) -> int:
     write_json(out_dir / "pstack-release.json", pstack)
     drives = {}
     rc = 0 if doc.get("ok") and pstack.get("ok") else 1
-    for feat in ("find-jobs", "jobs-chrome", "about", "jobs-crm"):
+    for feat in ("find-jobs", "jobs-chrome", "about", "jobs-crm", "find-stay", "employer-match"):
         if feat == "find-jobs":
             drives[feat] = drive_find_jobs(api=args.fly)
         elif feat == "jobs-chrome":
             drives[feat] = drive_jobs_chrome(origin=args.origin)
         elif feat == "about":
             drives[feat] = drive_about(origin=args.origin)
+        elif feat == "find-stay":
+            drives[feat] = drive_find_stay(origin=args.origin, api=args.fly)
+        elif feat == "employer-match":
+            drives[feat] = drive_employer_match(api=args.fly)
         else:
             drives[feat] = drive_jobs_crm(origin=args.origin)
         write_json(out_dir / f"drive-{feat}.json", drives[feat])
@@ -458,7 +615,7 @@ def feature_map_ok() -> list[str]:
     index = FEATURE_DIR / "README.md"
     if not index.exists():
         errors.append("features/README.md missing")
-    required = ("find-jobs.md", "job-cards.md", "jobs-chrome.md", "jobs-crm.md", "about.md")
+    required = ("find-jobs.md", "job-cards.md", "jobs-chrome.md", "jobs-crm.md", "about.md", "find-stay.md")
     for name in required:
         path = FEATURE_DIR / name
         if not path.exists():

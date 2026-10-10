@@ -417,7 +417,7 @@ def merge_vertical_catalog(
 
 def _seed_catalog_claims(product: dict[str, Any]) -> list[dict[str, Any]]:
     """Identity claims only. Empty specs stay UNKNOWN."""
-    cls = (product.get("primary_class") or "").strip()
+    cls = _seed_primary_class(product) or ""
     name = product.get("name") or "SKU"
     desc = _description(product)
     claims: list[dict[str, Any]] = []
@@ -499,6 +499,12 @@ def _work_kind_claims(product: dict[str, Any], name: str, desc: str) -> list[dic
     return out
 
 
+def _seed_primary_class(product: dict[str, Any]) -> str | None:
+    """Named FIND class only. Missing class stays empty, never service_robot."""
+    cls = (product.get("primary_class") or "").strip() or None
+    return cls
+
+
 def compile_vendor_seed(catalog: dict[str, Any]) -> dict[str, Any]:
     """FIND index shape. Hosts come from the spreadsheet; product_url only if verified."""
     vendors: list[dict[str, Any]] = []
@@ -519,7 +525,7 @@ def compile_vendor_seed(catalog: dict[str, Any]) -> dict[str, Any]:
                     "model_slug": product["slug"],
                     "product_url": product_url or None,
                     "vendor_url": vendor_url,
-                    "primary_class": product.get("primary_class") or "service_robot",
+                    "primary_class": _seed_primary_class(product),
                     "status": "available",
                     "country": product.get("region"),
                     "description": _description(product),

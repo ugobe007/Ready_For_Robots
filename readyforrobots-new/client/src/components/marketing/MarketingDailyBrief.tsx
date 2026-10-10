@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { ArrowRight, Mail } from "lucide-react";
 import { Link } from "wouter";
 import { cleanScrapedText } from "@/lib/text";
+import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 
 type NewsletterStory = {
   category?: string;
@@ -16,11 +18,11 @@ type NewsletterEdition = {
 };
 
 type Props = {
-  dailyBrief: NewsletterEdition | null;
-  newsletterEmail: string;
-  newsletterStatus: "idle" | "submitting" | "success" | "error";
-  onEmailChange: (v: string) => void;
-  onSubmit: (e: React.FormEvent<HTMLFormElement>) => void;
+  dailyBrief?: NewsletterEdition | null;
+  newsletterEmail?: string;
+  newsletterStatus?: "idle" | "submitting" | "success" | "error";
+  onEmailChange?: (v: string) => void;
+  onSubmit?: (e: React.FormEvent<HTMLFormElement>) => void;
 };
 
 export default function MarketingDailyBrief({
@@ -30,8 +32,53 @@ export default function MarketingDailyBrief({
   onEmailChange,
   onSubmit,
 }: Props) {
+  const [internalEmail, setInternalEmail] = useState("");
+  const [internalStatus, setInternalStatus] = useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  const emailValue = onEmailChange ? (newsletterEmail ?? "") : internalEmail;
+  const statusValue = onSubmit ? (newsletterStatus ?? "idle") : internalStatus;
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (onSubmit) {
+      onSubmit(e);
+      return;
+    }
+    const val = internalEmail.trim();
+    if (!val) return;
+    setInternalStatus("submitting");
+    setErrorMsg("");
+    try {
+      const res = await fetch(
+        `${getApiBase()}/api/newsletter/subscribe`,
+        liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email: val, source: "daily_brief_card" }),
+        })
+      );
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as {
+          detail?: string;
+        } | null;
+        throw new Error(data?.detail || "Could not subscribe");
+      }
+      setInternalStatus("success");
+      setInternalEmail("");
+    } catch (err: unknown) {
+      setInternalStatus("error");
+      const msg =
+        err instanceof Error ? err.message : "Could not subscribe. Try again.";
+      setErrorMsg(msg);
+    }
+  }
+
   const briefHeadline =
-    cleanScrapedText(dailyBrief?.latestEdition?.headline) || "Fresh robot demand signals, updated daily.";
+    cleanScrapedText(dailyBrief?.latestEdition?.headline) ||
+    "Fresh robot demand signals, updated daily.";
   const briefSubheadline =
     cleanScrapedText(dailyBrief?.latestEdition?.subheadline) ||
     "A daily scan of sales triggers, partnership motion, and automation buying intent from the ReadyForRobots signal engine.";
@@ -42,11 +89,15 @@ export default function MarketingDailyBrief({
         <div className="rounded-3xl border border-sky-100 p-6 lg:p-7 bg-gradient-to-br from-sky-50 to-white">
           <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="section-eyebrow mb-3">Today&apos;s Robot Intelligence Brief</p>
+              <p className="section-eyebrow mb-3">
+                Today&apos;s Robot Intelligence Brief
+              </p>
               <h2 className="max-w-2xl text-3xl font-display font-bold leading-tight text-gray-900">
                 {briefHeadline}
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-600">{briefSubheadline}</p>
+              <p className="mt-3 max-w-2xl text-sm leading-relaxed text-gray-600">
+                {briefSubheadline}
+              </p>
             </div>
             <Link
               href="/newsletter"
@@ -60,17 +111,26 @@ export default function MarketingDailyBrief({
           {dailyBrief?.topStories?.length ? (
             <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
               {dailyBrief.topStories.slice(0, 3).map((story, index) => {
-                const headline = cleanScrapedText(story.headline || story.company) || "Signal story";
+                const headline =
+                  cleanScrapedText(story.headline || story.company) ||
+                  "Signal story";
                 const snippet =
                   cleanScrapedText(story.snippet || story.summary) ||
                   "Fresh signal intelligence from ReadyForRobots.";
                 return (
-                  <div key={`${story.company || story.headline || index}`} className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm">
+                  <div
+                    key={`${story.company || story.headline || index}`}
+                    className="rounded-2xl border border-gray-100 bg-white p-4 shadow-sm"
+                  >
                     <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-amber-600">
                       {cleanScrapedText(story.category) || "Signal"}
                     </p>
-                    <p className="text-sm font-bold leading-snug text-gray-900">{headline}</p>
-                    <p className="mt-2 line-clamp-4 text-xs leading-relaxed text-gray-600">{snippet}</p>
+                    <p className="text-sm font-bold leading-snug text-gray-900">
+                      {headline}
+                    </p>
+                    <p className="mt-2 line-clamp-4 text-xs leading-relaxed text-gray-600">
+                      {snippet}
+                    </p>
                   </div>
                 );
               })}
@@ -80,28 +140,45 @@ export default function MarketingDailyBrief({
 
         <div className="rounded-3xl border border-gray-200 bg-white p-6">
           <Mail className="mb-5 h-5 w-5 text-amber-600" />
-          <p className="text-lg font-display font-bold text-gray-900">Get the brief daily</p>
-          <p className="mt-3 text-sm leading-relaxed text-gray-600">
-            A short, signal-driven digest of robot demand, buyer timing, and where Signal sees sales or partnership motion.
+          <p className="text-lg font-display font-bold text-gray-900">
+            Get the brief daily
           </p>
-          <form onSubmit={onSubmit} className="mt-5 space-y-2">
+          <p className="mt-3 text-sm leading-relaxed text-gray-600">
+            A short, signal-driven digest of robot demand, buyer timing, and
+            where Signal sees sales or partnership motion.
+          </p>
+          <form onSubmit={handleSubmit} className="mt-5 space-y-2">
             <input
-              value={newsletterEmail}
-              onChange={(e) => onEmailChange(e.target.value)}
+              required
+              value={emailValue}
+              onChange={e => {
+                if (onEmailChange) onEmailChange(e.target.value);
+                else setInternalEmail(e.target.value);
+              }}
               type="email"
               placeholder="work email"
               className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 placeholder-gray-400 outline-none focus:border-sky-500"
             />
             <button
               type="submit"
-              disabled={newsletterStatus === "submitting"}
-              className="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-amber-400 disabled:opacity-50"
+              disabled={statusValue === "submitting"}
+              className="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-amber-400 disabled:opacity-50 cursor-pointer"
             >
-              {newsletterStatus === "submitting" ? "Subscribing..." : "Subscribe Free"}
+              {statusValue === "submitting"
+                ? "Subscribing..."
+                : "Subscribe Free"}
             </button>
           </form>
-          {newsletterStatus === "success" && <p className="mt-3 text-xs text-sky-700">Subscribed.</p>}
-          {newsletterStatus === "error" && <p className="mt-3 text-xs text-red-600">Could not subscribe. Try again.</p>}
+          {statusValue === "success" && (
+            <p className="mt-3 text-xs font-medium text-emerald-600">
+              Subscribed! Check your inbox for the daily brief.
+            </p>
+          )}
+          {statusValue === "error" && (
+            <p className="mt-3 text-xs font-medium text-red-600">
+              {errorMsg || "Could not subscribe. Try again."}
+            </p>
+          )}
         </div>
       </div>
     </section>

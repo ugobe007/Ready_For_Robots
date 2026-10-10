@@ -5,7 +5,11 @@ import {
   normalizeRobotHandoffUrl,
   saveJobsHandoffSnapshot,
 } from "./jobsHandoffSnapshot";
-import { JOBS_ACTIVATE_CAP, JOBS_EXAMPLE_CAP, JOBS_PIPELINE_CAP } from "./jobsWorkflow";
+import {
+  JOBS_ACTIVATE_CAP,
+  JOBS_EXAMPLE_CAP,
+  JOBS_PIPELINE_CAP,
+} from "./jobsWorkflow";
 
 function installMemoryStorage() {
   const store = new Map<string, string>();
@@ -40,10 +44,10 @@ describe("jobsHandoffSnapshot", () => {
 
   it("normalizes trailing slashes so FIND and pipeline URLs match", () => {
     expect(normalizeRobotHandoffUrl("https://www.dexmate.ai/")).toBe(
-      "https://www.dexmate.ai",
+      "https://www.dexmate.ai"
     );
     expect(normalizeRobotHandoffUrl("https://WWW.Dexmate.ai/vega")).toBe(
-      "https://www.dexmate.ai/vega",
+      "https://www.dexmate.ai/vega"
     );
   });
 
@@ -60,16 +64,16 @@ describe("jobsHandoffSnapshot", () => {
         },
       ],
     });
-    expect(loadJobsHandoffSnapshot("https://www.dexmate.ai")?.jobs[0]?.title).toBe(
-      "Load CNC cells",
-    );
+    expect(
+      loadJobsHandoffSnapshot("https://www.dexmate.ai")?.jobs[0]?.title
+    ).toBe("Load CNC cells");
     expect(loadJobsHandoffSnapshot("https://agilityrobotics.com")).toBeNull();
   });
 
   it("keeps See All above the 5-job example cap on the same page", () => {
-    expect(JOBS_EXAMPLE_CAP).toBe(5);
-    expect(JOBS_PIPELINE_CAP).toBe(15);
-    expect(JOBS_ACTIVATE_CAP).toBe(15);
+    expect(JOBS_EXAMPLE_CAP).toBe(3);
+    expect(JOBS_PIPELINE_CAP).toBe(25);
+    expect(JOBS_ACTIVATE_CAP).toBe(25);
   });
 
   it("stores how many jobs the user checked", () => {
@@ -84,8 +88,12 @@ describe("jobsHandoffSnapshot", () => {
         path: `/jobs/${i}`,
       })),
     });
-    expect(loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.selectedCount).toBe(3);
-    expect(loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.jobs).toHaveLength(3);
+    expect(
+      loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.selectedCount
+    ).toBe(3);
+    expect(
+      loadJobsHandoffSnapshot("https://www.magiclab.top/en")?.jobs
+    ).toHaveLength(3);
   });
 
   it("overwrites a prior strawberry robot even when the new FIND has no jobs", () => {
@@ -109,7 +117,7 @@ describe("jobsHandoffSnapshot", () => {
     });
     expect(loadJobsHandoffSnapshot("https://www.agrobot.com/")).toBeNull();
     const greenfield = loadJobsHandoffSnapshot(
-      "https://www.greenfieldincorporated.com/",
+      "https://www.greenfieldincorporated.com/"
     );
     expect(greenfield?.productName).toBe("BOT#25");
     expect(greenfield?.jobs).toEqual([]);
@@ -131,8 +139,8 @@ describe("jobsHandoffSnapshot", () => {
     });
     beginJobsHandoffForUrl("https://www.greenfieldincorporated.com/", "BOT#25");
     expect(loadJobsHandoffSnapshot("https://www.agrobot.com/")).toBeNull();
-    expect(loadJobsHandoffSnapshot("https://www.greenfieldincorporated.com/")?.jobs).toEqual(
-      [],
-    );
+    expect(
+      loadJobsHandoffSnapshot("https://www.greenfieldincorporated.com/")?.jobs
+    ).toEqual([]);
   });
 });

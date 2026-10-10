@@ -68,13 +68,22 @@ export default function JobsPstackProtocol({
         <div className="bg-[#0b162f] px-4 py-4 sm:px-5">
           <ul className="space-y-2.5">
             {PSTACK_ROLES.map(role => (
-              <li key={role.id} className="border-l-2 border-emerald-400/50 pl-3">
-                <p className="text-sm font-semibold text-slate-100">{role.label}</p>
-                <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{role.job}</p>
+              <li
+                key={role.id}
+                className="border-l-2 border-emerald-400/50 pl-3"
+              >
+                <p className="text-sm font-semibold text-slate-100">
+                  {role.label}
+                </p>
+                <p className="mt-0.5 text-xs leading-relaxed text-slate-400">
+                  {role.job}
+                </p>
               </li>
             ))}
           </ul>
-          <p className="mt-3 text-xs leading-relaxed text-slate-500">{PSTACK_CHROME_FOOT}</p>
+          <p className="mt-3 text-xs leading-relaxed text-slate-500">
+            {PSTACK_CHROME_FOOT}
+          </p>
         </div>
       </div>
     </section>

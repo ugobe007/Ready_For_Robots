@@ -1188,7 +1188,8 @@ def _extract_from_page(
         r"assembl(?:e|es|ing)\s+(?:[\w-]+\s+){0,2}?(?:meals?|bowls?|salads?|dishes|entr[e\u00e9]es?|tacos?|burritos?|sandwich\w*|pizzas?)|"
         r"grill\w+\s+(?:food|burgers?|patties|meat)|cook\w*\s+(?:food|meals?|fries|burgers?|the\s+\w+\s+menu)|"
         r"(?:chop|slice|dice|peel)\w*\s+(?:vegetables?|produce|ingredients?|food)|"
-        r"tortilla"
+        r"tortilla|"
+        r"hotel\s+kitchen|casino\s+kitchen|airport\s+kitchen|banquet\s+cook|commissary\s+kitchen"
         r")\b",
         text,
         re.I,
@@ -1223,6 +1224,8 @@ def _extract_from_page(
         r"carpet\s+(?:clean\w*|extract\w*|shampoo\w*)|"
         r"vacuum\w*\s+(?:carpets?|floors?|robot)|robotic\s+vacuum|"
         r"commercial\s+cleaning\s+robot|"
+        r"janitor|custodian|restroom\s+attendant|"
+        r"data[- ]center\s+(?:janitor|custodian|cleaner|cleaning)|"
         r"vacuuming,?\s+scrubbing|scrubbing,?\s+mopping|"
         r"floor\s+(?:cleaning|scrubbing)|commercial\s+floors|"
         r"janitor|custodian|restroom\s+attendant"

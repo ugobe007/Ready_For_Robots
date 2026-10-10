@@ -21,7 +21,12 @@ type Props = {
   selectedLeadId?: number | string | null;
 };
 
-export default function AnonymousValueStrip({ leadCount, limit, selectedCompany, selectedLeadId }: Props) {
+export default function AnonymousValueStrip({
+  leadCount,
+  limit,
+  selectedCompany,
+  selectedLeadId,
+}: Props) {
   const company = (selectedCompany || "").trim();
   const hasLead = Boolean(company) && selectedLeadId != null;
   const ctaHref = hasLead
@@ -35,7 +40,9 @@ export default function AnonymousValueStrip({ leadCount, limit, selectedCompany,
         <Sparkles className="h-4 w-4 shrink-0 text-emerald-700 mt-0.5" />
         <div>
           <p className="pipeline-value-strip-title">
-            {hasLead ? `Notice the timing on ${company}` : "See what Cal notices before you sign up"}
+            {hasLead
+              ? `Notice the timing on ${company}`
+              : "See what Cal notices before you sign up"}
           </p>
           <p className="pipeline-value-strip-body">
             {hasLead

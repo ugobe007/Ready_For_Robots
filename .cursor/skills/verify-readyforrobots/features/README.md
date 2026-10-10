@@ -40,6 +40,7 @@ Each feature file starts with an H1 and one paragraph, then exactly four H2s:
 ## Features
 
 - [Find jobs](./find-jobs.md) — paste a robot URL, get Job Cards.
+- [Find stay](./find-stay.md) — FIND timeout / 500 / abort stays on `/?visit=jobs`; employer MATCH catalog budget.
 - [Job Cards](./job-cards.md) — employer, workplace, work, qualification, task model.
 - [Jobs chrome](./jobs-chrome.md) — header, process bar, no Pipeline hop.
 - [Jobs CRM](./jobs-crm.md) — Open CRM → `/pipeline?src=jobs_activate`, 5 unlocked jobs, Place this job.

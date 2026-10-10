@@ -1,8 +1,12 @@
 /**
  * POST /api/robot-job-search — one composed profile + jobs transaction.
  */
-import { getApiBase, fetchWithTimeout } from "@/lib/apiBase";
-import type { MatchCapability, MatchJob, RobotJobMatchResult } from "@/lib/robotJobMatch";
+import { getPublicReadApiBase, fetchWithTimeout } from "@/lib/apiBase";
+import type {
+  MatchCapability,
+  MatchJob,
+  RobotJobMatchResult,
+} from "@/lib/robotJobMatch";
 import type { RobotProfileResult } from "@/lib/robotProfile";
 import type { SearchTimings } from "@/lib/submitWorkflow";
 
@@ -19,7 +23,7 @@ export type RobotJobSearchResult = Omit<RobotJobMatchResult, "products"> & {
 };
 
 export async function fetchRobotJobSearch(opts: {
-  url: string;
+  url?: string;
   product?: string;
   maxSources?: number;
   assertedClass?: string;
@@ -27,14 +31,17 @@ export async function fetchRobotJobSearch(opts: {
   signal?: AbortSignal;
   timeoutMs?: number;
 }): Promise<RobotJobSearchResult> {
-  const base = getApiBase();
+  const base = getPublicReadApiBase();
   const res = await fetchWithTimeout(
     `${base}/api/robot-job-search`,
     {
       method: "POST",
-      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
       body: JSON.stringify({
-        url: opts.url,
+        url: opts.url || null,
         product: opts.product || null,
         max_sources: opts.maxSources ?? 6,
         asserted_class: opts.assertedClass || null,
@@ -42,7 +49,7 @@ export async function fetchRobotJobSearch(opts: {
       }),
       signal: opts.signal,
     },
-    opts.timeoutMs ?? 30_000,
+    opts.timeoutMs ?? 12_000
   );
   if (!res.ok) {
     let detail = `robot-job-search ${res.status}`;

@@ -1,13 +1,28 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
-import { clearPendingNext, peekPendingNext, readNextParam } from "@/lib/authNext";
+import {
+  clearPendingNext,
+  peekPendingNext,
+  readNextParam,
+} from "@/lib/authNext";
 
 type AuthCtx = { session: Session | null; loading: boolean };
 
 const AuthContext = createContext<AuthCtx>({ session: null, loading: true });
 
-const NEUTRAL_AFTER_AUTH = new Set(["/", "/login", "/signup", "/auth/callback"]);
+const NEUTRAL_AFTER_AUTH = new Set([
+  "/",
+  "/login",
+  "/signup",
+  "/auth/callback",
+]);
 
 function maybeResumeIntentAfterSignIn(session: Session | null): void {
   if (!session || typeof window === "undefined") return;
@@ -17,7 +32,16 @@ function maybeResumeIntentAfterSignIn(session: Session | null): void {
   const pending = peekPendingNext();
   if (!fromUrl && !pending) return;
   const dest = fromUrl ?? pending;
-  if (!dest || dest === "/" || dest === path) return;
+  const destPath = (dest || "").split("?")[0] || "/";
+  if (
+    !dest ||
+    dest === "/" ||
+    dest === path ||
+    (path === "/" && destPath === "/")
+  ) {
+    clearPendingNext();
+    return;
+  }
   clearPendingNext();
   window.location.replace(dest);
 }
@@ -50,7 +74,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => sub.subscription.unsubscribe();
   }, []);
 
-  return <AuthContext.Provider value={{ session, loading }}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{ session, loading }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth(): AuthCtx {

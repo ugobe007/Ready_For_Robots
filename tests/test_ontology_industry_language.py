@@ -85,6 +85,7 @@ def test_every_claimed_industry_has_work_words_and_a_task_model():
         "serving",
         "cleaning",
         "hotel",
+        "cleaning",
     ):
         row = rows[industry_id]
         assert row.get("class_signals") or row.get("work_words"), industry_id
@@ -238,6 +239,9 @@ def test_food_prep_ontology_keeps_qsr_work_words():
         "ingredient dosing",
         "tortilla",
         "assembly line kitchen",
+        "hotel kitchen",
+        "casino kitchen",
+        "airport kitchen",
     ):
         assert term in blob, term
     assert fp["find_class"] == "food_prep"
@@ -245,6 +249,7 @@ def test_food_prep_ontology_keeps_qsr_work_words():
         str(a).lower().replace(" ", "_") for a in (rows["hospitality"].get("aliases") or [])
     }
     assert "food_prep" not in hospitality_aliases
+    assert "serving" not in hospitality_aliases
     assert "food prep" not in {str(a).lower() for a in (rows["hospitality"].get("aliases") or [])}
 
 

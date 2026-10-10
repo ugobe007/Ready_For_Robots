@@ -1,7 +1,11 @@
 /**
  * Terminal research console — perceived progress via completed stages, not fake %.
  */
-import { dotsBar, researchStages, researchStatusLine } from "@/lib/submitWorkflow";
+import {
+  dotsBar,
+  researchStages,
+  researchStatusLine,
+} from "@/lib/submitWorkflow";
 
 export default function JobsResearchConsole({
   elapsedMs,
@@ -19,18 +23,26 @@ export default function JobsResearchConsole({
   sourceCount?: number | null;
 }) {
   const stages = researchStages(elapsedMs, composing);
-  const done = stages.filter((s) => s.done).length;
+  const done = stages.filter(s => s.done).length;
   const who = (robotName || companyName || "ROBOT").toUpperCase();
   const company = (companyName || "—").toUpperCase();
 
   return (
     <div className="mt-4 min-h-0 flex-1 font-mono text-[11px] uppercase tracking-[0.08em] text-slate-400">
-      <p className="font-semibold tracking-[0.14em] text-emerald-400">Looking for jobs…</p>
+      <p className="font-semibold tracking-[0.14em] text-emerald-400">
+        Looking for jobs…
+      </p>
       <ul className="mt-4 space-y-2">
-        {stages.map((s) => (
+        {stages.map(s => (
           <li
             key={s.n}
-            className={s.done ? "text-emerald-400" : s.active ? "text-slate-200" : "text-slate-600"}
+            className={
+              s.done
+                ? "text-emerald-400"
+                : s.active
+                  ? "text-slate-200"
+                  : "text-slate-600"
+            }
           >
             {s.n} {s.label} {s.done ? "✓" : s.active ? "…" : ""}
           </li>

@@ -8,7 +8,16 @@ type RobotLeaderRow = {
 
 type Props = {
   robots: RobotLeaderRow[];
-  indexValue: (robot: any, dim: "mobility" | "manipulation" | "cognition" | "safety" | "data_pipeline" | "production") => number;
+  indexValue: (
+    robot: any,
+    dim:
+      | "mobility"
+      | "manipulation"
+      | "cognition"
+      | "safety"
+      | "data_pipeline"
+      | "production"
+  ) => number;
 };
 
 type LeaderCard = {
@@ -26,20 +35,24 @@ function topBy<T>(items: T[], score: (item: T) => number): T | null {
 export default function RobotsLeaderCards({ robots, indexValue }: Props) {
   if (!robots.length) return null;
 
-  const indexLeader = topBy(robots, (r) => r.score_total ?? 0);
-  const mobilityLeader = topBy(robots, (r) => indexValue(r, "mobility"));
-  const manipulationLeader = topBy(robots, (r) => indexValue(r, "manipulation"));
+  const indexLeader = topBy(robots, r => r.score_total ?? 0);
+  const mobilityLeader = topBy(robots, r => indexValue(r, "mobility"));
+  const manipulationLeader = topBy(robots, r => indexValue(r, "manipulation"));
 
   const vendorCounts = robots.reduce<Record<string, number>>((acc, robot) => {
     const vendor = (robot.vendor || "Unknown").trim();
     acc[vendor] = (acc[vendor] ?? 0) + 1;
     return acc;
   }, {});
-  const deploymentVendor = Object.entries(vendorCounts).sort((a, b) => b[1] - a[1])[0];
+  const deploymentVendor = Object.entries(vendorCounts).sort(
+    (a, b) => b[1] - a[1]
+  )[0];
   const deploymentRobots = deploymentVendor
-    ? robots.filter((r) => (r.vendor || "").trim() === deploymentVendor[0])
+    ? robots.filter(r => (r.vendor || "").trim() === deploymentVendor[0])
     : [];
-  const commercialCount = deploymentRobots.filter((r) => r.status === "available" || r.status === "pilot").length;
+  const commercialCount = deploymentRobots.filter(
+    r => r.status === "available" || r.status === "pilot"
+  ).length;
 
   const cards: LeaderCard[] = [
     indexLeader
@@ -84,9 +97,17 @@ export default function RobotsLeaderCards({ robots, indexValue }: Props) {
           className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-sm animate-fade-in-up"
           style={{ animationDelay: `${index * 80}ms` }}
         >
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">{card.label}</p>
-          <p className={`mt-2 font-display text-sm font-bold leading-tight ${card.accent}`}>{card.name}</p>
-          <p className="mt-1 font-mono-data text-[11px] text-slate-400">{card.detail}</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500">
+            {card.label}
+          </p>
+          <p
+            className={`mt-2 font-display text-sm font-bold leading-tight ${card.accent}`}
+          >
+            {card.name}
+          </p>
+          <p className="mt-1 font-mono-data text-[11px] text-slate-400">
+            {card.detail}
+          </p>
         </div>
       ))}
     </div>

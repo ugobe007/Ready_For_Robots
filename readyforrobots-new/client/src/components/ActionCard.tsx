@@ -64,7 +64,10 @@ const statusConfig: Record<
   },
 };
 
-const signalIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+const signalIcons: Record<
+  string,
+  React.ComponentType<{ className?: string }>
+> = {
   "Hiring Signal": Users,
   "Expansion Signal": TrendingUp,
   "Operational Signal": Building2,
@@ -75,8 +78,7 @@ function ConfidenceArc({ score }: { score: number }) {
   const radius = 18;
   const circumference = Math.PI * radius; // half circle
   const progress = (score / 100) * circumference;
-  const color =
-    score >= 90 ? "#059669" : score >= 75 ? "#2563EB" : "#FFB000";
+  const color = score >= 90 ? "#059669" : score >= 75 ? "#2563EB" : "#FFB000";
 
   return (
     <div className="flex flex-col items-center gap-0.5">
@@ -121,10 +123,10 @@ export default function ActionCard({
     activity.status === "new_signal"
       ? "border-l-amber-400"
       : activity.status === "draft_ready"
-      ? "border-l-blue-400"
-      : activity.status === "followup_sent" || activity.status === "qualified"
-      ? "border-l-emerald-400"
-      : "border-l-purple-400";
+        ? "border-l-blue-400"
+        : activity.status === "followup_sent" || activity.status === "qualified"
+          ? "border-l-emerald-400"
+          : "border-l-purple-400";
 
   return (
     <motion.div
@@ -146,7 +148,9 @@ export default function ActionCard({
               <h3 className="font-semibold text-neutral-950 text-sm leading-tight truncate">
                 {activity.companyName}
               </h3>
-              <p className="text-xs text-neutral-400 mt-0.5">{activity.industry}</p>
+              <p className="text-xs text-neutral-400 mt-0.5">
+                {activity.industry}
+              </p>
             </div>
           </div>
 
@@ -237,7 +241,9 @@ export default function ActionCard({
 
       {/* Timestamp */}
       <div className="absolute top-4 right-[140px]">
-        <span className="font-mono text-xs text-neutral-400">{activity.createdAt}</span>
+        <span className="font-mono text-xs text-neutral-400">
+          {activity.createdAt}
+        </span>
       </div>
     </motion.div>
   );

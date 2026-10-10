@@ -69,7 +69,9 @@ export default function JobsPresentationOffer({
           href={href}
           className="mt-4 inline-flex items-center justify-center border border-emerald-400/50 bg-emerald-400/10 px-4 py-3 font-mono text-xs font-bold uppercase tracking-[0.08em] text-emerald-300"
         >
-          {signedIn ? "Pay to order this presentation →" : "Sign up and pay to order →"}
+          {signedIn
+            ? "Pay to order this presentation →"
+            : "Sign up and pay to order →"}
         </a>
       ) : (
         <button

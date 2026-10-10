@@ -21,6 +21,8 @@ def test_how_and_act_pass_on_this_tree():
     assert "chrome_not_gate" in ids
     assert "silent_abort" in ids
     assert "bind_url" in ids
+    assert "phelan_jobs_desk" in ids
+    assert "crm_first_cta" in ids
 
 
 def test_local_release_skips_fly_drive():
@@ -30,12 +32,14 @@ def test_local_release_skips_fly_drive():
     assert result["authority"] == "release_gate"
     critic_ids = [c["id"] for c in result["critic"]["checks"]]
     assert "find_abort" in critic_ids
+    assert "find_no_home" in critic_ids
     assert "crm_leftover" in critic_ids
     assert "oem_extract" in critic_ids
     assert "class_picker" in critic_ids
     assert "healthcare_class" in critic_ids
     assert "healthcare_class:live" in critic_ids
     assert "ontology_industry_language" in critic_ids
+    assert "url_workflow" in critic_ids
     assert "find_drive" in critic_ids
 
 
@@ -118,12 +122,14 @@ def test_critic_skips_fly_on_scrape_pr_file_list(monkeypatch):
     assert ids["find_drive"]["ok"]
     assert ids["healthcare_class:live"]["ok"]
     assert ids["ontology_industry_language"]["ok"]
+    assert ids["url_workflow"]["ok"]
 
 
 def test_critic_gates_include_abort_and_leftover():
     assert critic_gate_ids() == [
         "find",
         "find_abort",
+        "find_no_home",
         "find_identity",
         "crm_leftover",
         "job_cards",
@@ -133,6 +139,7 @@ def test_critic_gates_include_abort_and_leftover():
         "class_picker",
         "healthcare_class",
         "ontology_industry_language",
+        "url_workflow",
     ]
 
 

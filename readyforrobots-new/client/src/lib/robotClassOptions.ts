@@ -106,22 +106,24 @@ export const DEFAULT_CLASS_OPTIONS: ClassOption[] = [
   {
     id: "food_prep",
     label: "Food prep",
-    hint: "QSR make-line, bowl assembly, grill, kitchen automation",
+    hint: "Hotel, casino, airport, and QSR kitchens — make-line, grill, prep",
   },
   {
     id: "serving",
     label: "Serving",
-    hint: "Table, drinks, bussing, food-delivery AMR — restaurants and public venues",
+    hint: "Table, drinks, bussing — ADAM, Matradee, Servi in restaurants, hotels, casinos, airports, offices, malls",
   },
   {
     id: "cleaning",
     label: "Cleaning",
-    hint: "Floor scrubbing, vacuum, mopping — F&B and public venues",
+    hint: "Floor, vacuum, restroom — hotels, restaurants, casinos, airports, offices, malls, data centers",
   },
 ];
 
 export const CLASS_OPTION_IDS = DEFAULT_CLASS_OPTIONS.map(row => row.id);
 
-export function classOptionsOrDefault(options?: ClassOption[] | null): ClassOption[] {
+export function classOptionsOrDefault(
+  options?: ClassOption[] | null
+): ClassOption[] {
   return options && options.length > 0 ? options : DEFAULT_CLASS_OPTIONS;
 }

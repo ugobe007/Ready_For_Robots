@@ -13,10 +13,21 @@ const DARK_HERO_PATHS = new Set([
   "/experiment",
   "/jobs",
   "/newsletter",
+  "/sales-console",
+  "/crm",
+  "/supply-pipeline",
+  "/admin",
+  "/sales-workflow",
+  "/proposal/oem-review",
 ]);
 
 export function isDarkHeroRoute(pathname: string): boolean {
   const base = pathname.split("?")[0].split("#")[0];
   if (DARK_HERO_PATHS.has(base)) return true;
-  return base === "/jobs" || base.startsWith("/jobs/") || base.startsWith("/design/");
+  return (
+    base === "/jobs" ||
+    base.startsWith("/jobs/") ||
+    base.startsWith("/design/") ||
+    base.startsWith("/proposal/")
+  );
 }

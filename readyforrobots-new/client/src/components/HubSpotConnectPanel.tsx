@@ -19,7 +19,11 @@ type Props = {
   variant?: "profile" | "compact";
 };
 
-export default function HubSpotConnectPanel({ status, loading, variant = "profile" }: Props) {
+export default function HubSpotConnectPanel({
+  status,
+  loading,
+  variant = "profile",
+}: Props) {
   const connected = Boolean(status?.connected);
   const accountLabel = status?.account_login || status?.account_name;
   const tierNote =
@@ -56,16 +60,21 @@ export default function HubSpotConnectPanel({ status, loading, variant = "profil
                 Connected{accountLabel ? ` · ${accountLabel}` : ""}
               </p>
               <p className="mt-1 text-xs leading-relaxed text-gray-600">
-                Saved leads sync into HubSpot. Manage auto-sync vs hand-picked accounts on the integration page.
+                Saved leads sync into HubSpot. Manage auto-sync vs hand-picked
+                accounts on the integration page.
               </p>
             </>
           ) : (
             <>
-              <p className={`mt-1 text-gray-800 ${isCompact ? "text-xs" : "text-sm"}`}>
-                Already on HubSpot? Connect in one click — SIGNAL pushes scored buyer leads while your team closes in
-                familiar CRM.
+              <p
+                className={`mt-1 text-gray-800 ${isCompact ? "text-xs" : "text-sm"}`}
+              >
+                Already on HubSpot? Connect in one click — SIGNAL pushes scored
+                buyer leads while your team closes in familiar CRM.
               </p>
-              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">{tierNote}</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-gray-600">
+                {tierNote}
+              </p>
             </>
           )}
         </div>
@@ -96,7 +105,10 @@ export default function HubSpotConnectPanel({ status, loading, variant = "profil
           Native CRM
         </Link>
         {!connected && !isCompact && (
-          <Link href="/pricing?reason=hubspot" className="inline-flex items-center px-2 py-2 text-xs font-semibold text-gray-500 hover:text-emerald-800">
+          <Link
+            href="/pricing?reason=hubspot"
+            className="inline-flex items-center px-2 py-2 text-xs font-semibold text-gray-500 hover:text-emerald-800"
+          >
             Pro auto-sync →
           </Link>
         )}

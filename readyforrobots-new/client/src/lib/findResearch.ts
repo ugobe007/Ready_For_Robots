@@ -5,11 +5,12 @@
  * returned for the submit that just started. URL identity isolation still
  * drops late A responses after B starts; a same-URL retry is a new generation
  * so the first attempt cannot paint "Failed to fetch" over the second.
+ *
+ * Lookup timeout / 500 / abort stays on OEM FIND step 1 (`/?visit=jobs`).
+ * Never send employer MATCH.
  */
-import {
-  isCurrentRobotSubmit,
-  sameRobotUrl,
-} from "@/lib/robotUrlIdentity";
+import { jobsFindHref, landingVisitFromSearch } from "@/lib/jobsLanding";
+import { isCurrentRobotSubmit, sameRobotUrl } from "@/lib/robotUrlIdentity";
 
 export type FindResearchHandle = {
   url: string;
@@ -28,7 +29,10 @@ export function isFailedToFetchError(err: unknown): boolean {
   const name = "name" in err ? String((err as { name?: string }).name) : "";
   const message =
     "message" in err ? String((err as { message?: string }).message) : "";
-  if (name === "TypeError" && /failed to fetch|load failed|networkerror/i.test(message)) {
+  if (
+    name === "TypeError" &&
+    /failed to fetch|load failed|networkerror/i.test(message)
+  ) {
     return true;
   }
   return /^failed to fetch$/i.test(message.trim());
@@ -55,7 +59,7 @@ export function isFindAbortError(err: unknown, signal?: AbortSignal): boolean {
 
 export function beginFindResearch(
   previous: FindResearchHandle | null,
-  url: string,
+  url: string
 ): FindResearchHandle {
   const handle: FindResearchHandle = {
     url,
@@ -70,14 +74,14 @@ export function beginFindResearch(
 
 export function isLiveFindResearch(
   current: FindResearchHandle | null,
-  handle: FindResearchHandle,
+  handle: FindResearchHandle
 ): boolean {
   return Boolean(
     current &&
       current.generation === handle.generation &&
       current.controller === handle.controller &&
       sameRobotUrl(current.url, handle.url) &&
-      isCurrentRobotSubmit(current.url, handle.url),
+      isCurrentRobotSubmit(current.url, handle.url)
   );
 }
 
@@ -89,7 +93,71 @@ export function shouldIgnoreStaleFindError(opts: {
   return !isLiveFindResearch(opts.current, opts.handle);
 }
 
-export function findResearchFailureMessage(err: unknown, fallback: string): string {
+/** OEM FIND step 1. Lookup failure must not navigate. */
+export function findFailureStayHref(): string {
+  return jobsFindHref();
+}
+
+/**
+ * True when a href would dump FIND onto employer MATCH or another route.
+ * `null` means stay on this document — that is the success case.
+ */
+export function findFailureBouncesHome(
+  href: string | null | undefined
+): boolean {
+  if (href == null || href === "") return false;
+  const hashless = href.split("#")[0] || "";
+  const qIndex = hashless.indexOf("?");
+  const pathPart = (qIndex >= 0 ? hashless.slice(0, qIndex) : hashless).replace(
+    /^https?:\/\/[^/]+/i,
+    ""
+  );
+  const path = pathPart || "/";
+  const search = qIndex >= 0 ? hashless.slice(qIndex) : "";
+  if (path !== "/" && path !== "") return true;
+  return landingVisitFromSearch(search) !== "jobs";
+}
+
+export function findLookupFailureOutcome(err: unknown): {
+  stage: "find";
+  href: string;
+  bounceHome: false;
+  error: string;
+} {
+  return {
+    stage: "find",
+    href: findFailureStayHref(),
+    bounceHome: false,
+    error: findResearchFailureMessage(
+      err,
+      "Research failed. Check the URL and try again."
+    ),
+  };
+}
+
+/** Pin `?visit=jobs` so FIND failure cannot become employer MATCH. */
+export function ensureFindStayVisit(): boolean {
+  if (typeof window === "undefined") return false;
+  const params = new URLSearchParams(window.location.search);
+  const already = params.get("visit") === "jobs" && params.get("new") !== "1";
+  if (already) return false;
+  params.delete("new");
+  params.set("visit", "jobs");
+  const next = params.toString();
+  const path = window.location.pathname || "/";
+  const hash = window.location.hash || "";
+  window.history.replaceState(
+    window.history.state,
+    "",
+    `${path}?${next}${hash}`
+  );
+  return true;
+}
+
+export function findResearchFailureMessage(
+  err: unknown,
+  fallback: string
+): string {
   if (
     isFindAbortError(err) ||
     isTimeoutError(err) ||

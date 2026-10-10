@@ -172,7 +172,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.9968,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Accor Hotels: Accor group hotels across France, UK, Germany, Benelux: housekeeping and F&B roles 35% vacant post-COVID Accor investing EUR 300M in hotel technology transformatio\u2026",
         "for_whom": "oem",
@@ -388,7 +388,7 @@
       "pipeline_action": "Priority: Ask about new model lines or rework cells \u2014 AMR kitting is an easy wedge.",
       "signal_strength": 0.8132,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Ask about new model lines or rework cells \u2014 AMR kitting is an easy wedge.",
         "why_now": "Stellantis Deploys AI-Powered Robots in Factories How Investors Are Reacting To Stellantis (BIT:STLAM) Expanding Its Palantir AI Deal And U.S. What's driving it: Stated interest\u2026",
         "for_whom": "oem",
@@ -609,7 +609,7 @@
       "pipeline_action": "Priority: Pitch floor-scrubber and back-of-house delivery pilots before peak weekend traffic.",
       "signal_strength": 0.92,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Pitch floor-scrubber and back-of-house delivery pilots before peak weekend traffic.",
         "why_now": "MGM Resorts International: MGM Resorts announces $2.1B capital program over 3 years; technology and operational automation a key pillar of the investment plan MGM deploys AI-pow\u2026",
         "for_whom": "oem",
@@ -862,7 +862,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.92,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Sysco Corporation is hiring for Chief Supply Chain Transformation Officer \u2014 timing that usually means operational load is already rising.",
         "for_whom": "oem",
@@ -1128,7 +1128,7 @@
       "pipeline_action": "Priority: Focus on galley/logistics AMRs and cabin-turnover automation between port days.",
       "signal_strength": 0.89,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Focus on galley/logistics AMRs and cabin-turnover automation between port days.",
         "why_now": "Norwegian Cruise Line Holdings operating at 22% below required onboard crew levels; food service and cabin steward positions most impacted NCLH announces $3.5B new ship order pr\u2026",
         "for_whom": "oem",
@@ -1354,7 +1354,7 @@
       "pipeline_action": "Priority: Propose a single-building cleaning pilot with measurable sq-ft coverage.",
       "signal_strength": 0.93,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Propose a single-building cleaning pilot with measurable sq-ft coverage.",
         "why_now": "ABM Industries hires Chief Robotics & Automation Officer; mandate to integrate autonomous cleaning and service delivery robots across all service lines ABM Industries deploys 50\u2026",
         "for_whom": "oem",
@@ -1599,7 +1599,7 @@
       "pipeline_action": "Priority: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.88,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "HCA Healthcare: Deals tracker: Cross Country Healthcare to be acquired for $437M How Smart Technology in Healthcare Is Powering Smart Hospitals Deals tracker: Cross Country Heal\u2026",
         "for_whom": "oem",
@@ -1815,7 +1815,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
       "signal_strength": 0.9632,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
         "why_now": "American-United merger buzz fades, but could another big airline deal be coming? What's driving it: M&A or portfolio moves and Stated interest in automation.",
         "for_whom": "oem",
@@ -2061,7 +2061,7 @@
       "pipeline_action": "Priority: Ask about micro-fulfillment or backroom inventory bots before broad rollout.",
       "signal_strength": 0.9968,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Ask about micro-fulfillment or backroom inventory bots before broad rollout.",
         "why_now": "Walmart Investing Big in Montco with Store Remodels and Faster Shopping Tech Walmart plans high-tech pharmacy hub near Orlando airport Autonomous Robots powered by BrainOS to be\u2026",
         "for_whom": "oem",
@@ -2380,7 +2380,7 @@
       "pipeline_action": "Priority: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
       "signal_strength": 0.9,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
         "why_now": "Starbucks Corporation: Starbucks partner (employee) turnover at 65% annually; labor shortage creating long wait times and customer satisfaction issues Starbucks Reinvention Plan\u2026",
         "for_whom": "oem",
@@ -2631,7 +2631,7 @@
       "pipeline_action": "Priority: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.88,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Kenco Logistics is hiring for Director of Automation Engineering \u2014 timing that usually means operational load is already rising.",
         "for_whom": "oem",
@@ -2894,7 +2894,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.92,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "How Nvidia-backed Artisight is taking smart hospitals to the next level with AI and computer vision DHL Supply Chain Opens 1-Million-Square-Foot Life Sciences Distribution Cente\u2026",
         "for_whom": "oem",
@@ -3283,7 +3283,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.92,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "XPO Logistics Completes Acquisition of 3PD Tutor Intelligence to Unveil AI-Powered Case Packing Research Designed to Dramatically Lower Automation Costs at PACK EXPO East - Pack\u2026",
         "for_whom": "oem",
@@ -3635,7 +3635,7 @@
       "pipeline_action": "Priority: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.7317,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Medline expands AI platform and warehouse robotics - Digital Commerce 360. What's driving it: New locations or capacity growth and Public automation news.",
         "for_whom": "oem",
@@ -3959,7 +3959,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.88,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Ryder System is hiring for Warehouse Automation Engineer \u2014 timing that usually means operational load is already rising.",
         "for_whom": "oem",
@@ -4225,7 +4225,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.86,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Penn Entertainment regional casinos operating with 35% fewer F&B and floor service staff than required; table and slot service disrupted Penn Entertainment $350M technology tran\u2026",
         "for_whom": "oem",
@@ -4454,7 +4454,7 @@
       "pipeline_action": "Priority: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.91,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "Aimbridge manages 1,500+ hotels; housekeeping vacancy at 47% system-wide; single operator scale creates compelling robot buying opportunity Aimbridge Hospitality investing $200M\u2026",
         "for_whom": "oem",
@@ -4704,7 +4704,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.92,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "FedEx Ground Expands Chicago Presence Construction begins on new FedEx Ground facility in Panama City - WJHG. What's driving it: New locations or capacity growth and Public auto\u2026",
         "for_whom": "oem",
@@ -4975,7 +4975,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.696,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Amazon is hiring for Mechatronics & Robotics Technician \u2014 timing that usually means operational load is already rising.",
         "for_whom": "oem",
@@ -5286,7 +5286,7 @@
       "pipeline_action": "Priority: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.6902,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "Tampa Bay hospitals consider robots for patient transport Tampa Bay Water starts $181 million plant expansion Philip Morris International U.S. What's driving it: Public automati\u2026",
         "for_whom": "oem",
@@ -5496,7 +5496,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
       "signal_strength": 0.7999,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
         "why_now": "Singapore Changi International Airport: The benchmark for smart airports Singapore Changi no longer world's 2nd cleanest airport Singapore Changi no longer world's 2nd cleanest\u2026",
         "for_whom": "oem",
@@ -5710,7 +5710,7 @@
       "pipeline_action": "Priority: Staffing pressure \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.88,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Staffing pressure \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Marriott International: Falls Church Marriott Fairview Park Debuts Renovated Guestrooms and Meeting Spaces. What's driving it: Public automation news and Leadership moves drivin\u2026",
         "for_whom": "oem",
@@ -5954,7 +5954,7 @@
       "pipeline_action": "Priority: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.7591,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "LG Electronics unveils robotic vacuum for hotel cleaning, plans Marriott pilot Does Marriott\u2019s New All Inclusive Deals in Jamaica and Zanzibar Shift the Bull Case for MAR?. What\u2026",
         "for_whom": "oem",
@@ -6248,7 +6248,7 @@
       "pipeline_action": "Priority: Ask about micro-fulfillment or backroom inventory bots before broad rollout.",
       "signal_strength": 0.8266,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Ask about micro-fulfillment or backroom inventory bots before broad rollout.",
         "why_now": "Home Depot Buys Simpl Automation to Boost Distribution Speed - News and Statistics A-list actor\u2019s restaurant chain opening locations at Home Depot, Bass Pro Shops - MLive.com. W\u2026",
         "for_whom": "oem",
@@ -6484,7 +6484,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.83,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Loews Hotels & Co: Loews Hotels upscale properties: banquet, rooms, F&B staff shortage driving service disruption and cost overruns Loews Hotels committing $120M to hotel techno\u2026",
         "for_whom": "oem",
@@ -6699,7 +6699,7 @@
       "pipeline_action": "Priority: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.8189,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Rebel Hotel Company Expands South: Acquires Sheraton Orlando North in Strategic Growth Move Rebel Hotel Company adds Orlando Sheraton Rebel Hotel Company adds White House Napa t\u2026",
         "for_whom": "oem",
@@ -6919,7 +6919,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.8424,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "PM Hotel Group Announces Appointment of Kirk Pederson as Chief Operating Officer PM Hotel Group appoints COO PM Hotel Group Appoints New Chief Operating Officer. What's driving\u2026",
         "for_whom": "oem",
@@ -7139,7 +7139,7 @@
       "pipeline_action": "Priority: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.8292,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Dollar Tree To Open Arizona Distribution Center Dollar Tree Celebrates Opening of New Distribution Center with Ribbon Cutting Dollar Tree To Open Arizona Distribution Center. Wh\u2026",
         "for_whom": "oem",
@@ -7363,7 +7363,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.7532,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Lineage celebrates fully automated expansion for Indiana cold storage facility Lineage breaks ground on new automated facility in Dallas market Lineage confirms expansion of Dut\u2026",
         "for_whom": "oem",
@@ -7588,7 +7588,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.93,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Walt Disney Parks & Resorts: Disney Parks faces 35% food service, custodial, and resort operations vacancy; union contracts complicate hiring; automation being evaluated Disney\u2026",
         "for_whom": "oem",
@@ -7803,7 +7803,7 @@
       "pipeline_action": "Priority: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.6467,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Kuehne+Nagel expands facility in El Paso, Texas, to meet growing market demand for cross-border logistics Kuehne+Nagel accelerates India growth with 100,000 sqm fulfilment centr\u2026",
         "for_whom": "oem",
@@ -8028,7 +8028,7 @@
       "pipeline_action": "Priority: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
       "signal_strength": 0.88,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
         "why_now": "Panera Bread, a large Food Service (Restaurants) operator, sits in a sector facing acute front-line labor shortages that are pushing operators to evaluate service and material-h\u2026",
         "for_whom": "oem",
@@ -8317,7 +8317,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.93,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Refrigerated Warehousing and Storage Market Strategies to 2034 Featuring Lineage Logistics, AmeriCold Logistics, Penske Logistics, United States Cold Storage, and Nichirei Corpo\u2026",
         "for_whom": "oem",
@@ -8660,7 +8660,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.6898,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Uber Eats Partners with Starship for Robot Food Delivery in UK Uber Eats Rolls Out New Robot Food Delivery Service in Philadelphia Uber Eats Partners with Starship for Robot Foo\u2026",
         "for_whom": "oem",
@@ -8890,7 +8890,7 @@
       "pipeline_action": "Humanoid \u00b7 Lead with a narrow humanoid workcell pilot \u2014 confirm ops owner and success metrics.",
       "signal_strength": 0.8221,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Humanoid \u00b7 Lead with a narrow humanoid workcell pilot \u2014 confirm ops owner and success metrics.",
         "why_now": "Soon, humanoid robots will handle your baggage, clean aircraft at Tokyo Haneda Airport Japan Airlines trials humanoid robots as ground handlers Japan Airlines pilots humanoid gr\u2026",
         "for_whom": "oem",
@@ -9222,7 +9222,7 @@
       "pipeline_action": "Priority: Staffing pressure \u2014 ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.9,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Staffing pressure \u2014 ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "Atria Senior Living, a large Senior Living & Assisted Living operator, sits in a sector facing acute front-line labor shortages that are pushing operators to evaluate service an\u2026",
         "for_whom": "oem",
@@ -9442,7 +9442,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.88,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "RJW Logistics Group, a large Logistics & Warehousing (3PL) operator, sits in a sector facing acute front-line labor shortages that are pushing operators to evaluate service and\u2026",
         "for_whom": "oem",
@@ -9726,7 +9726,7 @@
       "pipeline_action": "Priority: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.88,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Echo Global Logistics acquires ITS Logistics to create $5.4 billion combined entity Echo Global Logistics, a large Logistics & Supply Chain operator, sits in a sector facing acu\u2026",
         "for_whom": "oem",
@@ -10027,7 +10027,7 @@
       "pipeline_action": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.88,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Budget is moving \u2014 open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Dollar General Corporation: Dollar General investing $650M in distribution centre automation: robotic conveyors, AMR-assisted sortation, autonomous dock systems Dollar General D\u2026",
         "for_whom": "oem",
@@ -10284,7 +10284,7 @@
       "pipeline_action": "Priority: Staffing pressure \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.487,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Priority: Staffing pressure \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Marina Bay Sands deploys autonomous robots for back-of-house deliveries Marina Bay Sands gets robotic support in operations Does foreign ownership matter? What's driving it: New\u2026",
         "for_whom": "oem",
@@ -10508,7 +10508,7 @@
       "pipeline_action": "Next: Focus on galley/logistics AMRs and cabin-turnover automation between port days.",
       "signal_strength": 0.93,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Focus on galley/logistics AMRs and cabin-turnover automation between port days.",
         "why_now": "Royal Caribbean Group: Royal Caribbean Icon of the Seas features bionic bar robots and autonomous drink delivery on promenade deck; guests rate experience top attraction onboard\u2026",
         "for_whom": "oem",
@@ -10738,7 +10738,7 @@
       "pipeline_action": "Next: Qualify manufacturing or lab workflow owners \u2014 cobots and mobile manipulators first.",
       "signal_strength": 0.4517,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Qualify manufacturing or lab workflow owners \u2014 cobots and mobile manipulators first.",
         "why_now": "Why is There a Shortage of Clinical Laboratory Technologists? What's driving it: Staffing pressure.",
         "for_whom": "oem",
@@ -10957,7 +10957,7 @@
       "pipeline_action": "Next: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
       "signal_strength": 0.5554,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
         "why_now": "Dubai Airports partners with Farnek to install more than 30 autonomous cleaning robots across five major locations - Robotics & Automation News. What's driving it: Stated intere\u2026",
         "for_whom": "oem",
@@ -11171,7 +11171,7 @@
       "pipeline_action": "Next: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
       "signal_strength": 0.4882,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
         "why_now": "Thompson Restaurants Reports Strong 2025 Growth, Outlines Expansion Into New Markets and Non-Traditional Venues in 2026 Thompson Restaurants Reports Strong 2025 Growth, Outlines\u2026",
         "for_whom": "oem",
@@ -11386,7 +11386,7 @@
       "pipeline_action": "Next: Ask about new model lines or rework cells \u2014 AMR kitting is an easy wedge.",
       "signal_strength": 0.3803,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Ask about new model lines or rework cells \u2014 AMR kitting is an easy wedge.",
         "why_now": "Zoox Tesla: Robotaxis in 2025: Waymo plots global expansion as Zoox, Tesla roll to the starting line - CNBC. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -11600,7 +11600,7 @@
       "pipeline_action": "Next: Qualify manufacturing or lab workflow owners \u2014 cobots and mobile manipulators first.",
       "signal_strength": 0.389,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Qualify manufacturing or lab workflow owners \u2014 cobots and mobile manipulators first.",
         "why_now": "Beckman Coulter Life Sciences partners with Automata to accelerate AI-ready laboratory automation - Robotics & Automation News. What's driving it: Staffing pressure.",
         "for_whom": "oem",
@@ -11812,7 +11812,7 @@
       "pipeline_action": "Next: Lead with inspection or cable-tracing drones \u2014 facilities owns the budget.",
       "signal_strength": 0.3292,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Lead with inspection or cable-tracing drones \u2014 facilities owns the budget.",
         "why_now": "Canadian pension fund invests $225m in expansion of Canadian data center Canadian pension fund invests $225m in expansion of Canadian data center Canadian pension fund invests $\u2026",
         "for_whom": "oem",
@@ -12023,7 +12023,7 @@
       "pipeline_action": "Next: Propose a single-building cleaning pilot with measurable sq-ft coverage.",
       "signal_strength": 0.3845,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Propose a single-building cleaning pilot with measurable sq-ft coverage.",
         "why_now": "Strength in HON's Building Automation Unit Seems Firm: What's Next? What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -12234,7 +12234,7 @@
       "pipeline_action": "Next: Engage terminal ops on horizontal transport \u2014 tie to dwell-time KPIs.",
       "signal_strength": 0.3039,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Engage terminal ops on horizontal transport \u2014 tie to dwell-time KPIs.",
         "why_now": "Maverik hires former Pilot VP as chief commercial officer USU's Maverik Stadium Gets 2025 Video Board Upgrade Maverik Expands to 21st State. What's driving it: Leadership moves\u2026",
         "for_whom": "oem",
@@ -12449,7 +12449,7 @@
       "pipeline_action": "Next: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
       "signal_strength": 0.3815,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
         "why_now": "Singapore Joins Malaysia Thailand Indonesia: Singapore Joins Malaysia, Thailand, Indonesia, Vietnam, and Philippines in Creating New Technologies at Airports and These Innovatio\u2026",
         "for_whom": "oem",
@@ -12673,7 +12673,7 @@
       "pipeline_action": "Next: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
       "signal_strength": 0.5413,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
         "why_now": "Port NOLA Ports America: Port NOLA, Ports America and TiL form JV to operate Louisiana International Terminal Port NOLA, Ports America and TiL form JV to operate Louisiana Inter\u2026",
         "for_whom": "oem",
@@ -12888,7 +12888,7 @@
       "pipeline_action": "Next: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.3028,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "Kauvery Hospital launches robotic beating heart bypass surgery programme - The Hindu. What's driving it: Stated interest in automation.",
         "for_whom": "oem",
@@ -13104,7 +13104,7 @@
       "pipeline_action": "Next: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
       "signal_strength": 0.4754,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
         "why_now": "Pittsburgh International Airport deploys germ-killing robots Pittsburgh International Airport deploys germ-killing robots Pittsburgh International Airport deploys germ-killing r\u2026",
         "for_whom": "oem",
@@ -13324,7 +13324,7 @@
       "pipeline_action": "Next: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.5986,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "DoorDash launches its own fleet of delivery robots, smart hardware, and more DoorDash launches delivery robot in Fremont DoorDash Unveils Dot, the Delivery Robot Powered by its\u2026",
         "for_whom": "oem",
@@ -13544,7 +13544,7 @@
       "pipeline_action": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.417,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Warehouse operator to hire 195 seasonal workers in Lehigh Valley for holiday rush - lehighvalleylive. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -13770,7 +13770,7 @@
       "pipeline_action": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.417,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "RK LOGISTICS GROUP EXPANDS PHOENIX FOOTPRINT BY 116% WITH TWO NEW FACILITIES RK LOGISTICS GROUP EXPANDS PHOENIX FOOTPRINT BY 116% WITH TWO NEW FACILITIES. What's driving it: New\u2026",
         "for_whom": "oem",
@@ -13985,7 +13985,7 @@
       "pipeline_action": "Next: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.4573,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "ZAWYA-PRESSR: Healthcare leaders call for greater strategic alignment between capital investment and health system strategy at WHX - tradingview.com. What's driving it: New loca\u2026",
         "for_whom": "oem",
@@ -14201,7 +14201,7 @@
       "pipeline_action": "Next: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
       "signal_strength": 0.4066,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
         "why_now": "TSA PreCheck Touchless ID expands to dozens of U.S. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -14417,7 +14417,7 @@
       "pipeline_action": "Next: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.5274,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "Hoban Group's Open Innovation Drives Smart Construction Hoban Group's Open Innovation Drives Smart Construction. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -14640,7 +14640,7 @@
       "pipeline_action": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.4698,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Gap Inc.: Launches New Fulfillment Capabilities Ahead of Holiday Season; Scaled to Meet Growing Consumer Demand. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -14864,7 +14864,7 @@
       "pipeline_action": "Next: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
       "signal_strength": 0.3482,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
         "why_now": "\u2018Almost at a crisis\u2019: Canada's restaurants face perfect storm of costs and cautious consumers \u2018Almost at a crisis\u2019: Canada's restaurants face perfect storm of costs and cautious\u2026",
         "for_whom": "oem",
@@ -15079,7 +15079,7 @@
       "pipeline_action": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.225,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Southern Nevada PHOTOS: This Henderson casino opening wasn\u2019t like any other in Southern Nevada \u2014 PHOTOS. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -15294,7 +15294,7 @@
       "pipeline_action": "Next: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.3804,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Wingate Deploys Two Knightscope Security Robots in Atlanta. What's driving it: Robots already going in.",
         "for_whom": "oem",
@@ -15510,7 +15510,7 @@
       "pipeline_action": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.4698,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Kroger Ocado: Kroger, Ocado said to proceed with Phoenix warehouse. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -15725,7 +15725,7 @@
       "pipeline_action": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.3666,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "FreezPak Logistics announces opening of state-of-the-art facility in Fall River designed to serve Boston area, New England - Fall River Reporter. What's driving it: New location\u2026",
         "for_whom": "oem",
@@ -15945,7 +15945,7 @@
       "pipeline_action": "Next: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.2201,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Los Gatos hotel seized through swift foreclosure as market wobbles - The Mercury News. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -16155,7 +16155,7 @@
       "pipeline_action": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.3666,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Reitar Logtech Signs Landmark US$60 Million Strategic Equity Investment Agreement at US$4.00 per Share Marking a Major New Milestone in the Global Logistics Sector. What's drivi\u2026",
         "for_whom": "oem",
@@ -16370,7 +16370,7 @@
       "pipeline_action": "Next: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.2693,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "US Sets to Join Mexico, Canada, France, UK, Australia and More at Hunter Hotel Investment Conference 2026 in Atlanta as Global Hotel Investors and Hospitality Giants Converge -\u2026",
         "for_whom": "oem",
@@ -16583,7 +16583,7 @@
       "pipeline_action": "Next: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
       "signal_strength": 0.3741,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
         "why_now": "First Watch opening in Cookeville, Everything You Need to Know About the Expansion Plans First Watch opening in Cookeville, Everything You Need to Know About the Expansion Plans\u2026",
         "for_whom": "oem",
@@ -16798,7 +16798,7 @@
       "pipeline_action": "Next: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.3629,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Next: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "INNsight Launches All-In-One Software and Service System Designed to Simplify Hotel Operations. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -17013,7 +17013,7 @@
       "pipeline_action": "Watch: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.4804,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "US Hospital - AI Insider: Canada's Able Innovations Deploys Robotic System That Transfers Patients Between Beds at US Hospital. What's driving it: Robots already going in.",
         "for_whom": "oem",
@@ -17238,7 +17238,7 @@
       "pipeline_action": "Watch: Staffing pressure \u2014 ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.4568,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Staffing pressure \u2014 ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "Colorado nursing homes face pandemic-worsened staffing crisis: \"It's a struggle on a daily basis\". What's driving it: Staffing pressure.",
         "for_whom": "oem",
@@ -17456,7 +17456,7 @@
       "pipeline_action": "Watch: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
       "signal_strength": 0.4951,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
         "why_now": "NoVA Restaurant Chain Plans To Expand To 100 Sites By 2027 NoVA Restaurant Chain Plans To Expand To 100 Sites By 2027. What's driving it: Public automation news and New location\u2026",
         "for_whom": "oem",
@@ -17679,7 +17679,7 @@
       "pipeline_action": "Watch: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.3786,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Blueflite Drones to Deliver Auto Parts in Detroit. What's driving it: Roi documented.",
         "for_whom": "oem",
@@ -17896,7 +17896,7 @@
       "pipeline_action": "Watch: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.72,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Caesars Palace Las Vegas: Potential buyer title: Director of Housekeeping. What's driving it: Stated interest in automation.",
         "for_whom": "oem",
@@ -18113,7 +18113,7 @@
       "pipeline_action": "Watch: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.72,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Paris Las Vegas: Potential buyer title: Director of Operations. What's driving it: Stated interest in automation.",
         "for_whom": "oem",
@@ -18325,7 +18325,7 @@
       "pipeline_action": "Watch: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.5307,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "Lilly Nvidia: Lilly, Nvidia tag on partnership with new AI co-innovation lab, $1B investment. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -18550,7 +18550,7 @@
       "pipeline_action": "Watch: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.2201,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Malaysia Joins Philippines Singapore Indonesia: Malaysia Joins Philippines, Singapore, Indonesia and Vietnam Sees Unleashing Hotel Investment Fury to Boost Tourism and Attract F\u2026",
         "for_whom": "oem",
@@ -18767,7 +18767,7 @@
       "pipeline_action": "Watch: Staffing pressure \u2014 ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.2125,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Staffing pressure \u2014 ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "Surescripts Annual Impact Report Shows Collaboration, Innovation Gains in Interoperability, Prior Authorization Automation and Medication Access in 2025 - Business Wire. What's\u2026",
         "for_whom": "oem",
@@ -18990,7 +18990,7 @@
       "pipeline_action": "Watch: Ask about new model lines or rework cells \u2014 AMR kitting is an easy wedge.",
       "signal_strength": 0.3408,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Ask about new model lines or rework cells \u2014 AMR kitting is an easy wedge.",
         "why_now": "Stuff MFG launches US silicone molding factory to \u2018bring manufacturing back to the US\u2019 Stuff MFG launches US silicone molding factory to \u2018bring manufacturing back to the US\u2019. Wh\u2026",
         "for_whom": "oem",
@@ -19212,7 +19212,7 @@
       "pipeline_action": "Watch: Staffing pressure \u2014 ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.83,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Staffing pressure \u2014 ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "Sunrise Medical Centers (Canada): Diagnostic imaging clinics: patient transport, cleaning, and support staff 45% short across Ontario locations Sunrise clinics evaluating autono\u2026",
         "for_whom": "oem",
@@ -19436,7 +19436,7 @@
       "pipeline_action": "Watch: Confirm the workflow owner and lead with one narrow pilot use case.",
       "signal_strength": 0.3039,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Confirm the workflow owner and lead with one narrow pilot use case.",
         "why_now": "Global telecoms capex declines in 2026, rising at 1% CAGR from 2027-2030 Global telecoms capex declines in 2026, rising at 1% CAGR from 2027-2030 Global telecoms capex declines\u2026",
         "for_whom": "oem",
@@ -19652,7 +19652,7 @@
       "pipeline_action": "Watch: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
       "signal_strength": 0.5647,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Open with dock-to-stock AMR ROI \u2014 ask who owns slotting and outbound flow.",
         "why_now": "Western-apparel company to open distribution center in Memphis. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -19869,7 +19869,7 @@
       "pipeline_action": "Watch: Staffing pressure \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.2462,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Staffing pressure \u2014 lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Kempinski Middle East Expansion Accelerates Despite Occupancy Collapse in 2026. What's driving it: Staffing pressure.",
         "for_whom": "oem",
@@ -20087,7 +20087,7 @@
       "pipeline_action": "Humanoid \u00b7 Lead with a narrow humanoid workcell pilot \u2014 confirm ops owner and success metrics.",
       "signal_strength": 0.6072,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Humanoid \u00b7 Lead with a narrow humanoid workcell pilot \u2014 confirm ops owner and success metrics.",
         "why_now": "HD Hyundai wants to deploy humanoid robots for ship welding, and the plan includes tests until 2026 to address the shortage of workers in one of the heaviest roles in shipyards.\u2026",
         "for_whom": "oem",
@@ -20304,7 +20304,7 @@
       "pipeline_action": "Watch: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
       "signal_strength": 0.3629,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Lead with off-hours cleaning plus daytime runner robots \u2014 tie to vacancy rates.",
         "why_now": "Breaking PM Hotel: Breaking: PM Hotel Group promotes former Sightline president. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -20521,7 +20521,7 @@
       "pipeline_action": "Watch: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
       "signal_strength": 0.2125,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Ask about internal transport and EVS \u2014 lead with linen/supply AMR or UV disinfection.",
         "why_now": "Vision Franchise Expansion Menu Innovations: Newk\u2019s Eatery 2025 Growth & 2026 Vision | Franchise Expansion, Menu Innovations. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -20745,7 +20745,7 @@
       "pipeline_action": "Watch: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
       "signal_strength": 0.4806,
       "workflow_family": null,
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Start with back-of-house prep or runner bots during peak rushes \u2014 avoid front-of-house hard sell.",
         "why_now": "Dooogh Smoothie Shop & Pita\u2019ria Opens at Asheville\u2019s S&W Market. What's driving it: New locations or capacity growth.",
         "for_whom": "oem",
@@ -20959,7 +20959,7 @@
       "pipeline_action": "Watch: Confirm the workflow owner and lead with one narrow pilot use case.",
       "signal_strength": 0.3382,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Confirm the workflow owner and lead with one narrow pilot use case.",
         "why_now": "Sam's Club Finalizes National Deployment of 'Inventory Scan', Brain Corp Becomes the World's Largest Supplier of Robotic Inventory Scanners. What's driving it: Leadership moves\u2026",
         "for_whom": "oem",
@@ -21175,7 +21175,7 @@
       "pipeline_action": "Watch: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
       "signal_strength": 0.195,
       "workflow_family": "unknown",
-      "cal_seller_brief": {
+      "phelan_seller_brief": {
         "pitch": "Watch: Lead with baggage AMR or overnight cleaning \u2014 confirm ground ops vs facilities owner.",
         "why_now": "Week Miami: Picture of the Week: Miami International Airport launches largest automated passport screening deployment in the US - International Airport Review. What's driving it\u2026",
         "for_whom": "oem",

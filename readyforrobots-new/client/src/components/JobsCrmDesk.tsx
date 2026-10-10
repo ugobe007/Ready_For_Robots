@@ -20,10 +20,13 @@ import {
   crmSelectAllKeys,
   crmSyncSelectedKeys,
   crmToggleSelectedKey,
+  isJobsQuerySrc,
   jobsCrmLeaveHref,
   jobsCrmLeaveLabel,
   jobsCrmNextHref,
   jobsCrmOpenHref,
+  jobsQueryHref,
+  jobsSignupHref,
   onJobsFreshHomeClick,
   pipelineActivityForJob,
   recordPipelineActivity,
@@ -31,26 +34,40 @@ import {
 } from "@/lib/jobsWorkflow";
 import ExperimentHeader from "@/components/ExperimentHeader";
 import JobsProcessChrome from "@/components/JobsProcessChrome";
+import { jobsFindHref } from "@/lib/jobsLanding";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
+import RobotSalesMaterial from "@/components/RobotSalesMaterial";
 import JobsCrmInbox from "@/components/JobsCrmInbox";
+import CalJobsDesk from "@/components/CalJobsDesk";
 import {
-  JOBS_APPLY_NEXT_CTA,
   JOBS_APPLY_SELECTED_CTA,
   JOBS_APPLY_SEQUENCE,
   JOBS_APPLY_CTA_CLASS,
+  WORK_TASK_MODEL_QUESTION,
+  WORK_TASK_MODEL_SELF_OPTION,
+  WORK_TASK_MODEL_SOURCE_HINT,
+  WORK_TASK_MODEL_SOURCE_OPTION,
+  WORK_TASK_MODEL_SOURCE_PLACEHOLDER,
+  WORK_TASK_MODEL_SOURCE_REQUIRED,
+  WORK_TASK_MODEL_UNKNOWN_HINT,
   fetchKeptJobs,
   isJobsCrmOfferQuery,
   jobsCrmOfferHref,
   keepJobsOnAccount,
   openJobsCrmNextStepsForm,
+  parseWorkTaskModel,
+  saveWorkTaskModelOnAccount,
+  workTaskModelListLine,
   crmDeskForCurrentRobot,
   postJobsCrmActivity,
   type JobsCrmApplication,
   type KeptJobRow,
+  type WorkTaskModelAnswer,
+  type WorkTaskModelKind,
 } from "@/lib/jobsCrmAccount";
 import {
   JOBS_APPLY_CTA,
@@ -75,6 +92,38 @@ import {
 
 const eyebrow = JOBS_EYEBROW_CLASS;
 
+function JobQueryResultsBanner({
+  queryParam,
+  isQueryDesk,
+}: {
+  queryParam: string;
+  isQueryDesk: boolean;
+}) {
+  if (!isQueryDesk && !queryParam) return null;
+  return (
+    <div className="mb-6 rounded-2xl border border-purple-500/40 bg-gradient-to-r from-[#09152e] to-[#0a1836] p-4 text-slate-100 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+      <div>
+        <p className="font-mono text-xs font-bold uppercase tracking-wider text-purple-300 flex items-center gap-1.5">
+          <span>✦</span> Job Query Results:{" "}
+          <span className="text-white underline">
+            {queryParam || "Queried Jobs"}
+          </span>
+        </p>
+        <p className="mt-1 text-xs text-slate-300">
+          Showing matching opportunities for your queried job type. Select rows
+          to keep on your CRM desk.
+        </p>
+      </div>
+      <a
+        href={jobsFindHref()}
+        className="inline-flex items-center gap-1.5 rounded-xl border border-slate-600 bg-[#040914] px-4 py-2.5 font-mono text-xs font-bold text-slate-200 transition hover:border-emerald-400 hover:text-white"
+      >
+        <span>← Return to Find Jobs</span>
+      </a>
+    </div>
+  );
+}
+
 export default function JobsCrmDesk({
   signedIn = false,
   authReady = true,
@@ -89,6 +138,12 @@ export default function JobsCrmDesk({
   const [, setLocation] = useLocation();
   useEffect(() => {
     if (!authReady || signedIn) return;
+    // A job-type query stays on this wall so the query banner can show.
+    // Activate still leaves for the signup wall. Do not drop src=jobs_query.
+    if (typeof window !== "undefined") {
+      const src = new URLSearchParams(window.location.search).get("src");
+      if (isJobsQuerySrc(src)) return;
+    }
     const dest = jobsCrmOpenHref(false, submissionId);
     setLocation(dest);
     if (typeof window !== "undefined") {
@@ -102,7 +157,7 @@ export default function JobsCrmDesk({
   const [showNextSteps, setShowNextSteps] = useState(() =>
     typeof window !== "undefined"
       ? isJobsCrmOfferQuery(window.location.search)
-      : false,
+      : false
   );
   const [applications, setApplications] = useState<
     Record<string, JobsCrmApplication>
@@ -140,7 +195,7 @@ export default function JobsCrmDesk({
   const allKeys = crmDeskJobKeys(jobs);
   const allKeySig = allKeys.join("\0");
   const [selectedKeys, setSelectedKeys] = useState<string[]>(() =>
-    crmSelectAllKeys(allKeys),
+    crmSelectAllKeys(allKeys)
   );
   const [expandedKey, setExpandedKey] = useState<string | null>(null);
   const [tick, setTick] = useState(0);
@@ -149,15 +204,57 @@ export default function JobsCrmDesk({
     const pool = allKeySig ? allKeySig.split("\0") : [];
     setSelectedKeys(prev => crmSyncSelectedKeys(prev, pool));
   }, [allKeySig]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const target = (
+      params.get("co") ||
+      params.get("q") ||
+      params.get("company") ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+    if (!target || !jobs.length) return;
+
+    const found = jobs.find(
+      j =>
+        (j.company_name || "").toLowerCase().includes(target) ||
+        j.job_key.toLowerCase().includes(target) ||
+        j.title.toLowerCase().includes(target) ||
+        j.industry.toLowerCase().includes(target)
+    );
+    if (found && expandedKey !== found.job_key) {
+      setExpandedKey(found.job_key);
+    }
+  }, [jobs, expandedKey]);
   const stats = placementBoardStats(jobs);
   const selected = selectedKeys.filter(key => allKeys.includes(key));
   const expanded = jobs.find(j => j.job_key === expandedKey) || null;
   const jobCount = jobs.length;
-  const offerJob = expanded || jobs.find(j => selected.includes(j.job_key)) || jobs[0] || null;
+  const offerJob =
+    expanded || jobs.find(j => selected.includes(j.job_key)) || jobs[0] || null;
+  const rowByKey = useMemo(() => {
+    const map = new Map<string, KeptJobRow>();
+    for (const row of desk.rows) map.set(row.job_key, row);
+    return map;
+  }, [desk.rows]);
 
+  function mergeKeptRow(row: KeptJobRow) {
+    setAccountRows(prev => {
+      const idx = prev.findIndex(item => item.job_key === row.job_key);
+      if (idx < 0) return [row, ...prev];
+      const next = [...prev];
+      next[idx] = { ...prev[idx], ...row };
+      return next;
+    });
+  }
+
+  const persistInFlightRef = useRef(false);
   async function persistKeptJobs(
     keys: string[] = selected,
-    opts: { openOffer?: boolean } = {},
+    opts: { openOffer?: boolean } = {}
   ) {
     const picked = jobs.filter(j => keys.includes(j.job_key));
     const pool = picked.length ? picked : jobs;
@@ -180,6 +277,7 @@ export default function JobsCrmDesk({
       }
       return;
     }
+    persistInFlightRef.current = true;
     try {
       const result = await keepJobsOnAccount(accessToken, {
         jobs: pool,
@@ -189,7 +287,7 @@ export default function JobsCrmDesk({
       });
       setAccountRows(result.jobs);
       setJustSavedCount(
-        crmDeskForCurrentRobot({ snap, accountRows: result.jobs }).savedCount,
+        crmDeskForCurrentRobot({ snap, accountRows: result.jobs }).savedCount
       );
       if (openOffer) {
         setShowNextSteps(true);
@@ -201,6 +299,8 @@ export default function JobsCrmDesk({
         setShowNextSteps(true);
         queueMicrotask(() => openJobsCrmNextStepsForm());
       }
+    } finally {
+      persistInFlightRef.current = false;
     }
   }
 
@@ -222,12 +322,25 @@ export default function JobsCrmDesk({
   }
   const leaveHref = jobsCrmLeaveHref({ submissionId, jobCount });
   const leaveLabel = jobsCrmLeaveLabel({ submissionId, jobCount });
-  const wallHref = jobsCrmNextHref(false, submissionId, jobCount);
+  const querySearch =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search)
+      : new URLSearchParams();
+  const queryParam = querySearch.get("query") || "";
+  const isQueryDesk = isJobsQuerySrc(querySearch.get("src"));
+  const wallHref = isQueryDesk
+    ? jobsSignupHref(
+        jobsQueryHref(queryParam, submissionId),
+        querySearch.get("src") || "jobs_query"
+      )
+    : jobsCrmNextHref(false, submissionId, jobCount);
   const process = (
     <JobsProcessChrome
       signedIn={signedIn}
       submissionId={submissionId}
       jobCount={jobCount}
+      queryParam={queryParam}
+      isQueryDesk={isQueryDesk}
     />
   );
 
@@ -235,8 +348,14 @@ export default function JobsCrmDesk({
     return (
       <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
         <div className="mb-6">{process}</div>
+        <JobQueryResultsBanner
+          queryParam={queryParam}
+          isQueryDesk={isQueryDesk}
+        />
         <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-          CRM
+          {isQueryDesk || queryParam
+            ? `Queried Jobs: ${queryParam || "Results"}`
+            : "CRM"}
         </h1>
         <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
           {authReady ? CRM_WALL_LEAD : "Opening CRM…"}
@@ -267,15 +386,27 @@ export default function JobsCrmDesk({
     <div className="mx-auto w-full max-w-5xl px-4 pb-12 pt-4">
       <div className="mb-6">{process}</div>
 
+      <JobQueryResultsBanner
+        queryParam={queryParam}
+        isQueryDesk={isQueryDesk}
+      />
+
       <h1 className="mt-2 font-display text-3xl font-bold tracking-tight text-white sm:text-5xl">
-        CRM
+        {isQueryDesk || queryParam
+          ? `Queried Jobs: ${queryParam || "Results"}`
+          : "CRM"}
       </h1>
       <p className="mt-3 max-w-3xl text-lg leading-relaxed text-slate-200 sm:text-xl">
-        {jobs.length === 0 ? crmEmptyDeskHint(product) : crmSaveJobsBlurb(product)}
+        {jobs.length === 0
+          ? crmEmptyDeskHint(product)
+          : crmSaveJobsBlurb(product)}
       </p>
       {jobs.length > 0 ? (
         <p className="mt-3 font-mono text-sm uppercase tracking-[0.08em] text-emerald-300">
-          {crmCollectedCountLabel(selected.length, jobCount || CRM_UNLOCKED_JOBS)}
+          {crmCollectedCountLabel(
+            selected.length,
+            jobCount || CRM_UNLOCKED_JOBS
+          )}
           {" · "}
           Applied {stats.applied} of {stats.total}
           {" · "}
@@ -292,6 +423,24 @@ export default function JobsCrmDesk({
           onApplyClick={openOfferForm}
         />
       </div>
+      {accessToken && robotUrl && !(showNextSteps && offerJob) ? (
+        <RobotSalesMaterial
+          token={accessToken}
+          robotUrl={robotUrl}
+          robotName={product}
+        />
+      ) : null}
+      {accessToken && jobs.length > 0 ? (
+        <CalJobsDesk
+          token={accessToken}
+          onKeptRow={mergeKeptRow}
+          onPrepared={app => {
+            setApplications(prev => ({ ...prev, [app.job_key]: app }));
+            setExpandedKey(app.job_key);
+            setShowNextSteps(true);
+          }}
+        />
+      ) : null}
 
       {jobs.length === 0 ? (
         <p className="mt-6 border border-slate-600 bg-[#081126] px-4 py-4 text-sm text-slate-300">
@@ -306,22 +455,24 @@ export default function JobsCrmDesk({
           </a>
         </p>
       ) : (
-        <div className="mt-6">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-            <p className={`${eyebrow} text-emerald-400`}>{CRM_LISTING_EYEBROW}</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <a
-                href={jobsCrmOfferHref(signedIn, submissionId)}
-                onClick={openOfferForm}
-                aria-label={JOBS_APPLY_SELECTED_CTA}
-                className={`${JOBS_APPLY_CTA_CLASS} px-3 py-2 font-mono text-xs`}
-              >
-                {JOBS_APPLY_SELECTED_CTA}
-              </a>
-              <p className="basis-full text-sm leading-relaxed text-slate-400">
-                {JOBS_APPLY_SEQUENCE}
+        <div className="mt-8 border-t border-slate-700/60 pt-6">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <p className={`${eyebrow} text-emerald-400`}>
+                {CRM_LISTING_EYEBROW}
+              </p>
+              <p className="mt-1 text-sm text-slate-300">
+                Select jobs to include in your automated application batch.
               </p>
             </div>
+            <a
+              href={jobsCrmOfferHref(signedIn, submissionId)}
+              onClick={openOfferForm}
+              aria-label={JOBS_APPLY_SELECTED_CTA}
+              className="inline-flex items-center justify-center bg-emerald-400 px-4 py-2.5 font-mono text-xs font-bold uppercase tracking-[0.08em] text-[#04122a] transition hover:bg-emerald-300"
+            >
+              {JOBS_APPLY_SELECTED_CTA}
+            </a>
           </div>
           {showNextSteps && offerJob && accessToken ? (
             <JobsCrmNextSteps
@@ -368,8 +519,8 @@ export default function JobsCrmDesk({
                             crmToggleSelectedKey(
                               keys,
                               job.job_key,
-                              e.target.checked,
-                            ),
+                              e.target.checked
+                            )
                           )
                         }
                         aria-label={`${JOBS_KEEP_LABEL} ${card.jobTitle}`}
@@ -387,9 +538,7 @@ export default function JobsCrmDesk({
                       type="button"
                       aria-expanded={open}
                       aria-label={`${open ? "Collapse" : "Inspect"} ${card.jobTitle}`}
-                      onClick={() =>
-                        setExpandedKey(open ? null : job.job_key)
-                      }
+                      onClick={() => setExpandedKey(open ? null : job.job_key)}
                       data-crm-select="inspect-only"
                       className="flex min-w-0 flex-1 items-start gap-3 py-4 pr-4 text-left"
                     >
@@ -402,7 +551,9 @@ export default function JobsCrmDesk({
                           {card.jobTitle}
                         </span>
                         {card.employer ? (
-                          <span className={`mt-0.5 block ${CRM_EMPLOYER_NAME_CLASS}`}>
+                          <span
+                            className={`mt-0.5 block ${CRM_EMPLOYER_NAME_CLASS}`}
+                          >
                             {card.employer}
                           </span>
                         ) : null}
@@ -416,6 +567,11 @@ export default function JobsCrmDesk({
                             {jobModelListLine(job)}
                           </span>
                         ) : null}
+                        <span className="mt-1 block font-mono text-sm text-slate-500">
+                          {workTaskModelListLine(
+                            parseWorkTaskModel(rowByKey.get(job.job_key))
+                          )}
+                        </span>
                       </span>
                       <span className="font-mono text-xs text-slate-500">
                         {open ? "−" : "+"}
@@ -425,6 +581,13 @@ export default function JobsCrmDesk({
                   {open ? (
                     <div className="border-t border-slate-700 px-4 pb-5 pt-4">
                       <CollectedJobInspect job={job} />
+                      <WorkTaskModelQuestion
+                        jobKey={job.job_key}
+                        row={rowByKey.get(job.job_key)}
+                        token={accessToken}
+                        onSaved={mergeKeptRow}
+                        persistInFlight={persistInFlightRef.current}
+                      />
                       <ApplyPanel
                         key={job.job_key}
                         job={job}
@@ -471,10 +634,177 @@ export default function JobsCrmDesk({
       </nav>
 
       {submissionId ? (
-        <p className="mt-6 font-mono text-xs text-slate-600">Submission {submissionId}</p>
+        <p className="mt-6 font-mono text-xs text-slate-600">
+          Submission {submissionId}
+        </p>
       ) : null}
       <div className="mt-10">{process}</div>
     </div>
+  );
+}
+
+function WorkTaskModelQuestion({
+  jobKey,
+  row,
+  token,
+  onSaved,
+  persistInFlight,
+}: {
+  jobKey: string;
+  row?: KeptJobRow;
+  token?: string | null;
+  onSaved: (row: KeptJobRow) => void;
+  persistInFlight: boolean;
+}) {
+  const saved = parseWorkTaskModel(row);
+  const [choice, setChoice] = useState<WorkTaskModelKind>(saved.kind);
+  const [sourceDraft, setSourceDraft] = useState(
+    saved.kind === "source" ? saved.source : ""
+  );
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
+  const pendingPersistRef = useRef<WorkTaskModelAnswer | null>(null);
+  const persistTimestampRef = useRef(0);
+  useEffect(() => {
+    if (busy) return;
+    const next = parseWorkTaskModel(row);
+    setChoice(next.kind);
+    setSourceDraft(next.kind === "source" ? next.source : "");
+    setError("");
+  }, [jobKey, row?.work_task_model_kind, row?.work_task_model_source, busy]);
+
+  async function persist(next: WorkTaskModelAnswer) {
+    if (!token) {
+      setError("Sign in to save this on the desk.");
+      return;
+    }
+    if (busy) {
+      pendingPersistRef.current = next;
+      return;
+    }
+    if (persistInFlight) {
+      pendingPersistRef.current = next;
+      return;
+    }
+    const timestamp = Date.now();
+    persistTimestampRef.current = timestamp;
+    setBusy(true);
+    setError("");
+    pendingPersistRef.current = null;
+    try {
+      const savedRow = await saveWorkTaskModelOnAccount(token, {
+        jobKey,
+        kind: next.kind,
+        source: next.kind === "source" ? next.source : "",
+      });
+      if (timestamp < persistTimestampRef.current) {
+        return;
+      }
+      onSaved(savedRow);
+      setChoice(parseWorkTaskModel(savedRow).kind);
+    } catch (err) {
+      if (timestamp < persistTimestampRef.current) {
+        return;
+      }
+      const message =
+        err instanceof Error ? err.message : WORK_TASK_MODEL_SOURCE_REQUIRED;
+      setError(message);
+    } finally {
+      if (timestamp >= persistTimestampRef.current) {
+        setBusy(false);
+        if (pendingPersistRef.current) {
+          const queued = pendingPersistRef.current;
+          pendingPersistRef.current = null;
+          void persist(queued);
+        }
+      }
+    }
+  }
+
+  function pickSelfTrain() {
+    setChoice("self_train");
+    setSourceDraft("");
+    void persist({ kind: "self_train" });
+  }
+
+  function pickSource() {
+    setChoice("source");
+    setError("");
+  }
+
+  function commitSource() {
+    const named = sourceDraft.replace(/\s+/g, " ").trim();
+    if (!named) {
+      setError(WORK_TASK_MODEL_SOURCE_REQUIRED);
+      return;
+    }
+    void persist({ kind: "source", source: named });
+  }
+
+  const group = `work-task-model-${jobKey}`;
+
+  return (
+    <section
+      className="mt-6 border border-emerald-400/40 bg-[#0b162f] px-4 py-5 sm:px-6"
+      aria-label={WORK_TASK_MODEL_QUESTION}
+    >
+      <p className={`${eyebrow} text-slate-400`}>For this job</p>
+      <h3 className="mt-2 font-display text-2xl font-bold text-white">
+        {WORK_TASK_MODEL_QUESTION}
+      </h3>
+      {choice === "unknown" ? (
+        <p className="mt-2 text-sm leading-relaxed text-slate-400">
+          {WORK_TASK_MODEL_UNKNOWN_HINT}
+        </p>
+      ) : null}
+      <div className="mt-4 space-y-3">
+        <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-200">
+          <input
+            type="radio"
+            name={group}
+            checked={choice === "source"}
+            onChange={pickSource}
+            disabled={busy}
+            className="mt-1 h-4 w-4 accent-emerald-400"
+          />
+          <span>
+            <span className="block font-semibold">
+              {WORK_TASK_MODEL_SOURCE_OPTION}
+            </span>
+            <span className="mt-1 block text-slate-400">
+              {WORK_TASK_MODEL_SOURCE_HINT}
+            </span>
+          </span>
+        </label>
+        {choice === "source" ? (
+          <input
+            type="text"
+            value={sourceDraft}
+            onChange={e => {
+              setSourceDraft(e.target.value);
+              setError("");
+            }}
+            onBlur={commitSource}
+            disabled={busy}
+            placeholder={WORK_TASK_MODEL_SOURCE_PLACEHOLDER}
+            aria-label={WORK_TASK_MODEL_SOURCE_OPTION}
+            className="w-full border border-emerald-400/50 bg-[#081126] px-3 py-3 text-base text-slate-100"
+          />
+        ) : null}
+        <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-200">
+          <input
+            type="radio"
+            name={group}
+            checked={choice === "self_train"}
+            onChange={pickSelfTrain}
+            disabled={busy}
+            className="mt-1 h-4 w-4 accent-emerald-400"
+          />
+          <span className="font-semibold">{WORK_TASK_MODEL_SELF_OPTION}</span>
+        </label>
+      </div>
+      {error ? <p className="mt-3 text-sm text-rose-300">{error}</p> : null}
+    </section>
   );
 }
 
@@ -507,9 +837,13 @@ function CollectedJobInspect({ job }: { job: MatchJob }) {
         <div>
           <dt className={eyebrow}>{card.payEstimate.heading}</dt>
           <dd className="mt-0.5">
-            <span className="text-emerald-300">{card.payEstimate.monthlyLabel}</span>
+            <span className="text-emerald-300">
+              {card.payEstimate.monthlyLabel}
+            </span>
             {" · "}
-            <span className="text-emerald-300">{card.payEstimate.annualLabel}</span>
+            <span className="text-emerald-300">
+              {card.payEstimate.annualLabel}
+            </span>
             <span className="mt-0.5 block text-slate-400">
               {card.payEstimate.disclaimer}
             </span>
@@ -552,23 +886,32 @@ function CollectedJobInspect({ job }: { job: MatchJob }) {
                 <ol className="mt-1 space-y-1">
                   {card.modelContract.steps.map(step => (
                     <li key={`${step.n}-${step.label}`}>
-                      <span className="font-mono text-emerald-400">{step.n}.</span>{" "}
-                      <span className="text-slate-200">{step.label}.</span> {step.body}
+                      <span className="font-mono text-emerald-400">
+                        {step.n}.
+                      </span>{" "}
+                      <span className="text-slate-200">{step.label}.</span>{" "}
+                      {step.body}
                     </li>
                   ))}
                 </ol>
               ) : (
                 <>
-                  {card.modelContract.layer ? <p>{card.modelContract.layer}</p> : null}
+                  {card.modelContract.layer ? (
+                    <p>{card.modelContract.layer}</p>
+                  ) : null}
                   {card.modelContract.whoTrains ? (
                     <p>{card.modelContract.whoTrains}</p>
                   ) : null}
-                  {card.modelContract.time ? <p>{card.modelContract.time}</p> : null}
+                  {card.modelContract.time ? (
+                    <p>{card.modelContract.time}</p>
+                  ) : null}
                   {card.modelContract.youProvide ? (
                     <p>{card.modelContract.youProvide}</p>
                   ) : null}
                   {card.modelContract.fieldFeedback ? (
-                    <p className="text-slate-400">{card.modelContract.fieldFeedback}</p>
+                    <p className="text-slate-400">
+                      {card.modelContract.fieldFeedback}
+                    </p>
                   ) : null}
                 </>
               )}
@@ -609,7 +952,7 @@ function ApplyPanel({
   onSaved: () => void;
 }) {
   const [record, setRecord] = useState<JobApplyRecord>(() =>
-    loadJobApplyRecord(job.job_key),
+    loadJobApplyRecord(job.job_key)
   );
   useEffect(() => {
     setRecord(loadJobApplyRecord(job.job_key));
@@ -775,7 +1118,9 @@ function ApplyPanel({
             {draft}
           </pre>
           {lane === "track" ? (
-            <p className="mt-3 text-sm text-slate-300">{followUpNextStep(record)}</p>
+            <p className="mt-3 text-sm text-slate-300">
+              {followUpNextStep(record)}
+            </p>
           ) : null}
         </div>
       ) : null}

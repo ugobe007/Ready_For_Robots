@@ -7,7 +7,7 @@ description: Drive ReadyForRobots Jobs the way a user does — FIND on `/`, Job 
 
 Primary surface: **Jobs web UI** on `https://readyforrobots.com` (`readyforrobots-new/`, Vite + wouter). API: `https://ready-2-robot.fly.dev`. Other routes (SIGNAL `/pipeline`, Cal admin) exist; they are not the product. Do not hop Jobs traffic onto HOT buyers.
 
-**Hermes is retired.** Do not smoke `/experiment` as FIND. FIND is `/`. Jobs proof is this skill plus `POST /api/robot-job-search` (submit) and `POST /api/robot-job-match` (cards). **Critic is pstack.** How / Act / Critic live in `pstack/`, `scripts/pstack_release.py`, `pstackSite.ts`, and `pstack_protocol.py`. pstack is the **release gate**, not a customer chatbot and not protocol chrome on `/` or Jobs CRM.
+**Hermes is retired.** Do not smoke `/experiment` as FIND. `/` is FIND (`/?visit=jobs` is the same document). Jobs proof is this skill plus `POST /api/robot-job-search` (submit) and `POST /api/robot-job-match` (cards). **Critic is pstack.** How / Act / Critic live in `pstack/`, `scripts/pstack_release.py`, `pstackSite.ts`, and `pstack_protocol.py`. pstack is the **release gate**, not a customer chatbot and not protocol chrome on `/` or Jobs CRM.
 
 **No Jobs product PR without pstack release checks.** Draft PRs must still run `.github/workflows/pstack-release.yml` and the `pstack-release` job in `agent-verify.yml`. Critic `healthcare_class` fails if Diligent FIND is `robot_class=humanoid` or shows `No humanoid jobs for this robot yet.`
 
@@ -63,6 +63,8 @@ Recipe: HTTP the user path the Jobs terminal already uses. Prefer ARIA when a br
 ```bash
 python3 scripts/agent_verify.py drive --feature find-jobs --evidence "$EVIDENCE"
 python3 scripts/agent_verify.py drive --feature find-url --evidence "$EVIDENCE"
+python3 scripts/agent_verify.py drive --feature find-stay --evidence "$EVIDENCE"
+python3 scripts/agent_verify.py drive --feature employer-match --evidence "$EVIDENCE"
 python3 scripts/agent_verify.py pstack --evidence "$EVIDENCE"
 python3 scripts/agent_verify.py ci --evidence "$EVIDENCE"
 ```
@@ -71,15 +73,17 @@ python3 scripts/agent_verify.py ci --evidence "$EVIDENCE"
 |---------|--------|----------------------|
 | find-jobs | `POST /api/robot-job-match` (Vega profile or chip) | `state=matches`, `job_count>0`, job titles; requirement matcher has named `company_name` |
 | find-url | `POST /api/robot-job-search` (Dexmate + Greenfield) | not Research failed / Failed to fetch; identity is that URL’s company; Greenfield is not strawberry/Agrobot |
+| find-stay | FIND catch + `Jobs.tsx` visit guard | timeout / 500 / abort stay on FIND (`/` or `/?visit=jobs`); never employer MATCH. Skip-green is a fail. |
+| employer-match | `POST /api/employer-robot-match` | catalog snapshot only; when `catalog_only` is live, elapsed < 3s; no OEM scrape |
 | job-cards | same payload | cards exist (title + employer); expand in UI shows employer / workplace / work / Conditional |
-| jobs-chrome | homepage JS | process labels + `jobs_activate`; checkout CTA `Find jobs →` |
+| jobs-chrome | homepage JS | FIND headline + `jobs_activate`; checkout CTA `Find jobs →`; no FIND process bar |
 | jobs-crm | `/pipeline?src=jobs_activate` | bundle has activate src; unlocked 5 jobs need a snapshot/session — do not call login a pass |
 | about | `/intelligence` | 200 and JS has the route; body is the Jobs loop, not SIGNAL |
 
 Stable UI handles (browser):
 
 - FIND form: `aria-label="Find jobs for your robot"`; url input placeholder `Paste robot product URL`
-- Process bar: `aria-label="Jobs process"`; steps 01 / 02 / 03
+- FIND has no process bar. CRM desk: `aria-label="Jobs process"`; step 03 is CRM
 - Jobs header: wordmark → `/?new=1`; nav **Jobs** / **About**; **no Pipeline** on `/`
 - Next: `Open CRM →` on the list, not on the card
 - Activate: `/pipeline?src=jobs_activate`
@@ -95,7 +99,8 @@ Proof standards:
 - Exercise the real Jobs path (URL/profile → match API → cards), not a test-only endpoint.
 - Capture the action and the result (`doctor.json`, `drive-<feature>.json`, `summary.json`).
 - Side effects: match must not create CRM rows. Do not POST signup during verify.
-- Skip-green Vercel is a failed proof even if Fly is healthy.
+- Skip-green Vercel is a failed proof even if Fly is healthy. A 7-second “Deploy frontend” skip is not proof. Doctor `skip_green` fails the run.
+- FIND lookup failure must remain on FIND (`/` or `/?visit=jobs`). Employer MATCH after timeout, 500, abort, or Failed to fetch is a failed proof.
 - After cleanup, JSON evidence must still exist at the named path.
 
 ## Cleanup

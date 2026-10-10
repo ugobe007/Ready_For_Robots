@@ -1,0 +1,340 @@
+{
+  "corpus_id": "url_workflow_critic_v1",
+  "generated_at": "2026-08-31",
+  "source": "missions/2026-08-31-url-workflow-critic",
+  "rule": "COMPANY → PRODUCT → CONFIGURATION → HARDWARE → CAPABILITIES. Never company → category. Catalog is cache; page extract wins. Do not invent SKUs.",
+  "notes": [
+    "Operator cleaning / mixed F&B list plus mixed humanoid/service hubs already in-repo.",
+    "Lucidbots = cleaning drones, NOT floor scrubbers.",
+    "Kaercher/Tennant: only robotic cleaning products, not every mop.",
+    "Tennant and SEER are robot OEMs. Empty picker is empty_range_on_robot_oem, not an honest pass.",
+    "Do not invent Seer Humanoid or AMR scrubbers. Named SKUs must appear on the page."
+  ],
+  "urls": [
+    {
+      "url": "https://pringlerobotics.ai/",
+      "vendor": "Pringle Robotics",
+      "expect_mixed": true,
+      "expect_classes": ["serving", "cleaning"],
+      "expect_products": ["BellaBot", "CC1"],
+      "distinct_class_pairs": [["BellaBot", "CC1"]]
+    },
+    {
+      "url": "https://www.keenon.com/en",
+      "vendor": "Keenon",
+      "expect_mixed": true,
+      "expect_classes": ["serving", "cleaning"],
+      "expect_products": ["T11", "C55"],
+      "distinct_class_pairs": [["T11", "C55"]]
+    },
+    {
+      "url": "https://www.pudurobotics.com/en",
+      "vendor": "Pudu Robotics",
+      "expect_mixed": true,
+      "expect_classes": ["serving", "cleaning", "humanoid"],
+      "expect_products": ["BellaBot", "CC1", "D9"],
+      "distinct_class_pairs": [["BellaBot", "CC1"], ["BellaBot", "D9"]],
+      "forbid_same_class_company": true
+    },
+    {
+      "url": "https://www.bearrobotics.ai/",
+      "vendor": "Bear Robotics",
+      "expect_mixed": true,
+      "expect_classes": ["serving", "cleaning"],
+      "expect_products": ["Servi", "Servi Clean"],
+      "distinct_class_pairs": [["Servi", "Servi Clean"]]
+    },
+    {
+      "url": "https://www.aotingbot.com/",
+      "vendor": "Aotingbots",
+      "expect_mixed": false,
+      "expect_classes": ["cleaning"],
+      "expect_products": ["SW80 A"],
+      "forbid_classes": ["cleaning_drone"]
+    },
+    {
+      "url": "https://www.kaercher.com/us/",
+      "vendor": "Kärcher",
+      "expect_mixed": false,
+      "expect_classes": ["cleaning"],
+      "expect_products": ["KIRA B 50"],
+      "product_name_must_match": "kira",
+      "forbid_name_substrings": ["mop", "pressure washer", "hd "],
+      "robotic_only": true
+    },
+    {
+      "url": "https://richtechrobotics.com/",
+      "vendor": "Richtech",
+      "expect_products": ["ADAM"],
+      "forbid_chrome": true
+    },
+    {
+      "url": "https://www.cenobots.com/",
+      "vendor": "CenoBots",
+      "expect_mixed": false,
+      "expect_classes": ["cleaning"],
+      "expect_products": ["S5"],
+      "forbid_classes": ["cleaning_drone"]
+    },
+    {
+      "url": "https://www.lucidbots.com/",
+      "vendor": "Lucid Bots",
+      "expect_mixed": false,
+      "expect_classes": ["cleaning_drone"],
+      "expect_products": ["Sherpa Drone"],
+      "forbid_classes": ["cleaning", "autonomous_scrubber", "avionics"],
+      "forbid_capabilities_on": {
+        "Sherpa Drone": ["hard_floor_scrub"]
+      },
+      "require_capabilities_on": {
+        "Sherpa Drone": ["drone_task"]
+      }
+    },
+    {
+      "url": "https://www.tennantco.com/en_us.html",
+      "vendor": "Tennant",
+      "expects_named_robots": true,
+      "expect_mixed": false,
+      "expect_classes": ["cleaning"],
+      "expect_products": ["X6 ROVR", "T7AMR"],
+      "forbid_products": ["AMR scrubbers", "About", "Scrubber"],
+      "robotic_only": true,
+      "notes": "Named robotic SKUs from robotics hub and product pages. Not every mop."
+    },
+    {
+      "url": "https://www.ecovacscommercial.com/",
+      "vendor": "ECOVACS Commercial",
+      "expect_mixed": false,
+      "expect_classes": ["cleaning"],
+      "expect_products": ["DEEBOT PRO M1"],
+      "forbid_classes": ["cleaning_drone"]
+    },
+    {
+      "url": "https://seer-robotics.ai/",
+      "vendor": "SEER Robotics",
+      "expects_named_robots": true,
+      "expect_classes": ["amr"],
+      "expect_products": ["AMB-300JZ", "SFL-CBD15"],
+      "forbid_products": ["Seer Humanoid", "About"],
+      "forbid_classes": ["humanoid"],
+      "notes": "Named warehouse AMRs and forklifts. Company+humanoid dump is a BREAK."
+    },
+    {
+      "url": "https://avidbots.com/",
+      "vendor": "Avidbots",
+      "expect_mixed": false,
+      "expect_classes": ["cleaning"],
+      "expect_products": ["Neo"],
+      "forbid_classes": ["cleaning_drone"]
+    },
+    {
+      "url": "https://gausium.com/",
+      "vendor": "Gausium",
+      "expect_mixed": false,
+      "expect_classes": ["cleaning"],
+      "expect_products": ["Phantas"],
+      "forbid_products": ["Scrubber"],
+      "forbid_classes": ["cleaning_drone"]
+    },
+    {
+      "url": "https://www.polarxrobotics.com/",
+      "vendor": "PolarX Robotics",
+      "expect_mixed": false,
+      "expect_classes": ["cleaning"],
+      "expect_products": ["Star50"],
+      "forbid_classes": ["cleaning_drone"]
+    },
+    {
+      "url": "https://www.ubtrobot.com/",
+      "vendor": "UBTECH",
+      "expect_products": ["Walker"],
+      "expect_classes": ["humanoid"],
+      "forbid_classes_on": {"Walker": ["serving", "service_robot"]}
+    },
+    {
+      "url": "https://www.agibot.com/",
+      "vendor": "AgiBot",
+      "expect_classes": ["humanoid"],
+      "forbid_classes": ["serving"]
+    },
+    {
+      "url": "https://www.magiclab.top/",
+      "vendor": "MagicLab",
+      "expect_mixed": true,
+      "expect_classes": ["humanoid", "quadruped"],
+      "expect_products": ["MagicBot X1", "MagicDog"],
+      "forbid_classes": ["serving"]
+    },
+    {
+      "url": "https://www.deeprobotics.cn/",
+      "vendor": "Deep Robotics",
+      "expect_mixed": true,
+      "expect_classes": ["quadruped", "humanoid"],
+      "expect_products": ["X20", "DR02"]
+    },
+    {
+      "url": "https://vinmotion.net/",
+      "vendor": "VinMotion",
+      "expects_named_robots": true,
+      "expect_classes": ["humanoid"],
+      "expect_products": ["Motion 1", "Motion 2"],
+      "forbid_products": ["Product", "About", "Careers", "News", "VinMotion Humanoid"],
+      "forbid_chrome": true,
+      "notes": "Named SKUs from homepage Product menu and /product/motion-1|/product/motion-2. Motion 1 is humanoid on the homepage. Motion 2 launching page is thin. Do not invent SKUs."
+    },
+    {
+      "url": "https://booster.tech",
+      "vendor": "Booster Robotics",
+      "expects_named_robots": true,
+      "expect_classes": ["humanoid"],
+      "expect_products": ["Booster K1", "Booster T1", "Booster T2"],
+      "forbid_products": ["Product", "About", "RoboCup"],
+      "forbid_chrome": true,
+      "notes": "Homepage names K1, T1, and T2. Humanoid robots on those product pages. Do not invent SKUs."
+    },
+    {
+      "url": "https://lumosbot.tech",
+      "vendor": "Lumos Robotics",
+      "expects_named_robots": true,
+      "expect_mixed": true,
+      "expect_classes": ["humanoid", "mobile_manipulator"],
+      "expect_products": ["Lumos LUS 2", "Lumos NIX S3", "Lumos MOS 2", "Lumos LUD"],
+      "distinct_class_pairs": [["Lumos LUS 2", "Lumos MOS 2"]],
+      "forbid_products": ["Lumos Motor", "Lumos Touch R1", "Product"],
+      "forbid_chrome": true,
+      "notes": "LUS 2 and NIX S3 are bipedal humanoids on their product pages. MOS 2 is a wheeled mobile manipulator on /products/mos. LUD English page is thin, so it stays unclassified. Skip desktop arm and data tools. Do not invent SKUs."
+    },
+    {
+      "url": "https://galbot.com",
+      "vendor": "Galbot",
+      "expects_named_robots": true,
+      "expect_classes": ["mobile_manipulator"],
+      "expect_products": ["Galbot G1", "Galbot S1"],
+      "forbid_products": ["Galbot G2", "Product"],
+      "forbid_chrome": true,
+      "notes": "SPA JS names Galbot G1 as a mobile dual-arm robot and Galbot S1 as a heavy-duty robot (50kg, dual-arm handling). G2 is not a product route. Do not dump company humanoid onto both SKUs."
+    },
+    {
+      "url": "https://unix-group.ai",
+      "vendor": "UniX AI",
+      "expects_named_robots": true,
+      "expect_classes": ["humanoid"],
+      "expect_products": ["Wanda 2.0", "Panther", "Martian"],
+      "forbid_products": ["Wheeled", "Product", "About"],
+      "forbid_chrome": true,
+      "notes": "Wanda 2.0 and Panther are wheeled dual-arm humanoids. Martian is a bipedal humanoid. Nav group labels are not SKUs."
+    },
+    {
+      "url": "https://noetixrobotics.com/en",
+      "vendor": "Noetix Robotics",
+      "expects_named_robots": true,
+      "expect_classes": ["humanoid"],
+      "expect_products": ["Bumi", "N2", "E1"],
+      "forbid_products": ["Product", "About", "Hobbs3"],
+      "forbid_chrome": true,
+      "notes": "Product menu names Bumi, N2, and E1 as bipedal humanoids. News robots stay out."
+    },
+    {
+      "url": "https://primebot.cn",
+      "vendor": "PrimeBOT",
+      "expects_named_robots": true,
+      "expect_classes": ["humanoid"],
+      "expect_products": ["Q1"],
+      "forbid_products": ["Qiyuan T1", "Product"],
+      "forbid_chrome": true,
+      "notes": "Product JS names PrimeBOT Q1, not Qiyuan T1. Humanoid on that page."
+    },
+    {
+      "url": "https://limxdynamics.com/en",
+      "vendor": "LimX Dynamics",
+      "expects_named_robots": true,
+      "expect_mixed": true,
+      "expect_classes": ["humanoid", "mobile_manipulator"],
+      "expect_products": ["Luna", "Oli", "TRON 1", "TRON 2"],
+      "distinct_class_pairs": [["Luna", "TRON 2"]],
+      "forbid_chrome": true,
+      "notes": "Luna and Oli are full-size humanoids. TRON 1 is a multi-modal biped / humanoid RL platform. TRON 2 is an autonomous mobile manipulation kit with dual arms and wheeled legs. Do not dump company humanoid onto TRON 2."
+    },
+    {
+      "url": "https://thirdwave.ai",
+      "vendor": "Third Wave Automation",
+      "expects_named_robots": true,
+      "expect_classes": ["amr"],
+      "expect_products": ["Third Wave Reach Trucks"],
+      "forbid_products": ["TWA Reach", "Autonomous forklifts"],
+      "forbid_chrome": true,
+      "notes": "Armada case study names Third Wave Reach Trucks. Homepage only says autonomous forklifts as a category. ArmadaFMS is software. Do not invent TWA Reach."
+    },
+    {
+      "url": "https://dexory.com",
+      "vendor": "Dexory",
+      "expects_named_robots": true,
+      "expect_products": ["DexoryView"],
+      "forbid_products": ["Powered by AI", "Impact"],
+      "forbid_chrome": true,
+      "notes": "Site names DexoryView. Public pages call the scanners autonomous robots and do not give them a SKU. Do not invent a Dexory AMR name."
+    },
+    {
+      "url": "https://galaxea-dynamics.com/",
+      "vendor": "Galaxea Dynamics",
+      "expects_named_robots": true,
+      "expect_mixed": true,
+      "expect_classes": ["humanoid", "mobile_manipulator"],
+      "expect_products": ["R1 Pro", "R1 Lite", "Kengo"],
+      "distinct_class_pairs": [["R1 Pro", "R1 Lite"], ["Kengo", "R1 Lite"]],
+      "forbid_products": ["A1 Z", "Lite-T", "G1 Gripper", "VLA All-in-One Unit", "Product"],
+      "forbid_chrome": true,
+      "notes": "Homepage Products menu names R1 Pro, R1 Lite, Kengo, A1 Z. R1 Pro is a wheeled humanoid. R1 Lite is a mobile manipulation platform. Kengo is bipedal. A1 Z is a desktop arm; Lite-T and G1 Gripper are accessories. Do not invent SKUs."
+    },
+    {
+      "url": "https://www.xpeng.com/",
+      "vendor": "XPENG",
+      "expects_named_robots": true,
+      "expect_classes": ["humanoid"],
+      "expect_products": ["IRON"],
+      "forbid_products": ["XPENG Humanoid", "XPeng PX5", "PX5", "G6", "P7", "G9", "G3i", "Vehicles", "About"],
+      "forbid_chrome": true,
+      "notes": "Homepage is cars. /au/explore/xpeng_ai_robot_iron names IRON as a humanoid robot. Do not ingest the EV catalog. Do not invent XPENG Humanoid or PX5."
+    },
+    {
+      "url": "http://ararobotics.eu/",
+      "vendor": "ARA Robotics",
+      "expects_named_robots": true,
+      "expect_classes": ["cleaning"],
+      "expect_products": ["ARI", "Petek"],
+      "forbid_products": ["Robots", "About", "Solutions"],
+      "forbid_chrome": true,
+      "notes": "English pages name ARI as an autonomous floor maintenance robot and Petek as a docking station. Petek stays unclassified. Do not dump cleaning onto Petek."
+    },
+    {
+      "url": "https://www.cartken.com/",
+      "vendor": "Cartken",
+      "expects_named_robots": true,
+      "expect_classes": ["amr"],
+      "expect_products": ["Cartken Hauler", "Cartken Courier", "Cartken Mover"],
+      "forbid_products": ["Cartken", "About", "Robots"],
+      "forbid_chrome": true,
+      "notes": "Homepage names Cartken Hauler, Cartken Courier, and Cartken Mover as outdoor AMRs. Hauler Temperature Control is a Hauler option, not a separate SKU. Do not keep the old Cartken company dump."
+    },
+    {
+      "url": "https://mobile-industrial-robots.com/",
+      "vendor": "Mobile Industrial Robots",
+      "expects_named_robots": true,
+      "expect_classes": ["amr"],
+      "expect_products": ["MiR250", "MiR600", "MiR1350", "MiR1200 Pallet Jack"],
+      "forbid_products": ["MC250", "MC600", "About", "Products"],
+      "forbid_chrome": true,
+      "notes": "Homepage and /products/robots name MiR250, MiR600, MiR1350, and MiR1200 Pallet Jack. MC250/MC600 are MiR Go partner modules. Do not invent SKUs."
+    },
+    {
+      "url": "https://www.teradyne.com/robotics/autonomous-mobile-robots/",
+      "vendor": "Teradyne",
+      "expects_named_robots": true,
+      "expect_classes": ["amr"],
+      "expect_products": ["MiR1200 Pallet Jack"],
+      "forbid_products": ["MiR250", "MiR600", "MiR1350", "J750", "UltraFLEX", "Universal Robots", "About"],
+      "forbid_chrome": true,
+      "notes": "AMR hub names MiR1200 Pallet Jack. Other MiR models are not named on this page. Do not invent duplicates from the MiR catalog. Not the Teradyne test-equipment catalog."
+    }
+  ]
+}

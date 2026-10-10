@@ -1,5 +1,5 @@
 """
-Flush stale Cal outreach drafts and re-render them in the current Cal voice.
+Flush stale Phelan outreach drafts and re-render them in the current Cal voice.
 
 Regenerates `CrmAccount.outreach_draft` for every account that still holds a
 draft, using the same voice functions the admin "Regenerate drafts" button uses.
@@ -25,7 +25,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description="Regenerate Cal outreach drafts in the current voice.")
+    ap = argparse.ArgumentParser(description="Regenerate Phelan outreach drafts in the current voice.")
     ap.add_argument("--pause-autopilot", action="store_true", help="Disable Cal autonomy runtime override first")
     ap.add_argument("--include-sent", action="store_true", help="Also rewrite already-sent drafts")
     ap.add_argument("--limit", type=int, default=0, help="Max drafts to rewrite (0 = all)")
@@ -43,16 +43,16 @@ def main() -> int:
     from app.database import SessionLocal
     from app.models.company import Company
     from app.models.crm import CrmAccount
-    from app.services.cal_autonomy import (
+    from app.services.phelan_autonomy import (
         cal_buyer_outreach_body,
         cal_vendor_outreach_body,
         format_cal_draft_storage,
-        set_cal_autonomy_runtime_override,
+        set_phelan_autonomy_runtime_override,
     )
     from app.api.crm import _draft_subject
 
     if args.pause_autopilot and not args.dry_run:
-        ok = set_cal_autonomy_runtime_override(False)
+        ok = set_phelan_autonomy_runtime_override(False)
         print(f"[pause] autopilot runtime override set to OFF: {'ok' if ok else 'FAILED (no redis?)'}")
 
     db = SessionLocal()
@@ -111,9 +111,9 @@ def _purge_junk_drafts(*, dry_run: bool, pause_autopilot: bool) -> int:
     from app.services.lead_filter import is_junk
 
     if pause_autopilot and not dry_run:
-        from app.services.cal_autonomy import set_cal_autonomy_runtime_override
+        from app.services.phelan_autonomy import set_phelan_autonomy_runtime_override
 
-        ok = set_cal_autonomy_runtime_override(False)
+        ok = set_phelan_autonomy_runtime_override(False)
         print(f"[pause] autopilot runtime override set to OFF: {'ok' if ok else 'FAILED (no redis?)'}")
 
     db = SessionLocal()

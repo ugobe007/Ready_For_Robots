@@ -25,7 +25,7 @@ export default function SecondaryNav() {
       <div className="max-w-5xl mx-auto px-6 flex items-center justify-between h-9">
         {/* Left: anchor links */}
         <nav className="flex items-center gap-1">
-          {links.map((link) => {
+          {links.map(link => {
             const Icon = link.icon;
             return (
               <a

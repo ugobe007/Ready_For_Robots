@@ -18,7 +18,7 @@ how:
   - id: owners
     prove: FIND / matcher / search / identity / CRM desk files exist and stay the owners
   - id: find_route
-    prove: FIND is / via RobotJobsWorkspace on pages/Jobs.tsx
+    prove: FIND is / after Look for robot jobs; RobotJobsWorkspace stays on pages/Jobs.tsx
     fail: smoking /experiment as FIND
   - id: chrome_not_gate
     prove: Jobs CRM has no JobsPstackProtocol; protocol chrome is not required to merge
@@ -36,12 +36,19 @@ act:
     prove: crmDeskForCurrentRobot keys the desk to the submitted URL
   - id: no_signal_hop
     prove: FIND workspace does not call fetchRobotJobMatch; CRM desk has no robot-job-match
+  - id: crm_first_cta
+    prove: Jobs-for-robot list Open CRM is the only primary CTA; Apply lives on the CRM desk
+  - id: phelan_jobs_desk
+    prove: Cal lives on Jobs CRM after Open CRM with desk tools; not FIND; not buyer mail
 
 critic:
   - id: find
     prove: FIND is /
   - id: find_abort
     prove: AbortError and Failed to fetch do not become Research failed
+  - id: find_no_home
+    prove: FIND timeout / 500 / abort stays on /?visit=jobs
+    fail: lookup failure dumps to / or /?new=1 landing
   - id: find_identity
     prove: submitted URL is the identity key; Greenfield is not Agrobot/Harvest CROO
   - id: crm_leftover
@@ -64,6 +71,9 @@ critic:
   - id: ontology_industry_language
     prove: Healthcare work words live in the ontology and outrank humanoid morphology
     fail: hospital/clinical/pharmacy work words missing from ontology files
+  - id: url_workflow
+    prove: FIND URL critic reports product range, named SKUs, and per-product capabilities
+    fail: mixed OEM flattened, chrome-as-SKU, cleaning-drone-as-scrubber, company-class dump, or empty robot-OEM hub
   - id: find_drive
     prove: POST /api/robot-job-search for a real OEM URL does not return Research failed
 

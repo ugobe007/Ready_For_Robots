@@ -26,13 +26,15 @@ describe("market job tape", () => {
   it("lists unique named-employer jobs, not a 32-row repeating short loop", () => {
     expect(MARKET_TAPE_JOBS.length).toBeGreaterThanOrEqual(50);
     expect(uniqueTapeJobCount()).toBe(MARKET_TAPE_JOBS.length);
-    const keys = MARKET_TAPE_JOBS.map((j) => j.key);
-    const titles = MARKET_TAPE_JOBS.map((j) => j.title.toLowerCase());
+    const keys = MARKET_TAPE_JOBS.map(j => j.key);
+    const titles = MARKET_TAPE_JOBS.map(j => j.title.toLowerCase());
     expect(new Set(keys).size).toBe(keys.length);
     expect(new Set(titles).size).toBe(titles.length);
     expect(keys).not.toContain("curascript_totes");
     expect(keys).not.toContain("hospital_med_carts");
-    const named = MARKET_TAPE_JOBS.filter((j) => /·/.test(j.industry) || j.industry.split(" ").length >= 2);
+    const named = MARKET_TAPE_JOBS.filter(
+      j => /·/.test(j.industry) || j.industry.split(" ").length >= 2
+    );
     expect(named.length).toBe(MARKET_TAPE_JOBS.length);
   });
 
@@ -58,7 +60,10 @@ describe("market job tape", () => {
   });
 
   it("keeps LiveJobTape on the unique-job helpers instead of cursor % length", () => {
-    const tape = readFileSync(join(here, "../components/jobs/LiveJobTape.tsx"), "utf8");
+    const tape = readFileSync(
+      join(here, "../components/jobs/LiveJobTape.tsx"),
+      "utf8"
+    );
     expect(tape).toMatch(/nextUnseenTapeJob/);
     expect(tape).toMatch(/shuffleTapeJobs/);
     expect(tape).not.toMatch(/corpus\[cursorRef\.current % corpus\.length\]/);

@@ -10,10 +10,11 @@ import {
   jobsCrmNextHref,
   jobsCrmNextLabel,
   jobsCrmOpenHref,
-  jobsFreshHomeHref,
   jobsWorkspaceRestoreHref,
-  onJobsFreshHomeClick,
+  jobsQueryHref,
+  jobsSignupHref,
 } from "@/lib/jobsWorkflow";
+import { jobsFindHref } from "@/lib/jobsLanding";
 import { jobsCrmOfferHref } from "@/lib/jobsCrmAccount";
 
 export default function JobsProcessChrome({
@@ -21,15 +22,22 @@ export default function JobsProcessChrome({
   submissionId = null,
   jobCount = 0,
   current = "activate",
+  queryParam,
+  isQueryDesk,
 }: {
   signedIn: boolean;
   submissionId?: number | null;
   jobCount?: number;
   current?: "find" | "jobs" | "activate";
+  queryParam?: string;
+  isQueryDesk?: boolean;
 }) {
-  const nextHref = jobsCrmNextHref(signedIn, submissionId, jobCount);
+  const baseNextHref = jobsCrmNextHref(signedIn, submissionId, jobCount);
+  const nextHref =
+    !signedIn && isQueryDesk && queryParam
+      ? jobsSignupHref(jobsQueryHref(queryParam, submissionId), "jobs_query")
+      : baseNextHref;
   const nextLabel = jobsCrmNextLabel(signedIn, { submissionId, jobCount });
-  const leaveIsFind = signedIn && nextHref === jobsFreshHomeHref();
 
   return (
     <nav
@@ -40,10 +48,15 @@ export default function JobsProcessChrome({
         const isCurrent = step.id === current;
         const href =
           step.id === "find"
-            ? jobsFreshHomeHref()
+            ? jobsFindHref()
             : step.id === "jobs"
               ? jobsWorkspaceRestoreHref()
-              : jobsCrmOpenHref(signedIn, submissionId);
+              : !signedIn && isQueryDesk && queryParam
+                ? jobsSignupHref(
+                    jobsQueryHref(queryParam, submissionId),
+                    "jobs_query"
+                  )
+                : jobsCrmOpenHref(signedIn, submissionId);
         const className = `flex min-w-0 flex-1 items-center px-3 py-3 ${JOBS_PROCESS_NAV_CLASS} ${
           isCurrent
             ? "border-b-2 border-emerald-400 bg-emerald-400/5 text-emerald-300"
@@ -54,14 +67,13 @@ export default function JobsProcessChrome({
             key={step.id}
             href={href}
             aria-current={isCurrent ? "step" : undefined}
-            onClick={step.id === "find" ? onJobsFreshHomeClick : undefined}
             className={className}
           >
             {step.n} {step.label}
           </a>
         );
       })}
-      {signedIn && jobCount > 0 ? (
+      {signedIn && jobCount > 0 && current !== "activate" ? (
         <a
           href={jobsCrmOfferHref(true, submissionId)}
           className={`rfr-jobs-process-action m-2 shrink-0 ${JOBS_APPLY_CTA_CLASS}`}
@@ -71,7 +83,6 @@ export default function JobsProcessChrome({
       ) : null}
       <a
         href={nextHref}
-        onClick={leaveIsFind ? onJobsFreshHomeClick : undefined}
         className="rfr-bevel rfr-jobs-process-action m-2 inline-flex shrink-0 items-center justify-center bg-emerald-400 px-4 py-2 text-sm font-bold uppercase tracking-[0.06em] text-[#04122a] transition hover:bg-emerald-300"
       >
         {nextLabel}

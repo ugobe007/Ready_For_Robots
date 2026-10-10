@@ -36,7 +36,11 @@ type Props = {
   showLegend?: boolean;
 };
 
-function WorkflowFlowViewerInner({ layout, className = "", showLegend = true }: Props) {
+function WorkflowFlowViewerInner({
+  layout,
+  className = "",
+  showLegend = true,
+}: Props) {
   const { fitView } = useReactFlow();
   const converted = useMemo(() => layoutToFlow(layout), [layout]);
   const [nodes, setNodes, onNodesChange] = useNodesState(converted.nodes);
@@ -74,11 +78,13 @@ function WorkflowFlowViewerInner({ layout, className = "", showLegend = true }: 
             <span className="h-0.5 w-4 bg-emerald-600" /> Automated flow
           </span>
           <span className="inline-flex items-center gap-1">
-            <span className="h-0.5 w-4 border-t border-dashed border-slate-400" /> Manual flow
+            <span className="h-0.5 w-4 border-t border-dashed border-slate-400" />{" "}
+            Manual flow
           </span>
           <span>🤖 Robot integration point</span>
           <span>
-            {layout.flows.length} linked handoff{layout.flows.length === 1 ? "" : "s"}
+            {layout.flows.length} linked handoff
+            {layout.flows.length === 1 ? "" : "s"}
           </span>
         </div>
       )}
