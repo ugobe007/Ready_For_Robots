@@ -551,10 +551,10 @@ def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collat
 def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:
     """Email to a robot company — Cal as veteran sherpa, not a sales blast."""
     from app.services.agent_messaging import (
-        CAL_VENDOR_BUYER_MATCH_CTA,
-        CAL_VENDOR_STRATEGY_CALL_CTA,
-        cal_vendor_match_paragraph,
+        PHELAN_VENDOR_BUYER_MATCH_CTA,
+        PHELAN_VENDOR_STRATEGY_CALL_CTA,
         phelan_signature,
+        phelan_vendor_match_paragraph,
     )
 
     industry = (acct.industry or "your space").strip()
@@ -564,7 +564,7 @@ def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], colla
 
     lines: list[str] = ["Hi,", ""]
 
-    lines.append(cal_vendor_match_paragraph(name, industry=industry))
+    lines.append(phelan_vendor_match_paragraph(name, industry=industry))
     lines.append("")
     lines.append(pick_cal_insight(company_name=name, allow_humor=allow_humor, audience="vendor"))
     lines.append("")
@@ -583,9 +583,9 @@ def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], colla
         channel = getattr(settings, "scout_preferred_channel", "email") if settings else "email"
         meeting = getattr(settings, "scout_meeting_preference", None) if settings else None
         if channel in ("phone", "meeting"):
-            lines.append(meeting or CAL_VENDOR_STRATEGY_CALL_CTA)
+            lines.append(meeting or PHELAN_VENDOR_STRATEGY_CALL_CTA)
         else:
-            lines.append(CAL_VENDOR_BUYER_MATCH_CTA)
+            lines.append(PHELAN_VENDOR_BUYER_MATCH_CTA)
 
     collateral = _collateral_note(collateral_policy, collateral_links)
     if collateral:

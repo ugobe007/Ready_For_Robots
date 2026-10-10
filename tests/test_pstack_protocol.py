@@ -97,6 +97,16 @@ def test_sales_plan_agent_uses_pstack_not_gateway():
     assert "Do not scrape Apollo" in src
 
 
+def test_fastapi_app_imports_for_fly_health():
+    """Cal→Phelan leftovers must not crash uvicorn (Fly /health 502)."""
+    from fastapi import FastAPI
+
+    from app.main import app
+
+    assert isinstance(app, FastAPI)
+    assert any(getattr(route, "path", "") == "/health" for route in app.routes)
+
+
 def test_cal_jobs_desk_is_not_find_or_buyer_mail():
     from app.services.phelan_jobs_desk import phelan_jobs_desk_intent
     from app.services.phelan_persona import CAL_JOBS_DESK_TOOLS, CAL_SURFACE

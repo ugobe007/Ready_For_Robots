@@ -420,10 +420,10 @@ def _company_signal_blob(company: Any) -> str:
 def cal_vendor_outreach_body(company: Any, *, fresh: bool = False) -> str:
     """Cal-voice outreach to robot companies — sherpa tone, PoC-aware."""
     from app.services.agent_messaging import (
-        CAL_VENDOR_BUYER_MATCH_CTA,
-        CAL_VENDOR_SHERPA_LINE,
-        cal_vendor_match_paragraph,
+        PHELAN_VENDOR_BUYER_MATCH_CTA,
+        PHELAN_VENDOR_SHERPA_LINE,
         phelan_signature,
+        phelan_vendor_match_paragraph,
     )
     from app.services.phelan_insights import pick_cal_insight
 
@@ -435,13 +435,13 @@ def cal_vendor_outreach_body(company: Any, *, fresh: bool = False) -> str:
     lines = [
         "Hi,",
         "",
-        cal_vendor_match_paragraph(name, industry=industry),
+        phelan_vendor_match_paragraph(name, industry=industry),
         "",
         pick_cal_insight(company_name=name, allow_humor=allow_humor, audience="vendor"),
         "",
-        CAL_VENDOR_SHERPA_LINE,
+        PHELAN_VENDOR_SHERPA_LINE,
         "",
-        CAL_VENDOR_BUYER_MATCH_CTA,
+        PHELAN_VENDOR_BUYER_MATCH_CTA,
         "",
         phelan_signature(),
     ]

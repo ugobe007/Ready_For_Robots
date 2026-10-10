@@ -959,3 +959,11 @@ def phelan_vendor_match_paragraph(company_name: str, *, industry: str = "your sp
         f"A few opportunities align with your capabilities — not generic leads, accounts with timing behind them.\n\n"
         f"{PHELAN_VENDOR_PIPELINE_LOGIC_LINE}"
     )
+
+
+# Cal → Phelan rename leftovers. Importing app.main must not 502 Fly.
+CAL_VENDOR_OFFRAMP_LINE = PHELAN_VENDOR_OFFRAMP_LINE
+CAL_VENDOR_STRATEGY_CALL_CTA = PHELAN_VENDOR_STRATEGY_CALL_CTA
+CAL_VENDOR_BUYER_MATCH_CTA = PHELAN_VENDOR_BUYER_MATCH_CTA
+CAL_VENDOR_SHERPA_LINE = PHELAN_VENDOR_SHERPA_LINE
+cal_vendor_match_paragraph = phelan_vendor_match_paragraph
