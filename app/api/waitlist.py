@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.waitlist import WaitlistSignup
-from app.services.cal_autonomy import get_cal_review_email
+from app.services.phelan_autonomy import get_phelan_review_email
 
 router = APIRouter()
 
@@ -70,7 +70,7 @@ def create_waitlist_signup(body: WaitlistSignupIn, db: Session = Depends(get_db)
 
 
 def _notify_founding_customer(*, email: str, company: str, name: Optional[str]) -> bool:
-    admin_email = get_cal_review_email()
+    admin_email = get_phelan_review_email()
     if not admin_email:
         return False
     from app.services.resend_email import ResendEmailError, send_email_via_resend

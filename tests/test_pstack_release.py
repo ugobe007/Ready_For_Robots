@@ -21,7 +21,7 @@ def test_how_and_act_pass_on_this_tree():
     assert "chrome_not_gate" in ids
     assert "silent_abort" in ids
     assert "bind_url" in ids
-    assert "cal_jobs_desk" in ids
+    assert "phelan_jobs_desk" in ids
     assert "crm_first_cta" in ids
 
 

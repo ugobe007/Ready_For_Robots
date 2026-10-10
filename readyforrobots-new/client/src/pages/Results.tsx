@@ -98,7 +98,7 @@ type ApiLead = {
   created_at?: string | null;
   hermes_job_titles?: string[];
   pipeline_action?: string | null;
-  cal_seller_brief?: {
+  phelan_seller_brief?: {
     headline?: string;
     why_now?: string;
     pitch?: string;
@@ -183,7 +183,7 @@ function buildOutreachFields(
 function buildSellerBrief(
   company: string,
   opts: {
-    fromApi?: ApiLead["cal_seller_brief"];
+    fromApi?: ApiLead["phelan_seller_brief"];
     relevance: string;
     action: string;
     signal: string;
@@ -368,7 +368,7 @@ function mapApiLead(lead: ApiLead, index: number): Prospect {
     signalAge: formatSignalAge(lead.created_at),
   };
   prospect.sellerBrief = buildSellerBrief(company, {
-    fromApi: lead.cal_seller_brief,
+    fromApi: lead.phelan_seller_brief,
     relevance: prospect.relevance,
     action: prospect.action,
     signal: prospect.signal,

@@ -10,7 +10,7 @@ from app.services.agent_messaging import (
     build_ladder_touch_body,
     ladder_touch_subject,
 )
-from app.services.cal_draft_guard import is_complete_cal_draft
+from app.services.phelan_draft_guard import is_complete_cal_draft
 from app.services.sequence_runner import (
     DEFAULT_BUYER_SEQUENCE,
     _render_sequence_step,

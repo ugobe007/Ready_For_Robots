@@ -12,7 +12,7 @@ from sqlalchemy.orm import Session
 
 from app.api.auth_deps import _require_user
 from app.database import get_db
-from app.services.cal_jobs_desk import read_desk as read_cal_desk, run_desk_tool
+from app.services.phelan_jobs_desk import read_desk as read_cal_desk, run_desk_tool
 from app.services.jobs_crm import (
     apply_selected_jobs,
     apply_to_job,
@@ -212,7 +212,7 @@ def post_kept_job_task_model(
 
 
 @router.get("/cal/desk")
-def get_cal_desk(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
+def get_phelan_desk(user: dict = Depends(_require_user), db: Session = Depends(get_db)):
     """Cal's Jobs-desk brief. Signed CRM only. Not FIND."""
     return read_cal_desk(db, user)
 

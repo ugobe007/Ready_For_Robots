@@ -37,13 +37,13 @@ from app.services.agent_messaging import (
     CAL_VENDOR_OFFRAMP_LINE,
     CAL_VENDOR_STRATEGY_CALL_CTA,
     VEGAS_DISTRIBUTION_LINE,
-    cal_signature,
+    phelan_signature,
     cal_vendor_match_paragraph,
 )
-from app.services.cal_insights import pick_cal_insight
+from app.services.phelan_insights import pick_cal_insight
 from app.services.company_domain import normalize_website_domain
 from app.services.email_templates import get_email_template
-from app.services.cal_email_send import send_cal_email_via_resend
+from app.services.phelan_email_send import send_phelan_email_via_resend
 from app.services.resend_email import ResendEmailError, send_email_via_resend
 from app.services.sales_learning_agent import record_sales_experience
 from app.services.shared_api_cache import shared_cache_get, shared_cache_set
@@ -1233,7 +1233,7 @@ def _vendor_signup_email(rc: RobotCompany, matches: list[dict[str, Any]], *, for
         robot_type=getattr(rc, "robot_type", None),
         allow_humor=True,
     )
-    from app.services.agent_messaging import cal_vendor_match_paragraph
+    from app.services.agent_messaging import phelan_vendor_match_paragraph
 
     body = f"""Hi,
 
@@ -1255,7 +1255,7 @@ If you're pushing West Coast expansion or hospitality adoption, we can map a cha
 
 {CAL_VENDOR_STRATEGY_CALL_CTA}
 
-{cal_signature()}"""
+{phelan_signature()}"""
     return {"subject": subject, "body": body}
 
 
@@ -2054,7 +2054,7 @@ def send_email(
     _supply_inbound_missing = False
     _include_demo = template_type in ("intro", "supply_pipeline", "vendor_signup")
     try:
-        send_fn = send_cal_email_via_resend if _include_demo else send_email_via_resend
+        send_fn = send_phelan_email_via_resend if _include_demo else send_email_via_resend
         send_kwargs: dict = {
             "to_email": to_emails,
             "subject": subject,

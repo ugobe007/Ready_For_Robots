@@ -4308,7 +4308,7 @@ export default function Pipeline() {
     }
   };
 
-  // Load Cal outreach summary (cached snapshot first — never block on full prospect rebuild)
+  // Load Phelan outreach summary (cached snapshot first — never block on full prospect rebuild)
   const loadScoutStats = async () => {
     if (!session?.access_token) return;
     const base = getApiBase();

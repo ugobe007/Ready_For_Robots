@@ -7,7 +7,7 @@
 
 ## Goal
 
-Users do not buy unless they see value. Anonymous visitors must **read a real Cal outreach draft** on `/pipeline` before signup — not a wall of jargon.
+Users do not buy unless they see value. Anonymous visitors must **read a real Phelan outreach draft** on `/pipeline` before signup — not a wall of jargon.
 
 ## Acceptance criteria
 

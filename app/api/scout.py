@@ -45,7 +45,7 @@ ACTIVATION_STATUSES = [
 ACTIVATION_STATUS_META = {
     "queued": "Queued for SIGNAL evaluation.",
     "evaluating": "SIGNAL is evaluating lead fit and sales angles.",
-    "drafted": "Strategy and Cal outreach drafts are ready.",
+    "drafted": "Strategy and Phelan outreach drafts are ready.",
     "awaiting_approval": "Drafts are waiting for user approval.",
     "paused": "User interrupted SIGNAL to adjust Cal's message, timing, or cadence.",
     "sent": "Cal has sent outreach and SIGNAL is watching for replies.",
@@ -199,7 +199,7 @@ def _activation_work_plan(body: ActivationBody) -> Dict[str, Any]:
             "next": {
                 "upload": "Parse deck, extract proof points, and align Cal's messaging to selected leads.",
                 "suggest": "Generate deck outline, ROI story, objection handling, and lead-specific talk track.",
-                "skip": "Start with lead research and prepare Cal outreach using available signals.",
+                "skip": "Start with lead research and prepare Phelan outreach using available signals.",
             }[material],
             "filename": body.filename(),
         },
@@ -247,7 +247,7 @@ def _activation_work_plan(body: ActivationBody) -> Dict[str, Any]:
                 "Proof points, implementation path, and next meeting ask",
             ],
             "positioning": "Lead with measurable operating pressure first, then introduce robotics as the practical response.",
-            "next_output": "SIGNAL should prepare a deck outline and ROI assumptions before Cal outreach approval.",
+            "next_output": "SIGNAL should prepare a deck outline and ROI assumptions before Phelan outreach approval.",
         }
     return plan
 

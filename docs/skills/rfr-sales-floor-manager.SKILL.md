@@ -82,7 +82,7 @@ Allowed action types only:
 |--------|---------|
 | `ALERT` | Operator must see (scraper offline, Cal error, signup funnel collapsed) |
 | `PRIORITY` | Prefer Hermes-qualified / HOT pool ordering (document why; no code edit required) |
-| `VOICE` | Reminder: use **OemCal** on Results/Signup; **BuyerCal** on outbound — cite `oemCalCopy.ts` / `cal_persona.py` |
+| `VOICE` | Reminder: use **OemCal** on Results/Signup; **BuyerCal** on outbound — cite `oemCalCopy.ts` / `phelan_persona.py` |
 | `KILL_SEND` | Recommend pause outbound if bounce/error streak (operator confirms) |
 | `INGEST_GAP` | Qualify/DM coverage too thin on HOT — nudge next Hermes research tick |
 | `SILENT` | All green — write one line and exit |

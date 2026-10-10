@@ -36,7 +36,7 @@ Pipeline position:
       ↓
   OEMNeedScore (0–100 + tier + ICP + reasons)
       ↓
-  Cal outreach (discovery email)
+  Phelan outreach (discovery email)
 
 Scoring dimensions:
   1. International origin        — no US support infrastructure → high need

@@ -199,7 +199,7 @@ def test_send_moves_stage_and_records_activity(client, monkeypatch):
         sent.update(kwargs)
         return {"id": "resend-123"}
 
-    monkeypatch.setattr("app.services.cal_email_send.send_cal_email_via_resend", fake_send)
+    monkeypatch.setattr("app.services.phelan_email_send.send_phelan_email_via_resend", fake_send)
 
     proj = _create(client)
     t = _add_target(client, proj["id"], contact_email="ops@cloudkitchens.com")
@@ -289,7 +289,7 @@ def test_bulk_sender_skips_unapproved_targets():
 def test_send_all_approved_only_sends_approved(client, monkeypatch):
     calls = []
     monkeypatch.setattr(
-        "app.services.cal_email_send.send_cal_email_via_resend",
+        "app.services.phelan_email_send.send_phelan_email_via_resend",
         lambda **kw: calls.append(kw) or {"id": "r"},
     )
     proj = _create(client)
@@ -317,7 +317,7 @@ def test_send_all_approved_only_sends_approved(client, monkeypatch):
 def test_approve_all_then_bulk_send(client, monkeypatch):
     calls = []
     monkeypatch.setattr(
-        "app.services.cal_email_send.send_cal_email_via_resend",
+        "app.services.phelan_email_send.send_phelan_email_via_resend",
         lambda **kw: calls.append(kw) or {"id": "r"},
     )
     proj = _create(client)
@@ -345,7 +345,7 @@ def test_approve_all_then_bulk_send(client, monkeypatch):
 
 def _send_first(client, project_id, monkeypatch, **kw):
     monkeypatch.setattr(
-        "app.services.cal_email_send.send_cal_email_via_resend", lambda **k: {"id": "r"}
+        "app.services.phelan_email_send.send_phelan_email_via_resend", lambda **k: {"id": "r"}
     )
     t = _add_target(client, project_id, contact_email="ops@x.com", **kw)
     client.post(f"/api/admin/special-projects/{project_id}/targets/{t['id']}/approve")
@@ -382,7 +382,7 @@ def test_followup_send_requires_approval(client, monkeypatch):
     # Approve then send.
     sent = []
     monkeypatch.setattr(
-        "app.services.cal_email_send.send_cal_email_via_resend",
+        "app.services.phelan_email_send.send_phelan_email_via_resend",
         lambda **kw: sent.append(kw) or {"id": "r"},
     )
     client.post(f"/api/admin/special-projects/{proj['id']}/targets/{t['id']}/approve-followup")

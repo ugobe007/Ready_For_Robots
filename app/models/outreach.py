@@ -1,4 +1,4 @@
-"""Cal outreach send and reply tracking for SCOUT workflows."""
+"""Phelan outreach send and reply tracking for SCOUT workflows."""
 from __future__ import annotations
 
 import uuid

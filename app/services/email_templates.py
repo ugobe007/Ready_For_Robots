@@ -5,12 +5,12 @@ Personalized email scripts for different workflow stages
 from typing import Dict, Optional
 
 from app.services.agent_messaging import (
-    CAL_VENDOR_OFFRAMP_LINE,
+    PHELAN_VENDOR_OFFRAMP_LINE,
     VEGAS_DISTRIBUTION_LINE,
-    cal_signature,
-    cal_vendor_opening,
+    phelan_signature,
+    phelan_vendor_opening,
 )
-from app.services.cal_insights import pick_cal_insight
+from app.services.phelan_insights import pick_cal_insight
 
 
 def _focus(company_data: Dict) -> str:
@@ -71,7 +71,7 @@ def generate_intro_email(company_data: Dict) -> Dict[str, str]:
     
     body = f"""Hello,
 
-{cal_vendor_opening()}
+{phelan_vendor_opening()}
 
 {_insight_paragraph(company_data)}
 
@@ -79,11 +79,11 @@ I came across {company_name} because your work around {focus} looks relevant to 
 
 If {market_note} is a priority, I can send over matched accounts and the operating signals behind each one. {VEGAS_DISTRIBUTION_LINE}
 
-{CAL_VENDOR_OFFRAMP_LINE}
+{PHELAN_VENDOR_OFFRAMP_LINE}
 
 If useful, I can send the list first by email so your team can review asynchronously.
 
-{cal_signature()}"""
+{phelan_signature()}"""
     
     return {
         "subject": subject,
@@ -103,7 +103,7 @@ def generate_demo_request_email(company_data: Dict, contact_response: Optional[s
     
     body = f"""Hello,
 
-{cal_vendor_opening(reminder=True)}
+{phelan_vendor_opening(reminder=True)}
 
 {contact_response or "Thanks for the reply."}
 
@@ -111,7 +111,7 @@ The useful next step is a short deployment fit check, not a long presentation. I
 
 If you'd rather, I can send questions in email first and only schedule time if it looks worthwhile.
 
-{cal_signature()}"""
+{phelan_signature()}"""
     
     return {
         "subject": subject,
@@ -131,7 +131,7 @@ def generate_partnership_proposal_email(company_data: Dict, demo_notes: Optional
     
     body = f"""Hello,
 
-{cal_vendor_opening(reminder=True)}
+{phelan_vendor_opening(reminder=True)}
 
 Thanks again for walking through {company_name}. Based on what we discussed, I think the next step should stay focused: confirm the buyer categories where your {robot_type} is strongest, then map those to the hottest signal types we are seeing.
 
@@ -139,7 +139,7 @@ I can put that into a short deployment brief: which accounts look warm, what sig
 
 If you'd like, I can send the brief first and you can decide whether a call is useful.
 
-{cal_signature()}"""
+{phelan_signature()}"""
     
     return {
         "subject": subject,
@@ -170,18 +170,18 @@ def generate_followup_email(company_data: Dict, previous_contact: str, days_sinc
     if tone == "friendly reminder":
         body = f"""Hello,
 
-{cal_vendor_opening(reminder=True)}
+{phelan_vendor_opening(reminder=True)}
 
 Following up on my note about {company_name} and the deployment demand we are seeing around {robot_type}.
 
 If this is close to a market you care about, I can send a short list of accounts and why each one looks credible.
 
-{cal_signature()}"""
+{phelan_signature()}"""
     
     elif tone == "value-added followup":
         body = f"""Hello,
 
-{cal_vendor_opening(reminder=True)}
+{phelan_vendor_opening(reminder=True)}
 
 I wanted to send one more useful angle rather than just bump the same email.
 
@@ -191,18 +191,18 @@ If that would help {company_name}, I can send a few examples and the context beh
 
 Open to a quick look next week? If the signal trail is not strong enough, I will tell you that directly.
 
-{cal_signature()}"""
+{phelan_signature()}"""
     
     else:  # last attempt
         body = f"""Hello,
 
-{cal_vendor_opening(reminder=True)}
+{phelan_vendor_opening(reminder=True)}
 
 I will close the loop here.
 
 If deployment demand becomes relevant for {company_name}, I am happy to reconnect and share what we are seeing around {robot_type}.
 
-{cal_signature()}"""
+{phelan_signature()}"""
     
     return {
         "subject": subject,
@@ -222,7 +222,7 @@ def generate_trade_show_invitation_email(company_data: Dict, trade_show: str, da
     
     body = f"""Hello,
 
-{cal_vendor_opening()}
+{phelan_vendor_opening()}
 
 {_insight_paragraph({**company_data, "trade_show": trade_show})}
 
@@ -232,7 +232,7 @@ If {company_name} will be there, I can compare your {robot_type} focus against t
 
 If useful, I can send that list before the show so your team can decide whether a call is even needed.
 
-{cal_signature()}"""
+{phelan_signature()}"""
     
     return {
         "subject": subject,
@@ -256,7 +256,7 @@ def generate_hot_lead_priority_email(company_data: Dict) -> Dict[str, str]:
     
     body = f"""Hello,
 
-{cal_vendor_opening()}
+{phelan_vendor_opening()}
 
 {company_name} is showing up as a higher-priority fit in our system. The reason is not just that you make {robot_type}; it is the combination of your focus ({usp_line}) and the buyer-side deployment signals we are seeing.
 
@@ -264,7 +264,7 @@ If useful, I can send the first few accounts and why each one looks warm. We can
 
 If helpful, I can send that list first and you can decide whether a short call is warranted.
 
-{cal_signature()}"""
+{phelan_signature()}"""
     
     return {
         "subject": subject,

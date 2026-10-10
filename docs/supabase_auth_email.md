@@ -19,7 +19,7 @@ Google / GitHub OAuth send **no** Auth email. Prefer that path for ICP.
 
 Dashboard: [Authentication → Emails](https://supabase.com/dashboard/project/lmoyydlhlgdyqbxkmkuz/auth/templates) → **SMTP Settings**.
 
-Use the same Resend account as Fly, on a **verified** domain (ideally a subdomain so Auth reputation stays off Cal outreach):
+Use the same Resend account as Fly, on a **verified** domain (ideally a subdomain so Auth reputation stays off Phelan outreach):
 
 | Field | Value |
 |-------|--------|
