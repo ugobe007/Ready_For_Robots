@@ -1,6 +1,6 @@
 /**
  * RobotJobCardUnit — Explicit 7-Point Robot Job Card.
- * 
+ *
  * Satisfies Product Charter & User Request:
  * [1] Name of Customer (Employer & Workplace)
  * [2] Name of Robot Job & Description
@@ -10,9 +10,26 @@
  * [6] Job Value — How Much Is The Job Worth? (Monthly & annual contract estimate)
  * [7] Workflow — Next Steps (Placement steps & primary CTA)
  */
-import { MapPin, Clock, Users, Cpu, DollarSign, ArrowRight, Zap, CheckCircle2, ShieldCheck, Mail, Copy, CheckCheck } from "lucide-react";
+import {
+  MapPin,
+  Clock,
+  Users,
+  Cpu,
+  DollarSign,
+  ArrowRight,
+  Zap,
+  CheckCircle2,
+  ShieldCheck,
+  Mail,
+  Copy,
+  CheckCheck,
+} from "lucide-react";
 import { Link } from "wouter";
-import { jobCardPayEstimate, qualificationFromVerdict, QUALIFICATION_LABEL } from "@/lib/robotJobCard";
+import {
+  jobCardPayEstimate,
+  qualificationFromVerdict,
+  QUALIFICATION_LABEL,
+} from "@/lib/robotJobCard";
 import { cleanAndClampText } from "@/lib/text";
 import LeadShareBar from "@/components/LeadShareBar";
 import LeadEmailDisplay from "@/components/LeadEmailDisplay";
@@ -89,10 +106,13 @@ export default function RobotJobCardUnit({
       : deal.industry
         ? `${deal.industry} Automation Facility`
         : "Enterprise Automation Site";
-  const workplace = [deal.location, deal.industry].filter(Boolean).join(" · ") || "Site pending";
+  const workplace =
+    [deal.location, deal.industry].filter(Boolean).join(" · ") ||
+    "Site pending";
 
   // [2] Name of Robot Job & Description
-  const jobTitle = deal.pipelineAction || deal.signalType || "Robot Automation Opportunity";
+  const jobTitle =
+    deal.pipelineAction || deal.signalType || "Robot Automation Opportunity";
   const rawDescription =
     deal.leadHighlights?.specific_problem ||
     deal.shareSummary ||
@@ -105,28 +125,35 @@ export default function RobotJobCardUnit({
   const timingLabel =
     deal.projectTiming?.day_min != null && deal.projectTiming?.day_max != null
       ? `${deal.projectTiming.day_min}–${deal.projectTiming.day_max} days`
-      : deal.projectTiming?.label || deal.crmEvidence?.timing?.label || "30–90 days (Estimated Q3 Window)";
+      : deal.projectTiming?.label ||
+        deal.crmEvidence?.timing?.label ||
+        "30–90 days (Estimated Q3 Window)";
 
   // [4] Decision Makers
   const primaryContact = deal.contact ? (
     <span className="inline-flex items-center gap-1.5">
       <LeadEmailDisplay email={deal.contact} variant="inline" />
-      {deal.contactTitle ? <span className="text-slate-400">· {deal.contactTitle}</span> : null}
+      {deal.contactTitle ? (
+        <span className="text-slate-400">· {deal.contactTitle}</span>
+      ) : null}
     </span>
   ) : null;
   const decisionMakerList = deal.crmEvidence?.decision_makers?.length
-    ? deal.crmEvidence.decision_makers.map(d => `${d.name || "Owner"}${d.title ? ` (${d.title})` : ""}`).join(", ")
+    ? deal.crmEvidence.decision_makers
+        .map(d => `${d.name || "Owner"}${d.title ? ` (${d.title})` : ""}`)
+        .join(", ")
     : null;
 
   // [5] What Type of Robots They Need
   const robotsList =
-    (deal.robotTypesNeeded && deal.robotTypesNeeded.length > 0)
+    deal.robotTypesNeeded && deal.robotTypesNeeded.length > 0
       ? deal.robotTypesNeeded.join(" · ")
-      : deal.crmEvidence?.robot_type?.label || "Industrial Cobot / High-Payload Palletizer";
+      : deal.crmEvidence?.robot_type?.label ||
+        "Industrial Cobot / High-Payload Palletizer";
 
   // [6] Job Value
   const jobWorthMonthly = pay.monthlyLabel; // e.g. $5,000–$7,500 / month
-  const jobWorthAnnual = pay.annualLabel;   // e.g. $60,000–$90,000 / year
+  const jobWorthAnnual = pay.annualLabel; // e.g. $60,000–$90,000 / year
   const publicBudget = deal.crmEvidence?.budget?.top_amount;
 
   // [7] Qualification
@@ -134,7 +161,9 @@ export default function RobotJobCardUnit({
   const qualLabel = QUALIFICATION_LABEL[qualState];
 
   return (
-    <div className={`rounded-2xl border-2 border-emerald-500/40 bg-[#09152e] p-4 sm:p-5 shadow-2xl space-y-4 text-slate-100 ${className}`}>
+    <div
+      className={`rounded-2xl border-2 border-emerald-500/40 bg-[#09152e] p-4 sm:p-5 shadow-2xl space-y-4 text-slate-100 ${className}`}
+    >
       {/* Job Card Header Badge */}
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-700/80 pb-3">
         <div className="flex items-center gap-2">
@@ -176,12 +205,8 @@ export default function RobotJobCardUnit({
         <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400">
           [2] Robot Job & Description
         </p>
-        <p className="text-sm font-bold text-emerald-300">
-          {jobTitle}
-        </p>
-        <p className="text-xs leading-relaxed text-slate-200">
-          {description}
-        </p>
+        <p className="text-sm font-bold text-emerald-300">{jobTitle}</p>
+        <p className="text-xs leading-relaxed text-slate-200">{description}</p>
       </div>
 
       {/* 2-COLUMN GRID FOR [3] TIME FRAME & [4] DECISION MAKERS */}
@@ -207,7 +232,9 @@ export default function RobotJobCardUnit({
             [4] Decision Owner
           </p>
           <div className="mt-1 text-xs font-semibold text-slate-100">
-            {primaryContact || decisionMakerList || "Plant Operations / Automation Director"}
+            {primaryContact ||
+              decisionMakerList ||
+              "Plant Operations / Automation Director"}
           </div>
           <p className="mt-0.5 text-[10px] text-slate-400">
             Sign-off authority for robot procurement.
@@ -240,12 +267,11 @@ export default function RobotJobCardUnit({
           <div className="mt-1 font-mono text-sm font-extrabold text-emerald-300">
             {jobWorthMonthly}
             <span className="block text-[11px] font-normal text-emerald-200/80">
-              {jobWorthAnnual} {publicBudget ? `· Public budget: ${publicBudget}` : ""}
+              {jobWorthAnnual}{" "}
+              {publicBudget ? `· Public budget: ${publicBudget}` : ""}
             </span>
           </div>
-          <p className="mt-0.5 text-[10px] text-slate-400">
-            {pay.disclaimer}
-          </p>
+          <p className="mt-0.5 text-[10px] text-slate-400">{pay.disclaimer}</p>
         </div>
       </div>
 
@@ -257,15 +283,23 @@ export default function RobotJobCardUnit({
           </p>
           <ol className="mt-2 space-y-1.5 text-xs text-slate-200">
             <li className="flex items-center gap-2">
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-500/20 text-[10px] font-bold text-purple-300">1</span>
-              <span>Site assessment — verify payload, reach & workplace safety.</span>
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-500/20 text-[10px] font-bold text-purple-300">
+                1
+              </span>
+              <span>
+                Site assessment — verify payload, reach & workplace safety.
+              </span>
             </li>
             <li className="flex items-center gap-2">
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-500/20 text-[10px] font-bold text-purple-300">2</span>
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-500/20 text-[10px] font-bold text-purple-300">
+                2
+              </span>
               <span>License task model pack for this SKU class.</span>
             </li>
             <li className="flex items-center gap-2">
-              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-500/20 text-[10px] font-bold text-purple-300">3</span>
+              <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-purple-500/20 text-[10px] font-bold text-purple-300">
+                3
+              </span>
               <span>Send outreach note & lock robot deployment quote.</span>
             </li>
           </ol>
@@ -307,7 +341,11 @@ export default function RobotJobCardUnit({
               onClick={onCopyDraft}
               className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-slate-600 bg-slate-800/80 px-3.5 py-2.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 hover:text-white transition"
             >
-              {copiedDraft ? <CheckCheck className="h-3.5 w-3.5 text-emerald-400" /> : <Copy className="h-3.5 w-3.5" />}
+              {copiedDraft ? (
+                <CheckCheck className="h-3.5 w-3.5 text-emerald-400" />
+              ) : (
+                <Copy className="h-3.5 w-3.5" />
+              )}
               {copiedDraft ? "Draft Copied!" : "Copy Outreach Draft"}
             </button>
           )}

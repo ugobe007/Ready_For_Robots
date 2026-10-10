@@ -61,7 +61,8 @@ export function buildLeadSharePost(lead: LeadShareInput): {
       : body.slice(0, Math.max(30, maxBody - 1)).trim() + "…";
   const tweetText = trimmed ? `${headline}\n\n${trimmed}` : headline;
   const isCrmPath =
-    typeof window !== "undefined" && window.location.pathname.startsWith("/crm");
+    typeof window !== "undefined" &&
+    window.location.pathname.startsWith("/crm");
   const basePath = isCrmPath ? "/crm" : "/pipeline";
   const paramName = isCrmPath ? "account" : "lead";
   const companyQuery = lead.company_name

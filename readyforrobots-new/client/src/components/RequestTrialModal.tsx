@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Bot, CheckCircle2, X, ArrowRight, Building2, MapPin, Mail, User, Sparkles } from "lucide-react";
+import {
+  Bot,
+  CheckCircle2,
+  X,
+  ArrowRight,
+  Building2,
+  MapPin,
+  Mail,
+  User,
+  Sparkles,
+} from "lucide-react";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 
 type RequestTrialModalProps = {
@@ -21,7 +31,9 @@ export default function RequestTrialModal({
     robotType: robotName,
     timeline: "Within 30 Days",
   });
-  const [status, setStatus] = useState<"idle" | "submitting" | "success" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "submitting" | "success" | "error"
+  >("idle");
 
   if (!isOpen) return null;
 
@@ -31,17 +43,20 @@ export default function RequestTrialModal({
     setStatus("submitting");
 
     try {
-      const res = await fetch(`${getApiBase()}/api/leads/report-download`, liveFetchInit({
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: form.name,
-          email: form.email,
-          company: `${form.company} (TRIAL REQUEST: ${form.robotType})`,
-          robotCategory: form.robotType,
-          website: form.location,
-        }),
-      }));
+      const res = await fetch(
+        `${getApiBase()}/api/leads/report-download`,
+        liveFetchInit({
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            company: `${form.company} (TRIAL REQUEST: ${form.robotType})`,
+            robotCategory: form.robotType,
+            website: form.location,
+          }),
+        })
+      );
 
       if (!res.ok) throw new Error("Trial submission failed");
       setStatus("success");
@@ -80,9 +95,13 @@ export default function RequestTrialModal({
             <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
               <CheckCircle2 className="h-6 w-6" />
             </div>
-            <h3 className="text-lg font-bold text-white">Trial Request Submitted!</h3>
+            <h3 className="text-lg font-bold text-white">
+              Trial Request Submitted!
+            </h3>
             <p className="text-xs text-slate-300 max-w-sm mx-auto">
-              Our engineering team will review your workplace parameters and connect you with vetted OEM deployment specialists within 24 hours.
+              Our engineering team will review your workplace parameters and
+              connect you with vetted OEM deployment specialists within 24
+              hours.
             </p>
             <button
               type="button"
@@ -105,7 +124,7 @@ export default function RequestTrialModal({
                   type="email"
                   placeholder="name@company.com"
                   value={form.email}
-                  onChange={(e) => setForm({ ...form, email: e.target.value })}
+                  onChange={e => setForm({ ...form, email: e.target.value })}
                   className="w-full rounded-xl border border-slate-700 bg-[#060c1c] py-2.5 pl-9 pr-3 text-slate-100 placeholder-slate-500 outline-none focus:border-purple-400 focus:ring-1 focus:ring-purple-400"
                 />
               </div>
@@ -122,7 +141,7 @@ export default function RequestTrialModal({
                     type="text"
                     placeholder="Alex Morgan"
                     value={form.name}
-                    onChange={(e) => setForm({ ...form, name: e.target.value })}
+                    onChange={e => setForm({ ...form, name: e.target.value })}
                     className="w-full rounded-xl border border-slate-700 bg-[#060c1c] py-2.5 pl-9 pr-3 text-slate-100 placeholder-slate-500 outline-none focus:border-purple-400"
                   />
                 </div>
@@ -138,7 +157,9 @@ export default function RequestTrialModal({
                     type="text"
                     placeholder="Acme Fulfillment LLC"
                     value={form.company}
-                    onChange={(e) => setForm({ ...form, company: e.target.value })}
+                    onChange={e =>
+                      setForm({ ...form, company: e.target.value })
+                    }
                     className="w-full rounded-xl border border-slate-700 bg-[#060c1c] py-2.5 pl-9 pr-3 text-slate-100 placeholder-slate-500 outline-none focus:border-purple-400"
                   />
                 </div>
@@ -156,7 +177,9 @@ export default function RequestTrialModal({
                     type="text"
                     placeholder="Dallas, TX"
                     value={form.location}
-                    onChange={(e) => setForm({ ...form, location: e.target.value })}
+                    onChange={e =>
+                      setForm({ ...form, location: e.target.value })
+                    }
                     className="w-full rounded-xl border border-slate-700 bg-[#060c1c] py-2.5 pl-9 pr-3 text-slate-100 placeholder-slate-500 outline-none focus:border-purple-400"
                   />
                 </div>
@@ -167,19 +190,25 @@ export default function RequestTrialModal({
                 </label>
                 <select
                   value={form.timeline}
-                  onChange={(e) => setForm({ ...form, timeline: e.target.value })}
+                  onChange={e => setForm({ ...form, timeline: e.target.value })}
                   className="w-full rounded-xl border border-slate-700 bg-[#060c1c] p-2.5 text-slate-100 outline-none focus:border-purple-400"
                 >
-                  <option value="Within 30 Days">Immediate (Within 30 Days)</option>
+                  <option value="Within 30 Days">
+                    Immediate (Within 30 Days)
+                  </option>
                   <option value="Q3 2026">Q3 2026 Program</option>
                   <option value="Q4 2026">Q4 2026 Program</option>
-                  <option value="Budgeting Phase">Budgeting / Feasibility Phase</option>
+                  <option value="Budgeting Phase">
+                    Budgeting / Feasibility Phase
+                  </option>
                 </select>
               </div>
             </div>
 
             {status === "error" && (
-              <p className="text-xs text-rose-400">Could not submit request. Please try again.</p>
+              <p className="text-xs text-rose-400">
+                Could not submit request. Please try again.
+              </p>
             )}
 
             <div className="pt-2">
@@ -188,7 +217,9 @@ export default function RequestTrialModal({
                 disabled={status === "submitting"}
                 className="w-full flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/30 hover:bg-purple-500 disabled:opacity-50 transition-all cursor-pointer font-sans"
               >
-                {status === "submitting" ? "Submitting Trial Request…" : "Submit 30-Day Trial Request"}
+                {status === "submitting"
+                  ? "Submitting Trial Request…"
+                  : "Submit 30-Day Trial Request"}
                 <ArrowRight className="h-4 w-4" />
               </button>
             </div>

@@ -7,7 +7,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import { toast } from "sonner";
-import { FileText, ShieldCheck, CheckCircle2, ExternalLink, Clock, Zap, Mail } from "lucide-react";
+import {
+  FileText,
+  ShieldCheck,
+  CheckCircle2,
+  ExternalLink,
+  Clock,
+  Zap,
+  Mail,
+} from "lucide-react";
 import CalProposalQuoteDrawer from "@/components/admin/CalProposalQuoteDrawer";
 import CalAutopilotSwitch from "@/components/admin/CalAutopilotSwitch";
 import ResendEmailModal from "@/components/ResendEmailModal";
@@ -142,9 +150,15 @@ export default function SalesConsole() {
   const filteredRows = useMemo(() => {
     return rows.filter(r => {
       if (stageFilter === "all") return true;
-      if (stageFilter === "contact_qualification") return r.current_stage === "contact_qualification" || !r.latest_message?.to_email;
-      if (stageFilter === "ready_for_draft") return r.current_stage === "ready_for_draft";
-      if (stageFilter === "intro_sent") return r.current_stage === "intro_sent" || r.last_inbound_at != null;
+      if (stageFilter === "contact_qualification")
+        return (
+          r.current_stage === "contact_qualification" ||
+          !r.latest_message?.to_email
+        );
+      if (stageFilter === "ready_for_draft")
+        return r.current_stage === "ready_for_draft";
+      if (stageFilter === "intro_sent")
+        return r.current_stage === "intro_sent" || r.last_inbound_at != null;
       if (stageFilter === "placement") return r.current_stage === "placement";
       return true;
     });
@@ -170,7 +184,9 @@ export default function SalesConsole() {
       await loadRows();
     } catch (e) {
       toast.error(
-        e instanceof Error ? e.message : "Could not execute automatic outreach cycle."
+        e instanceof Error
+          ? e.message
+          : "Could not execute automatic outreach cycle."
       );
     } finally {
       setBusy(false);
@@ -202,10 +218,14 @@ export default function SalesConsole() {
       const res = await authFetch("/api/sales/opportunities/seed", {
         method: "POST",
       });
-      toast.success(`Imported ${res?.created_count ?? 0} pipeline accounts into queue!`);
+      toast.success(
+        `Imported ${res?.created_count ?? 0} pipeline accounts into queue!`
+      );
       await loadRows();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not seed opportunities.");
+      toast.error(
+        e instanceof Error ? e.message : "Could not seed opportunities."
+      );
     } finally {
       setBusy(false);
     }
@@ -235,7 +255,9 @@ export default function SalesConsole() {
       toast.success(`Confirmed OEM/Vendor email: ${confirmEmail}`);
       await loadRows();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Could not confirm contact email.");
+      toast.error(
+        e instanceof Error ? e.message : "Could not confirm contact email."
+      );
     } finally {
       setConfirmingContact(false);
     }
@@ -324,7 +346,10 @@ export default function SalesConsole() {
           `/api/sales/opportunities/${selectedId}`
         )) as SalesOpportunity;
         setSelected(detail);
-        const latestFrom = detail.latest_message?.direction === "inbound" ? detail.latest_message.from_email : "";
+        const latestFrom =
+          detail.latest_message?.direction === "inbound"
+            ? detail.latest_message.from_email
+            : "";
         setRecipientOverride(latestFrom || "");
         setConfirmEmail(latestFrom || "");
         setConfirmName("");
@@ -481,12 +506,18 @@ export default function SalesConsole() {
   };
 
   if (loading) {
-    return <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`} />;
+    return (
+      <div
+        className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+      />
+    );
   }
 
   if (!session) {
     return (
-      <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <div
+        className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+      >
         <ExperimentHeader />
         <main className="max-w-3xl mx-auto px-6 pt-32">
           <h1 className="text-3xl font-bold text-white">Sales Console</h1>
@@ -506,7 +537,9 @@ export default function SalesConsole() {
   }
 
   return (
-    <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+    <div
+      className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}
+    >
       <ExperimentHeader />
       <main className="admin-workspace max-w-7xl mx-auto px-6 pt-8 pb-16">
         <AdminNav variant="dark" />
@@ -549,7 +582,11 @@ export default function SalesConsole() {
               onClick={() =>
                 setResendModal({
                   isOpen: true,
-                  to: confirmEmail || recipientOverride || selected?.latest_message?.from_email || "",
+                  to:
+                    confirmEmail ||
+                    recipientOverride ||
+                    selected?.latest_message?.from_email ||
+                    "",
                   subject: `Robotic Labor Placement — ${selected?.title || "ReadyForRobots"}`,
                   body: "",
                   companyName: selected?.title || "",
@@ -583,11 +620,49 @@ export default function SalesConsole() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-5 gap-3">
             {[
-              { key: "all", step: "1", title: "DISCOVER", count: rows.length, color: "border-cyan-500/40 bg-cyan-950/40 text-cyan-300" },
-              { key: "contact_qualification", step: "2", title: "CONFIRM EMAIL", count: rows.filter(r => r.current_stage === "contact_qualification" || !r.latest_message?.to_email).length, color: "border-amber-500/40 bg-amber-950/40 text-amber-300" },
-              { key: "ready_for_draft", step: "3", title: "PHELAN AUTO-DRAFT", count: rows.filter(r => r.current_stage === "ready_for_draft").length, color: "border-purple-500/40 bg-purple-950/40 text-purple-300" },
-              { key: "intro_sent", step: "4", title: "OUTREACH & REPLIES", count: rows.filter(r => r.current_stage === "intro_sent" || r.last_inbound_at).length, color: "border-emerald-500/40 bg-emerald-950/40 text-emerald-300" },
-              { key: "placement", step: "5", title: "PLACEMENT", count: rows.filter(r => r.current_stage === "placement").length, color: "border-indigo-500/40 bg-indigo-950/40 text-indigo-300" },
+              {
+                key: "all",
+                step: "1",
+                title: "DISCOVER",
+                count: rows.length,
+                color: "border-cyan-500/40 bg-cyan-950/40 text-cyan-300",
+              },
+              {
+                key: "contact_qualification",
+                step: "2",
+                title: "CONFIRM EMAIL",
+                count: rows.filter(
+                  r =>
+                    r.current_stage === "contact_qualification" ||
+                    !r.latest_message?.to_email
+                ).length,
+                color: "border-amber-500/40 bg-amber-950/40 text-amber-300",
+              },
+              {
+                key: "ready_for_draft",
+                step: "3",
+                title: "PHELAN AUTO-DRAFT",
+                count: rows.filter(r => r.current_stage === "ready_for_draft")
+                  .length,
+                color: "border-purple-500/40 bg-purple-950/40 text-purple-300",
+              },
+              {
+                key: "intro_sent",
+                step: "4",
+                title: "OUTREACH & REPLIES",
+                count: rows.filter(
+                  r => r.current_stage === "intro_sent" || r.last_inbound_at
+                ).length,
+                color:
+                  "border-emerald-500/40 bg-emerald-950/40 text-emerald-300",
+              },
+              {
+                key: "placement",
+                step: "5",
+                title: "PLACEMENT",
+                count: rows.filter(r => r.current_stage === "placement").length,
+                color: "border-indigo-500/40 bg-indigo-950/40 text-indigo-300",
+              },
             ].map((st, idx) => (
               <button
                 key={st.key}
@@ -596,9 +671,13 @@ export default function SalesConsole() {
               >
                 <div className="flex items-center justify-between text-[10px] font-mono uppercase font-bold">
                   <span>Step {st.step}</span>
-                  <span className="rounded-full bg-slate-900/80 px-2 py-0.5 border border-slate-700">{st.count}</span>
+                  <span className="rounded-full bg-slate-900/80 px-2 py-0.5 border border-slate-700">
+                    {st.count}
+                  </span>
                 </div>
-                <p className="mt-2 text-xs font-black tracking-tight leading-snug">{st.title}</p>
+                <p className="mt-2 text-xs font-black tracking-tight leading-snug">
+                  {st.title}
+                </p>
               </button>
             ))}
           </div>
@@ -621,7 +700,8 @@ export default function SalesConsole() {
                 </span>
               </div>
               <p className="text-sm font-semibold text-white mt-1">
-                Pre-Send OEM Gate: Phelan prepares quotes & matches robots to job openings for OEM sign-off before buyer dispatch.
+                Pre-Send OEM Gate: Phelan prepares quotes & matches robots to
+                job openings for OEM sign-off before buyer dispatch.
               </p>
             </div>
           </div>
@@ -631,7 +711,8 @@ export default function SalesConsole() {
               href="/proposal/oem-review?id=PROP-8842-APEX"
               className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold border border-slate-700 flex items-center gap-1.5 transition-all"
             >
-              Open OEM Review Gate <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
+              Open OEM Review Gate{" "}
+              <ExternalLink className="w-3.5 h-3.5 text-cyan-400" />
             </Link>
             <button
               onClick={() => setIsProposalDrawerOpen(true)}
@@ -689,9 +770,7 @@ export default function SalesConsole() {
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
               Open opportunities
             </p>
-            <p className="mt-2 text-3xl font-black text-white">
-              {rows.length}
-            </p>
+            <p className="mt-2 text-3xl font-black text-white">{rows.length}</p>
           </div>
           <div className="rounded-3xl border border-slate-700/60 bg-[#0c192e] shadow-xl p-5 backdrop-blur-sm">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
@@ -724,67 +803,69 @@ export default function SalesConsole() {
 
         {/* Opportunities List + Detail Panel */}
         <section className="mt-8 grid gap-6 lg:grid-cols-[360px_1fr]">
-              <div className="rounded-3xl border border-slate-700/60 bg-[#0c192e] shadow-xl p-4">
-                <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">
-                    Opportunities
-                  </h2>
-                  <span className="text-xs text-slate-500">
-                    {filteredRows.length} active
-                  </span>
+          <div className="rounded-3xl border border-slate-700/60 bg-[#0c192e] shadow-xl p-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-bold uppercase tracking-widest text-slate-400">
+                Opportunities
+              </h2>
+              <span className="text-xs text-slate-500">
+                {filteredRows.length} active
+              </span>
+            </div>
+            <div className="mt-4 space-y-3">
+              {filteredRows.map(row => (
+                <button
+                  key={row.id}
+                  onClick={() => setSelectedId(row.id)}
+                  className="w-full rounded-2xl border p-4 text-left transition"
+                  style={{
+                    borderColor:
+                      selectedId === row.id
+                        ? "rgba(52, 211, 153, 0.6)"
+                        : "rgba(51, 65, 85, 0.6)",
+                    background:
+                      selectedId === row.id
+                        ? "rgba(6, 78, 59, 0.35)"
+                        : "rgba(15, 23, 42, 0.6)",
+                  }}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-bold text-white">{row.title}</p>
+                    <span className="rounded-full border border-slate-700 bg-slate-800/80 px-2 py-1 text-[10px] uppercase text-slate-300">
+                      {row.opportunity_type}
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs text-slate-400">
+                    Stage: {row.current_stage}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Intent:{" "}
+                    {row.next_best_action?.intent ||
+                      row.latest_message?.detected_intent ||
+                      "unknown"}
+                  </p>
+                </button>
+              ))}
+              {!filteredRows.length && !busy && (
+                <div className="rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-950/20 p-5 text-center shadow-inner">
+                  <p className="text-sm font-bold text-white">
+                    No opportunities in queue
+                  </p>
+                  <p className="mt-1 text-xs text-slate-400">
+                    Populate your console with open leads from your pipeline.
+                  </p>
+                  <button
+                    onClick={seedOpportunitiesFromPipeline}
+                    disabled={busy}
+                    className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3 py-1.5 text-xs font-black uppercase tracking-wider transition"
+                  >
+                    <Zap className="w-3.5 h-3.5 fill-slate-950" />
+                    Populate Queue from Pipeline
+                  </button>
                 </div>
-                <div className="mt-4 space-y-3">
-                  {filteredRows.map(row => (
-                    <button
-                      key={row.id}
-                      onClick={() => setSelectedId(row.id)}
-                      className="w-full rounded-2xl border p-4 text-left transition"
-                      style={{
-                        borderColor:
-                          selectedId === row.id
-                            ? "rgba(52, 211, 153, 0.6)"
-                            : "rgba(51, 65, 85, 0.6)",
-                        background:
-                          selectedId === row.id
-                            ? "rgba(6, 78, 59, 0.35)"
-                            : "rgba(15, 23, 42, 0.6)",
-                      }}
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="font-bold text-white">{row.title}</p>
-                        <span className="rounded-full border border-slate-700 bg-slate-800/80 px-2 py-1 text-[10px] uppercase text-slate-300">
-                          {row.opportunity_type}
-                        </span>
-                      </div>
-                      <p className="mt-2 text-xs text-slate-400">
-                        Stage: {row.current_stage}
-                      </p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Intent:{" "}
-                        {row.next_best_action?.intent ||
-                          row.latest_message?.detected_intent ||
-                          "unknown"}
-                      </p>
-                    </button>
-                  ))}
-                  {!filteredRows.length && !busy && (
-                    <div className="rounded-2xl border border-dashed border-emerald-500/40 bg-emerald-950/20 p-5 text-center shadow-inner">
-                      <p className="text-sm font-bold text-white">No opportunities in queue</p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Populate your console with open leads from your pipeline.
-                      </p>
-                      <button
-                        onClick={seedOpportunitiesFromPipeline}
-                        disabled={busy}
-                        className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-3 py-1.5 text-xs font-black uppercase tracking-wider transition"
-                      >
-                        <Zap className="w-3.5 h-3.5 fill-slate-950" />
-                        Populate Queue from Pipeline
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+              )}
+            </div>
+          </div>
 
           <div className="rounded-3xl border border-slate-700/60 bg-[#0c192e] shadow-xl p-5">
             {selected ? (
@@ -859,15 +940,21 @@ export default function SalesConsole() {
                       </span>
                     </div>
                     <span className="text-[10px] font-mono bg-slate-900/90 px-2 py-1 rounded border border-slate-700 text-slate-300">
-                      {confirmEmail ? "Email Set" : "Action Required: Missing Email"}
+                      {confirmEmail
+                        ? "Email Set"
+                        : "Action Required: Missing Email"}
                     </span>
                   </div>
                   <p className="mt-2 text-xs text-slate-300">
-                    Confirm decision-maker contact email for <strong>{selected.title}</strong> before Phelan dispatches quotes.
+                    Confirm decision-maker contact email for{" "}
+                    <strong>{selected.title}</strong> before Phelan dispatches
+                    quotes.
                   </p>
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
                     <div>
-                      <label className="text-[10px] font-bold uppercase text-slate-400">OEM / Vendor Email *</label>
+                      <label className="text-[10px] font-bold uppercase text-slate-400">
+                        OEM / Vendor Email *
+                      </label>
                       <input
                         value={confirmEmail}
                         onChange={e => setConfirmEmail(e.target.value)}
@@ -876,7 +963,9 @@ export default function SalesConsole() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase text-slate-400">Contact Name</label>
+                      <label className="text-[10px] font-bold uppercase text-slate-400">
+                        Contact Name
+                      </label>
                       <input
                         value={confirmName}
                         onChange={e => setConfirmName(e.target.value)}
@@ -885,7 +974,9 @@ export default function SalesConsole() {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase text-slate-400">Title / Role</label>
+                      <label className="text-[10px] font-bold uppercase text-slate-400">
+                        Title / Role
+                      </label>
                       <input
                         value={confirmTitle}
                         onChange={e => setConfirmTitle(e.target.value)}
@@ -900,7 +991,9 @@ export default function SalesConsole() {
                       disabled={confirmingContact || !confirmEmail}
                       className="rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 px-4 py-2 text-xs font-black uppercase tracking-wider shadow-md disabled:opacity-50 transition"
                     >
-                      {confirmingContact ? "Saving..." : "Save & Confirm Contact Email"}
+                      {confirmingContact
+                        ? "Saving..."
+                        : "Save & Confirm Contact Email"}
                     </button>
                     <button
                       onClick={() => void loadProspects()}
@@ -925,7 +1018,11 @@ export default function SalesConsole() {
                       onClick={() =>
                         setResendModal({
                           isOpen: true,
-                          to: confirmEmail || recipientOverride || selected.latest_message?.from_email || "",
+                          to:
+                            confirmEmail ||
+                            recipientOverride ||
+                            selected.latest_message?.from_email ||
+                            "",
                           subject: `Robotic Labor Placement — ${selected.title}`,
                           body: "",
                           companyName: selected.title,
@@ -963,8 +1060,8 @@ export default function SalesConsole() {
                         Hunter.io prospect search
                       </p>
                       <p className="mt-2 text-sm text-slate-400">
-                        Find verified decision-makers for this opportunity and use
-                        them to route the next outreach step.
+                        Find verified decision-makers for this opportunity and
+                        use them to route the next outreach step.
                       </p>
                     </div>
                     <button
@@ -972,7 +1069,9 @@ export default function SalesConsole() {
                       disabled={prospectBusy}
                       className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50 transition"
                     >
-                      {prospectBusy ? "Searching Hunter.io..." : "Find prospects"}
+                      {prospectBusy
+                        ? "Searching Hunter.io..."
+                        : "Find prospects"}
                     </button>
                   </div>
                   {prospectTitles.length > 0 && (
@@ -1009,9 +1108,7 @@ export default function SalesConsole() {
                               "Organization unavailable"}
                           </p>
                           {person.email && (
-                            <p
-                              className="mt-2 text-xs font-semibold text-emerald-400"
-                            >
+                            <p className="mt-2 text-xs font-semibold text-emerald-400">
                               {person.email}
                             </p>
                           )}

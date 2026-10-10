@@ -11,12 +11,13 @@ export default function CustomerQuoteBanner() {
   const activeQuote: BuyerQuote = FEATURED_BUYER_QUOTES[currentIndex];
 
   const handleNext = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % FEATURED_BUYER_QUOTES.length);
+    setCurrentIndex(prev => (prev + 1) % FEATURED_BUYER_QUOTES.length);
   }, []);
 
   const handlePrev = useCallback(() => {
     setCurrentIndex(
-      (prev) => (prev - 1 + FEATURED_BUYER_QUOTES.length) % FEATURED_BUYER_QUOTES.length
+      prev =>
+        (prev - 1 + FEATURED_BUYER_QUOTES.length) % FEATURED_BUYER_QUOTES.length
     );
   }, []);
 
@@ -44,7 +45,8 @@ export default function CustomerQuoteBanner() {
             — {activeQuote.author}
           </span>
           <span className="text-slate-400">
-            {activeQuote.title}, <strong className="text-slate-200">{activeQuote.company}</strong>
+            {activeQuote.title},{" "}
+            <strong className="text-slate-200">{activeQuote.company}</strong>
           </span>
           <span className="text-slate-500">{activeQuote.date}</span>
           <span className="text-slate-600">·</span>

@@ -33,7 +33,12 @@ function maybeResumeIntentAfterSignIn(session: Session | null): void {
   if (!fromUrl && !pending) return;
   const dest = fromUrl ?? pending;
   const destPath = (dest || "").split("?")[0] || "/";
-  if (!dest || dest === "/" || dest === path || (path === "/" && destPath === "/")) {
+  if (
+    !dest ||
+    dest === "/" ||
+    dest === path ||
+    (path === "/" && destPath === "/")
+  ) {
     clearPendingNext();
     return;
   }

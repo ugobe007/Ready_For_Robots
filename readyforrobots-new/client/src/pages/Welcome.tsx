@@ -68,10 +68,14 @@ export default function Welcome() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-2xl sm:text-4xl font-extrabold text-white font-display tracking-tight leading-tight">
-                  Welcome to ReadyForRobots, <span className="text-emerald-400">{email}</span>!
+                  Welcome to ReadyForRobots,{" "}
+                  <span className="text-emerald-400">{email}</span>!
                 </h1>
                 <p className="mt-2 text-sm sm:text-base text-slate-300 max-w-2xl">
-                  Your enterprise workspace is unlocked. You now have access to independent engineering feasibility benchmarks, 3D cell evaluation reports, verified buyer leads, and turnkey commercial proposal tools.
+                  Your enterprise workspace is unlocked. You now have access to
+                  independent engineering feasibility benchmarks, 3D cell
+                  evaluation reports, verified buyer leads, and turnkey
+                  commercial proposal tools.
                 </p>
               </div>
 
@@ -103,7 +107,8 @@ export default function Welcome() {
                 Unlocked Member Features & Resources
               </h2>
               <p className="text-xs sm:text-sm text-slate-400">
-                Select any hub below to access your unlocked reports, buyer signals, or generate proposals.
+                Select any hub below to access your unlocked reports, buyer
+                signals, or generate proposals.
               </p>
             </div>
 
@@ -135,7 +140,9 @@ export default function Welcome() {
                     Engineering Feasibility & Reports
                   </h3>
                   <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
-                    Compare 200+ commercial robot models across duty cycles, payload capacities, floor navigation, and ISO safety standards.
+                    Compare 200+ commercial robot models across duty cycles,
+                    payload capacities, floor navigation, and ISO safety
+                    standards.
                   </p>
                 </div>
 
@@ -145,7 +152,8 @@ export default function Welcome() {
                     className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white transition-colors border border-slate-800"
                   >
                     <span className="flex items-center gap-2">
-                      <Bot className="w-4 h-4 text-emerald-400" /> HEIR Humanoid Benchmark
+                      <Bot className="w-4 h-4 text-emerald-400" /> HEIR Humanoid
+                      Benchmark
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-500" />
                   </Link>
@@ -155,7 +163,8 @@ export default function Welcome() {
                     className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white transition-colors border border-slate-800"
                   >
                     <span className="flex items-center gap-2">
-                      <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> Industry Feasibility Reports
+                      <FileSpreadsheet className="w-4 h-4 text-emerald-400" />{" "}
+                      Industry Feasibility Reports
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-500" />
                   </Link>
@@ -165,7 +174,8 @@ export default function Welcome() {
                     className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white transition-colors border border-slate-800"
                   >
                     <span className="flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-emerald-400" /> Robot Model Comparison
+                      <Layers className="w-4 h-4 text-emerald-400" /> Robot
+                      Model Comparison
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-500" />
                   </Link>
@@ -199,7 +209,8 @@ export default function Welcome() {
                     Sales Leads & Buyer Demand
                   </h3>
                   <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
-                    Access real-time commercial automation demand signals, facility expansions, and classified robot job opportunities.
+                    Access real-time commercial automation demand signals,
+                    facility expansions, and classified robot job opportunities.
                   </p>
                 </div>
 
@@ -209,7 +220,8 @@ export default function Welcome() {
                     className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white transition-colors border border-slate-800"
                   >
                     <span className="flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-amber-400" /> Live Robot Jobs Feed
+                      <Sparkles className="w-4 h-4 text-amber-400" /> Live Robot
+                      Jobs Feed
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-500" />
                   </Link>
@@ -219,7 +231,8 @@ export default function Welcome() {
                     className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white transition-colors border border-slate-800"
                   >
                     <span className="flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-amber-400" /> Real-Time Buyer Signals
+                      <Zap className="w-4 h-4 text-amber-400" /> Real-Time Buyer
+                      Signals
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-500" />
                   </Link>
@@ -229,7 +242,8 @@ export default function Welcome() {
                     className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white transition-colors border border-slate-800"
                   >
                     <span className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-amber-400" /> Automation Marketplace
+                      <Building2 className="w-4 h-4 text-amber-400" />{" "}
+                      Automation Marketplace
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-500" />
                   </Link>
@@ -263,7 +277,9 @@ export default function Welcome() {
                     Commercial Proposals & CRM
                   </h3>
                   <p className="mt-1.5 text-xs text-slate-400 leading-relaxed">
-                    Build turnkey multi-vendor commercial proposals, CapEx vs. RaaS lease models, and manage your pipeline of buyer opportunities.
+                    Build turnkey multi-vendor commercial proposals, CapEx vs.
+                    RaaS lease models, and manage your pipeline of buyer
+                    opportunities.
                   </p>
                 </div>
 
@@ -273,7 +289,8 @@ export default function Welcome() {
                     className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white transition-colors border border-slate-800"
                   >
                     <span className="flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-cyan-400" /> Opportunity CRM Desk
+                      <FileText className="w-4 h-4 text-cyan-400" /> Opportunity
+                      CRM Desk
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-500" />
                   </Link>
@@ -283,7 +300,8 @@ export default function Welcome() {
                     className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white transition-colors border border-slate-800"
                   >
                     <span className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-cyan-400" /> Executive Sales Console
+                      <ShieldCheck className="w-4 h-4 text-cyan-400" />{" "}
+                      Executive Sales Console
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-500" />
                   </Link>
@@ -293,7 +311,8 @@ export default function Welcome() {
                     className="flex items-center justify-between p-2.5 rounded-xl bg-slate-900/80 hover:bg-slate-800 text-xs font-medium text-slate-200 hover:text-white transition-colors border border-slate-800"
                   >
                     <span className="flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-cyan-400" /> Upgrade Plan & Capacity
+                      <Zap className="w-4 h-4 text-cyan-400" /> Upgrade Plan &
+                      Capacity
                     </span>
                     <ChevronRight className="w-4 h-4 text-slate-500" />
                   </Link>
@@ -319,7 +338,8 @@ export default function Welcome() {
               Ready to explore jobs for your robot or run feasibility searches?
             </h3>
             <p className="text-xs sm:text-sm text-slate-400">
-              Paste any robot product URL on the main site to run hardware task-matching and generate quotes.
+              Paste any robot product URL on the main site to run hardware
+              task-matching and generate quotes.
             </p>
           </div>
 

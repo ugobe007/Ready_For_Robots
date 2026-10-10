@@ -203,7 +203,8 @@ export type WorkTaskModelAnswer =
   | { kind: "source"; source: string }
   | { kind: "self_train" };
 
-export const WORK_TASK_MODEL_QUESTION = "Do you have a model for this work? (e.g. Phoenix v2, Sanctuary AI Biped, Unitree G1).";
+export const WORK_TASK_MODEL_QUESTION =
+  "Do you have a model for this work? (e.g. Phoenix v2, Sanctuary AI Biped, Unitree G1).";
 export const WORK_TASK_MODEL_SOURCE_OPTION = "Yes. Name the model source.";
 export const WORK_TASK_MODEL_SOURCE_HINT =
   "Product, vendor, or known policy. Your words. We will not guess a name.";
@@ -922,15 +923,17 @@ export function buyerQuoteToMatchJob(quote: BuyerQuote): MatchJob {
     path: `${quote.company.toUpperCase().replace(/[^A-Z0-9]+/g, "_")} → JOB_OPPORTUNITY`,
     tape_family: quote.targetRobotTypes[0]?.toLowerCase().includes("pallet")
       ? "pallet"
-      : quote.targetRobotTypes[0]?.toLowerCase().includes("scrub") || quote.targetRobotTypes[0]?.toLowerCase().includes("clean")
-      ? "scrub"
-      : quote.targetRobotTypes[0]?.toLowerCase().includes("inspect")
-      ? "inspect"
-      : quote.targetRobotTypes[0]?.toLowerCase().includes("cart")
-      ? "cart"
-      : quote.targetRobotTypes[0]?.toLowerCase().includes("cobot") || quote.targetRobotTypes[0]?.toLowerCase().includes("manipulat")
-      ? "gripper"
-      : "transport",
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("scrub") ||
+          quote.targetRobotTypes[0]?.toLowerCase().includes("clean")
+        ? "scrub"
+        : quote.targetRobotTypes[0]?.toLowerCase().includes("inspect")
+          ? "inspect"
+          : quote.targetRobotTypes[0]?.toLowerCase().includes("cart")
+            ? "cart"
+            : quote.targetRobotTypes[0]?.toLowerCase().includes("cobot") ||
+                quote.targetRobotTypes[0]?.toLowerCase().includes("manipulat")
+              ? "gripper"
+              : "transport",
     verdict: "POSSIBLE_MATCH",
     why: [
       `Verified customer requirement from ${quote.author} (${quote.title}): "${quote.quote}"`,
@@ -949,40 +952,6 @@ export function crmDeskForCurrentRobot(opts: {
 }): CrmDeskForRobot {
   const snapUrl = canonicalRobotUrl(opts.snap?.url || "");
   if (!snapUrl) {
-    const search =
-      typeof window !== "undefined" ? window.location?.search || "" : "";
-    const params = new URLSearchParams(search);
-    const coQuery = (
-      params.get("co") ||
-      params.get("q") ||
-      params.get("company") ||
-      ""
-    )
-      .trim()
-      .toLowerCase();
-
-    if (coQuery) {
-      const quoteJobs = FEATURED_BUYER_QUOTES.map(buyerQuoteToMatchJob);
-      const foundQuote = FEATURED_BUYER_QUOTES.find(
-        q =>
-          q.company.toLowerCase().includes(coQuery) ||
-          q.matchedJobTitle.toLowerCase().includes(coQuery) ||
-          q.industry.toLowerCase().includes(coQuery)
-      );
-      if (foundQuote) {
-        quoteJobs.sort((a, b) =>
-          a.job_key === foundQuote.id ? -1 : b.job_key === foundQuote.id ? 1 : 0
-        );
-        return {
-          product: foundQuote.targetRobotTypes.join(" / ") || "your robot",
-          robotUrl: "",
-          rows: [],
-          jobs: quoteJobs,
-          savedCount: quoteJobs.length,
-        };
-      }
-    }
-
     return {
       product: "your robot",
       robotUrl: "",

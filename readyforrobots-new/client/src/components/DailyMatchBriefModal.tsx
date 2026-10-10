@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { Mail, CheckCircle2, Sparkles, Lock, ArrowRight, X } from "lucide-react";
+import {
+  Mail,
+  CheckCircle2,
+  Sparkles,
+  Lock,
+  ArrowRight,
+  X,
+} from "lucide-react";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { toast } from "sonner";
 
@@ -86,14 +93,18 @@ export default function DailyMatchBriefModal({
               Daily Brief Activated for {email}
             </h3>
             <p className="mt-2 text-sm text-slate-300 leading-relaxed">
-              We saved <strong className="text-purple-300">{robotName}</strong> to your free profile. You will receive a daily email brief featuring top buyer job matches & customer intent quotes every morning.
+              We saved <strong className="text-purple-300">{robotName}</strong>{" "}
+              to your free profile. You will receive a daily email brief
+              featuring top buyer job matches & customer intent quotes every
+              morning.
             </p>
 
             {/* Email Preview Snippet Card */}
             <div className="mt-6 rounded-2xl border border-purple-500/20 bg-slate-950/60 p-4 text-left">
               <div className="flex items-center justify-between text-[11px] text-purple-300 font-mono border-b border-white/10 pb-2 mb-3">
                 <span className="flex items-center gap-1.5">
-                  <Mail className="h-3.5 w-3.5 text-purple-400" /> Daily Match Digest Preview
+                  <Mail className="h-3.5 w-3.5 text-purple-400" /> Daily Match
+                  Digest Preview
                 </span>
                 <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-emerald-300 font-bold">
                   Active
@@ -103,8 +114,13 @@ export default function DailyMatchBriefModal({
               <div className="space-y-2">
                 <div className="rounded-lg bg-white/[0.04] p-2.5 border border-white/5 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-slate-200">Hilton Hotels · Room Service & Floor Care</p>
-                    <p className="text-[10px] text-slate-400">&ldquo;Looking for luggage & floor care robots across 40 resorts...&rdquo;</p>
+                    <p className="text-xs font-bold text-slate-200">
+                      Hilton Hotels · Room Service & Floor Care
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      &ldquo;Looking for luggage & floor care robots across 40
+                      resorts...&rdquo;
+                    </p>
                   </div>
                   <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">
                     98% Match
@@ -112,8 +128,12 @@ export default function DailyMatchBriefModal({
                 </div>
                 <div className="rounded-lg bg-white/[0.04] p-2.5 border border-white/5 flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-bold text-slate-200">5-Axis Bin Picking & Sorting</p>
-                    <p className="text-[10px] text-slate-400">DHL Supply Chain · Texas</p>
+                    <p className="text-xs font-bold text-slate-200">
+                      5-Axis Bin Picking & Sorting
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      DHL Supply Chain · Texas
+                    </p>
                   </div>
                   <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded">
                     95% Match
@@ -147,7 +167,10 @@ export default function DailyMatchBriefModal({
               Save Your Robot & Get Daily Job Matches
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Never miss a high-intent buyer. Save <strong className="text-purple-300">{robotName}</strong> to receive a daily email brief featuring top buyer job matches and verified customer quotes — 100% free.
+              Never miss a high-intent buyer. Save{" "}
+              <strong className="text-purple-300">{robotName}</strong> to
+              receive a daily email brief featuring top buyer job matches and
+              verified customer quotes — 100% free.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-6 space-y-4">
@@ -160,7 +183,7 @@ export default function DailyMatchBriefModal({
                   required
                   placeholder="you@company.com"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="w-full rounded-xl border border-slate-700 bg-slate-950/80 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500"
                 />
               </div>
@@ -174,7 +197,7 @@ export default function DailyMatchBriefModal({
                     type="text"
                     placeholder="Alex Smith"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={e => setName(e.target.value)}
                     className="w-full rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2 text-xs text-white placeholder-slate-600 outline-none focus:border-purple-500"
                   />
                 </div>
@@ -186,7 +209,7 @@ export default function DailyMatchBriefModal({
                     type="text"
                     placeholder="Robotics OEM / VAR"
                     value={company}
-                    onChange={(e) => setCompany(e.target.value)}
+                    onChange={e => setCompany(e.target.value)}
                     className="w-full rounded-xl border border-slate-800 bg-slate-950/60 px-3.5 py-2 text-xs text-white placeholder-slate-600 outline-none focus:border-purple-500"
                   />
                 </div>
@@ -201,7 +224,9 @@ export default function DailyMatchBriefModal({
                       Daily Jackpot Match Bonus
                     </p>
                     <p className="text-[10px] text-slate-300">
-                      Subscribers randomly unlock <strong>10 job matches</strong> + weekly market intelligence reports.
+                      Subscribers randomly unlock{" "}
+                      <strong>10 job matches</strong> + weekly market
+                      intelligence reports.
                     </p>
                   </div>
                 </div>
@@ -214,19 +239,27 @@ export default function DailyMatchBriefModal({
               <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-3.5 space-y-2 text-xs text-slate-300">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" />
-                  <span>Daily automated email brief (5–10 buyer job matches)</span>
+                  <span>
+                    Daily automated email brief (5–10 buyer job matches)
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" />
-                  <span>Verified customer quotes & automation buyer intent</span>
+                  <span>
+                    Verified customer quotes & automation buyer intent
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" />
-                  <span>Weekly benchmark report & robotics market snippets</span>
+                  <span>
+                    Weekly benchmark report & robotics market snippets
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-purple-400 shrink-0" />
-                  <span>Activate outreach anytime via Basic Plan ($19.99/mo)</span>
+                  <span>
+                    Activate outreach anytime via Basic Plan ($19.99/mo)
+                  </span>
                 </div>
               </div>
 
@@ -246,7 +279,8 @@ export default function DailyMatchBriefModal({
               </button>
 
               <p className="text-[10px] text-center text-slate-400">
-                Free workspace account. Unsubscribe anytime in 1 click. Raw buyer emails protected by Vault.
+                Free workspace account. Unsubscribe anytime in 1 click. Raw
+                buyer emails protected by Vault.
               </p>
             </form>
           </div>

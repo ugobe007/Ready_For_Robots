@@ -75,7 +75,10 @@ const CATALOG_SPEC_LABELS: Record<string, string> = {
   has_sdk: "SDK",
 };
 
-function formatCatalogSpecValue(key: string, value: string | number | boolean): string {
+function formatCatalogSpecValue(
+  key: string,
+  value: string | number | boolean
+): string {
   if (typeof value === "boolean") return value ? "Yes" : "No";
   if (typeof value === "number") {
     if (key.endsWith("_kg")) return `${value} kg`;
@@ -94,7 +97,11 @@ export function catalogSpecRows(
   const rows: { label: string; value: string }[] = [];
   for (const [key, raw] of Object.entries(specs)) {
     if (raw === null || raw === undefined || raw === "") continue;
-    if (typeof raw !== "string" && typeof raw !== "number" && typeof raw !== "boolean") {
+    if (
+      typeof raw !== "string" &&
+      typeof raw !== "number" &&
+      typeof raw !== "boolean"
+    ) {
       continue;
     }
     const value = formatCatalogSpecValue(key, raw);

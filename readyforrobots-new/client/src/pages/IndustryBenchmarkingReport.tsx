@@ -28,7 +28,8 @@ import {
 export default function IndustryBenchmarkingReport() {
   const [, params] = useRoute("/reports/benchmarking/:industry");
   const initialIndustry = params?.industry || "hospitality";
-  const [selectedIndustry, setSelectedIndustry] = useState<string>(initialIndustry);
+  const [selectedIndustry, setSelectedIndustry] =
+    useState<string>(initialIndustry);
   const [copiedLink, setCopiedLink] = useState(false);
 
   const report: IndustryBenchmarkDataset =
@@ -70,7 +71,9 @@ export default function IndustryBenchmarkingReport() {
         <div className="hidden print-header">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-black text-black">ReadyForRobots</h2>
-            <span className="text-xs font-semibold text-gray-600">Executive Industry Benchmarking Report · 2026</span>
+            <span className="text-xs font-semibold text-gray-600">
+              Executive Industry Benchmarking Report · 2026
+            </span>
           </div>
         </div>
 
@@ -217,7 +220,9 @@ export default function IndustryBenchmarkingReport() {
           </p>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-slate-400">Target Accounts Evaluated:</span>
+            <span className="text-xs font-semibold text-slate-400">
+              Target Accounts Evaluated:
+            </span>
             {report.target_accounts.map(acc => (
               <span
                 key={acc}
@@ -256,10 +261,7 @@ export default function IndustryBenchmarkingReport() {
               </thead>
               <tbody className="divide-y divide-slate-800/60 text-slate-200">
                 {report.platforms.map((p, idx) => (
-                  <tr
-                    key={idx}
-                    className="transition hover:bg-slate-800/40"
-                  >
+                  <tr key={idx} className="transition hover:bg-slate-800/40">
                     <td className="px-4 py-4 font-bold text-white">
                       <div>{p.vendor}</div>
                       <div className="text-[11px] font-normal text-emerald-400">
@@ -272,16 +274,32 @@ export default function IndustryBenchmarkingReport() {
                       </span>
                     </td>
                     <td className="px-4 py-4">
-                      <div>Payload: <span className="font-semibold text-white">{p.payload}</span></div>
+                      <div>
+                        Payload:{" "}
+                        <span className="font-semibold text-white">
+                          {p.payload}
+                        </span>
+                      </div>
                       <div className="text-slate-400">Speed: {p.speed}</div>
                     </td>
                     <td className="px-4 py-4">
-                      <div>Runtime: <span className="font-semibold text-white">{p.battery_runtime}</span></div>
-                      <div className="text-slate-400 truncate max-w-[160px]">{p.navigation}</div>
+                      <div>
+                        Runtime:{" "}
+                        <span className="font-semibold text-white">
+                          {p.battery_runtime}
+                        </span>
+                      </div>
+                      <div className="text-slate-400 truncate max-w-[160px]">
+                        {p.navigation}
+                      </div>
                     </td>
                     <td className="px-4 py-4">
-                      <div className="font-semibold text-white">{p.price_range}</div>
-                      <div className="text-sky-300 font-mono text-[11px]">{p.est_monthly_raas}</div>
+                      <div className="font-semibold text-white">
+                        {p.price_range}
+                      </div>
+                      <div className="text-sky-300 font-mono text-[11px]">
+                        {p.est_monthly_raas}
+                      </div>
                     </td>
                     <td className="px-4 py-4">
                       <span className="inline-flex items-center gap-1 rounded-full bg-amber-950/80 px-2 py-0.5 text-[11px] font-bold text-amber-300 border border-amber-500/30">

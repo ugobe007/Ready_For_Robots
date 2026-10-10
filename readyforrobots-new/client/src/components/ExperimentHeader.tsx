@@ -21,7 +21,8 @@ import {
 } from "@/lib/jobsWorkflow";
 
 const navIdle = "text-slate-400 transition hover:text-slate-200";
-const navActive = "border-b-2 border-emerald-400 pb-0.5 text-emerald-400 font-semibold";
+const navActive =
+  "border-b-2 border-emerald-400 pb-0.5 text-emerald-400 font-semibold";
 
 export default function ExperimentHeader() {
   const { session } = useAuth();
@@ -29,14 +30,17 @@ export default function ExperimentHeader() {
   const [location] = useLocation();
   const search = useSearch();
   const [onJobsSlug] = useRoute("/jobs/:slug");
-  
+
   const [exploreOpen, setExploreOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(e.target as Node)
+      ) {
         setExploreOpen(false);
       }
     }
@@ -124,7 +128,9 @@ export default function ExperimentHeader() {
                 aria-expanded={exploreOpen}
               >
                 <span>Explore</span>
-                <ChevronDown className={`h-3.5 w-3.5 transition-transform ${exploreOpen ? "rotate-180" : ""}`} />
+                <ChevronDown
+                  className={`h-3.5 w-3.5 transition-transform ${exploreOpen ? "rotate-180" : ""}`}
+                />
               </button>
 
               {exploreOpen && (
@@ -139,8 +145,12 @@ export default function ExperimentHeader() {
                   >
                     <span className="text-base">📊</span>
                     <div>
-                      <div className="font-semibold text-slate-100">Lead Pipeline</div>
-                      <div className="text-[11px] text-slate-400 font-normal">Active buyer signals & workspace</div>
+                      <div className="font-semibold text-slate-100">
+                        Lead Pipeline
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-normal">
+                        Active buyer signals & workspace
+                      </div>
                     </div>
                   </a>
                   <a
@@ -150,8 +160,12 @@ export default function ExperimentHeader() {
                   >
                     <span className="text-base">🤖</span>
                     <div>
-                      <div className="font-semibold text-slate-100">Robot Ready</div>
-                      <div className="text-[11px] text-slate-400 font-normal">Match product URLs to robot jobs</div>
+                      <div className="font-semibold text-slate-100">
+                        Robot Ready
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-normal">
+                        Match product URLs to robot jobs
+                      </div>
                     </div>
                   </a>
                   <a
@@ -161,8 +175,12 @@ export default function ExperimentHeader() {
                   >
                     <span className="text-base">🗂️</span>
                     <div>
-                      <div className="font-semibold text-slate-100">CRM Accounts</div>
-                      <div className="text-[11px] text-slate-400 font-normal">Buyer pool & account staging</div>
+                      <div className="font-semibold text-slate-100">
+                        CRM Accounts
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-normal">
+                        Buyer pool & account staging
+                      </div>
                     </div>
                   </a>
                   <a
@@ -172,8 +190,12 @@ export default function ExperimentHeader() {
                   >
                     <span className="text-base">📰</span>
                     <div>
-                      <div className="font-semibold text-slate-100">Intelligence & HEIR</div>
-                      <div className="text-[11px] text-slate-400 font-normal">Humanoid readiness & reports</div>
+                      <div className="font-semibold text-slate-100">
+                        Intelligence & HEIR
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-normal">
+                        Humanoid readiness & reports
+                      </div>
                     </div>
                   </a>
                   <a
@@ -183,8 +205,12 @@ export default function ExperimentHeader() {
                   >
                     <span className="text-base">💰</span>
                     <div>
-                      <div className="font-semibold text-slate-100">RaaS ROI Engine</div>
-                      <div className="text-[11px] text-slate-400 font-normal">$8.5k/mo RaaS vs CapEx TCO</div>
+                      <div className="font-semibold text-slate-100">
+                        RaaS ROI Engine
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-normal">
+                        $8.5k/mo RaaS vs CapEx TCO
+                      </div>
                     </div>
                   </a>
                   <a
@@ -194,8 +220,12 @@ export default function ExperimentHeader() {
                   >
                     <span className="text-base">💳</span>
                     <div>
-                      <div className="font-semibold text-slate-100">Pricing & Plans</div>
-                      <div className="text-[11px] text-slate-400 font-normal">Pro plans & Cal outreach entitlement</div>
+                      <div className="font-semibold text-slate-100">
+                        Pricing & Plans
+                      </div>
+                      <div className="text-[11px] text-slate-400 font-normal">
+                        Pro plans & Cal outreach entitlement
+                      </div>
                     </div>
                   </a>
                   {isAdmin && (
@@ -220,10 +250,7 @@ export default function ExperimentHeader() {
             >
               Newsletter
             </a>
-            <a
-              href="/about"
-              className={`${aboutActive ? navActive : navIdle}`}
-            >
+            <a href="/about" className={`${aboutActive ? navActive : navIdle}`}>
               About
             </a>
             {session || !showPipeline ? (
@@ -234,7 +261,10 @@ export default function ExperimentHeader() {
             {session ? (
               <>
                 {isAdmin ? (
-                  <a href="/admin" className={adminActive ? navActive : navIdle}>
+                  <a
+                    href="/admin"
+                    className={adminActive ? navActive : navIdle}
+                  >
                     Admin
                   </a>
                 ) : null}
@@ -271,7 +301,11 @@ export default function ExperimentHeader() {
             className="md:hidden p-2 text-slate-300 hover:text-white hover:bg-slate-800/80 rounded-lg transition-colors"
             aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" />
+            ) : (
+              <Menu className="h-5 w-5" />
+            )}
           </button>
         </div>
       </header>
@@ -326,7 +360,7 @@ export default function ExperimentHeader() {
             </p>
             <a
               href="/"
-              onClick={(e) => {
+              onClick={e => {
                 setMobileMenuOpen(false);
                 onJobsFreshHomeClick(e);
                 if (typeof window !== "undefined") {

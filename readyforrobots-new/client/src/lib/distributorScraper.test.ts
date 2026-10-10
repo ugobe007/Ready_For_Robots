@@ -23,7 +23,10 @@ describe("distributorScraper page parser & mix extractor", () => {
       </html>
     `;
 
-    const result = scrapeDistributorPage("https://www.fastechautomation.com", sampleHtml);
+    const result = scrapeDistributorPage(
+      "https://www.fastechautomation.com",
+      sampleHtml
+    );
     expect(result.domain).toBe("fastechautomation.com");
     expect(result.detected_brands).toContain("FANUC");
     expect(result.detected_brands).toContain("Universal Robots");
@@ -51,7 +54,10 @@ describe("distributorScraper page parser & mix extractor", () => {
       </html>
     `;
 
-    const result = scrapeDistributorPage("https://alpharoboticsai.com/marketplace", sampleHtml);
+    const result = scrapeDistributorPage(
+      "https://alpharoboticsai.com/marketplace",
+      sampleHtml
+    );
     expect(result.domain).toBe("alpharoboticsai.com");
     expect(result.detected_brands).toContain("AgiBot");
     expect(result.detected_brands).toContain("PUDU Robotics");

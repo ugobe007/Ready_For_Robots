@@ -47,7 +47,13 @@ export type ProposalQuoteData = {
     payback_period_months: number;
   };
   oem_technical_notes: string;
-  status: "awaiting_oem_approval" | "oem_approved" | "revisions_requested" | "dispatched_to_buyer" | "buyer_accepted" | "oem_notified_buyer_accepted";
+  status:
+    | "awaiting_oem_approval"
+    | "oem_approved"
+    | "revisions_requested"
+    | "dispatched_to_buyer"
+    | "buyer_accepted"
+    | "oem_notified_buyer_accepted";
   buyer_contact: {
     name: string;
     title: string;
@@ -91,7 +97,8 @@ const SAMPLE_PROPOSAL_QUOTE: ProposalQuoteData = {
     projected_annual_savings: 103800,
     payback_period_months: 7.2,
   },
-  oem_technical_notes: "Unit standard equipped with high-grip EOAT pallet gripper and laser safety scanner suite. Fully compatible with Apex's SAP EWM warehouse management system via REST API.",
+  oem_technical_notes:
+    "Unit standard equipped with high-grip EOAT pallet gripper and laser safety scanner suite. Fully compatible with Apex's SAP EWM warehouse management system via REST API.",
   status: "awaiting_oem_approval",
   buyer_contact: {
     name: "Marcus Vance",
@@ -106,7 +113,8 @@ const SAMPLE_PROPOSAL_QUOTE: ProposalQuoteData = {
   feasibility_metrics: {
     heir_score: 94.2,
     active_deployments: 482,
-    buyer_qualification_tier: "Enterprise Tier 1 ($100M+ Revenue, 14 Distribution Hubs)",
+    buyer_qualification_tier:
+      "Enterprise Tier 1 ($100M+ Revenue, 14 Distribution Hubs)",
     oem_allocation_expires_hours: 48,
     poc_simulation_url: "/preview",
   },
@@ -116,7 +124,8 @@ const SAMPLE_PROPOSAL_QUOTE: ProposalQuoteData = {
 export default function ProposalOemReview() {
   const searchString = useSearch();
   const searchParams = new URLSearchParams(searchString);
-  const quoteId = searchParams.get("id") || searchParams.get("quote_id") || "PROP-8842-APEX";
+  const quoteId =
+    searchParams.get("id") || searchParams.get("quote_id") || "PROP-8842-APEX";
 
   const [quote, setQuote] = useState<ProposalQuoteData>(() => {
     const saved = localStorage.getItem(`cal_proposal_quote_${quoteId}`);
@@ -130,18 +139,37 @@ export default function ProposalOemReview() {
     return { ...SAMPLE_PROPOSAL_QUOTE, id: quoteId };
   });
 
-  const [activeTab, setActiveTab] = useState<"pricing" | "specs" | "oem_teeup" | "buyer_email">("pricing");
+  const [activeTab, setActiveTab] = useState<
+    "pricing" | "specs" | "oem_teeup" | "buyer_email"
+  >("pricing");
   const [isEditing, setIsEditing] = useState(false);
-  const [editedMonthly, setEditedMonthly] = useState(quote.pricing.raas_monthly_rate);
-  const [editedHardware, setEditedHardware] = useState(quote.pricing.hardware_cost);
-  const [editedWeeks, setEditedWeeks] = useState(quote.pricing.estimated_deployment_weeks);
+  const [editedMonthly, setEditedMonthly] = useState(
+    quote.pricing.raas_monthly_rate
+  );
+  const [editedHardware, setEditedHardware] = useState(
+    quote.pricing.hardware_cost
+  );
+  const [editedWeeks, setEditedWeeks] = useState(
+    quote.pricing.estimated_deployment_weeks
+  );
   const [editedNotes, setEditedNotes] = useState(quote.oem_technical_notes);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Recalculate metrics based on edited rates
   const annualRaas = editedMonthly * 12;
-  const annualSavings = Math.max(0, quote.pricing.annual_human_labor_cost - annualRaas);
-  const paybackMonths = editedMonthly > 0 ? Number(((editedHardware / (quote.pricing.annual_human_labor_cost / 12 - editedMonthly)).toFixed(1))) : 8.5;
+  const annualSavings = Math.max(
+    0,
+    quote.pricing.annual_human_labor_cost - annualRaas
+  );
+  const paybackMonths =
+    editedMonthly > 0
+      ? Number(
+          (
+            editedHardware /
+            (quote.pricing.annual_human_labor_cost / 12 - editedMonthly)
+          ).toFixed(1)
+        )
+      : 8.5;
 
   const handleSaveEdits = () => {
     const updated: ProposalQuoteData = {
@@ -158,7 +186,10 @@ export default function ProposalOemReview() {
       updated_at: new Date().toISOString(),
     };
     setQuote(updated);
-    localStorage.setItem(`cal_proposal_quote_${quoteId}`, JSON.stringify(updated));
+    localStorage.setItem(
+      `cal_proposal_quote_${quoteId}`,
+      JSON.stringify(updated)
+    );
     setIsEditing(false);
     toast.success("Quote pricing and deployment terms updated successfully.");
   };
@@ -172,9 +203,14 @@ export default function ProposalOemReview() {
         updated_at: new Date().toISOString(),
       };
       setQuote(updated);
-      localStorage.setItem(`cal_proposal_quote_${quoteId}`, JSON.stringify(updated));
+      localStorage.setItem(
+        `cal_proposal_quote_${quoteId}`,
+        JSON.stringify(updated)
+      );
       setIsSubmitting(false);
-      toast.success("Proposal approved & supported! Cal AI is now dispatching the proposal quote to Apex Logistics.");
+      toast.success(
+        "Proposal approved & supported! Cal AI is now dispatching the proposal quote to Apex Logistics."
+      );
     }, 800);
   };
 
@@ -185,7 +221,10 @@ export default function ProposalOemReview() {
       updated_at: new Date().toISOString(),
     };
     setQuote(updated);
-    localStorage.setItem(`cal_proposal_quote_${quoteId}`, JSON.stringify(updated));
+    localStorage.setItem(
+      `cal_proposal_quote_${quoteId}`,
+      JSON.stringify(updated)
+    );
     toast.info("Revision request sent back to Cal AI sales dispatcher.");
   };
 
@@ -196,7 +235,10 @@ export default function ProposalOemReview() {
       updated_at: new Date().toISOString(),
     };
     setQuote(updated);
-    localStorage.setItem(`cal_proposal_quote_${quoteId}`, JSON.stringify(updated));
+    localStorage.setItem(
+      `cal_proposal_quote_${quoteId}`,
+      JSON.stringify(updated)
+    );
     toast.success(
       `🎉 GREAT NEWS! ${quote.buyer_contact.name} (${quote.company_name}) accepted the proposal! Cal has notified ${quote.matched_robot.oem_name}.`
     );
@@ -215,7 +257,10 @@ export default function ProposalOemReview() {
       updated_at: new Date().toISOString(),
     };
     setQuote(updated);
-    localStorage.setItem(`cal_proposal_quote_${quoteId}`, JSON.stringify(updated));
+    localStorage.setItem(
+      `cal_proposal_quote_${quoteId}`,
+      JSON.stringify(updated)
+    );
     toast.success(
       `⚡ Cal Autopilot is now automatically handling site assessment, SLA agreement delivery, and deployment kickoff!`
     );
@@ -225,15 +270,22 @@ export default function ProposalOemReview() {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500 selection:text-slate-950">
       <ExperimentHeader />
 
-      <main className={`flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pb-16 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <main
+        className={`flex-grow container mx-auto px-4 sm:px-6 lg:px-8 pb-16 ${JOBS_HEADER_OFFSET_CLASS}`}
+      >
         {/* Top Navigation & Status Bar */}
         <div className="pt-6 pb-4 border-b border-slate-800/80 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
-            <Link href="/sales-console" className="hover:text-cyan-400 transition-colors">
+            <Link
+              href="/sales-console"
+              className="hover:text-cyan-400 transition-colors"
+            >
               Sales Console
             </Link>
             <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-            <span className="text-slate-300 font-semibold">Cal OEM Proposal Review Gate</span>
+            <span className="text-slate-300 font-semibold">
+              Cal OEM Proposal Review Gate
+            </span>
             <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
             <span className="text-cyan-400">{quote.id}</span>
           </div>
@@ -283,7 +335,8 @@ export default function ProposalOemReview() {
         </div>
 
         {/* Employer Acceptance Alert Banner (Triggered when employer says YES) */}
-        {(quote.status === "buyer_accepted" || quote.status === "oem_notified_buyer_accepted") && (
+        {(quote.status === "buyer_accepted" ||
+          quote.status === "oem_notified_buyer_accepted") && (
           <div className="mt-6 rounded-2xl bg-gradient-to-r from-emerald-950/90 via-slate-900 to-cyan-950/90 border border-emerald-500/40 p-6 shadow-2xl space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3">
@@ -300,7 +353,10 @@ export default function ProposalOemReview() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-300 mt-0.5">
-                    {quote.buyer_contact.name} ({quote.buyer_contact.title}) accepted the proposal for {quote.matched_robot.oem_name} {quote.matched_robot.model_name}. Cal has automatically notified {quote.matched_robot.oem_name}!
+                    {quote.buyer_contact.name} ({quote.buyer_contact.title})
+                    accepted the proposal for {quote.matched_robot.oem_name}{" "}
+                    {quote.matched_robot.model_name}. Cal has automatically
+                    notified {quote.matched_robot.oem_name}!
                   </p>
                 </div>
               </div>
@@ -308,7 +364,9 @@ export default function ProposalOemReview() {
 
             <div className="p-4 rounded-xl bg-slate-950/80 border border-emerald-500/20 text-xs space-y-3">
               <div className="text-emerald-400 font-mono font-bold uppercase tracking-wider flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-emerald-400" /> Choose Next Step for Opportunity Execution with {quote.matched_robot.oem_name}:
+                <Sparkles className="w-4 h-4 text-emerald-400" /> Choose Next
+                Step for Opportunity Execution with{" "}
+                {quote.matched_robot.oem_name}:
               </div>
 
               <div className="flex flex-wrap gap-3 pt-1">
@@ -334,7 +392,7 @@ export default function ProposalOemReview() {
         {/* OEM Portal Hero Section */}
         <div className="mt-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/50 border border-slate-800 p-6 sm:p-8 relative overflow-hidden shadow-2xl">
           <div className="absolute top-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
-          
+
           <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
             <div>
               <div className="flex items-center gap-2 text-cyan-400 text-xs font-mono tracking-wider uppercase mb-2">
@@ -345,7 +403,17 @@ export default function ProposalOemReview() {
                 Review & Confirm Robot Proposal Quote
               </h1>
               <p className="mt-2 text-sm text-slate-300 max-w-2xl">
-                Cal AI matched <span className="font-semibold text-cyan-300">{quote.matched_robot.oem_name} {quote.matched_robot.model_name}</span> to an active job opening at <span className="font-semibold text-white">{quote.company_name}</span>. Please review pricing, SLA warranty, and technical notes before Cal dispatches the proposal quote to the buyer.
+                Cal AI matched{" "}
+                <span className="font-semibold text-cyan-300">
+                  {quote.matched_robot.oem_name}{" "}
+                  {quote.matched_robot.model_name}
+                </span>{" "}
+                to an active job opening at{" "}
+                <span className="font-semibold text-white">
+                  {quote.company_name}
+                </span>
+                . Please review pricing, SLA warranty, and technical notes
+                before Cal dispatches the proposal quote to the buyer.
               </p>
             </div>
 
@@ -390,7 +458,8 @@ export default function ProposalOemReview() {
             <div className="rounded-xl bg-slate-900/80 border border-slate-800 p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <span className="text-xs font-mono text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                  <Building2 className="w-4 h-4 text-cyan-400" /> Enterprise Buyer Opportunity
+                  <Building2 className="w-4 h-4 text-cyan-400" /> Enterprise
+                  Buyer Opportunity
                 </span>
                 <span className="text-xs text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded font-mono">
                   Verified Opening
@@ -398,23 +467,33 @@ export default function ProposalOemReview() {
               </div>
 
               <div>
-                <h3 className="text-base font-bold text-white">{quote.job_title}</h3>
-                <p className="text-xs text-cyan-300 font-medium mt-0.5">{quote.company_name}</p>
+                <h3 className="text-base font-bold text-white">
+                  {quote.job_title}
+                </h3>
+                <p className="text-xs text-cyan-300 font-medium mt-0.5">
+                  {quote.company_name}
+                </p>
                 <p className="text-xs text-slate-400 mt-1">{quote.location}</p>
               </div>
 
               <div className="pt-2 border-t border-slate-800/80 text-xs space-y-2">
                 <div className="flex justify-between">
                   <span className="text-slate-400">Buyer Decision Maker:</span>
-                  <span className="text-slate-200 font-medium">{quote.buyer_contact.name}</span>
+                  <span className="text-slate-200 font-medium">
+                    {quote.buyer_contact.name}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Title:</span>
-                  <span className="text-slate-300">{quote.buyer_contact.title}</span>
+                  <span className="text-slate-300">
+                    {quote.buyer_contact.title}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Contact Email:</span>
-                  <span className="text-cyan-400 font-mono text-[11px]">{quote.buyer_contact.email}</span>
+                  <span className="text-cyan-400 font-mono text-[11px]">
+                    {quote.buyer_contact.email}
+                  </span>
                 </div>
               </div>
             </div>
@@ -423,24 +502,39 @@ export default function ProposalOemReview() {
             <div className="rounded-xl bg-slate-900/80 border border-slate-800 p-5 space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <span className="text-xs font-mono text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                  <Bot className="w-4 h-4 text-cyan-400" /> Matched Robot Hardware
+                  <Bot className="w-4 h-4 text-cyan-400" /> Matched Robot
+                  Hardware
                 </span>
-                <span className="text-xs text-cyan-400 font-semibold font-mono">{quote.matched_robot.oem_name}</span>
+                <span className="text-xs text-cyan-400 font-semibold font-mono">
+                  {quote.matched_robot.oem_name}
+                </span>
               </div>
 
               <div>
-                <h4 className="text-sm font-extrabold text-cyan-300">{quote.matched_robot.model_name}</h4>
-                <p className="text-xs text-slate-400 mt-0.5">{quote.matched_robot.category}</p>
+                <h4 className="text-sm font-extrabold text-cyan-300">
+                  {quote.matched_robot.model_name}
+                </h4>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {quote.matched_robot.category}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2 text-xs pt-1">
                 <div className="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/60">
-                  <span className="text-slate-400 block text-[10px] uppercase font-mono">Payload</span>
-                  <span className="text-slate-200 font-semibold text-xs">{quote.matched_robot.payload_capacity}</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-mono">
+                    Payload
+                  </span>
+                  <span className="text-slate-200 font-semibold text-xs">
+                    {quote.matched_robot.payload_capacity}
+                  </span>
                 </div>
                 <div className="bg-slate-950/60 p-2.5 rounded-lg border border-slate-800/60">
-                  <span className="text-slate-400 block text-[10px] uppercase font-mono">Reach / Specs</span>
-                  <span className="text-slate-200 font-semibold text-xs">{quote.matched_robot.reach}</span>
+                  <span className="text-slate-400 block text-[10px] uppercase font-mono">
+                    Reach / Specs
+                  </span>
+                  <span className="text-slate-200 font-semibold text-xs">
+                    {quote.matched_robot.reach}
+                  </span>
                 </div>
               </div>
             </div>
@@ -448,20 +542,33 @@ export default function ProposalOemReview() {
             {/* Quick Metrics Callout */}
             <div className="rounded-xl bg-gradient-to-br from-indigo-950/40 to-slate-900 border border-indigo-500/20 p-5">
               <div className="flex items-center gap-2 text-xs font-mono text-indigo-300 uppercase tracking-wider mb-3">
-                <Zap className="w-4 h-4 text-indigo-400" /> Cal ROI Calculator Projection
+                <Zap className="w-4 h-4 text-indigo-400" /> Cal ROI Calculator
+                Projection
               </div>
               <div className="space-y-3">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-xs text-slate-400">Est. Annual Labor Replaced:</span>
-                  <span className="text-sm font-mono font-bold text-white">${quote.pricing.annual_human_labor_cost.toLocaleString()}</span>
+                  <span className="text-xs text-slate-400">
+                    Est. Annual Labor Replaced:
+                  </span>
+                  <span className="text-sm font-mono font-bold text-white">
+                    ${quote.pricing.annual_human_labor_cost.toLocaleString()}
+                  </span>
                 </div>
                 <div className="flex justify-between items-baseline">
-                  <span className="text-xs text-slate-400">Net Buyer Annual Savings:</span>
-                  <span className="text-sm font-mono font-bold text-emerald-400">+${annualSavings.toLocaleString()} / yr</span>
+                  <span className="text-xs text-slate-400">
+                    Net Buyer Annual Savings:
+                  </span>
+                  <span className="text-sm font-mono font-bold text-emerald-400">
+                    +${annualSavings.toLocaleString()} / yr
+                  </span>
                 </div>
                 <div className="flex justify-between items-baseline pt-2 border-t border-slate-800">
-                  <span className="text-xs text-slate-400">Hardware Payback Period:</span>
-                  <span className="text-sm font-mono font-bold text-cyan-400">{paybackMonths} months</span>
+                  <span className="text-xs text-slate-400">
+                    Hardware Payback Period:
+                  </span>
+                  <span className="text-sm font-mono font-bold text-cyan-400">
+                    {paybackMonths} months
+                  </span>
                 </div>
               </div>
             </div>
@@ -500,7 +607,8 @@ export default function ProposalOemReview() {
                       : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
                   }`}
                 >
-                  <FileText className="w-3.5 h-3.5 text-amber-400" /> OEM Tee-Up Email
+                  <FileText className="w-3.5 h-3.5 text-amber-400" /> OEM Tee-Up
+                  Email
                 </button>
                 <button
                   onClick={() => setActiveTab("buyer_email")}
@@ -510,18 +618,23 @@ export default function ProposalOemReview() {
                       : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
                   }`}
                 >
-                  <Send className="w-3.5 h-3.5 text-cyan-400" /> Buyer Dispatch Email
+                  <Send className="w-3.5 h-3.5 text-cyan-400" /> Buyer Dispatch
+                  Email
                 </button>
               </div>
 
-              {!isEditing && quote.status === "awaiting_oem_approval" && activeTab !== "oem_teeup" && activeTab !== "buyer_email" && (
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-xs font-medium text-slate-300 flex items-center gap-1.5 transition-all"
-                >
-                  <Edit3 className="w-3.5 h-3.5 text-cyan-400" /> Edit Pricing & Notes
-                </button>
-              )}
+              {!isEditing &&
+                quote.status === "awaiting_oem_approval" &&
+                activeTab !== "oem_teeup" &&
+                activeTab !== "buyer_email" && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-900 hover:bg-slate-800 text-xs font-medium text-slate-300 flex items-center gap-1.5 transition-all"
+                  >
+                    <Edit3 className="w-3.5 h-3.5 text-cyan-400" /> Edit Pricing
+                    & Notes
+                  </button>
+                )}
             </div>
 
             {/* Tab Content: Pricing & Terms */}
@@ -529,9 +642,12 @@ export default function ProposalOemReview() {
               <div className="rounded-xl bg-slate-900/80 border border-slate-800 p-6 space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-lg font-bold text-white">Commercial Proposal Quote Breakdown</h3>
+                    <h3 className="text-lg font-bold text-white">
+                      Commercial Proposal Quote Breakdown
+                    </h3>
                     <p className="text-xs text-slate-400 mt-0.5">
-                      Configure baseline RaaS leasing and turnkey hardware purchase prices for {quote.company_name}.
+                      Configure baseline RaaS leasing and turnkey hardware
+                      purchase prices for {quote.company_name}.
                     </p>
                   </div>
                   {isEditing && (
@@ -546,15 +662,21 @@ export default function ProposalOemReview() {
                   <div className="rounded-xl bg-slate-950/80 border border-slate-800 p-4 space-y-3">
                     <div className="flex items-center justify-between text-xs text-slate-400">
                       <span>Robots-as-a-Service (RaaS)</span>
-                      <span className="font-mono text-emerald-400">Monthly Billing</span>
+                      <span className="font-mono text-emerald-400">
+                        Monthly Billing
+                      </span>
                     </div>
                     {isEditing ? (
                       <div>
-                        <label className="text-[11px] text-slate-400 font-mono block mb-1">RaaS Monthly Rate ($)</label>
+                        <label className="text-[11px] text-slate-400 font-mono block mb-1">
+                          RaaS Monthly Rate ($)
+                        </label>
                         <input
                           type="number"
                           value={editedMonthly}
-                          onChange={e => setEditedMonthly(Number(e.target.value))}
+                          onChange={e =>
+                            setEditedMonthly(Number(e.target.value))
+                          }
                           className="w-full bg-slate-900 border border-cyan-500/50 rounded-lg px-3 py-2 text-white font-mono text-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
                         />
                       </div>
@@ -563,11 +685,15 @@ export default function ProposalOemReview() {
                         <span className="text-3xl font-extrabold font-mono text-white">
                           ${quote.pricing.raas_monthly_rate.toLocaleString()}
                         </span>
-                        <span className="text-xs text-slate-400 font-mono"> / month</span>
+                        <span className="text-xs text-slate-400 font-mono">
+                          {" "}
+                          / month
+                        </span>
                       </div>
                     )}
                     <p className="text-xs text-slate-400">
-                      Includes 24/7 teleoperation support, scheduled maintenance, and software updates.
+                      Includes 24/7 teleoperation support, scheduled
+                      maintenance, and software updates.
                     </p>
                   </div>
 
@@ -575,15 +701,21 @@ export default function ProposalOemReview() {
                   <div className="rounded-xl bg-slate-950/80 border border-slate-800 p-4 space-y-3">
                     <div className="flex items-center justify-between text-xs text-slate-400">
                       <span>Turnkey Capital Buyout</span>
-                      <span className="font-mono text-cyan-400">CapEx Hardware</span>
+                      <span className="font-mono text-cyan-400">
+                        CapEx Hardware
+                      </span>
                     </div>
                     {isEditing ? (
                       <div>
-                        <label className="text-[11px] text-slate-400 font-mono block mb-1">Hardware & System Cost ($)</label>
+                        <label className="text-[11px] text-slate-400 font-mono block mb-1">
+                          Hardware & System Cost ($)
+                        </label>
                         <input
                           type="number"
                           value={editedHardware}
-                          onChange={e => setEditedHardware(Number(e.target.value))}
+                          onChange={e =>
+                            setEditedHardware(Number(e.target.value))
+                          }
                           className="w-full bg-slate-900 border border-cyan-500/50 rounded-lg px-3 py-2 text-white font-mono text-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
                         />
                       </div>
@@ -592,11 +724,15 @@ export default function ProposalOemReview() {
                         <span className="text-3xl font-extrabold font-mono text-white">
                           ${quote.pricing.hardware_cost.toLocaleString()}
                         </span>
-                        <span className="text-xs text-slate-400 font-mono"> total</span>
+                        <span className="text-xs text-slate-400 font-mono">
+                          {" "}
+                          total
+                        </span>
                       </div>
                     )}
                     <p className="text-xs text-slate-400">
-                      Turnkey price for robot arm, end-effector gripper, cell safety cage, and PLC integration.
+                      Turnkey price for robot arm, end-effector gripper, cell
+                      safety cage, and PLC integration.
                     </p>
                   </div>
                 </div>
@@ -615,12 +751,15 @@ export default function ProposalOemReview() {
                           onChange={e => setEditedWeeks(Number(e.target.value))}
                           className="w-24 bg-slate-900 border border-cyan-500/50 rounded-lg px-3 py-1.5 text-white font-mono text-sm"
                         />
-                        <span className="text-xs text-slate-300">weeks from PO</span>
+                        <span className="text-xs text-slate-300">
+                          weeks from PO
+                        </span>
                       </div>
                     ) : (
                       <div className="text-sm font-semibold text-slate-200 flex items-center gap-2">
                         <Clock className="w-4 h-4 text-cyan-400" />
-                        {quote.pricing.estimated_deployment_weeks} weeks standard deployment window
+                        {quote.pricing.estimated_deployment_weeks} weeks
+                        standard deployment window
                       </div>
                     )}
                   </div>
@@ -660,9 +799,12 @@ export default function ProposalOemReview() {
             {activeTab === "specs" && (
               <div className="rounded-xl bg-slate-900/80 border border-slate-800 p-6 space-y-6">
                 <div>
-                  <h3 className="text-lg font-bold text-white">OEM Application & Technical Engineering Notes</h3>
+                  <h3 className="text-lg font-bold text-white">
+                    OEM Application & Technical Engineering Notes
+                  </h3>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    These technical notes will be appended to the proposal documentation sent to the customer engineering team.
+                    These technical notes will be appended to the proposal
+                    documentation sent to the customer engineering team.
                   </p>
                 </div>
 
@@ -686,10 +828,15 @@ export default function ProposalOemReview() {
 
                 <div className="p-4 rounded-xl bg-indigo-950/30 border border-indigo-500/20 space-y-2">
                   <span className="text-xs font-bold text-indigo-300 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-indigo-400" /> Cal AI Verification Safeguard
+                    <Sparkles className="w-4 h-4 text-indigo-400" /> Cal AI
+                    Verification Safeguard
                   </span>
                   <p className="text-xs text-slate-300">
-                    By approving this proposal, {quote.matched_robot.oem_name} confirms hardware availability for the {quote.pricing.estimated_deployment_weeks}-week window and authorizes Cal to present these pricing options to {quote.company_name}.
+                    By approving this proposal, {quote.matched_robot.oem_name}{" "}
+                    confirms hardware availability for the{" "}
+                    {quote.pricing.estimated_deployment_weeks}-week window and
+                    authorizes Cal to present these pricing options to{" "}
+                    {quote.company_name}.
                   </p>
                 </div>
               </div>
@@ -707,19 +854,37 @@ export default function ProposalOemReview() {
                       </span>
                     </h3>
                     <span className="text-xs font-mono text-slate-400 bg-slate-800 px-2.5 py-1 rounded-md border border-slate-700">
-                      Recipient: {quote.oem_contact?.email || "partner-sales@kuka-robotics-demo.com"}
+                      Recipient:{" "}
+                      {quote.oem_contact?.email ||
+                        "partner-sales@kuka-robotics-demo.com"}
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    This is the initial outreach email Cal sends to the Robot Manufacturer / Distributor to tee up the deal before buyer dispatch.
+                    This is the initial outreach email Cal sends to the Robot
+                    Manufacturer / Distributor to tee up the deal before buyer
+                    dispatch.
                   </p>
                 </div>
 
                 <div className="rounded-xl bg-slate-950 border border-slate-800 overflow-hidden text-xs">
                   <div className="bg-slate-900/90 p-3 border-b border-slate-800 font-mono text-slate-300 space-y-1">
-                    <div><span className="text-slate-500">From:</span> Cal @ Ready For Robots &lt;cal@readyforrobots.com&gt;</div>
-                    <div><span className="text-slate-500">To:</span> {quote.oem_contact?.name || quote.matched_robot.oem_name} &lt;{quote.oem_contact?.email || "partner-sales@kuka-robotics-demo.com"}&gt;</div>
-                    <div><span className="text-slate-500">Subject:</span> New Robot Job Opening: {quote.matched_robot.oem_name} {quote.matched_robot.model_name} for {quote.company_name}</div>
+                    <div>
+                      <span className="text-slate-500">From:</span> Cal @ Ready
+                      For Robots &lt;cal@readyforrobots.com&gt;
+                    </div>
+                    <div>
+                      <span className="text-slate-500">To:</span>{" "}
+                      {quote.oem_contact?.name || quote.matched_robot.oem_name}{" "}
+                      &lt;
+                      {quote.oem_contact?.email ||
+                        "partner-sales@kuka-robotics-demo.com"}
+                      &gt;
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Subject:</span> New Robot
+                      Job Opening: {quote.matched_robot.oem_name}{" "}
+                      {quote.matched_robot.model_name} for {quote.company_name}
+                    </div>
                   </div>
 
                   <div className="p-5 font-sans space-y-4 text-slate-200 leading-relaxed">
@@ -732,26 +897,75 @@ export default function ProposalOemReview() {
                     </p>
 
                     <p>
-                      We identified an active enterprise job opening at <strong>{quote.company_name}</strong> in {quote.location} looking for a robot solution to automate their <strong>{quote.job_title}</strong> role.
+                      We identified an active enterprise job opening at{" "}
+                      <strong>{quote.company_name}</strong> in {quote.location}{" "}
+                      looking for a robot solution to automate their{" "}
+                      <strong>{quote.job_title}</strong> role.
                     </p>
 
                     <p>
-                      We matched your <strong>{quote.matched_robot.oem_name} {quote.matched_robot.model_name}</strong> as the optimal hardware package for this site. We built an initial commercial proposal quote to present to their VP of Automation ({quote.buyer_contact.name}):
+                      We matched your{" "}
+                      <strong>
+                        {quote.matched_robot.oem_name}{" "}
+                        {quote.matched_robot.model_name}
+                      </strong>{" "}
+                      as the optimal hardware package for this site. We built an
+                      initial commercial proposal quote to present to their VP
+                      of Automation ({quote.buyer_contact.name}):
                     </p>
 
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 font-mono text-xs">
-                      <div className="text-amber-400 font-bold">Matched Enterprise Opportunity & Commercial Summary:</div>
-                      <div>• Target Enterprise Buyer: {quote.company_name} ({quote.feasibility_metrics?.buyer_qualification_tier || "Enterprise Tier 1, $100M+ Revenue"})</div>
-                      <div>• Matched Hardware Model: {quote.matched_robot.oem_name} {quote.matched_robot.model_name}</div>
-                      <div>• HEIR Feasibility Benchmark: {quote.feasibility_metrics?.heir_score || 94.2}% Task-Match Score ({quote.feasibility_metrics?.active_deployments || 482} active fleet deployments)</div>
-                      <div>• Proposed RaaS Monthly Rate: ${quote.pricing.raas_monthly_rate.toLocaleString()}/mo (${(quote.pricing.raas_monthly_rate * 12).toLocaleString()}/yr)</div>
-                      <div>• Proposed Turnkey CapEx Buyout: ${quote.pricing.hardware_cost.toLocaleString()}</div>
-                      <div>• Estimated Deployment Lead Time: {quote.pricing.estimated_deployment_weeks} weeks</div>
-                      <div>• OEM Allocation Reservation Window: {quote.feasibility_metrics?.oem_allocation_expires_hours || 48} Hours</div>
+                      <div className="text-amber-400 font-bold">
+                        Matched Enterprise Opportunity & Commercial Summary:
+                      </div>
+                      <div>
+                        • Target Enterprise Buyer: {quote.company_name} (
+                        {quote.feasibility_metrics?.buyer_qualification_tier ||
+                          "Enterprise Tier 1, $100M+ Revenue"}
+                        )
+                      </div>
+                      <div>
+                        • Matched Hardware Model: {quote.matched_robot.oem_name}{" "}
+                        {quote.matched_robot.model_name}
+                      </div>
+                      <div>
+                        • HEIR Feasibility Benchmark:{" "}
+                        {quote.feasibility_metrics?.heir_score || 94.2}%
+                        Task-Match Score (
+                        {quote.feasibility_metrics?.active_deployments || 482}{" "}
+                        active fleet deployments)
+                      </div>
+                      <div>
+                        • Proposed RaaS Monthly Rate: $
+                        {quote.pricing.raas_monthly_rate.toLocaleString()}/mo ($
+                        {(
+                          quote.pricing.raas_monthly_rate * 12
+                        ).toLocaleString()}
+                        /yr)
+                      </div>
+                      <div>
+                        • Proposed Turnkey CapEx Buyout: $
+                        {quote.pricing.hardware_cost.toLocaleString()}
+                      </div>
+                      <div>
+                        • Estimated Deployment Lead Time:{" "}
+                        {quote.pricing.estimated_deployment_weeks} weeks
+                      </div>
+                      <div>
+                        • OEM Allocation Reservation Window:{" "}
+                        {quote.feasibility_metrics
+                          ?.oem_allocation_expires_hours || 48}{" "}
+                        Hours
+                      </div>
                     </div>
 
                     <p>
-                      Please review the proposal quote specs, confirm your equipment lead time window, and click <strong>Approve & Support Proposal</strong> so Cal can automatically dispatch the proposal to <strong>{quote.buyer_contact.name}</strong> ({quote.buyer_contact.title}).
+                      Please review the proposal quote specs, confirm your
+                      equipment lead time window, and click{" "}
+                      <strong>Approve & Support Proposal</strong> so Cal can
+                      automatically dispatch the proposal to{" "}
+                      <strong>{quote.buyer_contact.name}</strong> (
+                      {quote.buyer_contact.title}).
                     </p>
 
                     <div className="py-2 flex flex-wrap gap-3 items-center">
@@ -770,8 +984,10 @@ export default function ProposalOemReview() {
                     </div>
 
                     <p className="text-slate-400 text-[11px] border-t border-slate-800/80 pt-3">
-                      Best regards,<br />
-                      <strong>Cal</strong> | AI Robotics Procurement Specialist<br />
+                      Best regards,
+                      <br />
+                      <strong>Cal</strong> | AI Robotics Procurement Specialist
+                      <br />
                       Ready For Robots (readyforrobots.com)
                     </p>
                   </div>
@@ -795,41 +1011,99 @@ export default function ProposalOemReview() {
                     </span>
                   </div>
                   <p className="text-xs text-slate-400 mt-0.5">
-                    This email is dispatched directly to the enterprise decision-maker once {quote.matched_robot.oem_name} approves the proposal.
+                    This email is dispatched directly to the enterprise
+                    decision-maker once {quote.matched_robot.oem_name} approves
+                    the proposal.
                   </p>
                 </div>
 
                 <div className="rounded-xl bg-slate-950 border border-slate-800 overflow-hidden text-xs">
                   <div className="bg-slate-900/90 p-3 border-b border-slate-800 font-mono text-slate-300 space-y-1">
-                    <div><span className="text-slate-500">From:</span> Cal @ Ready For Robots &lt;cal@readyforrobots.com&gt;</div>
-                    <div><span className="text-slate-500">To:</span> {quote.buyer_contact.name} &lt;{quote.buyer_contact.email}&gt;</div>
-                    <div><span className="text-slate-500">Subject:</span> Custom Robot Proposal & Quote: {quote.matched_robot.oem_name} {quote.matched_robot.model_name} for {quote.job_title}</div>
+                    <div>
+                      <span className="text-slate-500">From:</span> Cal @ Ready
+                      For Robots &lt;cal@readyforrobots.com&gt;
+                    </div>
+                    <div>
+                      <span className="text-slate-500">To:</span>{" "}
+                      {quote.buyer_contact.name} &lt;{quote.buyer_contact.email}
+                      &gt;
+                    </div>
+                    <div>
+                      <span className="text-slate-500">Subject:</span> Custom
+                      Robot Proposal & Quote: {quote.matched_robot.oem_name}{" "}
+                      {quote.matched_robot.model_name} for {quote.job_title}
+                    </div>
                   </div>
 
                   <div className="p-5 font-sans space-y-4 text-slate-200 leading-relaxed">
-                    <p className="text-sm font-semibold text-white">Hi {quote.buyer_contact.name.split(" ")[0]},</p>
+                    <p className="text-sm font-semibold text-white">
+                      Hi {quote.buyer_contact.name.split(" ")[0]},
+                    </p>
 
                     <p className="text-sm font-bold text-cyan-300">
                       I find jobs for robot companies.
                     </p>
 
                     <p>
-                      I saw <strong>{quote.company_name}</strong> is actively looking to fill the <strong>{quote.job_title}</strong> role in {quote.location}. We matched your operational requirements with <strong>{quote.matched_robot.oem_name}</strong> and structured a turnkey engineering proposal and commercial quote tailored to your facility.
+                      I saw <strong>{quote.company_name}</strong> is actively
+                      looking to fill the <strong>{quote.job_title}</strong>{" "}
+                      role in {quote.location}. We matched your operational
+                      requirements with{" "}
+                      <strong>{quote.matched_robot.oem_name}</strong> and
+                      structured a turnkey engineering proposal and commercial
+                      quote tailored to your facility.
                     </p>
 
                     <div className="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2 font-mono text-xs">
-                      <div className="text-cyan-400 font-bold">Proposal & Commercial Quote Highlights:</div>
-                      <div>• Matched Hardware: {quote.matched_robot.oem_name} {quote.matched_robot.model_name} ({quote.matched_robot.category})</div>
-                      <div>• Operational Feasibility: {quote.feasibility_metrics?.heir_score || 94.2}% HEIR Task-Match Score ({quote.feasibility_metrics?.active_deployments || 482} active fleet deployments)</div>
-                      <div>• RaaS Monthly Subscription: ${quote.pricing.raas_monthly_rate.toLocaleString()}/mo</div>
-                      <div>• Turnkey Hardware Buyout: ${quote.pricing.hardware_cost.toLocaleString()}</div>
-                      <div>• EBITDA Financial Impact: Replaces ${quote.pricing.annual_human_labor_cost.toLocaleString()}/yr labor spend for ${(quote.pricing.raas_monthly_rate * 12).toLocaleString()}/yr RaaS = +${annualSavings.toLocaleString()}/yr Net EBITDA Expansion</div>
-                      <div>• Estimated Deployment Lead Time: {quote.pricing.estimated_deployment_weeks} weeks</div>
-                      <div>• SLA Warranty Guarantee: {quote.pricing.sla_tier}</div>
+                      <div className="text-cyan-400 font-bold">
+                        Proposal & Commercial Quote Highlights:
+                      </div>
+                      <div>
+                        • Matched Hardware: {quote.matched_robot.oem_name}{" "}
+                        {quote.matched_robot.model_name} (
+                        {quote.matched_robot.category})
+                      </div>
+                      <div>
+                        • Operational Feasibility:{" "}
+                        {quote.feasibility_metrics?.heir_score || 94.2}% HEIR
+                        Task-Match Score (
+                        {quote.feasibility_metrics?.active_deployments || 482}{" "}
+                        active fleet deployments)
+                      </div>
+                      <div>
+                        • RaaS Monthly Subscription: $
+                        {quote.pricing.raas_monthly_rate.toLocaleString()}/mo
+                      </div>
+                      <div>
+                        • Turnkey Hardware Buyout: $
+                        {quote.pricing.hardware_cost.toLocaleString()}
+                      </div>
+                      <div>
+                        • EBITDA Financial Impact: Replaces $
+                        {quote.pricing.annual_human_labor_cost.toLocaleString()}
+                        /yr labor spend for $
+                        {(
+                          quote.pricing.raas_monthly_rate * 12
+                        ).toLocaleString()}
+                        /yr RaaS = +${annualSavings.toLocaleString()}/yr Net
+                        EBITDA Expansion
+                      </div>
+                      <div>
+                        • Estimated Deployment Lead Time:{" "}
+                        {quote.pricing.estimated_deployment_weeks} weeks
+                      </div>
+                      <div>
+                        • SLA Warranty Guarantee: {quote.pricing.sla_tier}
+                      </div>
                     </div>
 
                     <p>
-                      We submitted this proposal configuration which aligns with <strong>{quote.matched_robot.oem_name}</strong> specifications and requirements. You can review the full interactive engineering quote, 3D cell simulations, and accept the proposal directly online for site deployment here:
+                      We submitted this proposal configuration which aligns with{" "}
+                      <strong>{quote.matched_robot.oem_name}</strong>{" "}
+                      specifications and requirements. You can review the full
+                      interactive engineering quote, 3D cell simulations, and
+                      accept the proposal directly online for site deployment
+                      here:
                     </p>
 
                     <div className="py-2 flex flex-wrap gap-3 items-center">
@@ -840,7 +1114,10 @@ export default function ProposalOemReview() {
                         Review & Accept Proposal Quote →
                       </Link>
                       <Link
-                        href={quote.feasibility_metrics?.poc_simulation_url || "/preview"}
+                        href={
+                          quote.feasibility_metrics?.poc_simulation_url ||
+                          "/preview"
+                        }
                         className="inline-block px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-cyan-500/30 font-semibold text-xs tracking-wide shadow-md transition-all"
                       >
                         View 3D Cell Simulation & Video Proof →
@@ -857,8 +1134,10 @@ export default function ProposalOemReview() {
                     </div>
 
                     <p className="text-slate-400 text-[11px] border-t border-slate-800/80 pt-3">
-                      Best regards,<br />
-                      <strong>Cal</strong> | AI Robotics Procurement Specialist<br />
+                      Best regards,
+                      <br />
+                      <strong>Cal</strong> | AI Robotics Procurement Specialist
+                      <br />
                       Ready For Robots (readyforrobots.com)
                     </p>
                   </div>

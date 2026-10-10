@@ -42,8 +42,9 @@ export function getJobLifecycleState(job: MatchJob): JobLifecycleState {
   const hash = stringHash(job.job_key || job.title || "job");
 
   // 1. Applicants count (0..3)
-  let applicantsCount = job.applicants_count ?? (hash % 4);
-  if (applicantsCount > MAX_APPLICANTS_PER_JOB) applicantsCount = MAX_APPLICANTS_PER_JOB;
+  let applicantsCount = job.applicants_count ?? hash % 4;
+  if (applicantsCount > MAX_APPLICANTS_PER_JOB)
+    applicantsCount = MAX_APPLICANTS_PER_JOB;
   const isPending = applicantsCount >= MAX_APPLICANTS_PER_JOB;
   const spotsRemaining = Math.max(0, MAX_APPLICANTS_PER_JOB - applicantsCount);
 
@@ -57,9 +58,17 @@ export function getJobLifecycleState(job: MatchJob): JobLifecycleState {
     postedDate = new Date(now.getTime() - ageDaysSeed * 86400000);
   }
 
-  const daysOld = Math.max(0, Math.floor((now.getTime() - postedDate.getTime()) / 86400000));
-  const expiresDate = new Date(postedDate.getTime() + JOB_ARCHIVE_DAYS * 86400000);
-  const daysRemaining = Math.max(0, Math.ceil((expiresDate.getTime() - now.getTime()) / 86400000));
+  const daysOld = Math.max(
+    0,
+    Math.floor((now.getTime() - postedDate.getTime()) / 86400000)
+  );
+  const expiresDate = new Date(
+    postedDate.getTime() + JOB_ARCHIVE_DAYS * 86400000
+  );
+  const daysRemaining = Math.max(
+    0,
+    Math.ceil((expiresDate.getTime() - now.getTime()) / 86400000)
+  );
 
   const isFresh = daysOld < JOB_AGING_FRESH_DAYS;
   const isArchived = daysOld >= JOB_ARCHIVE_DAYS;

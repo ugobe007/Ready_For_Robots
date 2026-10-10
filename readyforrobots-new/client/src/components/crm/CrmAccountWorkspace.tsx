@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "wouter";
-import { Check, ExternalLink, Loader2, Plus, Mail, Box, FileText, Sparkles } from "lucide-react";
+import {
+  Check,
+  ExternalLink,
+  Loader2,
+  Plus,
+  Mail,
+  Box,
+  FileText,
+  Sparkles,
+} from "lucide-react";
 import LeadEmailDisplay from "@/components/LeadEmailDisplay";
 import ResendEmailModal from "@/components/ResendEmailModal";
 import FeasibilitySimulationModal from "@/components/FeasibilitySimulationModal";
@@ -122,7 +131,9 @@ export default function CrmAccountWorkspace({
         engagement: data?.engagement || null,
         tasks: Array.isArray(data?.tasks) ? data.tasks : [],
         notes: Array.isArray(data?.notes) ? data.notes : [],
-        outreach_history: Array.isArray(data?.outreach_history) ? data.outreach_history : [],
+        outreach_history: Array.isArray(data?.outreach_history)
+          ? data.outreach_history
+          : [],
         timeline: Array.isArray(data?.timeline) ? data.timeline : [],
       };
       setDetail(safeDetail);
@@ -307,7 +318,8 @@ export default function CrmAccountWorkspace({
               onClick={() => setShowFeasibilityModal(true)}
               className="inline-flex items-center gap-1 rounded bg-slate-800 border border-slate-700 px-2 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-700 hover:text-white transition"
             >
-              <Box className="h-3 w-3 text-emerald-400" /> 3D Feasibility Simulation
+              <Box className="h-3 w-3 text-emerald-400" /> 3D Feasibility
+              Simulation
             </button>
             <button
               type="button"
@@ -470,8 +482,13 @@ export default function CrmAccountWorkspace({
           isOpen={showResendModal}
           onClose={() => setShowResendModal(false)}
           defaultTo=""
-          defaultSubject={buildPhelanExecutiveEmail({ companyName: detail.account.name }).subject}
-          defaultBody={buildPhelanExecutiveEmail({ companyName: detail.account.name }).body}
+          defaultSubject={
+            buildPhelanExecutiveEmail({ companyName: detail.account.name })
+              .subject
+          }
+          defaultBody={
+            buildPhelanExecutiveEmail({ companyName: detail.account.name }).body
+          }
           companyName={detail.account.name}
           crmAccountId={detail.account.id}
           onSent={() => reload()}

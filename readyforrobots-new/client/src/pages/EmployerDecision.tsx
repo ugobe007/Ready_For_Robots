@@ -206,8 +206,8 @@ export default function EmployerDecision() {
             {data.documents?.length ? (
               <div className="mt-4">
                 <p className="text-sm text-slate-300">
-                  Material from the robot company. These files do not change
-                  the job qualification.
+                  Material from the robot company. These files do not change the
+                  job qualification.
                 </p>
                 <ul className="mt-2 space-y-1 text-sm text-slate-300">
                   {data.documents.map(doc => (

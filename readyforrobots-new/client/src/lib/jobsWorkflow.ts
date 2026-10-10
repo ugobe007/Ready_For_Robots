@@ -1363,7 +1363,10 @@ export function jobsActivateHref(submissionId?: number | null): string {
 }
 
 /** Queried jobs desk on Pipeline with query parameter and Return to Find jobs link. */
-export function jobsQueryHref(query: string, submissionId?: number | null): string {
+export function jobsQueryHref(
+  query: string,
+  submissionId?: number | null
+): string {
   const params = new URLSearchParams();
   params.set("src", JOBS_QUERY_SRC);
   if (query) params.set("query", query);

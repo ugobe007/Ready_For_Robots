@@ -27,7 +27,9 @@ function listingFromHost(host: string): KnownDistributorListing | null {
 }
 
 /** Look up a known robotics distributor / VAR by URL or domain host. */
-export function lookupKnownDistributor(url: string): KnownDistributorListing | null {
+export function lookupKnownDistributor(
+  url: string
+): KnownDistributorListing | null {
   const host = hostFromOemUrl(url);
   if (!host) return null;
   const exact = listingFromHost(host);
@@ -54,12 +56,16 @@ export function lookupKnownDistributor(url: string): KnownDistributorListing | n
 }
 
 /** Search all indexed distributors that distribute a given OEM brand name (e.g. "Universal Robots" or "MiR"). */
-export function searchDistributorsForBrand(brandName: string): KnownDistributorListing[] {
+export function searchDistributorsForBrand(
+  brandName: string
+): KnownDistributorListing[] {
   const target = (brandName || "").toLowerCase().trim();
   if (!target) return [];
   const matches: KnownDistributorListing[] = [];
   for (const listing of Object.values(BY_HOST)) {
-    const hasBrand = listing.supported_brands.some(b => b.toLowerCase().includes(target));
+    const hasBrand = listing.supported_brands.some(b =>
+      b.toLowerCase().includes(target)
+    );
     if (hasBrand) {
       matches.push(listing);
     }

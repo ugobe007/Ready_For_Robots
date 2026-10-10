@@ -30,26 +30,26 @@ function runSmokeTests() {
     "Buyer quotes count >= 4",
     `Found ${FEATURED_BUYER_QUOTES.length}`
   );
-  const namedEmployers = FEATURED_BUYER_QUOTES.map((q) => q.company);
+  const namedEmployers = FEATURED_BUYER_QUOTES.map(q => q.company);
   assert(
-    namedEmployers.some((name) => name.includes("Rochester Regional")),
+    namedEmployers.some(name => name.includes("Rochester Regional")),
     "Rochester Regional Health quote present",
     `Companies: ${namedEmployers.join(", ")}`
   );
   assert(
-    namedEmployers.some((name) => name.includes("Chipotle")),
+    namedEmployers.some(name => name.includes("Chipotle")),
     "Chipotle quote present",
     `Companies: ${namedEmployers.join(", ")}`
   );
   assert(
-    FEATURED_BUYER_QUOTES.every((q) => q.opportunityHref.includes("visit=jobs")),
+    FEATURED_BUYER_QUOTES.every(q => q.opportunityHref.includes("visit=jobs")),
     "Quote links go to FIND",
-    FEATURED_BUYER_QUOTES.map((q) => q.opportunityHref).join(", ")
+    FEATURED_BUYER_QUOTES.map(q => q.opportunityHref).join(", ")
   );
   assert(
-    FEATURED_BUYER_QUOTES.every((q) => !q.opportunityHref.includes("/pipeline")),
+    FEATURED_BUYER_QUOTES.every(q => !q.opportunityHref.includes("/pipeline")),
     "Quotes do not hop to SIGNAL pipeline",
-    FEATURED_BUYER_QUOTES.map((q) => q.opportunityHref).join(", ")
+    FEATURED_BUYER_QUOTES.map(q => q.opportunityHref).join(", ")
   );
 
   // 2. Data Integrity: Known OEM Lineups
@@ -106,7 +106,9 @@ function runSmokeTests() {
   ];
 
   for (const route of registeredRoutes) {
-    const routeRegex = new RegExp(`path=["']${route.replace(/\//g, "\\/")}["']`);
+    const routeRegex = new RegExp(
+      `path=["']${route.replace(/\//g, "\\/")}["']`
+    );
     assert(
       routeRegex.test(appTsx),
       `Route '${route}' is registered in App.tsx`,
@@ -115,7 +117,9 @@ function runSmokeTests() {
   }
 
   console.log("\n=========================================");
-  console.log(`📊 SMOKE TEST SUMMARY: ${totalPassed} PASSED, ${totalFailed} FAILED`);
+  console.log(
+    `📊 SMOKE TEST SUMMARY: ${totalPassed} PASSED, ${totalFailed} FAILED`
+  );
   console.log("=========================================\n");
 
   if (totalFailed > 0) {

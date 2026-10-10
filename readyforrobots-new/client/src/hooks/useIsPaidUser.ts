@@ -4,7 +4,10 @@ import { useAuth } from "@/contexts/AuthContext";
  * Checks if a session has active paid subscription metadata.
  * Free accounts (including signed up users) have lead emails blurred per Vault Contact Protection policy.
  */
-export function isPaidSubscriber(session: any, overrideIsPaid?: boolean): boolean {
+export function isPaidSubscriber(
+  session: any,
+  overrideIsPaid?: boolean
+): boolean {
   if (overrideIsPaid) return true;
   if (!session?.user) return false;
 

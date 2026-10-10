@@ -87,8 +87,7 @@ export const LANDING_STATS = [
 export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
 export const LANDING_BRIEF_HEADLINE = "Jobs for robots.";
 export const LANDING_BRIEF_JOB_FIELD = "Jobs";
-export const LANDING_BRIEF_NOTE =
-  "Evidence shown on every verified match.";
+export const LANDING_BRIEF_NOTE = "Evidence shown on every verified match.";
 
 export type LandingBriefJob = {
   id: string;

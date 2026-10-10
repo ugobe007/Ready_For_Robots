@@ -67,7 +67,9 @@ describe("landing fork", () => {
     expect(landingVisitFromSearch("?new=1")).toBe("landing");
     expect(landingVisitFromSearch("?visit=jobs")).toBe("jobs");
     expect(landingVisitFromSearch("?job=geodis-dock")).toBe("landing");
-    expect(landingVisitFromSearch("?visit=jobs&job=geodis-dock")).toBe("landing");
+    expect(landingVisitFromSearch("?visit=jobs&job=geodis-dock")).toBe(
+      "landing"
+    );
     expect(landingVisitFromSearch("?visit=candidates")).toBe("candidates");
     expect(landingVisitFromSearch("?restore=1")).toBe("jobs");
     expect(landingVisitFromSearch("?visit=jobs&restore=1")).toBe("jobs");
@@ -502,7 +504,10 @@ describe("landing chrome hrefs cannot swap visits", () => {
     );
     const pricing = readFileSync(join(here, "../pages/Pricing.tsx"), "utf8");
     const privacy = readFileSync(join(here, "../pages/Privacy.tsx"), "utf8");
-    const legal = readFileSync(join(here, "../pages/LegalDocument.tsx"), "utf8");
+    const legal = readFileSync(
+      join(here, "../pages/LegalDocument.tsx"),
+      "utf8"
+    );
     expect(landing).toMatch(/jobsFindHref/);
     expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
     expect(landing).toMatch(/LANDING_FOOTER_LINKS/);
@@ -536,7 +541,7 @@ describe("landing chrome hrefs cannot swap visits", () => {
 
   it("landing employer quotes are named 2024–2026 work, linked to FIND", () => {
     expect(FEATURED_BUYER_QUOTES.length).toBeGreaterThanOrEqual(4);
-    const companies = FEATURED_BUYER_QUOTES.map((q) => q.company).join(" ");
+    const companies = FEATURED_BUYER_QUOTES.map(q => q.company).join(" ");
     expect(companies).toMatch(/Rochester Regional Health/);
     expect(companies).toMatch(/GEODIS/);
     expect(companies).toMatch(/DHL Supply Chain/);
