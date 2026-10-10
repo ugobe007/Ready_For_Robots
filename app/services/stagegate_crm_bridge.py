@@ -27,7 +27,7 @@ COMPANY_SOURCE = "stagegate_oem"
 CAL_TEAM_SLUG = "admin-cal-outreach"
 
 
-def get_cal_outreach_team(db: Session) -> Team:
+def get_phelan_outreach_team(db: Session) -> Team:
     """Shared admin Cal team (same slug as admin_extended._admin_team)."""
     team = db.query(Team).filter(Team.slug == CAL_TEAM_SLUG).first()
     if team:
@@ -214,7 +214,7 @@ def _upsert_crm_account(
     *,
     refresh_draft: bool,
 ) -> CrmAccount:
-    team = get_cal_outreach_team(db)
+    team = get_phelan_outreach_team(db)
     acct = (
         db.query(CrmAccount)
         .filter(

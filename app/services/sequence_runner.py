@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 DEFAULT_BUYER_SEQUENCE = {
     "name": "Cal buyer cadence",
-    "slug": "cal_buyer_v1",
+    "slug": "phelan_buyer_v1",
     # Cal's voice: smooth, smart, lightly self-aware. Each touch adds a NEW idea
     # (not "just bumping this"), keeps it short/mobile-friendly, and makes the ask
     # a low-friction yes/no. Templates support {company_name} and {industry}.
@@ -137,7 +137,7 @@ def sync_default_sequence_steps(db: Session) -> dict[str, int]:
     ``ensure_default_sequence`` only seeds steps when the sequence is first
     created, so editing the templates in code does NOT reach the accounts already
     enrolled. Call this to push new subject/body/delay copy to the existing
-    ``cal_buyer_v1`` steps (and add any new steps, e.g. a 4th touch) so in-flight
+    ``phelan_buyer_v1`` steps (and add any new steps, e.g. a 4th touch) so in-flight
     follow-ups send the current voice.
     """
     seq = (
@@ -386,11 +386,11 @@ def process_due_enrollments(
     db: Session, *, limit: int = 50, force: bool = False
 ) -> dict[str, Any]:
     if not force:
-        from app.services.cal_autonomy import cal_autonomy_enabled
+        from app.services.phelan_autonomy import phelan_autonomy_enabled
 
-        if not cal_autonomy_enabled():
+        if not phelan_autonomy_enabled():
             logger.info(
-                "[sequences] due follow-ups held — CAL_AUTONOMY_ENABLED off"
+                "[sequences] due follow-ups held — PHELAN_AUTONOMY_ENABLED off"
             )
             return {
                 "processed": 0,
@@ -398,7 +398,7 @@ def process_due_enrollments(
                 "skipped": 0,
                 "failed": 0,
                 "status": "paused",
-                "reason": "CAL_AUTONOMY_ENABLED off — due follow-ups are held",
+                "reason": "PHELAN_AUTONOMY_ENABLED off — due follow-ups are held",
             }
     now = datetime.now(timezone.utc)
     due = (

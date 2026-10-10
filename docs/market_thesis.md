@@ -86,7 +86,7 @@ Active bets the Orchestrator should prefer when choosing build missions:
 - **Volume over quality** — more pipeline rows while `built_at` fresh but names broken
 - **Dashboard parity** with Salesforce/HubSpot — we win on intent + autonomy
 - **Horizontal GTM data parity** — Explee/Apollo-style company & people search at 100M+ scale ([competitive_positioning.md](competitive_positioning.md)); we win on robot pipeline outcomes, not list size
-- **Hermes as Jobs** — Mac cron, Fly ingest, or Cal outreach treated as FIND. FIND is `/` via the matcher.
+- **Hermes as Jobs** — Mac cron, Fly ingest, or Phelan outreach treated as FIND. FIND is `/` via the matcher.
 
 ---
 

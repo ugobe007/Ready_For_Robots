@@ -1,4 +1,4 @@
-# Cal Learning Log
+# Phelan Learning Log
 
 Institutional memory for Cal corrections. Spec: [CAL_LEARNING_SYSTEM.md](./CAL_LEARNING_SYSTEM.md).
 

@@ -76,7 +76,7 @@ def _split_emails(raw: str) -> list[str]:
 
 
 def _redis_client():
-    from app.services.cal_autonomy import _redis_client as client_fn
+    from app.services.phelan_autonomy import _redis_client as client_fn
 
     return client_fn()
 

@@ -1458,7 +1458,7 @@ export default function Admin() {
         setCalStatus(listData);
         if (listData.bootstrap_required) {
           setCalStatusError(
-            listData.bootstrap_message || "Cal outreach team not initialized."
+            listData.bootstrap_message || "Phelan outreach team not initialized."
           );
         } else {
           setCalStatusError("");
@@ -1881,7 +1881,7 @@ export default function Admin() {
       setMessage(
         dryRun
           ? `Dry run: would draft ${data.drafted ?? 0}, refresh ${data.refreshed ?? 0}, send ${data.sent ?? 0}.${suffix ? ` ${suffix}` : ""}`
-          : `Cal cycle: drafted ${data.drafted ?? 0}, refreshed ${data.refreshed ?? 0}, sent ${data.sent ?? 0}.${suffix ? ` ${suffix}` : data.drafted === 0 && data.sent === 0 ? " Queue may already be drafted — check sendable count and assembly blocks." : ""}`
+          : `Phelan cycle: drafted ${data.drafted ?? 0}, refreshed ${data.refreshed ?? 0}, sent ${data.sent ?? 0}.${suffix ? ` ${suffix}` : data.drafted === 0 && data.sent === 0 ? " Queue may already be drafted — check sendable count and assembly blocks." : ""}`
       );
       void refreshOperatorView();
       void loadCalAutonomyStatus();
@@ -3108,7 +3108,7 @@ export default function Admin() {
           </h1>
           <p className="mt-3 text-sm text-slate-400">
             {me.email || "This account"} is signed in but is not listed in
-            `ADMIN_EMAILS`. Cal outreach and the agent command center live on
+            `ADMIN_EMAILS`. Phelan outreach and the agent command center live on
             `/admin` for admin accounts only.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">

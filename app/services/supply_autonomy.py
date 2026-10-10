@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from app.models.robot_company import RobotCompany
 from app.models.supply_outreach import SupplyOutreachMessage
-from app.services.cal_autonomy import get_cal_review_email, resolve_cal_admin_context
+from app.services.phelan_autonomy import get_phelan_review_email, resolve_cal_admin_context
 
 logger = logging.getLogger(__name__)
 
@@ -148,7 +148,7 @@ def notify_admin_of_format_change(
     previous_fingerprint: Optional[str],
     new_fingerprint: str,
 ) -> bool:
-    to_email = get_cal_review_email()
+    to_email = get_phelan_review_email()
     if not to_email:
         logger.warning("Supply format changed but ADMIN_EMAIL / ADMIN_EMAILS is not configured")
         return False
@@ -242,7 +242,7 @@ def _send_supply_email(
         _supply_reply_address,
         _uuid_for_session,
     )
-    from app.services.cal_email_send import send_cal_email_via_resend
+    from app.services.phelan_email_send import send_phelan_email_via_resend
     from app.services.resend_email import ResendEmailError
 
     subject, body = _prepare_supply_pipeline_copy(company, subject, body)
@@ -253,7 +253,7 @@ def _send_supply_email(
     reply_to = _supply_reply_address(reply_token)
     inbound_missing = False
     try:
-        send_result = send_cal_email_via_resend(
+        send_result = send_phelan_email_via_resend(
             to_email=to_emails,
             subject=subject,
             body_text=body,
@@ -277,7 +277,7 @@ def _send_supply_email(
             )
         ):
             inbound_missing = True
-            send_result = send_cal_email_via_resend(
+            send_result = send_phelan_email_via_resend(
                 to_email=to_emails,
                 subject=subject,
                 body_text=body,
@@ -349,7 +349,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
         }
 
     uid, _team = ctx
-    admin_email = get_cal_review_email() or "admin@readyforrobots.com"
+    admin_email = get_phelan_review_email() or "admin@readyforrobots.com"
     user = {"uid": str(uid), "email": admin_email}
 
     from app.api.robot_companies import (
@@ -395,7 +395,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
 
         matches = _match_buyer_leads(db, company, limit=12)
         matches = _select_supply_batch_matches(matches, used_lead_ids, limit=3)
-        from app.services.cal_pipeline_enrichment import ensure_supply_matches_enriched
+        from app.services.phelan_pipeline_enrichment import ensure_supply_matches_enriched
 
         matches, _enriched_count = ensure_supply_matches_enriched(db, matches)
         min_matches = int(os.getenv("SUPPLY_AUTONOMY_MIN_MATCHES", "2") or "2")
@@ -413,9 +413,9 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
         body = append_signup_cta(draft["body"], company, tracking=tracking)
         subject = draft["subject"]
 
-        from app.services.cal_assembly_agent import assemble_supply_outreach, cal_assembly_required
+        from app.services.phelan_assembly_agent import assemble_supply_outreach, phelan_assembly_required
 
-        if cal_assembly_required():
+        if phelan_assembly_required():
             assembly = assemble_supply_outreach(
                 db,
                 company,
@@ -426,9 +426,9 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
             )
             if not assembly.approved:
                 skipped_assembly_rejected += 1
-                from app.services.cal_ops_monitor import record_cal_assembly_rejection
+                from app.services.phelan_ops_monitor import record_phelan_assembly_rejection
 
-                record_cal_assembly_rejection(
+                record_phelan_assembly_rejection(
                     db,
                     channel="supply",
                     robot_company_id=company.id,
@@ -509,7 +509,7 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
         "errors": errors[:20],
         "template_fingerprint": new_fp,
         "format_review_notified": format_notified,
-        "review_email": get_cal_review_email(),
+        "review_email": get_phelan_review_email(),
         "admin_user_id": str(uid),
         "min_score": min_score,
         "send_limit": send_limit,
@@ -517,11 +517,11 @@ def run_supply_autonomy_cycle(db: Session, *, dry_run: bool = False) -> dict[str
 
 
 def get_supply_autonomy_status() -> dict[str, Any]:
-    from app.services.cal_assembly_agent import get_cal_assembly_status
+    from app.services.phelan_assembly_agent import get_phelan_assembly_status
 
     return {
         "enabled": supply_autonomy_enabled(),
-        "review_email": get_cal_review_email(),
+        "review_email": get_phelan_review_email(),
         "template_fingerprint": outreach_template_fingerprint(),
         "stored_fingerprint": _stored_template_fingerprint(),
         "template_version": os.getenv("SUPPLY_TEMPLATE_VERSION") or "1",
@@ -529,5 +529,5 @@ def get_supply_autonomy_status() -> dict[str, Any]:
         "min_score": int(os.getenv("SUPPLY_AUTONOMY_MIN_SCORE", "60") or "60"),
         "every_hours": float(os.getenv("SUPPLY_AUTONOMY_EVERY_HOURS", "6") or "6"),
         "allow_inferred_inboxes": _allow_inferred_inboxes(),
-        "assembly": get_cal_assembly_status(),
+        "assembly": get_phelan_assembly_status(),
     }

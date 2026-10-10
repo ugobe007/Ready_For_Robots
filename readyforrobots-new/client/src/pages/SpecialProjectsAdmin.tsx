@@ -1300,14 +1300,14 @@ export default function SpecialProjectsAdmin() {
                   </div>
                 </div>
 
-                {/* Cal outreach queue (review-first) */}
+                {/* Phelan outreach queue (review-first) */}
                 <div
                   id="cal-queue"
                   className="rounded-lg border border-slate-200 bg-white p-5"
                 >
                   <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
                     <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-900">
-                      <Bot className="h-4 w-4 text-indigo-600" /> Cal outreach
+                      <Bot className="h-4 w-4 text-indigo-600" /> Phelan outreach
                       queue
                       <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-600">
                         {targetsLoading ? "…" : `${targets.length} accounts`}

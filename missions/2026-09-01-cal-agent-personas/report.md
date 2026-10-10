@@ -1,4 +1,4 @@
-# Cal agent personas — sources
+# Phelan agent personas — sources
 
 **Date:** 2026-09-01  
 **Mission:** `missions/2026-09-01-cal-agent-personas/`  
@@ -11,15 +11,15 @@ Operator said "Boardsy." Live product researched: **Boardy** (`boardy.ai`). Also
 
 | Claim | Where |
 | --- | --- |
-| Jobs advisor identity | `docs/cal_persona_spec.md`, `app/services/cal_persona.py` `CAL_IDENTITY` |
+| Jobs advisor identity | `docs/cal_persona_spec.md`, `app/services/phelan_persona.py` `CAL_IDENTITY` |
 | Sales-intelligence identity | `docs/cal_voice_and_persona.md` §§1–3, §21 |
 | Buyer-capture vendor lines | `app/services/agent_messaging.py` `CAL_VENDOR_*` |
 | OemCal buyer copy | `readyforrobots-new/client/src/lib/oemCalCopy.ts` |
 | OemCal vs BuyerCal split | `docs/skills/rfr-sales-floor-manager.SKILL.md`, `docs/hermes_cal_bridge.md` |
-| Autonomy off | `fly.toml` `CAL_AUTONOMY_ENABLED=0`, `ENABLE_SCHEDULED_CAL_AUTONOMY=0` |
-| Buyer sales default off | `app/services/cal_autonomy.py` `cal_buyer_sales_enabled()` |
+| Autonomy off | `fly.toml` `PHELAN_AUTONOMY_ENABLED=0`, `ENABLE_SCHEDULED_PHELAN_AUTONOMY=0` |
+| Buyer sales default off | `app/services/phelan_autonomy.py` `cal_buyer_sales_enabled()` |
 | Hermes retired, Cal not Jobs | `docs/hermes_retired.md` |
-| Digest frozen copy | `app/services/cal_daily_digest.py`, `tests/test_cal_daily_digest.py` |
+| Digest frozen copy | `app/services/phelan_daily_digest.py`, `tests/test_cal_daily_digest.py` |
 | Floor manager never ticked | `docs/cal_floor_manager_log.md` |
 | Jobs CRM has no Cal | `readyforrobots-new/client/src/components/JobsCrmDesk.tsx`, `docs/jobs_crm.md`, `jobsWorkflow.test.ts` |
 | ScoutChat is SIGNAL, not chat | `readyforrobots-new/client/src/components/ScoutChat.tsx` |
@@ -30,7 +30,7 @@ Operator said "Boardsy." Live product researched: **Boardy** (`boardy.ai`). Also
 | Cal freeze as core | `docs/EXPERIMENT_MODE.md`, `docs/feature_map.md`, `docs/agent-product-manager.md` |
 | Conversion still values Cal drafts on SIGNAL pipeline | `docs/conversion_agent_challenges.md` |
 | Learning system / corpus | `docs/CAL_LEARNING_SYSTEM.md`, `docs/cal_corpus/README.md`, `docs/cal_learning_log.md` |
-| Assembly reviews email, not Jobs actions | `app/services/cal_assembly_agent.py` |
+| Assembly reviews email, not Jobs actions | `app/services/phelan_assembly_agent.py` |
 | Task models are QUALIFY, not Cal | `docs/robot_task_models.md` |
 | Apply already operator-reviewed | `docs/jobs_crm.md` F11 |
 | #202 task-model question | https://github.com/ugobe007/Ready_For_Robots/pull/202 draft. Do not undraft from this mission. |
@@ -94,7 +94,7 @@ Internal analogy only. No Cursor marketing URL required. Shape: job, tools, loop
 ## What this mission did not do
 
 - No Cal rewrite in `app/` or `readyforrobots-new/`
-- No `CAL_AUTONOMY_ENABLED` flip
+- No `PHELAN_AUTONOMY_ENABLED` flip
 - No merge or undraft of #202, #195, #197
 - No Fly/Vercel deploy
 - No `reports/` commit
