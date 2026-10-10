@@ -232,6 +232,7 @@ def _run_web_startup() -> None:
     # CAL_DAILY_DIGEST_WEB_BACKUP=1 (default off) so SKIP_CELERY=1 does not
     # double-send with the worker at 15:00 UTC. GHA remains the late backup.
     _start_scheduled_cal_daily_digest()
+    _start_scheduled_daily_jobs_report()
 
 
 def _web_cache_rehydrate_loop() -> None:
@@ -327,6 +328,7 @@ def _run_worker_startup() -> None:
     _start_scheduled_data_quality()
     _start_scheduled_cal_autonomy()
     _start_scheduled_cal_daily_digest()
+    _start_scheduled_daily_jobs_report()
     _start_scheduled_communication_learning()
     _start_scheduled_supply_autonomy()
     _start_scheduled_newsletter_publish()
@@ -1036,6 +1038,85 @@ def _scheduled_cal_daily_digest_loop():
         next_run = next_digest_run_utc(hour=hour, minute=minute)
         sleep_sec = max(300, int((next_run - datetime.now(timezone.utc)).total_seconds()))
         time.sleep(sleep_sec)
+
+
+def _scheduled_daily_jobs_report_loop():
+    from datetime import datetime, timezone
+
+    from app.database import SessionLocal
+    from app.services.daily_jobs_report import (
+        daily_jobs_report_enabled,
+        maybe_send_missed_daily_jobs_report,
+        next_report_run_utc,
+        send_daily_jobs_report,
+    )
+
+    hour = int(os.getenv("DAILY_JOBS_REPORT_HOUR_UTC", "14") or "14")
+    minute = int(os.getenv("DAILY_JOBS_REPORT_MINUTE_UTC", "0") or "0")
+    try:
+        if daily_jobs_report_enabled():
+            with SessionLocal() as db:
+                catch_up = maybe_send_missed_daily_jobs_report(db)
+            logger.info(
+                "Daily jobs report catch-up: sent=%s reason=%s count=%s",
+                catch_up.get("sent"),
+                catch_up.get("reason"),
+                catch_up.get("count"),
+            )
+    except Exception as exc:
+        logger.exception("Daily jobs report catch-up failed: %s", exc)
+    first = next_report_run_utc(hour=hour, minute=minute)
+    delay = max(60, int((first - datetime.now(timezone.utc)).total_seconds()))
+    time.sleep(delay)
+    while True:
+        if not daily_jobs_report_enabled():
+            time.sleep(3600)
+            continue
+        try:
+            with SessionLocal() as db:
+                result = send_daily_jobs_report(db)
+            logger.info(
+                "Daily jobs report: sent=%s recipients=%s reason=%s count=%s",
+                result.get("sent"),
+                result.get("recipients"),
+                result.get("reason"),
+                result.get("count"),
+            )
+        except Exception as exc:
+            logger.exception("Daily jobs report failed: %s", exc)
+        next_run = next_report_run_utc(hour=hour, minute=minute)
+        sleep_sec = max(300, int((next_run - datetime.now(timezone.utc)).total_seconds()))
+        time.sleep(sleep_sec)
+
+
+def _start_scheduled_daily_jobs_report():
+    from app.services.daily_jobs_report import report_in_process_owner
+
+    owner = report_in_process_owner()
+    if not owner:
+        logger.info(
+            "In-app daily jobs report skipped on this process "
+            "(worker owns it; set DAILY_JOBS_REPORT_WEB_BACKUP=1 for web backup)"
+        )
+        return
+    enabled = (
+        os.getenv("FLY_APP_NAME")
+        or os.getenv("ENABLE_SCHEDULED_DAILY_JOBS_REPORT", "").lower() in ("1", "true", "yes")
+    )
+    if not enabled:
+        return
+    t = threading.Thread(
+        target=_scheduled_daily_jobs_report_loop,
+        daemon=True,
+        name="daily-jobs-report",
+    )
+    t.start()
+    print("[daily-jobs-report] scheduler thread started", flush=True)
+    logger.info(
+        "In-app daily jobs report thread started (daily at %s:%02d UTC)",
+        os.getenv("DAILY_JOBS_REPORT_HOUR_UTC", "14"),
+        int(os.getenv("DAILY_JOBS_REPORT_MINUTE_UTC", "0") or "0"),
+    )
 
 
 def _start_scheduled_cal_daily_digest():

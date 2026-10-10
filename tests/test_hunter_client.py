@@ -42,6 +42,7 @@ def test_hunter_disabled_when_opt_out(monkeypatch):
 def test_find_email_returns_normalized_prospect(monkeypatch):
     def fake_get(url, params, timeout):
         assert params["domain"] == "acme.com"
+        assert params["company"] == "Acme Logistics"
         assert params["first_name"] == "Jane"
         return _Response(
             {
@@ -59,13 +60,52 @@ def test_find_email_returns_normalized_prospect(monkeypatch):
 
     monkeypatch.setattr("app.services.hunter_client.requests.get", fake_get)
     result = HunterClient(api_key="test-key").find_email(
-        domain="https://www.acme.com",
+        domain="https://about.acme.com/team",
+        company="Acme Logistics",
         first_name="Jane",
         last_name="Doe",
     )
     assert result["email"] == "jane.doe@acme.com"
     assert result["title"] == "VP Operations"
     assert result["source"] == "hunter_finder"
+
+
+def test_registrable_domain_strips_subdomains():
+    from app.services.hunter_client import registrable_domain
+
+    assert registrable_domain("https://www.acme.com/about") == "acme.com"
+    assert registrable_domain("about.acme.com") == "acme.com"
+    assert registrable_domain("geodis.com.au") == "geodis.com.au"
+    assert registrable_domain("news.geodis.com.au") == "geodis.com.au"
+
+
+def test_domain_search_returns_company_domain(monkeypatch):
+    def fake_get(url, params, timeout):
+        assert params["company"] == "GEODIS"
+        return _Response(
+            {
+                "data": {
+                    "domain": "geodis.com",
+                    "organization": "GEODIS",
+                    "emails": [
+                        {
+                            "value": "priya.shah@geodis.com",
+                            "first_name": "Priya",
+                            "last_name": "Shah",
+                            "position": "Site Operations Manager",
+                            "confidence": 92,
+                            "verification": {"status": "valid"},
+                        }
+                    ],
+                },
+                "meta": {},
+            }
+        )
+
+    monkeypatch.setattr("app.services.hunter_client.requests.get", fake_get)
+    result = HunterClient(api_key="test-key").domain_search(company="GEODIS")
+    assert result["domain"] == "geodis.com"
+    assert result["emails"][0]["email"] == "priya.shah@geodis.com"
 
 
 def test_pick_best_domain_email_prefers_operations(monkeypatch):

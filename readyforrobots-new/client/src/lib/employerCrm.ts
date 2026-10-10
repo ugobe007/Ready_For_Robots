@@ -15,6 +15,7 @@ export type EmployerPosting = {
   id: string;
   employer: string;
   title: string;
+  contact_name?: string;
   workplace?: string;
   description?: string;
   work_class?: string;

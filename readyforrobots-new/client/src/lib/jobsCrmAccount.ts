@@ -22,6 +22,7 @@ import {
 } from "@/lib/jobsHandoffSnapshot";
 import { canonicalRobotUrl } from "@/lib/robotUrlIdentity";
 import type { MatchJob } from "@/lib/robotJobMatch";
+import { FEATURED_BUYER_QUOTES, type BuyerQuote } from "@/lib/buyerQuotes";
 
 export const JOBS_KEEP_JOBS_CTA = "Keep jobs";
 export const JOBS_KEEP_YES_CTA = "Yes, keep them";
@@ -911,6 +912,33 @@ const EMPTY_CRM_DESK: CrmDeskForRobot = {
   savedCount: 0,
 };
 
+export function buyerQuoteToMatchJob(quote: BuyerQuote): MatchJob {
+  return {
+    job_key: quote.id,
+    title: quote.matchedJobTitle,
+    industry: `${quote.company} · ${quote.location}`,
+    company_name: quote.company,
+    locality: quote.location,
+    path: `${quote.company.toUpperCase().replace(/[^A-Z0-9]+/g, "_")} → JOB_OPPORTUNITY`,
+    tape_family: quote.targetRobotTypes[0]?.toLowerCase().includes("pallet")
+      ? "pallet"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("scrub") || quote.targetRobotTypes[0]?.toLowerCase().includes("clean")
+      ? "scrub"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("inspect")
+      ? "inspect"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("cart")
+      ? "cart"
+      : quote.targetRobotTypes[0]?.toLowerCase().includes("cobot") || quote.targetRobotTypes[0]?.toLowerCase().includes("manipulat")
+      ? "gripper"
+      : "transport",
+    verdict: "POSSIBLE_MATCH",
+    why: [
+      `Verified customer requirement from ${quote.author} (${quote.title}): "${quote.quote}"`,
+      `Target timeline: ${quote.timeline}`,
+    ],
+  };
+}
+
 /**
  * Desk identity + jobs for the robot FIND just ran.
  * The submitted URL is the primary key. Landing quotes are not CRM jobs.
@@ -921,7 +949,47 @@ export function crmDeskForCurrentRobot(opts: {
 }): CrmDeskForRobot {
   const snapUrl = canonicalRobotUrl(opts.snap?.url || "");
   if (!snapUrl) {
-    return EMPTY_CRM_DESK;
+    const search =
+      typeof window !== "undefined" ? window.location?.search || "" : "";
+    const params = new URLSearchParams(search);
+    const coQuery = (
+      params.get("co") ||
+      params.get("q") ||
+      params.get("company") ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+    if (coQuery) {
+      const quoteJobs = FEATURED_BUYER_QUOTES.map(buyerQuoteToMatchJob);
+      const foundQuote = FEATURED_BUYER_QUOTES.find(
+        q =>
+          q.company.toLowerCase().includes(coQuery) ||
+          q.matchedJobTitle.toLowerCase().includes(coQuery) ||
+          q.industry.toLowerCase().includes(coQuery)
+      );
+      if (foundQuote) {
+        quoteJobs.sort((a, b) =>
+          a.job_key === foundQuote.id ? -1 : b.job_key === foundQuote.id ? 1 : 0
+        );
+        return {
+          product: foundQuote.targetRobotTypes.join(" / ") || "your robot",
+          robotUrl: "",
+          rows: [],
+          jobs: quoteJobs,
+          savedCount: quoteJobs.length,
+        };
+      }
+    }
+
+    return {
+      product: "your robot",
+      robotUrl: "",
+      rows: [],
+      jobs: [],
+      savedCount: 0,
+    };
   }
 
   const snap = opts.snap as JobsHandoffSnapshot;
