@@ -62,9 +62,9 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 
 describe("landing fork", () => {
-  it("bare / and ?new=1 are FIND, not a landing fork", () => {
-    expect(landingVisitFromSearch("")).toBe("jobs");
-    expect(landingVisitFromSearch("?new=1")).toBe("jobs");
+  it("bare / is the home hero and ?visit=jobs is FIND", () => {
+    expect(landingVisitFromSearch("")).toBe("landing");
+    expect(landingVisitFromSearch("?new=1")).toBe("landing");
     expect(landingVisitFromSearch("?visit=jobs")).toBe("jobs");
     expect(landingVisitFromSearch("?job=geodis-dock")).toBe("landing");
     expect(landingVisitFromSearch("?visit=jobs&job=geodis-dock")).toBe(
@@ -188,7 +188,7 @@ describe("landing fork", () => {
     const admin = readFileSync(join(here, "../pages/Admin.tsx"), "utf8");
     expect(admin).toMatch(/\/api\/sales\/inbox\?folder=all/);
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
-    expect(jobsPage).not.toMatch(/JobsLanding/);
+    expect(jobsPage).toMatch(/JobsLanding/);
     expect(jobsPage).toMatch(/EmployerMatchWorkspace/);
     expect(jobsPage).toMatch(/RobotJobsWorkspace/);
     expect(jobsPage).toMatch(/landingVisitFromSearch/);
@@ -206,13 +206,14 @@ describe("landing fork", () => {
     );
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
     expect(jobsPage).toMatch(/RobotJobsWorkspace/);
-    expect(jobsPage).not.toMatch(/JobsLanding/);
+    expect(jobsPage).toMatch(/JobsLanding/);
     expect(workspace).toMatch(/FIND_JOBS_HOME_HEADLINE/);
     expect(workspace).toMatch(/FIND_JOBS_HOME_SUBHEAD/);
     expect(workspace).toMatch(/aria-label="Find jobs for your robot"/);
     expect(workspace).toMatch(/Employers: name the work/);
-    expect(workspace).toMatch(/FindProofJobs/);
-    expect(workspace).not.toMatch(/LiveJobTape/);
+    expect(workspace).not.toMatch(/FindProofJobs/);
+    expect(workspace).toMatch(/LiveJobTape/);
+    expect(workspace).toMatch(/MARKET_TAPE_JOBS/);
     expect(workspace).not.toMatch(/LiveJobDetailModal/);
     expect(workspace).not.toMatch(/JobsProcessNav/);
     expect(workspace).not.toMatch(/aria-label="Jobs process"/);

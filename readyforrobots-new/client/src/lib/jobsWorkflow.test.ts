@@ -317,13 +317,14 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/min-h-0 flex-1 overflow-y-auto p-6 sm:p-8/);
   });
 
-  it("FIND home shows live named-employer jobs as inline text, not the tape", () => {
+  it("FIND home shows the live job tape without the proof lines", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8"
     );
-    expect(workspace).toMatch(/FindProofJobs/);
-    expect(workspace).not.toMatch(/<LiveJobTape/);
+    expect(workspace).not.toMatch(/FindProofJobs/);
+    expect(workspace).toMatch(/<LiveJobTape/);
+    expect(workspace).toMatch(/MARKET_TAPE_JOBS/);
     expect(workspace).not.toMatch(/LiveJobDetailModal/);
     expect(workspace).not.toMatch(/uniqueTapeJobCount/);
     expect(workspace).not.toMatch(/const MARKET_FOUND_BASE = 140/);

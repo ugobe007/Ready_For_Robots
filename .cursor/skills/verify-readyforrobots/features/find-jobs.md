@@ -4,7 +4,7 @@ Find jobs lets an OEM or distributor paste a robot product URL (or pick a robot 
 
 ## Sub-features
 
-- `find-open` shows FIND on `/` (and `/?visit=jobs`) with headline, URL field, and three live named-employer jobs as inline text.
+- `find-open` shows FIND on `/` (and `/?visit=jobs`) with headline, URL field, and three live named-employer jobs as inline text. Those three jobs are the public board — they must load without submitting a robot URL.
 - `find-submit` runs research + match for one URL.
 - `find-lineup` asks which SKU when the page has several robots.
 - `find-api` is the same path the UI calls (`POST /api/robot-job-match`).
@@ -23,7 +23,7 @@ Preconditions:
 - Doctor reports `worth_driving: true`.
 - Do not use SIGNAL `/pipeline` as the entry.
 
-- **Open FIND.** Load `/` or `/?visit=jobs`. Heading is `Jobs for robots.` URL placeholder is `Paste robot product URL`. Form name is `Find jobs for your robot`. Type path is **What type of robot?** then **Find jobs →** after a class is selected. Three live jobs show as inline text. Employer MATCH is a quiet link.
+- **Open FIND.** Load `/` or `/?visit=jobs`. Heading is `Jobs for robots.` URL placeholder is `Paste robot product URL`. Form name is `Find jobs for your robot`. Type path is **What type of robot?** then **Find jobs →** after a class is selected. Three live jobs show as inline text **before** any URL submit (`aria-label="Named employer jobs"`). Employer MATCH is a quiet link.
 - **Submit a known robot.** Paste `https://www.dexmate.ai/` (or Fourier) and start Find jobs. One SKU continues to jobs on the same click; several SKUs must keep 01/02/03 as links.
 - **API entry (CI).** Run `python3 scripts/agent_verify.py drive --feature find-jobs --evidence "$EVIDENCE"`. Expect HTTP 200, `state` `matches` or `thin_corpus`, `job_count > 0`, and job titles. When `matcher` is `requirement_v1`, at least one `company_name` is present.
 - **Real URL (pstack Critic).** Run `python3 scripts/pstack_release.py` (or `drive --feature find-url`). Posts `POST /api/robot-job-search` for Dexmate and Greenfield. Fail if the payload is Research failed / Failed to fetch, or if Greenfield identity looks like strawberry / Agrobot. Diligent (`https://www.diligentrobots.com/`) is a held-out `healthcare_class` critic: fail if `robot_class=humanoid` or the empty copy is `No humanoid jobs for this robot yet.`
@@ -31,7 +31,8 @@ Preconditions:
 
 ## Gotchas
 
-- `/` is FIND. Do not remount-loop the workspace.
+- `/` is FIND. Do not remount-loop the workspace. Do not require a URL submit to review the public job board.
+- `GET /api/robot-jobs/preview` must be JSON (`jobs` array), never the Vite `index.html`. HTML 200 is an empty board.
 - Lookup timeout, 500, abort, or Failed to fetch must stay on FIND with retry copy. That dump is `drive --feature find-stay`. Do not treat a 7-second skip-green badge as proof.
 - Chip-only match may omit `required_task_models` — use a Understanding profile (Vega fixture) for cards.
 - Diligent/Moxi is healthcare, not a humanoid torso tile. Empty copy must not be `No humanoid jobs for this robot yet.`
