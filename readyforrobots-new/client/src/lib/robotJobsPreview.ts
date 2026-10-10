@@ -91,7 +91,7 @@ export async function fetchRobotJobsPreview(limit = 3): Promise<PreviewJob[]> {
     if (res.ok && isJsonContentType(res.headers.get("content-type"))) {
       const body = (await res.json()) as unknown;
       const live = jobsFromPreviewBody(body, cap);
-      if (live) return live;
+      if (live && live.length) return live;
     }
   } catch {
     /* Fly missing the route, HTML catch-all, or network — show the board. */

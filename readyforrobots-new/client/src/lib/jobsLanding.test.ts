@@ -212,7 +212,8 @@ describe("landing fork", () => {
     expect(workspace).toMatch(/aria-label="Find jobs for your robot"/);
     expect(workspace).toMatch(/Employers: name the work/);
     expect(workspace).toMatch(/FindProofJobs/);
-    expect(workspace).not.toMatch(/LiveJobTape/);
+    expect(workspace).toMatch(/LiveJobTape/);
+    expect(workspace).toMatch(/MARKET_TAPE_JOBS/);
     expect(workspace).not.toMatch(/LiveJobDetailModal/);
     expect(workspace).not.toMatch(/JobsProcessNav/);
     expect(workspace).not.toMatch(/aria-label="Jobs process"/);

@@ -50,7 +50,7 @@ describe("robotJobsPreview", () => {
     expect(preview).toMatch(/previewJobsFromTape/);
     expect(proof).toMatch(/fetchRobotJobsPreview\(3\)/);
     expect(workspace).toMatch(/FindProofJobs/);
-    expect(workspace).not.toMatch(/MARKET_TAPE_JOBS/);
+    expect(workspace).toMatch(/MARKET_TAPE_JOBS/);
     expect(workspace).not.toMatch(/UNLOCK FULL FEASIBILITY/i);
   });
 
@@ -107,7 +107,7 @@ describe("robotJobsPreview", () => {
     expect(rows[0].employer.trim()).not.toBe("");
   });
 
-  it("keeps an honest empty live table when JSON has no named employers", async () => {
+  it("falls back to named-employer tape when live JSON is an empty table", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
@@ -117,6 +117,7 @@ describe("robotJobsPreview", () => {
       })
     );
     const rows = await fetchRobotJobsPreview(3);
-    expect(rows).toEqual([]);
+    expect(rows).toHaveLength(3);
+    expect(rows[0].employer.trim()).not.toBe("");
   });
 });
