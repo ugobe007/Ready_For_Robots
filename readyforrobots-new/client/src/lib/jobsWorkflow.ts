@@ -1222,7 +1222,7 @@ export function stripJobsFreshQuery(): boolean {
   return true;
 }
 
-/** Wordmark / Jobs home: landing fork, not FIND. Drops new=1 and visit. */
+/** Wordmark / Jobs home: FIND. Drops new=1 and visit. */
 export function stripJobsLandingQuery(): boolean {
   if (typeof window === "undefined") return false;
   const params = new URLSearchParams(window.location.search);
@@ -1733,14 +1733,14 @@ export function pipelineActivityForJob(
   return scoped.filter(event => !event.jobKey || event.jobKey === jobKey);
 }
 
-/** Auth / leftover-link return to FIND — never the landing fork. */
+/** Auth / leftover-link return to FIND. */
 export function jobsWorkspaceRestoreHref(): string {
   return `${jobsFindHref()}&restore=1`;
 }
 
 /**
- * Header **Jobs**: landing fork while already there, FIND everywhere else.
- * CRM desk restores Job Cards. Never SIGNAL `/pipeline`.
+ * Header **Jobs**: FIND on `/`. CRM desk restores Job Cards.
+ * Never SIGNAL `/pipeline`.
  */
 export function jobsHeaderJobsHref(
   pathname: string,

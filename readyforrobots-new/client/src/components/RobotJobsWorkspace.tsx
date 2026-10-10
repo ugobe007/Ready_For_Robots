@@ -27,7 +27,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { Mail, ArrowRight, Lock } from "lucide-react";
+import { Mail, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { getJobLifecycleState } from "@/lib/jobLifecycle";
 import DailyMatchBriefModal from "@/components/DailyMatchBriefModal";
@@ -61,14 +61,8 @@ import type {
 } from "@/lib/robotJobMatch";
 import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import RobotJobCardUnit from "@/components/pipeline/RobotJobCardUnit";
-import LiveJobTape from "@/components/jobs/LiveJobTape";
-import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
+import FindProofJobs from "@/components/jobs/FindProofJobs";
 import JobQueryModal from "@/components/jobs/JobQueryModal";
-import {
-  MARKET_TAPE_JOBS,
-  uniqueTapeJobCount,
-  type TapeJob,
-} from "@/lib/jobsTapeCorpus";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
@@ -200,7 +194,6 @@ type ProductChoice = {
 };
 type RestoreView = "review" | "jobs" | "portfolio";
 
-const MARKET_FOUND_BASE = uniqueTapeJobCount();
 const WORKSPACE_SESSION_KEY = "rfr_jobs_workspace";
 
 const eyebrow = JOBS_EYEBROW_CLASS;
@@ -541,84 +534,6 @@ function pickSelectedJobKey(
   return jobs[0]?.job_key ?? null;
 }
 
-function FindShowcaseSection({
-  onSelectJob,
-}: {
-  onSelectJob?: (job: TapeJob) => void;
-}) {
-  const [index, setIndex] = useState(0);
-  const [paused, setPaused] = useState(false);
-  const jobs = MARKET_TAPE_JOBS;
-
-  useEffect(() => {
-    if (paused || jobs.length === 0) return;
-    const timer = window.setInterval(() => {
-      setIndex(prev => (prev + 1) % jobs.length);
-    }, 6000);
-    return () => window.clearInterval(timer);
-  }, [paused, jobs.length]);
-
-  const currentJob = jobs[index % jobs.length];
-  if (!currentJob) return null;
-
-  const parts = (currentJob.industry || "").split(" · ");
-  const customer = currentJob.customer || parts[0] || "Enterprise Buyer";
-  const location = currentJob.location || parts[1] || "Automation Facility";
-  const robotClass = currentJob.robotClass || "Industrial Cobot / AMR";
-  const valueText = currentJob.valueText || "$60,000–$90,000/yr";
-
-  return (
-    <div
-      className="p-4 sm:p-5 border-b border-slate-700/80 bg-[#070f22] transition-colors hover:bg-[#09142d]"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <div className="flex items-center justify-between mb-2.5 px-0.5">
-        <span className="inline-flex items-center gap-2 text-[11px] font-mono font-extrabold uppercase tracking-wider text-purple-300">
-          <span className="relative flex h-2 w-2">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-          </span>
-          Showcase Opportunity ({index + 1} of {jobs.length})
-        </span>
-        <span className="text-[11px] font-mono text-slate-400 hidden sm:inline">
-          Auto-rotating live buyer demand · Hover to pause
-        </span>
-      </div>
-
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-lg border border-slate-800 bg-[#09152e]/90 shadow-sm">
-        <div className="min-w-0 flex-1 space-y-1">
-          <div className="flex items-center gap-2 text-[12px] font-mono text-emerald-400 font-semibold truncate">
-            <span>{customer}</span>
-            <span className="text-slate-600">•</span>
-            <span className="text-slate-300 font-normal">{location}</span>
-          </div>
-          <h4 className="text-sm sm:text-base font-bold text-slate-100 truncate">
-            {currentJob.title}
-          </h4>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-slate-300 pt-0.5">
-            <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono bg-slate-800 text-slate-200 border border-slate-700">
-              {robotClass}
-            </span>
-            <span className="inline-flex items-center gap-1 rounded px-2 py-0.5 text-[11px] font-mono bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 font-semibold">
-              {valueText}
-            </span>
-          </div>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => onSelectJob?.(currentJob)}
-          className="self-start sm:self-center shrink-0 inline-flex items-center gap-1.5 px-3 py-2 rounded-md bg-emerald-600 text-slate-950 text-xs font-mono font-bold hover:bg-emerald-400 transition-colors shadow-sm"
-        >
-          <span>Inspect Job</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 /* Component                                                           */
 /* ------------------------------------------------------------------ */
@@ -680,8 +595,6 @@ export default function RobotJobsWorkspace() {
   const [keepSavedCount, setKeepSavedCount] = useState(0);
   const [showAllJobs, setShowAllJobs] = useState(false);
   const [lineupPreview, setLineupPreview] = useState(false);
-  const [selectedTapeModalJob, setSelectedTapeModalJob] =
-    useState<TapeJob | null>(null);
   const [showJobQueryModal, setShowJobQueryModal] = useState(false);
 
   function handleJobQuerySubmit({
@@ -2281,9 +2194,6 @@ export default function RobotJobsWorkspace() {
         <section className="rfr-find-pane min-w-0">
           {stage === "find" && (
             <div>
-              <FindShowcaseSection
-                onSelectJob={job => setSelectedTapeModalJob(job)}
-              />
               <div className="rfr-jobs-start-bar border-b border-slate-600 px-6 py-4">
                 <div className="flex flex-wrap items-center gap-3">
                   <button
@@ -2304,23 +2214,9 @@ export default function RobotJobsWorkspace() {
                   type.
                 </p>
               </div>
-              <LiveJobTape
-                title="Live Robot Jobs"
-                subtitle="Click any job opportunity to explore specs, ROI, and share direct links"
-                corpus={MARKET_TAPE_JOBS}
-                baseCount={MARKET_FOUND_BASE}
-                running
-                statusLines={[]}
-                revealTarget={null}
-                onRevealComplete={() => undefined}
-                onSelect={job => setSelectedTapeModalJob(job)}
-                selectedKey={selectedTapeModalJob?.key ?? null}
-              />
-              <LiveJobDetailModal
-                job={selectedTapeModalJob}
-                isOpen={Boolean(selectedTapeModalJob)}
-                onClose={() => setSelectedTapeModalJob(null)}
-              />
+              <div className="px-6 py-4">
+                <FindProofJobs />
+              </div>
             </div>
           )}
 

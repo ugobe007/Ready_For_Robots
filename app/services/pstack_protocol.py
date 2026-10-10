@@ -56,8 +56,8 @@ CRITIC_GATES: tuple[dict[str, str], ...] = (
     },
     {
         "id": "find_no_home",
-        "prove": "FIND timeout / 500 / abort stays on /?visit=jobs",
-        "fail": "lookup failure dumps to / or /?new=1 landing",
+        "prove": "FIND timeout / 500 / abort stays on FIND (`/` or /?visit=jobs)",
+        "fail": "lookup failure dumps to employer MATCH",
     },
     {
         "id": "find_identity",

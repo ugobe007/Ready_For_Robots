@@ -373,7 +373,8 @@ def drive_find_stay(*, origin: str | None = None, api: str | None = None) -> dic
         and "?new=1" not in submit
         and 'setLocation("/")' not in submit
         and "findFailureBouncesHome" in research
-        and 'forcedLanding && fromSearch === "landing"' in jobs_page
+        and "RobotJobsWorkspace" in jobs_page
+        and "JobsLanding" not in jobs_page
         and "FIND_IDENTITY_TIMEOUT_MS = 8_000" in (
             FIND_JOBS_WORKFLOW.read_text(encoding="utf-8") if FIND_JOBS_WORKFLOW.is_file() else ""
         )
