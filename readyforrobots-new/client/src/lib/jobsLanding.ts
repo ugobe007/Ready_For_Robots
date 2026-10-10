@@ -1,7 +1,7 @@
 /**
- * `/` is FIND. `/?visit=jobs` is the same FIND document.
+ * `/` is the home hero. `/?visit=jobs` is OEM FIND.
  * `/?visit=candidates` is employer MATCH/POST.
- * Wordmark `/` resets FIND. There is no landing fork.
+ * Wordmark `/` returns to the hero. Lookup failure stays on FIND.
  */
 export const LANDING_VISIT_QUERY = "visit";
 export const LANDING_VISIT_JOBS = "jobs";
@@ -318,8 +318,10 @@ export function landingVisitFromSearch(
   // remounts the 01/02/03 process bar on top of the card.
   if (params.get("job")) return "landing";
   if (visit === LANDING_VISIT_JOBS || visit === "jobs") return "jobs";
-  // Bare `/`, `?new=1`, and `?restore=1` are FIND.
-  return "jobs";
+  // Auth return without a visit still opens FIND.
+  if (params.get("restore") === "1") return "jobs";
+  // Bare `/` and `?new=1` are the home hero.
+  return "landing";
 }
 
 export function isEmployerVisit(search: string | null | undefined): boolean {

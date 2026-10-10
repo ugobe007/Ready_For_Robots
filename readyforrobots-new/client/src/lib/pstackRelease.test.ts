@@ -139,7 +139,8 @@ describe("pstack release — #173 self-abort FIND", () => {
     );
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
     expect(jobsPage).toMatch(/RobotJobsWorkspace/);
-    expect(jobsPage).not.toMatch(/JobsLanding/);
+    expect(jobsPage).toMatch(/JobsLanding/);
+    expect(jobsPage).toMatch(/visit === "landing"/);
     expect(jobsPage).not.toMatch(/forcedLanding/);
   });
 });

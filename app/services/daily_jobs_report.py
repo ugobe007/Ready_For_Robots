@@ -466,8 +466,15 @@ def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
         else_=0,
     )
     try:
+        # Filter named employer + workplace before the pool cap. High-score
+        # rows with an empty locality otherwise fill the pool and the public
+        # board stays empty even when named jobs exist further down.
         rows = (
             db.query(RobotJob)
+            .filter(RobotJob.company_name.isnot(None))
+            .filter(RobotJob.company_name != "")
+            .filter(RobotJob.locality.isnot(None))
+            .filter(RobotJob.locality != "")
             .order_by(
                 desc(status_rank),
                 desc(RobotJob.existence_confidence),

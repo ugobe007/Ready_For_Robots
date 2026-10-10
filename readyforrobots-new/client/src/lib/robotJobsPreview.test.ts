@@ -49,7 +49,7 @@ describe("robotJobsPreview", () => {
     expect(preview).toMatch(/getPublicReadApiBase/);
     expect(preview).toMatch(/previewJobsFromTape/);
     expect(proof).toMatch(/fetchRobotJobsPreview\(3\)/);
-    expect(workspace).toMatch(/FindProofJobs/);
+    expect(workspace).not.toMatch(/FindProofJobs/);
     expect(workspace).toMatch(/MARKET_TAPE_JOBS/);
     expect(workspace).not.toMatch(/UNLOCK FULL FEASIBILITY/i);
   });

@@ -74,6 +74,34 @@ def test_preview_keeps_named_employers_drops_boards(db_session):
     assert len(select_daily_report_rows(db_session, limit=3)) == 1
 
 
+def test_preview_skips_high_score_rows_with_no_workplace(db_session):
+    """Empty-locality rows must not crowd named jobs out of the board pool."""
+    for i in range(200):
+        db_session.add(
+            _job(
+                job_key=f"noloc-{i}",
+                company_name=f"Kitchen {i} Hospitality",
+                locality="",
+                investigate_status="yes",
+                existence_confidence=0.99,
+                robot_compatible_task="Line Cook",
+            )
+        )
+    db_session.add(
+        _job(
+            job_key="named-behind",
+            company_name="Mercy General Hospital",
+            locality="Columbus, OH",
+            investigate_status="weak",
+            existence_confidence=0.4,
+            robot_compatible_task="Deliver medications to patient units",
+        )
+    )
+    db_session.commit()
+    rows = select_daily_report_rows(db_session, limit=3)
+    assert [row.job_key for row in rows] == ["named-behind"]
+
+
 def test_public_job_does_not_invent_a_person():
     row = _job(provenance={}, requirements={})
     public = _public_job(row, 1)
