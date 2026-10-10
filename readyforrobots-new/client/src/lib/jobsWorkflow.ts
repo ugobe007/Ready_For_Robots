@@ -13,7 +13,6 @@ import { sameRobotUrl } from "@/lib/robotUrlIdentity";
 import {
   LANDING_VISIT_QUERY,
   jobsFindHref,
-  landingVisitFromSearch,
 } from "@/lib/jobsLanding";
 
 export type JobsConfirmLanding = "review" | "jobs" | "portfolio";
@@ -1291,6 +1290,13 @@ export function goJobsFreshHome(): void {
   if (typeof window === "undefined") return;
   const path = window.location.pathname || "/";
   if (isJobsHomePath(path)) {
+    const visit = new URLSearchParams(window.location.search).get(
+      LANDING_VISIT_QUERY
+    );
+    if (visit === "jobs" || visit === "candidates") {
+      window.location.assign("/");
+      return;
+    }
     stripJobsLandingQuery();
     window.dispatchEvent(new Event(JOBS_FRESH_HOME_EVENT));
     return;
@@ -1743,16 +1749,11 @@ export function jobsWorkspaceRestoreHref(): string {
  * Never SIGNAL `/pipeline`.
  */
 export function jobsHeaderJobsHref(
-  pathname: string,
-  search?: string | null,
+  _pathname: string,
+  _search?: string | null,
   onJobsCrmDesk = false
 ): string {
   if (onJobsCrmDesk) return jobsWorkspaceRestoreHref();
-  if (isJobsHomePath(pathname)) {
-    const visit = landingVisitFromSearch(search);
-    if (visit === "jobs" || visit === "candidates") return jobsFindHref();
-    return jobsFreshHomeHref();
-  }
   return jobsFindHref();
 }
 

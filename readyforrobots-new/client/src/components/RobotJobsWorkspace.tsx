@@ -62,7 +62,6 @@ import type {
 } from "@/lib/robotJobMatch";
 import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import RobotJobCardUnit from "@/components/pipeline/RobotJobCardUnit";
-import FindProofJobs from "@/components/jobs/FindProofJobs";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import JobQueryModal from "@/components/jobs/JobQueryModal";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
@@ -2218,8 +2217,7 @@ export default function RobotJobsWorkspace() {
                 </p>
               </div>
               <div className="px-6 py-4">
-                <FindProofJobs />
-                <div className="mt-6 overflow-hidden border border-slate-700">
+                <div className="overflow-hidden border border-slate-700">
                   <LiveJobTape
                     title="Live jobs"
                     corpus={MARKET_TAPE_JOBS}

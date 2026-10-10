@@ -317,12 +317,12 @@ describe("jobsWorkflow", () => {
     expect(workspace).not.toMatch(/min-h-0 flex-1 overflow-y-auto p-6 sm:p-8/);
   });
 
-  it("FIND home shows named-employer lines and the live job tape without a URL", () => {
+  it("FIND home shows the live job tape without the proof lines", () => {
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8"
     );
-    expect(workspace).toMatch(/FindProofJobs/);
+    expect(workspace).not.toMatch(/FindProofJobs/);
     expect(workspace).toMatch(/<LiveJobTape/);
     expect(workspace).toMatch(/MARKET_TAPE_JOBS/);
     expect(workspace).not.toMatch(/LiveJobDetailModal/);
