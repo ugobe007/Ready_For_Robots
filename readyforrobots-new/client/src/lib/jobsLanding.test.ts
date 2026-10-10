@@ -162,6 +162,7 @@ describe("landing fork", () => {
     expect(landing).toMatch(/rfr-landing-employer-link/);
     expect(landing).toMatch(/LiveJobTape/);
     expect(landing).toMatch(/MARKET_TAPE_JOBS/);
+    expect(landing).toMatch(/\/api\/robot-job-card\//);
     expect(landing).not.toMatch(/\?visit=jobs&job=/);
     expect(landing).not.toMatch(/LANDING_HOW_STEPS|LANDING_VOCAB/);
     expect(landing).not.toMatch(
@@ -170,6 +171,18 @@ describe("landing fork", () => {
     expect(landing).not.toMatch(/Market Intelligence|Automation Imperative/i);
     expect(landing).not.toMatch(/Headline options|headlineOptions|id:\"A\"/);
     expect(landing).not.toMatch(/CalJobsDesk|choose your workflow/i);
+    const report = readFileSync(
+      join(here, "../components/admin/AdminDailyJobsReport.tsx"),
+      "utf8"
+    );
+    expect(report).toMatch(/Decision maker:/);
+    expect(report).toMatch(/Job card/);
+    expect(report).toMatch(/card_href/);
+    expect(report).not.toMatch(/\[1\] Job type and description/);
+    const inbox = readFileSync(join(here, "../pages/Inbox.tsx"), "utf8");
+    expect(inbox).toMatch(/folder=all/);
+    const admin = readFileSync(join(here, "../pages/Admin.tsx"), "utf8");
+    expect(admin).toMatch(/\/api\/sales\/inbox\?folder=all/);
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
     expect(jobsPage).toMatch(/JobsLanding/);
     expect(jobsPage).toMatch(/EmployerMatchWorkspace/);

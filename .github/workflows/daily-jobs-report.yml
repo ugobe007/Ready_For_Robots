@@ -2,11 +2,20 @@ name: Daily jobs report
 
 # Fly worker + Celery Beat own the 14:00 UTC send. This Action is the backup.
 # Hermes is retired. Do not draft this email with an LLM.
+#
+# Redis NX is an in-progress lock, not proof of Gmail delivery. Skip only when
+# Fly returns resend_id / sent_at for today. A claimed-but-unsent day is a miss.
 
 on:
   schedule:
     - cron: "5 14 * * *"
+    - cron: "50 14 * * *"
   workflow_dispatch:
+    inputs:
+      force:
+        description: Send even if today's report already went out
+        type: boolean
+        default: false
 
 concurrency:
   group: daily-jobs-report
@@ -16,39 +25,80 @@ jobs:
   send:
     name: POST daily-jobs-report-send
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - name: Send top-25 jobs report via Fly (no LLM)
         env:
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
           SCRAPER_CRON_TOKEN: ${{ secrets.SCRAPER_CRON_TOKEN }}
+          FORCE_INPUT: ${{ github.event.inputs.force || 'false' }}
         run: |
           set -euo pipefail
           URL="https://ready-2-robot.fly.dev/api/v1/market-graph/daily-jobs-report-send"
-          BODY='{"force": false, "limit": 25}'
+          FORCE=false
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ] && [ "${FORCE_INPUT}" = "true" ]; then
+            FORCE=true
+          fi
           post() {
-            local extra=("$@")
+            local force="$1"
+            local extra=("${@:2}")
             local tmp
             tmp="$(mktemp)"
             local code
             code="$(curl -sS -o "$tmp" -w "%{http_code}" -X POST "$URL" \
               -H "Content-Type: application/json" \
               "${extra[@]}" \
-              -d "$BODY" || true)"
-            echo "HTTP $code"
+              -d "{\"force\": ${force}, \"limit\": 25}" || true)"
+            echo "HTTP $code force=${force}"
             cat "$tmp"
             echo
             if [ "$code" != "200" ]; then
               echo "::error::daily-jobs-report-send failed HTTP $code. If the body mentions a 16-character hex fingerprint, GitHub ADMIN_KEY is the fly secrets list digest — set the real ADMIN_KEY (same value as Fly), not the fingerprint."
+              rm -f "$tmp"
               exit 1
             fi
+            python3 - "$tmp" <<'PY'
+          import json, sys
+          path = sys.argv[1]
+          with open(path, encoding="utf-8") as fh:
+              data = json.load(fh)
+          sent = data.get("sent") is True
+          reason = str(data.get("reason") or "")
+          resend_id = data.get("resend_id")
+          sent_at = data.get("sent_at")
+          if sent:
+              print(f"delivered resend_id={resend_id}")
+              sys.exit(0)
+          proven = bool(resend_id or sent_at) and reason == "Already sent today"
+          if proven:
+              print(f"already delivered resend_id={resend_id} sent_at={sent_at}")
+              sys.exit(0)
+          if reason == "Send already in progress":
+              print("send in progress — 14:50 UTC catch-up may steal a stale lock")
+              sys.exit(0)
+          print(f"not delivered reason={reason!r} resend_id={resend_id}")
+          sys.exit(2)
+          PY
           }
+          extra=()
           if [ -n "${ADMIN_KEY:-}" ]; then
-            post -H "X-Admin-Key: ${ADMIN_KEY}"
+            extra=(-H "X-Admin-Key: ${ADMIN_KEY}")
           elif [ -n "${SCRAPER_CRON_TOKEN:-}" ]; then
             URL="${URL}?token=${SCRAPER_CRON_TOKEN}"
-            post
           else
             echo "No ADMIN_KEY or SCRAPER_CRON_TOKEN in Actions. Fly worker still owns the send."
             exit 0
           fi
+          set +e
+          post "$FORCE" "${extra[@]}"
+          status=$?
+          set -e
+          if [ "$status" -eq 0 ]; then
+            exit 0
+          fi
+          if [ "$FORCE" = "true" ]; then
+            echo "::error::forced daily jobs report did not deliver"
+            exit 1
+          fi
+          echo "First attempt failed. Do not retry — force=true skips lock and races the living send."
+          exit 1

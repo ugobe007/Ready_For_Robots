@@ -223,19 +223,26 @@ class DailyJobsReportSendBody(BaseModel):
 
 @router.get("/daily-jobs-report")
 def daily_jobs_report(db: Session = Depends(get_db)):
-    """Operator top-25 named Robot Jobs. Looks up decision makers on Hunter.io."""
-    from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
-    from app.services.daily_jobs_report import compose_daily_jobs_report
+    """Operator top-25 named Robot Jobs. Read-only.
 
-    hunter: dict = {}
-    try:
-        hunter = enrich_daily_jobs_with_hunter(
-            db, limit=25, force=False, scrape_pages=False
-        )
-    except Exception:
-        hunter = {"ok": False, "reason": "hunter_enrich_failed"}
+    Opening this page must not call Hunter. A domain-only miss used to stamp
+    hunter_checked_at and skip the leadership-page → email-finder pass.
+    Lookup is POST /daily-jobs-report/enrich or the daily send.
+    """
+    from app.services.daily_jobs_report import compose_daily_jobs_report
+    from app.services.hunter_client import hunter_contact_enabled
+
     report = compose_daily_jobs_report(db, limit=25)
-    report["hunter"] = hunter
+    enabled = hunter_contact_enabled()
+    report["hunter"] = {
+        "ok": True,
+        "enabled": enabled,
+        "looked_up": 0,
+        "filled": 0,
+        "skipped": 0,
+        "missed": 0,
+        "reason": None if enabled else "hunter_disabled",
+    }
     return report
 
 

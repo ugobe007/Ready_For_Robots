@@ -12,6 +12,7 @@ import os
 import re
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+from urllib.parse import quote
 
 from sqlalchemy import case, desc
 from sqlalchemy.orm import Session
@@ -25,6 +26,9 @@ _SITE = (os.getenv("PUBLIC_SITE_URL") or "https://readyforrobots.com").rstrip("/
 _REDIS_SENT_KEY = "jobs:daily_report:last_sent_date"
 _REDIS_PAYLOAD_KEY = "jobs:daily_report:latest"
 _CLAIM_TTL_SEC = 60 * 60 * 48
+# A living send holds the NX lock. After this, a crashed worker no longer
+# looks like a delivered email — GHA / catch-up may steal and send.
+_STALE_CLAIM_SEC = 40 * 60
 DESCRIPTION_MAX = 360
 DECISION_MAKER_EMPTY = "Not named on the posting"
 DECISION_MAKER_HUNTER_MISS = "Hunter.io found no named person"
@@ -72,17 +76,57 @@ def _redis_client():
     return client_fn()
 
 
-def _claim_report_day(day: str) -> bool:
-    """Atomically claim today's send. Yesterday's last_sent_date must not block today.
+def _parse_claim_at(raw: Any) -> Optional[datetime]:
+    text = str(raw or "").strip()
+    if not text:
+        return None
+    # Date-only leftover from claim-before-send is not a living lock.
+    if "T" not in text and " " not in text:
+        return None
+    try:
+        if text.endswith("Z"):
+            text = text[:-1] + "+00:00"
+        dt = datetime.fromisoformat(text)
+    except ValueError:
+        return None
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
 
-    Same-day de-dupe uses a per-day NX key. The last_sent_date key is display-only
-    and keeps a 48h TTL, so SET NX on that shared key would skip the next morning.
+
+def _claim_report_day(day: str) -> bool:
+    """Atomically lock today's send. Yesterday's last_sent_date must not block today.
+
+    The lock value is an ISO timestamp. A leftover day-only value from the old
+    claim-before-send path is treated as stale so a hung Hunter run cannot fake
+    Gmail delivery. Fresh locks younger than `_STALE_CLAIM_SEC` stay exclusive.
     """
     client = _redis_client()
     if not client:
         return True
+    stamp = datetime.now(timezone.utc).isoformat()
+    key = _claim_key(day)
     try:
-        return bool(client.set(_claim_key(day), day, nx=True, ex=_CLAIM_TTL_SEC))
+        if client.set(key, stamp, nx=True, ex=_CLAIM_TTL_SEC):
+            return True
+        raw = client.get(key)
+        claimed_at = _parse_claim_at(raw)
+        if claimed_at is None:
+            logger.warning("daily jobs report: stealing unparseable claim for %s", day)
+            if client.set(key, stamp, xx=True, ex=_CLAIM_TTL_SEC, get=True) == raw:
+                return True
+            return False
+        age = (datetime.now(timezone.utc) - claimed_at).total_seconds()
+        if age >= _STALE_CLAIM_SEC:
+            logger.warning(
+                "daily jobs report: stealing stale claim for %s age_sec=%.0f",
+                day,
+                age,
+            )
+            if client.set(key, stamp, xx=True, ex=_CLAIM_TTL_SEC, get=True) == raw:
+                return True
+            return False
+        return False
     except Exception:
         return True
 
@@ -103,7 +147,11 @@ def _mark_report_sent(day: str, payload: dict[str, Any]) -> None:
         return
     try:
         client.set(_REDIS_SENT_KEY, day, ex=_CLAIM_TTL_SEC)
-        client.set(_claim_key(day), day, ex=_CLAIM_TTL_SEC)
+        client.set(
+            _claim_key(day),
+            datetime.now(timezone.utc).isoformat(),
+            ex=_CLAIM_TTL_SEC,
+        )
         client.set(_REDIS_PAYLOAD_KEY, json.dumps(payload), ex=_CLAIM_TTL_SEC)
     except Exception:
         pass
@@ -118,6 +166,21 @@ def last_sent_day() -> Optional[str]:
         return str(raw) if raw else None
     except Exception:
         return None
+
+
+def last_sent_payload() -> dict[str, Any]:
+    """Last successful Resend payload. Empty if the day was only claimed."""
+    client = _redis_client()
+    if not client:
+        return {}
+    try:
+        raw = client.get(_REDIS_PAYLOAD_KEY)
+        if not raw:
+            return {}
+        parsed = json.loads(raw) if isinstance(raw, (str, bytes)) else raw
+        return parsed if isinstance(parsed, dict) else {}
+    except Exception:
+        return {}
 
 
 def _as_map(value: Any) -> dict[str, Any]:
@@ -276,6 +339,74 @@ def _contact_line(
     return CONTACT_EMPTY
 
 
+def job_card_href(job_key: str) -> str:
+    key = str(job_key or "").strip()
+    if not key:
+        return f"{_SITE}/?visit=jobs"
+    return f"{_SITE}/?job={quote(key, safe='')}"
+
+
+def _family_for_action(action: str, title: str) -> str:
+    """Letter tokens only. `arm` in pharmacy is not a gripper; `pallet_move` is a pallet."""
+    tokens = re.findall(r"[a-z]+", f"{action} {title}".lower())
+
+    def has(*stems: str) -> bool:
+        return any(token.startswith(stem) for token in tokens for stem in stems)
+
+    if has("pallet", "stack", "case"):
+        return "pallet"
+    if has("scrub", "clean", "evs", "floor"):
+        return "scrub"
+    if has("inspect", "vision", "audit"):
+        return "inspect"
+    if has("pick", "grip", "manipul") or "arm" in tokens:
+        return "gripper"
+    if has("cart", "tote"):
+        return "cart"
+    return "transport"
+
+
+def public_job_card(db: Session, job_key: str) -> Optional[dict[str, Any]]:
+    """Named-employer Robot Job for `/?job=`. No invented people or dollars."""
+    from app.models.robot_directed_discovery import RobotJob
+    from app.services.robot_job_extract import is_job_employer_name
+    from app.services.robot_requirement_match import is_named_robot_job
+
+    key = str(job_key or "").strip()
+    if not key:
+        return None
+    try:
+        row = db.query(RobotJob).filter(RobotJob.job_key == key).one_or_none()
+    except Exception:
+        logger.debug("public job card lookup skipped", exc_info=True)
+        return None
+    if row is None:
+        return None
+    employer = str(getattr(row, "company_name", "") or "").strip()
+    locality = str(getattr(row, "locality", "") or "").strip()
+    title = str(getattr(row, "robot_compatible_task", "") or "").strip()
+    if not is_named_robot_job(employer, locality):
+        return None
+    if not is_job_employer_name(employer, title=title):
+        return None
+    serialized = _serialize_job(row, 0)
+    return {
+        "key": serialized["job_key"],
+        "title": serialized["title"],
+        "employer": serialized["employer"],
+        "locality": serialized["locality"],
+        "description": serialized["description"],
+        "job_type": serialized["job_type"],
+        "action": serialized["action"],
+        "family": _family_for_action(serialized["action"], serialized["title"]),
+        "path": locality or "WORKSITE → WORKSITE",
+        "industry": " · ".join(
+            p for p in (serialized["employer"], serialized["locality"]) if p
+        ),
+        "card_href": serialized["card_href"],
+    }
+
+
 def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
     title = _clean(getattr(row, "robot_compatible_task", ""), limit=240)
     action = _clean(getattr(row, "action", ""), limit=80)
@@ -310,6 +441,7 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
         "match_why": match_why,
         "investigate_status": str(getattr(row, "investigate_status", "") or ""),
         "created_at": created.isoformat() if created else None,
+        "card_href": job_card_href(str(getattr(row, "job_key", "") or "")),
     }
 
 
@@ -368,6 +500,7 @@ def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, A
         _serialize_job(row, rank)
         for rank, row in enumerate(select_daily_report_rows(db, limit=cap), start=1)
     ]
+    last = last_sent_payload()
     return {
         "date": day_label,
         "count": len(jobs),
@@ -375,47 +508,57 @@ def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, A
         "jobs": jobs,
         "recipients": get_daily_jobs_report_recipients(),
         "last_sent_date": last_sent_day(),
+        "last_sent_at": last.get("sent_at"),
+        "last_resend_id": last.get("resend_id"),
         "find_href": f"{_SITE}/?visit=jobs",
         "admin_href": f"{_SITE}/admin#daily-jobs-report",
     }
+
+
+def _job_name_line(job: dict[str, Any]) -> str:
+    title = str(job.get("title") or job.get("job_type") or "Work").strip()
+    desc = str(job.get("description") or "").strip()
+    if desc and desc != title:
+        return f"{title} — {desc}"
+    return title
+
+
+def _decision_maker_inline(job: dict[str, Any]) -> str:
+    parts = [str(job.get("decision_maker") or DECISION_MAKER_EMPTY)]
+    titles = [str(t).strip() for t in (job.get("target_titles") or []) if str(t).strip()]
+    if titles and not job.get("decision_maker_name"):
+        parts.append("Looked for: " + ", ".join(titles[:3]))
+    why = str(job.get("match_why") or "").strip()
+    if why:
+        parts.append(why)
+    return " · ".join(parts)
 
 
 def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
     day = report.get("date") or datetime.now(timezone.utc).date().isoformat()
     jobs = list(report.get("jobs") or [])
     lines = [
-        f"Top {int(report.get('limit') or TOP_N)} robot job sales cards — {day}",
+        f"Top {int(report.get('limit') or TOP_N)} hot job opportunities — {day}",
         "",
-        "Each card is a named-employer Robot Job. We do not invent people or emails.",
+        "Named-employer Robot Jobs. Decision maker and contact as stored. We do not invent people or emails.",
         "",
     ]
     if not jobs:
-        lines.append("  • No named-employer jobs in the live table yet.")
+        lines.append("No named-employer jobs in the live table yet.")
         lines.append("")
     for job in jobs:
         rank = int(job.get("rank") or 0)
         employer = job.get("employer") or "Employer"
-        locality = job.get("locality") or ""
-        lines.append(f"{rank:02d}  {employer}")
+        locality = str(job.get("locality") or "").strip()
+        head = f"{rank:02d}  {employer}"
         if locality:
-            lines.append(f"    {locality}")
-        lines.append("    [1] Job type and description")
-        lines.append(f"        {job.get('job_type') or job.get('title') or 'Work'}")
-        desc = job.get("description") or job.get("title") or ""
-        if desc:
-            lines.append(f"        {desc}")
-        lines.append("    [2] Decision maker")
-        lines.append(f"        {job.get('decision_maker') or DECISION_MAKER_EMPTY}")
-        titles = [str(t).strip() for t in (job.get("target_titles") or []) if str(t).strip()]
-        if titles:
-            lines.append(f"        Looked for: {', '.join(titles[:3])}")
-        why = str(job.get("match_why") or "").strip()
-        if why:
-            lines.append(f"        {why}")
-        lines.append("    [3] Timing")
-        lines.append(f"        {job.get('timing') or TIMING_EMPTY}")
-        lines.append("    [4] Contact information")
-        lines.append(f"        {job.get('contact') or CONTACT_EMPTY}")
+            head = f"{head} · {locality}"
+        lines.append(head)
+        lines.append(f"    {_job_name_line(job)}")
+        lines.append(f"    Decision maker: {_decision_maker_inline(job)}")
+        lines.append(f"    Contact: {job.get('contact') or CONTACT_EMPTY}")
+        href = str(job.get("card_href") or job_card_href(str(job.get("job_key") or "")))
+        lines.append(f"    Job card: {href}")
         lines.append("")
     lines += [
         f"FIND: {report.get('find_href') or f'{_SITE}/?visit=jobs'}",
@@ -426,27 +569,29 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def _decision_maker_html(job: dict[str, Any]) -> str:
-    parts = [str(job.get("decision_maker") or DECISION_MAKER_EMPTY)]
-    titles = [str(t).strip() for t in (job.get("target_titles") or []) if str(t).strip()]
-    if titles:
-        parts.append("Looked for: " + ", ".join(titles[:3]))
-    why = str(job.get("match_why") or "").strip()
-    if why:
-        parts.append(why)
-    return "\n".join(parts)
+def _mailto_or_link(value: str) -> str:
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    if "@" in raw and "://" not in raw and " " not in raw:
+        href = html.escape(f"mailto:{raw}")
+        return f'<a href="{href}">{html.escape(raw)}</a>'
+    if raw.startswith(("http://", "https://")):
+        href = html.escape(raw)
+        return f'<a href="{href}">{html.escape(raw)}</a>'
+    return html.escape(raw)
 
 
-def _card_field(label: str, value: str) -> str:
-    safe_label = html.escape(label)
-    safe_value = html.escape(value or "").replace("\n", "<br>")
-    return (
-        f"<div style=\"margin:8px 0 0\">"
-        f"<div style=\"font-size:11px;letter-spacing:0.08em;text-transform:uppercase;"
-        f"color:#047857;font-weight:700\">{safe_label}</div>"
-        f"<div style=\"font-size:14px;color:#111827;margin-top:2px\">{safe_value}</div>"
-        f"</div>"
-    )
+def _contact_html(job: dict[str, Any]) -> str:
+    bits = [
+        _mailto_or_link(str(job.get("employer_email") or "")),
+        _mailto_or_link(str(job.get("contact_url") or "")),
+        _mailto_or_link(str(job.get("apply_url") or "")),
+    ]
+    bits = [b for b in bits if b]
+    if bits:
+        return " · ".join(bits)
+    return html.escape(str(job.get("contact") or CONTACT_EMPTY))
 
 
 def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
@@ -457,47 +602,43 @@ def render_daily_jobs_report_html(report: dict[str, Any]) -> str:
     admin_href = html.escape(
         str(report.get("admin_href") or f"{_SITE}/admin#daily-jobs-report")
     )
-    cards: list[str] = []
+    rows: list[str] = []
     for job in jobs:
         rank = int(job.get("rank") or 0)
         employer = html.escape(str(job.get("employer") or "Employer"))
-        locality = html.escape(str(job.get("locality") or ""))
-        place = (
-            f"<div style=\"color:#4b5563;font-size:13px;margin:0 0 4px\">{locality}</div>"
-            if locality
-            else ""
-        )
-        job_type = str(job.get("job_type") or job.get("title") or "Work")
-        description = str(job.get("description") or job.get("title") or "")
-        type_block = job_type if job_type == description else f"{job_type}\n{description}"
-        cards.append(
-            "<div style=\"border:1px solid #d1d5db;padding:16px 18px;margin:0 0 12px\">"
-            f"<div style=\"font-family:ui-monospace,monospace;font-size:12px;color:#6b7280\">"
-            f"{rank:02d}</div>"
-            f"<div style=\"font-size:18px;font-weight:700;color:#047857\">{employer}</div>"
-            f"{place}"
-            f"{_card_field('[1] Job type and description', type_block)}"
-            f"{_card_field('[2] Decision maker', _decision_maker_html(job))}"
-            f"{_card_field('[3] Timing', str(job.get('timing') or TIMING_EMPTY))}"
-            f"{_card_field('[4] Contact information', str(job.get('contact') or CONTACT_EMPTY))}"
-            "</div>"
+        locality = html.escape(str(job.get("locality") or "").strip())
+        head = f"{rank:02d} {employer}"
+        if locality:
+            head = f"{head} · {locality}"
+        href = str(job.get("card_href") or job_card_href(str(job.get("job_key") or "")))
+        card = html.escape(href)
+        rows.append(
+            "<p style=\"margin:0 0 12px;padding:0;font-size:14px;line-height:1.45\">"
+            f"<strong>{head}</strong><br>"
+            f"{html.escape(_job_name_line(job))}<br>"
+            f"Decision maker: {html.escape(_decision_maker_inline(job))}<br>"
+            f"Contact: {_contact_html(job)}<br>"
+            f"<a href=\"{card}\">Job card</a>"
+            "</p>"
         )
     listing = (
-        "<p>No named-employer jobs in the live table yet.</p>"
+        "<p style=\"margin:0;padding:0\">No named-employer jobs in the live table yet.</p>"
         if not jobs
-        else "".join(cards)
+        else "".join(rows)
     )
     return (
-        "<div style=\"font-family:Georgia,serif;max-width:640px;color:#111827\">"
-        f"<h1 style=\"font-size:20px;margin:0 0 8px\">"
-        f"Top {limit} robot job sales cards — {day}</h1>"
-        "<p style=\"color:#4b5563;font-size:14px;margin:0 0 16px\">"
-        "Each card is a named-employer Robot Job. We do not invent people or emails.</p>"
+        "<div style=\"font-family:Georgia,serif;max-width:640px;color:#111827;"
+        "margin:0;padding:0\">"
+        f"<p style=\"font-size:16px;font-weight:700;margin:0 0 8px;padding:0\">"
+        f"Top {limit} hot job opportunities — {day}</p>"
+        "<p style=\"color:#4b5563;font-size:13px;margin:0 0 12px;padding:0\">"
+        "Named-employer Robot Jobs. Decision maker and contact as stored. "
+        "We do not invent people or emails.</p>"
         f"{listing}"
-        f"<p style=\"margin:16px 0 0;font-size:13px\">"
+        f"<p style=\"margin:12px 0 0;padding:0;font-size:13px\">"
         f"<a href=\"{find_href}\">FIND</a> · "
-        f"<a href=\"{admin_href}\">Admin cards</a></p>"
-        "<p style=\"color:#6b7280;font-size:12px\">"
+        f"<a href=\"{admin_href}\">Admin</a></p>"
+        "<p style=\"color:#6b7280;font-size:12px;margin:8px 0 0;padding:0\">"
         "You receive this once per day. Email now on Admin sends a catch-up.</p>"
         "</div>"
     )
@@ -507,7 +648,21 @@ def _idempotency_key(day: str, *, force: bool) -> str:
     if force:
         stamp = datetime.now(timezone.utc).strftime("%H%M%S")
         return f"daily-jobs-report-{day}-force-{stamp}"
-    return f"daily-jobs-report-{day}-cards-v1"
+    return f"daily-jobs-report-{day}-cards-v2"
+
+
+def _already_sent_response(
+    *, today: str, recipients: list[str], payload: dict[str, Any]
+) -> dict[str, Any]:
+    return {
+        "sent": False,
+        "reason": "Already sent today",
+        "date": today,
+        "recipients": recipients,
+        "resend_id": payload.get("resend_id"),
+        "sent_at": payload.get("sent_at"),
+        "count": payload.get("count"),
+    }
 
 
 def send_daily_jobs_report(
@@ -518,66 +673,86 @@ def send_daily_jobs_report(
 ) -> dict[str, Any]:
     recipients = get_daily_jobs_report_recipients()
     today = datetime.now(timezone.utc).date().isoformat()
+    payload = last_sent_payload()
+    if not force and last_sent_day() == today:
+        return _already_sent_response(
+            today=today, recipients=recipients, payload=payload
+        )
     if not force and not _claim_report_day(today):
         return {
             "sent": False,
-            "reason": "Already sent today",
+            "reason": "Send already in progress",
             "date": today,
             "recipients": recipients,
+            "last_sent_date": last_sent_day(),
+            "resend_id": payload.get("resend_id"),
+            "sent_at": payload.get("sent_at"),
         }
     hunter: dict[str, Any] = {}
     try:
-        from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
+        try:
+            from app.services.daily_jobs_hunter import enrich_daily_jobs_with_hunter
 
-        hunter = enrich_daily_jobs_with_hunter(
-            db, limit=limit, scrape_pages=True
-        )
+            hunter = enrich_daily_jobs_with_hunter(
+                db, limit=limit, scrape_pages=True
+            )
+        except Exception:
+            logger.warning("Hunter.io daily-jobs enrich skipped", exc_info=True)
+            hunter = {"ok": False, "reason": "hunter_enrich_failed"}
+        report = compose_daily_jobs_report(db, limit=limit)
+        subject = f"Top {report['limit']} hot job opportunities — {report['date']}"
+        body = render_daily_jobs_report_text(report)
+        html_body = render_daily_jobs_report_html(report)
+        from app.services.resend_email import ResendEmailError, send_email_via_resend
+
+        try:
+            result = send_email_via_resend(
+                to_email=recipients,
+                subject=subject,
+                body_text=body,
+                body_html=html_body,
+                from_display_name="Ready For Robots · Jobs ops",
+                idempotency_key=_idempotency_key(today, force=force),
+            )
+        except ResendEmailError as exc:
+            logger.warning("daily jobs report email failed: %s", exc)
+            if not force:
+                _release_report_day(today)
+            return {"sent": False, "reason": str(exc), "recipients": recipients}
+        sent_payload = {
+            "date": today,
+            "count": report["count"],
+            "jobs": report["jobs"],
+            "sent_at": datetime.now(timezone.utc).isoformat(),
+            "resend_id": result.get("resend_id"),
+            "recipients": recipients,
+        }
+        _mark_report_sent(today, sent_payload)
+        return {
+            "sent": True,
+            "date": today,
+            "recipients": recipients,
+            "count": report["count"],
+            "resend_id": result.get("resend_id"),
+            "jobs": report["jobs"],
+            "hunter": hunter,
+        }
     except Exception:
-        logger.warning("Hunter.io daily-jobs enrich skipped", exc_info=True)
-        hunter = {"ok": False, "reason": "hunter_enrich_failed"}
-    report = compose_daily_jobs_report(db, limit=limit)
-    subject = f"Top {report['limit']} robot job sales cards — {report['date']}"
-    body = render_daily_jobs_report_text(report)
-    html_body = render_daily_jobs_report_html(report)
-    from app.services.resend_email import ResendEmailError, send_email_via_resend
-
-    try:
-        result = send_email_via_resend(
-            to_email=recipients,
-            subject=subject,
-            body_text=body,
-            body_html=html_body,
-            from_display_name="Ready For Robots · Jobs ops",
-            idempotency_key=_idempotency_key(today, force=force),
-        )
-    except ResendEmailError as exc:
-        logger.warning("daily jobs report email failed: %s", exc)
         if not force:
             _release_report_day(today)
-        return {"sent": False, "reason": str(exc), "recipients": recipients}
-    payload = {
-        "date": today,
-        "count": report["count"],
-        "jobs": report["jobs"],
-        "sent_at": datetime.now(timezone.utc).isoformat(),
-    }
-    _mark_report_sent(today, payload)
-    return {
-        "sent": True,
-        "date": today,
-        "recipients": recipients,
-        "count": report["count"],
-        "resend_id": result.get("resend_id"),
-        "jobs": report["jobs"],
-        "hunter": hunter,
-    }
+        raise
 
 
 def maybe_send_missed_daily_jobs_report(db: Session) -> dict[str, Any]:
     """If today's 14:00 UTC send was missed (deploy after the hour), send once."""
     today = datetime.now(timezone.utc).date().isoformat()
     if last_sent_day() == today:
-        return {"sent": False, "reason": "Already sent today", "date": today}
+        payload = last_sent_payload()
+        return _already_sent_response(
+            today=today,
+            recipients=get_daily_jobs_report_recipients(),
+            payload=payload,
+        )
     return send_daily_jobs_report(db, force=False)
 
 

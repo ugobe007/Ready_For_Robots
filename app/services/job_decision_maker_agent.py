@@ -93,6 +93,8 @@ TITLES_BY_FUNCTION: dict[str, list[str]] = {
     "serving": [
         "Director of Food and Beverage",
         "Restaurant General Manager",
+        "General Manager",
+        "Director of Guest Services",
         "VP Restaurant Operations",
         "Director of Operations",
     ],
@@ -291,6 +293,8 @@ def function_for_job(row: Any) -> str:
 def hunter_departments_for_function(function: str) -> str:
     if function in {"pharmacy", "patient_transport"}:
         return "health,operations"
+    if function in {"serving", "food_prep", "housekeeping"}:
+        return "management,executive"
     return "operations,management"
 
 
@@ -350,20 +354,23 @@ def score_candidate(
             score += 48
             why_bits.append(f"title is {target}")
             break
-        words = [
-            w
-            for w in re.findall(r"[a-z]{4,}", target_l)
-            if w not in {"director", "manager", "head", "chief", "vice"}
-        ]
-        hits = [w for w in words if w in title]
-        if len(hits) >= 2:
-            score += 36
-            why_bits.append(f"title matches {target}")
-            break
-        if len(hits) == 1 and hits[0] not in {"operations"}:
-            score += 18
-            why_bits.append(f"title has {hits[0]}")
-            break
+    if not why_bits:
+        for target in plan.titles:
+            target_l = _norm(target)
+            words = [
+                w
+                for w in re.findall(r"[a-z]{4,}", target_l)
+                if w not in {"director", "manager", "head", "chief", "vice"}
+            ]
+            hits = [w for w in words if w in title]
+            if len(hits) >= 2:
+                score += 36
+                why_bits.append(f"title matches {target}")
+                break
+            if len(hits) == 1 and hits[0] not in {"operations", "general"}:
+                score += 18
+                why_bits.append(f"title has {hits[0]}")
+                break
     token_hits = [tok for tok in plan.tokens if tok in title]
     if token_hits:
         score += 16 * min(2, len(token_hits))

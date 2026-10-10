@@ -278,6 +278,52 @@ def test_send_runs_hunter_before_email(monkeypatch):
     assert "Priya Shah" in sent[0]["body_text"]
 
 
+def test_company_search_uses_brand_not_property_suffix():
+    from app.services.daily_jobs_hunter import _company_search_names
+
+    names = _company_search_names("HMSHost by Avolta")
+    assert "HMSHost" in names
+    names = _company_search_names("Westin Fort Lauderdale", "Fort Lauderdale, FL 33334")
+    assert "Westin" in names
+    names = _company_search_names("Materion Newton Inc.", "Newton, MA 02461")
+    assert "Materion" in names
+    names = _company_search_names("Texas Health Resources", "McKinney, TX 75071")
+    assert names[0] == "Texas Health Resources"
+    assert "Texas Health" not in names
+    names = _company_search_names("University of Rochester", "Rochester, NY")
+    assert "University" not in names
+    assert "University of Rochester" in names
+    names = _company_search_names("Office Pride of Cedar Rapids", "Cedar Falls, IA")
+    assert "Office Pride" in names
+
+
+def test_preview_domain_must_fit_employer_name():
+    from app.services.daily_jobs_hunter import domain_from_people
+
+    assert (
+        domain_from_people(
+            [
+                {
+                    "email": "patrice.valade@telushealth.com",
+                    "organization_domain": "telushealth.com",
+                    "name": "Patrice Valade",
+                }
+            ],
+            "Texas Health Resources",
+            "McKinney, TX",
+        )
+        is None
+    )
+    assert (
+        domain_from_people(
+            [{"email": "tandrews@asbury.org", "name": "Todd Andrews"}],
+            "Asbury",
+            "Union City, GA",
+        )
+        == "asbury.org"
+    )
+
+
 def test_email_must_belong_to_the_named_employer():
     from app.services.daily_jobs_hunter import _email_fits_employer
 
@@ -326,6 +372,70 @@ def test_email_must_belong_to_the_named_employer():
         "GEODIS",
         "Plainfield, IN",
     ) is True
+    assert _email_fits_employer(
+        "ops@unifiservice.com",
+        "Unifi Aviation",
+        "ATL — Atlanta, GA",
+        domain="unifiservice.com",
+    ) is True
+    assert _email_fits_employer(
+        "jurias@unical.com",
+        "Unifi Aviation",
+        "ATL — Atlanta, GA",
+        domain="unifiservice.com",
+    ) is False
+
+
+def test_hunter_company_search_unlocks_leadership_when_job_has_no_url(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    html = """
+    <html><body>
+      <h2>Priya Shah</h2>
+      <p>Site Operations Manager</p>
+    </body></html>
+    """
+    seen = {}
+
+    def fake_pages(**kwargs):
+        seen.update(kwargs)
+        return [{"url": "https://geodis.com/leadership", "html": html}]
+
+    monkeypatch.setattr(
+        "app.services.employer_leadership.fetch_leadership_pages",
+        fake_pages,
+    )
+    db = _session()
+    db.add(_job(job_key="no-url"))
+    db.commit()
+    hunter = _FakeHunter(
+        [
+            {
+                "email": "other.person@geodis.com",
+                "name": "Other Person",
+                "title": "COO",
+                "confidence": 99,
+                "department": "executive",
+                "verification_status": "valid",
+            }
+        ],
+        finder={
+            "email": "priya.shah@geodis.com",
+            "name": "Priya Shah",
+            "title": "Site Operations Manager",
+            "confidence": 92,
+            "verification_status": "valid",
+            "source": "hunter_finder",
+            "organization_domain": "geodis.com",
+        },
+    )
+    result = enrich_daily_jobs_with_hunter(
+        db, limit=25, client=hunter, scrape_pages=True
+    )
+    assert result["filled"] == 1
+    assert seen.get("domain") == "geodis.com"
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "Priya Shah" in report["jobs"][0]["decision_maker"]
+    assert "priya.shah@geodis.com" in report["jobs"][0]["contact"]
 
 
 def test_company_lookup_fills_empty_posting_via_hunter(monkeypatch):
@@ -355,7 +465,8 @@ def test_company_lookup_fills_empty_posting_via_hunter(monkeypatch):
     result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
     assert result["filled"] == 1
     assert any(call.get("company") == "GEODIS" for call in hunter.domain_calls)
-    assert not any(call.get("domain") for call in hunter.domain_calls)
+    assert not any("greenhouse" in str(call.get("domain") or "") for call in hunter.domain_calls)
+    assert any(call.get("domain") == "geodis.com" for call in hunter.domain_calls)
     report = compose_daily_jobs_report(db, limit=25)
     assert "Priya Shah" in report["jobs"][0]["decision_maker"]
     assert "priya.shah@geodis.com" in report["jobs"][0]["contact"]
@@ -589,8 +700,9 @@ def test_low_confidence_hunter_email_is_not_used(monkeypatch):
         ]
     )
     result = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
-    assert result["filled"] == 0
+    assert result["filled"] == 1
     report = compose_daily_jobs_report(db, limit=25)
+    assert "Guess Pattern" in report["jobs"][0]["decision_maker"]
     assert "guess.pattern@geodis.com" not in (report["jobs"][0]["contact"] or "")
 
 
@@ -675,6 +787,147 @@ def test_enrich_assigns_leadership_name_then_hunter_finder(monkeypatch):
     assert hunter.finder_calls
     assert hunter.finder_calls[0]["first_name"] == "Priya"
     assert hunter.finder_calls[0]["last_name"] == "Shah"
+    assert hunter.finder_calls[0]["company"] == "Harris Health"
+    assert hunter.finder_calls[0]["domain"] == "harrishealth.org"
     report = compose_daily_jobs_report(db, limit=25)
     assert "Priya Shah" in report["jobs"][0]["decision_maker"]
     assert "priya.shah@harrishealth.org" in report["jobs"][0]["contact"]
+
+
+def test_domain_only_miss_does_not_skip_leadership_finder(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    today = datetime.now(timezone.utc).date().isoformat()
+    html = """
+    <html><body>
+      <h2>Priya Shah</h2>
+      <p>Pharmacy Operations Manager</p>
+    </body></html>
+    """
+    monkeypatch.setattr(
+        "app.services.employer_leadership.fetch_leadership_pages",
+        lambda **kwargs: [
+            {"url": "https://harrishealth.org/leadership", "html": html}
+        ],
+    )
+    db = _session()
+    db.add(
+        _job(
+            job_key="hh-retry",
+            company_name="Harris Health",
+            locality="Houston, TX",
+            action="delivery",
+            robot_compatible_task="Pharmacy cart loop",
+            apply_url="https://www.harrishealth.org/about",
+            provenance={"hunter_checked_at": today},
+        )
+    )
+    db.commit()
+    hunter = _FakeHunter(
+        [],
+        finder={
+            "email": "priya.shah@harrishealth.org",
+            "name": "Priya Shah",
+            "title": "Pharmacy Operations Manager",
+            "confidence": 92,
+            "verification_status": "valid",
+            "source": "hunter_finder",
+            "organization_domain": "harrishealth.org",
+        },
+    )
+    skipped = enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    assert skipped["skipped"] == 1
+    result = enrich_daily_jobs_with_hunter(
+        db, limit=25, client=hunter, scrape_pages=True
+    )
+    assert result["filled"] == 1
+    assert hunter.finder_calls
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "priya.shah@harrishealth.org" in report["jobs"][0]["contact"]
+
+
+def test_finder_retries_company_when_domain_misses(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    html = """
+    <html><body>
+      <h2>Priya Shah</h2>
+      <p>Pharmacy Operations Manager</p>
+    </body></html>
+    """
+    monkeypatch.setattr(
+        "app.services.employer_leadership.fetch_leadership_pages",
+        lambda **kwargs: [
+            {"url": "https://harrishealth.org/leadership", "html": html}
+        ],
+    )
+    db = _session()
+    db.add(
+        _job(
+            job_key="hh-company-retry",
+            company_name="Harris Health",
+            locality="Houston, TX",
+            action="delivery",
+            robot_compatible_task="Pharmacy cart loop",
+            apply_url="https://www.harrishealth.org/about",
+        )
+    )
+    db.commit()
+
+    class _RetryHunter(_FakeHunter):
+        def find_email(self, **kwargs):
+            self.finder_calls.append(kwargs)
+            if kwargs.get("domain"):
+                return None
+            return self.finder_result
+
+    hunter = _RetryHunter(
+        [],
+        finder={
+            "email": "priya.shah@harrishealth.org",
+            "name": "Priya Shah",
+            "title": "Pharmacy Operations Manager",
+            "confidence": 92,
+            "verification_status": "valid",
+            "source": "hunter_finder",
+            "organization_domain": "harrishealth.org",
+        },
+    )
+    result = enrich_daily_jobs_with_hunter(
+        db, limit=25, client=hunter, scrape_pages=True
+    )
+    assert result["filled"] == 1
+    assert any(call.get("domain") == "harrishealth.org" for call in hunter.finder_calls)
+    assert any(
+        call.get("company") == "Harris Health" and not call.get("domain")
+        for call in hunter.finder_calls
+    )
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "priya.shah@harrishealth.org" in report["jobs"][0]["contact"]
+
+
+def test_finder_does_not_accept_wrong_company_domain(monkeypatch):
+    monkeypatch.setenv("HUNTER_API_KEY", "test-key")
+    db = _session()
+    db.add(
+        _job(
+            job_key="unifi",
+            company_name="Unifi Aviation",
+            locality="ATL — Atlanta, GA",
+            apply_url="https://www.unifiservice.com/about",
+        )
+    )
+    db.commit()
+    hunter = _FakeHunter(
+        [],
+        finder={
+            "email": "jurias@unical.com",
+            "name": "Guess Person",
+            "title": "Site Operations Manager",
+            "confidence": 99,
+            "verification_status": "valid",
+            "source": "hunter_finder",
+            "organization_domain": "unical.com",
+        },
+    )
+    enrich_daily_jobs_with_hunter(db, limit=25, client=hunter)
+    report = compose_daily_jobs_report(db, limit=25)
+    assert "jurias@unical.com" not in (report["jobs"][0]["contact"] or "")
