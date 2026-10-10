@@ -166,8 +166,10 @@ describe("landing fork", () => {
     expect(landing).toMatch(/rfr-landing-employer-link/);
     expect(landing).toMatch(/LiveJobTape/);
     expect(landing).toMatch(/MARKET_TAPE_JOBS/);
-    expect(landing).toMatch(/\/api\/robot-job-card\//);
+    expect(landing).toMatch(/useTapeJobCard/);
     expect(landing).not.toMatch(/\?visit=jobs&job=/);
+    const tapeCard = readFileSync(join(here, "./tapeJobCard.ts"), "utf8");
+    expect(tapeCard).toMatch(/\/api\/robot-job-card\//);
     expect(landing).not.toMatch(/LANDING_HOW_STEPS|LANDING_VOCAB/);
     expect(landing).not.toMatch(
       /Look for buyers|SIGNAL|Apollo|Who is this visit/i
@@ -214,7 +216,8 @@ describe("landing fork", () => {
     expect(workspace).not.toMatch(/FindProofJobs/);
     expect(workspace).toMatch(/LiveJobTape/);
     expect(workspace).toMatch(/MARKET_TAPE_JOBS/);
-    expect(workspace).not.toMatch(/LiveJobDetailModal/);
+    expect(workspace).toMatch(/onSelect=\{handleSelectJob\}/);
+    expect(workspace).toMatch(/LiveJobDetailModal/);
     expect(workspace).not.toMatch(/JobsProcessNav/);
     expect(workspace).not.toMatch(/aria-label="Jobs process"/);
     expect(workspace).not.toMatch(/ready_for_robots_hero/);
