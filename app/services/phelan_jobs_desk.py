@@ -67,6 +67,9 @@ def cal_jobs_desk_intent() -> dict[str, Any]:
     }
 
 
+phelan_jobs_desk_intent = cal_jobs_desk_intent
+
+
 def _kind(row: dict[str, Any]) -> str:
     kind = str(row.get("work_task_model_kind") or "unknown").strip().lower()
     if kind in {"source", "self_train"}:

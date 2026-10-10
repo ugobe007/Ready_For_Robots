@@ -101,7 +101,7 @@ def test_cal_jobs_desk_is_not_find_or_buyer_mail():
     from app.services.phelan_jobs_desk import phelan_jobs_desk_intent
     from app.services.phelan_persona import CAL_JOBS_DESK_TOOLS, CAL_SURFACE
 
-    intent = cal_jobs_desk_intent()
+    intent = phelan_jobs_desk_intent()
     assert intent["not_the_matcher"] is True
     assert intent["not_find_chat"] is True
     assert intent["not_buyer_mail"] is True
