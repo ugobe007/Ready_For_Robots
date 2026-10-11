@@ -292,6 +292,10 @@ def cross_reference_with_db(companies_list: list[dict]) -> dict[str, Any]:
     """
     Cross-reference Grace Gong's list against our database.
     Returns coverage stats and new companies to add.
+    
+    IMPORTANT: Grace Gong companies are SUPPLY-SIDE (robot manufacturers),
+    NOT demand-side (employers with work to automate). They should be tagged
+    as 'robotics_vendor' to distinguish from buyer opportunities.
     """
     try:
         from app.database import SessionLocal
@@ -533,8 +537,78 @@ def main():
     
     if args.apply:
         print("\nApplying changes to database...")
-        # TODO: Implement database insertion logic
-        print("  Database insertion not yet implemented - manual review recommended")
+        
+        try:
+            from app.database import SessionLocal
+            from app.models.company import Company
+            from datetime import datetime, timezone
+            
+            db = SessionLocal()
+            added_count = 0
+            updated_count = 0
+            
+            for company_data in cross_ref.get("new_companies", []):
+                if not isinstance(company_data, dict):
+                    continue
+                    
+                name = company_data.get("name")
+                career_page = company_data.get("career_page")
+                location = company_data.get("location")
+                category = company_data.get("category")
+                
+                if not name or not career_page:
+                    continue
+                
+                # Create new company record
+                # IMPORTANT: Tag as 'robotics_vendor' (supply-side), NOT 'buyer' (demand-side)
+                new_company = Company(
+                    name=name,
+                    website=career_page,
+                    source="grace_gong_week_98",
+                    is_internal=False,
+                    # Metadata tags for supply-side intelligence
+                    automation_profile={
+                        "company_type": "robotics_vendor",
+                        "supply_side": True,
+                        "hiring_activity_signal": True,
+                        "grace_gong_week": 98,
+                        "grace_gong_category": category,
+                        "deployment_velocity_indicator": "high",
+                        "career_page": career_page,
+                        "location": location,
+                        "note": "Robot manufacturer/OEM from Grace Gong hiring list - supply-side intelligence"
+                    }
+                )
+                
+                db.add(new_company)
+                added_count += 1
+            
+            # Update existing companies with hiring activity signal
+            if cross_ref.get("existing_companies"):
+                for name in cross_ref["existing_companies"]:
+                    company = db.query(Company).filter(
+                        Company.name.ilike(f"%{name}%")
+                    ).first()
+                    
+                    if company and company.automation_profile:
+                        # Add hiring activity signal to existing profile
+                        profile = company.automation_profile or {}
+                        profile["hiring_activity_signal"] = True
+                        profile["grace_gong_week"] = 98
+                        profile["supply_side"] = True
+                        company.automation_profile = profile
+                        updated_count += 1
+            
+            db.commit()
+            db.close()
+            
+            print(f"  ✓ Added {added_count} new companies to database")
+            print(f"  ✓ Updated {updated_count} existing companies with hiring signal")
+            print(f"  ✓ All companies tagged as 'robotics_vendor' (supply-side)")
+            
+        except Exception as e:
+            print(f"  ✗ Database operation failed: {e}")
+            print(f"  Note: Companies can still be added manually later")
     
     print("\n✓ Intelligence ingestion complete")
     print(f"\nNext steps:")
