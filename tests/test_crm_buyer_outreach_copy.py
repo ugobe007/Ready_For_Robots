@@ -8,12 +8,11 @@ def test_buyer_draft_is_human_and_not_template_slop():
     body = _draft_buyer_body(acct, settings=None, traits=[], collateral_policy="none", collateral_links=None)
     low = body.lower()
 
-    assert body.startswith("Hi Americold")
-    assert "i research how companies are using robotics" in low
-    assert "i've been looking" in low
-    assert "i'd be interested in your perspective" in low
-    assert "vendor-neutral" not in low
-    assert "robot coordinator" in low
+    assert "nice to meet you" in low
+    assert "i am a robot coordinator" in low
+    assert "at americold realty trust" in low
+    assert "may i send them to you for review?" in low
+    assert "i've been looking" not in low
 
 
 def test_buyer_draft_strips_recommended_action_suffix_from_name():
@@ -25,7 +24,7 @@ def test_buyer_draft_strips_recommended_action_suffix_from_name():
 
     assert "ROI-focused pitch" not in body
     assert "contact new executive" not in body
-    assert body.startswith("Hi Americold")
+    assert "at Americold Realty Trust" in body
 
 
 def test_hospitality_variant_matches_new_rewrite_style():
@@ -33,10 +32,9 @@ def test_hospitality_variant_matches_new_rewrite_style():
     body = _draft_buyer_body(acct, settings=None, traits=[], collateral_policy="none", collateral_links=None)
     low = body.lower()
 
-    assert "i research how companies are using robotics" in low
-    assert "housekeeping" in low
-    assert "i'd be interested in your perspective" in low
-    assert "vendor-neutral" not in low
+    assert "i am a robot coordinator" in low
+    assert "at mgm resorts international" in low
+    assert "may i send them to you for review?" in low
 
 
 def test_healthcare_variant_matches_new_rewrite_style():
@@ -44,10 +42,9 @@ def test_healthcare_variant_matches_new_rewrite_style():
     body = _draft_buyer_body(acct, settings=None, traits=[], collateral_policy="none", collateral_links=None)
     low = body.lower()
 
-    assert "i research how companies are using robotics" in low
-    assert "between floors" in low
-    assert "i'd be interested in your perspective" in low
-    assert "vendor-neutral" not in low
+    assert "i am a robot coordinator" in low
+    assert "at lifepoint health" in low
+    assert "may i send them to you for review?" in low
 
 
 def test_food_variant_matches_new_rewrite_style():
@@ -55,7 +52,6 @@ def test_food_variant_matches_new_rewrite_style():
     body = _draft_buyer_body(acct, settings=None, traits=[], collateral_policy="none", collateral_links=None)
     low = body.lower()
 
-    assert "i research how companies are using robotics" in low
-    assert "changeover" in low
-    assert "i'd be interested in your perspective" in low
-    assert "vendor-neutral" not in low
+    assert "i am a robot coordinator" in low
+    assert "at clemens food group" in low
+    assert "may i send them to you for review?" in low

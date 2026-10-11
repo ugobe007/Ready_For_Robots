@@ -66,10 +66,13 @@ def test_send_cal_intro_allows_verified_source_for_generic_role_inbox(monkeypatc
         to_email="info@acme.com",
         subject="Hello",
         body_text=(
-            "I'm Phelan, Robot Coordinator at ReadyForRobots. I research how companies are using robotics "
-            "and help identify jobs where automation could actually make a difference.\n\n"
-            "I've been looking at logistics, and I keep noticing something I wanted to check with you.\n\n"
-            "I'd be interested in your perspective."
+            "Hi Kelly, nice to meet you. My name is Phelan, I am a Robot Coordinator "
+            "for ReadyForRobots where I help find robots for automation jobs. I noticed "
+            "you announced the need for order assembly to help with packing automation tasks "
+            "at Wendy's. I understand the task requires robots with indoor navigation skills "
+            "and capabilities of payload handling. On that note I found a few robots that match "
+            "these requirements I would like to share with you. May I send them to you "
+            "for review? Thanks and look forward to learning more.\n\nPhelan."
         ),
         idempotency_key="k2",
         email_source="apollo",

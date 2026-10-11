@@ -158,8 +158,18 @@ _OFF_INSTRUCTION_MARKERS = (
 )
 
 
+_ESSAY_MARKERS = (
+    "i've been looking",
+    "i’ve been looking",
+    "i'd be interested in your perspective",
+    "i’d be interested in your perspective",
+    "i research how companies are using robotics",
+    "i keep noticing something",
+)
+
+
 def buyer_letter_obeys_instructions(draft: str | None) -> tuple[bool, str]:
-    """The operator letter: who Phelan is, what he has been looking at, one question, their perspective."""
+    """The Robot Coordinator script: who Phelan is, the job, and a request to send matches."""
     text = (draft or "").strip()
     if not text:
         return False, "Draft is empty"
@@ -167,17 +177,25 @@ def buyer_letter_obeys_instructions(draft: str | None) -> tuple[bool, str]:
     for marker in _OFF_INSTRUCTION_MARKERS:
         if marker in low:
             return False, f"Draft violates operator instructions ({marker})"
-    if "i'd be interested in your perspective" not in low and "i’d be interested in your perspective" not in low:
-        return False, "Draft missing the approved close"
-    has_frame = "i've been looking" in low or "i’ve been looking" in low
-    has_identity = (
-        "i research how companies are using robotics" in low
-        or "this is phelan again" in low
-    )
-    if not has_frame or not has_identity:
-        return False, "Draft missing the approved introduction"
-    if "phelan" not in low or "robot coordinator" not in low:
-        return False, "Draft missing Phelan, Robot Coordinator"
+    for marker in _ESSAY_MARKERS:
+        if marker in low:
+            return False, f"Draft uses the essay format ({marker})"
+    if "i am a robot coordinator" not in low:
+        return False, "Draft missing the Robot Coordinator introduction"
+    if "may i send them to you for review" not in low:
+        return False, "Draft missing the request to send the robot matches"
+    if not low.rstrip().endswith("phelan."):
+        return False, "Draft missing the Phelan close"
+    return True, "ok"
+
+
+def buyer_letter_ready_to_send(draft: str | None) -> tuple[bool, str]:
+    """Format is right, and the contact and job are filled in. Blanks are not a send."""
+    ok, reason = buyer_letter_obeys_instructions(draft)
+    if not ok:
+        return ok, reason
+    if "_______" in (draft or ""):
+        return False, "Draft is missing the contact or the job"
     return True, "ok"
 
 

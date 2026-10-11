@@ -49,7 +49,7 @@ def test_every_ladder_touch_is_complete_and_named():
             ok, reason = is_complete_cal_draft(full)
             assert ok, f"{touch}/{industry!r} failed guard: {reason}"
             assert name in body, f"{touch}/{industry!r} missing company name"
-            assert body.rstrip().endswith("readyforrobots.com")
+            assert body.rstrip().endswith("Phelan.")
             assert "Phelan" in body
             assert "Robot Coordinator" in body
             assert "Cal" not in body
@@ -92,12 +92,13 @@ def test_ladder_touches_teach_and_differ_from_intro():
         seen.add(body)
 
 
-def test_industry_touch_differs_from_generic():
-    # A recognised industry should get tailored copy, not the generic fallback.
+def test_industry_is_not_invented_as_the_job():
+    # The script names the company. It does not turn the industry into a fake announcement.
     for touch in LADDER_TOUCHES:
-        logistics = build_ladder_touch_body(touch, "Acme", "Logistics")
-        generic = build_ladder_touch_body(touch, "Acme", "Sasquatch Wrangling")
-        assert logistics != generic, f"{touch} did not specialise for logistics"
+        body = build_ladder_touch_body(touch, "Acme", "Logistics").lower()
+        assert "at acme" in body
+        assert "announced the need for logistics" not in body
+        assert "i've been looking" not in body
 
 
 def test_default_cadence_delays_and_labels():

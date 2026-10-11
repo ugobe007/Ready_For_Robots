@@ -546,70 +546,34 @@ def _ladder_content(industry: str) -> dict[str, str]:
 
 
 def ladder_touch_subject(touch: str, name: str, industry: str) -> str:
-    """Same subject style as the approved first touch. No field-note subjects."""
-    angle = {"teach": "workflow_first", "trend": "what_survives"}.get(touch, "bottleneck_first")
-    return buyer_variant_subject(name, industry, angle)
+    """Follow-up subjects stay on the job. No field-note subjects."""
+    company = (name or "your team").strip()
+    if touch == "teach":
+        subject = f"the robots that match the job at {company}"
+    elif touch == "trend":
+        subject = f"still holding robot matches for {company}"
+    else:
+        subject = f"may I send the robot matches for {company}"
+    return subject[:88]
 
 
 def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
-    """Follow-up in the same voice as the approved first touch.
-
-    The operator letter is who Phelan is, what he has been looking at, one
-    operational observation, one question, and an invitation for their perspective.
-    Follow-ups stay on that letter. They do not switch to a field note.
-    """
-    n = (name or "your team").strip()
-    team = _greeting_name(n)
-    ins = _buyer_insight(industry)
-    visible = str(ins.get("visible") or "the most visible task")
-    look_at = _look_at_label(ins, industry)
-    pressure = _pressure_paragraph(ins)
-    visible_cap = f"{visible[:1].upper()}{visible[1:]}" if visible else "The most visible task"
-    opener = (
-        f"I've been looking at {look_at}, and I keep noticing something I wanted to check with you."
-    )
-    if touch == "teach":
-        observation = (
-            f"{opener} {visible_cap} gets most of the attention, but a lot of the "
-            "day-to-day pressure seems to happen elsewhere."
+    """Follow-up uses the same Robot Coordinator script, not a new essay."""
+    body = build_buyer_variant_body(name, industry, "bottleneck_first")
+    body = body.replace("nice to meet you. My name is Phelan,", "this is Phelan again.", 1)
+    if touch == "trend":
+        body = body.replace(
+            "I found a few robots that match",
+            "I am still holding a few robots that match",
+            1,
         )
-        question = f"I'm curious if that's true at {n}."
-    elif touch == "trend":
-        observation = (
-            f"{opener} A demo can look great and still fail once real traffic, exceptions, and support show up."
+    elif touch == "question":
+        body = body.replace(
+            "May I send them to you for review?",
+            "May I send them to you for review this week?",
+            1,
         )
-        pressure = (
-            "The projects that hold up usually start with one clear operational problem — "
-            f"not a shortlist of robots. {pressure}"
-        )
-        question = (
-            f"If {n} were starting fresh, would you begin with {visible}, "
-            "or with the quieter workflow that actually creates more problems?"
-        )
-    else:
-        observation = (
-            f"{opener} {visible_cap} gets most of the attention, but a lot of the "
-            "day-to-day pressure seems to happen elsewhere."
-        )
-        question = (
-            "Where do you see the biggest opportunity to automate today? "
-            f"Is it still {visible} at {n}, or are there other parts of the operation that cause more problems?"
-        )
-    return "\n".join([
-        f"Hi {team},",
-        "",
-        PHELAN_BUYER_REMINDER_LINE,
-        "",
-        observation,
-        "",
-        pressure,
-        "",
-        question,
-        "",
-        _mission_close(),
-        "",
-        phelan_buyer_email_signature(),
-    ])
+    return body
 
 
 def pick_buyer_variant(company_id, *, allowed=None) -> str:
@@ -886,69 +850,44 @@ def build_context_reason(name: str, signal_blob: str, *, max_chars: int = 200) -
 
 
 def build_buyer_variant_body(
-    name: str, industry: str, variant_id: str, *, reason: str | None = None
+    name: str,
+    industry: str,
+    variant_id: str,
+    *,
+    reason: str | None = None,
+    contact_name: str | None = None,
+    announced_need: str | None = None,
+    automation_tasks: str | None = None,
+    skills: str | None = None,
+    capabilities: str | None = None,
 ) -> str:
-    """Assemble the full buyer email body for a given advisor angle.
+    """Buyer letter in the operator's Robot Coordinator script.
 
-    When ``reason`` is provided (a verifiable, company-specific hook from
-    :func:`build_context_reason`), it is woven in as the first paragraph so the
-    opener cites a concrete reason for writing while the rest of the angle stays
-    humble on whether a robot is even the answer.
+    The essay angles are not this letter. Unknown contact, job, skills, and
+    capabilities stay blank. The company name is filled in when we have it.
     """
-    n = (name or "your team").strip()
-    builders = {
-        "workflow_first": _variant_workflow_first,
-        "what_survives": _variant_what_survives,
-        "bottleneck_first": _variant_bottleneck_first,
-    }
-    fn = builders.get(variant_id, _variant_workflow_first)
-    body = fn(n, industry or "your industry")
-    short = _short_label(n)
-    anchored = (n.lower() in body.lower()) or (short.lower() in body.lower())
-    if n and not anchored:
-        # Prefer short conversational labels; only force an anchor if neither appears.
-        anchor = f"I'm curious if that's true at {short}."
-        if body.startswith("Hi") and "\n\n" in body:
-            first, rest = body.split("\n\n", 1)
-            body = f"{first}\n\n{anchor}\n\n{rest}"
-        elif body.startswith("Hi"):
-            body = f"{body}\n\n{anchor}"
-        else:
-            body = f"Hi {short} team,\n\n{anchor}\n\n{body}"
-    if reason:
-        # Inject the grounded hook right after the greeting line so the email
-        # leads with a real, verifiable reason before Cal's field observation.
-        if body.startswith("Hi") and "\n\n" in body:
-            first, rest = body.split("\n\n", 1)
-            if not rest.startswith(reason):
-                body = f"{first}\n\n{reason}\n\n{rest}"
-        elif body.startswith("Hi,\n\n"):
-            body = body.replace("Hi,\n\n", f"Hi,\n\n{reason}\n\n", 1)
-    return body
+    del industry, variant_id, reason  # script does not take an angle or a pitch
+    from app.services.oem_job_intro import compose_employer_need_intro
+
+    text = compose_employer_need_intro(
+        contact_name=contact_name,
+        announced_need=announced_need,
+        automation_tasks=automation_tasks,
+        skills=skills,
+        capabilities=capabilities,
+    )
+    company = (name or "").strip()
+    if company and company.lower() not in {"your team", "your company"}:
+        text = text.replace("at your company", f"at {company}", 1)
+    return text
 
 
 def buyer_variant_subject(name: str, industry: str, variant_id: str) -> str:
-    """Grounded subject — operational topic, not a pitch or curiosity teaser."""
-    sector = _buyer_sector(industry)
-    generic_sector = sector == "your line of work"
-    if variant_id == "what_survives":
-        return (
-            "demo versus deployment"
-            if generic_sector
-            else f"demo versus deployment in {sector}"
-        )
-    if variant_id == "bottleneck_first":
-        return (
-            "where the operational hours go"
-            if generic_sector
-            else f"where the hours go in {sector}"
-        )
-    # workflow_first (default)
-    return (
-        "start with the task, not the robot"
-        if generic_sector
-        else f"start with the task in {sector}"
-    )
+    """Subject for the Robot Coordinator script. One job, not an essay."""
+    del industry, variant_id
+    company = (name or "your team").strip()
+    subject = f"robots that match the job at {company}"
+    return subject[:88]
 
 
 def phelan_opening(*, audience: str = "buyer") -> str:

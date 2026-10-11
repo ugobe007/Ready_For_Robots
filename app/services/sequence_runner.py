@@ -17,6 +17,16 @@ from app.services.sales_learning_agent import record_sales_experience
 
 logger = logging.getLogger(__name__)
 
+_BUYER_SCRIPT = (
+    "Hi _______, nice to meet you. My name is Phelan, I am a Robot Coordinator "
+    "for ReadyForRobots where I help find robots for automation jobs. I noticed "
+    "you announced the need for _______ to help with _______ automation tasks "
+    "at {company_name}. I understand the task requires robots with _______ skills "
+    "and capabilities of _______. On that note I found a few robots that match "
+    "these requirements I would like to share with you. May I send them to you "
+    "for review? Thanks and look forward to learning more.\n\nPhelan."
+)
+
 DEFAULT_BUYER_SEQUENCE = {
     "name": "Phelan buyer cadence",
     "slug": "cal_buyer_v1",
@@ -27,22 +37,8 @@ DEFAULT_BUYER_SEQUENCE = {
         {
             "step_number": 1,
             "delay_days": 0,
-            "subject_template": "a deployment note for {company_name}",
-            "body_template": (
-                "Hi {company_name} team,\n\n"
-                "I'm Phelan, Robot Coordinator at ReadyForRobots. I research how companies are using robotics "
-                "and help identify jobs where automation could actually make a difference.\n\n"
-                "I've been looking at {industry}, and I keep noticing something I wanted to check with you. "
-                "The most visible task gets most of the attention, but a lot of the day-to-day pressure "
-                "seems to happen elsewhere.\n\n"
-                "A lot of material still has to move between steps, exceptions create work that doesn't fit "
-                "the standard process, and people end up filling the gaps.\n\n"
-                "I'm curious if that's true at {company_name}.\n\n"
-                "Where do you see the biggest opportunity to automate today? Is it still the most visible task, "
-                "or are there other parts of the operation that cause more problems?\n\n"
-                "I'd be interested in your perspective.\n\n"
-                "— Phelan\nRobot Coordinator\nReady For Robots"
-            ),
+            "subject_template": "robots that match the job at {company_name}",
+            "body_template": _BUYER_SCRIPT,
             "action_label": "Intro",
         },
         {
@@ -50,50 +46,24 @@ DEFAULT_BUYER_SEQUENCE = {
             # builders (per-industry); this static template is a fallback only.
             "step_number": 2,
             "delay_days": 6,
-            "subject_template": "start with the task in {industry}",
-            "body_template": (
-                "Hi {company_name} team,\n\n"
-                "This is Phelan again, Robot Coordinator at ReadyForRobots.\n\n"
-                "I've been looking at {industry}, and I keep noticing something I wanted to check with you. "
-                "The most visible task gets most of the attention, but a lot of the day-to-day pressure "
-                "seems to happen elsewhere.\n\n"
-                "I'm curious if that's true at {company_name}.\n\n"
-                "I'd be interested in your perspective.\n\n"
-                "— Phelan\nRobot Coordinator\nReady For Robots"
-            ),
+            "subject_template": "the robots that match the job at {company_name}",
+            "body_template": _BUYER_SCRIPT,
             "action_label": "Teach",
         },
         {
             # Trend — one market pattern / common mistake. Live copy = ladder.
             "step_number": 3,
             "delay_days": 14,
-            "subject_template": "demo versus deployment in {industry}",
-            "body_template": (
-                "Hi {company_name} team,\n\n"
-                "This is Phelan again, Robot Coordinator at ReadyForRobots.\n\n"
-                "I've been looking at {industry}, and I keep noticing something I wanted to check with you. "
-                "A demo can look great and still fail once real traffic, exceptions, and support show up.\n\n"
-                "If you were starting fresh at {company_name}, would you begin with the most visible task, "
-                "or with the quieter workflow that actually creates more problems?\n\n"
-                "I'd be interested in your perspective.\n\n"
-                "— Phelan\nRobot Coordinator\nReady For Robots"
-            ),
+            "subject_template": "still holding robot matches for {company_name}",
+            "body_template": _BUYER_SCRIPT,
             "action_label": "Trend",
         },
         {
             # Question — one easy, genuine question. Live copy = ladder.
             "step_number": 4,
             "delay_days": 24,
-            "subject_template": "where the hours go in {industry}",
-            "body_template": (
-                "Hi {company_name} team,\n\n"
-                "This is Phelan again, Robot Coordinator at ReadyForRobots.\n\n"
-                "I've been looking at {industry}, and I keep noticing something I wanted to check with you.\n\n"
-                "Where do you see the biggest opportunity to automate today at {company_name}? "
-                "Is it still the most visible task, or are there other parts of the operation that cause more problems?\n\n"
-                "I'd be interested in your perspective.\n\n"
-                "— Phelan\nRobot Coordinator\nReady For Robots"
-            ),
+            "subject_template": "may I send the robot matches for {company_name}",
+            "body_template": _BUYER_SCRIPT,
             "action_label": "Question",
         },
     ],
@@ -500,12 +470,12 @@ def process_due_enrollments(
             step, account, sequence_slug=slug_cache[enrollment.sequence_id]
         )
         if slug_cache[enrollment.sequence_id] == DEFAULT_BUYER_SEQUENCE["slug"]:
-            from app.services.phelan_draft_guard import buyer_letter_obeys_instructions
+            from app.services.phelan_draft_guard import buyer_letter_ready_to_send
 
-            obeys, obey_reason = buyer_letter_obeys_instructions(body)
-            if not obeys:
+            ready, ready_reason = buyer_letter_ready_to_send(body)
+            if not ready:
                 enrollment.status = "blocked"
-                enrollment.paused_reason = f"off_instruction:{obey_reason[:120]}"
+                enrollment.paused_reason = f"off_instruction:{ready_reason[:120]}"
                 skipped += 1
                 continue
         reply_token = secrets.token_urlsafe(18)
