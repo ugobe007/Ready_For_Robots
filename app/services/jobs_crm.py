@@ -9,6 +9,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from uuid import UUID
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.models.jobs_crm import ApplicationMessage, JobApplication, JobsCrmActivity, KeptJob
@@ -1113,4 +1114,7 @@ def capture_inbound_message(
 def find_application_by_reply_token(db: Session, token: str) -> JobApplication | None:
     if not token:
         return None
-    return db.query(JobApplication).filter(JobApplication.reply_token == token).first()
+    row = db.query(JobApplication).filter(JobApplication.reply_token == token).first()
+    if row:
+        return row
+    return db.query(JobApplication).filter(func.lower(JobApplication.reply_token) == token.lower()).first()
