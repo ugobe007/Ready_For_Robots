@@ -106,17 +106,9 @@ def test_compose_keeps_named_employers_drops_boards(db_session):
     assert report["jobs"][0]["job_type"] == "Delivery"
     assert report["jobs"][0]["decision_maker"] == "Not named on the posting"
     assert "will not invent" in report["jobs"][0]["contact"]
-    intro = report["jobs"][0]["intro"]
-    assert "Robot Coordinator for ReadyForRobots" in intro
-    assert "pharmacy delivery at Rochester Regional Health in Rochester, NY" in intro
-    assert "arrange a call with Rochester Regional Health" in intro
-    assert "$______" in intro
-    assert "Not named on the posting" not in intro
-    employer_intro = report["jobs"][0]["employer_intro"]
-    assert "I help find robots for automation jobs" in employer_intro
-    assert "need for pharmacy delivery" in employer_intro
-    assert "May I send them to you for review?" in employer_intro
-    assert "Hi _______," in employer_intro
+    assert report["jobs"][0]["robots"] == "Autonomous mobile robot"
+    assert "intro" not in report["jobs"][0]
+    assert "employer_intro" not in report["jobs"][0]
     assert "First seen" in report["jobs"][0]["timing"]
     assert report["jobs"][0]["card_href"].endswith("/?job=named")
     assert report["limit"] == TOP_N or report["limit"] == 25
@@ -162,13 +154,8 @@ def test_compose_sales_card_uses_page_contact_not_invented(db_session):
     assert "Unload inbound trailers" in real["description"]
     assert real["decision_maker"] == "Priya Shah · Site operations manager"
     assert "dock.ops@geodis.com" in real["contact"]
-    assert "Priya at GEODIS" in real["intro"]
-    assert "unload inbound trailers" in real["intro"]
-    assert "Hi _______," in real["intro"]
-    assert "Hi Priya," in real["employer_intro"]
-    assert "need for pallet move" in real["employer_intro"]
-    assert "help with unload inbound trailers" in real["employer_intro"]
-    assert "robots with _______" in real["employer_intro"]
+    assert real["robots"] == "Pallet AMR and heavy cobot"
+    assert "intro" not in real
     html_named = render_daily_jobs_report_html(
         {"date": "2026-10-09", "limit": 25, "jobs": [real]}
     )
@@ -238,10 +225,12 @@ def test_render_email_is_jobs_not_signal():
     assert "Job card:" not in text
     assert "/?job=" not in text
     assert "CSV of these leads is attached" in text
-    assert "[5] Intro to the robot company" in text
-    assert "[6] Intro to the employer" in text
-    assert "Robot Coordinator for ReadyForRobots" in text
-    assert "May I send them to you for review?" in text
+    assert "Job: Pharmacy delivery" in text
+    assert "Robots: Autonomous mobile robot" in text
+    assert "[5] Intro to the robot company" not in text
+    assert "[6] Intro to the employer" not in text
+    assert "Robot Coordinator" not in text
+    assert "May I send them" not in text
     assert "Pharmacy delivery between units" in text
     assert "/?visit=jobs" in text
     assert "admin#daily-jobs-report" in text
@@ -271,6 +260,9 @@ def test_render_email_is_jobs_not_signal():
         }
     )
     assert csv_body.splitlines()[0].startswith("rank,employer,locality")
+    assert "robots" in csv_body.splitlines()[0]
+    assert "intro" not in csv_body.splitlines()[0]
+    assert "Autonomous mobile robot" in csv_body
     assert "Rochester Regional Health" in csv_body
     assert "rrh-pharmacy" not in csv_body
     assert "/?job=" not in csv_body
@@ -504,8 +496,9 @@ def test_send_emails_operator(monkeypatch, db_session):
     assert "Rochester Regional Health" in stored.body_text
     assert "Job card" not in stored.body_text
     assert stored.csv_text.startswith("rank,employer,locality")
-    assert "[5] Intro to the robot company" in sent[0]["body_text"]
-    assert "[6] Intro to the employer" in sent[0]["body_text"]
+    assert "Robots: Autonomous mobile robot" in sent[0]["body_text"]
+    assert "Robot Coordinator" not in sent[0]["body_text"]
+    assert "[5] Intro" not in sent[0]["body_text"]
     assert "Rochester Regional Health" in (sent[0].get("body_html") or "")
     assert (sent[0].get("idempotency_key") or "").startswith(
         "daily-jobs-report-"
