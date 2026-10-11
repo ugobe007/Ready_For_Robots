@@ -1,8 +1,8 @@
 """Named live Robot Jobs → FIND match corpus rows.
 
-Scrapers persist onto ``robot_jobs``. FIND used a frozen JSON file, so new
-employer+work never reached Job Cards. Overlay recent named jobs that map to
-a FIND tape family. Fail-open if the table is missing. Do not invent employers.
+Scrapers persist onto ``robot_jobs``. Overlay a named job only when the
+employer is asking for a robot. A human occupation stays off FIND. Fail-open
+if the table is missing. Do not invent employers.
 """
 from __future__ import annotations
 
@@ -135,11 +135,17 @@ def corpus_row_from_robot_job(row: Any) -> Optional[dict[str, Any]]:
         req = {}
     function = str(req.get("job_function") or getattr(row, "action", "") or "").strip()
     product_class = str(req.get("product_class") or "").strip() or None
+    from app.services.robot_job_extract import asks_for_a_robot
     from app.services.robot_requirement_match import is_named_robot_job
 
     if not is_named_robot_job(employer, locality):
         return None
     if not is_job_employer_name(employer, title=title):
+        return None
+    # A human occupation that could be automated is not a job opportunity.
+    observed_workflow = str(getattr(row, "observed_workflow", "") or "").strip()
+    why_job = str(getattr(row, "why_job", "") or "").strip()
+    if not asks_for_a_robot(title, observed_workflow, why_job):
         return None
     tape = tape_family_for_live_job(
         job_function=function,

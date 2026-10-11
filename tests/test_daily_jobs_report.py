@@ -48,7 +48,7 @@ def _job(**extra):
         company_name="Rochester Regional Health",
         locality="Rochester, NY",
         action="delivery",
-        robot_compatible_task="Pharmacy delivery",
+        robot_compatible_task="Pharmacy delivery AMR",
         investigate_status="yes",
         existence_confidence=0.9,
         definition_completeness=0.8,
@@ -75,7 +75,7 @@ def test_compose_keeps_named_employers_drops_boards(db_session):
             job_key="named",
             company_name="Rochester Regional Health",
             locality="Rochester, NY",
-            robot_compatible_task="Pharmacy delivery",
+            robot_compatible_task="Pharmacy delivery AMR",
             investigate_status="yes",
         )
     )
@@ -101,18 +101,61 @@ def test_compose_keeps_named_employers_drops_boards(db_session):
     report = compose_daily_jobs_report(db_session, limit=25)
     employers = [j["employer"] for j in report["jobs"]]
     assert employers == ["Rochester Regional Health"]
-    assert report["jobs"][0]["title"] == "Pharmacy delivery"
+    assert report["jobs"][0]["title"] == "Pharmacy delivery AMR"
     assert report["jobs"][0]["locality"] == "Rochester, NY"
     assert report["jobs"][0]["job_type"] == "Delivery"
     assert report["jobs"][0]["decision_maker"] == "Not named on the posting"
     assert "will not invent" in report["jobs"][0]["contact"]
     assert "Hospital delivery AMR" in report["jobs"][0]["robots"]
-    assert report["jobs"][0]["robot_work"] == "Pharmacy delivery"
+    assert report["jobs"][0]["robot_work"] == "Pharmacy delivery AMR"
     assert "intro" not in report["jobs"][0]
     assert "employer_intro" not in report["jobs"][0]
     assert "First seen" in report["jobs"][0]["timing"]
     assert report["jobs"][0]["card_href"].endswith("/?job=named")
     assert report["limit"] == TOP_N or report["limit"] == 25
+
+
+def test_human_labor_is_not_a_job_opportunity(db_session):
+    """A staff requisition is not a robot job, even when a robot could do the work."""
+    human = (
+        "Material Handler",
+        "Janitor",
+        "Night Auditor",
+        "Busser",
+        "Weekend Cook",
+        "Stand up Forklift Operator",
+        "Robotics Engineer",
+        "Order Picker",
+        "Front Desk Agent",
+    )
+    for title in human:
+        db_session.add(
+            _job(
+                job_key=f"human-{title[:12]}",
+                company_name="Ajinomoto Foods",
+                locality="Portland, OR",
+                action="material_handling",
+                robot_compatible_task=title,
+                investigate_status="yes",
+                existence_confidence=0.99,
+            )
+        )
+    db_session.add(
+        _job(
+            job_key="asks",
+            company_name="GEODIS",
+            locality="Plainfield, IN",
+            action="pallet_move",
+            robot_compatible_task="Pallet AMR",
+        )
+    )
+    db_session.commit()
+    report = compose_daily_jobs_report(db_session, limit=25)
+    assert [j["job_key"] for j in report["jobs"]] == ["asks"]
+    empty = render_daily_jobs_report_text(
+        {"date": "2026-10-11", "limit": 25, "jobs": []}
+    )
+    assert "No employer is asking for a robot yet." in empty
 
 
 def test_compose_sales_card_uses_page_contact_not_invented(db_session):
@@ -122,7 +165,7 @@ def test_compose_sales_card_uses_page_contact_not_invented(db_session):
             company_name="GEODIS",
             locality="Plainfield, IN",
             action="pallet_move",
-            robot_compatible_task="Pallet move",
+            robot_compatible_task="Pallet AMR",
             observed_workflow="Unload inbound trailers and stage pallets at the dock.",
             why_job="Dock labor is short on the night shift.",
             employer_email="dock.ops@geodis.com",
@@ -157,7 +200,7 @@ def test_compose_sales_card_uses_page_contact_not_invented(db_session):
     assert "dock.ops@geodis.com" in real["contact"]
     assert "Pallet AMR" in real["robots"]
     assert "lifts a loaded pallet" in real["robots"]
-    assert real["robot_work"] == "Pallet move"
+    assert real["robot_work"] == "Pallet AMR"
     assert "intro" not in real
     html_named = render_daily_jobs_report_html(
         {"date": "2026-10-09", "limit": 25, "jobs": [real]}
@@ -175,7 +218,7 @@ def test_compose_ranks_yes_ahead_of_weak(db_session):
             job_key="weak",
             company_name="Endeavor Health",
             locality="Evanston, IL",
-            robot_compatible_task="Unit supply runs",
+            robot_compatible_task="Unit supply AMR",
             investigate_status="weak",
             existence_confidence=0.99,
         )
@@ -185,7 +228,7 @@ def test_compose_ranks_yes_ahead_of_weak(db_session):
             job_key="yes",
             company_name="GEODIS",
             locality="Plainfield, IN",
-            robot_compatible_task="Pallet move",
+            robot_compatible_task="Pallet AMR",
             investigate_status="yes",
             existence_confidence=0.5,
         )
@@ -279,7 +322,7 @@ def test_public_job_card_is_named_employer_only(db_session):
             job_key="rrh-live",
             company_name="Rochester Regional Health",
             locality="Rochester, NY",
-            robot_compatible_task="Pharmacy delivery",
+            robot_compatible_task="Pharmacy delivery AMR",
         )
     )
     db_session.add(

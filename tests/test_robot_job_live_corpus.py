@@ -10,12 +10,22 @@ from app.services.robot_requirement_match import match_jobs_from_profile
 
 
 def test_live_row_maps_named_harvest_job_to_agriculture():
-    row = SimpleNamespace(
+    human = SimpleNamespace(
         job_key="abc123harvest",
         company_name="Sunrise Orchards",
         locality="Yakima, WA",
         action="harvest",
         robot_compatible_task="Harvest Worker",
+        requirements={"job_function": "harvest", "unknowns": ["compensation"]},
+        unknowns=["compensation"],
+    )
+    assert corpus_row_from_robot_job(human) is None
+    row = SimpleNamespace(
+        job_key="abc123harvest",
+        company_name="Sunrise Orchards",
+        locality="Yakima, WA",
+        action="harvest",
+        robot_compatible_task="Orchard harvest robot",
         requirements={"job_function": "harvest", "unknowns": ["compensation"]},
         unknowns=["compensation"],
     )
@@ -34,7 +44,7 @@ def test_live_overlay_copies_employer_email():
         company_name="Named Hospital",
         locality="Portland, OR",
         action="patient_transport",
-        robot_compatible_task="Patient Transporter",
+        robot_compatible_task="Patient transport AMR",
         employer_email="ops@named-hospital.org",
         contact_url="https://named-hospital.org",
         apply_url="https://named-hospital.org/careers/transporter",
@@ -107,7 +117,7 @@ def test_live_overlay_reaches_requirement_matcher(monkeypatch):
     live = (
         {
             "job_key": "live_chipotle_cook",
-            "title": "Line Cook",
+            "title": "Kitchen food-prep robot",
             "industry": "Restaurant",
             "path": "food prep",
             "company_name": "Taqueria Luna LLC",

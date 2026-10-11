@@ -403,6 +403,39 @@ def is_job_employer_name(name: str, title: str = "") -> bool:
     return True
 
 
+# The employer is asking for a robot as the worker. "Robotics engineer" is a person.
+_ROBOT_ASK_RE = re.compile(
+    r"(?:\b|_)(?:robots?|robotic|robotics|cobots?|humanoids?|amrs?|agvs?|drones?)(?:\b|_)",
+    re.I,
+)
+_PERSON_HIRE_RE = re.compile(
+    r"\b(?:operators?|operating|technicians?|engineers?|engineering|specialists?|managers?|associates?|"
+    r"attendants?|interns?|internships?|programmers?|programming|developers?|developing|mechanics?|salespeople|"
+    r"analysts?|supervisors?|coordinators?|clerks?|drivers?|workers?|laborers?|"
+    r"staff|crew|members?|agents?|auditors?|bussers?|runners?|cooks?|servers?|"
+    r"bartenders?|mixologists?|janitors?|custodians?|housekeepers?|housekeeping|"
+    r"valets?|concierges?|bellm[ae]n|helpers?|aides?|cashiers?|hosts?|hostesses?|"
+    r"baristas?|bakers?|butchers?|welders?|assemblers?|pickers?|packers?|"
+    r"handlers?|porters?|transporters?|masons?|bricklayers?|dishwashers?|"
+    r"receptionists?|directors?|leads?|cleaners?|maintenance|nurses?|"
+    r"pharmacists?|therapists?|washers?)\b",
+    re.I,
+)
+
+
+def asks_for_a_robot(title: str, *extra: str) -> bool:
+    """True when the posting asks for a robot.
+
+    A human occupation that could be automated is still a human job.
+    """
+    blob = " ".join(part for part in (title, *extra) if part).strip()
+    if not blob or not _ROBOT_ASK_RE.search(blob):
+        return False
+    if _PERSON_HIRE_RE.search(blob):
+        return False
+    return True
+
+
 # Board inboxes that appear on aggregator pages. Not an employer mailbox.
 _BOARD_EMAIL_DOMAINS = frozenset(
     {
