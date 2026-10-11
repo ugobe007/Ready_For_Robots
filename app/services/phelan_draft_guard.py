@@ -190,12 +190,18 @@ def buyer_letter_obeys_instructions(draft: str | None) -> tuple[bool, str]:
 
 
 def buyer_letter_ready_to_send(draft: str | None) -> tuple[bool, str]:
-    """Format is right, and the contact and job are filled in. Blanks are not a send."""
+    """Format is right, and the contact and job are filled in. Skills/capabilities may be blank."""
     ok, reason = buyer_letter_obeys_instructions(draft)
     if not ok:
         return ok, reason
-    if "_______" in (draft or ""):
-        return False, "Draft is missing the contact or the job"
+    text = draft or ""
+    # The Robot Coordinator script leaves skills, capabilities, and tasks blank
+    # when those facts are unknown. Only reject if contact (Hi _______) or
+    # the announced need (announced the need for _______) are still blank.
+    if text.startswith("Hi _______,"):
+        return False, "Draft is missing the contact name"
+    if "announced the need for _______" in text:
+        return False, "Draft is missing the announced job need"
     return True, "ok"
 
 

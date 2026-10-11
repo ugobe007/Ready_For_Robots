@@ -318,6 +318,7 @@ def _render_sequence_step(
     account: CrmAccount,
     *,
     sequence_slug: str | None,
+    company: Any = None,
 ) -> tuple[str, str]:
     """Produce (subject, body) for a due follow-up.
 
@@ -340,13 +341,13 @@ def _render_sequence_step(
         if touch:
             return (
                 ladder_touch_subject(touch, name, industry),
-                build_ladder_touch_body(touch, name, industry),
+                build_ladder_touch_body(touch, name, industry, company=company),
             )
         # Step 1 is the operator-approved first touch, not the stored fallback.
         if int(getattr(step, "step_number", 0) or 0) == 1:
             return (
                 buyer_variant_subject(name, industry, "bottleneck_first"),
-                build_buyer_variant_body(name, industry, "bottleneck_first"),
+                build_buyer_variant_body(name, industry, "bottleneck_first", company=company),
             )
     subject = _render_template(step.subject_template or f"Follow-up — {account.name}", account)
     body = _render_template(
@@ -447,6 +448,7 @@ def process_due_enrollments(
         # predate variant tagging in enrollment payload.
         meta = dict(enrollment.payload or {})
         variant_id = (meta.get("variant_id") or "").strip()
+        company = None
         if not variant_id and account.company_id:
             from app.models.company import Company
             from app.services.agent_messaging import BUYER_VARIANTS, resolve_buyer_variant
@@ -458,6 +460,10 @@ def process_due_enrollments(
                     variant_id = resolved
                     meta["variant_id"] = variant_id
                     enrollment.payload = meta
+        elif account.company_id:
+            # Query company even if variant_id exists, for job data extraction.
+            from app.models.company import Company
+            company = db.query(Company).filter(Company.id == account.company_id).first()
 
         if enrollment.sequence_id not in slug_cache:
             seq_row = (
@@ -467,7 +473,7 @@ def process_due_enrollments(
             )
             slug_cache[enrollment.sequence_id] = seq_row[0] if seq_row else None
         subject, body = _render_sequence_step(
-            step, account, sequence_slug=slug_cache[enrollment.sequence_id]
+            step, account, sequence_slug=slug_cache[enrollment.sequence_id], company=company
         )
         if slug_cache[enrollment.sequence_id] == DEFAULT_BUYER_SEQUENCE["slug"]:
             from app.services.phelan_draft_guard import buyer_letter_ready_to_send

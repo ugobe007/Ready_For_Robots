@@ -430,7 +430,7 @@ def _draft_subject(acct: CrmAccount, variant_id: str | None = None) -> str:
     return f"a robotics shortlist for {name}"
 
 
-def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:
+def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None, company: Optional[Any] = None) -> str:
     """Email from robot sales rep to buyer ops — first person, no platform branding."""
     def _display_account_name(raw: str | None) -> str:
         name = (raw or "your team").strip()
@@ -460,8 +460,34 @@ def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collat
     name = _display_account_name(acct.name)
     from app.services.agent_messaging import build_buyer_variant_body
 
+    # Extract job facts from company metadata if available.
+    contact_name = None
+    announced_need = None
+    automation_tasks = None
+    skills = None
+    capabilities = None
+    if company is not None:
+        meta = getattr(company, "crm_metadata", None) or {}
+        if isinstance(meta, dict):
+            contact_name = meta.get("outreach_contact_name")
+            # Hermes job titles or automation requirements can fill announced_need.
+            hermes_jobs = meta.get("hermes_job_titles") or []
+            if hermes_jobs and isinstance(hermes_jobs, list):
+                announced_need = hermes_jobs[0] if hermes_jobs else None
+            # automation_requirements can fill skills if no explicit skills.
+            auto_reqs = meta.get("automation_requirements")
+            if auto_reqs and isinstance(auto_reqs, list) and auto_reqs:
+                skills = ", ".join(str(r) for r in auto_reqs[:3] if r)
+
     # One letter. The operator-approved first touch, not a per-industry pitch.
-    return build_buyer_variant_body(name, industry, "bottleneck_first")
+    return build_buyer_variant_body(
+        name, industry, "bottleneck_first",
+        contact_name=contact_name,
+        announced_need=announced_need,
+        automation_tasks=automation_tasks,
+        skills=skills,
+        capabilities=capabilities,
+    )
 
 
 
@@ -523,7 +549,7 @@ def _draft_body(acct: CrmAccount, settings: Any, traits: list[str], style_instru
     account_type = getattr(acct, "account_type", "buyer") or "buyer"
     if account_type == "vendor":
         return _draft_vendor_body(acct, settings, traits, collateral_policy, collateral_links)
-    return _draft_buyer_body(acct, settings, traits, collateral_policy, collateral_links)
+    return _draft_buyer_body(acct, settings, traits, collateral_policy, collateral_links, company)
 
 
 def _draft_subject_for_account(acct: CrmAccount, company: Optional[Any] = None) -> str:

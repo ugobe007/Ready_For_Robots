@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from app.services.phelan_persona import PHELAN_BANNED_PHRASES, PHELAN_ORG, phelan_buyer_email_signature, phelan_signature
 
@@ -557,9 +558,41 @@ def ladder_touch_subject(touch: str, name: str, industry: str) -> str:
     return subject[:88]
 
 
-def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
+def build_ladder_touch_body(
+    touch: str,
+    name: str,
+    industry: str,
+    *,
+    company: Any = None,
+    contact_name: str | None = None,
+    announced_need: str | None = None,
+    automation_tasks: str | None = None,
+    skills: str | None = None,
+    capabilities: str | None = None,
+) -> str:
     """Follow-up uses the same Robot Coordinator script, not a new essay."""
-    body = build_buyer_variant_body(name, industry, "bottleneck_first")
+    # Extract job facts from company metadata if not explicitly provided.
+    if company is not None and not any([contact_name, announced_need, skills, capabilities]):
+        meta = getattr(company, "crm_metadata", None) or {}
+        if isinstance(meta, dict):
+            contact_name = contact_name or meta.get("outreach_contact_name")
+            # Hermes job titles or automation requirements can fill announced_need.
+            hermes_jobs = meta.get("hermes_job_titles") or []
+            if hermes_jobs and isinstance(hermes_jobs, list) and not announced_need:
+                announced_need = hermes_jobs[0] if hermes_jobs else None
+            # automation_requirements can fill skills if no explicit skills.
+            auto_reqs = meta.get("automation_requirements")
+            if auto_reqs and isinstance(auto_reqs, list) and auto_reqs and not skills:
+                skills = ", ".join(str(r) for r in auto_reqs[:3] if r)
+    
+    body = build_buyer_variant_body(
+        name, industry, "bottleneck_first",
+        contact_name=contact_name,
+        announced_need=announced_need,
+        automation_tasks=automation_tasks,
+        skills=skills,
+        capabilities=capabilities,
+    )
     body = body.replace("nice to meet you. My name is Phelan,", "this is Phelan again.", 1)
     if touch == "trend":
         body = body.replace(
@@ -855,6 +888,7 @@ def build_buyer_variant_body(
     variant_id: str,
     *,
     reason: str | None = None,
+    company: Any = None,
     contact_name: str | None = None,
     announced_need: str | None = None,
     automation_tasks: str | None = None,
@@ -867,6 +901,21 @@ def build_buyer_variant_body(
     capabilities stay blank. The company name is filled in when we have it.
     """
     del industry, variant_id, reason  # script does not take an angle or a pitch
+    
+    # Extract job facts from company metadata if not explicitly provided.
+    if company is not None and not any([contact_name, announced_need, skills, capabilities]):
+        meta = getattr(company, "crm_metadata", None) or {}
+        if isinstance(meta, dict):
+            contact_name = contact_name or meta.get("outreach_contact_name")
+            # Hermes job titles or automation requirements can fill announced_need.
+            hermes_jobs = meta.get("hermes_job_titles") or []
+            if hermes_jobs and isinstance(hermes_jobs, list) and not announced_need:
+                announced_need = hermes_jobs[0] if hermes_jobs else None
+            # automation_requirements can fill skills if no explicit skills.
+            auto_reqs = meta.get("automation_requirements")
+            if auto_reqs and isinstance(auto_reqs, list) and auto_reqs and not skills:
+                skills = ", ".join(str(r) for r in auto_reqs[:3] if r)
+    
     from app.services.oem_job_intro import compose_employer_need_intro
 
     text = compose_employer_need_intro(
@@ -876,9 +925,9 @@ def build_buyer_variant_body(
         skills=skills,
         capabilities=capabilities,
     )
-    company = (name or "").strip()
-    if company and company.lower() not in {"your team", "your company"}:
-        text = text.replace("at your company", f"at {company}", 1)
+    company_name = (name or "").strip()
+    if company_name and company_name.lower() not in {"your team", "your company"}:
+        text = text.replace("at your company", f"at {company_name}", 1)
     return text
 
 
