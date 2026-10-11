@@ -106,7 +106,8 @@ def test_compose_keeps_named_employers_drops_boards(db_session):
     assert report["jobs"][0]["job_type"] == "Delivery"
     assert report["jobs"][0]["decision_maker"] == "Not named on the posting"
     assert "will not invent" in report["jobs"][0]["contact"]
-    assert report["jobs"][0]["robots"] == "Autonomous mobile robot"
+    assert "Hospital delivery AMR" in report["jobs"][0]["robots"]
+    assert report["jobs"][0]["robot_work"] == "Pharmacy delivery"
     assert "intro" not in report["jobs"][0]
     assert "employer_intro" not in report["jobs"][0]
     assert "First seen" in report["jobs"][0]["timing"]
@@ -137,8 +138,8 @@ def test_compose_sales_card_uses_page_contact_not_invented(db_session):
             job_key="invented-ops",
             company_name="Chipotle",
             locality="Newport Beach, CA",
-            action="assembly",
-            robot_compatible_task="Bowl assembly",
+            action="food_prep",
+            robot_compatible_task="Weekend Cook",
             employer_email="operations@chipotle.com",
             provenance={
                 "contact_name": "Operational Lead (Vice President of Restaurant & Dining Operations)",
@@ -154,7 +155,9 @@ def test_compose_sales_card_uses_page_contact_not_invented(db_session):
     assert "Unload inbound trailers" in real["description"]
     assert real["decision_maker"] == "Priya Shah · Site operations manager"
     assert "dock.ops@geodis.com" in real["contact"]
-    assert real["robots"] == "Pallet AMR and heavy cobot"
+    assert "Pallet AMR" in real["robots"]
+    assert "lifts a loaded pallet" in real["robots"]
+    assert real["robot_work"] == "Pallet move"
     assert "intro" not in real
     html_named = render_daily_jobs_report_html(
         {"date": "2026-10-09", "limit": 25, "jobs": [real]}
@@ -163,10 +166,7 @@ def test_compose_sales_card_uses_page_contact_not_invented(db_session):
     assert "Job card" not in html_named
     assert "/?job=" not in html_named
     assert real["card_href"].endswith("/?job=page-contact")
-    fake = by_key["invented-ops"]
-    assert fake["decision_maker"] == "Not named on the posting"
-    assert "operations@chipotle.com" not in fake["contact"]
-    assert "will not invent" in fake["contact"]
+    assert "invented-ops" not in by_key
 
 
 def test_compose_ranks_yes_ahead_of_weak(db_session):
@@ -226,7 +226,9 @@ def test_render_email_is_jobs_not_signal():
     assert "/?job=" not in text
     assert "CSV of these leads is attached" in text
     assert "Job: Pharmacy delivery" in text
-    assert "Robots: Autonomous mobile robot" in text
+    assert "Robots: Hospital delivery AMR" in text
+    assert "Cook" not in text
+    assert "Bartender" not in text
     assert "[5] Intro to the robot company" not in text
     assert "[6] Intro to the employer" not in text
     assert "Robot Coordinator" not in text
@@ -262,7 +264,7 @@ def test_render_email_is_jobs_not_signal():
     assert csv_body.splitlines()[0].startswith("rank,employer,locality")
     assert "robots" in csv_body.splitlines()[0]
     assert "intro" not in csv_body.splitlines()[0]
-    assert "Autonomous mobile robot" in csv_body
+    assert "Hospital delivery AMR" in csv_body
     assert "Rochester Regional Health" in csv_body
     assert "rrh-pharmacy" not in csv_body
     assert "/?job=" not in csv_body
@@ -496,7 +498,8 @@ def test_send_emails_operator(monkeypatch, db_session):
     assert "Rochester Regional Health" in stored.body_text
     assert "Job card" not in stored.body_text
     assert stored.csv_text.startswith("rank,employer,locality")
-    assert "Robots: Autonomous mobile robot" in sent[0]["body_text"]
+    assert "Robots: Hospital delivery AMR" in sent[0]["body_text"]
+    assert "Sterile Processing" not in sent[0]["body_text"]
     assert "Robot Coordinator" not in sent[0]["body_text"]
     assert "[5] Intro" not in sent[0]["body_text"]
     assert "Rochester Regional Health" in (sent[0].get("body_html") or "")
