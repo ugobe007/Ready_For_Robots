@@ -35,6 +35,12 @@ def test_reply_token_keeps_case_that_lowercase_extract_drops():
     assert _token_from_addresses(_extract_addresses(raw)) == "4mfpd96wt1blzu5wzioim9yn"
 
 
+def test_legacy_email_webhook_route_is_registered():
+    from app.api.webhooks import router
+
+    assert "/email" in {getattr(route, "path", "") for route in router.routes}
+
+
 def test_resend_signature_verification_accepts_svix_signature(monkeypatch):
     raw_secret = b"secret bytes"
     monkeypatch.setenv("RESEND_WEBHOOK_SECRET", f"whsec_{base64.b64encode(raw_secret).decode()}")

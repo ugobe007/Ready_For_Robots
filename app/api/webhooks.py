@@ -82,26 +82,76 @@ def _verify_resend_signature(
     - Inbound emails   → RESEND_INBOUND_WEBHOOK_SECRET (falls back to RESEND_WEBHOOK_SECRET)
     """
     # Prefer the specific secret; fall back to the shared one.
-    secret = (os.getenv(secret_env) or os.getenv("RESEND_WEBHOOK_SECRET") or "").strip()
-    if not secret:
-        raise HTTPException(
-            status_code=503,
-            detail=f"Missing {secret_env} (or RESEND_WEBHOOK_SECRET) — set it in Fly.io secrets",
-        )
+    secrets = []
+    for name in (secret_env, "RESEND_WEBHOOK_SECRET"):
+        value = (os.getenv(name) or "").strip()
+        if value and value not in secrets:
+            secrets.append(value)
+    _verify_against_webhook_secrets(
+        payload,
+        svix_id,
+        svix_timestamp,
+        svix_signature,
+        secrets,
+        missing_detail=f"Missing {secret_env} (or RESEND_WEBHOOK_SECRET) — set it in Fly.io secrets",
+    )
+
+
+def _verify_resend_signature_any(
+    payload: bytes,
+    svix_id: str | None,
+    svix_timestamp: str | None,
+    svix_signature: str | None,
+) -> None:
+    """Accept the legacy /email webhook secret or either current Resend secret."""
+    secrets = []
+    for name in (
+        "RESEND_EMAIL_WEBHOOK_SECRET",
+        "RESEND_INBOUND_WEBHOOK_SECRET",
+        "RESEND_WEBHOOK_SECRET",
+    ):
+        value = (os.getenv(name) or "").strip()
+        if value and value not in secrets:
+            secrets.append(value)
+    _verify_against_webhook_secrets(
+        payload,
+        svix_id,
+        svix_timestamp,
+        svix_signature,
+        secrets,
+        missing_detail="Missing Resend webhook secret — set it in Fly.io secrets",
+    )
+
+
+def _verify_against_webhook_secrets(
+    payload: bytes,
+    svix_id: str | None,
+    svix_timestamp: str | None,
+    svix_signature: str | None,
+    secrets: list[str],
+    *,
+    missing_detail: str,
+) -> None:
+    if not secrets:
+        raise HTTPException(status_code=503, detail=missing_detail)
     if not svix_id or not svix_timestamp or not svix_signature:
         raise HTTPException(status_code=400, detail="Missing webhook signature headers")
-    signed = f"{svix_id}.{svix_timestamp}.".encode("utf-8") + payload
-    expected = base64.b64encode(hmac.new(_svix_secret_bytes(secret), signed, hashlib.sha256).digest()).decode("utf-8")
     signatures = [part.split(",", 1)[1] if "," in part else part for part in svix_signature.split(" ")]
-    if not any(hmac.compare_digest(expected, sig.strip()) for sig in signatures if sig.strip()):
-        raise HTTPException(
-            status_code=400,
-            detail=(
-                "Invalid webhook signature. If this is the inbound webhook, set "
-                "RESEND_INBOUND_WEBHOOK_SECRET in Fly.io secrets to the signing secret "
-                "shown on your Resend inbound webhook endpoint (different from delivery webhooks)."
-            ),
-        )
+    signed = f"{svix_id}.{svix_timestamp}.".encode("utf-8") + payload
+    for secret in secrets:
+        expected = base64.b64encode(
+            hmac.new(_svix_secret_bytes(secret), signed, hashlib.sha256).digest()
+        ).decode("utf-8")
+        if any(hmac.compare_digest(expected, sig.strip()) for sig in signatures if sig.strip()):
+            return
+    raise HTTPException(
+        status_code=400,
+        detail=(
+            "Invalid webhook signature. If this is the inbound webhook, set "
+            "RESEND_INBOUND_WEBHOOK_SECRET in Fly.io secrets to the signing secret "
+            "shown on your Resend inbound webhook endpoint (different from delivery webhooks)."
+        ),
+    )
 
 
 def _extract_addresses(value: Any) -> list[str]:
@@ -657,6 +707,7 @@ async def resend_delivery_webhook(
         db.close()
 
 
+@router.post("/email")
 @router.post("/resend/inbound")
 async def resend_inbound_webhook(
     request: Request,
@@ -664,8 +715,21 @@ async def resend_inbound_webhook(
     svix_timestamp: str | None = Header(None, alias="svix-timestamp"),
     svix_signature: str | None = Header(None, alias="svix-signature"),
 ):
+    """Inbound mail, plus the legacy Resend URL /api/webhooks/email.
+
+    That older endpoint receives delivery events and email.received together.
+    """
     payload = await request.body()
-    _verify_resend_signature(payload, svix_id, svix_timestamp, svix_signature, secret_env="RESEND_INBOUND_WEBHOOK_SECRET")
+    if request.url.path.rstrip("/").endswith("/email"):
+        _verify_resend_signature_any(payload, svix_id, svix_timestamp, svix_signature)
+    else:
+        _verify_resend_signature(
+            payload,
+            svix_id,
+            svix_timestamp,
+            svix_signature,
+            secret_env="RESEND_INBOUND_WEBHOOK_SECRET",
+        )
     event = await request.json()
     event_type = event.get("type")
     data = _event_data(event)
