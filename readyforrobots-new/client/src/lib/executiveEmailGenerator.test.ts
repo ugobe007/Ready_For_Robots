@@ -14,7 +14,7 @@ describe("executiveEmailGenerator", () => {
     );
     expect(email.body).toContain("Hi David,");
     expect(email.body).toContain(
-      "I’m Phelan, a Robot Job Analyst at ReadyForRobots."
+      "I’m Phelan, a Robot Coordinator at ReadyForRobots."
     );
     expect(email.body).toContain(
       "matching payload capacity, cell reach, operating environment, and pre-trained task models."

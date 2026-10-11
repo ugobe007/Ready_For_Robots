@@ -23,7 +23,7 @@ def test_intro_uses_operator_wording_and_named_job():
         decision_maker_name="Priya Shah",
     )
     assert text.startswith("Hi Maya, nice to meet you.")
-    assert "I am a robot coordinator for ReadyForRobots" in text
+    assert "I am a Robot Coordinator for ReadyForRobots" in text
     assert "place robots into robot automation jobs" in text
     assert "your Stretch robot" in text
     assert (
@@ -99,7 +99,7 @@ def test_employer_intro_uses_operator_wording():
         capabilities="500 lb payload",
     )
     assert text.startswith("Hi Priya, nice to meet you.")
-    assert "I am a robot coordinator for ReadyForRobots" in text
+    assert "I am a Robot Coordinator for ReadyForRobots" in text
     assert "I help find robots for automation jobs" in text
     assert "need for pallet move" in text
     assert "help with unload inbound trailers and stage pallets at the dock automation tasks" in text

@@ -82,7 +82,7 @@ def test_vendor_signup_email_only_mentions_three_matches():
     assert "https://news.google.com" not in email["body"]
     assert "Buyer 1 (Unknown)" not in email["body"]
     assert "I'm not assuming each one is a fit" in email["body"]
-    assert "— Cal\nReady For Robots" in email["body"]
+    assert "— Phelan\nRobot Coordinator, Ready For Robots" in email["body"]
     assert "channel strategy" in email["body"]
 
 

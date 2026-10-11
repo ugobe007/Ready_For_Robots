@@ -49,8 +49,10 @@ def test_every_ladder_touch_is_complete_and_named():
             ok, reason = is_complete_cal_draft(full)
             assert ok, f"{touch}/{industry!r} failed guard: {reason}"
             assert name in body, f"{touch}/{industry!r} missing company name"
-            assert body.rstrip().endswith("Ready For Robots")
-            assert "— Cal" in body
+            assert body.rstrip().endswith("readyforrobots.com")
+            assert "Phelan" in body
+            assert "Robot Coordinator" in body
+            assert "Cal" not in body
             assert subject and len(subject) < 90
 
 
@@ -70,7 +72,8 @@ def test_ladder_touches_reintroduce_cal_again():
     for industry in _INDUSTRIES:
         for touch in LADDER_TOUCHES:
             body = build_ladder_touch_body(touch, name, industry)
-            assert body.startswith(f"Hi {name}, this is Cal again."), f"{touch}/{industry!r} missing re-intro"
+            assert body.startswith("Hi "), f"{touch}/{industry!r} missing greeting"
+            assert "Phelan" in body and "Robot Coordinator" in body
 
 
 def test_ladder_touches_teach_and_differ_from_intro():

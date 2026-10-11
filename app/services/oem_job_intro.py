@@ -146,7 +146,7 @@ def compose_robot_company_intro(
         decision_maker_name=decision_maker_name or "",
     ) or BLANK
     return (
-        f"Hi {hi}, nice to meet you. My name is Phelan and I am a robot coordinator "
+        f"Hi {hi}, nice to meet you. My name is Phelan and I am a Robot Coordinator "
         "for ReadyForRobots. My job is to help identify and place robots into robot "
         "automation jobs. On that note I found a few job opportunities for your "
         f"{robot} robot that I would like to discuss with you. The job is {work} "
@@ -191,7 +191,7 @@ def compose_employer_need_intro(
     skill = _insert_words(_clause(skills)) or BLANK
     caps = _insert_words(_clause(capabilities)) or BLANK
     return (
-        f"Hi {hi}, nice to meet you. My name is Phelan, I am a robot coordinator "
+        f"Hi {hi}, nice to meet you. My name is Phelan, I am a Robot Coordinator "
         "for ReadyForRobots where I help find robots for automation jobs. I noticed "
         f"you announced the need for {need} to help with {tasks} automation tasks "
         f"at your company. I understand the task requires robots with {skill} skills "

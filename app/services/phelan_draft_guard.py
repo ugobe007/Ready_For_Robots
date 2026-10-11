@@ -33,6 +33,7 @@ _COMPLETE_MARKERS = (
     "jobs robots can actually do well",
     "i'd be interested in your perspective",
     "i'm cal with readyforrobots",
+    "robot coordinator",
 )
 _TRUNCATED_TAIL = re.compile(r"\b\w{1,12}$")  # ends mid-word (no sentence punctuation)
 
@@ -97,30 +98,33 @@ _LEGACY_VOICE_MARKERS = (
 )
 
 
+_STALE_VOICE_MARKERS = (
+    "i'm cal",
+    "i am cal",
+    "this is cal",
+    "hi, i am cal",
+    "deployment advisor",
+    "robot job analyst",
+    "robot placement specialist",
+    "ai robotics placement specialist",
+)
+
+
 def is_legacy_cal_draft(draft: str | None) -> bool:
-    """True when body uses pre-v3 Cal sales voice or old two-line signature."""
+    """True when the body still uses the Cal name or an older title."""
     text = (draft or "").strip()
     if not text:
         return False
     low = text.lower()
 
-    # Current approved buyer close: "Cal\nReadyForRobots" (with or without spaces).
-    plain_close = bool(re.search(r"(?m)^cal\s*$", low)) and "readyforrobots" in low.replace(" ", "")
-    if plain_close:
-        for phrase in PHELAN_BANNED_PHRASES:
-            if phrase in low:
-                return True
-        return any(marker in low for marker in _LEGACY_VOICE_MARKERS)
-
-    # Role-line sign-off without title is incomplete/legacy unless current close is present.
-    if "— cal" in low and "ready for robots" in low:
-        if "deployment advisor" not in low and "automation advisor" not in low:
-            if "i'd be interested in your perspective" not in low and "jobs robots can actually do well" not in low:
-                return True
-
-    # Old three-line sign-off style.
-    if "\ncal\ndeployment advisor\nready for robots" in low:
+    if any(marker in low for marker in _STALE_VOICE_MARKERS):
         return True
+    if re.search(r"(?m)^[—-]?\s*cal\s*$", low):
+        return True
+
+    # Current letter: Phelan, titled Robot Coordinator.
+    if "phelan" in low and "robot coordinator" in low:
+        return any(marker in low for marker in _LEGACY_VOICE_MARKERS)
 
     for phrase in PHELAN_BANNED_PHRASES:
         if phrase in low:
@@ -132,11 +136,11 @@ def draft_needs_regeneration(draft: str | None, *, account_type: str = "buyer") 
     """Detect truncated previews, template mismatches, or legacy Cal voice."""
     from app.services.brand import BRAND_STAGEGATE, content_brand
 
-    if is_legacy_cal_draft(draft):
-        return True, "Legacy Cal voice — redrafting with current templates"
     at = (account_type or "buyer").lower()
     if at == "buyer" and content_brand(draft) == BRAND_STAGEGATE:
         return True, "Buyer account has StageGate-branded draft — regenerating"
+    if is_legacy_cal_draft(draft):
+        return True, "Legacy Cal voice — redrafting with current templates"
     ok, reason = is_complete_cal_draft(draft)
     if not ok:
         return True, reason

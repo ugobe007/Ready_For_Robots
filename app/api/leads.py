@@ -3193,8 +3193,9 @@ I'm not assuming each one is a fit. PoCs fail when capabilities don't match buye
 
 Worth a quick reply to explore timing?
 
-— Cal
-Ready For Robots"""
+— Phelan
+Robot Coordinator, Ready For Robots
+readyforrobots.com"""
     enriched = enrich_cal_email_with_demo(sample, use_cid=False)
     html = enriched.get("body_html") or "<p>Demo GIF not configured.</p>"
     return HTMLResponse(content=html)

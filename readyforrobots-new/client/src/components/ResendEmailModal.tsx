@@ -155,7 +155,7 @@ export function ResendEmailModal({
                 </span>
               </h3>
               <p className="text-xs text-slate-400">
-                Phelan | Robot Job Analyst &bull;{" "}
+                Phelan | Robot Coordinator &bull;{" "}
                 <span className="font-mono text-emerald-400">
                   readyforrobots.com
                 </span>

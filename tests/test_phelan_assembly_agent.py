@@ -15,7 +15,7 @@ from app.services.phelan_assembly_agent import (
     phelan_assembly_required,
     curate_supply_matches,
 )
-from app.services.phelan_persona import phelan_persona_payload
+from app.services.phelan_persona import cal_persona_payload
 import app.models  # noqa: F401
 
 
@@ -43,13 +43,13 @@ class _Vendor:
 
 def test_cal_persona_has_mission_and_never_rules():
     payload = cal_persona_payload()
-    assert payload["name"] == "Cal"
-    assert payload["title"] == "Jobs Recruiter"
+    assert payload["name"] == "Phelan"
+    assert payload["title"] == "Robot Coordinator"
     assert payload["job"]
     assert payload["surface"] == "/pipeline?src=jobs_activate"
     assert "save_task_model" in payload["tools"]
     ident = payload["identity"].lower()
-    assert "jobs recruiter" in ident
+    assert "robot coordinator" in ident
     assert "vendor-neutral" in payload["mission"].lower() or "jobs" in payload["mission"].lower()
     assert any("universit" in n.lower() for n in payload["never"])
     assert len(payload["always"]) >= 5

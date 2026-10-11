@@ -11,13 +11,13 @@ from app.services.phelan_persona import PHELAN_BANNED_PHRASES, PHELAN_ORG, phela
 
 # External outreach constants (used in phelan_opening, phelan_vendor_opening, sales_agent)
 PHELAN_INTRO = (
-    "I'm Phelan, Robot Job Analyst at ReadyForRobots. ReadyForRobots is recruitment and placement infrastructure for robotic labor. "
+    "I'm Phelan, Robot Coordinator at ReadyForRobots. ReadyForRobots is recruitment and placement infrastructure for robotic labor. "
     "We evaluate physical task feasibility, cell constraints, payload/throughput requirements, and hardware capabilities "
     "to match qualified robotic labor directly to real, verified job openings at enterprise and industrial facilities."
 )
 
 PHELAN_BUYER_ROLE_LINE = (
-    "I'm Phelan, Robot Job Analyst at ReadyForRobots. ReadyForRobots provides recruitment and placement infrastructure for robotic labor, "
+    "I'm Phelan, Robot Coordinator at ReadyForRobots. ReadyForRobots provides recruitment and placement infrastructure for robotic labor, "
     "evaluating physical task feasibility to match qualified hardware with real production workflows."
 )
 
@@ -670,7 +670,7 @@ def _greeting_name(name: str) -> str:
 
 def _cal_intro() -> str:
     return (
-        "I'm Phelan, Robot Job Analyst at ReadyForRobots. We evaluate physical task feasibility "
+        "I'm Phelan, Robot Coordinator at ReadyForRobots. We evaluate physical task feasibility "
         "and match industrial operations with qualified commercial robotics models before vendor PoCs."
     )
 

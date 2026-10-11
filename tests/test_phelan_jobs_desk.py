@@ -74,14 +74,14 @@ def _job(n: int, *, email: str | None = None) -> dict:
 
 def test_persona_is_jobs_recruiter_on_crm_desk():
     payload = cal_persona_payload()
-    assert payload["title"] == "Jobs Recruiter"
+    assert payload["title"] == "Robot Coordinator"
     assert payload["title"] == CAL_TITLE
     assert payload["job"] == CAL_JOBS_DESK_JOB
     assert payload["surface"] == CAL_SURFACE
     assert payload["tools"] == list(CAL_JOBS_DESK_TOOLS)
     assert "send_buyer_intro" in payload["forbidden_tools"]
     ident = payload["identity"].lower()
-    assert "jobs recruiter" in ident
+    assert "robot coordinator" in ident
     assert "find" in ident
     assert "buyer" not in ident or "does not sell" in ident
     assert CAL_SURFACE == "/pipeline?src=jobs_activate"

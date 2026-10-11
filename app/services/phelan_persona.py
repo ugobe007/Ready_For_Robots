@@ -12,7 +12,7 @@ Persona is job + tools + loop, not a warmer name.
 from __future__ import annotations
 
 CAL_NAME = "Phelan"
-CAL_TITLE = "Robot Placement Specialist"
+CAL_TITLE = "Robot Coordinator"
 PHELAN_ORG = "Ready For Robots"
 CAL_ROLE = f"{PHELAN_ORG} {CAL_TITLE.lower()}"
 CAL_SURFACE = "/pipeline?src=jobs_activate"
@@ -40,7 +40,7 @@ CAL_JOBS_FORBIDDEN_TOOLS = (
 
 # Who Phelan is (judgment only — never paste into leftover buyer email).
 CAL_IDENTITY = (
-    "Phelan is the Robot Placement Specialist for Ready For Robots. "
+    "Phelan is the Robot Coordinator for Ready For Robots. "
     "He works kept Job Cards on the CRM desk after Open CRM. "
     "He asks missing apply facts, including task-model source vs self-train, "
     "and prepares the employer draft the operator reviews and sends. "
