@@ -29,16 +29,18 @@ DEFAULT_BUYER_SEQUENCE = {
             "delay_days": 0,
             "subject_template": "a deployment note for {company_name}",
             "body_template": (
-                "Hi {company_name},\n\n"
-                "Hi, I am Phelan. I work at ReadyForRobots as a Robot Coordinator. I focus on robot deployments and their metrics, to help companies improve ROI.\n\n"
-                "I spend my time studying robot deployments — not the demos, the ones still "
-                "running months later.\n\n"
-                "One thing shows up over and over: deployments fail less from hardware limits "
-                "and more from assigning automation to the wrong problem.\n\n"
-                "That's why we're vendor-neutral. I focus first on whether automation belongs "
-                "in a workflow before anyone compares robots.\n\n"
-                "Out of curiosity, is {company_name} evaluating automation now, or is it still "
-                "further down the road?\n\n"
+                "Hi {company_name} team,\n\n"
+                "I'm Phelan, Robot Coordinator at ReadyForRobots. I research how companies are using robotics "
+                "and help identify jobs where automation could actually make a difference.\n\n"
+                "I've been looking at {industry}, and I keep noticing something I wanted to check with you. "
+                "The most visible task gets most of the attention, but a lot of the day-to-day pressure "
+                "seems to happen elsewhere.\n\n"
+                "A lot of material still has to move between steps, exceptions create work that doesn't fit "
+                "the standard process, and people end up filling the gaps.\n\n"
+                "I'm curious if that's true at {company_name}.\n\n"
+                "Where do you see the biggest opportunity to automate today? Is it still the most visible task, "
+                "or are there other parts of the operation that cause more problems?\n\n"
+                "I'd be interested in your perspective.\n\n"
                 "— Phelan\nRobot Coordinator\nReady For Robots"
             ),
             "action_label": "Intro",
@@ -48,15 +50,15 @@ DEFAULT_BUYER_SEQUENCE = {
             # builders (per-industry); this static template is a fallback only.
             "step_number": 2,
             "delay_days": 6,
-            "subject_template": "the workflow most teams automate last — {company_name}",
+            "subject_template": "start with the task in {industry}",
             "body_template": (
-                "Hi {company_name}, this is Phelan again.\n\n"
-                "One practical note, then one question.\n\n"
-                "One pattern I see everywhere: the projects with the fastest payback rarely start "
-                "with the most visible task. They start with the quiet process upstream that backs "
-                "everything else up.\n\n"
-                "Most teams automate the flashy part first, then wonder why the ROI never showed. If "
-                "{company_name} ever maps this out, that's where I'd start.\n\n"
+                "Hi {company_name} team,\n\n"
+                "This is Phelan again, Robot Coordinator at ReadyForRobots.\n\n"
+                "I've been looking at {industry}, and I keep noticing something I wanted to check with you. "
+                "The most visible task gets most of the attention, but a lot of the day-to-day pressure "
+                "seems to happen elsewhere.\n\n"
+                "I'm curious if that's true at {company_name}.\n\n"
+                "I'd be interested in your perspective.\n\n"
                 "— Phelan\nRobot Coordinator\nReady For Robots"
             ),
             "action_label": "Teach",
@@ -65,15 +67,15 @@ DEFAULT_BUYER_SEQUENCE = {
             # Trend — one market pattern / common mistake. Live copy = ladder.
             "step_number": 3,
             "delay_days": 14,
-            "subject_template": "why \"evaluating five robots\" is usually the wrong question — {company_name}",
+            "subject_template": "demo versus deployment in {industry}",
             "body_template": (
-                "Hi {company_name}, this is Phelan again.\n\n"
-                "One practical note, then one question.\n\n"
-                "A team lines up five vendors, runs a bake-off, picks the fastest — and six months "
-                "later it's parked. The robots that survive aren't the fastest; they're matched to "
-                "one specific bottleneck, with integration and software actually resourced.\n\n"
-                "If {company_name} is weighing vendors, I'm glad to share what separates the ones "
-                "that last. No pitch.\n\n"
+                "Hi {company_name} team,\n\n"
+                "This is Phelan again, Robot Coordinator at ReadyForRobots.\n\n"
+                "I've been looking at {industry}, and I keep noticing something I wanted to check with you. "
+                "A demo can look great and still fail once real traffic, exceptions, and support show up.\n\n"
+                "If you were starting fresh at {company_name}, would you begin with the most visible task, "
+                "or with the quieter workflow that actually creates more problems?\n\n"
+                "I'd be interested in your perspective.\n\n"
                 "— Phelan\nRobot Coordinator\nReady For Robots"
             ),
             "action_label": "Trend",
@@ -82,14 +84,14 @@ DEFAULT_BUYER_SEQUENCE = {
             # Question — one easy, genuine question. Live copy = ladder.
             "step_number": 4,
             "delay_days": 24,
-            "subject_template": "one question about {company_name}",
+            "subject_template": "where the hours go in {industry}",
             "body_template": (
-                "Hi {company_name}, this is Phelan again.\n\n"
-                "One practical note, then one question.\n\n"
-                "No agenda here — one question tells me more than a whole discovery call.\n\n"
-                "If you automated one workflow tomorrow, which would it be? Most teams name the "
-                "busiest one. The one that actually pays back is usually the process quietly "
-                "creating work everywhere else. Curious what you'd pick for {company_name}.\n\n"
+                "Hi {company_name} team,\n\n"
+                "This is Phelan again, Robot Coordinator at ReadyForRobots.\n\n"
+                "I've been looking at {industry}, and I keep noticing something I wanted to check with you.\n\n"
+                "Where do you see the biggest opportunity to automate today at {company_name}? "
+                "Is it still the most visible task, or are there other parts of the operation that cause more problems?\n\n"
+                "I'd be interested in your perspective.\n\n"
                 "— Phelan\nRobot Coordinator\nReady For Robots"
             ),
             "action_label": "Question",
@@ -355,18 +357,26 @@ def _render_sequence_step(
     touch (e.g. the CRM manual step 1) — falls back to the static template.
     """
     if sequence_slug == DEFAULT_BUYER_SEQUENCE["slug"]:
+        from app.services.agent_messaging import (
+            build_buyer_variant_body,
+            build_ladder_touch_body,
+            buyer_variant_subject,
+            ladder_touch_subject,
+        )
+
+        name = account.name or "your team"
+        industry = account.industry or ""
         touch = _step_touch(step)
         if touch:
-            from app.services.agent_messaging import (
-                build_ladder_touch_body,
-                ladder_touch_subject,
-            )
-
-            name = account.name or "your team"
-            industry = account.industry or ""
             return (
                 ladder_touch_subject(touch, name, industry),
                 build_ladder_touch_body(touch, name, industry),
+            )
+        # Step 1 is the operator-approved first touch, not the stored fallback.
+        if int(getattr(step, "step_number", 0) or 0) == 1:
+            return (
+                buyer_variant_subject(name, industry, "bottleneck_first"),
+                build_buyer_variant_body(name, industry, "bottleneck_first"),
             )
     subject = _render_template(step.subject_template or f"Follow-up — {account.name}", account)
     body = _render_template(
@@ -377,10 +387,10 @@ def _render_sequence_step(
 
 
 def _reply_address(token: str) -> str:
-    import os
+    """Same receiving address as the intro. Follow-ups must land in the inbox."""
+    from app.services.phelan_outreach_send import cal_reply_address
 
-    domain = (os.getenv("RESEND_FROM_EMAIL") or "updates@readyforrobots.com").split("@")[-1]
-    return f"scout+{token}@{domain}"
+    return cal_reply_address(token)
 
 
 def process_due_enrollments(
@@ -489,6 +499,15 @@ def process_due_enrollments(
         subject, body = _render_sequence_step(
             step, account, sequence_slug=slug_cache[enrollment.sequence_id]
         )
+        if slug_cache[enrollment.sequence_id] == DEFAULT_BUYER_SEQUENCE["slug"]:
+            from app.services.phelan_draft_guard import buyer_letter_obeys_instructions
+
+            obeys, obey_reason = buyer_letter_obeys_instructions(body)
+            if not obeys:
+                enrollment.status = "blocked"
+                enrollment.paused_reason = f"off_instruction:{obey_reason[:120]}"
+                skipped += 1
+                continue
         reply_token = secrets.token_urlsafe(18)
         try:
             send_result = send_email_via_resend(

@@ -132,6 +132,55 @@ def is_legacy_cal_draft(draft: str | None) -> bool:
     return any(marker in low for marker in _LEGACY_VOICE_MARKERS)
 
 
+# Letters that ignore the operator-approved first touch. Name and title alone
+# are not enough — these lines are a different message.
+_OFF_INSTRUCTION_MARKERS = (
+    "following up on task feasibility",
+    "one field note",
+    "something i'm seeing",
+    "vendor-neutral",
+    "evaluate physical task feasibility",
+    "before vendor pocs",
+    "before vendor poc",
+    "i spend my time studying",
+    "i spend my days",
+    "we've identified",
+    "we’ve identified",
+    "one practical note, then one question",
+    "robot job analyst",
+    "robot placement specialist",
+    "recruitment and placement infrastructure",
+    "i work with logistics teams on one thing",
+    "i work with hospitality teams on one thing",
+    "i work with healthcare",
+    "i work with food teams on one thing",
+    "leadership team",
+)
+
+
+def buyer_letter_obeys_instructions(draft: str | None) -> tuple[bool, str]:
+    """The operator letter: who Phelan is, what he has been looking at, one question, their perspective."""
+    text = (draft or "").strip()
+    if not text:
+        return False, "Draft is empty"
+    low = text.lower()
+    for marker in _OFF_INSTRUCTION_MARKERS:
+        if marker in low:
+            return False, f"Draft violates operator instructions ({marker})"
+    if "i'd be interested in your perspective" not in low and "i’d be interested in your perspective" not in low:
+        return False, "Draft missing the approved close"
+    has_frame = "i've been looking" in low or "i’ve been looking" in low
+    has_identity = (
+        "i research how companies are using robotics" in low
+        or "this is phelan again" in low
+    )
+    if not has_frame or not has_identity:
+        return False, "Draft missing the approved introduction"
+    if "phelan" not in low or "robot coordinator" not in low:
+        return False, "Draft missing Phelan, Robot Coordinator"
+    return True, "ok"
+
+
 def draft_needs_regeneration(draft: str | None, *, account_type: str = "buyer") -> tuple[bool, str]:
     """Detect truncated previews, template mismatches, or legacy Cal voice."""
     from app.services.brand import BRAND_STAGEGATE, content_brand
@@ -145,6 +194,10 @@ def draft_needs_regeneration(draft: str | None, *, account_type: str = "buyer") 
     if not ok:
         return True, reason
     low = (draft or "").lower()
+    if at == "buyer":
+        obeys, why = buyer_letter_obeys_instructions(draft)
+        if not obeys:
+            return True, why
     if at == "buyer" and any(p in low for p in _WRONG_BUYER_PHRASES):
         return True, "Buyer account has vendor-facing draft — regenerating"
     if at == "buyer":

@@ -96,7 +96,7 @@ def test_bottleneck_first_matches_operator_pfg_example():
     expected = "\n".join([
         "Hi PFG team,",
         "",
-        "I'm Phelan, Robot Coordinator at ReadyForRobots. We evaluate physical task feasibility and match industrial operations with qualified commercial robotics models before vendor PoCs.",
+        "I'm Phelan, Robot Coordinator at ReadyForRobots. I research how companies are using robotics and help identify jobs where automation could actually make a difference.",
         "",
         "I've been looking at food distribution, and I keep noticing something I wanted to check with you. Picking gets most of the attention, but a lot of the day-to-day pressure seems to happen elsewhere.",
         "",

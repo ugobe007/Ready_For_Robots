@@ -139,7 +139,9 @@ def test_cal_buyer_outreach_body_mentions_cal():
         type("Co", (), {"name": "Acme Logistics", "industry": "Logistics"})(),
         fresh=False,
     )
-    assert "Cal" in body
+    assert "Phelan" in body
+    assert "Robot Coordinator" in body
+    assert "I research how companies are using robotics" in body
     assert "ReadyForRobots" in body or "Ready For Robots" in body
 
 

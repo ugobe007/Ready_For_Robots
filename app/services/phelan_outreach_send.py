@@ -97,6 +97,14 @@ def send_phelan_intro_email(
             "Use a provider-verified contact source before sending Cal intro."
         )
 
+    from app.services.brand import BRAND_STAGEGATE, content_brand
+    from app.services.phelan_draft_guard import buyer_letter_obeys_instructions
+
+    if content_brand(body_text) != BRAND_STAGEGATE:
+        obeys, obey_reason = buyer_letter_obeys_instructions(body_text)
+        if not obeys:
+            raise ResendEmailError(obey_reason)
+
     reply_token = secrets.token_urlsafe(18)
     reply_to = cal_reply_address(reply_token)
     inbound_missing = False

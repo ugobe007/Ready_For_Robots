@@ -22,7 +22,7 @@ PHELAN_BUYER_ROLE_LINE = (
 )
 
 PHELAN_BUYER_REMINDER_LINE = (
-    "Following up on task feasibility and robotic labor placement planning for your operations."
+    "This is Phelan again, Robot Coordinator at ReadyForRobots."
 )
 
 PHELAN_VENDOR_ROLE_LINE = (
@@ -546,47 +546,67 @@ def _ladder_content(industry: str) -> dict[str, str]:
 
 
 def ladder_touch_subject(touch: str, name: str, industry: str) -> str:
-    """Curiosity-led subject for a follow-up touch (teach / trend / question)."""
-    content = _ladder_content(industry)
-    key = f"{touch}_subject"
-    base = content.get(key, _GENERIC_LADDER.get(key, "a quick note"))
-    if touch == "teach":
-        return f"one field note: {base}"
-    if touch == "trend":
-        return f"something I'm seeing: {base}"
-    return base
+    """Same subject style as the approved first touch. No field-note subjects."""
+    angle = {"teach": "workflow_first", "trend": "what_survives"}.get(touch, "bottleneck_first")
+    return buyer_variant_subject(name, industry, angle)
 
 
 def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
-    """Assemble a teaching follow-up body. Each touch teaches one thing and ends
-    with a company-named close (assembly gate) plus Cal's sign-off."""
+    """Follow-up in the same voice as the approved first touch.
+
+    The operator letter is who Phelan is, what he has been looking at, one
+    operational observation, one question, and an invitation for their perspective.
+    Follow-ups stay on that letter. They do not switch to a field note.
+    """
     n = (name or "your team").strip()
-    content = _ladder_content(industry)
-    core = content.get(touch, _GENERIC_LADDER.get(touch, ""))
+    team = _greeting_name(n)
+    ins = _buyer_insight(industry)
+    visible = str(ins.get("visible") or "the most visible task")
+    look_at = _look_at_label(ins, industry)
+    pressure = _pressure_paragraph(ins)
+    visible_cap = f"{visible[:1].upper()}{visible[1:]}" if visible else "The most visible task"
+    opener = (
+        f"I've been looking at {look_at}, and I keep noticing something I wanted to check with you."
+    )
     if touch == "teach":
-        close = (
-            f"If it is useful for {n}, I can share where I would start — and where I would wait. "
-            "No pitch either way."
+        observation = (
+            f"{opener} {visible_cap} gets most of the attention, but a lot of the "
+            "day-to-day pressure seems to happen elsewhere."
         )
+        question = f"I'm curious if that's true at {n}."
     elif touch == "trend":
-        close = (
-            f"If {n} is weighing vendors this year, I can say which patterns tend to hold up. "
-            "Curious what you are seeing on your side."
+        observation = (
+            f"{opener} A demo can look great and still fail once real traffic, exceptions, and support show up."
         )
-    else:  # question
-        close = (
-            f"No right answer — what comes to mind for {n} usually points at where a robot "
-            "would earn its keep. Curious what you would say."
+        pressure = (
+            "The projects that hold up usually start with one clear operational problem — "
+            f"not a shortlist of robots. {pressure}"
         )
-    greeting = f"Hi {n} Leadership Team," if n and n != "your team" else "Hi,"
+        question = (
+            f"If {n} were starting fresh, would you begin with {visible}, "
+            "or with the quieter workflow that actually creates more problems?"
+        )
+    else:
+        observation = (
+            f"{opener} {visible_cap} gets most of the attention, but a lot of the "
+            "day-to-day pressure seems to happen elsewhere."
+        )
+        question = (
+            "Where do you see the biggest opportunity to automate today? "
+            f"Is it still {visible} at {n}, or are there other parts of the operation that cause more problems?"
+        )
     return "\n".join([
-        greeting,
+        f"Hi {team},",
         "",
         PHELAN_BUYER_REMINDER_LINE,
         "",
-        core,
+        observation,
         "",
-        close,
+        pressure,
+        "",
+        question,
+        "",
+        _mission_close(),
         "",
         phelan_buyer_email_signature(),
     ])
@@ -669,9 +689,10 @@ def _greeting_name(name: str) -> str:
 
 
 def _cal_intro() -> str:
+    """Operator instruction: who Phelan is, then why he is writing. No platform pitch."""
     return (
-        "I'm Phelan, Robot Coordinator at ReadyForRobots. We evaluate physical task feasibility "
-        "and match industrial operations with qualified commercial robotics models before vendor PoCs."
+        "I'm Phelan, Robot Coordinator at ReadyForRobots. I research how companies are using robotics "
+        "and help identify jobs where automation could actually make a difference."
     )
 
 

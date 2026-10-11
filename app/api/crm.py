@@ -458,94 +458,11 @@ def _draft_buyer_body(acct: CrmAccount, settings: Any, traits: list[str], collat
 
     industry = (acct.industry or "your industry").strip()
     name = _display_account_name(acct.name)
-    industry_lower = industry.lower()
-    closing_line = f"If helpful, I'll send a short, vendor-neutral recommendation for {name} before we discuss anything live."
+    from app.services.agent_messaging import build_buyer_variant_body
 
-    lines: list[str] = [f"Hi {name},", ""]
+    # One letter. The operator-approved first touch, not a per-industry pitch.
+    return build_buyer_variant_body(name, industry, "bottleneck_first")
 
-    if industry_lower in ("logistics", "warehousing"):
-        lines.append(
-            "I work with logistics teams on one thing: picking the first workflow where automation "
-            "actually pays back in live operations."
-        )
-        lines.extend(
-            [
-                "",
-                "The best first project is usually receiving, replenishment, or exception handling "
-                "rather than the most visible robot demo.",
-            ]
-        )
-    elif industry_lower in ("hospitality", "hotels", "casinos & gaming"):
-        closing_line = (
-            f"If helpful, I'll send a short, vendor-neutral housekeeping and turnover workflow "
-            f"recommendation for {name} before we discuss anything live."
-        )
-        lines.append(
-            "I work with hospitality teams on one thing: choosing service and cleaning workflows "
-            "that still perform under real weekend occupancy."
-        )
-        lines.extend(
-            [
-                "",
-                "The win is usually one constrained workflow with clear housekeeping turnover or overnight "
-                "coverage gaps, not a broad rollout.",
-            ]
-        )
-    elif industry_lower in ("healthcare", "medical technology"):
-        closing_line = (
-            f"If helpful, I'll send a short, vendor-neutral EVS and transport workflow "
-            f"recommendation for {name} before we discuss anything live."
-        )
-        lines.append(
-            "I work with healthcare ops teams on one thing: selecting transport and internal logistics "
-            "workflows where AMRs reduce staff miles without adding operational friction."
-        )
-        lines.extend(
-            [
-                "",
-                "The highest-payback cases tend to be repetitive EVS, meds/supplies, and lab movement "
-                "routes with clean handoffs and elevator access.",
-            ]
-        )
-    elif industry_lower in ("food service", "food processing & manufacturing"):
-        closing_line = (
-            f"If helpful, I'll send a short, vendor-neutral changeover and OEE-focused workflow "
-            f"recommendation for {name} before we discuss anything live."
-        )
-        lines.append(
-            "I work with food teams on one thing: picking back-of-house and line workflows where automation "
-            "relieves throughput pressure without creating changeover headaches."
-        )
-        lines.extend(
-            [
-                "",
-                "The projects that last usually start with one repeatable bottleneck, with changeover time "
-                "and OEE tracked before expanding.",
-            ]
-        )
-    else:
-        lines.append(
-            "I help operations teams scope where automation is likely to pay back quickly and where "
-            "it is better to wait."
-        )
-        lines.extend(
-            [
-                "",
-                f"If useful, I can send a brief view of which workflow at {name} is most likely to deliver early ROI.",
-            ]
-        )
-
-    lines.append("")
-    lines.append(closing_line)
-    lines.append("")
-    lines.append(REP_OUTREACH_CTA)
-
-    collateral = _collateral_note(collateral_policy, collateral_links)
-    if collateral:
-        lines.extend(["", collateral.replace("I can also send", "Happy to send").replace("I’m including", "I can include")])
-
-    lines.extend(["", rep_outreach_signature()])
-    return "\n".join(lines)
 
 
 def _draft_vendor_body(acct: CrmAccount, settings: Any, traits: list[str], collateral_policy: str, collateral_links: str | None) -> str:
