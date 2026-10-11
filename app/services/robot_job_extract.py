@@ -418,7 +418,17 @@ _PERSON_HIRE_RE = re.compile(
     r"baristas?|bakers?|butchers?|welders?|assemblers?|pickers?|packers?|"
     r"handlers?|porters?|transporters?|masons?|bricklayers?|dishwashers?|"
     r"receptionists?|directors?|leads?|cleaners?|maintenance|nurses?|"
-    r"pharmacists?|therapists?|washers?)\b",
+    r"pharmacists?|therapists?|washers?|"
+    # Additional human employment indicators
+    r"hiring|seeking|looking\s+for|need\s+(?:a|an)|apply\s+(?:now|today)|"
+    r"full-time|part-time|seasonal|position|role|employee|"
+    r"resume|cv|interview|background\s+check|drug\s+test|"
+    r"benefits|401k|health\s+insurance|pto|paid\s+time\s+off|"
+    r"experience\s+required|years?\s+of\s+experience|"
+    r"high\s+school|ged|bachelor|degree|certification|"
+    r"hourly\s+wage|salary\s+range|competitive\s+pay|"
+    r"ability\s+to\s+lift|must\s+be\s+able\s+to|"
+    r"fast-paced\s+environment|team\s+player)\b",
     re.I,
 )
 
