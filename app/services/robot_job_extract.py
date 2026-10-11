@@ -409,8 +409,8 @@ _ROBOT_ASK_RE = re.compile(
     re.I,
 )
 _PERSON_HIRE_RE = re.compile(
-    r"\b(?:operators?|operating|technicians?|engineers?|engineering|specialists?|managers?|associates?|"
-    r"attendants?|interns?|internships?|programmers?|programming|developers?|developing|mechanics?|salespeople|"
+    r"(?:\b|_)(?:operators?|technicians?|engineers?|specialists?|managers?|associates?|"
+    r"attendants?|interns?|internships?|programmers?|developers?|mechanics?|salespeople|"
     r"analysts?|supervisors?|coordinators?|clerks?|drivers?|workers?|laborers?|"
     r"staff|crew|members?|agents?|auditors?|bussers?|runners?|cooks?|servers?|"
     r"bartenders?|mixologists?|janitors?|custodians?|housekeepers?|housekeeping|"
@@ -418,7 +418,7 @@ _PERSON_HIRE_RE = re.compile(
     r"baristas?|bakers?|butchers?|welders?|assemblers?|pickers?|packers?|"
     r"handlers?|porters?|transporters?|masons?|bricklayers?|dishwashers?|"
     r"receptionists?|directors?|leads?|cleaners?|maintenance|nurses?|"
-    r"pharmacists?|therapists?|washers?)\b",
+    r"pharmacists?|therapists?|washers?)(?:\b|_)",
     re.I,
 )
 
@@ -431,7 +431,7 @@ def asks_for_a_robot(title: str, *extra: str) -> bool:
     blob = " ".join(part for part in (title, *extra) if part).strip()
     if not blob or not _ROBOT_ASK_RE.search(blob):
         return False
-    if _PERSON_HIRE_RE.search(blob):
+    if _PERSON_HIRE_RE.search(title or ""):
         return False
     return True
 
