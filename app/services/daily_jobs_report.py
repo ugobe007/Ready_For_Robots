@@ -614,7 +614,6 @@ def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
                 desc(RobotJob.definition_completeness),
                 desc(RobotJob.created_at),
             )
-            .limit(POOL)
             .all()
         )
         def _sort_key(row: Any) -> tuple:

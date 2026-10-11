@@ -405,12 +405,12 @@ def is_job_employer_name(name: str, title: str = "") -> bool:
 
 # The employer is asking for a robot as the worker. "Robotics engineer" is a person.
 _ROBOT_ASK_RE = re.compile(
-    r"\b(?:robots?|robotic|robotics|cobots?|humanoids?|amrs?|agvs?|drones?)\b",
+    r"(?:\b|_)(?:robots?|robotic|robotics|cobots?|humanoids?|amrs?|agvs?|drones?)(?:\b|_)",
     re.I,
 )
 _PERSON_HIRE_RE = re.compile(
-    r"\b(?:operators?|technicians?|engineers?|specialists?|managers?|associates?|"
-    r"attendants?|interns?|programmers?|developers?|mechanics?|salespeople|"
+    r"\b(?:operators?|operating|technicians?|engineers?|engineering|specialists?|managers?|associates?|"
+    r"attendants?|interns?|internships?|programmers?|programming|developers?|developing|mechanics?|salespeople|"
     r"analysts?|supervisors?|coordinators?|clerks?|drivers?|workers?|laborers?|"
     r"staff|crew|members?|agents?|auditors?|bussers?|runners?|cooks?|servers?|"
     r"bartenders?|mixologists?|janitors?|custodians?|housekeepers?|housekeeping|"
@@ -431,7 +431,7 @@ def asks_for_a_robot(title: str, *extra: str) -> bool:
     blob = " ".join(part for part in (title, *extra) if part).strip()
     if not blob or not _ROBOT_ASK_RE.search(blob):
         return False
-    if _PERSON_HIRE_RE.search(title or ""):
+    if _PERSON_HIRE_RE.search(blob):
         return False
     return True
 

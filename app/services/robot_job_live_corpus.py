@@ -143,7 +143,9 @@ def corpus_row_from_robot_job(row: Any) -> Optional[dict[str, Any]]:
     if not is_job_employer_name(employer, title=title):
         return None
     # A human occupation that could be automated is not a job opportunity.
-    if not asks_for_a_robot(title, function, product_class or ""):
+    observed_workflow = str(getattr(row, "observed_workflow", "") or "").strip()
+    why_job = str(getattr(row, "why_job", "") or "").strip()
+    if not asks_for_a_robot(title, observed_workflow, why_job):
         return None
     tape = tape_family_for_live_job(
         job_function=function,
