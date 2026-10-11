@@ -5,7 +5,7 @@ import json
 
 from app.api.crm import _reply_address
 from app.api.robot_companies import _supply_reply_address
-from app.api.webhooks import _extract_addresses, _token_from_addresses, _verify_resend_signature
+from app.api.webhooks import _extract_addresses, _reply_token, _token_from_addresses, _verify_resend_signature
 
 
 def test_reply_address_uses_plus_token(monkeypatch):
@@ -26,6 +26,13 @@ def test_inbound_reply_token_extracted_from_address():
 
     assert addresses == ["reply+thread_token@readyforrobots.com"]
     assert _token_from_addresses(addresses) == "thread_token"
+
+
+def test_reply_token_keeps_case_that_lowercase_extract_drops():
+    raw = ["reply+4MFpD96WT1BlZu5wziOiM9yN@reply.readyforrobots.com"]
+
+    assert _reply_token(raw) == "4MFpD96WT1BlZu5wziOiM9yN"
+    assert _token_from_addresses(_extract_addresses(raw)) == "4mfpd96wt1blzu5wzioim9yn"
 
 
 def test_resend_signature_verification_accepts_svix_signature(monkeypatch):

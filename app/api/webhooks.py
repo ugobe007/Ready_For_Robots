@@ -130,6 +130,40 @@ def _token_from_addresses(addresses: list[str]) -> str | None:
     return None
 
 
+def _reply_token(value: Any) -> str | None:
+    """Plus-address token with its original case.
+
+    ``_extract_addresses`` lowercases the whole mailbox. Reply tokens from
+    ``token_urlsafe`` are case-sensitive, so a lowercased token never matches
+    the stored row.
+    """
+    if not value:
+        return None
+    if isinstance(value, str):
+        items = [value]
+    elif isinstance(value, list):
+        items = [str(item.get("email") if isinstance(item, dict) else item) for item in value]
+    else:
+        items = [str(value)]
+    for item in items:
+        matches = re.findall(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", item)
+        for addr in matches or ([item.strip()] if "@" in item else []):
+            local = addr.split("@", 1)[0]
+            if "+" not in local:
+                continue
+            token = local.split("+", 1)[1].strip()
+            if token:
+                return token
+    return None
+
+
+def _row_by_reply_token(db: Session, model, token: str):
+    row = db.query(model).filter(model.reply_token == token).first()
+    if row:
+        return row
+    return db.query(model).filter(func.lower(model.reply_token) == token.lower()).first()
+
+
 def _event_data(event: dict[str, Any]) -> dict[str, Any]:
     data = event.get("data")
     return data if isinstance(data, dict) else {}
@@ -644,8 +678,9 @@ async def resend_inbound_webhook(
     if event_type != "email.received":
         return {"ok": True, "ignored": event_type}
     data = _fetch_received_if_needed(data)
-    to_addresses = _extract_addresses(data.get("to") or data.get("recipients"))
-    token = _token_from_addresses(to_addresses)
+    to_raw = data.get("to") or data.get("recipients") or data.get("received_for")
+    to_addresses = _extract_addresses(to_raw)
+    token = _reply_token(to_raw) or _token_from_addresses(to_addresses)
 
     db = SessionLocal()
     try:
@@ -693,13 +728,9 @@ async def resend_inbound_webhook(
             if existing_supply:
                 return {"ok": True, "deduplicated": True, "supply_outreach_reply_id": str(existing_supply.id)}
 
-        msg = db.query(OutreachMessage).filter(OutreachMessage.reply_token == token).first()
+        msg = _row_by_reply_token(db, OutreachMessage, token)
         if not msg:
-            supply_msg = (
-                db.query(SupplyOutreachMessage)
-                .filter(SupplyOutreachMessage.reply_token == token)
-                .first()
-            )
+            supply_msg = _row_by_reply_token(db, SupplyOutreachMessage, token)
             if supply_msg:
                 crm_msg = _find_supply_crm_message(db, supply_msg)
                 supply_reply = _capture_supply_reply(db, supply_msg, {**data, "_svix_id": svix_id or ""}, to_addresses)
