@@ -24,6 +24,8 @@ export type DailyJobsReportJob = {
   target_titles?: string[];
   match_why?: string | null;
   robots?: string | null;
+  robot_work?: string | null;
+  source_posting?: string | null;
 };
 
 export type DailyJobsReportHunter = {
@@ -165,7 +167,7 @@ export default function AdminDailyJobsReport({
                 </span>{" "}
                 <span className="font-bold text-emerald-400">{place}</span>
                 <br />
-                Job: {jobNameLine(job)}
+                Job: {job.robot_work || jobNameLine(job)}
                 <br />
                 Decision maker: {decisionMakerLine(job)}
                 <br />
@@ -173,7 +175,7 @@ export default function AdminDailyJobsReport({
                 {job.contact ||
                   "No page email or apply URL. We will not invent one."}
                 <br />
-                Robots: {job.robots || "Autonomous mobile robot"}
+                Robots: {job.robots || "Robot type not named"}
               </li>
             );
           })}

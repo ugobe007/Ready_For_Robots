@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from urllib.parse import quote
 
-from sqlalchemy import case, desc
+from sqlalchemy import case, desc, func
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -370,20 +370,131 @@ def _family_for_action(action: str, title: str) -> str:
     return "transport"
 
 
-_ROBOT_MATCH_BY_FAMILY = {
-    "pallet": "Pallet AMR and heavy cobot",
-    "scrub": "Floor scrubber",
-    "gripper": "Mobile manipulator and humanoid",
-    "inspect": "Inspection robot",
-    "cart": "Cart AMR",
-    "transport": "Autonomous mobile robot",
-}
+# Open staff requisitions are not robot jobs. These actions are physical work
+# a commercial robot can do. Cooks, bartenders, masons, and machine operators stay out.
+ROBOT_AUTOMATION_ACTIONS = frozenset(
+    {
+        "material_handling",
+        "picking",
+        "packing",
+        "receiving",
+        "shipping",
+        "palletizing",
+        "environmental_services",
+        "cleaning",
+        "facade_cleaning",
+        "delivery",
+        "pallet_move",
+        "scrub",
+        "inspect",
+        "cart",
+        "gripper",
+    }
+)
+_ACTION_CAP = 5
+_NOT_A_ROBOT_JOB_RE = re.compile(
+    r"\b(?:bartender|mixologist|banquet|server|cook|mason|bricklayer|sterile|"
+    r"childcare|front desk|machine operator|technician|dishwasher|housekeeper|"
+    r"room attendant)\b",
+    re.I,
+)
+_STAFF_ROLE_RE = re.compile(
+    r"\b(?:operator|handler|picker|packer|puller|janitor|custodian|attendant|"
+    r"associate|porter|transporter|selector|coordinator|specialist|clerk|"
+    r"driver|forklift|shift)\b|"
+    r"\d+\s*(?:st|nd|rd|th)\s+shift|full-time|part-time",
+    re.I,
+)
+
+
+def is_robot_automation_lead(action: str, title: str) -> bool:
+    """True when the row is robot work, not an open staff posting."""
+    act = (action or "").strip().lower()
+    if act not in ROBOT_AUTOMATION_ACTIONS:
+        return False
+    if _NOT_A_ROBOT_JOB_RE.search(title or ""):
+        return False
+    return True
+
+
+def describe_required_robot(action: str, title: str) -> tuple[str, str]:
+    """Robot work line and a description of the robot required. No model or pay."""
+    blob = f"{action} {title}".lower()
+    if any(token in blob for token in ("pallet", "forklift", "palletiz")):
+        work = "Move and stack pallets"
+        robots = (
+            "Pallet AMR. It lifts a loaded pallet and drives it between the line, "
+            "storage, and the dock."
+        )
+    elif "pharmac" in blob and "deliver" in blob:
+        work = "Deliver pharmacy items between units"
+        robots = (
+            "Hospital delivery AMR. It carries medications or supplies on a route "
+            "between the pharmacy and the units."
+        )
+    elif (action or "").strip().lower() == "picking" or any(
+        token in blob for token in ("picker", "order select")
+    ):
+        work = "Pick cases or eaches from storage"
+        robots = (
+            "Piece-picking robot. It selects cases or items from racks and carries "
+            "them to pack-out."
+        )
+    elif (action or "").strip().lower() == "packing" or any(
+        token in blob for token in ("packer", "puller")
+    ):
+        work = "Pack and move finished cases"
+        robots = (
+            "Packing robot. It cases goods or carries packed orders from the line "
+            "to shipping."
+        )
+    elif (action or "").strip().lower() in {"environmental_services", "cleaning", "scrub"} or any(
+        token in blob for token in ("janitor", "custodian", "floor", "evs", "scrub")
+    ):
+        work = "Clean hard floors on a route"
+        robots = (
+            "Floor scrubber. It drives a cleaning path and scrubs hard floors. "
+            "A person does not walk the route."
+        )
+    elif (action or "").strip().lower() == "facade_cleaning" or any(
+        token in blob for token in ("facade", "window")
+    ):
+        work = "Clean exterior glass and facade"
+        robots = (
+            "Facade cleaning robot. It washes exterior glass from a guided rig or drone."
+        )
+    elif (action or "").strip().lower() in {"receiving", "shipping"} or any(
+        token in blob for token in ("receiv", "shipping", "dock")
+    ):
+        work = "Move goods on and off the dock"
+        robots = (
+            "Dock AMR. It carries inbound or outbound goods between the trailer and storage."
+        )
+    elif (action or "").strip().lower() == "inspect" or any(
+        token in blob for token in ("inspect", "audit")
+    ):
+        work = "Inspect along a route"
+        robots = "Inspection robot. It carries cameras along a route and records what it sees."
+    elif (action or "").strip().lower() == "gripper" or "manipul" in blob:
+        work = "Handle items at a station"
+        robots = (
+            "Mobile manipulator. An arm on a mobile base picks up items and places them."
+        )
+    else:
+        work = "Carry goods between stations"
+        robots = (
+            "Warehouse AMR. It carries totes, cases, or carts from one station to the next."
+        )
+    shown = (title or "").strip()
+    if not shown or _STAFF_ROLE_RE.search(shown):
+        shown = work
+    return shown, robots
 
 
 def robot_types_for_job(action: str, title: str) -> str:
-    """Readable robot types for this job. One family, no invented model or pay."""
-    family = _family_for_action(action, title)
-    return _ROBOT_MATCH_BY_FAMILY.get(family, _ROBOT_MATCH_BY_FAMILY["transport"])
+    """Description of the robot required for this work."""
+    _work, robots = describe_required_robot(action, title)
+    return robots
 
 
 def public_job_card(db: Session, job_key: str) -> Optional[dict[str, Any]]:
@@ -462,16 +573,34 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
         "investigate_status": str(getattr(row, "investigate_status", "") or ""),
         "created_at": created.isoformat() if created else None,
         "card_href": job_card_href(str(getattr(row, "job_key", "") or "")),
-        "robots": robot_types_for_job(action, title),
     }
+    robot_work, robots = describe_required_robot(action, title)
+    card["source_posting"] = title
+    card["robot_work"] = robot_work
+    card["robots"] = robots
     return card
 
 
-def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
-    """Named-employer Robot Jobs in the same order as the operator cards."""
-    from app.models.robot_directed_discovery import RobotJob
+def _row_passes_report(row: Any) -> bool:
     from app.services.robot_job_extract import is_job_employer_name
     from app.services.robot_requirement_match import is_named_robot_job
+
+    employer = str(getattr(row, "company_name", "") or "").strip()
+    locality = str(getattr(row, "locality", "") or "").strip()
+    title = str(getattr(row, "robot_compatible_task", "") or "").strip()
+    action = str(getattr(row, "action", "") or "").strip()
+    if not is_robot_automation_lead(action, title):
+        return False
+    if not is_named_robot_job(employer, locality):
+        return False
+    if not is_job_employer_name(employer, title=title):
+        return False
+    return True
+
+
+def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
+    """Named-employer robot automation. Staff postings (cook, bartender, mason) stay out."""
+    from app.models.robot_directed_discovery import RobotJob
 
     cap = max(1, min(int(limit), 50))
     status_rank = case(
@@ -480,45 +609,72 @@ def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
         else_=0,
     )
     try:
-        # Filter named employer + workplace before the pool cap. High-score
-        # rows with an empty locality otherwise fill the pool and the public
-        # board stays empty even when named jobs exist further down.
-        rows = (
-            db.query(RobotJob)
-            .filter(RobotJob.company_name.isnot(None))
-            .filter(RobotJob.company_name != "")
-            .filter(RobotJob.locality.isnot(None))
-            .filter(RobotJob.locality != "")
-            .order_by(
+        rank = func.row_number().over(
+            partition_by=RobotJob.action,
+            order_by=(
                 desc(status_rank),
                 desc(RobotJob.existence_confidence),
                 desc(RobotJob.definition_completeness),
                 desc(RobotJob.created_at),
-            )
-            .limit(POOL)
+            ),
+        )
+        ranked = (
+            db.query(RobotJob.id.label("id"), rank.label("rn"))
+            .filter(RobotJob.company_name.isnot(None))
+            .filter(RobotJob.company_name != "")
+            .filter(RobotJob.locality.isnot(None))
+            .filter(RobotJob.locality != "")
+            .filter(RobotJob.action.in_(sorted(ROBOT_AUTOMATION_ACTIONS)))
+            .subquery()
+        )
+        id_rows = (
+            db.query(ranked.c.id)
+            .filter(ranked.c.rn <= _ACTION_CAP + 3)
             .all()
         )
+        ids = [row[0] for row in id_rows]
+        rows = (
+            db.query(RobotJob).filter(RobotJob.id.in_(ids)).all()
+            if ids
+            else []
+        )
+        def _sort_key(row: Any) -> tuple:
+            created = getattr(row, "created_at", None)
+            stamp = created.timestamp() if isinstance(created, datetime) else 0.0
+            return (
+                0 if str(getattr(row, "investigate_status", "") or "") == "yes" else 1,
+                -(float(getattr(row, "existence_confidence", 0) or 0)),
+                -(float(getattr(row, "definition_completeness", 0) or 0)),
+                -stamp,
+            )
+
+        rows.sort(key=_sort_key)
     except Exception:
         logger.debug("daily jobs report query skipped", exc_info=True)
         return []
     picked: list[Any] = []
+    deferred: list[Any] = []
     seen: set[str] = set()
+    counts: dict[str, int] = {}
     for row in rows:
-        employer = str(getattr(row, "company_name", "") or "").strip()
-        locality = str(getattr(row, "locality", "") or "").strip()
-        title = str(getattr(row, "robot_compatible_task", "") or "").strip()
-        if not is_named_robot_job(employer, locality):
-            continue
-        if not is_job_employer_name(employer, title=title):
-            continue
         key = str(getattr(row, "job_key", "") or "").strip()
-        if not key or key in seen:
+        if not key or key in seen or not _row_passes_report(row):
             continue
         seen.add(key)
+        action = str(getattr(row, "action", "") or "").strip().lower()
+        if counts.get(action, 0) >= _ACTION_CAP:
+            deferred.append(row)
+            continue
+        counts[action] = counts.get(action, 0) + 1
         picked.append(row)
         if len(picked) >= cap:
             break
-    return picked
+    if len(picked) < cap:
+        for row in deferred:
+            picked.append(row)
+            if len(picked) >= cap:
+                break
+    return picked[:cap]
 
 
 def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, Any]:
@@ -542,6 +698,26 @@ def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, A
         "find_href": f"{_SITE}/?visit=jobs",
         "admin_href": f"{_SITE}/admin#daily-jobs-report",
     }
+
+
+def _report_job_line(job: dict[str, Any]) -> str:
+    """The robot work. A staff requisition title is not the job."""
+    action = str(job.get("action") or "")
+    title = str(job.get("title") or job.get("job_type") or "")
+    work = str(job.get("robot_work") or "").strip()
+    if not work:
+        work, _robots = describe_required_robot(action, title)
+    desc = str(job.get("description") or "").strip()
+    posting = str(job.get("source_posting") or title).strip()
+    if (
+        desc
+        and desc != work
+        and desc != posting
+        and not _STAFF_ROLE_RE.search(desc)
+        and not _NOT_A_ROBOT_JOB_RE.search(desc)
+    ):
+        return f"{work} — {desc}"
+    return work
 
 
 def _job_name_line(job: dict[str, Any]) -> str:
@@ -569,7 +745,7 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
     lines = [
         f"Top {int(report.get('limit') or TOP_N)} hot job opportunities — {day}",
         "",
-        "Named-employer Robot Jobs. Employer, decision maker, the work, and the robot types that match.",
+        "Robot automation at named employers. Each row is the work a robot would do, and the robot required.",
         "",
     ]
     if not jobs:
@@ -583,16 +759,15 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
         if locality:
             head = f"{head} · {locality}"
         lines.append(head)
-        lines.append(f"    Job: {_job_name_line(job)}")
+        lines.append(f"    Job: {_report_job_line(job)}")
         lines.append(f"    Decision maker: {_decision_maker_inline(job)}")
         lines.append(f"    Contact: {job.get('contact') or CONTACT_EMPTY}")
-        robots = str(
-            job.get("robots")
-            or robot_types_for_job(
+        robots = str(job.get("robots") or "").strip()
+        if not robots:
+            _work, robots = describe_required_robot(
                 str(job.get("action") or ""),
                 str(job.get("title") or job.get("job_type") or ""),
             )
-        ).strip()
         if robots:
             lines.append(f"    Robots: {robots}")
         lines.append("")
@@ -618,6 +793,7 @@ _CSV_COLUMNS = (
     "employer_email",
     "apply_url",
     "robots",
+    "source_posting",
 )
 
 
@@ -642,17 +818,18 @@ def render_daily_jobs_report_csv(report: dict[str, Any]) -> str:
                 "rank": job.get("rank") or "",
                 "employer": job.get("employer") or "",
                 "locality": job.get("locality") or "",
-                "job_type": job.get("job_type") or job.get("title") or "",
-                "description": job.get("description") or "",
+                "job_type": job.get("robot_work") or job.get("job_type") or job.get("title") or "",
                 "decision_maker": _decision_maker_inline(job),
                 "contact": job.get("contact") or "",
                 "employer_email": job.get("employer_email") or "",
                 "apply_url": job.get("apply_url") or "",
+                "description": _report_job_line(job),
                 "robots": job.get("robots")
-                or robot_types_for_job(
+                or describe_required_robot(
                     str(job.get("action") or ""),
                     str(job.get("title") or job.get("job_type") or ""),
-                ),
+                )[1],
+                "source_posting": job.get("source_posting") or job.get("title") or "",
             }
         )
     return buf.getvalue()
