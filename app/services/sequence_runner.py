@@ -17,6 +17,16 @@ from app.services.sales_learning_agent import record_sales_experience
 
 logger = logging.getLogger(__name__)
 
+_BUYER_SCRIPT = (
+    "Hi _______, nice to meet you. My name is Phelan, I am a Robot Coordinator "
+    "for ReadyForRobots where I help find robots for automation jobs. I noticed "
+    "you announced the need for _______ to help with _______ automation tasks "
+    "at {company_name}. I understand the task requires robots with _______ skills "
+    "and capabilities of _______. On that note I found a few robots that match "
+    "these requirements I would like to share with you. May I send them to you "
+    "for review? Thanks and look forward to learning more.\n\nPhelan."
+)
+
 DEFAULT_BUYER_SEQUENCE = {
     "name": "Phelan buyer cadence",
     "slug": "cal_buyer_v1",
@@ -27,20 +37,8 @@ DEFAULT_BUYER_SEQUENCE = {
         {
             "step_number": 1,
             "delay_days": 0,
-            "subject_template": "a deployment note for {company_name}",
-            "body_template": (
-                "Hi {company_name},\n\n"
-                "Hi, I am Phelan. I work at ReadyForRobots as a Robot Coordinator. I focus on robot deployments and their metrics, to help companies improve ROI.\n\n"
-                "I spend my time studying robot deployments — not the demos, the ones still "
-                "running months later.\n\n"
-                "One thing shows up over and over: deployments fail less from hardware limits "
-                "and more from assigning automation to the wrong problem.\n\n"
-                "That's why we're vendor-neutral. I focus first on whether automation belongs "
-                "in a workflow before anyone compares robots.\n\n"
-                "Out of curiosity, is {company_name} evaluating automation now, or is it still "
-                "further down the road?\n\n"
-                "— Phelan\nRobot Coordinator\nReady For Robots"
-            ),
+            "subject_template": "robots that match the job at {company_name}",
+            "body_template": _BUYER_SCRIPT,
             "action_label": "Intro",
         },
         {
@@ -48,50 +46,24 @@ DEFAULT_BUYER_SEQUENCE = {
             # builders (per-industry); this static template is a fallback only.
             "step_number": 2,
             "delay_days": 6,
-            "subject_template": "the workflow most teams automate last — {company_name}",
-            "body_template": (
-                "Hi {company_name}, this is Phelan again.\n\n"
-                "One practical note, then one question.\n\n"
-                "One pattern I see everywhere: the projects with the fastest payback rarely start "
-                "with the most visible task. They start with the quiet process upstream that backs "
-                "everything else up.\n\n"
-                "Most teams automate the flashy part first, then wonder why the ROI never showed. If "
-                "{company_name} ever maps this out, that's where I'd start.\n\n"
-                "— Phelan\nRobot Coordinator\nReady For Robots"
-            ),
+            "subject_template": "the robots that match the job at {company_name}",
+            "body_template": _BUYER_SCRIPT,
             "action_label": "Teach",
         },
         {
             # Trend — one market pattern / common mistake. Live copy = ladder.
             "step_number": 3,
             "delay_days": 14,
-            "subject_template": "why \"evaluating five robots\" is usually the wrong question — {company_name}",
-            "body_template": (
-                "Hi {company_name}, this is Phelan again.\n\n"
-                "One practical note, then one question.\n\n"
-                "A team lines up five vendors, runs a bake-off, picks the fastest — and six months "
-                "later it's parked. The robots that survive aren't the fastest; they're matched to "
-                "one specific bottleneck, with integration and software actually resourced.\n\n"
-                "If {company_name} is weighing vendors, I'm glad to share what separates the ones "
-                "that last. No pitch.\n\n"
-                "— Phelan\nRobot Coordinator\nReady For Robots"
-            ),
+            "subject_template": "still holding robot matches for {company_name}",
+            "body_template": _BUYER_SCRIPT,
             "action_label": "Trend",
         },
         {
             # Question — one easy, genuine question. Live copy = ladder.
             "step_number": 4,
             "delay_days": 24,
-            "subject_template": "one question about {company_name}",
-            "body_template": (
-                "Hi {company_name}, this is Phelan again.\n\n"
-                "One practical note, then one question.\n\n"
-                "No agenda here — one question tells me more than a whole discovery call.\n\n"
-                "If you automated one workflow tomorrow, which would it be? Most teams name the "
-                "busiest one. The one that actually pays back is usually the process quietly "
-                "creating work everywhere else. Curious what you'd pick for {company_name}.\n\n"
-                "— Phelan\nRobot Coordinator\nReady For Robots"
-            ),
+            "subject_template": "may I send the robot matches for {company_name}",
+            "body_template": _BUYER_SCRIPT,
             "action_label": "Question",
         },
     ],
@@ -346,6 +318,7 @@ def _render_sequence_step(
     account: CrmAccount,
     *,
     sequence_slug: str | None,
+    company: Any = None,
 ) -> tuple[str, str]:
     """Produce (subject, body) for a due follow-up.
 
@@ -355,18 +328,26 @@ def _render_sequence_step(
     touch (e.g. the CRM manual step 1) — falls back to the static template.
     """
     if sequence_slug == DEFAULT_BUYER_SEQUENCE["slug"]:
+        from app.services.agent_messaging import (
+            build_buyer_variant_body,
+            build_ladder_touch_body,
+            buyer_variant_subject,
+            ladder_touch_subject,
+        )
+
+        name = account.name or "your team"
+        industry = account.industry or ""
         touch = _step_touch(step)
         if touch:
-            from app.services.agent_messaging import (
-                build_ladder_touch_body,
-                ladder_touch_subject,
-            )
-
-            name = account.name or "your team"
-            industry = account.industry or ""
             return (
                 ladder_touch_subject(touch, name, industry),
-                build_ladder_touch_body(touch, name, industry),
+                build_ladder_touch_body(touch, name, industry, company=company),
+            )
+        # Step 1 is the operator-approved first touch, not the stored fallback.
+        if int(getattr(step, "step_number", 0) or 0) == 1:
+            return (
+                buyer_variant_subject(name, industry, "bottleneck_first"),
+                build_buyer_variant_body(name, industry, "bottleneck_first", company=company),
             )
     subject = _render_template(step.subject_template or f"Follow-up — {account.name}", account)
     body = _render_template(
@@ -377,10 +358,10 @@ def _render_sequence_step(
 
 
 def _reply_address(token: str) -> str:
-    import os
+    """Same receiving address as the intro. Follow-ups must land in the inbox."""
+    from app.services.phelan_outreach_send import cal_reply_address
 
-    domain = (os.getenv("RESEND_FROM_EMAIL") or "updates@readyforrobots.com").split("@")[-1]
-    return f"scout+{token}@{domain}"
+    return cal_reply_address(token)
 
 
 def process_due_enrollments(
@@ -467,6 +448,7 @@ def process_due_enrollments(
         # predate variant tagging in enrollment payload.
         meta = dict(enrollment.payload or {})
         variant_id = (meta.get("variant_id") or "").strip()
+        company = None
         if not variant_id and account.company_id:
             from app.models.company import Company
             from app.services.agent_messaging import BUYER_VARIANTS, resolve_buyer_variant
@@ -478,6 +460,10 @@ def process_due_enrollments(
                     variant_id = resolved
                     meta["variant_id"] = variant_id
                     enrollment.payload = meta
+        elif account.company_id:
+            # Query company even if variant_id exists, for job data extraction.
+            from app.models.company import Company
+            company = db.query(Company).filter(Company.id == account.company_id).first()
 
         if enrollment.sequence_id not in slug_cache:
             seq_row = (
@@ -487,8 +473,17 @@ def process_due_enrollments(
             )
             slug_cache[enrollment.sequence_id] = seq_row[0] if seq_row else None
         subject, body = _render_sequence_step(
-            step, account, sequence_slug=slug_cache[enrollment.sequence_id]
+            step, account, sequence_slug=slug_cache[enrollment.sequence_id], company=company
         )
+        if slug_cache[enrollment.sequence_id] == DEFAULT_BUYER_SEQUENCE["slug"]:
+            from app.services.phelan_draft_guard import buyer_letter_ready_to_send
+
+            ready, ready_reason = buyer_letter_ready_to_send(body)
+            if not ready:
+                enrollment.status = "blocked"
+                enrollment.paused_reason = f"off_instruction:{ready_reason[:120]}"
+                skipped += 1
+                continue
         reply_token = secrets.token_urlsafe(18)
         try:
             send_result = send_email_via_resend(

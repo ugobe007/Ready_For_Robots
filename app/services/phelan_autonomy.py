@@ -341,7 +341,33 @@ def cal_buyer_outreach_body(company: Any, *, fresh: bool = False, variant_id: st
         reason = build_context_reason(name, _company_signal_blob(company))
     elif include_hermes:
         reason = _hermes_context_reason(company)
-    return build_buyer_variant_body(name, industry, vid, reason=reason)
+    
+    # Extract job facts from company metadata if available.
+    contact_name = None
+    announced_need = None
+    automation_tasks = None
+    skills = None
+    capabilities = None
+    meta = getattr(company, "crm_metadata", None) or {}
+    if isinstance(meta, dict):
+        contact_name = meta.get("outreach_contact_name")
+        # Hermes job titles or automation requirements can fill announced_need.
+        hermes_jobs = meta.get("hermes_job_titles") or []
+        if hermes_jobs and isinstance(hermes_jobs, list):
+            announced_need = hermes_jobs[0] if hermes_jobs else None
+        # automation_requirements can fill skills if no explicit skills.
+        auto_reqs = meta.get("automation_requirements")
+        if auto_reqs and isinstance(auto_reqs, list) and auto_reqs:
+            skills = ", ".join(str(r) for r in auto_reqs[:3] if r)
+    
+    return build_buyer_variant_body(
+        name, industry, vid, reason=reason,
+        contact_name=contact_name,
+        announced_need=announced_need,
+        automation_tasks=automation_tasks,
+        skills=skills,
+        capabilities=capabilities,
+    )
 
 
 def _hermes_context_reason(company: Any) -> Optional[str]:

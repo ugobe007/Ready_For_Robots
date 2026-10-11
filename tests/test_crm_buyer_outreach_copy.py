@@ -8,11 +8,11 @@ def test_buyer_draft_is_human_and_not_template_slop():
     body = _draft_buyer_body(acct, settings=None, traits=[], collateral_policy="none", collateral_links=None)
     low = body.lower()
 
-    assert body.startswith("Hi Americold Realty Trust,")
-    assert "i've been following" not in low
-    assert "worth a quick reply if you're the right person to explore this" not in low
-    assert "vendor-neutral" in low
-    assert "could you point me to the right contact" in low
+    assert "nice to meet you" in low
+    assert "i am a robot coordinator" in low
+    assert "at americold realty trust" in low
+    assert "may i send them to you for review?" in low
+    assert "i've been looking" not in low
 
 
 def test_buyer_draft_strips_recommended_action_suffix_from_name():
@@ -23,7 +23,8 @@ def test_buyer_draft_strips_recommended_action_suffix_from_name():
     body = _draft_buyer_body(acct, settings=None, traits=[], collateral_policy="none", collateral_links=None)
 
     assert "ROI-focused pitch" not in body
-    assert body.startswith("Hi Americold Realty Trust,")
+    assert "contact new executive" not in body
+    assert "at Americold Realty Trust" in body
 
 
 def test_hospitality_variant_matches_new_rewrite_style():
@@ -31,11 +32,9 @@ def test_hospitality_variant_matches_new_rewrite_style():
     body = _draft_buyer_body(acct, settings=None, traits=[], collateral_policy="none", collateral_links=None)
     low = body.lower()
 
-    assert "i work with hospitality teams on one thing" in low
-    assert "real weekend occupancy" in low
-    assert "housekeeping turnover" in low
-    assert "housekeeping and turnover workflow recommendation" in low
-    assert "i've been watching labor" not in low
+    assert "i am a robot coordinator" in low
+    assert "at mgm resorts international" in low
+    assert "may i send them to you for review?" in low
 
 
 def test_healthcare_variant_matches_new_rewrite_style():
@@ -43,12 +42,9 @@ def test_healthcare_variant_matches_new_rewrite_style():
     body = _draft_buyer_body(acct, settings=None, traits=[], collateral_policy="none", collateral_links=None)
     low = body.lower()
 
-    assert "i work with healthcare ops teams on one thing" in low
-    assert "reduce staff miles" in low
-    assert "evs" in low
-    assert "elevator access" in low
-    assert "evs and transport workflow recommendation" in low
-    assert "i've had lifepoint health on my radar" not in low
+    assert "i am a robot coordinator" in low
+    assert "at lifepoint health" in low
+    assert "may i send them to you for review?" in low
 
 
 def test_food_variant_matches_new_rewrite_style():
@@ -56,8 +52,6 @@ def test_food_variant_matches_new_rewrite_style():
     body = _draft_buyer_body(acct, settings=None, traits=[], collateral_policy="none", collateral_links=None)
     low = body.lower()
 
-    assert "i work with food teams on one thing" in low
-    assert "changeover headaches" in low
-    assert "oee" in low
-    assert "changeover and oee-focused workflow recommendation" in low
-    assert "i noticed operational signals" not in low
+    assert "i am a robot coordinator" in low
+    assert "at clemens food group" in low
+    assert "may i send them to you for review?" in low

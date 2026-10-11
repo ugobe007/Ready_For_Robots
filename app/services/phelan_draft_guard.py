@@ -132,6 +132,79 @@ def is_legacy_cal_draft(draft: str | None) -> bool:
     return any(marker in low for marker in _LEGACY_VOICE_MARKERS)
 
 
+# Letters that ignore the operator-approved first touch. Name and title alone
+# are not enough — these lines are a different message.
+_OFF_INSTRUCTION_MARKERS = (
+    "following up on task feasibility",
+    "one field note",
+    "something i'm seeing",
+    "vendor-neutral",
+    "evaluate physical task feasibility",
+    "before vendor pocs",
+    "before vendor poc",
+    "i spend my time studying",
+    "i spend my days",
+    "we've identified",
+    "we’ve identified",
+    "one practical note, then one question",
+    "robot job analyst",
+    "robot placement specialist",
+    "recruitment and placement infrastructure",
+    "i work with logistics teams on one thing",
+    "i work with hospitality teams on one thing",
+    "i work with healthcare",
+    "i work with food teams on one thing",
+    "leadership team",
+)
+
+
+_ESSAY_MARKERS = (
+    "i've been looking",
+    "i’ve been looking",
+    "i'd be interested in your perspective",
+    "i’d be interested in your perspective",
+    "i research how companies are using robotics",
+    "i keep noticing something",
+)
+
+
+def buyer_letter_obeys_instructions(draft: str | None) -> tuple[bool, str]:
+    """The Robot Coordinator script: who Phelan is, the job, and a request to send matches."""
+    text = (draft or "").strip()
+    if not text:
+        return False, "Draft is empty"
+    low = text.lower()
+    for marker in _OFF_INSTRUCTION_MARKERS:
+        if marker in low:
+            return False, f"Draft violates operator instructions ({marker})"
+    for marker in _ESSAY_MARKERS:
+        if marker in low:
+            return False, f"Draft uses the essay format ({marker})"
+    if "i am a robot coordinator" not in low:
+        return False, "Draft missing the Robot Coordinator introduction"
+    if "may i send them to you for review" not in low:
+        return False, "Draft missing the request to send the robot matches"
+    if not low.rstrip().endswith("phelan."):
+        return False, "Draft missing the Phelan close"
+    return True, "ok"
+
+
+def buyer_letter_ready_to_send(draft: str | None) -> tuple[bool, str]:
+    """Format is right, and the contact and job are filled in. Skills/capabilities may be blank."""
+    ok, reason = buyer_letter_obeys_instructions(draft)
+    if not ok:
+        return ok, reason
+    text = draft or ""
+    # The Robot Coordinator script leaves skills, capabilities, and tasks blank
+    # when those facts are unknown. Only reject if contact (Hi _______) or
+    # the announced need (announced the need for _______) are still blank.
+    if text.startswith("Hi _______,"):
+        return False, "Draft is missing the contact name"
+    if "announced the need for _______" in text:
+        return False, "Draft is missing the announced job need"
+    return True, "ok"
+
+
 def draft_needs_regeneration(draft: str | None, *, account_type: str = "buyer") -> tuple[bool, str]:
     """Detect truncated previews, template mismatches, or legacy Cal voice."""
     from app.services.brand import BRAND_STAGEGATE, content_brand
@@ -145,6 +218,10 @@ def draft_needs_regeneration(draft: str | None, *, account_type: str = "buyer") 
     if not ok:
         return True, reason
     low = (draft or "").lower()
+    if at == "buyer":
+        obeys, why = buyer_letter_obeys_instructions(draft)
+        if not obeys:
+            return True, why
     if at == "buyer" and any(p in low for p in _WRONG_BUYER_PHRASES):
         return True, "Buyer account has vendor-facing draft — regenerating"
     if at == "buyer":

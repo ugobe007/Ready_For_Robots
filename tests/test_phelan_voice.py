@@ -44,13 +44,11 @@ def test_persona_payload_exports_voice_rules():
 def test_workflow_first_matches_observation_led_shape():
     body = build_buyer_variant_body("Acme Logistics", "Logistics", "workflow_first")
     low = body.lower()
-    assert body.startswith("Hi Acme Logistics,") or body.startswith("Hi Acme team,")
-    paragraphs = [p for p in body.split("\n\n") if p.strip()]
-    opener = paragraphs[1].lower()
-    assert opener.startswith("i'm phelan, robot coordinator")
-    assert "i've been looking at" in low
-    assert "i'd be interested in your perspective" in low
-    assert body.rstrip().endswith("readyforrobots.com")
+    assert body.startswith("Hi _______, nice to meet you.")
+    assert "i am a robot coordinator for readyforrobots" in low
+    assert "may i send them to you for review?" in low
+    assert "i've been looking at" not in low
+    assert body.rstrip().endswith("Phelan.")
     assert "Deployment Advisor" not in body
     assert len(body.split()) <= 280
 
@@ -59,9 +57,8 @@ def test_buyer_intro_first_paragraph_is_human():
     name = "Acme Logistics"
     for vid in BUYER_VARIANTS:
         body = build_buyer_variant_body(name, "Logistics", vid)
-        paragraphs = [p for p in body.split("\n\n") if p.strip()]
-        opener = paragraphs[1].strip().lower()
-        assert opener.startswith("i'm phelan, robot coordinator"), f"{vid} opener: {paragraphs[1][:90]}"
+        assert body.startswith("Hi _______, nice to meet you."), vid
+        assert "I am a Robot Coordinator for ReadyForRobots" in body
 
 
 def test_long_name_anchor_keeps_greeting_first():
@@ -93,26 +90,11 @@ def test_bottleneck_first_matches_operator_pfg_example():
         "Food Distribution / Wholesale",
         "bottleneck_first",
     )
-    expected = "\n".join([
-        "Hi PFG team,",
-        "",
-        "I'm Phelan, Robot Coordinator at ReadyForRobots. We evaluate physical task feasibility and match industrial operations with qualified commercial robotics models before vendor PoCs.",
-        "",
-        "I've been looking at food distribution, and I keep noticing something I wanted to check with you. Picking gets most of the attention, but a lot of the day-to-day pressure seems to happen elsewhere.",
-        "",
-        "Receiving and replenishment involve a lot of material movement, pallets have to move continuously through the operation, and inventory exceptions and returns create work that doesn't always fit neatly into the normal warehouse flow. Those are often the places where people end up filling the gaps.",
-        "",
-        "I'm curious if that's true at PFG.",
-        "",
-        "Where do you see the biggest opportunity to automate today? Is it still picking, or are there other parts of the operation that cause more problems?",
-        "",
-        "I'd be interested in your perspective.",
-        "",
-        "Best regards,",
-        "",
-        "Phelan",
-        "Robot Coordinator | Ready For Robots",
-        "phelan@readyforrobots.com",
-        "readyforrobots.com",
-    ])
-    assert body == expected
+    assert body.startswith("Hi _______, nice to meet you.")
+    assert "I am a Robot Coordinator for ReadyForRobots" in body
+    assert "I help find robots for automation jobs" in body
+    assert "at Performance Food Group" in body
+    assert "May I send them to you for review?" in body
+    assert body.endswith("Phelan.")
+    assert "I've been looking" not in body
+    assert "I'd be interested in your perspective" not in body

@@ -6,7 +6,13 @@ from app.services.agent_messaging import (
 )
 from app.services.phelan_assembly_agent import assemble_buyer_outreach
 from app.services.phelan_autonomy import cal_buyer_outreach_body
-from app.services.phelan_draft_guard import draft_needs_regeneration, is_complete_cal_draft, is_legacy_cal_draft, parse_cal_draft_or_raise
+from app.services.phelan_draft_guard import (
+    buyer_letter_obeys_instructions,
+    draft_needs_regeneration,
+    is_complete_cal_draft,
+    is_legacy_cal_draft,
+    parse_cal_draft_or_raise,
+)
 
 _THEATER = (
     "innovation theater",
@@ -62,14 +68,9 @@ def test_buyer_variants_are_humble_not_presumptuous():
     # Conversational honesty: invite their perspective, don't diagnose them.
     name = "Acme Distribution"
     honesty_markers = (
-        "i'm curious",
-        "i keep noticing",
-        "i've been looking",
-        "i'm phelan, robot coordinator",
-        "i'd be interested in your perspective",
-        "biggest opportunity",
-        "somewhere else",
-        "happen elsewhere",
+        "i am a robot coordinator",
+        "may i send them to you for review",
+        "nice to meet you",
     )
     for vid in BUYER_VARIANTS:
         body = build_buyer_variant_body(name, "Logistics", vid).lower()
@@ -136,6 +137,27 @@ def test_wrong_vendor_pitch_on_buyer_needs_regeneration():
     needs, reason = draft_needs_regeneration(vendor_pitch, account_type="buyer")
     assert needs
     assert "vendor-facing" in reason or "legacy" in reason.lower()
+
+
+def test_field_note_and_pitch_intro_are_rejected():
+    field_note = (
+        "Hi ISS Facilities Leadership Team,\n\n"
+        "Following up on task feasibility and robotic labor placement planning for your operations.\n\n"
+        "When a plant asks me where to automate, they point at the six-axis arm everyone photographs.\n\n"
+        "Best regards,\n\nPhelan\nRobot Coordinator | Ready For Robots\n"
+        "phelan@readyforrobots.com\nreadyforrobots.com\n"
+    )
+    ok, reason = buyer_letter_obeys_instructions(field_note)
+    assert not ok
+    assert "operator instructions" in reason
+    needs, _ = draft_needs_regeneration(field_note, account_type="buyer")
+    assert needs
+
+    pitch = build_buyer_variant_body("Performance Food Group", "Food Distribution / Wholesale", "bottleneck_first")
+    assert "I am a Robot Coordinator for ReadyForRobots" in pitch
+    assert "I've been looking" not in pitch
+    obeys, why = buyer_letter_obeys_instructions(pitch)
+    assert obeys, why
 
 
 def test_parse_cal_draft_or_raise_raises_on_truncated():

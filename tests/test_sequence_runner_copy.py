@@ -38,7 +38,11 @@ def test_render_never_emits_broken_industry_grammar():
     # the reminder identity line and never leak junk industry placeholders.
     for industry in [None, "Unknown", "General Robotics"]:
         rendered = build_ladder_touch_body("teach", "Acme", industry)
-        assert "Following up on task feasibility and robotic labor placement planning" in rendered
+        assert "I am a Robot Coordinator for ReadyForRobots" in rendered
+        assert "May I send them to you for review?" in rendered
+        assert rendered.rstrip().endswith("Phelan.")
+        assert "one field note" not in rendered.lower()
+        assert "i've been looking" not in rendered.lower()
         assert "{industry}" not in rendered
         assert "Unknown" not in rendered
         assert "your industry teams" not in rendered  # the old broken construction
@@ -50,5 +54,9 @@ def test_cadence_has_four_touches_and_cal_signoff():
     # Every follow-up is signed by Cal and interpolates cleanly.
     for s in steps:
         body = _render_template(s["body_template"], _Acct("Acme Foods", "Logistics"))
-        assert "Cal" in body
+        assert "Phelan" in body
+        assert "Robot Coordinator" in body
+        assert "May I send them to you for review?" in body
+        assert "vendor-neutral" not in body.lower()
+        assert "I've been looking" not in body
         assert "{company_name}" not in body and "{industry}" not in body

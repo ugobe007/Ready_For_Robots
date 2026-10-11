@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import re
+from typing import Any
 
 from app.services.phelan_persona import PHELAN_BANNED_PHRASES, PHELAN_ORG, phelan_buyer_email_signature, phelan_signature
 
@@ -22,7 +23,7 @@ PHELAN_BUYER_ROLE_LINE = (
 )
 
 PHELAN_BUYER_REMINDER_LINE = (
-    "Following up on task feasibility and robotic labor placement planning for your operations."
+    "This is Phelan again, Robot Coordinator at ReadyForRobots."
 )
 
 PHELAN_VENDOR_ROLE_LINE = (
@@ -546,50 +547,66 @@ def _ladder_content(industry: str) -> dict[str, str]:
 
 
 def ladder_touch_subject(touch: str, name: str, industry: str) -> str:
-    """Curiosity-led subject for a follow-up touch (teach / trend / question)."""
-    content = _ladder_content(industry)
-    key = f"{touch}_subject"
-    base = content.get(key, _GENERIC_LADDER.get(key, "a quick note"))
+    """Follow-up subjects stay on the job. No field-note subjects."""
+    company = (name or "your team").strip()
     if touch == "teach":
-        return f"one field note: {base}"
-    if touch == "trend":
-        return f"something I'm seeing: {base}"
-    return base
-
-
-def build_ladder_touch_body(touch: str, name: str, industry: str) -> str:
-    """Assemble a teaching follow-up body. Each touch teaches one thing and ends
-    with a company-named close (assembly gate) plus Cal's sign-off."""
-    n = (name or "your team").strip()
-    content = _ladder_content(industry)
-    core = content.get(touch, _GENERIC_LADDER.get(touch, ""))
-    if touch == "teach":
-        close = (
-            f"If it is useful for {n}, I can share where I would start — and where I would wait. "
-            "No pitch either way."
-        )
+        subject = f"the robots that match the job at {company}"
     elif touch == "trend":
-        close = (
-            f"If {n} is weighing vendors this year, I can say which patterns tend to hold up. "
-            "Curious what you are seeing on your side."
+        subject = f"still holding robot matches for {company}"
+    else:
+        subject = f"may I send the robot matches for {company}"
+    return subject[:88]
+
+
+def build_ladder_touch_body(
+    touch: str,
+    name: str,
+    industry: str,
+    *,
+    company: Any = None,
+    contact_name: str | None = None,
+    announced_need: str | None = None,
+    automation_tasks: str | None = None,
+    skills: str | None = None,
+    capabilities: str | None = None,
+) -> str:
+    """Follow-up uses the same Robot Coordinator script, not a new essay."""
+    # Extract job facts from company metadata if not explicitly provided.
+    if company is not None and not any([contact_name, announced_need, skills, capabilities]):
+        meta = getattr(company, "crm_metadata", None) or {}
+        if isinstance(meta, dict):
+            contact_name = contact_name or meta.get("outreach_contact_name")
+            # Hermes job titles or automation requirements can fill announced_need.
+            hermes_jobs = meta.get("hermes_job_titles") or []
+            if hermes_jobs and isinstance(hermes_jobs, list) and not announced_need:
+                announced_need = hermes_jobs[0] if hermes_jobs else None
+            # automation_requirements can fill skills if no explicit skills.
+            auto_reqs = meta.get("automation_requirements")
+            if auto_reqs and isinstance(auto_reqs, list) and auto_reqs and not skills:
+                skills = ", ".join(str(r) for r in auto_reqs[:3] if r)
+    
+    body = build_buyer_variant_body(
+        name, industry, "bottleneck_first",
+        contact_name=contact_name,
+        announced_need=announced_need,
+        automation_tasks=automation_tasks,
+        skills=skills,
+        capabilities=capabilities,
+    )
+    body = body.replace("nice to meet you. My name is Phelan,", "this is Phelan again.", 1)
+    if touch == "trend":
+        body = body.replace(
+            "I found a few robots that match",
+            "I am still holding a few robots that match",
+            1,
         )
-    else:  # question
-        close = (
-            f"No right answer — what comes to mind for {n} usually points at where a robot "
-            "would earn its keep. Curious what you would say."
+    elif touch == "question":
+        body = body.replace(
+            "May I send them to you for review?",
+            "May I send them to you for review this week?",
+            1,
         )
-    greeting = f"Hi {n} Leadership Team," if n and n != "your team" else "Hi,"
-    return "\n".join([
-        greeting,
-        "",
-        PHELAN_BUYER_REMINDER_LINE,
-        "",
-        core,
-        "",
-        close,
-        "",
-        phelan_buyer_email_signature(),
-    ])
+    return body
 
 
 def pick_buyer_variant(company_id, *, allowed=None) -> str:
@@ -669,9 +686,10 @@ def _greeting_name(name: str) -> str:
 
 
 def _cal_intro() -> str:
+    """Operator instruction: who Phelan is, then why he is writing. No platform pitch."""
     return (
-        "I'm Phelan, Robot Coordinator at ReadyForRobots. We evaluate physical task feasibility "
-        "and match industrial operations with qualified commercial robotics models before vendor PoCs."
+        "I'm Phelan, Robot Coordinator at ReadyForRobots. I research how companies are using robotics "
+        "and help identify jobs where automation could actually make a difference."
     )
 
 
@@ -865,69 +883,60 @@ def build_context_reason(name: str, signal_blob: str, *, max_chars: int = 200) -
 
 
 def build_buyer_variant_body(
-    name: str, industry: str, variant_id: str, *, reason: str | None = None
+    name: str,
+    industry: str,
+    variant_id: str,
+    *,
+    reason: str | None = None,
+    company: Any = None,
+    contact_name: str | None = None,
+    announced_need: str | None = None,
+    automation_tasks: str | None = None,
+    skills: str | None = None,
+    capabilities: str | None = None,
 ) -> str:
-    """Assemble the full buyer email body for a given advisor angle.
+    """Buyer letter in the operator's Robot Coordinator script.
 
-    When ``reason`` is provided (a verifiable, company-specific hook from
-    :func:`build_context_reason`), it is woven in as the first paragraph so the
-    opener cites a concrete reason for writing while the rest of the angle stays
-    humble on whether a robot is even the answer.
+    The essay angles are not this letter. Unknown contact, job, skills, and
+    capabilities stay blank. The company name is filled in when we have it.
     """
-    n = (name or "your team").strip()
-    builders = {
-        "workflow_first": _variant_workflow_first,
-        "what_survives": _variant_what_survives,
-        "bottleneck_first": _variant_bottleneck_first,
-    }
-    fn = builders.get(variant_id, _variant_workflow_first)
-    body = fn(n, industry or "your industry")
-    short = _short_label(n)
-    anchored = (n.lower() in body.lower()) or (short.lower() in body.lower())
-    if n and not anchored:
-        # Prefer short conversational labels; only force an anchor if neither appears.
-        anchor = f"I'm curious if that's true at {short}."
-        if body.startswith("Hi") and "\n\n" in body:
-            first, rest = body.split("\n\n", 1)
-            body = f"{first}\n\n{anchor}\n\n{rest}"
-        elif body.startswith("Hi"):
-            body = f"{body}\n\n{anchor}"
-        else:
-            body = f"Hi {short} team,\n\n{anchor}\n\n{body}"
-    if reason:
-        # Inject the grounded hook right after the greeting line so the email
-        # leads with a real, verifiable reason before Cal's field observation.
-        if body.startswith("Hi") and "\n\n" in body:
-            first, rest = body.split("\n\n", 1)
-            if not rest.startswith(reason):
-                body = f"{first}\n\n{reason}\n\n{rest}"
-        elif body.startswith("Hi,\n\n"):
-            body = body.replace("Hi,\n\n", f"Hi,\n\n{reason}\n\n", 1)
-    return body
+    del industry, variant_id, reason  # script does not take an angle or a pitch
+    
+    # Extract job facts from company metadata if not explicitly provided.
+    if company is not None and not any([contact_name, announced_need, skills, capabilities]):
+        meta = getattr(company, "crm_metadata", None) or {}
+        if isinstance(meta, dict):
+            contact_name = contact_name or meta.get("outreach_contact_name")
+            # Hermes job titles or automation requirements can fill announced_need.
+            hermes_jobs = meta.get("hermes_job_titles") or []
+            if hermes_jobs and isinstance(hermes_jobs, list) and not announced_need:
+                announced_need = hermes_jobs[0] if hermes_jobs else None
+            # automation_requirements can fill skills if no explicit skills.
+            auto_reqs = meta.get("automation_requirements")
+            if auto_reqs and isinstance(auto_reqs, list) and auto_reqs and not skills:
+                skills = ", ".join(str(r) for r in auto_reqs[:3] if r)
+    
+    from app.services.oem_job_intro import compose_employer_need_intro
+
+    text = compose_employer_need_intro(
+        contact_name=contact_name,
+        announced_need=announced_need,
+        automation_tasks=automation_tasks,
+        skills=skills,
+        capabilities=capabilities,
+    )
+    company_name = (name or "").strip()
+    if company_name and company_name.lower() not in {"your team", "your company"}:
+        text = text.replace("at your company", f"at {company_name}", 1)
+    return text
 
 
 def buyer_variant_subject(name: str, industry: str, variant_id: str) -> str:
-    """Grounded subject — operational topic, not a pitch or curiosity teaser."""
-    sector = _buyer_sector(industry)
-    generic_sector = sector == "your line of work"
-    if variant_id == "what_survives":
-        return (
-            "demo versus deployment"
-            if generic_sector
-            else f"demo versus deployment in {sector}"
-        )
-    if variant_id == "bottleneck_first":
-        return (
-            "where the operational hours go"
-            if generic_sector
-            else f"where the hours go in {sector}"
-        )
-    # workflow_first (default)
-    return (
-        "start with the task, not the robot"
-        if generic_sector
-        else f"start with the task in {sector}"
-    )
+    """Subject for the Robot Coordinator script. One job, not an essay."""
+    del industry, variant_id
+    company = (name or "your team").strip()
+    subject = f"robots that match the job at {company}"
+    return subject[:88]
 
 
 def phelan_opening(*, audience: str = "buyer") -> str:
