@@ -46,6 +46,54 @@ Current experiment: five evidence-backed machine-tending Job Cards for RobCo —
 
 ---
 
+## Market Intelligence: Grace Gong Physical AI Hiring List (2026-10-11)
+
+**Source:** Grace Gong "On My Radar" Week 98 — 36 physical AI companies actively hiring, ranked by % headcount growth (past 90 days).
+
+**Strategic signal:** These are **deployment-active companies** scaling through hiring. They represent:
+- **Demand-side intelligence:** Potential employers posting robot jobs
+- **Deployment velocity:** Companies hiring → companies deploying
+- **ICP alignment:** Robot OEMs/integrators placing robots into work
+
+### Key Observations
+
+| Metric | Value | Implication |
+|--------|-------|-------------|
+| **Humanoid concentration** | 25% (9 companies) | Category inflection confirmed — humanoid pilot lane is active |
+| **Foundation model platforms** | 22% (8 companies) | Deployment multiplier potential — one platform → many deployments |
+| **China presence** | 25% (9 companies: 5 Beijing, 4 Shenzhen) | Global ICP expansion required for placement scale |
+| **Bay Area cluster** | 25% (9 companies) | Dense local deployment signal — prioritize for Jobs product |
+| **Industrial/applied** | 11% (4 companies) | Job placement ready — warehouse, factory, welding verticals |
+
+### Notable High-Growth Companies
+
+**Foundation Models (deployment multipliers):**
+- **Physical Intelligence** (San Francisco) — foundation models for robots
+- **Skild AI** (Pittsburgh) — one brain to control many kinds of robots
+- **XDOF** (San Mateo) — foundation models for robots
+
+**Humanoid Platform (Jobs ICP):**
+- **Figure** (Sunnyvale) — general-purpose humanoid robot
+- **Apptronik** (Austin) — modular humanoid robots
+- **LimX Dynamics** (Shenzhen) — full-size general-purpose humanoids
+
+**Industrial/Applied (placement targets):**
+- **Path Robotics** (Columbus) — AI welding robots
+- **Maven Robotics** (Santa Clara) — autonomous industrial robots
+- **Standard Bots** (Glen Cove) — AI-native industrial robots
+
+### Integration Actions
+
+1. ✅ **Intelligence ingested:** Report generated at `reports/grace_gong_week_98_intelligence.md`
+2. **Career page monitoring:** Add 36 career pages to scraping rotation for job posting signals
+3. **Deployment tracking:** Monitor these companies for deployment announcements (scaling signal)
+4. **Weekly refresh:** Automate Grace Gong LinkedIn monitoring (publishes weekly)
+5. **Database enrichment:** Cross-reference and tag companies with hiring activity metadata
+
+**Full details:** [`reports/grace_gong_week_98_intelligence.md`](../reports/grace_gong_week_98_intelligence.md)
+
+---
+
 ## Friction themes (internal — from secondary pass & quarantine)
 
 Priority order matches north star: fix (1) before tuning (4). **Baseline below is now live-DB-backed** from the `friction-baseline` mission (2026-06-23). The live `intelligence` slice was restored this mission (see theme 0); historical CSV sweeps are retained for bulk-junk shape.
