@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "wouter";
 import { Mail } from "lucide-react";
-import Header from "@/components/Header";
+import ExperimentHeader from "@/components/ExperimentHeader";
 import AdminNav from "@/components/AdminNav";
+import { JOBS_HEADER_OFFSET_CLASS } from "@/lib/jobsWorkflow";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
@@ -95,18 +96,18 @@ export default function Inbox() {
   }, [items]);
 
   if (loading)
-    return <div className="min-h-screen bg-slate-50 text-gray-900" />;
+    return <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`} />;
 
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-50 text-gray-900">
-        <Header />
+      <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+        <ExperimentHeader />
         <main className="mx-auto max-w-3xl px-6 pt-32">
-          <h1 className="text-3xl font-black">Inbox</h1>
-          <p className="mt-3 text-gray-500">Sign in to review buyer replies.</p>
+          <h1 className="text-3xl font-black text-white">Inbox</h1>
+          <p className="mt-3 text-slate-400">Sign in to review buyer replies.</p>
           <Link
             href="/login?next=/inbox"
-            className="mt-6 inline-flex rounded-xl bg-amber-400 px-4 py-2 text-sm font-black text-[#111827]"
+            className="mt-6 inline-flex rounded-xl bg-emerald-500 px-4 py-2 text-sm font-black text-slate-950 hover:bg-emerald-400"
           >
             Sign in
           </Link>
@@ -139,51 +140,51 @@ export default function Inbox() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-gray-900">
-      <Header />
-      <main className="admin-workspace mx-auto max-w-7xl px-6 pb-16 pt-28">
-        <AdminNav />
+    <div className={`min-h-screen bg-[#081126] text-slate-100 ${JOBS_HEADER_OFFSET_CLASS}`}>
+      <ExperimentHeader />
+      <main className="admin-workspace mx-auto max-w-7xl px-6 pb-16 pt-8">
+        <AdminNav variant="dark" />
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.25em] text-amber-800">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-emerald-400">
               Operator inbox
             </p>
-            <h1 className="mt-2 text-4xl font-black">Replies</h1>
-            <p className="mt-2 max-w-2xl text-sm text-gray-500">
+            <h1 className="mt-2 text-4xl font-black tracking-tight text-white">Replies</h1>
+            <p className="mt-2 max-w-2xl text-sm text-slate-400">
               Buyer and robot-company replies land here before you decide
-              whether SIGNAL should respond or you should take over.
+              whether to answer or take the thread over.
             </p>
           </div>
           <button
             onClick={() => void loadInbox()}
             disabled={busy}
-            className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-bold text-gray-600 disabled:opacity-50"
+            className="rounded-xl border border-slate-700/80 bg-slate-800/80 px-4 py-2 text-xs font-bold text-slate-300 hover:bg-slate-700 hover:text-white disabled:opacity-50"
           >
             Refresh
           </button>
         </div>
         {err && (
-          <p className="mt-5 rounded-xl border border-red-300 bg-red-50 p-3 text-sm font-medium text-red-900">
+          <p className="mt-5 rounded-xl border border-red-400/40 bg-red-950/50 p-3 text-sm font-medium text-red-100">
             {err}
           </p>
         )}
         <section className="mt-8 grid gap-5 lg:grid-cols-[380px_1fr]">
-          <aside className="rounded-3xl border border-gray-200 bg-white p-4 shadow-sm">
+          <aside className="rounded-2xl border border-slate-700/60 bg-[#0a1226] p-4">
             <div className="flex items-center justify-between">
-              <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
                 Inbound replies
               </p>
-              <span className="text-xs text-gray-400">{items.length}</span>
+              <span className="text-xs text-slate-400">{items.length}</span>
             </div>
 
-            <div className="mt-3 flex items-center rounded-xl bg-gray-100 p-1">
+            <div className="mt-3 flex items-center rounded-xl border border-slate-700/60 bg-[#081126] p-1">
               <button
                 type="button"
                 onClick={() => setFolderTab("all")}
                 className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
                   folderTab === "all"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-900"
+                    ? "bg-emerald-500/15 text-emerald-300"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 All ({allItems.length})
@@ -193,8 +194,8 @@ export default function Inbox() {
                 onClick={() => setFolderTab("main")}
                 className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
                   folderTab === "main"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-900"
+                    ? "bg-emerald-500/15 text-emerald-300"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 Customer ({mainCount})
@@ -204,8 +205,8 @@ export default function Inbox() {
                 onClick={() => setFolderTab("test")}
                 className={`flex-1 rounded-lg py-1.5 text-xs font-bold transition ${
                   folderTab === "test"
-                    ? "bg-white text-gray-900 shadow-sm"
-                    : "text-gray-500 hover:text-gray-900"
+                    ? "bg-emerald-500/15 text-emerald-300"
+                    : "text-slate-400 hover:text-white"
                 }`}
               >
                 System ({testCount})
@@ -217,49 +218,49 @@ export default function Inbox() {
                   key={item.id}
                   type="button"
                   onClick={() => setSelectedId(item.id)}
-                  className={`w-full rounded-2xl border p-4 text-left transition ${
+                  className={`w-full rounded-xl border p-4 text-left transition ${
                     selectedId === item.id
-                      ? "border-amber-400 bg-amber-50"
-                      : "border-gray-300 bg-gray-50 hover:border-gray-400 hover:bg-white"
+                      ? "border-emerald-400 bg-[#0b162f]"
+                      : "border-slate-700/60 bg-[#081126] hover:border-slate-500"
                   }`}
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-bold text-gray-800">
+                    <p className="truncate text-sm font-bold text-slate-100">
                       {item.title}
                     </p>
-                    <span className="rounded-full bg-gray-100 px-2 py-1 text-[10px] uppercase text-gray-500">
+                    <span className="rounded-full border border-slate-700/60 bg-slate-800/80 px-2 py-1 text-[10px] uppercase text-slate-400">
                       {item.opportunity_type}
                     </span>
                   </div>
-                  <p className="mt-1 truncate text-xs text-gray-500">
+                  <p className="mt-1 truncate text-xs text-slate-400">
                     {item.from_email || "Unknown sender"}
                   </p>
-                  <p className="mt-2 line-clamp-2 text-xs text-gray-400">
+                  <p className="mt-2 line-clamp-2 text-xs text-slate-500">
                     {item.subject || item.body_text || "No preview"}
                   </p>
                 </button>
               ))}
               {!items.length && !busy && (
-                <p className="rounded-2xl border border-gray-200 p-4 text-sm text-gray-500">
+                <p className="rounded-xl border border-slate-700/60 p-4 text-sm text-slate-400">
                   {allItems.length
                     ? "No messages in this folder."
-                    : "No inbound replies stored yet. Replies need the Resend inbound webhook on /api/webhooks/resend/inbound."}
+                    : "No replies have been captured."}
                 </p>
               )}
             </div>
           </aside>
-          <section className="rounded-3xl border border-gray-200 bg-white p-5 shadow-sm">
+          <section className="rounded-2xl border border-slate-700/60 bg-[#0a1226] p-5">
             {selected ? (
               <>
                 <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div>
-                    <p className="text-xs uppercase tracking-widest text-gray-400">
+                    <p className="text-xs uppercase tracking-widest text-slate-400">
                       {selected.opportunity_type} · {selected.current_stage}
                     </p>
-                    <h2 className="mt-2 text-2xl font-black">
+                    <h2 className="mt-2 text-2xl font-black text-white">
                       {selected.title}
                     </h2>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm text-slate-400">
                       From {selected.from_email || "unknown"} ·{" "}
                       {formatDate(selected.received_at)}
                     </p>
@@ -268,7 +269,7 @@ export default function Inbox() {
                     {selected.thread_id ? (
                       <Link
                         href={`/sales-console?opportunity_id=${encodeURIComponent(selected.thread_id)}`}
-                        className="rounded-lg border border-gray-200 px-3 py-2 text-xs font-bold text-gray-600"
+                        className="rounded-lg border border-slate-700/80 bg-slate-800/80 px-3 py-2 text-xs font-bold text-slate-300 hover:text-white"
                       >
                         Open in Sales Console
                       </Link>
@@ -282,7 +283,7 @@ export default function Inbox() {
                         onClick={() =>
                           void approveDraft(selected.latest_action!.id!)
                         }
-                        className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"
+                        className="rounded-lg bg-emerald-500 px-3 py-2 text-xs font-black text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
                       >
                         Approve &amp; send reply
                       </button>
@@ -290,7 +291,7 @@ export default function Inbox() {
                     <button
                       type="button"
                       onClick={() => setReplyModalOpen(true)}
-                      className="rounded-lg bg-emerald-600 border border-emerald-500 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-500 transition flex items-center gap-1.5"
+                      className="rounded-lg border border-emerald-500/50 bg-emerald-950/40 px-3 py-2 text-xs font-bold text-emerald-300 hover:bg-emerald-900/60 transition flex items-center gap-1.5"
                     >
                       <Mail className="w-3.5 h-3.5" />
                       Reply via Resend
@@ -298,34 +299,34 @@ export default function Inbox() {
                     {selected.thread_id ? (
                       <Link
                         href={scheduleHref(selected)}
-                        className="rounded-lg bg-amber-400 px-3 py-2 text-xs font-black text-[#111827]"
+                        className="rounded-lg border border-slate-700/80 bg-slate-800/80 px-3 py-2 text-xs font-bold text-slate-200 hover:text-white"
                       >
                         Schedule meeting
                       </Link>
                     ) : null}
                   </div>
                 </div>
-                <div className="mt-5 rounded-2xl border border-gray-300 bg-gray-50 p-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-gray-400">
+                <div className="mt-5 rounded-xl border border-slate-700/60 bg-[#081126] p-4">
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
                     Incoming message
                   </p>
-                  <p className="mt-2 text-sm font-bold text-gray-700">
+                  <p className="mt-2 text-sm font-bold text-slate-100">
                     {selected.subject || "No subject"}
                   </p>
-                  <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-gray-600">
+                  <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-slate-300">
                     {selected.body_text || "No body captured."}
                   </p>
                 </div>
-                <div className="mt-5 rounded-2xl border border-emerald-400/15 bg-emerald-400/5 p-4">
-                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-100/70">
+                <div className="mt-5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-4">
+                  <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">
                     Recommended next step
                   </p>
-                  <p className="mt-2 text-sm text-emerald-100/85">
+                  <p className="mt-2 text-sm text-slate-200">
                     {selected.next_best_action?.recommendation ||
                       "Review the reply and decide whether to respond or schedule a meeting."}
                   </p>
                   {selected.latest_action?.draft_body && (
-                    <pre className="mt-3 max-h-60 overflow-y-auto whitespace-pre-wrap rounded-xl border border-gray-300 bg-white p-3 text-xs leading-relaxed text-gray-800">
+                    <pre className="mt-3 max-h-60 overflow-y-auto whitespace-pre-wrap rounded-xl border border-slate-700/60 bg-[#081126] p-3 text-xs leading-relaxed text-slate-200">
                       {selected.latest_action.draft_body}
                     </pre>
                   )}
@@ -348,7 +349,7 @@ export default function Inbox() {
                 )}
               </>
             ) : (
-              <p className="text-sm text-gray-500">Select a reply to review.</p>
+              <p className="text-sm text-slate-400">Select a reply to review.</p>
             )}
           </section>
         </section>
