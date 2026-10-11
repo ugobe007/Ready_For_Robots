@@ -1470,11 +1470,11 @@ export default function Admin() {
         }));
       } else if (!sumRes.ok && sumRes.status !== 502) {
         setCalStatusError(
-          sumData.detail || `Cal queue failed (${sumRes.status})`
+          sumData.detail || `Phelan queue failed (${sumRes.status})`
         );
       } else if (!sumRes.ok && !cached?.summary) {
         setCalStatusError(
-          "Cal queue failed to load (502) — retrying from cache…"
+          "Phelan queue failed to load (502) — retrying from cache…"
         );
       }
 
@@ -1519,7 +1519,7 @@ export default function Admin() {
         | undefined;
       if (cached?.summary) setCalStatus(cached);
       setCalStatusError(
-        err instanceof Error ? err.message : "Cal queue failed to load."
+        err instanceof Error ? err.message : "Phelan queue failed to load."
       );
     } finally {
       setCalStatusLoading(false);
@@ -1548,7 +1548,7 @@ export default function Admin() {
           if (full) {
             setDraftBodies(prev => ({ ...prev, [crmAccountId]: full }));
             if (data.legacy_repaired) {
-              setMessage("Outdated Cal voice replaced with current template.");
+              setMessage("Outdated Phelan voice replaced with current template.");
             }
           } else if (preview) {
             setDraftBodies(prev => ({ ...prev, [crmAccountId]: preview }));
@@ -1622,10 +1622,10 @@ export default function Admin() {
       } else {
         setCalAutonomy(prev => ({ ...prev, enabled }));
       }
-      setMessage(`Cal autopilot turned ${enabled ? "ON" : "OFF"}.`);
+      setMessage(`Phelan autopilot turned ${enabled ? "ON" : "OFF"}.`);
     } catch {
       setCalAutonomy(prev => ({ ...prev, enabled }));
-      setMessage(`Cal autopilot turned ${enabled ? "ON" : "OFF"}.`);
+      setMessage(`Phelan autopilot turned ${enabled ? "ON" : "OFF"}.`);
     } finally {
       setActionBusy("");
     }
@@ -1791,7 +1791,7 @@ export default function Admin() {
           }),
         });
         if (!res.ok) throw new Error(await res.text());
-        setMessage("Cal draft saved.");
+        setMessage("Phelan draft saved.");
         void refreshOperatorView();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Could not save draft.");
@@ -1816,7 +1816,7 @@ export default function Admin() {
             ? "Robot vendor lead"
             : "Buyer lead";
         const noteBody = [
-          "RFQ/spec handoff request (Cal -> Robert)",
+          "RFQ/spec handoff request (Phelan -> Robert)",
           `Company: ${selected.company_name || "Unknown"}`,
           `Website: ${selected.website || "Unknown"}`,
           `Lead type: ${robotHint}`,
@@ -1889,7 +1889,7 @@ export default function Admin() {
             data.detail ||
               data.reason ||
               data.status ||
-              "Cal autonomy run failed"
+              "Phelan autonomy run failed"
           )
         );
       const skips = [
@@ -1918,7 +1918,7 @@ export default function Admin() {
       void refreshOperatorView();
       void loadCalAutonomyStatus();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Cal autonomy run failed.");
+      setError(err instanceof Error ? err.message : "Phelan autonomy run failed.");
     } finally {
       setActionBusy("");
     }
@@ -2206,7 +2206,7 @@ export default function Admin() {
           ? `Redrafted ${drafted} unsent draft${drafted === 1 ? "" : "s"}.`
           : `Drafted ${drafted} email${drafted === 1 ? "" : "s"}.`;
         setMessage(
-          `Cal drafted ${drafted} emails · ${skipped} already had drafts · ${errors} errors.`
+          `Phelan drafted ${drafted} emails · ${skipped} already had drafts · ${errors} errors.`
         );
         setCalWorkflowNotice(
           `${notice} ${skipped ? `${skipped} already had drafts.` : ""}`.trim()
@@ -2216,14 +2216,14 @@ export default function Admin() {
           ? "Redrafted pending leads in outreach queue."
           : "Drafted outreach emails for pending leads in queue.";
         setMessage(
-          "Cal processed pending leads. Intros are ready for review in CRM editor & Sales Console."
+          "Phelan processed pending leads. Intros are ready for review in CRM editor & Sales Console."
         );
         setCalWorkflowNotice(notice);
       }
       await refreshOperatorView();
     } catch {
       setMessage(
-        "Cal processed pending leads. Intros are ready for review in CRM editor & Sales Console."
+        "Phelan processed pending leads. Intros are ready for review in CRM editor & Sales Console."
       );
       setCalWorkflowNotice("Drafts ready in outreach queue.");
     } finally {
@@ -2264,15 +2264,15 @@ export default function Admin() {
       await refreshOperatorView();
       if (crmAccountId) await loadDraftBody(crmAccountId, undefined, true);
       setMessage(
-        `Redrafted with Cal's current voice (${data.drafted ?? 1} updated).`
+        `Redrafted with Phelan's current voice (${data.drafted ?? 1} updated).`
       );
       setCalWorkflowNotice(
-        `Redrafted ${data.drafted ?? 1} draft with Cal's current voice.`
+        `Redrafted ${data.drafted ?? 1} draft with Phelan's current voice.`
       );
     } catch {
       if (crmAccountId) await loadDraftBody(crmAccountId, undefined, true);
-      setMessage("Redrafted with Cal's current voice.");
-      setCalWorkflowNotice("Redrafted 1 draft with Cal's current voice.");
+      setMessage("Redrafted with Phelan's current voice.");
+      setCalWorkflowNotice("Redrafted 1 draft with Phelan's current voice.");
     } finally {
       setActionBusy("");
     }
@@ -2327,21 +2327,21 @@ export default function Admin() {
         const issues = d.issues ?? [];
         if (issues.length) {
           setMessage(
-            `Cal delivery diagnostic (${d.health ?? "healthy"}): ${issues.join(" · ")}`
+            `Phelan delivery diagnostic (${d.health ?? "healthy"}): ${issues.join(" · ")}`
           );
         } else {
           setMessage(
-            `Cal delivery healthy — from ${d.config?.from_email ?? "ugobe07@gmail.com"}, API key set.`
+            `Phelan delivery healthy — from ${d.config?.from_email ?? "ugobe07@gmail.com"}, API key set.`
           );
         }
       } else {
         setMessage(
-          "Cal delivery healthy — webhooks, SMTP relay, and open tracking operational."
+          "Phelan delivery healthy — webhooks, SMTP relay, and open tracking operational."
         );
       }
     } catch {
       setMessage(
-        "Cal delivery healthy — webhooks, SMTP relay, and open tracking operational."
+        "Phelan delivery healthy — webhooks, SMTP relay, and open tracking operational."
       );
     }
   }
@@ -2428,7 +2428,7 @@ export default function Admin() {
         );
       }
       setMessage(
-        `Cal sent ${totalSent} email(s)${totalErrors ? ` · ${totalErrors} skipped/failed` : ""}.`
+        `Phelan sent ${totalSent} email(s)${totalErrors ? ` · ${totalErrors} skipped/failed` : ""}.`
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Send failed.");
@@ -3484,11 +3484,11 @@ export default function Admin() {
         >
           <div className="flex items-center gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-600 text-sm font-extrabold text-white">
-              C
+              P
             </span>
             <div>
               <div className="text-sm font-extrabold text-indigo-200">
-                Cal → Special Projects (NIMO)
+                Phelan → Special Projects (NIMO)
               </div>
               <div className="text-[11px] text-indigo-300/80">
                 Review-first outreach queue, funnel & client portal for bespoke
@@ -3637,7 +3637,7 @@ export default function Admin() {
 
           {calStatusLoading && !calStatus?.summary ? (
             <p className="mb-4 text-sm text-slate-400 flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 animate-spin" /> Loading Cal queue…
+              <RefreshCw className="h-4 w-4 animate-spin" /> Loading Phelan queue…
             </p>
           ) : null}
 

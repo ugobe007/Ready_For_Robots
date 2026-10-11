@@ -379,7 +379,7 @@ def collect_activity_feed(
                     "companyName": acct.name,
                     "industry": acct.industry or "",
                     "signalType": "outreach",
-                    "signalSummary": "Cal draft ready for review",
+                    "signalSummary": "Phelan draft ready for review",
                     "robotUseCase": "",
                     "recommendedAction": "Approve and send outreach",
                     "status": "draft_ready",

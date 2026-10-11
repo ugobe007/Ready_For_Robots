@@ -94,8 +94,11 @@ export default function DailyBriefPanel({ data, loading, calActions }: Props) {
   const nonCalSteps = (data?.next_steps ?? []).filter(
     s =>
       !s.label.toLowerCase().includes("cal autopilot") &&
+      !s.label.toLowerCase().includes("phelan autopilot") &&
       !s.label.toLowerCase().includes("cal leads need drafting") &&
+      !s.label.toLowerCase().includes("phelan leads need drafting") &&
       !s.label.toLowerCase().includes("cal drafts need approval") &&
+      !s.label.toLowerCase().includes("phelan drafts need approval") &&
       !s.label.toLowerCase().includes("hot leads not yet")
   );
 

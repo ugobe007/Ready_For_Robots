@@ -1249,7 +1249,7 @@ def cal_activity(
     for action in pending_approval:
         needs_you.append({
             "kind": "approval_required",
-            "title": action.recommendation or "Cal action needs approval",
+            "title": action.recommendation or "Phelan action needs approval",
             "detail": action.detected_intent or action.action_type,
             "action_url": "/sales-console",
         })
@@ -1276,7 +1276,7 @@ def cal_activity(
         needs_you.append({
             "kind": "schedule_meeting",
             "title": f"Schedule meeting — {opp.title or 'Opportunity'}",
-            "detail": "Cal replied asking for times — book on calendar when ready",
+            "detail": "Phelan replied asking for times — book on calendar when ready",
             "action_url": f"/calendar?sales_opportunity_id={opp.id}",
         })
 
@@ -1340,7 +1340,7 @@ def cal_activity(
             "followup_autonomous": True,
             "reply_autonomous": True,
             "meeting_autonomous": False,
-            "meeting_note": "Cal classifies meeting requests and asks for times; you confirm on Calendar.",
+            "meeting_note": "Phelan classifies meeting requests and asks for times; you confirm on Calendar.",
         },
     }
 
@@ -1456,14 +1456,14 @@ def cal_operator_dashboard(
         "ai_assistants": [
             {
                 "id": "phelan_autonomy",
-                "name": "Cal autonomy",
+                "name": "Phelan autonomy",
                 "role": "Drafts HOT/WARM buyer emails, sends on schedule, runs follow-up sequences",
                 "review_url": "/admin#cal-outreach",
                 "status": "active" if get_phelan_autonomy_status().get("enabled") else "paused",
             },
             {
                 "id": "phelan_assembly",
-                "name": "Cal assembly QA",
+                "name": "Phelan assembly QA",
                 "role": "Pre-send copy review — blocks weak buyer–vendor pairings",
                 "review_url": "/admin#cal-outreach",
                 "status": "active" if get_phelan_autonomy_status().get("assembly", {}).get("assembly_required") else "off",

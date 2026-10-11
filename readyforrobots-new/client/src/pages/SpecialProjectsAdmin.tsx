@@ -778,7 +778,7 @@ export default function SpecialProjectsAdmin() {
     const plural = (n: number) => (n === 1 ? "" : "s");
     if (snapshot.total === 0) {
       steps.push({
-        text: "Seed target accounts to start Cal's outreach (queue below).",
+        text: "Seed target accounts to start Phelan's outreach (queue below).",
         tone: "info",
       });
       return steps;
@@ -790,7 +790,7 @@ export default function SpecialProjectsAdmin() {
       });
     if (snapshot.awaitingApproval > 0)
       steps.push({
-        text: `Review & approve ${snapshot.awaitingApproval} draft${plural(snapshot.awaitingApproval)} in the queue below — review-first: Cal never sends without your approval.`,
+        text: `Review & approve ${snapshot.awaitingApproval} draft${plural(snapshot.awaitingApproval)} in the queue below — review-first: Phelan never sends without your approval.`,
         tone: "action",
       });
     if (snapshot.readyToSend > 0)
@@ -918,7 +918,7 @@ export default function SpecialProjectsAdmin() {
               Bespoke robot-company engagements
             </h1>
             <p className="mt-1 text-sm text-slate-600">
-              Run a private Cal GTM workflow per company (e.g. NIMO). Share a
+              Run a private Phelan GTM workflow per company (e.g. NIMO). Share a
               read-only portal with each client.
             </p>
           </div>
@@ -1024,7 +1024,7 @@ export default function SpecialProjectsAdmin() {
           <div>
             {!selected ? (
               <div className="flex h-full min-h-[300px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-white text-sm text-slate-500">
-                Select a project to manage Cal's workflow, KPIs, and the client
+                Select a project to manage Phelan's workflow, KPIs, and the client
                 portal.
               </div>
             ) : (
@@ -1347,7 +1347,7 @@ export default function SpecialProjectsAdmin() {
                     </div>
                   </div>
                   <p className="mb-3 text-xs text-slate-500">
-                    Review-first — Cal drafts every touch, nothing sends until
+                    Review-first — Phelan drafts every touch, nothing sends until
                     you approve. Sending and stage changes auto-update the
                     funnel + KPIs below.
                   </p>

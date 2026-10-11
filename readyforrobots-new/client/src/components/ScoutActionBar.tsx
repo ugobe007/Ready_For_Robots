@@ -99,16 +99,16 @@ export default function ScoutActionBar({
     <>
       <div className="border-b border-gray-200 bg-gradient-to-r from-emerald-50 to-white px-4 py-3 text-sm">
         <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-800">
-          Cal autopilot
+          Phelan autopilot
         </p>
         <p className="mb-1 text-[10px] text-gray-600">
           {autopilotEnabled
             ? `On · drafts, sends (${sendLimit}/run), follow-ups every ${everyHours}h`
-            : "Off · enable on worker or run Cal now"}
+            : "Off · enable on worker or run Phelan now"}
         </p>
         <div>
           <SupabaseInlineLink onClick={onRunNow} busy={busy === "run"}>
-            Run Cal now
+            Run Phelan now
           </SupabaseInlineLink>
           <span className="text-gray-400"> · </span>
           <SupabaseInlineLink tone="blue" onClick={onViewQueue}>
@@ -138,7 +138,7 @@ export default function ScoutActionBar({
           >
             <div className="mb-4 flex items-center justify-between">
               <p className="text-sm font-bold text-white">
-                Cal delivery health
+                Phelan delivery health
               </p>
               <SupabaseInlineLink
                 tone="gray"

@@ -89,11 +89,11 @@ export default function AdminCalWorkflowPanel({
     <div className="mb-6 space-y-4">
       <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4">
         <p className="text-sm font-bold text-gray-950">
-          Cal buyer queue (admin-cal-outreach)
+          Phelan buyer queue (admin-cal-outreach)
         </p>
         <p className="mt-1 text-sm text-gray-700">
           This tab is the operator activation queue — not the public pipeline
-          page. Cal works HOT/WARM scored buyers ({hot} hot · {warm} warm) who
+          page. Phelan works HOT/WARM scored buyers ({hot} hot · {warm} warm) who
           have CRM drafts on your admin team.
         </p>
         <p className="mt-2 text-xs text-gray-600">
@@ -139,8 +139,8 @@ export default function AdminCalWorkflowPanel({
           title="Generate drafts"
           description={
             pending > 0
-              ? `${pending} HOT/WARM lead(s) have no Cal draft yet. Draft them before preview or activation.`
-              : "All leads in the Cal universe have drafts. Skip to preview unless you want to regenerate."
+              ? `${pending} HOT/WARM lead(s) have no Phelan draft yet. Draft them before preview or activation.`
+              : "All leads in the Phelan universe have drafts. Skip to preview unless you want to regenerate."
           }
         >
           <button
@@ -201,7 +201,7 @@ export default function AdminCalWorkflowPanel({
         <StepCard
           step={manualApproval ? "4" : "3"}
           title="Activate (pick one path)"
-          description="Run Cal now = draft + assembly-gated activation + follow-ups. Send all ready = only sends existing ready drafts (skips assembly)."
+          description="Run Phelan now = draft + assembly-gated activation + follow-ups. Send all ready = only sends existing ready drafts (skips assembly)."
         >
           <button
             type="button"
@@ -210,7 +210,7 @@ export default function AdminCalWorkflowPanel({
             className="inline-flex items-center gap-2 rounded-xl border border-emerald-500 bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-50"
           >
             <Play className="h-4 w-4" />
-            {busy ? "Running…" : "Run Cal now"}
+            {busy ? "Running…" : "Run Phelan now"}
           </button>
           <button
             type="button"

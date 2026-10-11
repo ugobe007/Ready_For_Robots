@@ -341,7 +341,7 @@ export default function CalWorkflowPanel({
       <div className="overflow-x-auto rounded-xl border border-slate-700/60 bg-[#060c1c] p-3 text-slate-100">
         <div className="mb-2 flex items-center justify-between gap-2">
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
-            Cal workflow · Ready For Robots
+            Phelan workflow · Ready For Robots
           </p>
           <p className="text-[10px] text-slate-400">
             Autopilot{" "}
@@ -463,7 +463,7 @@ export default function CalWorkflowPanel({
             onClick={onRedraft}
           />
           <p className="mt-1.5 text-[10px] leading-snug text-amber-200/80">
-            Rewrites all unsent drafts with Cal&apos;s current voice.
+            Rewrites all unsent drafts with Phelan&apos;s current voice.
           </p>
         </div>
 
@@ -510,7 +510,7 @@ export default function CalWorkflowPanel({
           disabled={busy === "cal-run"}
           onClick={onRunCal}
         >
-          {busy === "cal-run" ? "Running Cal…" : "Run Cal now"}
+          {busy === "cal-run" ? "Running Phelan…" : "Run Phelan now"}
         </button>
         <span className="text-slate-600">·</span>
         <button
