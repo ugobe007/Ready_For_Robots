@@ -419,63 +419,55 @@ def is_robot_automation_lead(action: str, title: str) -> bool:
 
 def describe_required_robot(action: str, title: str) -> tuple[str, str]:
     """Robot work line and a description of the robot required. No model or pay."""
-    blob = f"{action} {title}".lower()
-    if any(token in blob for token in ("pallet", "forklift", "palletiz")):
+    tokens = re.findall(r"[a-z]+", f"{action} {title}".lower())
+
+    def has(*stems: str) -> bool:
+        return any(token.startswith(stem) for token in tokens for stem in stems)
+
+    if has("pallet", "forklift", "palletiz"):
         work = "Move and stack pallets"
         robots = (
             "Pallet AMR. It lifts a loaded pallet and drives it between the line, "
             "storage, and the dock."
         )
-    elif "pharmac" in blob and "deliver" in blob:
+    elif has("pharmac") and has("deliver"):
         work = "Deliver pharmacy items between units"
         robots = (
             "Hospital delivery AMR. It carries medications or supplies on a route "
             "between the pharmacy and the units."
         )
-    elif (action or "").strip().lower() == "picking" or any(
-        token in blob for token in ("picker", "order select")
-    ):
+    elif (action or "").strip().lower() == "picking" or has("picker") or "select" in tokens:
         work = "Pick cases or eaches from storage"
         robots = (
             "Piece-picking robot. It selects cases or items from racks and carries "
             "them to pack-out."
         )
-    elif (action or "").strip().lower() == "packing" or any(
-        token in blob for token in ("packer", "puller")
-    ):
+    elif (action or "").strip().lower() == "packing" or has("packer", "puller"):
         work = "Pack and move finished cases"
         robots = (
             "Packing robot. It cases goods or carries packed orders from the line "
             "to shipping."
         )
-    elif (action or "").strip().lower() in {"environmental_services", "cleaning", "scrub"} or any(
-        token in blob for token in ("janitor", "custodian", "floor", "evs", "scrub")
-    ):
+    elif (action or "").strip().lower() in {"receiving", "shipping"} or has("receiv", "shipping", "dock"):
+        work = "Move goods on and off the dock"
+        robots = (
+            "Dock AMR. It carries inbound or outbound goods between the trailer and storage."
+        )
+    elif (action or "").strip().lower() == "inspect" or has("inspect", "audit"):
+        work = "Inspect along a route"
+        robots = "Inspection robot. It carries cameras along a route and records what it sees."
+    elif (action or "").strip().lower() in {"environmental_services", "cleaning", "scrub"} or has("janitor", "custodian", "scrub") or "evs" in tokens:
         work = "Clean hard floors on a route"
         robots = (
             "Floor scrubber. It drives a cleaning path and scrubs hard floors. "
             "A person does not walk the route."
         )
-    elif (action or "").strip().lower() == "facade_cleaning" or any(
-        token in blob for token in ("facade", "window")
-    ):
+    elif (action or "").strip().lower() == "facade_cleaning" or has("facade", "window"):
         work = "Clean exterior glass and facade"
         robots = (
             "Facade cleaning robot. It washes exterior glass from a guided rig or drone."
         )
-    elif (action or "").strip().lower() in {"receiving", "shipping"} or any(
-        token in blob for token in ("receiv", "shipping", "dock")
-    ):
-        work = "Move goods on and off the dock"
-        robots = (
-            "Dock AMR. It carries inbound or outbound goods between the trailer and storage."
-        )
-    elif (action or "").strip().lower() == "inspect" or any(
-        token in blob for token in ("inspect", "audit")
-    ):
-        work = "Inspect along a route"
-        robots = "Inspection robot. It carries cameras along a route and records what it sees."
-    elif (action or "").strip().lower() == "gripper" or "manipul" in blob:
+    elif (action or "").strip().lower() == "gripper" or has("manipul"):
         work = "Handle items at a station"
         robots = (
             "Mobile manipulator. An arm on a mobile base picks up items and places them."
@@ -629,7 +621,7 @@ def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
         )
         id_rows = (
             db.query(ranked.c.id)
-            .filter(ranked.c.rn <= _ACTION_CAP + 3)
+            .filter(ranked.c.rn <= 25)
             .all()
         )
         ids = [row[0] for row in id_rows]
