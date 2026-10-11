@@ -18,7 +18,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 from urllib.parse import quote
 
-from sqlalchemy import case, desc, func
+from sqlalchemy import case, desc, or_
 from sqlalchemy.orm import Session
 
 logger = logging.getLogger(__name__)
@@ -370,28 +370,7 @@ def _family_for_action(action: str, title: str) -> str:
     return "transport"
 
 
-# Open staff requisitions are not robot jobs. These actions are physical work
-# a commercial robot can do. Cooks, bartenders, masons, and machine operators stay out.
-ROBOT_AUTOMATION_ACTIONS = frozenset(
-    {
-        "material_handling",
-        "picking",
-        "packing",
-        "receiving",
-        "shipping",
-        "palletizing",
-        "environmental_services",
-        "cleaning",
-        "facade_cleaning",
-        "delivery",
-        "pallet_move",
-        "scrub",
-        "inspect",
-        "cart",
-        "gripper",
-    }
-)
-_ACTION_CAP = 5
+# Words that mark a staff requisition when they appear in a description line.
 _NOT_A_ROBOT_JOB_RE = re.compile(
     r"\b(?:bartender|mixologist|banquet|server|cook|mason|bricklayer|sterile|"
     r"childcare|front desk|machine operator|technician|dishwasher|housekeeper|"
@@ -407,14 +386,11 @@ _STAFF_ROLE_RE = re.compile(
 )
 
 
-def is_robot_automation_lead(action: str, title: str) -> bool:
-    """True when the row is robot work, not an open staff posting."""
-    act = (action or "").strip().lower()
-    if act not in ROBOT_AUTOMATION_ACTIONS:
-        return False
-    if _NOT_A_ROBOT_JOB_RE.search(title or ""):
-        return False
-    return True
+def is_robot_automation_lead(title: str, *extra: str) -> bool:
+    """True when the employer is asking for a robot. A human job is not enough."""
+    from app.services.robot_job_extract import asks_for_a_robot
+
+    return asks_for_a_robot(title, *extra)
 
 
 def describe_required_robot(action: str, title: str) -> tuple[str, str]:
@@ -512,6 +488,12 @@ def public_job_card(db: Session, job_key: str) -> Optional[dict[str, Any]]:
         return None
     if not is_job_employer_name(employer, title=title):
         return None
+    if not is_robot_automation_lead(
+        title,
+        str(getattr(row, "observed_workflow", "") or ""),
+        str(getattr(row, "why_job", "") or ""),
+    ):
+        return None
     serialized = _serialize_job(row, 0)
     return {
         "key": serialized["job_key"],
@@ -580,8 +562,11 @@ def _row_passes_report(row: Any) -> bool:
     employer = str(getattr(row, "company_name", "") or "").strip()
     locality = str(getattr(row, "locality", "") or "").strip()
     title = str(getattr(row, "robot_compatible_task", "") or "").strip()
-    action = str(getattr(row, "action", "") or "").strip()
-    if not is_robot_automation_lead(action, title):
+    if not is_robot_automation_lead(
+        title,
+        str(getattr(row, "observed_workflow", "") or ""),
+        str(getattr(row, "why_job", "") or ""),
+    ):
         return False
     if not is_named_robot_job(employer, locality):
         return False
@@ -590,8 +575,23 @@ def _row_passes_report(row: Any) -> bool:
     return True
 
 
+def _robot_ask_clause():
+    """SQL prefilter: the posting text names a robot. Python still drops a person hired to work on robots."""
+    from app.models.robot_directed_discovery import RobotJob
+
+    needles = ("%robot%", "%cobot%", "%humanoid%", "%amr%", "%agv%", "%drone%")
+    columns = (
+        RobotJob.robot_compatible_task,
+        RobotJob.observed_workflow,
+        RobotJob.why_job,
+    )
+    return or_(
+        *(column.ilike(needle) for column in columns for needle in needles)
+    )
+
+
 def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
-    """Named-employer robot automation. Staff postings (cook, bartender, mason) stay out."""
+    """Named employers that are asking for a robot. Human labor stays out."""
     from app.models.robot_directed_discovery import RobotJob
 
     cap = max(1, min(int(limit), 50))
@@ -601,34 +601,21 @@ def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
         else_=0,
     )
     try:
-        rank = func.row_number().over(
-            partition_by=RobotJob.action,
-            order_by=(
-                desc(status_rank),
-                desc(RobotJob.existence_confidence),
-                desc(RobotJob.definition_completeness),
-                desc(RobotJob.created_at),
-            ),
-        )
-        ranked = (
-            db.query(RobotJob.id.label("id"), rank.label("rn"))
+        rows = (
+            db.query(RobotJob)
             .filter(RobotJob.company_name.isnot(None))
             .filter(RobotJob.company_name != "")
             .filter(RobotJob.locality.isnot(None))
             .filter(RobotJob.locality != "")
-            .filter(RobotJob.action.in_(sorted(ROBOT_AUTOMATION_ACTIONS)))
-            .subquery()
-        )
-        id_rows = (
-            db.query(ranked.c.id)
-            .filter(ranked.c.rn <= 25)
+            .filter(_robot_ask_clause())
+            .order_by(
+                desc(status_rank),
+                desc(RobotJob.existence_confidence),
+                desc(RobotJob.definition_completeness),
+                desc(RobotJob.created_at),
+            )
+            .limit(POOL)
             .all()
-        )
-        ids = [row[0] for row in id_rows]
-        rows = (
-            db.query(RobotJob).filter(RobotJob.id.in_(ids)).all()
-            if ids
-            else []
         )
         def _sort_key(row: Any) -> tuple:
             created = getattr(row, "created_at", None)
@@ -645,28 +632,16 @@ def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
         logger.debug("daily jobs report query skipped", exc_info=True)
         return []
     picked: list[Any] = []
-    deferred: list[Any] = []
     seen: set[str] = set()
-    counts: dict[str, int] = {}
     for row in rows:
         key = str(getattr(row, "job_key", "") or "").strip()
         if not key or key in seen or not _row_passes_report(row):
             continue
         seen.add(key)
-        action = str(getattr(row, "action", "") or "").strip().lower()
-        if counts.get(action, 0) >= _ACTION_CAP:
-            deferred.append(row)
-            continue
-        counts[action] = counts.get(action, 0) + 1
         picked.append(row)
         if len(picked) >= cap:
             break
-    if len(picked) < cap:
-        for row in deferred:
-            picked.append(row)
-            if len(picked) >= cap:
-                break
-    return picked[:cap]
+    return picked
 
 
 def compose_daily_jobs_report(db: Session, *, limit: int = TOP_N) -> dict[str, Any]:
@@ -737,11 +712,11 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
     lines = [
         f"Top {int(report.get('limit') or TOP_N)} hot job opportunities — {day}",
         "",
-        "Robot automation at named employers. Each row is the work a robot would do, and the robot required.",
+        "Each row is an employer asking for a robot.",
         "",
     ]
     if not jobs:
-        lines.append("No named-employer jobs in the live table yet.")
+        lines.append("No employer is asking for a robot yet.")
         lines.append("")
     for job in jobs:
         rank = int(job.get("rank") or 0)

@@ -33,7 +33,7 @@ def _job(**extra):
         company_name="Rochester Regional Health",
         locality="Rochester, NY",
         action="delivery",
-        robot_compatible_task="Pharmacy delivery",
+        robot_compatible_task="Pharmacy delivery AMR",
         observed_workflow="Move pharmacy totes between the basement and floors.",
         investigate_status="yes",
         existence_confidence=0.9,
@@ -94,7 +94,7 @@ def test_preview_skips_high_score_rows_with_no_workplace(db_session):
             locality="Columbus, OH",
             investigate_status="weak",
             existence_confidence=0.4,
-            robot_compatible_task="Deliver medications to patient units",
+            robot_compatible_task="AMR delivers medications to patient units",
         )
     )
     db_session.commit()

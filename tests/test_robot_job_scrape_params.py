@@ -44,7 +44,7 @@ def test_serving_posting_does_not_attach_to_cleaner_sku_class():
         company_name="Named Casino",
         locality="Las Vegas, NV",
         action="serving",
-        robot_compatible_task="Banquet Server",
+        robot_compatible_task="Banquet serving robot",
         requirements={
             "job_function": "serving",
             "product_class": "serving",
@@ -82,7 +82,7 @@ def test_drone_cleaning_posting_is_not_hard_floor_scrub_only():
         company_name="Named Facilities LLC",
         locality="Chicago, IL",
         action="facade_cleaning",
-        robot_compatible_task="Window Washer",
+        robot_compatible_task="Facade cleaning drone",
         requirements={
             "job_function": job["job_function"],
             "product_class": "cleaning_drone",
