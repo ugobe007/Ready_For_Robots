@@ -117,7 +117,19 @@ def is_legacy_cal_draft(draft: str | None) -> bool:
         return False
     low = text.lower()
 
-    if any(marker in low for marker in _STALE_VOICE_MARKERS):
+    # StageGate isolation copy still uses Cal — never treat it as legacy.
+    if "stagegate" in low or "onstage.bot" in low:
+        return False
+
+    # Word-boundary checks for stale voice markers to avoid false matches.
+    # "i'm cal" should not match "i'm calling"; "this is cal" should not match "this is called".
+    if re.search(r"\bi'?m cal\b", low) or re.search(r"\bthis is cal\b", low):
+        return True
+    if re.search(r"\bhi,? i'?m cal\b", low):
+        return True
+    if "deployment advisor" in low or "robot job analyst" in low:
+        return True
+    if "robot placement specialist" in low or "ai robotics placement specialist" in low:
         return True
     if re.search(r"(?m)^[—-]?\s*cal\s*$", low):
         return True
@@ -137,8 +149,13 @@ def draft_needs_regeneration(draft: str | None, *, account_type: str = "buyer") 
     from app.services.brand import BRAND_STAGEGATE, content_brand
 
     at = (account_type or "buyer").lower()
-    if at == "buyer" and content_brand(draft) == BRAND_STAGEGATE:
-        return True, "Buyer account has StageGate-branded draft — regenerating"
+    draft_brand = content_brand(draft)
+    # StageGate isolation copy is always valid — never regenerate it.
+    if draft_brand == BRAND_STAGEGATE:
+        if at == "buyer":
+            return True, "Buyer account has StageGate-branded draft — regenerating"
+        # Vendor/unknown account_type with StageGate draft is correct; keep it.
+        return False, "ok"
     if is_legacy_cal_draft(draft):
         return True, "Legacy Cal voice — redrafting with current templates"
     ok, reason = is_complete_cal_draft(draft)
