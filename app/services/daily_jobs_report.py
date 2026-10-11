@@ -21,11 +21,6 @@ from urllib.parse import quote
 from sqlalchemy import case, desc
 from sqlalchemy.orm import Session
 
-from app.services.oem_job_intro import (
-    employer_intro_from_sales_card,
-    intro_from_sales_card,
-)
-
 logger = logging.getLogger(__name__)
 
 TOP_N = 25
@@ -375,6 +370,22 @@ def _family_for_action(action: str, title: str) -> str:
     return "transport"
 
 
+_ROBOT_MATCH_BY_FAMILY = {
+    "pallet": "Pallet AMR and heavy cobot",
+    "scrub": "Floor scrubber",
+    "gripper": "Mobile manipulator and humanoid",
+    "inspect": "Inspection robot",
+    "cart": "Cart AMR",
+    "transport": "Autonomous mobile robot",
+}
+
+
+def robot_types_for_job(action: str, title: str) -> str:
+    """Readable robot types for this job. One family, no invented model or pay."""
+    family = _family_for_action(action, title)
+    return _ROBOT_MATCH_BY_FAMILY.get(family, _ROBOT_MATCH_BY_FAMILY["transport"])
+
+
 def public_job_card(db: Session, job_key: str) -> Optional[dict[str, Any]]:
     """Named-employer Robot Job for `/?job=`. No invented people or dollars."""
     from app.models.robot_directed_discovery import RobotJob
@@ -451,9 +462,8 @@ def _serialize_job(row: Any, rank: int) -> dict[str, Any]:
         "investigate_status": str(getattr(row, "investigate_status", "") or ""),
         "created_at": created.isoformat() if created else None,
         "card_href": job_card_href(str(getattr(row, "job_key", "") or "")),
+        "robots": robot_types_for_job(action, title),
     }
-    card["intro"] = intro_from_sales_card(card)
-    card["employer_intro"] = employer_intro_from_sales_card(card)
     return card
 
 
@@ -559,7 +569,7 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
     lines = [
         f"Top {int(report.get('limit') or TOP_N)} hot job opportunities — {day}",
         "",
-        "Named-employer Robot Jobs. Decision maker and contact as stored. We do not invent people or emails.",
+        "Named-employer Robot Jobs. Employer, decision maker, the work, and the robot types that match.",
         "",
     ]
     if not jobs:
@@ -573,21 +583,18 @@ def render_daily_jobs_report_text(report: dict[str, Any]) -> str:
         if locality:
             head = f"{head} · {locality}"
         lines.append(head)
-        lines.append(f"    {_job_name_line(job)}")
+        lines.append(f"    Job: {_job_name_line(job)}")
         lines.append(f"    Decision maker: {_decision_maker_inline(job)}")
         lines.append(f"    Contact: {job.get('contact') or CONTACT_EMPTY}")
-        intro = str(job.get("intro") or intro_from_sales_card(job) or "").strip()
-        if intro:
-            lines.append("    [5] Intro to the robot company")
-            for intro_line in intro.splitlines():
-                lines.append(f"        {intro_line}")
-        employer_intro = str(
-            job.get("employer_intro") or employer_intro_from_sales_card(job) or ""
+        robots = str(
+            job.get("robots")
+            or robot_types_for_job(
+                str(job.get("action") or ""),
+                str(job.get("title") or job.get("job_type") or ""),
+            )
         ).strip()
-        if employer_intro:
-            lines.append("    [6] Intro to the employer")
-            for intro_line in employer_intro.splitlines():
-                lines.append(f"        {intro_line}")
+        if robots:
+            lines.append(f"    Robots: {robots}")
         lines.append("")
     day_name = str(report.get("date") or day)
     lines += [
@@ -610,8 +617,7 @@ _CSV_COLUMNS = (
     "contact",
     "employer_email",
     "apply_url",
-    "intro",
-    "employer_intro",
+    "robots",
 )
 
 
@@ -642,8 +648,11 @@ def render_daily_jobs_report_csv(report: dict[str, Any]) -> str:
                 "contact": job.get("contact") or "",
                 "employer_email": job.get("employer_email") or "",
                 "apply_url": job.get("apply_url") or "",
-                "intro": job.get("intro") or "",
-                "employer_intro": job.get("employer_intro") or "",
+                "robots": job.get("robots")
+                or robot_types_for_job(
+                    str(job.get("action") or ""),
+                    str(job.get("title") or job.get("job_type") or ""),
+                ),
             }
         )
     return buf.getvalue()
