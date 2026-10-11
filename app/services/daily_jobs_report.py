@@ -436,7 +436,7 @@ def describe_required_robot(action: str, title: str) -> tuple[str, str]:
             "Hospital delivery AMR. It carries medications or supplies on a route "
             "between the pharmacy and the units."
         )
-    elif (action or "").strip().lower() == "picking" or has("picker") or "select" in tokens:
+    elif (action or "").strip().lower() == "picking" or has("picker", "select"):
         work = "Pick cases or eaches from storage"
         robots = (
             "Piece-picking robot. It selects cases or items from racks and carries "
@@ -448,6 +448,12 @@ def describe_required_robot(action: str, title: str) -> tuple[str, str]:
             "Packing robot. It cases goods or carries packed orders from the line "
             "to shipping."
         )
+    elif (action or "").strip().lower() in {"environmental_services", "cleaning", "scrub"} or has("janitor", "custodian", "scrub") or "evs" in tokens:
+        work = "Clean hard floors on a route"
+        robots = (
+            "Floor scrubber. It drives a cleaning path and scrubs hard floors. "
+            "A person does not walk the route."
+        )
     elif (action or "").strip().lower() in {"receiving", "shipping"} or has("receiv", "shipping", "dock"):
         work = "Move goods on and off the dock"
         robots = (
@@ -456,12 +462,6 @@ def describe_required_robot(action: str, title: str) -> tuple[str, str]:
     elif (action or "").strip().lower() == "inspect" or has("inspect", "audit"):
         work = "Inspect along a route"
         robots = "Inspection robot. It carries cameras along a route and records what it sees."
-    elif (action or "").strip().lower() in {"environmental_services", "cleaning", "scrub"} or has("janitor", "custodian", "scrub") or "evs" in tokens:
-        work = "Clean hard floors on a route"
-        robots = (
-            "Floor scrubber. It drives a cleaning path and scrubs hard floors. "
-            "A person does not walk the route."
-        )
     elif (action or "").strip().lower() == "facade_cleaning" or has("facade", "window"):
         work = "Clean exterior glass and facade"
         robots = (
