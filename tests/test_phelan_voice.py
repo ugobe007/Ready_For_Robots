@@ -18,9 +18,13 @@ from app.services.phelan_persona import (
 
 def test_cal_signature_includes_role():
     sig = phelan_signature()
-    assert sig.startswith("— Cal")
+    assert sig.startswith("— Phelan")
+    assert CAL_TITLE == "Robot Coordinator"
     assert f"\n{CAL_TITLE}, Ready For Robots" in sig
-    assert phelan_buyer_email_signature() == "Cal\nReadyForRobots"
+    buyer_sig = phelan_buyer_email_signature()
+    assert "Robot Coordinator | Ready For Robots" in buyer_sig
+    assert "phelan@readyforrobots.com" in buyer_sig
+    assert "Cal" not in buyer_sig
 
 
 def test_persona_payload_exports_voice_rules():
@@ -43,10 +47,10 @@ def test_workflow_first_matches_observation_led_shape():
     assert body.startswith("Hi Acme Logistics,") or body.startswith("Hi Acme team,")
     paragraphs = [p for p in body.split("\n\n") if p.strip()]
     opener = paragraphs[1].lower()
-    assert opener.startswith("i'm cal with readyforrobots")
+    assert opener.startswith("i'm phelan, robot coordinator")
     assert "i've been looking at" in low
     assert "i'd be interested in your perspective" in low
-    assert body.rstrip().endswith("ReadyForRobots")
+    assert body.rstrip().endswith("readyforrobots.com")
     assert "Deployment Advisor" not in body
     assert len(body.split()) <= 280
 
@@ -57,7 +61,7 @@ def test_buyer_intro_first_paragraph_is_human():
         body = build_buyer_variant_body(name, "Logistics", vid)
         paragraphs = [p for p in body.split("\n\n") if p.strip()]
         opener = paragraphs[1].strip().lower()
-        assert opener.startswith("i'm cal with readyforrobots"), f"{vid} opener: {paragraphs[1][:90]}"
+        assert opener.startswith("i'm phelan, robot coordinator"), f"{vid} opener: {paragraphs[1][:90]}"
 
 
 def test_long_name_anchor_keeps_greeting_first():
@@ -92,7 +96,7 @@ def test_bottleneck_first_matches_operator_pfg_example():
     expected = "\n".join([
         "Hi PFG team,",
         "",
-        "I'm Cal with ReadyForRobots. I research how companies are using robotics and help identify jobs where automation could actually make a difference.",
+        "I'm Phelan, Robot Coordinator at ReadyForRobots. We evaluate physical task feasibility and match industrial operations with qualified commercial robotics models before vendor PoCs.",
         "",
         "I've been looking at food distribution, and I keep noticing something I wanted to check with you. Picking gets most of the attention, but a lot of the day-to-day pressure seems to happen elsewhere.",
         "",
@@ -104,7 +108,11 @@ def test_bottleneck_first_matches_operator_pfg_example():
         "",
         "I'd be interested in your perspective.",
         "",
-        "Cal",
-        "ReadyForRobots",
+        "Best regards,",
+        "",
+        "Phelan",
+        "Robot Coordinator | Ready For Robots",
+        "phelan@readyforrobots.com",
+        "readyforrobots.com",
     ])
     assert body == expected

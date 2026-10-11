@@ -514,7 +514,7 @@ export default function CrmAccountWorkspace({
             proposal: `Turnkey RaaS Commercial Proposal & 3D Cell-Feasibility Audit for ${detail.account.name}.\n\nShortlisted Models:\n- Universal Robots UR10e\n- FANUC CRX-20iA\n- ABB GoFa CRB 15000\n\nRaaS Monthly Rate: $3,200/month\nDeployment Timeline: 4 weeks`,
             sender_company: "ReadyForRobots",
             sender_name: "Phelan",
-            sender_title: "Robot Job Analyst",
+            sender_title: "Robot Coordinator",
             generated_at: Date.now(),
           }}
         />

@@ -20,7 +20,7 @@ def test_enrich_cal_email_html_uses_hosted_gif_url():
     html = enriched.get("body_html") or ""
     assert "cal-pipeline-demo.gif" in html or "marketing/" in html
     assert "cid:cal-pipeline-demo" not in html
-    assert "Cal · pipeline preview" in html
+    assert "Phelan · pipeline preview" in html
     assert 'width="280"' in html
     assert enriched.get("attachments") is None
 
@@ -44,7 +44,7 @@ def test_enrich_html_demo_at_bottom():
     enriched = enrich_cal_email_with_demo("Hi,\n\nTest body.\n\n— Cal", use_cid=False)
     html = enriched.get("body_html") or ""
     # Letter content before demo table
-    assert html.index("Test body") < html.index("Cal · pipeline preview")
+    assert html.index("Test body") < html.index("Phelan · pipeline preview")
 
 
 def test_build_cal_demo_html_uses_https_url():

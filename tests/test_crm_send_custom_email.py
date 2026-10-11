@@ -57,7 +57,7 @@ def test_send_custom_email_endpoint(db_session):
             json={
                 "to_email": "prospect@company.com",
                 "subject": "Robotic Labor Placement — Company X",
-                "body_text": "Hi Jane,\n\nI’m Phelan, a Robot Job Analyst at ReadyForRobots.",
+                "body_text": "Hi Jane,\n\nI’m Phelan, a Robot Coordinator at ReadyForRobots.",
                 "company_name": "Company X",
             },
         )

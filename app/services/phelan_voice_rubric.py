@@ -88,6 +88,10 @@ _PRESCRIBE_EARLY = (
     "hand this to robert",
 )
 _INTRO_MARKERS = (
+    "i'm phelan",
+    "i am phelan",
+    "my name is phelan",
+    "this is phelan",
     "i'm cal with readyforrobots",
     "i am cal with readyforrobots",
     "this is cal",
@@ -150,8 +154,8 @@ def score_cal_draft(draft: str | None, *, company_hint: str | None = None) -> Ca
         human += 1
     else:
         human -= 1
-        issues.append("Missing Cal introduction / familiarity assumed")
-        rules.append("Cal establishes who he is before asking for attention.")
+        issues.append("Missing Phelan introduction / familiarity assumed")
+        rules.append("Phelan establishes who he is before asking for attention.")
     if any(m in low for m in _RESEARCH_FRAME):
         human += 1
     if _BILLBOARD_OPEN_RE.search(body.split("\n\n")[1] if "\n\n" in body else body):
@@ -173,7 +177,7 @@ def score_cal_draft(draft: str | None, *, company_hint: str | None = None) -> Ca
         insight -= 2
         reasoning -= 2
         issues.append("Label stack without relationships")
-        rules.append("Cal connects observations; he does not stack labels.")
+        rules.append("Phelan connects observations; he does not stack labels.")
     connective = sum(1 for m in _CONNECTIVE_REASONING if m in low)
     if connective >= 2:
         insight += 1
@@ -201,7 +205,7 @@ def score_cal_draft(draft: str | None, *, company_hint: str | None = None) -> Ca
         else:
             relevance -= 1
             issues.append("Company name/short label missing from body")
-            rules.append("Cal researches the company/sector before discussing automation.")
+            rules.append("Phelan researches the company/sector before discussing automation.")
     sectorish = any(
         k in low
         for k in (
@@ -228,7 +232,7 @@ def score_cal_draft(draft: str | None, *, company_hint: str | None = None) -> Ca
     if any(m in low for m in _PRESCRIBE_EARLY):
         restraint -= 2
         issues.append("Premature prescription / meeting ask")
-        rules.append("Cal earns the right to diagnose before prescribing.")
+        rules.append("Phelan earns the right to diagnose before prescribing.")
     if "rfq" in low or "book a demo" in low:
         restraint -= 1
 
@@ -293,7 +297,7 @@ def _looks_like_label_stack(body: str) -> bool:
     return False
 
 
-def format_rubric_report(result: CalRubricResult, *, title: str = "Cal voice rubric") -> str:
+def format_rubric_report(result: CalRubricResult, *, title: str = "Phelan voice rubric") -> str:
     lines = [
         f"{title}",
         f"  Voice total: {result.voice_total}/30  "
@@ -317,7 +321,7 @@ def format_rubric_report(result: CalRubricResult, *, title: str = "Cal voice rub
             lines.append(f"    - {note}")
     if result.suggested_rules:
         lines.append("")
-        lines.append("  Suggested Cal rules:")
+        lines.append("  Suggested Phelan rules:")
         for rule in result.suggested_rules:
             lines.append(f"    - {rule}")
     return "\n".join(lines)

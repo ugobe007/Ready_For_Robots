@@ -107,7 +107,7 @@ def test_compose_keeps_named_employers_drops_boards(db_session):
     assert report["jobs"][0]["decision_maker"] == "Not named on the posting"
     assert "will not invent" in report["jobs"][0]["contact"]
     intro = report["jobs"][0]["intro"]
-    assert "robot coordinator for ReadyForRobots" in intro
+    assert "Robot Coordinator for ReadyForRobots" in intro
     assert "pharmacy delivery at Rochester Regional Health in Rochester, NY" in intro
     assert "arrange a call with Rochester Regional Health" in intro
     assert "$______" in intro
@@ -240,7 +240,7 @@ def test_render_email_is_jobs_not_signal():
     assert "CSV of these leads is attached" in text
     assert "[5] Intro to the robot company" in text
     assert "[6] Intro to the employer" in text
-    assert "robot coordinator for ReadyForRobots" in text
+    assert "Robot Coordinator for ReadyForRobots" in text
     assert "May I send them to you for review?" in text
     assert "Pharmacy delivery between units" in text
     assert "/?visit=jobs" in text

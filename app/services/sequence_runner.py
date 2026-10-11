@@ -18,7 +18,7 @@ from app.services.sales_learning_agent import record_sales_experience
 logger = logging.getLogger(__name__)
 
 DEFAULT_BUYER_SEQUENCE = {
-    "name": "Cal buyer cadence",
+    "name": "Phelan buyer cadence",
     "slug": "cal_buyer_v1",
     # Cal's voice: smooth, smart, lightly self-aware. Each touch adds a NEW idea
     # (not "just bumping this"), keeps it short/mobile-friendly, and makes the ask
@@ -30,7 +30,7 @@ DEFAULT_BUYER_SEQUENCE = {
             "subject_template": "a deployment note for {company_name}",
             "body_template": (
                 "Hi {company_name},\n\n"
-                "Hi, I am Cal. I work at ReadyForRobots as a deployment advisor. I focus on robot deployments and their metrics, to help companies improve ROI.\n\n"
+                "Hi, I am Phelan. I work at ReadyForRobots as a Robot Coordinator. I focus on robot deployments and their metrics, to help companies improve ROI.\n\n"
                 "I spend my time studying robot deployments — not the demos, the ones still "
                 "running months later.\n\n"
                 "One thing shows up over and over: deployments fail less from hardware limits "
@@ -39,7 +39,7 @@ DEFAULT_BUYER_SEQUENCE = {
                 "in a workflow before anyone compares robots.\n\n"
                 "Out of curiosity, is {company_name} evaluating automation now, or is it still "
                 "further down the road?\n\n"
-                "— Cal\nDeployment Advisor\nReady For Robots"
+                "— Phelan\nRobot Coordinator\nReady For Robots"
             ),
             "action_label": "Intro",
         },
@@ -50,14 +50,14 @@ DEFAULT_BUYER_SEQUENCE = {
             "delay_days": 6,
             "subject_template": "the workflow most teams automate last — {company_name}",
             "body_template": (
-                "Hi {company_name}, this is Cal again.\n\n"
+                "Hi {company_name}, this is Phelan again.\n\n"
                 "One practical note, then one question.\n\n"
                 "One pattern I see everywhere: the projects with the fastest payback rarely start "
                 "with the most visible task. They start with the quiet process upstream that backs "
                 "everything else up.\n\n"
                 "Most teams automate the flashy part first, then wonder why the ROI never showed. If "
                 "{company_name} ever maps this out, that's where I'd start.\n\n"
-                "— Cal\nReady For Robots"
+                "— Phelan\nRobot Coordinator\nReady For Robots"
             ),
             "action_label": "Teach",
         },
@@ -67,14 +67,14 @@ DEFAULT_BUYER_SEQUENCE = {
             "delay_days": 14,
             "subject_template": "why \"evaluating five robots\" is usually the wrong question — {company_name}",
             "body_template": (
-                "Hi {company_name}, this is Cal again.\n\n"
+                "Hi {company_name}, this is Phelan again.\n\n"
                 "One practical note, then one question.\n\n"
                 "A team lines up five vendors, runs a bake-off, picks the fastest — and six months "
                 "later it's parked. The robots that survive aren't the fastest; they're matched to "
                 "one specific bottleneck, with integration and software actually resourced.\n\n"
                 "If {company_name} is weighing vendors, I'm glad to share what separates the ones "
                 "that last. No pitch.\n\n"
-                "— Cal\nReady For Robots"
+                "— Phelan\nRobot Coordinator\nReady For Robots"
             ),
             "action_label": "Trend",
         },
@@ -84,13 +84,13 @@ DEFAULT_BUYER_SEQUENCE = {
             "delay_days": 24,
             "subject_template": "one question about {company_name}",
             "body_template": (
-                "Hi {company_name}, this is Cal again.\n\n"
+                "Hi {company_name}, this is Phelan again.\n\n"
                 "One practical note, then one question.\n\n"
                 "No agenda here — one question tells me more than a whole discovery call.\n\n"
                 "If you automated one workflow tomorrow, which would it be? Most teams name the "
                 "busiest one. The one that actually pays back is usually the process quietly "
                 "creating work everywhere else. Curious what you'd pick for {company_name}.\n\n"
-                "— Cal\nReady For Robots"
+                "— Phelan\nRobot Coordinator\nReady For Robots"
             ),
             "action_label": "Question",
         },
@@ -147,6 +147,7 @@ def sync_default_sequence_steps(db: Session) -> dict[str, int]:
     )
     if not seq:
         return {"updated": 0, "added": 0, "sequence": 0}
+    seq.name = DEFAULT_BUYER_SEQUENCE["name"]
     updated = added = 0
     for step in DEFAULT_BUYER_SEQUENCE["steps"]:
         row = (

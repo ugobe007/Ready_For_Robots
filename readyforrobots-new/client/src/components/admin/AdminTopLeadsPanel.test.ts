@@ -16,14 +16,12 @@ describe("AdminTopLeadsPanel component module", () => {
     });
 
     expect(email.subject).toBe(
-      "Robotic labor placement & task feasibility evaluation for CloudKitchens"
+      "Robot job matches & feasibility review for CloudKitchens"
     );
     expect(email.body).toContain("Hi Justin,");
     expect(email.body).toContain(
-      "I'm Phelan, AI Robotics Placement Specialist at ReadyForRobots."
+      "I’m Phelan, a Robot Coordinator at ReadyForRobots."
     );
-    expect(email.body).toContain(
-      "Would you be open to reviewing a brief task feasibility and robotic labor placement summary for your facilities?"
-    );
+    expect(email.body).toContain("Robot Coordinator | ReadyForRobots");
   });
 });

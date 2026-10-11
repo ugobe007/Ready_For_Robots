@@ -5,7 +5,7 @@ from app.services.agent_messaging import (
     pick_buyer_variant,
 )
 from app.services.phelan_assembly_agent import assemble_buyer_outreach
-from app.services.phelan_autonomy import phelan_buyer_outreach_body
+from app.services.phelan_autonomy import cal_buyer_outreach_body
 from app.services.phelan_draft_guard import draft_needs_regeneration, is_complete_cal_draft, is_legacy_cal_draft, parse_cal_draft_or_raise
 
 _THEATER = (
@@ -47,7 +47,8 @@ def test_every_buyer_variant_passes_guard_and_assembly():
         ok, reason = is_complete_cal_draft(full)
         assert ok, f"{vid} failed guard: {reason}"
         assert "UPS" in body, f"{vid} missing company anchor"
-        assert "Cal" in body and "ReadyForRobots" in body
+        assert "Phelan" in body and "Robot Coordinator" in body
+        assert "Cal" not in body
         assert "Deployment Advisor" not in body
         needs, _ = draft_needs_regeneration(full, account_type="buyer")
         assert not needs, f"{vid} wrongly flagged for regeneration"
@@ -64,7 +65,7 @@ def test_buyer_variants_are_humble_not_presumptuous():
         "i'm curious",
         "i keep noticing",
         "i've been looking",
-        "i'm cal with readyforrobots",
+        "i'm phelan, robot coordinator",
         "i'd be interested in your perspective",
         "biggest opportunity",
         "somewhere else",

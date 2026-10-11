@@ -81,7 +81,7 @@ def build_phelan_demo_html(
 ) -> str:
     """Email-safe table layout — hosted GIF autoplays when images are enabled."""
     alt_text = html.escape(
-        alt or "Monday pipeline: Cal identifies a priority account and prepares outreach"
+        alt or "Monday pipeline: Phelan identifies a priority account and prepares outreach"
     )
     src = html.escape(img_src, quote=True)
     link = html.escape(preview_url or cal_preview_page_url(), quote=True)
@@ -89,7 +89,7 @@ def build_phelan_demo_html(
   <tr>
     <td style="padding:10px 0 0 0;border-top:1px solid #e5e7eb;">
       <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:1.4;color:#6b7280;">
-        <strong style="color:#047857;">Cal · pipeline preview</strong> · 6-sec loop
+        <strong style="color:#047857;">Phelan · pipeline preview</strong> · 6-sec loop
       </p>
       <img src="{src}" alt="{alt_text}" width="280" height="95" style="display:block;width:100%;max-width:280px;height:auto;border-radius:6px;border:0;" />
       <p style="margin:5px 0 0 0;font-family:Arial,Helvetica,sans-serif;font-size:10px;line-height:1.35;color:#9ca3af;">
@@ -118,6 +118,8 @@ _DEMO_MARKERS = (
     "cal-pipeline-demo.gif",
     "Cal · pipeline preview",
     "Cal pipeline preview",
+    "Phelan · pipeline preview",
+    "Phelan pipeline preview",
     "View full preview",
 )
 
