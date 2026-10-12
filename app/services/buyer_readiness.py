@@ -137,6 +137,61 @@ def _posting_title(text: str) -> Optional[str]:
     return None
 
 
+# Typed signals the intelligence pipeline already writes. One credit per type per
+# company (plus a little for repeats) — the text patterns below still add detail.
+SIGNAL_TYPE_WEIGHTS: dict[str, tuple[str, float, str]] = {
+    "rfp_posted": ("buy_now", 35, "tender / RFP"),
+    "government_contract": ("buy_now", 30, "government contract"),
+    "vendor_selection": ("buy_now", 35, "vendor selection"),
+    "pilot_success": ("buy_now", 30, "pilot / trial"),
+    "robot_installation": ("expanding", 20, "robots installed"),
+    "automation_intent": ("evaluating", 15, "automation intent"),
+    "automation_interest": ("evaluating", 8, "automation interest"),
+    "automation_leadership_hire": ("evaluating", 20, "automation hire"),
+}
+
+_COUNTRIES_REGIONS = frozenset(
+    """afghanistan albania algeria argentina armenia australia austria bangladesh belgium bolivia brazil bulgaria
+    cambodia cameroon canada chile china colombia croatia cuba czechia denmark ecuador egypt estonia ethiopia finland
+    france georgia germany ghana greece guatemala hungary india indonesia iran iraq ireland israel italy jamaica japan
+    jordan kazakhstan kenya korea kuwait laos latvia lebanon lithuania malaysia mexico morocco myanmar nepal netherlands
+    nigeria norway oman pakistan panama peru philippines poland portugal qatar romania russia rwanda serbia singapore
+    slovakia slovenia spain sweden switzerland taiwan tanzania thailand tunisia turkey uganda ukraine uruguay uzbekistan
+    venezuela vietnam yemen zambia zimbabwe usa us uk europe asia africa""".split()
+) | frozenset({"sri lanka", "south korea", "north korea", "new zealand", "south africa", "saudi arabia",
+               "united states", "united kingdom", "united arab emirates", "hong kong", "latin america",
+               "middle east", "north america", "costa rica", "dominican republic", "puerto rico", "el salvador",
+               "las vegas", "new york", "los angeles", "san francisco", "silicon valley"})
+
+_HEADLINE_RE = re.compile(
+    r"^(?:how|why|what|when|where|who|which|is|are|can|will|this|these|top|best|inside|watch|video|report)\b"
+    r"|\b(?:are|is|was|were|will|says?|said|could|would|announces?|reveals?|launch(?:es)?|plans?)\b.*\b\w+\b"
+    r"|\bto (?:open|build|deploy|add|launch|use|test|buy|invest|expand|hire|cut|replace|roll)\b",
+    re.I,
+)
+_ENCODED_RE = re.compile(r"^[A-Za-z0-9+/=_-]{20,}$")
+
+
+def buyer_name_problem(name: str) -> Optional[str]:
+    """Why a stored company name can't be a buyer (headline fragment, place, encoded junk), or None."""
+    n = (name or "").strip()
+    low = n.lower().strip(" .,")
+    if len(n) < 2:
+        return "empty name"
+    if _ENCODED_RE.match(n) and (any(c.isdigit() for c in n) or n != n.lower() and n != n.upper() and " " not in n and len(n) >= 24):
+        return "encoded string, not a company"
+    if low in _COUNTRIES_REGIONS:
+        return "place name, not a company"
+    words = n.split()
+    if len(words) >= 6 or (len(words) >= 3 and _HEADLINE_RE.search(n)):
+        return "headline fragment, not a company"
+    if "robot" in low and not any(w in low for w in ("hotel", "casino", "resort")):
+        return "robot vendor (supply side)"
+    if n.endswith(("?", "!")) or n.count('"') or n.count("|"):
+        return "headline fragment, not a company"
+    return None
+
+
 def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[datetime] = None,
                    recent_days: int = 180) -> BuyerReadiness:
     now = now or datetime.now(timezone.utc)
@@ -149,10 +204,22 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
     postings = 0
     seen_labels: set[tuple[str, str]] = set()
 
+    typed_seen: Counter = Counter()
     for sig in signals:
         stype, text, url, ts = _signal_fields(sig)
         if not text:
             continue
+        typed = SIGNAL_TYPE_WEIGHTS.get(stype.strip().lower())
+        if typed and not (vendor and _VENDOR_STORY_RE.search(text)):
+            kind, w, label = typed
+            n = typed_seen[stype]
+            typed_seen[stype] += 1
+            if n < 4:
+                weights[kind] += w if n == 0 else w * 0.15
+                if n == 0:
+                    evidence.append(Evidence(kind, label, text[:240], getattr(sig, "source_url", None)
+                                             if not isinstance(sig, dict) else sig.get("source_url"),
+                                             ts.isoformat() if hasattr(ts, "isoformat") else None))
         if ts is not None and getattr(ts, "tzinfo", None) is None:
             ts = ts.replace(tzinfo=timezone.utc)
         recency = 1.0 if (ts is None or ts >= cutoff) else 0.5
@@ -209,8 +276,11 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
     expand = min(30.0, weights["expanding"])
     score = min(100.0, buy + evalu + expand + (primed * (0.5 if (buy or evalu or expand) else 1.0)))
 
+    name_problem = buyer_name_problem(company_name)
     if vendor:
         stage, score, why = "watch", min(score, 10.0), "robot vendor (supply side)"
+    elif name_problem:
+        stage, score, why = "watch", 0.0, name_problem
     elif buy >= 30:
         stage, why = "buying_now", "tender, pilot or vendor selection on record"
     elif evalu >= 20:
