@@ -639,21 +639,31 @@ class EnhancedJobBoardScraper(BaseScraper):
                 skipped_relevancy += 1
                 continue
 
+            # ── NEW: Classify opportunity using framework ─────────────────────
+            from app.services.automation_opportunity_classifier import (
+                classify_opportunity,
+                should_create_robot_job,
+                should_create_signal,
+                should_reject,
+                OpportunityTier,
+            )
+            
+            opp_tier, opp_class = classify_opportunity(title, desc)
+            
+            # ── Tier 3: HUMAN_LABOR - Reject immediately ─────────────────────
+            if should_reject(opp_tier):
+                logger.debug(f"[JobBoardScraper] Rejected human labor: {title[:60]}")
+                skipped_no_pain += 1
+                continue
+            
+            # ── Tier 1: ROBOT_JOBS - Create robot_job ────────────────────────
             robot_job_extract = None
-            if _is_buyer_persona(title):
-                strength = 0.80
-                sig_type = "strategic_hire"
-                summary_text = f"Buyer persona hire: {title}"
-            elif _is_automation_intent(title):
-                strength = 0.72
-                sig_type = "automation_intent"
-                summary_text = f"Automation intent hire: {title}"
-            elif is_operational_robot_job(title, desc):
+            if should_create_robot_job(opp_tier):
+                # This is an explicit robot/automation request
                 if not should_persist_robot_job(title=title, employer=company_name):
                     skipped_no_pain += 1
                     continue
-                pain_score = operational_labor_hits(title, desc)
-                urgency_score = sum(1 for p in PAIN_SIGNALS if p in f"{title} {desc}".lower())
+                
                 job = extract_robot_job(
                     title=title,
                     description=desc,
@@ -666,15 +676,29 @@ class EnhancedJobBoardScraper(BaseScraper):
                 if not job.get("persistable"):
                     skipped_no_pain += 1
                     continue
+                
                 posting_state = status_from_posting_text(desc)
                 job["status"] = posting_state["status"]
-                strength = min(1.0, round(0.20 + pain_score * 0.15 + urgency_score * 0.10, 2))
+                job["opportunity_tier"] = int(opp_tier)
+                job["opportunity_class"] = int(opp_class)
+                
+                strength = 0.85  # High signal for explicit robot requests
                 sig_type = "robot_job"
                 summary_text = format_robot_job_signal(job)
                 robot_job_extract = job
+            
+            # ── Tier 2: SIGNALS - Create signal (market intelligence) ────────
+            elif should_create_signal(opp_tier):
+                # Market intelligence: leadership hires, labor challenges, etc.
+                from app.services.automation_opportunity_classifier import get_signal_type
+                
+                sig_type = get_signal_type(opp_class)
+                strength = 0.60  # Medium signal for pipeline opportunities
+                summary_text = f"Pipeline opportunity ({sig_type}): {title}"
+                # Do NOT set robot_job_extract - this goes to signals table only
+            
             else:
-                # Relevancy passed via ontology/buyer keywords, but this is not
-                # operational work (e.g. generic GM). Do not invent a Robot Job.
+                # Unknown - skip
                 skipped_no_pain += 1
                 continue
 

@@ -177,6 +177,9 @@ class RobotJob(Base):
     apply_url = Column(String(1024), nullable=True)
     source_run = Column(String(120), nullable=True)  # opaque; future discovery_run_id
     provenance = Column(JSONB, nullable=False, server_default="{}")
+    # Opportunity classification (Tier 1=robot_jobs, 2=signals, 3=human_labor)
+    opportunity_tier = Column(Integer, nullable=True, index=True)
+    opportunity_class = Column(Integer, nullable=True, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 

@@ -192,6 +192,8 @@ def upsert_robot_job_from_extract(
     row.action = (extract.get("job_function") or row.action or "work")[:120]
     row.robot_compatible_task = title
     row.automation_state = extract.get("status") or row.automation_state or "open"
+    row.opportunity_tier = extract.get("opportunity_tier")
+    row.opportunity_class = extract.get("opportunity_class")
     req = dict(row.requirements or {})
     req["compensation"] = extract.get("compensation")
     req["performance_specs"] = extract.get("performance_specs")
