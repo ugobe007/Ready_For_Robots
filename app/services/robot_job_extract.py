@@ -283,6 +283,7 @@ def extract_robot_job(
         "employer": (company or "").strip() or None,
         "workplace": (locality or "").strip() or None,
         "job_title": (title or "").strip() or None,
+        "job_description": (description or "").strip() or None,
         "job_function": function,
         "product_class": product_class,
         "required_capabilities": required_capabilities,
