@@ -562,8 +562,15 @@ def _row_passes_report(row: Any) -> bool:
     employer = str(getattr(row, "company_name", "") or "").strip()
     locality = str(getattr(row, "locality", "") or "").strip()
     title = str(getattr(row, "robot_compatible_task", "") or "").strip()
-    # robot_jobs table already contains only robot-compatible work
-    # No need to check is_robot_automation_lead() again
+    # robot_jobs holds every automatable workflow (tiers 1-3). The daily email
+    # leads with employers already moving to automation: tier 1, or a posting
+    # that itself asks for a robot (person hired to fix robots does not count).
+    if getattr(row, "opportunity_tier", None) != 1:
+        from app.services.robot_job_extract import asks_for_a_robot
+
+        action = str(getattr(row, "action", "") or "")
+        if not asks_for_a_robot(title, action):
+            return False
     if not is_named_robot_job(employer, locality):
         return False
     if not is_job_employer_name(employer, title=title):
@@ -603,7 +610,7 @@ def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
             .filter(RobotJob.company_name != "")
             .filter(RobotJob.locality.isnot(None))
             .filter(RobotJob.locality != "")
-            .filter(RobotJob.opportunity_tier == 1)  # Only Tier 1 (ROBOT_JOBS)
+            .filter(or_(RobotJob.opportunity_tier == 1, _robot_ask_clause()))
             .order_by(
                 desc(status_rank),
                 desc(RobotJob.existence_confidence),

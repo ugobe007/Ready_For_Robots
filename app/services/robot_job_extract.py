@@ -231,6 +231,13 @@ def extract_robot_job(
 ) -> dict[str, Any]:
     blob = f"{title or ''}\n{description or ''}"
     function = job_function_from_title(title)
+    from app.services.workflow_ontology import FAMILY_BY_KEY, analyze_posting
+
+    opportunity = analyze_posting(title or "", description or "", company or "")
+    ontology_family = opportunity.primary
+    if not function and ontology_family is not None:
+        # Legacy title map missed it (EVS, palletizer, CNC, sorter, …). Ontology decides.
+        function = ontology_family.key
     pay = extract_compensation(blob)
     specs = extract_performance_specs(blob)
     unknowns: list[str] = []
@@ -269,6 +276,10 @@ def extract_robot_job(
         description=description or "",
         product_class=product_class,
     )
+    if not product_class and function in FAMILY_BY_KEY:
+        product_class = FAMILY_BY_KEY[function].product_class
+    if not required_capabilities and function in FAMILY_BY_KEY:
+        required_capabilities = list(FAMILY_BY_KEY[function].capabilities)
     if not product_class:
         unknowns.append("product_class")
     if task["work_task_model_kind"] == "unknown":
@@ -299,6 +310,8 @@ def extract_robot_job(
         "unknowns": unknowns,
         "status": "open",
         "persistable": persistable,
+        "opportunity_tier": opportunity.tier,
+        "opportunity": opportunity.to_requirements(),
     }
 
 

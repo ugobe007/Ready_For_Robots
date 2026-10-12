@@ -2232,6 +2232,27 @@ ALL_TARGETS: List[ScrapeTarget] = (
 )
 
 
+def _ontology_targets() -> List[ScrapeTarget]:
+    """Job-board + intent-news targets generated from workflow_ontology (robot_opportunity_sources)."""
+    import os
+
+    if os.getenv("ENABLE_ONTOLOGY_TARGETS", "1").strip().lower() in ("0", "false", "no"):
+        return []
+    try:
+        from app.scrapers.robot_opportunity_sources import scrape_targets as _gen
+
+        return _gen(existing_urls=[t.url for t in ALL_TARGETS])
+    except Exception:  # never let the catalog break the legacy registry
+        import logging
+
+        logging.getLogger(__name__).exception("ontology scrape targets unavailable")
+        return []
+
+
+ONTOLOGY_TARGETS: List[ScrapeTarget] = _ontology_targets()
+ALL_TARGETS = ALL_TARGETS + ONTOLOGY_TARGETS
+
+
 def get_targets(
     scraper: Optional[str] = None,
     industry: Optional[str] = None,

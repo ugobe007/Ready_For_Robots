@@ -490,6 +490,10 @@ class EnhancedJobBoardScraper(BaseScraper):
 
     def _is_relevant(self, title: str, description: str, threshold: float = 0.15) -> bool:
         """Keep operational Robot Jobs and buyer hires; drop robot-builder roles."""
+        from app.services.workflow_ontology import analyze_posting
+
+        if analyze_posting(title, description).tier > 0:
+            return True
         score = calculate_job_relevancy_score(title, description)
         is_relevant = score >= threshold
         if not is_relevant:
@@ -616,7 +620,16 @@ class EnhancedJobBoardScraper(BaseScraper):
 
         soup = BeautifulSoup(html, "html.parser")
         cards = self._collect_cards(soup, url)
+        try:
+            from app.scrapers.opportunity_feed_scraper import register_ats_boards_from_text
 
+            register_ats_boards_from_text(self.db, html, found_on=url)
+        except Exception:
+            logger.debug("[JobBoardScraper] ATS discovery skipped", exc_info=True)
+        return self.process_cards(cards, url)
+
+    def process_cards(self, cards: List[Dict[str, Any]], url: str) -> Dict[str, int]:
+        """Classify + persist normalized job cards (HTML boards, ATS APIs, aggregators)."""
         logger.info(f"[JobBoardScraper] Found {len(cards)} job postings from {url}")
         skipped_no_company = skipped_relevancy = skipped_no_pain = 0
         kept_robot_job = kept_hire = 0
@@ -639,31 +652,26 @@ class EnhancedJobBoardScraper(BaseScraper):
                 skipped_relevancy += 1
                 continue
 
-            # ── NEW: Classify opportunity using framework ─────────────────────
+            # ── Classify: FIT × PAIN × INTENT (workflow_ontology) ─────────────
+            # Operational postings ARE the opportunity. Only robot builders and
+            # desk work with no physical workflow are dropped.
             from app.services.automation_opportunity_classifier import (
                 classify_opportunity,
-                should_create_robot_job,
-                should_create_signal,
+                get_signal_type,
                 should_reject,
-                OpportunityTier,
             )
-            
-            opp_tier, opp_class = classify_opportunity(title, desc)
-            
-            # ── Tier 3: HUMAN_LABOR - Reject immediately ─────────────────────
+
+            opp_tier, opp_class = classify_opportunity(title, desc, company_name)
             if should_reject(opp_tier):
-                logger.debug(f"[JobBoardScraper] Rejected human labor: {title[:60]}")
+                logger.debug("[JobBoardScraper] not an opportunity: %s", title[:60])
                 skipped_no_pain += 1
                 continue
-            
-            # ── Tier 1: ROBOT_JOBS - Create robot_job ────────────────────────
+
             robot_job_extract = None
-            if should_create_robot_job(opp_tier):
-                # This is an explicit robot/automation request
-                if not should_persist_robot_job(title=title, employer=company_name):
-                    skipped_no_pain += 1
-                    continue
-                
+            sig_type = get_signal_type(opp_class)
+            strength = {1: 0.85, 2: 0.70, 3: 0.55}.get(int(opp_tier), 0.5)
+            summary_text = f"Automation opportunity ({sig_type}): {title}"
+            if should_persist_robot_job(title=title, employer=company_name):
                 job = extract_robot_job(
                     title=title,
                     description=desc,
@@ -673,32 +681,16 @@ class EnhancedJobBoardScraper(BaseScraper):
                     html=card.get("html") or "",
                     jsonld=card.get("jsonld"),
                 )
-                if not job.get("persistable"):
-                    skipped_no_pain += 1
-                    continue
-                
-                posting_state = status_from_posting_text(desc)
-                job["status"] = posting_state["status"]
-                job["opportunity_tier"] = int(opp_tier)
-                job["opportunity_class"] = int(opp_class)
-                
-                strength = 0.85  # High signal for explicit robot requests
-                sig_type = "robot_job"
-                summary_text = format_robot_job_signal(job)
-                robot_job_extract = job
-            
-            # ── Tier 2: SIGNALS - Create signal (market intelligence) ────────
-            elif should_create_signal(opp_tier):
-                # Market intelligence: leadership hires, labor challenges, etc.
-                from app.services.automation_opportunity_classifier import get_signal_type
-                
-                sig_type = get_signal_type(opp_class)
-                strength = 0.60  # Medium signal for pipeline opportunities
-                summary_text = f"Pipeline opportunity ({sig_type}): {title}"
-                # Do NOT set robot_job_extract - this goes to signals table only
-            
-            else:
-                # Unknown - skip
+                if job.get("persistable"):
+                    posting_state = status_from_posting_text(desc)
+                    job["status"] = posting_state["status"]
+                    job["opportunity_tier"] = int(opp_tier)
+                    job["opportunity_class"] = int(opp_class)
+                    sig_type = "robot_job"
+                    summary_text = format_robot_job_signal(job)
+                    robot_job_extract = job
+            if robot_job_extract is None and sig_type == "robot_job":
+                # Not persistable as a named job (chrome title, class dump): keep nothing.
                 skipped_no_pain += 1
                 continue
 
@@ -706,8 +698,10 @@ class EnhancedJobBoardScraper(BaseScraper):
             city = parts[0].strip() if parts else location
             state = parts[1].strip() if len(parts) > 1 else ""
 
-            industry = "Unknown"
-            url_lower = source_url.lower()
+            from app.services.workflow_ontology import industry_for
+
+            industry = industry_for(title, desc) or "Unknown"
+            url_lower = source_url.lower() if industry == "Unknown" else ""
             if any(w in url_lower for w in ["restaurant", "food", "kitchen", "cook", "dishwash", "crew", "qsr", "make+line", "make%20line", "bowl+assembly", "bowl%20assembly", "tortilla", "prep+cook", "fast+casual", "fast%20casual", "banquet+cook", "dining", "server", "busser"]):
                 industry = "Food Service"
             elif any(w in url_lower for w in ["janitor", "custodian", "restroom", "cleaning", "commercial+cleaning"]):
@@ -795,3 +789,11 @@ class EnhancedJobBoardScraper(BaseScraper):
             self.request_count,
             len(self.session_seen_fingerprints),
         )
+        return {
+            "found": len(cards),
+            "robot_jobs": kept_robot_job,
+            "signals_only": kept_hire,
+            "skipped_relevancy": skipped_relevancy,
+            "skipped_no_company": skipped_no_company,
+            "skipped_not_opportunity": skipped_no_pain,
+        }

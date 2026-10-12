@@ -730,6 +730,20 @@ def _scheduled_job_board_loop():
         time.sleep(max(3600, int(interval_hours * 3600)))
 
 
+def _scheduled_opportunity_feeds_loop():
+    """API feeds (Amazon, ATS boards, Adzuna/Jooble/USAJOBS/SAM.gov). Hourly, rotating."""
+    from app.scrapers.opportunity_feed_scraper import run_opportunity_feeds
+
+    every_min = max(15, int(os.getenv("OPPORTUNITY_FEEDS_EVERY_MINUTES", "60")))
+    time.sleep(max(60, int(os.getenv("OPPORTUNITY_FEEDS_FIRST_RUN_DELAY_MINUTES", "8")) * 60))
+    while True:
+        try:
+            logger.info("Opportunity feeds finished: %s", run_opportunity_feeds())
+        except Exception as exc:
+            logger.exception("Opportunity feeds failed: %s", exc)
+        time.sleep(every_min * 60)
+
+
 def _start_scheduled_job_board():
     """Start job-board Robot Job ingest when Celery Beat is not running (worker machine)."""
     from app.runtime_role import is_worker_process
@@ -756,6 +770,11 @@ def _start_scheduled_job_board():
         return
     t = threading.Thread(target=_scheduled_job_board_loop, daemon=True, name="job-board-scraper")
     t.start()
+    if os.getenv("ENABLE_OPPORTUNITY_FEEDS", "1").strip().lower() not in ("0", "false", "no"):
+        threading.Thread(
+            target=_scheduled_opportunity_feeds_loop, daemon=True, name="opportunity-feeds"
+        ).start()
+        logger.info("Opportunity feeds thread started (every %s min)", os.getenv("OPPORTUNITY_FEEDS_EVERY_MINUTES", "60"))
     logger.info(
         "In-app scheduled job-board thread started (every %s hours, first run in %s min)",
         os.getenv("JOB_BOARD_EVERY_HOURS", "6"),
