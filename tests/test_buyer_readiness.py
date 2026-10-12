@@ -81,7 +81,7 @@ def test_rank_buyers_script_end_to_end(tmp_path, monkeypatch):
     assert prof["buyer_readiness"]["stage"] == "buying_now"
 
 
-@pytest.mark.parametrize("name", ["Sri Lanka", "Dwbrobot", "aHR0cHM6Ly9haXJwb3J0LmV4YW1wbGUuY29tL3Rlcm1pbmFs",
+@pytest.mark.parametrize("name", ["Sri Lanka", "Hoboken", "Hoboken, NJ", "Henderson", "Las Vegas", "Dwbrobot", "aHR0cHM6Ly9haXJwb3J0LmV4YW1wbGUuY29tL3Rlcm1pbmFs",
                                   "How Robots Are Changing Airports", "Kroger to open new DC"])
 def test_junk_names_are_never_buyers(name):
     r = assess_company(name, [news("County issues RFP for autonomous floor scrubbing robots", "rfp_posted")])
@@ -89,7 +89,8 @@ def test_junk_names_are_never_buyers(name):
 
 
 @pytest.mark.parametrize("name", ["Kenco Logistics", "GXO", "Japan Airlines", "Point to Point Logistics",
-                                  "Bank of America", "Clark County Department of Aviation", "Omni Hotels & Resorts"])
+                                  "Bank of America", "Clark County Department of Aviation", "Omni Hotels & Resorts",
+                                  "City of Hoboken", "Hoboken University Medical Center", "Providence", "Target"])
 def test_real_names_pass(name):
     from app.services.buyer_readiness import buyer_name_problem
     assert buyer_name_problem(name) is None

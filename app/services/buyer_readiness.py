@@ -19,6 +19,8 @@ company a buyer on their own.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
+from pathlib import Path
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -169,6 +171,36 @@ _HEADLINE_RE = re.compile(
     r"|\bto (?:open|build|deploy|add|launch|use|test|buy|invest|expand|hire|cut|replace|roll)\b",
     re.I,
 )
+# Bare place names that are also well-known buyer brands (Providence health system, …).
+_PLACE_NAME_BRANDS = frozenset({"providence", "columbia"})
+
+
+@lru_cache(maxsize=1)
+def _place_names() -> frozenset[str]:
+    """US cities ≥15k, world cities ≥100k, US states, countries (app/data/place_names.txt)."""
+    path = Path(__file__).resolve().parents[1] / "data" / "place_names.txt"
+    try:
+        with open(path, encoding="utf-8") as fh:
+            return frozenset(line.strip() for line in fh if line.strip() and not line.startswith("#"))
+    except OSError:
+        return frozenset()
+
+
+def _is_place_name(low: str) -> bool:
+    """Exact match only: 'Hoboken' is a place; 'City of Hoboken' / 'Hoboken Hospital' are not."""
+    low = re.sub(r",\s*[a-z]{2}$", "", low).strip()   # 'hoboken, nj' → 'hoboken'
+    if low in _PLACE_NAME_BRANDS:
+        return False
+    if low not in _place_names():
+        return False
+    try:
+        from app.services.known_brands import is_allowlisted_company_name
+
+        return not is_allowlisted_company_name(low)
+    except Exception:
+        return True
+
+
 _ENCODED_RE = re.compile(r"^[A-Za-z0-9+/=_-]{20,}$")
 
 
@@ -180,7 +212,7 @@ def buyer_name_problem(name: str) -> Optional[str]:
         return "empty name"
     if _ENCODED_RE.match(n) and (any(c.isdigit() for c in n) or n != n.lower() and n != n.upper() and " " not in n and len(n) >= 24):
         return "encoded string, not a company"
-    if low in _COUNTRIES_REGIONS:
+    if low in _COUNTRIES_REGIONS or _is_place_name(low):
         return "place name, not a company"
     words = n.split()
     if len(words) >= 6 or (len(words) >= 3 and _HEADLINE_RE.search(n)):
