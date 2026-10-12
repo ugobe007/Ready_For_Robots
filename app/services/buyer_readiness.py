@@ -1,20 +1,23 @@
 """Buyer readiness — is this COMPANY ready to buy or pilot robots?
 
-The unit is the company, not the job posting. A dishwasher posting is not an
-opportunity; it is (at most) supporting evidence that a company has automatable
-work it struggles to staff. What makes a buyer:
+The unit is the company, not the job posting. Buyers rarely say "we will buy a
+robot". They say they are budgeting, modernizing, realigning workflows, or that
+they can't keep staff. Stages, strongest first:
 
-  BUYING NOW   tender / RFP / RFQ for robots or automation; pilot or purchase
-               announced; "evaluating vendors"
-  EVALUATING   hiring automation / robotics / CI people at an operator; automation
-               program, roadmap or budget stated; new automated facility planned
-  EXPANDING    already runs robots/AMRs/cobots (postings say "maintain robots",
-               "work alongside AMRs") — proven buyer, next site / next workflow
-  PRIMED       no intent yet, but heavy pain at scale on work robots do today
-               (many open postings, bonuses, shortage language, multiple sites)
+  BUYING NOW   tender / RFP; pilot or purchase; vendor selection
+  EVALUATING   automation hire, automation program/budget/investment, new
+               automated facility — OR modernizing while under labor pressure
+  EXPANDING    already runs robots — next site / next workflow
+  PREPARING    indirect intent: budgeting/capex, modernizing or upgrading
+               operations, redesigning workflows, cost/efficiency programs,
+               workforce transformation — or labor pressure (turnover, shortage,
+               wage hikes) in a labor-heavy industry (restaurants, warehouses,
+               retail, janitorial, airports, commercial laundry, logistics,
+               factories, hotels/casinos, hospitals, farms)
+  PRIMED       heavy hiring volume for work robots do today, nothing else yet
+  WATCH        not enough evidence; robot vendors; junk names
 
-Score 0-100. Labor postings alone cap at PRIMED (max 45) — they never make a
-company a buyer on their own.
+Score 0-100. Labor postings alone cap at PRIMED (max 45).
 """
 from __future__ import annotations
 
@@ -53,6 +56,8 @@ EVALUATING = (
     (r"(?:invest\w*|\$\d[\d.,]*\s*(?:million|billion|m|bn)\b)\W+(?:\w+\W+){0,6}?" + _R, 25, "automation investment"),
     (r"(?:new|greenfield|state[- ]of[- ]the[- ]art|highly|fully)\s+automated\s+(?:facility|distribution center|dc|warehouse|plant|fulfillment center|kitchen)", 25, "automated facility"),
     (r"lights[- ]out|industry 4\.0|smart (?:factory|warehouse)", 12, "automation strategy"),
+    (r"(?:explor|consider|evaluat|stud(?:y|ies|ying)|assess|look\w* (?:at|into)|weigh)\w*\W+(?:\w+\W+){0,4}?"
+     r"(?:robot\w*|automat\w*|autonomous|technology (?:to|that) (?:replace|reduce|assist))", 20, "exploring robots / automation"),
     (r"(?:open|build|construct|break\w* ground on|plan)\w*\W+(?:\w+\W+){0,6}?" + _R, 22, "automated facility"),
 )
 
@@ -60,6 +65,44 @@ EXPANDING = (
     (r"(?:maintain|troubleshoot|repair|service|support|operate|monitor|supervise|program)\w*\W+(?:\w+\W+){0,4}?" + _R, 18, "already runs robots"),
     (r"(?:alongside|with|next to)\W+(?:\w+\W+){0,2}?(?:robots?|cobots?|amrs?|agvs?|autonomous)", 18, "already runs robots"),
     (r"\b(?:robot|cobot|amr|agv|asrs|automation) (?:technician|tech|operator|attendant|coordinator|supervisor|specialist)s?\b", 18, "robot ops role"),
+)
+
+# Indirect intent: the decision to evaluate robots is forming.
+_OPS = (r"(?:operations?|facilit(?:y|ies)|supply chain|distribution|warehous\w*|fulfillment|kitchens?|restaurants?|stores?|"
+        r"plants?|factor(?:y|ies)|manufacturing|production|logistics|network|fleet|workforce|labor model|back[- ]of[- ]house|"
+        r"housekeeping|laundry|terminals?|airport|hotels?|propert(?:y|ies)|campus|dcs?|processes|workflows?)")
+PREPARING = (
+    (r"(?:budget\w*|capital (?:plan|budget|spending|expenditure|investment)s?|capex|allocat\w*|earmark\w*|set aside)"
+     r"\W+(?:\w+\W+){0,8}?(?:technology|equipment|efficien\w*|moderni[sz]\w*|upgrad\w*|" + _OPS + r")", 12, "budgeting for operations"),
+    (r"(?:moderni[sz]\w*|upgrad\w*|overhaul\w*|transform\w*|retool\w*|refresh\w*|revamp\w*|reinvent\w*|future[- ]proof\w*)"
+     r"\W+(?:\w+\W+){0,4}?" + _OPS, 10, "modernizing operations"),
+    (r"(?:re-?align\w*|re-?design\w*|re-?engineer\w*|re-?imagin\w*|re-?structur\w*|re-?think\w*|streamlin\w*|optimi[sz]\w*|"
+     r"standardi[sz]\w*)\W+(?:\w+\W+){0,4}?" + _OPS, 9, "redesigning workflows"),
+    (r"(?:efficiency|productivity|cost[- ](?:reduction|savings?|cutting|out)|margin (?:improvement|expansion)|operational excellence|"
+     r"lean|continuous improvement)\W+(?:\w+\W+){0,3}?(?:program|initiative|plan|push|drive|effort|target|goal|strategy)", 10, "efficiency program"),
+    (r"(?:reduce|lower|cut|offset|control|manage)\w*\W+(?:\w+\W+){0,3}?(?:labor|labour|staffing|personnel|headcount|wage|payroll)\s*(?:costs?|expenses?|spend|hours)?", 10, "labor cost focus"),
+    (r"(?:do more with (?:less|fewer)|fewer (?:workers|employees|people|staff)|smaller (?:workforce|crews?|staff)|"
+     r"labor[- ]sav\w*|labor[- ]light|reduce reliance on (?:labor|workers|staff))", 12, "labor-light model"),
+    (r"(?:workforce|labor) (?:transformation|planning|strategy|model|optimization)|future of work|reskill\w*|upskill\w*", 8, "workforce transformation"),
+
+    (r"(?:technology|tech|digital|innovation) (?:investments?|upgrades?|roadmap|transformation|initiative|spend)", 8, "technology investment"),
+    (r"(?:smart|connected|next[- ]gen(?:eration)?|store of the future|kitchen of the future|hotel of the future)\s+"
+     r"(?:stores?|kitchens?|hotels?|warehouses?|factor(?:y|ies)|plants?|airports?|buildings?|restaurants?)", 10, "next-gen facility"),
+    (r"(?:new|additional|second|third|larger|expanded)\s+(?:distribution|fulfillment|cold storage|production|processing|manufacturing|"
+     r"central|commissary|laundry)\s+(?:center|facility|plant|kitchen|hub|campus)", 8, "new facility"),
+)
+
+# Labor pressure that pushes companies toward robots.
+PRESSURE = (
+    (r"(?:labor|labour|staffing|worker|workforce|employee|driver|nurse|kitchen|housekeeping) (?:shortages?|crunch|crisis|challenges?|gap|constraints?|woes)",
+     12, "labor shortage"),
+    (r"(?:high|record|rising|chronic|elevated)\s+(?:employee\s+|staff\s+|worker\s+)?(?:turnover|attrition|churn)|turnover (?:rates?|of \d+)", 12, "high turnover"),
+    (r"(?:can'?t|cannot|unable to|struggl\w* to|hard to|difficult to|difficulty) (?:find|hire|keep|retain|recruit|staff|fill)", 12, "can't staff"),
+    (r"(?:minimum wage|wage (?:hikes?|increases?|inflation|pressure|growth)|rising (?:labor|wage) costs?|labor cost (?:pressure|inflation|increases?)|"
+     r"higher (?:labor|wage) costs?|\$20 (?:an hour|minimum)|fast food council|ab ?1228)", 10, "wage pressure"),
+    (r"(?:union|strike|walkout|labor dispute|collective bargaining|work stoppage)", 6, "labor relations"),
+    (r"(?:reduced|cut|limited|shortened) (?:hours|shifts|service|menu)|closed (?:early|dining rooms?)|(?:due to|because of) (?:staffing|labor)", 10, "service cut from staffing"),
+    (r"(?:injur\w*|osha|ergonomic\w*|workers'? comp\w*|heat illness|repetitive strain)", 6, "injury / safety"),
 )
 
 PAIN = (
@@ -74,7 +117,29 @@ _COMPILED = {
     "evaluating": [(re.compile(p, re.I), w, l) for p, w, l in EVALUATING],
     "expanding": [(re.compile(p, re.I), w, l) for p, w, l in EXPANDING],
     "pain": [(re.compile(p, re.I), w, l) for p, w, l in PAIN],
+    "preparing": [(re.compile(p, re.I), w, l) for p, w, l in PREPARING],
+    "pressure": [(re.compile(p, re.I), w, l) for p, w, l in PRESSURE],
 }
+
+# Industries where labor pressure translates into robot evaluation.
+_LABOR_HEAVY_RE = re.compile(
+    r"\b(?:restaurants?|food ?service|quick[- ]service|qsr|fast[- ]casual|dining|cafeterias?|catering|kitchens?|"
+    r"warehous\w*|logistics|distribution|fulfillment|3pl|supply chain|freight|parcel|trucking|cold (?:chain|storage)|"
+    r"retail|grocer\w*|supermarkets?|department stores?|convenience|pharmac\w*|"
+    r"janitorial|cleaning|custodial|facilit\w*|building services|property management|"
+    r"airports?|aviation|airlines?|"
+    r"laundr\w*|linen|uniform|"
+    r"hotels?|hospitality|resorts?|casinos?|gaming|cruise|"
+    r"factor(?:y|ies)|manufactur\w*|plants?|food processing|meat|poultry|bakery|packaging|bottling|"
+    r"hospitals?|health ?care|health system|senior living|nursing|"
+    r"agricultur\w*|farms?|growers?|produce|dairy|"
+    r"parking|car wash|waste|recycling)\b",
+    re.I,
+)
+
+
+def is_labor_heavy(industry: str = "", company_name: str = "") -> bool:
+    return bool(_LABOR_HEAVY_RE.search(f"{industry or ''} {company_name or ''}"))
 
 # Stories about vendors (funding, launches) are not buyer evidence.
 _VENDOR_STORY_RE = re.compile(
@@ -92,7 +157,7 @@ _NOT_ROBOT_AUTOMATION_RE = re.compile(
     re.I,
 )
 
-STAGES = ("buying_now", "evaluating", "expanding", "primed", "watch")
+STAGES = ("buying_now", "evaluating", "expanding", "preparing", "primed", "watch")
 
 
 @dataclass
@@ -142,14 +207,42 @@ def _posting_title(text: str) -> Optional[str]:
 # Typed signals the intelligence pipeline already writes. One credit per type per
 # company (plus a little for repeats) — the text patterns below still add detail.
 SIGNAL_TYPE_WEIGHTS: dict[str, tuple[str, float, str]] = {
+    # buying now
     "rfp_posted": ("buy_now", 35, "tender / RFP"),
     "government_contract": ("buy_now", 30, "government contract"),
     "vendor_selection": ("buy_now", 35, "vendor selection"),
     "pilot_success": ("buy_now", 30, "pilot / trial"),
+    # already running robots
     "robot_installation": ("expanding", 20, "robots installed"),
+    "scale_expansion": ("expanding", 20, "scaling robots"),
+    "roi_documented": ("expanding", 18, "robot ROI documented"),
+    # evaluating
     "automation_intent": ("evaluating", 15, "automation intent"),
-    "automation_interest": ("evaluating", 8, "automation interest"),
     "automation_leadership_hire": ("evaluating", 20, "automation hire"),
+    "budget_allocated": ("evaluating", 15, "budget allocated"),
+    "factory_automation": ("evaluating", 12, "factory automation"),
+    "packaging_automation": ("evaluating", 12, "packaging automation"),
+    "automation_interest": ("evaluating", 8, "automation interest"),
+    "economics_driven": ("evaluating", 10, "automation economics"),
+    "competitive_response": ("evaluating", 10, "competitor automating"),
+    "problem_solution": ("evaluating", 10, "automation problem/solution"),
+    "equipment_integration": ("evaluating", 8, "equipment integration"),
+    # preparing (indirect intent)
+    "capex": ("preparing", 12, "capital spending"),
+    "warehouse_throughput": ("preparing", 10, "throughput pressure"),
+    "production_capacity": ("preparing", 8, "capacity pressure"),
+    "quality_bottleneck": ("preparing", 8, "quality bottleneck"),
+    "material_handling": ("preparing", 8, "material handling problem"),
+    "repetitive_process": ("preparing", 8, "repetitive process"),
+    "trade_show_attendance": ("preparing", 8, "automation trade show"),
+    "expansion": ("preparing", 6, "expansion"),
+    "strategic_hire": ("preparing", 6, "operations leadership hire"),
+    "ma_activity": ("preparing", 4, "M&A / integration"),
+    # labor pressure
+    "labor_shortage": ("pressure", 12, "labor shortage"),
+    "labor_pain": ("pressure", 4, "labor pain"),
+    "safety_incident": ("pressure", 6, "safety incident"),
+    "service_consistency": ("pressure", 4, "service consistency"),
 }
 
 _COUNTRIES_REGIONS = frozenset(
@@ -225,7 +318,7 @@ def buyer_name_problem(name: str) -> Optional[str]:
 
 
 def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[datetime] = None,
-                   recent_days: int = 180) -> BuyerReadiness:
+                   recent_days: int = 180, industry: str = "") -> BuyerReadiness:
     now = now or datetime.now(timezone.utc)
     cutoff = now - timedelta(days=recent_days)
     vendor = is_robot_vendor(company_name)
@@ -278,19 +371,26 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
         elif _VENDOR_STORY_RE.search(text) and vendor:
             continue
 
-        for kind in ("buy_now", "evaluating", "expanding"):
+        for kind in ("buy_now", "evaluating", "expanding", "preparing", "pressure"):
+            if title is not None and kind in ("preparing", "pressure"):
+                continue  # posting boilerplate ("optimize workflows") is not company intent
             for rx, w, label in _COMPILED[kind]:
                 m = rx.search(blob)
                 if not m:
                     continue
                 key = (kind, label + "|" + (title or text[:80]).lower())
                 if key in seen_labels:
+                    if kind in ("preparing", "pressure"):
+                        continue
                     break
                 seen_labels.add(key)
                 weights[kind] += w * recency
+                if kind == "pressure":
+                    pain_labels[label] += 1
                 snippet = text[max(0, m.start() - 60): m.end() + 60].strip() if title is None else title
                 evidence.append(Evidence(kind, label, snippet[:240], url, seen))
-                break
+                if kind not in ("preparing", "pressure"):
+                    break  # strong kinds: one credit per item; indirect cues stack
         for rx, w, label in _COMPILED["pain"]:
             if rx.search(blob):
                 pain_labels[label] += 1
@@ -303,10 +403,18 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
     pain_pts = min(15.0, sum(w for rx, w, l in _COMPILED["pain"] for _ in range(min(pain_labels.get(l, 0), 3))))
     primed = min(45.0, vol + pain_pts + (5 if len(families) >= 2 else 0))
 
+    labor_heavy = is_labor_heavy(industry, company_name)
     buy = min(60.0, weights["buy_now"])
     evalu = min(40.0, weights["evaluating"])
     expand = min(30.0, weights["expanding"])
-    score = min(100.0, buy + evalu + expand + (primed * (0.5 if (buy or evalu or expand) else 1.0)))
+    prep = min(30.0, weights["preparing"])
+    pressure = min(25.0, weights["pressure"] * (1.0 if labor_heavy else 0.5))
+    if labor_heavy:
+        primed = min(45.0, primed * 1.2)
+    score = min(100.0, buy + evalu + expand + 0.6 * prep + 0.5 * pressure
+                + (primed * (0.5 if (buy or evalu or expand) else 1.0)))
+    under_pressure = pressure >= 10 or primed >= 24
+    labor_focus = any(e.label in ("labor cost focus", "labor-light model", "workforce transformation") for e in evidence)
 
     name_problem = buyer_name_problem(company_name)
     if vendor:
@@ -314,18 +422,32 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
     elif name_problem:
         stage, score, why = "watch", 0.0, name_problem
     elif buy >= 30:
-        stage, why = "buying_now", "tender, pilot or vendor selection on record"
+        labels = list(dict.fromkeys(e.label for e in evidence if e.kind == "buy_now"))[:3]
+        stage, why = "buying_now", ", ".join(labels) or "tender, pilot or vendor selection on record"
     elif evalu >= 20:
-        stage, why = "evaluating", "hiring automation talent / automation program stated"
+        labels = list(dict.fromkeys(e.label for e in evidence if e.kind == "evaluating"))[:3]
+        stage, why = "evaluating", ", ".join(labels) or "automation evaluation on record"
+    elif prep >= 8 and under_pressure:
+        stage, why = "evaluating", "modernizing operations while under labor pressure"
+    elif prep >= 20 and labor_heavy and labor_focus:
+        stage, why = "evaluating", "modernizing operations to reduce labor"
     elif expand >= 18:
         stage, why = "expanding", "already operates robots — next site or next workflow"
+    elif evalu >= 8 and (prep >= 8 or under_pressure):
+        stage, why = "preparing", "automation interest plus modernization or labor pressure"
+    elif prep >= 15 or (prep >= 8 and labor_heavy):
+        stage, why = "preparing", "budgeting, modernizing or redesigning operations"
+    elif pressure >= 12 and labor_heavy:
+        stage, why = "preparing", "labor pressure in a labor-heavy industry"
     elif primed >= 24:
         stage, why = "primed", f"{postings} open postings for work robots do today"
     else:
         stage, why = "watch", "not enough buying evidence yet"
 
-    order = {"buy_now": 0, "evaluating": 1, "expanding": 2}
+    order = {"buy_now": 0, "evaluating": 1, "expanding": 2, "preparing": 3, "pressure": 4}
     evidence.sort(key=lambda e: (order.get(e.kind, 9), e.seen_at or ""), reverse=False)
+    seen_ev: set[str] = set()
+    evidence = [e for e in evidence if not (e.label in seen_ev or seen_ev.add(e.label))]
     return BuyerReadiness(
         company=company_name,
         score=round(score, 1),

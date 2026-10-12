@@ -85,3 +85,32 @@ labor-title searches only fill 4 rotating slots (`JOB_SCRAPER_LEGACY_URLS_PER_RU
 Env knobs: `ENABLE_OPPORTUNITY_FEEDS`, `OPPORTUNITY_FEEDS_EVERY_MINUTES` (60),
 `OPPORTUNITY_FEEDS_MAX_SOURCES` (60), `JOB_SCRAPER_LEGACY_URLS_PER_RUN` (4),
 `ENABLE_ONTOLOGY_TARGETS`, and the API keys in `robot_opportunity_sources.py`.
+
+## Indirect buying signals and the daily buyers email (2026-10-12)
+
+Buyers rarely say "we will buy a robot". `buyer_readiness.py` now also reads:
+
+* **Indirect intent** — budgeting / capex, modernizing or upgrading operations,
+  redesigning or realigning workflows, efficiency and cost programs, labor-cost
+  focus, workforce transformation, next-gen facilities, new DCs/plants/kitchens.
+* **Labor pressure** — shortages, high turnover, can't staff, wage pressure,
+  service cuts from staffing, injuries — weighted fully only in labor-heavy
+  industries (restaurants, warehouses/logistics, retail/grocery, janitorial,
+  airports, commercial laundry, hotels/casinos, factories, hospitals, farms).
+* **Typed signals** already in `signals`: `budget_allocated`, `capex`,
+  `scale_expansion`, `roi_documented`, `economics_driven`, `labor_shortage`, …
+
+Rules: modernizing **and** under labor pressure → Evaluating. Indirect intent or
+labor pressure alone → new **Preparing** stage. Job-posting boilerplate never
+counts as company intent.
+
+**Daily email** (same 14:00 UTC schedule, same endpoint/recipients) now sends
+companies, not robot jobs: re-scores everyone, then lists every Buying now and
+Evaluating company with up to 3 evidence lines and links, the top 40 Preparing,
+and a CSV (`robot-buyers-YYYY-MM-DD.csv`) with all of them.
+
+| Env | Default | |
+|---|---|---|
+| `DAILY_REPORT_MODE` | `buyers` | `jobs` restores the old robot-jobs email |
+| `DAILY_BUYERS_STAGES` | `buying_now,evaluating,preparing` | which stages to send |
+| `DAILY_BUYERS_REFRESH` | `1` | re-score all companies before sending |

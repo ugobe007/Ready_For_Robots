@@ -485,6 +485,7 @@ def test_send_reports_in_progress_when_lock_held(monkeypatch, db_session):
 
 
 def test_compose_failure_releases_claim(monkeypatch, db_session):
+    monkeypatch.setenv("DAILY_REPORT_MODE", "jobs")
     monkeypatch.delenv("HUNTER_API_KEY", raising=False)
     monkeypatch.setattr(
         "app.services.daily_jobs_report.last_sent_day", lambda: None
@@ -507,6 +508,7 @@ def test_compose_failure_releases_claim(monkeypatch, db_session):
 
 
 def test_send_emails_operator(monkeypatch, db_session):
+    monkeypatch.setenv("DAILY_REPORT_MODE", "jobs")
     monkeypatch.delenv("HUNTER_API_KEY", raising=False)
     db_session.add(_job(job_key="named-send"))
     db_session.commit()
@@ -580,3 +582,32 @@ def test_missed_send_runs_once_when_not_sent_today(monkeypatch, db_session):
     again = maybe_send_missed_daily_jobs_report(db_session)
     assert again["sent"] is False
     assert again["reason"] == "Already sent today"
+
+
+def test_send_emails_buyers_by_default(monkeypatch, db_session):
+    """Default daily email: companies ready to buy/pilot robots, with evidence + CSV."""
+    from app.models.company import Company
+    from app.models.signal import Signal
+
+    monkeypatch.delenv("DAILY_REPORT_MODE", raising=False)
+    c = Company(name="Clark County Department of Aviation", industry="Aviation")
+    db_session.add(c); db_session.flush()
+    db_session.add(Signal(company_id=c.id, signal_type="rfp_posted", signal_strength=0.9,
+                          signal_text="Request for proposals: autonomous floor scrubbing robots",
+                          source_url="https://example.com/rfp"))
+    db_session.commit()
+    sent = []
+    monkeypatch.setattr("app.services.daily_jobs_report._claim_report_day", lambda day: True)
+    monkeypatch.setattr("app.services.daily_jobs_report._mark_report_sent", lambda *a, **k: None)
+    monkeypatch.setattr("app.services.resend_email.send_email_via_resend",
+                        lambda **kw: sent.append(kw) or {"resend_id": "re_test"})
+    result = send_daily_jobs_report(db_session, force=True)
+    assert result["sent"] is True and result["kind"] == "buyers"
+    assert result["counts"]["buying_now"] == 1
+    assert sent[0]["subject"].startswith("Robot buyers — 1 buying now")
+    assert "Clark County Department of Aviation" in sent[0]["body_text"]
+    assert "https://example.com/rfp" in sent[0]["body_text"]
+    att = sent[0]["attachments"][0]
+    assert att["filename"].startswith("robot-buyers-") and att["content_type"] == "text/csv"
+    stored = db_session.query(DailyJobsReportEdition).one()
+    assert stored.csv_text.startswith("rank,company,stage")

@@ -908,6 +908,8 @@ def send_daily_jobs_report(
             "resend_id": payload.get("resend_id"),
             "sent_at": payload.get("sent_at"),
         }
+    if daily_report_mode() == "buyers":
+        return _send_daily_buyers_report(db, today=today, recipients=recipients, force=force)
     hunter: dict[str, Any] = {}
     try:
         try:
@@ -961,6 +963,80 @@ def send_daily_jobs_report(
             "resend_id": result.get("resend_id"),
             "jobs": report["jobs"],
             "hunter": hunter,
+        }
+    except Exception:
+        if not force:
+            _release_report_day(today)
+        raise
+
+
+def daily_report_mode() -> str:
+    """'buyers' (default): companies ready to buy/pilot robots. 'jobs': legacy robot-jobs list."""
+    mode = (os.getenv("DAILY_REPORT_MODE") or "buyers").strip().lower()
+    return mode if mode in ("buyers", "jobs") else "buyers"
+
+
+def _send_daily_buyers_report(
+    db: Session, *, today: str, recipients: list[str], force: bool
+) -> dict[str, Any]:
+    """Same schedule, lock and recipients as the jobs report; buyer content."""
+    from app.services.daily_buyers_report import (
+        _subject,
+        buyers_csv_attachment,
+        compose_daily_buyers_report,
+        render_daily_buyers_csv,
+        render_daily_buyers_html,
+        render_daily_buyers_text,
+    )
+
+    try:
+        report = compose_daily_buyers_report(db)
+        subject = _subject(report)
+        body = render_daily_buyers_text(report)
+        html_body = render_daily_buyers_html(report)
+        csv_text = render_daily_buyers_csv(report)
+        store_daily_jobs_report_edition(db, report, body_text=body, csv_text=csv_text)
+        from app.services.resend_email import ResendEmailError, send_email_via_resend
+
+        try:
+            result = send_email_via_resend(
+                to_email=recipients,
+                subject=subject,
+                body_text=body,
+                body_html=html_body,
+                from_display_name="Ready For Robots · Buyers",
+                attachments=[buyers_csv_attachment(report, csv_text)],
+                idempotency_key=_idempotency_key(today, force=force),
+            )
+        except ResendEmailError as exc:
+            logger.warning("daily buyers report email failed: %s", exc)
+            if not force:
+                _release_report_day(today)
+            return {"sent": False, "reason": str(exc), "recipients": recipients}
+        summary = [
+            {"rank": b["rank"], "company": b["company"], "stage": b["stage"], "score": b["score"]}
+            for b in report["buyers"][:100]
+        ]
+        sent_payload = {
+            "date": today,
+            "kind": "buyers",
+            "count": report["count"],
+            "counts": report["counts"],
+            "jobs": summary,
+            "sent_at": datetime.now(timezone.utc).isoformat(),
+            "resend_id": result.get("resend_id"),
+            "recipients": recipients,
+        }
+        _mark_report_sent(today, sent_payload)
+        return {
+            "sent": True,
+            "kind": "buyers",
+            "date": today,
+            "recipients": recipients,
+            "count": report["count"],
+            "counts": report["counts"],
+            "resend_id": result.get("resend_id"),
+            "jobs": summary,
         }
     except Exception:
         if not force:

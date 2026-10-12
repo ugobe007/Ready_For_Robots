@@ -100,3 +100,80 @@ def test_real_names_pass(name):
                                          ("robot_installation", "expanding"), ("automation_intent", "watch")])
 def test_typed_signals_count(stype, stage):
     assert assess_company("Sysco", [news("Sysco update", stype)]).stage == stage
+
+
+# ── Indirect intent and labor pressure (Bob, 2026-10-12) ────────────────────
+
+@pytest.mark.parametrize("name,industry,text,stype,stage", [
+    ("Target", "Retail",
+     "Target is modernizing its supply chain and redesigning store fulfillment workflows to lower labor costs", "news", "evaluating"),
+    ("Darden Restaurants", "Restaurants",
+     "Darden cites high turnover and rising wage costs; plans kitchen technology investments", "news", "evaluating"),
+    ("Harry Reid International Airport", "Aviation",
+     "Airport upgrading terminals and facing staffing shortages among custodial crews", "news", "evaluating"),
+    ("Hilton", "Hospitality", "Hilton exploring robots for room service delivery", "news", "evaluating"),
+    ("Chipotle", "Restaurants", "Chipotle struggles to hire kitchen staff amid labor shortage", "news", "preparing"),
+    ("ABM Industries", "Janitorial", "ABM budgeting for equipment upgrades across facilities", "news", "preparing"),
+    ("Prudential Overall Supply", "Commercial Laundry", "Laundry plant faces chronic turnover", "labor_shortage", "preparing"),
+    ("Kroger", "Grocery", "Kroger capital plan", "capex", "preparing"),
+])
+def test_indirect_intent_is_seen(name, industry, text, stype, stage):
+    r = assess_company(name, [news(text, stype)], industry=industry)
+    assert r.stage == stage, (r.stage, r.why, [e.label for e in r.evidence])
+
+
+@pytest.mark.parametrize("name,industry,text", [
+    ("Acme SaaS", "Software", "Acme modernizing its cloud infrastructure"),
+    ("Bank of America", "Banking", "Bank of America cuts costs with efficiency program"),
+    ("Big Law LLP", "Legal", "Firm faces associate turnover"),
+])
+def test_indirect_language_outside_physical_work_stays_watch(name, industry, text):
+    assert assess_company(name, [news(text)], industry=industry).stage == "watch"
+
+
+def test_posting_boilerplate_is_not_company_intent():
+    sigs = [posting("Warehouse Associate - optimize workflows, reduce labor costs")] * 3
+    assert assess_company("Order Co", sigs, industry="Logistics").stage == "watch"
+
+
+def test_daily_buyers_report_lists_stages_with_evidence(monkeypatch):
+    from app.services import daily_buyers_report as dbr
+
+    engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})
+    Base.metadata.create_all(bind=engine)
+    db = sessionmaker(bind=engine)()
+    rows = [
+        ("Clark County Department of Aviation", "Aviation", "rfp_posted",
+         "Request for proposals: autonomous floor scrubbing robots for terminals"),
+        ("Target", "Retail", "news",
+         "Target is modernizing its supply chain and redesigning store workflows to lower labor costs"),
+        ("Chipotle", "Restaurants", "news", "Chipotle struggles to hire kitchen staff amid labor shortage"),
+        ("Wynn Las Vegas", "Hospitality", "robot_job",
+         "ROBOT TASK SIGNAL | Dishwasher | Warewash | pay unknown | specs unknown | open | Wynn"),
+    ]
+    for name, ind, st, text in rows:
+        c = Company(name=name, industry=ind)
+        db.add(c); db.flush()
+        db.add(Signal(company_id=c.id, signal_type=st, signal_text=text, signal_strength=0.8,
+                      source_url=f"https://example.com/{c.id}"))
+    db.commit()
+
+    report = dbr.compose_daily_buyers_report(db, refresh=True)
+    assert report["counts"] == {"buying_now": 1, "evaluating": 1, "preparing": 1}
+    assert [b["company"] for b in report["buyers"]] == ["Clark County Department of Aviation", "Target", "Chipotle"]
+    text = dbr.render_daily_buyers_text(report)
+    assert "BUYING NOW" in text and "EVALUATING" in text and "PREPARING" in text
+    assert "https://example.com/" in text and "Wynn" not in text
+    csv_text = dbr.render_daily_buyers_csv(report)
+    assert csv_text.splitlines()[0].startswith("rank,company,stage,score,why,evidence_1")
+    assert len(csv_text.splitlines()) == 4
+    assert "1 buying now, 1 evaluating, 1 preparing" in dbr._subject(report)
+
+
+def test_daily_send_uses_buyers_mode_by_default(monkeypatch):
+    from app.services import daily_jobs_report as djr
+
+    monkeypatch.delenv("DAILY_REPORT_MODE", raising=False)
+    assert djr.daily_report_mode() == "buyers"
+    monkeypatch.setenv("DAILY_REPORT_MODE", "jobs")
+    assert djr.daily_report_mode() == "jobs"
