@@ -607,7 +607,6 @@ def select_daily_report_rows(db: Session, *, limit: int = TOP_N) -> list[Any]:
             .filter(RobotJob.company_name != "")
             .filter(RobotJob.locality.isnot(None))
             .filter(RobotJob.locality != "")
-            .filter(_robot_ask_clause())
             .order_by(
                 desc(status_rank),
                 desc(RobotJob.existence_confidence),
