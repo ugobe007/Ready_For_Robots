@@ -393,9 +393,9 @@ class EnhancedNewsScraper:
             logger.debug("news_scraper_enhanced: rejected %r — failed validator", company_name)
             return
 
-        company = self.db.query(Company).filter(
-            Company.name == company_name
-        ).first()
+        from app.services.company_identity import find_existing_company
+
+        company = find_existing_company(self.db, company_name)
 
         if not company:
             company = Company(

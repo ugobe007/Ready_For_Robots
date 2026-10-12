@@ -114,3 +114,25 @@ and a CSV (`robot-buyers-YYYY-MM-DD.csv`) with all of them.
 | `DAILY_REPORT_MODE` | `buyers` | `jobs` restores the old robot-jobs email |
 | `DAILY_BUYERS_STAGES` | `buying_now,evaluating,preparing` | which stages to send |
 | `DAILY_BUYERS_REFRESH` | `1` | re-score all companies before sending |
+
+## Duplicate companies and junk names (2026-10-12)
+
+`app/services/company_identity.py` decides whether a string is a company and
+which company it is.
+
+* **At ingest** every scraper now reuses the existing row for name variants
+  ("Target" / "Target Corporation" / "TARGET CORP." / "Target Stores", "Wal-Mart" /
+  "Walmart", "Kenco Logistics" → "Kenco Group") or the same own website domain,
+  instead of inserting a duplicate. Place names, encoded strings and headline
+  fragments are refused before INSERT.
+* **At ranking** duplicates that already exist are scored once on their pooled
+  evidence; every row gets the same stage, one row is marked primary, and the
+  daily email lists each company once ("Also listed as: …").
+* Conservative: only legal/corporate suffixes are stripped; properties stay
+  separate from parents (JW Marriott Las Vegas ≠ Marriott International);
+  shared sites (linkedin.com, indeed.com, press-release wires) never link companies.
+
+Existing rows: `python3 scripts/company_hygiene.py` writes
+`reports/duplicate_companies.csv` and `reports/junk_company_names.csv`;
+`--apply` tags them in `crm_metadata` (`identity`, `junk_name`). Nothing is deleted
+or merged — review the CSVs first.

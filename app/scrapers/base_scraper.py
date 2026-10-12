@@ -84,6 +84,10 @@ class BaseScraper(ABC):
         """
         if not name or not name.strip():
             return False
+        from app.services.company_identity import junk_name_reason
+
+        if junk_name_reason(name):  # place names, encoded strings, headline fragments
+            return False
         try:
             from app.services.company_validator import is_valid_lead
             valid, _ = is_valid_lead(name)
@@ -96,7 +100,9 @@ class BaseScraper(ABC):
         if not self._name_is_valid(name):
             logger.debug("save_company: rejected %r — failed validator", name)
             return None  # type: ignore[return-value]
-        existing = self.db.query(Company).filter(Company.name == name).first()
+        from app.services.company_identity import find_existing_company
+
+        existing = find_existing_company(self.db, name, data.get("website"))
         if existing:
             return existing
         company = Company(**data)

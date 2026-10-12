@@ -1438,11 +1438,12 @@ class IntelligenceNewsScraper:
             return None
 
         # Check if exists (case-insensitive)
-        existing = (
-            self.db.query(Company)
-            .filter(func.lower(Company.name) == name.lower())
-            .first()
-        )
+        from app.services.company_identity import find_existing_company, junk_name_reason
+
+        if junk_name_reason(name):
+            logger.debug("junk company name rejected %r: %s", name, junk_name_reason(name))
+            return None
+        existing = find_existing_company(self.db, name)
         
         if existing:
             self.stats["companies_enriched"] += 1

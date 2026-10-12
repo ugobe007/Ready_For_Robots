@@ -609,7 +609,9 @@ class NewsScraper:
         if not self._name_is_valid(name):
             logger.debug("_get_or_create_company: rejected %r — failed validator", name)
             return None
-        existing = self.db.query(Company).filter(Company.name == name).first()
+        from app.services.company_identity import find_existing_company
+
+        existing = find_existing_company(self.db, name)
         if existing:
             if existing.industry == "Unknown" and industry != "Unknown":
                 existing.industry = industry

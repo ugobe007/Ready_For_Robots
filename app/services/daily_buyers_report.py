@@ -68,6 +68,7 @@ def _serialize(company: Any, br: dict[str, Any]) -> dict[str, Any]:
         "state": getattr(company, "location_state", "") or "",
         "website": getattr(company, "website", "") or "",
         "computed_at": (br.get("computed_at") or "")[:16],
+        "also_listed_as": list(br.get("duplicate_names") or []),
     }
 
 
@@ -80,7 +81,7 @@ def select_buyers(db, *, stages: tuple[str, ...] = DEFAULT_STAGES) -> list[dict[
     q = db.query(Company).filter(Company.automation_profile.isnot(None))
     for company in q.yield_per(2000):
         br = _profile(company)
-        if br.get("stage") in wanted:
+        if br.get("stage") in wanted and br.get("is_primary", True):
             rows.append(_serialize(company, br))
     rows.sort(key=lambda r: (STAGE_RANK.get(r["stage"], 9), -r["score"], r["company"].lower()))
     for i, r in enumerate(rows, 1):
@@ -135,6 +136,8 @@ def _buyer_lines(b: dict[str, Any]) -> list[str]:
     if meta:
         head += f"  ({meta})"
     out = [head, f"     Why: {b.get('why') or '—'}  [score {b.get('score', 0):.0f}]"]
+    if b.get("also_listed_as"):
+        out.append(f"     Also listed as: {', '.join(b['also_listed_as'][:4])}")
     for e in b.get("evidence") or []:
         line = f"     • {e['label']}: {e['text']}"
         if e.get("seen_at"):
@@ -181,7 +184,7 @@ def render_daily_buyers_html(report: dict[str, Any]) -> str:
 
 CSV_COLUMNS = ("rank", "company", "stage", "score", "why", "evidence_1", "evidence_1_url", "evidence_2",
                "evidence_2_url", "evidence_3", "evidence_3_url", "industry", "city", "state", "website",
-               "workflows", "labor_pressure", "scored_at")
+               "workflows", "labor_pressure", "also_listed_as", "scored_at")
 
 
 def _csv_filename(report: dict[str, Any]) -> str:
@@ -200,6 +203,7 @@ def render_daily_buyers_csv(report: dict[str, Any]) -> str:
             "state": b.get("state") or "", "website": b.get("website") or "",
             "workflows": "; ".join(b.get("workflows") or []), "labor_pressure": "; ".join(b.get("pain") or []),
             "scored_at": b.get("computed_at") or "",
+            "also_listed_as": "; ".join(b.get("also_listed_as") or []),
         }
         for i in range(3):
             e = ev[i] or {}

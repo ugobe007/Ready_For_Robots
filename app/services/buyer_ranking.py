@@ -33,22 +33,63 @@ def iter_company_signals(db) -> Iterator[tuple[Any, list[dict]]]:
         yield db.get(Company, current), bucket
 
 
-def score_companies(db, *, apply: bool = False, commit_every: int = 500) -> tuple[Counter, list[tuple[Any, Any]]]:
-    """Assess every company that has signals. Returns (stage counts, [(company, readiness)])."""
+def _company_groups(db) -> dict[int, int]:
+    """{company_id: group_root_id} — rows that are the same company (name variants, same domain)."""
+    from app.models.company import Company
+    from app.services.company_identity import group_companies
+
+    rows = db.query(Company.id, Company.name, Company.website_domain).yield_per(5000)
+    return group_companies((r.id, r.name or "", r.website_domain) for r in rows)
+
+
+def _pick_primary(members: list[Any], signal_counts: dict[int, int]) -> Any:
+    """Most signals wins; then has website; then shortest clean name; then oldest id."""
+    return sorted(
+        members,
+        key=lambda c: (-signal_counts.get(c.id, 0), 0 if getattr(c, "website", None) else 1,
+                       len(c.name or ""), c.id),
+    )[0]
+
+
+def score_companies(db, *, apply: bool = False, commit_every: int = 500,
+                    group_duplicates: bool = True) -> tuple[Counter, list[tuple[Any, Any]]]:
+    """Assess every company with signals. Duplicate rows of one company (Target / Target
+    Corporation / target.com) are scored once on their pooled evidence; every row gets
+    the same stamp, and only the primary row is returned.
+
+    Returns (stage counts per company group, [(primary company, readiness)])."""
     from app.services.buyer_readiness import assess_company
+
+    groups = _company_groups(db) if group_duplicates else {}
+    pooled: dict[int, list[dict]] = {}
+    members: dict[int, list[Any]] = {}
+    counts: dict[int, int] = {}
+    for company, sigs in iter_company_signals(db):
+        if company is None:
+            continue
+        root = groups.get(company.id, company.id)
+        pooled.setdefault(root, []).extend(sigs)
+        members.setdefault(root, []).append(company)
+        counts[company.id] = len(sigs)
 
     stages: Counter = Counter()
     results: list[tuple[Any, Any]] = []
-    for i, (company, sigs) in enumerate(iter_company_signals(db), 1):
-        if company is None:
-            continue
-        r = assess_company(company.name or "", sigs, industry=company.industry or "")
+    for i, (root, sigs) in enumerate(pooled.items(), 1):
+        rows = members[root]
+        primary = _pick_primary(rows, counts)
+        industry = primary.industry or next((c.industry for c in rows if c.industry and c.industry != "Unknown"), "")
+        r = assess_company(primary.name or "", sigs, industry=industry or "")
         stages[r.stage] += 1
-        results.append((company, r))
+        results.append((primary, r))
         if apply:
-            prof = dict(company.automation_profile or {})
-            prof["buyer_readiness"] = r.to_dict()
-            company.automation_profile = prof
+            stamp = r.to_dict()
+            stamp["primary_company_id"] = primary.id
+            stamp["duplicate_company_ids"] = sorted(c.id for c in rows if c.id != primary.id)
+            stamp["duplicate_names"] = sorted({c.name for c in rows if c.id != primary.id})[:10]
+            for c in rows:
+                prof = dict(c.automation_profile or {})
+                prof["buyer_readiness"] = dict(stamp, is_primary=(c.id == primary.id))
+                c.automation_profile = prof
             if i % commit_every == 0:
                 db.commit()
     if apply:

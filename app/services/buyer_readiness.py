@@ -22,8 +22,6 @@ Score 0-100. Labor postings alone cap at PRIMED (max 45).
 from __future__ import annotations
 
 import re
-from functools import lru_cache
-from pathlib import Path
 from collections import Counter
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timedelta, timezone
@@ -245,75 +243,16 @@ SIGNAL_TYPE_WEIGHTS: dict[str, tuple[str, float, str]] = {
     "service_consistency": ("pressure", 4, "service consistency"),
 }
 
-_COUNTRIES_REGIONS = frozenset(
-    """afghanistan albania algeria argentina armenia australia austria bangladesh belgium bolivia brazil bulgaria
-    cambodia cameroon canada chile china colombia croatia cuba czechia denmark ecuador egypt estonia ethiopia finland
-    france georgia germany ghana greece guatemala hungary india indonesia iran iraq ireland israel italy jamaica japan
-    jordan kazakhstan kenya korea kuwait laos latvia lebanon lithuania malaysia mexico morocco myanmar nepal netherlands
-    nigeria norway oman pakistan panama peru philippines poland portugal qatar romania russia rwanda serbia singapore
-    slovakia slovenia spain sweden switzerland taiwan tanzania thailand tunisia turkey uganda ukraine uruguay uzbekistan
-    venezuela vietnam yemen zambia zimbabwe usa us uk europe asia africa""".split()
-) | frozenset({"sri lanka", "south korea", "north korea", "new zealand", "south africa", "saudi arabia",
-               "united states", "united kingdom", "united arab emirates", "hong kong", "latin america",
-               "middle east", "north america", "costa rica", "dominican republic", "puerto rico", "el salvador",
-               "las vegas", "new york", "los angeles", "san francisco", "silicon valley"})
-
-_HEADLINE_RE = re.compile(
-    r"^(?:how|why|what|when|where|who|which|is|are|can|will|this|these|top|best|inside|watch|video|report)\b"
-    r"|\b(?:are|is|was|were|will|says?|said|could|would|announces?|reveals?|launch(?:es)?|plans?)\b.*\b\w+\b"
-    r"|\bto (?:open|build|deploy|add|launch|use|test|buy|invest|expand|hire|cut|replace|roll)\b",
-    re.I,
-)
-# Bare place names that are also well-known buyer brands (Providence health system, …).
-_PLACE_NAME_BRANDS = frozenset({"providence", "columbia"})
-
-
-@lru_cache(maxsize=1)
-def _place_names() -> frozenset[str]:
-    """US cities ≥15k, world cities ≥100k, US states, countries (app/data/place_names.txt)."""
-    path = Path(__file__).resolve().parents[1] / "data" / "place_names.txt"
-    try:
-        with open(path, encoding="utf-8") as fh:
-            return frozenset(line.strip() for line in fh if line.strip() and not line.startswith("#"))
-    except OSError:
-        return frozenset()
-
-
-def _is_place_name(low: str) -> bool:
-    """Exact match only: 'Hoboken' is a place; 'City of Hoboken' / 'Hoboken Hospital' are not."""
-    low = re.sub(r",\s*[a-z]{2}$", "", low).strip()   # 'hoboken, nj' → 'hoboken'
-    if low in _PLACE_NAME_BRANDS:
-        return False
-    if low not in _place_names():
-        return False
-    try:
-        from app.services.known_brands import is_allowlisted_company_name
-
-        return not is_allowlisted_company_name(low)
-    except Exception:
-        return True
-
-
-_ENCODED_RE = re.compile(r"^[A-Za-z0-9+/=_-]{20,}$")
-
-
 def buyer_name_problem(name: str) -> Optional[str]:
-    """Why a stored company name can't be a buyer (headline fragment, place, encoded junk), or None."""
-    n = (name or "").strip()
-    low = n.lower().strip(" .,")
-    if len(n) < 2:
-        return "empty name"
-    if _ENCODED_RE.match(n) and (any(c.isdigit() for c in n) or n != n.lower() and n != n.upper() and " " not in n and len(n) >= 24):
-        return "encoded string, not a company"
-    if low in _COUNTRIES_REGIONS or _is_place_name(low):
-        return "place name, not a company"
-    words = n.split()
-    if len(words) >= 6 or (len(words) >= 3 and _HEADLINE_RE.search(n)):
-        return "headline fragment, not a company"
+    """Why a stored company name can't be a buyer (headline fragment, place, encoded junk, robot vendor), or None."""
+    from app.services.company_identity import junk_name_reason
+
+    reason = junk_name_reason(name)
+    if reason:
+        return reason
+    low = (name or "").lower()
     if "robot" in low and not any(w in low for w in ("hotel", "casino", "resort")):
         return "robot vendor (supply side)"
-    if n.endswith(("?", "!")) or n.count('"') or n.count("|"):
-        return "headline fragment, not a company"
     return None
 
 

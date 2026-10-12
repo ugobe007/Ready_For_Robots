@@ -846,11 +846,18 @@ def import_companies(payload: CompanyImportPayload, db: Session = Depends(get_db
 
     for rec in payload.companies:
         ok, reason = is_valid_lead(rec.name or "")
+        if ok:
+            from app.services.company_identity import junk_name_reason
+
+            junk = junk_name_reason(rec.name)
+            ok, reason = (False, junk) if junk else (ok, reason)
         if not ok:
             skipped.append({"name": rec.name, "reason": reason})
             continue
 
-        existing = db.query(Company).filter(Company.name == rec.name).first()
+        from app.services.company_identity import find_existing_company
+
+        existing = find_existing_company(db, rec.name, rec.website)
         if existing:
             skipped.append({"name": rec.name, "reason": "duplicate"})
             continue

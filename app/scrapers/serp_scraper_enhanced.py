@@ -188,8 +188,11 @@ class EnhancedSerpScraper:
     @staticmethod
     def _name_is_valid(name: str) -> bool:
         """Same lead gate as list API — inference + structure before persisting new SERP names."""
+        from app.services.company_identity import junk_name_reason
         from app.services.company_validator import is_valid_lead
 
+        if junk_name_reason(name):
+            return False
         ok, _ = is_valid_lead(name or "", skip_junk_check=False)
         return ok
 
@@ -332,7 +335,9 @@ class EnhancedSerpScraper:
         if not self._name_is_valid(name):
             logger.debug("_get_or_create_company: rejected %r — failed validator", name)
             return None
-        existing = self.db.query(Company).filter(Company.name == name).first()
+        from app.services.company_identity import find_existing_company
+
+        existing = find_existing_company(self.db, name)
         if existing:
             if not existing.website:
                 from app.services.lead_enrichment import enrich_company_website
