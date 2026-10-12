@@ -116,3 +116,31 @@ def test_ranking_pools_duplicates_and_lists_once(db):
         db.refresh(c)
         assert c.automation_profile["buyer_readiness"]["stage"] == "evaluating"
     assert sum(c.automation_profile["buyer_readiness"]["is_primary"] for c in (a, b)) == 1
+
+
+# ── Junk names seen in the 2026-10-12 Evaluating/Preparing review ───────────
+
+@pytest.mark.parametrize("name,kind", [
+    ("Health Care", "topic"), ("Coming Soon", "topic"), ("Patient Testing Set", "topic"),
+    ("Innovative Two-Step Treatment", "topic"), ("Rewiring the future", "sentence"),
+    ("Detroit News", "outlet"), ("Washington Post", "outlet"), ("USA Today", "outlet"),
+])
+def test_review_junk_names(name, kind):
+    reason = junk_name_reason(name)
+    assert reason and kind in reason.split()[0] or (kind == "outlet" and "outlet" in (reason or "")), reason
+
+
+def _real_names():
+    from pathlib import Path
+
+    path = Path(__file__).parent / "fixtures" / "real_company_names.txt"
+    return [line.strip() for line in path.read_text().splitlines() if line.strip()]
+
+
+def test_real_company_names_are_never_junk():
+    """Real operators, agencies and brands (plus the allowlist) — any hit here demotes a real buyer."""
+    from app.services.known_brands import ALLOWLISTED_COMPANY_NAMES
+
+    names = set(_real_names()) | set(ALLOWLISTED_COMPANY_NAMES)
+    flagged = {n: junk_name_reason(n) for n in names if junk_name_reason(n)}
+    assert not flagged, flagged

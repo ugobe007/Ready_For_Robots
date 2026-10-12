@@ -27,12 +27,22 @@ _COUNTRIES_REGIONS = frozenset({
     "south america", "southeast asia", "silicon valley", "bay area", "midwest", "gulf coast",
 })
 # Bare place names that are also well-known buyer brands (Providence health system, …).
-_PLACE_NAME_BRANDS = frozenset({"providence", "columbia"})
+_PLACE_NAME_BRANDS = frozenset({
+    "providence", "columbia", "toyota", "burlington", "hershey", "kohler", "corning", "dell", "nordstrom",
+    "marion", "aurora", "mobile", "orange", "victoria", "florence", "sterling", "lincoln", "hudson",
+})
 
 _HEADLINE_RE = re.compile(
     r"^(?:how|why|what|when|where|who|which|is|are|can|will|this|these|top|best|inside|watch|video|report)\b"
     r"|\b(?:are|is|was|were|will|says?|said|could|would|announces?|reveals?|launch(?:es)?|plans?)\b.*\b\w+\b"
     r"|\bto (?:open|build|deploy|add|launch|use|test|buy|invest|expand|hire|cut|replace|roll)\b",
+    re.I,
+)
+# Long official names are fine: "Port Authority of New York and New Jersey".
+_ORG_NAME_RE = re.compile(
+    r"\b(?:authority|department|district|county|city of|town of|state of|university|college|hospital|"
+    r"health ?(?:system|plan)|medical center|school|agency|commission|administration|bureau|board of|"
+    r"international airport|airport authority|port of|council)\b",
     re.I,
 )
 _ENCODED_RE = re.compile(r"^[A-Za-z0-9+/=_-]{20,}$")
@@ -64,11 +74,72 @@ def is_place_name(name: str) -> bool:
         return True
 
 
+# Publications: "<anything> News / Times / Post / Journal …" is an outlet, not a buyer.
+_OUTLET_RE = re.compile(
+    r"\s(?:news|times|post|journal|herald|tribune|gazette|chronicle|daily|magazine|weekly|digest|insider|today|"
+    r"review|register|observer|bulletin|dispatch|examiner|sentinel|telegraph|newswire|wire|press|reporter|"
+    r"monthly|quarterly|blog|podcast|newsletter)$",
+    re.I,
+)
+# Lowercase words allowed inside a real company name ("Bank of America", "Holiday Inn by Wyndham").
+_NAME_CONNECTORS = frozenset({
+    "of", "and", "the", "for", "at", "on", "in", "by", "de", "la", "le", "du", "des", "del", "da", "di", "van",
+    "von", "der", "den", "y", "e", "et", "&", "a", "an", "to", "n", "s", "x", "plus", "co", "inc", "llc", "ltd",
+})
+# Phrases that are a sector or a topic, never a company.
+_TOPIC_NAMES = frozenset({
+    "health care", "healthcare", "home care", "senior care", "patient care", "child care", "food service",
+    "foodservice", "hospitality", "retail", "logistics", "manufacturing", "warehousing", "supply chain",
+    "coming soon", "now open", "grand opening", "press release", "breaking news", "case study", "white paper",
+    "the future", "future of work", "artificial intelligence", "machine learning", "robotics", "automation",
+    "smart city", "smart home", "smart factory", "industry", "technology", "innovation", "sustainability",
+    "labor shortage", "workforce", "customer service", "public safety", "real estate", "higher education",
+})
+# Headline/topic endings: "Patient Testing Set", "Innovative Two-Step Treatment".
+_TOPIC_TAIL_RE = re.compile(
+    r"\s(?:set|treatment|treatments|soon|step|steps|approach|method|methods|program|initiative|study|"
+    r"trial|trials|update|updates|overview|guide|tips|ideas|trends|outlook|strategy|strategies|breakthrough|"
+    r"milestone|launch|debut|rollout|announcement|partnership|deal|opportunity|opportunities|challenge|"
+    r"challenges|solution|revolution|era|age|wave|boom|surge|shift|push|race|crisis|shortage|gap)$",
+    re.I,
+)
+_LEGAL_TAIL_RE = re.compile(r"\b(?:inc|llc|ltd|corp|corporation|co|company|plc|lp|llp|gmbh|group|holdings)\.?$", re.I)
+
+
+def _phrase_reason(n: str) -> Optional[str]:
+    """Topic phrases, sentence fragments and outlets that slip past headline checks."""
+    low = n.lower().strip(" .,")
+    if low in _TOPIC_NAMES:
+        return "topic phrase, not a company"
+    words = n.split()
+    if len(words) < 2 or _LEGAL_TAIL_RE.search(n):
+        return None
+    if _OUTLET_RE.search(n):
+        return "news outlet, not a buyer"
+    # Sentence case: a lowercase word that isn't a connector ("Rewiring the future").
+    # Only for names written in Title Case — all-lowercase rows ("best western hotels") are just unformatted.
+    title_cased = words[0][:1].isupper()
+    for w in (words[1:] if title_cased else []):
+        core = re.sub(r"[^\w&]", "", w)
+        if core and core[0].islower() and core.lower() not in _NAME_CONNECTORS and not core.isdigit():
+            return "sentence fragment, not a company"
+    if _TOPIC_TAIL_RE.search(n) and len(words) <= 5:
+        return "topic phrase, not a company"
+    return None
+
+
 def junk_name_reason(name: Optional[str]) -> Optional[str]:
     """Why this string is not a company name (headline, place, encoded junk), or None."""
     n = (name or "").strip()
     if len(n) < 2:
         return "empty name"
+    try:
+        from app.services.known_brands import is_allowlisted_company_name
+
+        if is_allowlisted_company_name(n):
+            return None
+    except Exception:
+        pass
     if _ENCODED_RE.match(n) and (
         any(c.isdigit() for c in n) or (n != n.lower() and n != n.upper() and len(n) >= 24)
     ):
@@ -76,11 +147,12 @@ def junk_name_reason(name: Optional[str]) -> Optional[str]:
     if is_place_name(n):
         return "place name, not a company"
     words = n.split()
-    if len(words) >= 6 or (len(words) >= 3 and _HEADLINE_RE.search(n)):
+    long_name = len(words) >= 6 and not _ORG_NAME_RE.search(n)
+    if long_name or (len(words) >= 3 and _HEADLINE_RE.search(n)):
         return "headline fragment, not a company"
     if n.endswith(("?", "!")) or '"' in n or "|" in n or "“" in n or "”" in n:
         return "headline fragment, not a company"
-    return None
+    return _phrase_reason(n)
 
 
 # ─── Canonical identity ──────────────────────────────────────────────────────

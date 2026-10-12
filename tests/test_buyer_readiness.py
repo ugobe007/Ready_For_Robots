@@ -177,3 +177,34 @@ def test_daily_send_uses_buyers_mode_by_default(monkeypatch):
     assert djr.daily_report_mode() == "buyers"
     monkeypatch.setenv("DAILY_REPORT_MODE", "jobs")
     assert djr.daily_report_mode() == "jobs"
+
+
+# ── Routine events alone are not buying evidence (2026-10-12 review) ─────────
+
+@pytest.mark.parametrize("name,industry,sigs", [
+    ("Uline", "Distribution", [("Uline hiring event", "news"), ("Uline names director of distribution", "strategic_hire"),
+                               ("Uline opens new distribution center", "expansion")]),
+    ("Dollar General", "Retail", [("Dollar General to open 800 new stores", "expansion")]),
+    ("Acme SaaS", "Software", [("Acme announces technology investment in cloud", "news")]),
+])
+def test_routine_events_alone_stay_watch(name, industry, sigs):
+    r = assess_company(name, [news(t, st) for t, st in sigs], industry=industry)
+    assert r.stage == "watch", (r.stage, r.why)
+
+
+@pytest.mark.parametrize("name,industry,text,stage", [
+    ("Merlin Entertainments", "Entertainment",
+     "Merlin commits €400M resort program, modernizing parks and budgeting for autonomous delivery", "evaluating"),
+    ("Caesars Entertainment", "Casinos", "Caesars $500M property modernization includes automation technology", "evaluating"),
+    ("Wynn Resorts", "Casinos",
+     "Wynn pilots robotic cocktail delivery; housekeeping exploring automation as operation is 29% understaffed", "buying_now"),
+])
+def test_review_real_buyers_hold(name, industry, text, stage):
+    assert assess_company(name, [news(text)], industry=industry).stage == stage
+
+
+@pytest.mark.parametrize("name", ["Health Care", "Detroit News", "Coming Soon", "Rewiring the future"])
+def test_review_junk_names_are_watch(name):
+    r = assess_company(name, [news("Chain struggles to hire kitchen staff amid labor shortage"),
+                              news("pilots delivery robots")], industry="Restaurants")
+    assert r.stage == "watch" and r.score == 0

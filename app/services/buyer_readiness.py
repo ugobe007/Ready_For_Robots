@@ -51,7 +51,8 @@ BUY_NOW = (
 EVALUATING = (
     (r"(?:implement|deploy|roll(?:ing)? out|introduc|install|integrat|scal|launch|adopt)\w*\W+(?:\w+\W+){0,5}?" + _R, 22, "deploying automation"),
     (_R + r"\W+(?:\w+\W+){0,3}?(?:program|roadmap|strategy|initiative|investment|project|transformation|budget)", 22, "automation program"),
-    (r"(?:invest\w*|\$\d[\d.,]*\s*(?:million|billion|m|bn)\b)\W+(?:\w+\W+){0,6}?" + _R, 25, "automation investment"),
+    (r"(?:invest\w*|budget\w*|commit\w*|earmark\w*|allocat\w*|[$€£]\s?\d[\d.,]*\s*(?:million|billion|m|bn)\b)\W+(?:\w+\W+){0,8}?" + _R,
+     25, "automation investment"),
     (r"(?:new|greenfield|state[- ]of[- ]the[- ]art|highly|fully)\s+automated\s+(?:facility|distribution center|dc|warehouse|plant|fulfillment center|kitchen)", 25, "automated facility"),
     (r"lights[- ]out|industry 4\.0|smart (?:factory|warehouse)", 12, "automation strategy"),
     (r"(?:explor|consider|evaluat|stud(?:y|ies|ying)|assess|look\w* (?:at|into)|weigh)\w*\W+(?:\w+\W+){0,4}?"
@@ -68,7 +69,8 @@ EXPANDING = (
 # Indirect intent: the decision to evaluate robots is forming.
 _OPS = (r"(?:operations?|facilit(?:y|ies)|supply chain|distribution|warehous\w*|fulfillment|kitchens?|restaurants?|stores?|"
         r"plants?|factor(?:y|ies)|manufacturing|production|logistics|network|fleet|workforce|labor model|back[- ]of[- ]house|"
-        r"housekeeping|laundry|terminals?|airport|hotels?|propert(?:y|ies)|campus|dcs?|processes|workflows?)")
+        r"housekeeping|laundry|terminals?|airport|hotels?|propert(?:y|ies)|campus|dcs?|processes|workflows?|"
+        r"parks?|resorts?|casinos?|ships?|fleet|venues?|stadiums?|arenas?|hospitals?|units?|locations?)")
 PREPARING = (
     (r"(?:budget\w*|capital (?:plan|budget|spending|expenditure|investment)s?|capex|allocat\w*|earmark\w*|set aside)"
      r"\W+(?:\w+\W+){0,8}?(?:technology|equipment|efficien\w*|moderni[sz]\w*|upgrad\w*|" + _OPS + r")", 12, "budgeting for operations"),
@@ -83,12 +85,21 @@ PREPARING = (
      r"labor[- ]sav\w*|labor[- ]light|reduce reliance on (?:labor|workers|staff))", 12, "labor-light model"),
     (r"(?:workforce|labor) (?:transformation|planning|strategy|model|optimization)|future of work|reskill\w*|upskill\w*", 8, "workforce transformation"),
 
+    (r"(?:kitchen|store|in-store|warehouse|distribution|fulfillment|operations?|operational|back[- ]of[- ]house|labor|"
+     r"housekeeping|guest[- ]service|plant|factory|production|hotel|property|restaurant|frontline)\s+"
+     r"(?:technology|tech|automation|equipment)\s+(?:investments?|upgrades?|roadmap|rollout|initiative|spend)", 12,
+     "operational technology investment"),
     (r"(?:technology|tech|digital|innovation) (?:investments?|upgrades?|roadmap|transformation|initiative|spend)", 8, "technology investment"),
     (r"(?:smart|connected|next[- ]gen(?:eration)?|store of the future|kitchen of the future|hotel of the future)\s+"
      r"(?:stores?|kitchens?|hotels?|warehouses?|factor(?:y|ies)|plants?|airports?|buildings?|restaurants?)", 10, "next-gen facility"),
     (r"(?:new|additional|second|third|larger|expanded)\s+(?:distribution|fulfillment|cold storage|production|processing|manufacturing|"
      r"central|commissary|laundry)\s+(?:center|facility|plant|kitchen|hub|campus)", 8, "new facility"),
 )
+
+# Routine business events: real context, but never enough on their own.
+WEAK_PREP_LABELS = frozenset({
+    "operations leadership hire", "expansion", "M&A / integration", "new facility", "technology investment",
+})
 
 # Labor pressure that pushes companies toward robots.
 PRESSURE = (
@@ -269,6 +280,7 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
     seen_labels: set[tuple[str, str]] = set()
 
     typed_seen: Counter = Counter()
+    prep_labels: Counter = Counter()
     for sig in signals:
         stype, text, url, ts = _signal_fields(sig)
         if not text:
@@ -280,6 +292,8 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
             typed_seen[stype] += 1
             if n < 4:
                 weights[kind] += w if n == 0 else w * 0.15
+                if kind == "preparing":
+                    prep_labels[label] += w if n == 0 else w * 0.15
                 if n == 0:
                     evidence.append(Evidence(kind, label, text[:240], getattr(sig, "source_url", None)
                                              if not isinstance(sig, dict) else sig.get("source_url"),
@@ -324,6 +338,8 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
                     break
                 seen_labels.add(key)
                 weights[kind] += w * recency
+                if kind == "preparing":
+                    prep_labels[label] += w * recency
                 if kind == "pressure":
                     pain_labels[label] += 1
                 snippet = text[max(0, m.start() - 60): m.end() + 60].strip() if title is None else title
@@ -347,6 +363,9 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
     evalu = min(40.0, weights["evaluating"])
     expand = min(30.0, weights["expanding"])
     prep = min(30.0, weights["preparing"])
+    # A hire, a new store or a deal alone is routine; it needs a real modernization cue beside it.
+    strong_prep = min(30.0, sum(w for lbl, w in prep_labels.items() if lbl not in WEAK_PREP_LABELS))
+    distinct_prep = len(prep_labels)
     pressure = min(25.0, weights["pressure"] * (1.0 if labor_heavy else 0.5))
     if labor_heavy:
         primed = min(45.0, primed * 1.2)
@@ -366,15 +385,15 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
     elif evalu >= 20:
         labels = list(dict.fromkeys(e.label for e in evidence if e.kind == "evaluating"))[:3]
         stage, why = "evaluating", ", ".join(labels) or "automation evaluation on record"
-    elif prep >= 8 and under_pressure:
+    elif strong_prep >= 8 and under_pressure:
         stage, why = "evaluating", "modernizing operations while under labor pressure"
     elif prep >= 20 and labor_heavy and labor_focus:
         stage, why = "evaluating", "modernizing operations to reduce labor"
     elif expand >= 18:
         stage, why = "expanding", "already operates robots — next site or next workflow"
-    elif evalu >= 8 and (prep >= 8 or under_pressure):
+    elif evalu >= 8 and (strong_prep >= 8 or under_pressure):
         stage, why = "preparing", "automation interest plus modernization or labor pressure"
-    elif prep >= 15 or (prep >= 8 and labor_heavy):
+    elif (strong_prep >= 10 and (labor_heavy or distinct_prep >= 2)) or (strong_prep >= 8 and prep >= 15):
         stage, why = "preparing", "budgeting, modernizing or redesigning operations"
     elif pressure >= 12 and labor_heavy:
         stage, why = "preparing", "labor pressure in a labor-heavy industry"

@@ -136,3 +136,24 @@ Existing rows: `python3 scripts/company_hygiene.py` writes
 `reports/duplicate_companies.csv` and `reports/junk_company_names.csv`;
 `--apply` tags them in `crm_metadata` (`identity`, `junk_name`). Nothing is deleted
 or merged — review the CSVs first.
+
+## Review fixes: junk names and routine events (2026-10-12)
+
+From the Evaluating / Preparing spot-check:
+
+* **More junk names refused** (ingest and ranking): news outlets ("Detroit News",
+  "USA Today"), topic phrases ("Health Care", "Coming Soon"), headline endings
+  ("Patient Testing Set", "Innovative Two-Step Treatment"), sentence fragments
+  ("Rewiring the future"). The brand allowlist is checked first. Long official
+  names pass ("Port Authority of New York and New Jersey"), and so do brands
+  that share a place name (Toyota, Burlington). Guarded by
+  `tests/fixtures/real_company_names.txt` (real operators, agencies, brands) —
+  none may be flagged.
+* **Routine events alone don't count**: an operations hire, new store or DC,
+  M&A, or generic "technology investment" no longer makes a company Evaluating
+  or Preparing by itself. It needs a real modernization cue beside it.
+  Operational tech spend ("kitchen technology investments") is a real cue.
+* **Budgets in € / £** and "budgeting / committing … for autonomous X" count as
+  automation investment (Merlin Entertainments' €400M program).
+
+Thresholds for "modernizing under labor pressure" are unchanged.
