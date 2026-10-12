@@ -319,3 +319,43 @@ def summary() -> dict[str, int]:
     from collections import Counter
 
     return dict(Counter(s.kind for s in catalog()))
+
+
+# ─── Discovery queries for the production intelligence scraper ───────────────
+# Fly runs IntelligenceNewsScraper.discover_leads (not the Celery rss_feed task),
+# so buyer-intent news must be fed in as discovery queries to be scraped at all.
+
+def _vendor_customer_queries() -> list[str]:
+    import re
+    """Every commercial, US-available robot OEM in the vendor seed: who did they deploy at?"""
+    import csv
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parents[2] / "docs" / "calibration" / "vendor_seed_sheets" / "vendors.csv"
+    out: list[str] = []
+    try:
+        with open(path, newline="", encoding="utf-8") as fh:
+            for row in csv.DictReader(fh):
+                if (row.get("vendor_role") or "") != "robot_oem":
+                    continue
+                if not (row.get("us_availability") or "").lower().startswith("y"):
+                    continue
+                if (row.get("commercial_maturity") or "") not in ("commercial", "pilot"):
+                    continue
+                name = re.sub(r"\s*\(.*?\)", "", row.get("company_name") or "").strip()
+                if name:
+                    out.append(f'"{name}" (deploys OR deployed OR selects OR selected OR customer OR pilot OR rollout OR "partners with")')
+    except OSError:
+        pass
+    return out
+
+
+def extra_discovery_queries() -> list[str]:
+    """Deployment / intent / labor-pressure queries + vendor-named-customer queries."""
+    seen: set[str] = set()
+    out: list[str] = []
+    for q in [q for q, _ in INTENT_NEWS_QUERIES] + [q for q, _ in VENDOR_CUSTOMER_QUERIES] + _vendor_customer_queries():
+        if q not in seen:
+            seen.add(q)
+            out.append(q)
+    return out

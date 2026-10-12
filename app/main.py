@@ -635,6 +635,39 @@ def health_db():
 # On Fly with REDIS_URL, `scripts/start_all.sh` starts Beat + worker; this thread is skipped
 # so intelligence is not scheduled twice (see `_start_scheduled_scraper`).
 
+def _run_buyer_watchlist_and_feeds():
+    """Watch named companies for robot/automation and labor-pressure news; then trade RSS."""
+    from app.database import SessionLocal
+
+    if os.getenv("ENABLE_BUYER_WATCHLIST", "1").strip().lower() not in ("0", "false", "no"):
+        db = SessionLocal()
+        try:
+            from app.scrapers.intelligence_news_scraper import IntelligenceNewsScraper
+
+            IntelligenceNewsScraper(db=db).watch_companies()
+        except Exception as exc:
+            logger.warning("Buyer watchlist failed: %s", exc)
+        finally:
+            db.close()
+    n_feeds = int(os.getenv("RSS_FEEDS_PER_RUN", "15") or 0)
+    if n_feeds > 0:
+        db = SessionLocal()
+        try:
+            from app.scrapers.news_scraper import NewsScraper
+            from app.scrapers.scrape_targets import get_targets
+
+            feeds = [t.url for t in get_targets("rss_feed") if "news.google.com" not in t.url]
+            if feeds:
+                cycle = int(time.time() // 3600)
+                start = (cycle * n_feeds) % len(feeds)
+                window = (feeds[start:] + feeds[:start])[:n_feeds]
+                NewsScraper(db=db).run_rss_feeds(window)
+        except Exception as exc:
+            logger.warning("Trade RSS feeds failed: %s", exc)
+        finally:
+            db.close()
+
+
 def _scheduled_scraper_loop():
     """Run intelligence scraper on an interval. Catches and logs errors so one failure doesn't stop the loop."""
     from app.api.scraper_control import _run_intelligence_scraper_sync
@@ -642,9 +675,10 @@ def _scheduled_scraper_loop():
     interval_hours = float(os.getenv("RUN_SCRAPER_EVERY_HOURS", "6"))
     if interval_hours <= 0:
         return
-    # Quick run: 20 queries, ~3–5 min, so we don't block the process long
-    articles_per_query = 15
-    max_queries = 20
+    # Discovery rotates through ~850 queries (DISCOVERY_QUERIES_PER_RUN per run), then the
+    # buyer watchlist (WATCHLIST_COMPANIES_PER_RUN), then trade-publication RSS (RSS_FEEDS_PER_RUN).
+    articles_per_query = int(os.getenv("DISCOVERY_ARTICLES_PER_QUERY", "10"))
+    max_queries = int(os.getenv("DISCOVERY_QUERIES_PER_RUN", "60"))
     time.sleep(first_delay_min * 60)
     while True:
         try:
@@ -655,6 +689,7 @@ def _scheduled_scraper_loop():
                 enrich=True,
             )
             logger.info("Scheduled intelligence scraper finished")
+            _run_buyer_watchlist_and_feeds()
             try:
                 from app.database import SessionLocal
                 from app.services.oem_discovery import run_oem_discovery

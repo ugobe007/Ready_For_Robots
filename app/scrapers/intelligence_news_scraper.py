@@ -870,13 +870,23 @@ class IntelligenceNewsScraper:
         """
         logger.info("🎣 Starting lead discovery from news...")
         self._reset_signal_run_cache()
+        pool = list(DISCOVERY_QUERIES)
+        try:
+            from app.scrapers.robot_opportunity_sources import extra_discovery_queries
+
+            pool += [q for q in extra_discovery_queries() if q not in set(pool)]
+        except Exception as exc:
+            logger.warning("extra discovery queries unavailable: %s", exc)
         if max_queries:
-            # Shuffle so short runs hit diverse industries (not just first 20 = warehouse heavy)
-            shuffled = DISCOVERY_QUERIES.copy()
-            random.shuffle(shuffled)
-            queries = shuffled[:max_queries]
+            # Rotate a fixed-order window so every query runs within a few days
+            # (a random 20 of 364 left most queries unrun for a week).
+            mixed = pool[:]
+            random.Random(7).shuffle(mixed)  # stable order, industries interleaved
+            cycle = int(time.time() // max(3600, int(float(os.getenv("RUN_SCRAPER_EVERY_HOURS", "6")) * 3600)))
+            start = (cycle * max_queries) % len(mixed)
+            queries = (mixed[start:] + mixed[:start])[:max_queries]
         else:
-            queries = DISCOVERY_QUERIES
+            queries = pool
         logger.info(f"Running {len(queries)} queries (max_articles_per_query={max_articles_per_query})")
 
         # Per-article wall-clock budget: a single junk name (e.g. a news
@@ -921,6 +931,57 @@ class IntelligenceNewsScraper:
         self._print_stats()
         return self.stats
     
+    def watch_companies(self, limit: Optional[int] = None) -> Dict:
+        """Buyer watchlist: search news for named companies + robots/automation and
+        + labor pressure/modernization. Evidence attaches to that company; the
+        headline must name it; article URLs already on file are skipped."""
+        from app.services import buyer_watchlist as bw
+
+        stats = {"watched": 0, "articles": 0, "signals": 0, "seeded": 0}
+        try:
+            stats["seeded"] = bw.ensure_seed_companies(
+                self.db, lambda n: self._get_or_create_company(n, context_text="")
+            )
+        except Exception as exc:
+            logger.warning("watchlist seed skipped: %s", exc)
+            self.db.rollback()
+        companies = bw.select_watchlist(self.db, limit)
+        logger.info("👀 Watchlist: %d companies", len(companies))
+        for company in companies:
+            hits = 0
+            try:
+                for query in bw.watch_queries(company.name):
+                    articles = [a for a in self._fetch_google_news(query)[:10]
+                                if bw.title_names_company(a.get("title", ""), company.name)]
+                    stats["articles"] += len(articles)
+                    seen = bw.existing_signal_urls(self.db, company.id, (a.get("url") for a in articles))
+                    for article in articles:
+                        if article.get("url") in seen:
+                            continue
+                        try:
+                            types = self._detect_signal_types(article["text"], article) or ["news"]
+                        except Exception:
+                            types = ["news"]
+                        before = self.stats["signals_created"]
+                        for signal_type in types:
+                            self._create_signal(company=company, signal_type=signal_type,
+                                                text=article["text"][:600], url=article.get("url") or "",
+                                                query=query)
+                        hits += self.stats["signals_created"] - before
+                    time.sleep(self.DELAY)
+                bw.mark_checked(company, hits)
+                self.db.commit()
+                stats["watched"] += 1
+                stats["signals"] += hits
+            except Exception as exc:
+                logger.warning("watchlist check failed for %s: %s", company.name, exc)
+                try:
+                    self.db.rollback()
+                except Exception:
+                    pass
+        logger.info("👀 Watchlist done: %s", stats)
+        return stats
+
     def enrich_existing_companies(self, limit: int = 50) -> Dict:
         """
         Enrich companies already in DB by searching news for their names.

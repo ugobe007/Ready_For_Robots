@@ -157,3 +157,32 @@ From the Evaluating / Preparing spot-check:
   automation investment (Merlin Entertainments' €400M program).
 
 Thresholds for "modernizing under labor pressure" are unchanged.
+
+## More opportunities: what actually runs in production (2026-10-12)
+
+Finding: Fly only runs the intelligence scraper (Celery is off). It ran **20 of
+364** discovery queries every 6 h and enriched 20 companies — the ones with the
+fewest signals, with queries that never mentioned robots. The `rss_feed`
+targets (incl. the 90 deployment-news feeds) never ran on Fly at all.
+
+Now, each scheduled run:
+
+1. **Discovery** rotates a fixed-order window through ~850 queries: the 364
+   existing + 90 deployment/intent/labor-pressure queries + "who did they deploy
+   at?" queries for every commercial, US-available robot OEM in `vendors.csv`
+   (~390). `DISCOVERY_QUERIES_PER_RUN` (60), `DISCOVERY_ARTICLES_PER_QUERY` (10).
+2. **Buyer watchlist** (`app/services/buyer_watchlist.py`) searches news *for
+   named companies*: `"<name>" (robot OR automation OR autonomous …)` and
+   `"<name>" ("labor shortage" OR turnover OR modernization OR "capital plan" …)`.
+   The headline must name the company; evidence attaches to that row; article
+   URLs already on file are skipped. Priority: companies at evaluating /
+   expanding / preparing / primed → labor-heavy Watch companies with ≥5
+   operational postings → `app/data/operator_watchlist.txt` (~360 operators,
+   airports, agencies; created if missing). Never-checked first, then oldest.
+   `WATCHLIST_COMPANIES_PER_RUN` (120), `ENABLE_BUYER_WATCHLIST` (1).
+3. **Trade-publication RSS** (Supply Chain Dive, MH&L, …) finally runs on Fly:
+   `RSS_FEEDS_PER_RUN` (15) per run, rotating.
+
+New evidence only changes stages after a re-score: run
+`python3 scripts/rank_buyers.py --apply` (or set `DAILY_BUYERS_REFRESH=1` once the
+DB connection is stable).

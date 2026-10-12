@@ -1,0 +1,361 @@
+# Labor-heavy operators, airports and agencies watched for robot / automation / labor-pressure news.
+# One name per line. Add freely; buyer_watchlist.py creates missing companies.
+3M
+7-Eleven
+ABM Industries
+Academy Sports + Outdoors
+Accor
+Ace Hardware
+Advocate Health
+Alaska Airlines
+Albertsons
+Aldi
+Allied Universal
+Alsco
+Amazon
+American Airlines
+Americold
+Applebee's
+Aramark
+Arby's
+ArcBest
+Ascension
+Atrium Health
+BJ's Restaurants
+Ball Corporation
+Banner Health
+Bass Pro Shops
+Ben E. Keith
+Berry Global
+Best Buy
+Best Western
+Big Lots
+Bimbo Bakeries USA
+Bloomin' Brands
+Blue Bell Creameries
+Blue Diamond Growers
+Boeing
+Bojangles
+Bolthouse Farms
+Boyd Gaming
+Brinker International
+Buc-ee's
+Buffalo Wild Wings
+Burger King
+Burris Logistics
+C.H. Robinson
+CBRE
+CVS Health
+Caesars Entertainment
+Campbell Soup Company
+Cardinal Health
+Cargill
+Carnival Corporation
+Casey's
+Caterpillar
+Cava
+Cedar Fair
+Cedars-Sinai
+Cencora
+Chewy
+Chick-fil-A
+Chili's
+Chipotle Mexican Grill
+Choice Hotels
+Church Brothers
+Church's Texas Chicken
+Cintas
+Circa Resort & Casino
+Circle K
+City of Las Vegas
+Clark County
+Clark County Department of Aviation
+Clark County School District
+Cleveland Clinic
+Coca-Cola
+Colgate-Palmolive
+CommonSpirit Health
+Compass Group
+Conagra Brands
+Corning
+Costco
+Coyote Logistics
+Cracker Barrel
+Crown Holdings
+Culver's
+Cushman & Wakefield
+DB Schenker
+DHL Supply Chain
+Dairy Farmers of America
+Dallas Fort Worth International Airport
+Darden Restaurants
+Darigold
+Dave & Buster's
+Deere & Company
+Del Taco
+Delaware North
+Delta Air Lines
+Denny's
+Dick's Sporting Goods
+Disney Parks
+Dole
+Dollar General
+Dollar Tree
+Domino's
+DoorDash
+Driscoll's
+DuPont
+Dunkin'
+Dutch Bros
+Eastman Chemical
+Ecolab
+El Pollo Loco
+Estes Express Lines
+Expeditors
+Family Dollar
+Fastenal
+FedEx
+Firehouse Subs
+First Watch
+Five Below
+Five Guys
+Flexport
+Flowers Foods
+Flying J
+Fontainebleau Las Vegas
+Food Lion
+Ford Motor Company
+Four Seasons
+Fresh Del Monte
+G4S
+GXO Logistics
+Gate Gourmet
+General Electric
+General Mills
+General Motors
+Geodis
+Giant Eagle
+Gopuff
+Gordon Food Service
+Grainger
+Great Wolf Lodge
+H-E-B
+HCA Healthcare
+Harris Teeter
+Harry Reid International Airport
+Hartsfield-Jackson Atlanta International Airport
+Henry Schein
+Hershey
+Hilton
+Home Depot
+Honeywell
+Hormel Foods
+Hub Group
+Hy-Vee
+Hyatt
+IHG Hotels & Resorts
+IHOP
+ISS Facility Services
+ImageFIRST
+In-N-Out Burger
+Instacart
+Intermountain Health
+International Paper
+J.B. Hunt
+JBS USA
+JCPenney
+JLL
+JW Marriott Las Vegas
+Jack in the Box
+Jersey Mike's
+JetBlue
+Jimmy John's
+Johns Hopkins Medicine
+KFC
+Kaiser Permanente
+Kellogg
+Kenco Logistics
+Keurig Dr Pepper
+Kimberly-Clark
+King Soopers
+King's Hawaiian
+Knight-Swift
+Kohl's
+Kraft Heinz
+Krispy Kreme
+Kroger
+Kuehne + Nagel
+Lamb Weston
+Land O'Lakes
+Las Vegas Sands
+Leprino Foods
+Levy Restaurants
+Lidl
+Lineage Logistics
+Living Spaces
+Lockheed Martin
+Los Angeles World Airports
+Love's Travel Stops
+Lowe's
+MGM Resorts
+Macy's
+Marriott International
+Mass General Brigham
+Maverik
+Mayo Clinic
+McCain Foods
+McDonald's
+McKesson
+Medline Industries
+Meijer
+Menards
+Menzies Aviation
+Merlin Entertainments
+Moe's Southwest Grill
+Mondelez
+Mount Sinai
+NFI Industries
+NYU Langone
+Nestle USA
+Nevada Department of Transportation
+Noodles & Company
+Nordstrom
+Northrop Grumman
+Northwell Health
+Norwegian Cruise Line
+Ocean Spray
+Old Dominion Freight Line
+Olive Garden
+Ollie's Bargain Outlet
+Outback Steakhouse
+Owens & Minor
+Owens Corning
+P.F. Chang's
+PPG Industries
+Packaging Corporation of America
+Panera Bread
+Papa John's
+Penn Entertainment
+Penske Logistics
+PepsiCo
+Perdue Farms
+Performance Food Group
+PetSmart
+Petco
+Pilgrim's Pride
+Pilot Company
+Pizza Hut
+Popeyes
+Port Authority of New York and New Jersey
+Portillo's
+Potbelly
+Procter & Gamble
+Providence
+Prudential Overall Supply
+Publix
+Qdoba
+QuikTrip
+RJW Logistics
+RaceTrac
+Radial
+Raising Cane's
+Raytheon
+Red Lobster
+Red Rock Resorts
+Red Stag Fulfillment
+Reinhart Foodservice
+Republic Services
+Resorts World Las Vegas
+Rich Products
+Rite Aid
+Ross Stores
+Royal Caribbean
+Ruan
+Ryder
+Saddle Creek Logistics
+Safeway
+Saia
+Schneider
+Schwan's Company
+SeaWorld
+Sealed Air
+Securitas
+Sephora
+Shake Shack
+Sheetz
+Sherwin-Williams
+ShipBob
+ShipMonk
+Shipt
+Simplot
+Six Flags
+Smart & Final
+Smithfield Foods
+Sodexo
+Sonic Drive-In
+Southwest Airlines
+Sprouts Farmers Market
+Stanford Health Care
+Stanley Black & Decker
+Starbucks
+Station Casinos
+Stellantis
+Stop & Shop
+Subway
+Sun-Maid
+Sutter Health
+Sweetgreen
+Swissport
+Sysco
+TJX Companies
+TQL
+Taco Bell
+Tanimura & Antle
+Target
+Taylor Farms
+Tenet Healthcare
+Tesla
+Texas Roadhouse
+The Cheesecake Factory
+The Venetian Resort
+Tim Hortons
+Toyota Motor North America
+Tractor Supply
+Trader Joe's
+Trinity Health
+Tyson Foods
+UC Davis Health
+UPS
+US Foods
+Uline
+Ulta Beauty
+UniFirst
+United Airlines
+Universal Parks & Resorts
+Vestis
+Viking Cruises
+Waffle House
+Walgreens
+Walmart
+Waste Connections
+Waste Management
+Wawa
+Wayfair
+Wegmans
+Welch's
+Wendy's
+Werner Enterprises
+WestRock
+Whataburger
+Whirlpool
+Whitbread
+White Castle
+Whole Foods Market
+WinCo Foods
+Wingstop
+Wonderful Company
+Wyndham Hotels & Resorts
+Wynn Resorts
+XPO
+Zappos
+Zaxby's
