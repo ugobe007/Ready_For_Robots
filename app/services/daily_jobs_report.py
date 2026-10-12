@@ -562,12 +562,8 @@ def _row_passes_report(row: Any) -> bool:
     employer = str(getattr(row, "company_name", "") or "").strip()
     locality = str(getattr(row, "locality", "") or "").strip()
     title = str(getattr(row, "robot_compatible_task", "") or "").strip()
-    if not is_robot_automation_lead(
-        title,
-        str(getattr(row, "observed_workflow", "") or ""),
-        str(getattr(row, "why_job", "") or ""),
-    ):
-        return False
+    # robot_jobs table already contains only robot-compatible work
+    # No need to check is_robot_automation_lead() again
     if not is_named_robot_job(employer, locality):
         return False
     if not is_job_employer_name(employer, title=title):
