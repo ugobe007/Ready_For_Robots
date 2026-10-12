@@ -1,17 +1,17 @@
 """
 Automation Opportunity Classification
 
-A Robot Job is human work a robot could be hired to do. An operational posting
-(order picker, dishwasher, EVS tech) is the evidence that the work exists at a
-named employer — it is the opportunity, never "contamination".
+We sell to COMPANIES ready to buy or pilot robots. A posting is an opportunity
+only when it shows automation intent. Plain labor postings (order picker,
+dishwasher) are kept as company-level `labor_pain` evidence — not deleted, not
+leads. Company ranking: app/services/buyer_readiness.py.
 
 Routing (stored on ``robot_jobs.opportunity_tier``):
 
     1  ROBOT_JOBS / AUTOMATION_INTENT   employer already moving to automation
                                         (robot/AMR named, automation hire, RFP)  → daily email first
-    2  AUTOMATION_READY                 automatable work + staffing pain, or work
-                                        robots do commercially today              → pipeline
-    3  AUTOMATABLE_WORK                 automatable work, no pain/intent yet       → nurture
+    2  AUTOMATION_READY                 automatable work + staffing pain           → labor_pain signal
+    3  AUTOMATABLE_WORK                 automatable work, no pain/intent yet       → labor_pain signal
     0  NOT_AN_OPPORTUNITY               robot builders / desk work — the ONLY drop
 
 History: on 2026-10-11 tier 3 meant "human labor → reject" and a cleanup script
@@ -84,8 +84,9 @@ def classify_opportunity(
 
 
 def should_create_robot_job(tier: OpportunityTier) -> bool:
-    """Every automatable workflow is a Robot Job. Only tier 0 is not."""
-    return int(tier) in (1, 2, 3)
+    """Only automation intent (tier 1) is a buyer opportunity row. Tiers 2-3 are
+    labor-pain evidence: kept as company signals, not robot_jobs."""
+    return int(tier) == 1
 
 
 def should_create_signal(tier: OpportunityTier) -> bool:

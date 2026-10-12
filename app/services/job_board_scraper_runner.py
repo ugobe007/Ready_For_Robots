@@ -49,23 +49,32 @@ def job_board_urls(
     robot_first = [t for t in targets if "robot_job" in (t.signal_types or [])]
     seen = {id(t) for t in robot_first}
     rest = [t for t in targets if id(t) not in seen]
-    generated = [t for t in robot_first + rest if (t.notes or "").startswith("robot_opportunity_sources")]
-    gen_ids = {id(t) for t in generated}
-    curated = [t.url for t in (robot_first + rest) if id(t) not in gen_ids]
-    head = curated[:cap]
-    # Ontology-generated targets (robot_opportunity_sources) rotate through extra
-    # slots so all of them get scraped over a day, without displacing curated URLs.
-    extra = int(os.getenv("JOB_SCRAPER_ONTOLOGY_URLS_PER_RUN", "8") or 0)
-    if max_urls is not None or extra <= 0 or not generated:
-        return head
+    generated = [t.url for t in robot_first + rest if (t.notes or "").startswith("robot_opportunity_sources")]
+    gen_set = set(generated)
+    curated = [t.url for t in (robot_first + rest) if t.url not in gen_set]
+    if max_urls is not None and not generated:
+        return curated[:cap]
+    # Buyer intent first: automation-hiring searches (robot/AMR/automation techs and
+    # engineers at operators) rotate through the main slots. Legacy labor-title
+    # searches only fill a few rotating slots — they feed company pain evidence,
+    # they are not leads.
     import time
 
     every_h = max(1, int(float(os.getenv("JOB_BOARD_EVERY_HOURS", "6") or 6)))
     cycle = int(time.time() // (every_h * 3600))
-    gen_urls = [t.url for t in generated]
-    start = (cycle * extra) % len(gen_urls)
-    window = (gen_urls[start:] + gen_urls[:start])[:extra]
-    return head + [u for u in window if u not in head]
+
+    def window(urls: list[str], n: int) -> list[str]:
+        if not urls or n <= 0:
+            return []
+        if len(urls) <= n:
+            return list(urls)
+        start = (cycle * n) % len(urls)
+        return (urls[start:] + urls[:start])[:n]
+
+    legacy_n = int(os.getenv("JOB_SCRAPER_LEGACY_URLS_PER_RUN", "4") or 0)
+    head = window(generated, cap if generated else 0)
+    tail = window(curated, legacy_n if generated else cap)
+    return head + [u for u in tail if u not in head]
 
 
 def run_job_board_scraper_sync(

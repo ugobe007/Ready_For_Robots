@@ -12,29 +12,36 @@ those postings at ingest, so re-scraping rebuilt nothing.
 Both are reverted in thinking and in code: an operational posting is the evidence
 that work a robot can do exists at a named employer. It is the product.
 
-## Recover (in this order)
+## The goal (Bob, 2026-10-11)
+
+We are looking for **companies ready to buy or pilot robots** — not robot labor
+jobs. Labor postings are kept only as company-level pain evidence; they are
+never leads by themselves.
+
+## Get a buyer list from what survived (tonight)
+
+`signals` (56,139 `robot_job` rows + every other signal type) and `companies` were
+never touched. Rank companies straight from them:
 
 ```bash
-# 0. What survived? (signals + companies were never touched)
-python3 scripts/rebuild_robot_jobs.py count
-
-# 1. Best: a Supabase backup from before 2026-10-11 ~5pm PT.
-#    Restore it into a NEW project or branch — not over production — then:
-python3 scripts/rebuild_robot_jobs.py from-backup --source-url "postgresql://…restored…"          # dry run
-python3 scripts/rebuild_robot_jobs.py from-backup --source-url "postgresql://…restored…" --apply  # copy jobs + evidence + matches
-
-# 2. Also (or instead): rebuild from surviving `signals` rows (signal_type = 'robot_job')
-python3 scripts/rebuild_robot_jobs.py from-signals            # dry run, prints sample + counts
-python3 scripts/rebuild_robot_jobs.py from-signals --apply
-
-# 3. Re-tier everything with the new ontology (never deletes)
-python3 scripts/reclassify_robot_jobs.py --apply
+python3 scripts/rank_buyers.py                     # dry run: stage counts, top 40, reports/buyer_readiness.csv
+python3 scripts/rank_buyers.py --apply             # stamp companies.automation_profile.buyer_readiness
+python3 scripts/rank_buyers.py --min-stage evaluating --csv hot_buyers.csv
 ```
 
-Both recovery paths upsert on `job_key`, so they are safe to re-run and safe to
-combine. `from-signals` restores employer, title, location, pay, specs, status,
-source URL and original timestamp; full descriptions come back on the next scrape
-of the same posting (same `job_key`).
+Stages: **buying_now** (tender / pilot / vendor selection) → **evaluating**
+(automation hires, automation program or investment, new automated facility) →
+**expanding** (already runs robots) → **primed** (heavy pain at scale only, capped
+at 45/100) → watch. Robot vendors are always "watch".
+
+## Restore robot_jobs (optional)
+
+```bash
+python3 scripts/rebuild_robot_jobs.py count
+python3 scripts/rebuild_robot_jobs.py from-backup --source-url "postgresql://…restored…" [--apply]
+python3 scripts/rebuild_robot_jobs.py from-signals [--apply]    # restores only automation-intent postings
+python3 scripts/reclassify_robot_jobs.py [--apply]              # re-tier; never deletes
+```
 
 ## Never again
 
@@ -49,40 +56,32 @@ Run `migrations/sql/rfr_delete_guard_robot_jobs.sql` once in the Supabase SQL ed
 Also: turn on Point-in-Time Recovery in Supabase (Database → Backups) if the plan
 allows it, and keep agent sessions on a database role without DELETE on these tables.
 
-## How opportunities are scored now
+## How evidence is scored
 
-`app/services/workflow_ontology.py` — 48 workflow families (picking, palletizing,
-machine tending, warewash, EVS, security patrol, harvest, sorting, …), each mapped
-to robot categories from `docs/calibration/vendor_seed_sheets/vendors.csv`.
-
-| Tier | Meaning | Example |
-|---|---|---|
-| 1 | **Automation intent** — robots/AMRs named, automation/CI hire at an operator, RFP | "Maintenance Tech — palletizing robots", SAM.gov "Autonomous scrubbers" |
-| 2 | **Automation-ready** — automatable work + staffing pain, or work robots already do at scale | Order Picker with sign-on bonus, EVS Tech, Janitor |
-| 3 | **Automatable work** — fit only | Line Cook, Dishwasher, Room Attendant |
-| 0 | Not an opportunity — robot builders, desk work. The only thing dropped. | Robotics Software Engineer at an OEM |
-
-`requirements.opportunity` stores the score, families, robot categories, example
-vendors, and the intent/pain evidence for each job.
+`app/services/workflow_ontology.py` classifies one posting/headline (48 workflow
+families mapped to robot categories in `vendors.csv`): tier 1 = automation
+intent → `robot_jobs`; tiers 2–3 = labor posting → `labor_pain` signal only;
+tier 0 = vendors/builders/desk work → dropped.
+`app/services/buyer_readiness.py` rolls all of a company's evidence into a stage
+and score with the evidence lines that justify it.
 
 ## Sources
 
-`app/scrapers/robot_opportunity_sources.py` generates 431 sources from the ontology
+`app/scrapers/robot_opportunity_sources.py` — 389 buyer-intent sources
 (full list: `docs/robot_opportunity_sources.csv`):
 
 | Lane | Count | Key needed |
 |---|---|---|
-| Job-board searches (Indeed/SimplyHired), all families + 15 metros + Las Vegas casino roles | 220 | no |
-| Intent news (Google News RSS: deployments, new DCs, labor shortage, RFPs) | 60 | no |
-| Amazon Jobs JSON | 12 | no |
-| Adzuna / Jooble (one query per family) | 96 | free |
-| USAJOBS | 16 | free |
-| SAM.gov tenders (robot / automation / scrubber / AMR …) | 26 | free |
+| Automation hiring at operators — job boards (AMR/robotics/automation techs & engineers, kitchen/hotel/cleaning robots), national + 15 metros + Las Vegas | 166 | no |
+| Deployment & intent news (Google News RSS) — 30 robot vendors' named customers, pilots, automation programs, new automated facilities, RFP news | 90 | no |
+| Amazon Jobs (RME / robotics / automation roles) | 6 | no |
+| Adzuna + Jooble (same automation-hiring queries) | 100 | free |
+| SAM.gov tenders (robot, AMR, scrubber, conveyor, ASRS …) | 26 | free |
 | ATS boards (Greenhouse/Lever/Ashby/SmartRecruiters/Workday) | 1 seed + auto-discovered | no |
 
-ATS boards are discovered from apply links seen while scraping and polled hourly;
-boards that 404 three times are disabled.
+Job-board rotation now leads with these automation-hiring searches; the old
+labor-title searches only fill 4 rotating slots (`JOB_SCRAPER_LEGACY_URLS_PER_RUN`).
 
 Env knobs: `ENABLE_OPPORTUNITY_FEEDS`, `OPPORTUNITY_FEEDS_EVERY_MINUTES` (60),
-`OPPORTUNITY_FEEDS_MAX_SOURCES` (60), `JOB_SCRAPER_ONTOLOGY_URLS_PER_RUN` (8),
-`ENABLE_ONTOLOGY_TARGETS`, plus the API keys listed in `robot_opportunity_sources.py`.
+`OPPORTUNITY_FEEDS_MAX_SOURCES` (60), `JOB_SCRAPER_LEGACY_URLS_PER_RUN` (4),
+`ENABLE_ONTOLOGY_TARGETS`, and the API keys in `robot_opportunity_sources.py`.

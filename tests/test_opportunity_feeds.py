@@ -76,18 +76,21 @@ def test_run_sources_routes_operational_work_and_tenders(db_session):
     out = feeds.run_sources(db_session, srcs, fetch=lambda s: cards["jobs" if s.label == "jobs" else "tender"], pause_s=0)
     assert out["skipped_no_key"] == 1 and out["failed"] == 0
     rows = {r.robot_compatible_task: r for r in db_session.query(RobotJob).all()}
-    assert "Dishwasher" in rows and "Order Picker" in rows
-    assert "Robotics Software Engineer" not in rows
-    assert rows["Order Picker"].opportunity_tier == 2
+    # Only buyer intent becomes a robot_job; labor postings are company pain signals.
+    assert set(rows) == {"Autonomous Floor Scrubbing Robots"}
     assert rows["Autonomous Floor Scrubbing Robots"].opportunity_tier == 1
-    assert rows["Dishwasher"].requirements["opportunity"]["workflow_families"][0] == "warewash"
+    from app.models.signal import Signal
+    types = {s.signal_text.split("|")[1].strip(): s.signal_type for s in db_session.query(Signal).all()}
+    assert types["Dishwasher"] == "labor_pain" and types["Order Picker"] == "labor_pain"
+    assert "Robotics Software Engineer" not in types
 
 
 def test_one_failing_source_does_not_stop_the_sweep(db_session):
     def fetch(src):
         if src.label == "bad":
             raise feeds.SourceGone("404")
-        return [{"title": "Janitor", "company": "MGM Resorts", "location": "Las Vegas, NV", "desc": "", "url": "u", "html": ""}]
+        return [{"title": "Janitor", "company": "MGM Resorts", "location": "Las Vegas, NV",
+                 "desc": "Operate our new autonomous floor scrubbing robots", "url": "u", "html": ""}]
 
     out = feeds.run_sources(db_session, [OpportunitySource("lever", "bad"), OpportunitySource("lever", "good")],
                             fetch=fetch, pause_s=0)

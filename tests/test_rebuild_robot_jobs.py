@@ -61,7 +61,7 @@ def test_from_signals_dry_run_writes_nothing_then_apply_rebuilds(db_session, mon
     db_session.add(company)
     db_session.flush()
     then = datetime(2026, 6, 1, tzinfo=timezone.utc)
-    for title in ("Dishwasher", "Line Cook", "Housekeeper", "Line Cook"):  # one dupe
+    for title in ("Robot Cleaning Technician", "Dishwasher", "AMR Technician", "AMR Technician"):  # one dupe
         job = extract_robot_job(title=title, company="Caesars Entertainment", locality="Las Vegas, NV")
         db_session.add(Signal(company_id=company.id, signal_type="robot_job",
                               signal_text=format_robot_job_signal(job), signal_strength=0.8,
@@ -75,10 +75,11 @@ def test_from_signals_dry_run_writes_nothing_then_apply_rebuilds(db_session, mon
 
     rebuild.cmd_from_signals(Namespace(apply=True))
     rows = db_session.query(RobotJob).all()
-    assert sorted(r.robot_compatible_task for r in rows) == ["Dishwasher", "Housekeeper", "Line Cook"]
+    # Labor posting (Dishwasher) stays a signal; only automation-intent rows rebuild.
+    assert sorted(r.robot_compatible_task for r in rows) == ["AMR Technician", "Robot Cleaning Technician"]
     assert all(r.provenance.get("rebuilt_from") == "signals" for r in rows)
-    assert all(r.opportunity_tier in (1, 2, 3) for r in rows)
+    assert all(r.opportunity_tier == 1 for r in rows)
 
     # Idempotent.
     rebuild.cmd_from_signals(Namespace(apply=True))
-    assert db_session.query(RobotJob).count() == 3
+    assert db_session.query(RobotJob).count() == 2

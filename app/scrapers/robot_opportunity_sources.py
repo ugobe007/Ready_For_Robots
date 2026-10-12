@@ -1,25 +1,25 @@
-"""Robot opportunity source catalog — where to find work robots can be hired for.
+"""Buyer-intent source catalog — find COMPANIES ready to buy or pilot robots.
 
-Four lanes, most durable first:
+We are not collecting labor postings. Every source here is aimed at evidence that
+a named company is buying, evaluating, or already running robots:
 
-  1. APIs (structured, no anti-bot):  Amazon Jobs JSON, Adzuna, Jooble, USAJOBS,
-     SAM.gov tenders, and employer ATS boards (Greenhouse / Lever / Ashby /
-     SmartRecruiters / Workday) — boards are also *discovered* automatically from
-     apply links seen while scraping (see opportunity_feed_scraper).
-  2. Job-board HTML search pages (Indeed / SimplyHired) for every workflow family
-     in ``workflow_ontology`` — national plus robot-dense metros.
-  3. Intent news (Google News RSS): deployments, automation programs, new
-     DCs/plants, labor-shortage stories, RFPs — feeds the existing rss_feed pipeline.
-  4. Procurement: SAM.gov keyword sweeps for robots / automation / scrubbers / AMRs.
+  1. Tenders     SAM.gov keyword sweeps (robots, AMRs, scrubbers, conveyors…) +
+                 RFP news. → stage buying_now
+  2. Deployments Google News: "<vendor> deploys/selects/partners" (customers named
+                 in vendor press), "<industry> pilots robots", automation programs,
+                 new automated facilities. → buying_now / evaluating / expanding
+  3. Automation hiring at operators (job boards, Amazon Jobs, Adzuna/Jooble):
+                 AMR / robotics / automation technicians, automation engineers and
+                 managers, CI leaders at warehouses, plants, hotels, hospitals —
+                 a company staffing robot ops is buying robots. → evaluating / expanding
+  4. ATS boards  auto-discovered from apply links (Greenhouse/Lever/Ashby/
+                 SmartRecruiters/Workday), polled for the same automation roles.
 
-Everything is generated from the ontology so adding a workflow family adds its
-sources. ``catalog()`` returns the full list; ``scrape_targets()`` returns the
-HTML + RSS subset as ``ScrapeTarget`` objects for the existing runners.
+Roll-up per company: app/services/buyer_readiness.py, scripts/rank_buyers.py.
 
 API lanes need free keys (skipped with a log line when missing):
     ADZUNA_APP_ID / ADZUNA_APP_KEY     https://developer.adzuna.com
     JOOBLE_API_KEY                     https://jooble.org/api/about
-    USAJOBS_API_KEY / USAJOBS_EMAIL    https://developer.usajobs.gov
     SAM_GOV_API_KEY                    https://open.gsa.gov/api/get-opportunities-public-api/
 """
 from __future__ import annotations
@@ -28,21 +28,19 @@ from dataclasses import dataclass
 from typing import Any, Iterable, Optional
 from urllib.parse import quote_plus
 
-from app.services.workflow_ontology import FAMILIES, LEGACY_INDUSTRY_BY_CLASS
-
 
 @dataclass(frozen=True)
 class OpportunitySource:
-    kind: str                      # job_board | rss_feed | amazon_jobs | adzuna | jooble | usajobs | sam_gov |
+    kind: str                      # job_board | rss_feed | amazon_jobs | adzuna | jooble | sam_gov |
                                    # greenhouse | lever | ashby | smartrecruiters | workday
     label: str
     url: str = ""                  # html / rss sources
     params: tuple[tuple[str, Any], ...] = ()
     industries: tuple[str, ...] = ()
     families: tuple[str, ...] = ()
-    lane: str = "posting"          # posting | intent_news | tender
+    lane: str = "automation_hiring"   # tender | deployment_news | automation_hiring | ats
     needs_env: tuple[str, ...] = ()
-    verified: bool = False         # endpoint/format checked by a human or validator
+    verified: bool = False         # URL/API format matches a known-working source
 
     def param(self, key: str, default: Any = None) -> Any:
         return dict(self.params).get(key, default)
@@ -52,122 +50,122 @@ class OpportunitySource:
         return f"{self.kind}:{self.url or dict(self.params)}"
 
 
-# ─── Search vocabulary per family (what an employer actually titles the job) ──
-# Hand-picked, board-friendly phrases. 2 per family nationally; metros get the first.
-FAMILY_QUERIES: dict[str, tuple[str, ...]] = {
-    "picking": ("order picker", "order selector warehouse"),
-    "packing": ("packer warehouse", "pack out associate"),
-    "palletizing": ("palletizer operator", "case stacker"),
-    "truck_unloading": ("trailer unloader", "package handler"),
-    "material_handling": ("material handler", "tugger driver"),
-    "forklift": ("forklift operator", "reach truck operator"),
-    "receiving": ("receiving clerk warehouse", "inventory cycle counter"),
-    "sortation": ("parcel sorter", "mail processing clerk"),
-    "cold_storage": ("freezer order selector", "cold storage warehouse associate"),
-    "machine_tending": ("cnc machine operator", "injection molding operator"),
-    "assembly": ("assembler production", "assembly line worker"),
-    "welding": ("welder fabricator", "mig welder production"),
-    "finishing": ("paint line operator", "sander deburr finisher"),
-    "quality_inspection": ("quality inspector production", "visual inspector"),
-    "food_processing": ("poultry processing worker", "food production line worker"),
-    "lab_automation": ("specimen processor", "laboratory assistant accessioning"),
-    "food_prep": ("line cook high volume", "prep cook"),
-    "beverage": ("barista high volume", "beverage attendant"),
-    "warewash": ("dishwasher", "steward kitchen utility"),
-    "serving": ("food runner", "banquet server"),
-    "cashier_ordering": ("drive thru cashier", "cashier crew member"),
-    "housekeeping": ("room attendant hotel", "housekeeper hotel"),
-    "laundry": ("laundry attendant", "linen attendant"),
-    "guest_delivery": ("bellperson", "hotel runner amenities"),
-    "front_desk": ("front desk agent hotel", "night auditor"),
-    "parking": ("valet attendant", "parking attendant"),
-    "cleaning": ("janitor", "floor technician scrubber"),
-    "environmental_services": ("environmental services technician hospital", "evs tech"),
-    "facade_cleaning": ("window washer high rise", "solar panel cleaner"),
-    "pool_car_wash": ("car wash attendant", "tank cleaner industrial"),
-    "waste_recycling": ("recycling sorter", "mrf sorter"),
-    "security_patrol": ("security officer patrol", "fire watch guard"),
-    "industrial_inspection": ("plant operator rounds", "data center technician"),
-    "patient_transport": ("patient transporter", "hospital courier"),
-    "hospital_logistics": ("hospital supply chain technician", "dietary aide tray line"),
-    "pharmacy": ("central fill pharmacy technician", "pharmacy technician"),
-    "sterile_processing": ("sterile processing technician", "decontamination technician"),
-    "patient_assist": ("patient sitter", "patient care companion"),
-    "replenishment": ("overnight stocker", "grocery stocker"),
-    "last_mile": ("delivery driver package", "courier delivery"),
-    "trucking": ("yard jockey", "cdl a driver local"),
-    "harvest": ("farm worker harvest", "greenhouse worker"),
-    "field_work": ("tractor operator farm", "pesticide applicator"),
-    "dairy_livestock": ("dairy milker", "poultry farm worker"),
-    "landscaping": ("groundskeeper", "mower operator"),
-    "construction_labor": ("construction laborer", "drywall finisher"),
-    "mining": ("haul truck operator", "underground miner"),
-    "general_labor": ("general laborer warehouse", "production associate"),
-}
+# ─── Automation hiring at operators ──────────────────────────────────────────
+# (query, industries). Titles an OPERATOR posts when robots are arriving or running.
+AUTOMATION_HIRING_QUERIES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("AMR technician warehouse", ("Logistics",)),
+    ("autonomous mobile robot technician", ("Logistics",)),
+    ("robotics technician distribution center", ("Logistics",)),
+    ("automation technician distribution center", ("Logistics",)),
+    ("automation technician warehouse conveyor sortation", ("Logistics",)),
+    ("ASRS technician", ("Logistics",)),
+    ("AutoStore technician", ("Logistics", "Retail")),
+    ("MHE technician automation", ("Logistics",)),
+    ("automation engineer distribution center", ("Logistics",)),
+    ("automation manager warehouse", ("Logistics",)),
+    ("director of automation supply chain", ("Logistics",)),
+    ("automation project manager fulfillment", ("Logistics",)),
+    ("robotics engineer operations warehouse", ("Logistics",)),
+    ("autonomous forklift", ("Logistics",)),
+    ("robot operator warehouse", ("Logistics",)),
+    ("robotic palletizer technician", ("Factory",)),
+    ("robot technician manufacturing plant", ("Factory",)),
+    ("cobot operator", ("Factory",)),
+    ("robotic welding operator", ("Factory",)),
+    ("robot programmer production", ("Factory",)),
+    ("automation engineer food manufacturing", ("Factory",)),
+    ("automation specialist packaging", ("Factory",)),
+    ("controls engineer automation plant", ("Factory",)),
+    ("director of automation manufacturing", ("Factory",)),
+    ("continuous improvement manager automation", ("Factory", "Logistics")),
+    ("industrial engineer automation", ("Factory", "Logistics")),
+    ("hotel robot", ("Hospitality",)),
+    ("robot attendant hotel", ("Hospitality",)),
+    ("hospitality innovation technology director", ("Hospitality",)),
+    ("casino technology innovation", ("Hospitality",)),
+    ("robot server restaurant", ("Food Service",)),
+    ("kitchen automation", ("Food Service",)),
+    ("restaurant innovation automation", ("Food Service",)),
+    ("food service robotics", ("Food Service",)),
+    ("cleaning robot operator", ("Cleaning",)),
+    ("autonomous floor scrubber", ("Cleaning",)),
+    ("robotic cleaning technician", ("Cleaning",)),
+    ("janitorial technology robotics", ("Cleaning",)),
+    ("hospital robotics coordinator", ("Healthcare",)),
+    ("pharmacy automation technician", ("Healthcare",)),
+    ("hospital automation supply chain", ("Healthcare",)),
+    ("lab automation specialist", ("Healthcare",)),
+    ("UV disinfection robot", ("Healthcare",)),
+    ("security robot", ("Facilities",)),
+    ("drone program manager inspection", ("Facilities",)),
+    ("data center robotics", ("Facilities",)),
+    ("agricultural robotics operations", ("Agriculture",)),
+    ("autonomous tractor operator", ("Agriculture",)),
+    ("construction robotics", ("Construction",)),
+    ("retail store automation inventory robot", ("Retail",)),
+)
 
-# Robot-dense / labor-tight metros. Las Vegas first: casinos + hotels + DCs.
+# Robot-dense metros (Las Vegas first). Metro sweeps use the first queries below.
 METROS: tuple[str, ...] = (
     "Las Vegas, NV", "Dallas, TX", "Ontario, CA", "Atlanta, GA", "Chicago, IL",
     "Phoenix, AZ", "Houston, TX", "Columbus, OH", "Indianapolis, IN", "Memphis, TN",
     "Reno, NV", "Allentown, PA", "Nashville, TN", "Orlando, FL", "Charlotte, NC",
 )
-
-# Families worth a metro sweep (high volume + high automatability).
-METRO_FAMILIES: tuple[str, ...] = (
-    "picking", "material_handling", "cleaning", "warewash", "housekeeping", "food_prep",
-    "security_patrol", "palletizing", "serving", "forklift",
+METRO_QUERIES: tuple[str, ...] = (
+    "robotics technician", "automation technician", "automation engineer", "AMR technician",
 )
-
-LAS_VEGAS_EXTRA: tuple[tuple[str, str], ...] = (
-    ("casino porter", "cleaning"), ("casino utility porter", "cleaning"), ("banquet houseperson", "serving"),
-    ("room service server", "serving"), ("casino steward", "warewash"), ("cocktail server casino", "serving"),
-    ("convention center custodian", "cleaning"), ("public area attendant casino", "cleaning"),
-    ("buffet attendant", "serving"), ("hotel laundry attendant", "laundry"),
+LAS_VEGAS_EXTRA: tuple[str, ...] = (
+    "hotel robot", "casino technology innovation", "kitchen automation", "cleaning robot",
+    "robot server", "security robot",
 )
 
 
 def _indeed(q: str, loc: str = "United States") -> str:
-    return f"https://www.indeed.com/jobs?q={quote_plus(q)}&l={quote_plus(loc)}&sort=date&fromage=14"
+    return f"https://www.indeed.com/jobs?q={quote_plus(q)}&l={quote_plus(loc)}&sort=date&fromage=30"
 
 
 def _simplyhired(q: str, loc: str = "United States") -> str:
-    return f"https://www.simplyhired.com/search?q={quote_plus(q)}&l={quote_plus(loc)}&t=14"
+    return f"https://www.simplyhired.com/search?q={quote_plus(q)}&l={quote_plus(loc)}&t=30"
 
 
 def _gnews(q: str) -> str:
     return f"https://news.google.com/rss/search?q={quote_plus(q)}+when:30d&hl=en-US&gl=US&ceid=US:en"
 
 
-def _industries(family_key: str) -> tuple[str, ...]:
-    fam = next((f for f in FAMILIES if f.key == family_key), None)
-    if not fam:
-        return ()
-    legacy = LEGACY_INDUSTRY_BY_CLASS.get(fam.product_class)
-    out = [legacy] if legacy else []
-    out += [i for i in fam.industries[:2] if i not in out]
-    return tuple(out)
-
-
 def _job_board_sources() -> list[OpportunitySource]:
     out: list[OpportunitySource] = []
-    for fam_key, queries in FAMILY_QUERIES.items():
-        inds = _industries(fam_key)
-        for q in queries:
-            out.append(OpportunitySource("job_board", f"Indeed · {q}", _indeed(q), industries=inds, families=(fam_key,), verified=True))
-        out.append(OpportunitySource("job_board", f"SimplyHired · {queries[0]}", _simplyhired(queries[0]),
-                                     industries=inds, families=(fam_key,), verified=True))
+    for q, inds in AUTOMATION_HIRING_QUERIES:
+        out.append(OpportunitySource("job_board", f"Indeed · {q}", _indeed(q), industries=inds, verified=True))
+        out.append(OpportunitySource("job_board", f"SimplyHired · {q}", _simplyhired(q), industries=inds, verified=True))
     for metro in METROS:
-        for fam_key in METRO_FAMILIES[: (10 if metro == "Las Vegas, NV" else 4)]:
-            q = FAMILY_QUERIES[fam_key][0]
+        for q in METRO_QUERIES:
             out.append(OpportunitySource("job_board", f"Indeed · {q} · {metro}", _indeed(q, metro),
-                                         industries=_industries(fam_key), families=(fam_key,), verified=True))
-    for q, fam_key in LAS_VEGAS_EXTRA:
+                                         industries=("Logistics", "Factory"), verified=True))
+    for q in LAS_VEGAS_EXTRA:
         out.append(OpportunitySource("job_board", f"Indeed · {q} · Las Vegas", _indeed(q, "Las Vegas, NV"),
-                                     industries=_industries(fam_key) + ("Hospitality",), families=(fam_key,), verified=True))
+                                     industries=("Hospitality",), verified=True))
     return out
 
 
-# ─── Intent news (Google News RSS → existing rss_feed pipeline) ──────────────
+# ─── Deployment / intent news (Google News RSS → existing rss_feed pipeline) ─
+# Robot vendors name their customers in press releases. Each query surfaces buyers.
+VENDOR_CUSTOMER_QUERIES: tuple[tuple[str, tuple[str, ...]], ...] = tuple(
+    (f'"{v}" (deploys OR selects OR "partners with" OR customer OR pilot OR rollout)', inds)
+    for v, inds in (
+        ("Locus Robotics", ("Logistics",)), ("Symbotic", ("Logistics", "Retail")), ("GreyOrange", ("Logistics",)),
+        ("Geek+", ("Logistics",)), ("AutoStore", ("Logistics", "Retail")), ("Dexterity", ("Logistics",)),
+        ("Plus One Robotics", ("Logistics",)), ("Fox Robotics", ("Logistics",)), ("Seegrid", ("Logistics", "Factory")),
+        ("Vecna Robotics", ("Logistics",)), ("OTTO Motors", ("Factory",)), ("Agility Robotics", ("Logistics",)),
+        ("Figure AI", ("Factory",)), ("Apptronik", ("Logistics", "Factory")), ("Boston Dynamics Stretch", ("Logistics",)),
+        ("Brain Corp", ("Cleaning", "Retail")), ("Avidbots", ("Cleaning",)), ("Simbe Robotics", ("Retail",)),
+        ("Knightscope", ("Facilities",)), ("Bear Robotics", ("Food Service",)), ("Pudu Robotics", ("Food Service", "Hospitality")),
+        ("Keenon Robotics", ("Food Service", "Hospitality")), ("Miso Robotics", ("Food Service",)),
+        ("Serve Robotics", ("Food Service",)), ("Starship Technologies", ("Food Service",)),
+        ("Diligent Robotics", ("Healthcare",)), ("Aethon TUG", ("Healthcare",)), ("Universal Robots", ("Factory",)),
+        ("Path Robotics", ("Factory",)), ("Carbon Robotics", ("Agriculture",)),
+    )
+)
+
 INTENT_NEWS_QUERIES: tuple[tuple[str, tuple[str, ...]], ...] = (
     # Deployments / programs (named operator buying robots now)
     ('"deploys robots" OR "deployed robots" warehouse', ("Logistics",)),
@@ -238,23 +236,17 @@ INTENT_NEWS_QUERIES: tuple[tuple[str, tuple[str, ...]], ...] = (
 
 
 def _news_sources() -> list[OpportunitySource]:
-    return [
-        OpportunitySource("rss_feed", f"Google News · {q[:60]}", _gnews(q), industries=inds, lane="intent_news", verified=True)
-        for q, inds in INTENT_NEWS_QUERIES
-    ]
+    out = [OpportunitySource("rss_feed", f"Google News · {q[:60]}", _gnews(q), industries=inds,
+                             lane="deployment_news", verified=True) for q, inds in INTENT_NEWS_QUERIES]
+    out += [OpportunitySource("rss_feed", f"Google News · {q[:60]}", _gnews(q), industries=inds,
+                              lane="deployment_news", verified=True) for q, inds in VENDOR_CUSTOMER_QUERIES]
+    return out
 
 
 # ─── API lanes ───────────────────────────────────────────────────────────────
 AMAZON_QUERIES = (
-    "warehouse associate", "fulfillment center associate", "sortation center", "delivery station",
-    "rme technician", "robotics technician", "amazon robotics", "grocery associate", "prime air ground",
-    "cold storage associate", "air hub associate", "returns center associate",
-)
-
-USAJOBS_KEYWORDS = (
-    "custodial worker", "warehouse worker", "materials handler", "food service worker", "laundry worker",
-    "housekeeping aid", "sterile processing", "pharmacy technician", "motor vehicle operator", "mail clerk",
-    "security guard", "laborer", "packer", "sales store checker", "equipment cleaner", "cook",
+    "rme technician", "robotics technician", "amazon robotics", "automation technician",
+    "controls engineer", "automation engineer",
 )
 
 SAM_GOV_KEYWORDS = (
@@ -276,21 +268,17 @@ def _api_sources() -> list[OpportunitySource]:
     for q in AMAZON_QUERIES:
         out.append(OpportunitySource("amazon_jobs", f"Amazon Jobs · {q}", params=(("query", q),),
                                      industries=("Logistics",), verified=True))
-    for fam_key, queries in FAMILY_QUERIES.items():
-        inds = _industries(fam_key)
-        out.append(OpportunitySource("adzuna", f"Adzuna · {queries[0]}", params=(("what", queries[0]),),
-                                     industries=inds, families=(fam_key,), needs_env=("ADZUNA_APP_ID", "ADZUNA_APP_KEY")))
-        out.append(OpportunitySource("jooble", f"Jooble · {queries[0]}", params=(("keywords", queries[0]),),
-                                     industries=inds, families=(fam_key,), needs_env=("JOOBLE_API_KEY",)))
-    for kw in USAJOBS_KEYWORDS:
-        out.append(OpportunitySource("usajobs", f"USAJOBS · {kw}", params=(("keyword", kw),),
-                                     industries=("Government",), needs_env=("USAJOBS_API_KEY", "USAJOBS_EMAIL")))
+    for q, inds in AUTOMATION_HIRING_QUERIES:
+        out.append(OpportunitySource("adzuna", f"Adzuna · {q}", params=(("what", q),), industries=inds,
+                                     needs_env=("ADZUNA_APP_ID", "ADZUNA_APP_KEY")))
+        out.append(OpportunitySource("jooble", f"Jooble · {q}", params=(("keywords", q),), industries=inds,
+                                     needs_env=("JOOBLE_API_KEY",)))
     for kw in SAM_GOV_KEYWORDS:
         out.append(OpportunitySource("sam_gov", f"SAM.gov tenders · {kw}", params=(("keyword", kw),),
                                      industries=("Government",), lane="tender", needs_env=("SAM_GOV_API_KEY",)))
     for ats, token, company in SEED_ATS_BOARDS:
         out.append(OpportunitySource(ats, f"{company} ({ats})", params=(("token", token), ("company", company)),
-                                     verified=True))
+                                     lane="ats", verified=True))
     return out
 
 
@@ -321,8 +309,8 @@ def scrape_targets(existing_urls: Iterable[str] = ()) -> list:
             continue
         out.append(ScrapeTarget(
             url=s.url, label=s.label, scraper=s.kind, industries=list(s.industries),
-            signal_types=["robot_job"] if s.kind == "job_board" else ["automation_intent", "expansion", "labor_shortage"],
-            cadence="daily", notes=f"robot_opportunity_sources families={','.join(s.families)}",
+            signal_types=["robot_job"] if s.kind == "job_board" else ["automation_intent", "deployment", "rfp_posted"],
+            cadence="daily", notes=f"robot_opportunity_sources lane={s.lane}",
         ))
     return out
 

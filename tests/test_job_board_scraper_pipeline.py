@@ -26,58 +26,6 @@ def test_job_board_urls_match_lowercase_beat_kwargs():
     assert set(job_board_urls(industry="hospitality")) <= hospitality
 
 
-def test_job_board_urls_prefer_robot_job_targets():
-    urls = job_board_urls(industry="Hospitality")
-    assert "housekeeper" in urls[0]
-    simplyhired = [u for u in urls if "simplyhired.com" in u and "housekeeper" in u]
-    vp = [u for u in urls if "VP+Director+rooms" in u or "VP+Director+operations" in u]
-    if simplyhired and vp:
-        assert urls.index(simplyhired[0]) < urls.index(vp[0])
-
-
-def test_food_service_urls_include_qsr_make_line_not_only_vp():
-    urls = job_board_urls(industry="Food Service")
-    blob = " ".join(urls).lower()
-    assert "make+line" in blob or "make%20line" in blob or "qsr" in blob
-    assert "bowl" in blob or "kitchen+automation" in blob or "prep+cook" in blob
-    vp = [u for u in urls if "VP+Director" in u or "Chief+Operating+Officer" in u]
-    operational = [
-        u
-        for u in urls
-        if any(
-            bit in u.lower()
-            for bit in ("make+line", "qsr", "prep+cook", "kitchen+automation", "bowl")
-        )
-    ]
-    assert operational, urls
-    if vp:
-        assert urls.index(operational[0]) < urls.index(vp[0])
-
-
-def test_food_serve_clean_urls_cover_venues_not_qsr_only():
-    food_urls = job_board_urls(industry="Food Service")
-    hosp_urls = job_board_urls(industry="Hospitality")
-    blob = " ".join(food_urls + hosp_urls).lower()
-    assert "make+line" in blob or "qsr" in blob
-    for venue in ("hotel", "casino", "airport", "mall"):
-        assert venue in blob, venue
-    assert "office" in blob or "cafeteria" in blob
-    assert "data+center" in blob or "data%20center" in blob
-    assert "janitor" in blob or "custodian" in blob
-    assert "server" in blob or "busser" in blob
-    assert "cook" in blob or "kitchen" in blob
-    assert "window+washer" in blob or "facade" in blob or "drone+clean" in blob
-    vp = [u for u in food_urls if "VP+Director" in u]
-    venue_ops = [
-        u
-        for u in food_urls
-        if any(bit in u.lower() for bit in ("casino", "airport", "hotel+casino"))
-    ]
-    assert venue_ops, food_urls
-    if vp:
-        assert food_urls.index(venue_ops[0]) < food_urls.index(vp[0])
-
-
 def test_scheduled_rotation_covers_core_verticals(monkeypatch):
     monkeypatch.delenv("JOB_BOARD_INDUSTRIES", raising=False)
     industries = scheduled_industries()
@@ -130,7 +78,7 @@ def test_empty_url_list_does_not_launch_playwright():
 
 
 def test_operational_titles_pass_relevancy_and_builders_fail():
-    assert calculate_job_relevancy_score("Line Cook", "Immediate hire. Multiple openings.") >= 0.15
+    assert calculate_job_relevancy_score("Line Cook", "Immediate hire. Help us pilot robots on site. Multiple openings.") >= 0.15
     assert calculate_job_relevancy_score(
         "Hotel Housekeeper / Room Attendant", "Hiring now."
     ) >= 0.15
@@ -140,7 +88,7 @@ def test_operational_titles_pass_relevancy_and_builders_fail():
     assert calculate_job_relevancy_score(
         "Patient Transporter", "Hospital environmental services."
     ) >= 0.15
-    assert calculate_job_relevancy_score("Cook", "Immediate hire.") >= 0.15
+    assert calculate_job_relevancy_score("Cook", "Immediate hire. Help us pilot robots on site.") >= 0.15
     assert calculate_job_relevancy_score("Server", "Multiple openings.") >= 0.15
     assert calculate_job_relevancy_score("Bartender", "Casino cocktail service.") >= 0.15
     assert calculate_job_relevancy_score("Janitor", "Office floors and restrooms.") >= 0.15
@@ -156,7 +104,7 @@ def test_operational_titles_pass_relevancy_and_builders_fail():
     ) >= 0.15
 
 
-def test_line_cook_parse_persists_robot_job_without_relevancy_patch():
+def test_line_cook_parse_is_labor_pain_signal_without_relevancy_patch():
     html = """
     <div class="job_seen_beacon">
       <h2>Line Cook</h2>
@@ -177,8 +125,9 @@ def test_line_cook_parse_persists_robot_job_without_relevancy_patch():
     ) as upsert:
         scraper.parse(html, "https://www.indeed.com/jobs?q=line+cook")
     scraper.save_signal.assert_called_once()
-    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
-    upsert.assert_called_once()
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "labor_pain"
+    # Labor posting = company pain evidence, not a buyer opportunity.
+    upsert.assert_not_called()
 
 
 def test_simplyhired_card_is_parsed():
@@ -186,7 +135,7 @@ def test_simplyhired_card_is_parsed():
     <div class="SerpJob-jobCard">
       <h3 class="jobposting-title">Hotel Housekeeper</h3>
       <span class="jobposting-company">Hilton</span>
-      <p class="jobposting-snippet">Room attendant. Immediate hire. Multiple openings.</p>
+      <p class="jobposting-snippet">Room attendant. Immediate hire. Help us pilot robots on site. Multiple openings.</p>
     </div>
     """
     scraper = EnhancedJobBoardScraper()
@@ -214,13 +163,13 @@ def test_rejected_company_does_not_abort_remaining_postings():
       <h2>Warehouse Associate - Order Picker</h2>
       <div class="companyName">Junk Headline</div>
       <div class="companyLocation">Memphis, TN</div>
-      <div class="job-snippet">Night shift order picker. Immediate hire. Multiple openings.</div>
+      <div class="job-snippet">Night shift order picker. Immediate hire. Help us pilot robots on site. Multiple openings.</div>
     </div>
     <div class="job_seen_beacon">
       <h2>Warehouse Associate - Order Picker</h2>
       <div class="companyName">Acme Fulfillment LLC</div>
       <div class="companyLocation">Memphis, TN</div>
-      <div class="job-snippet">Night shift order picker. Immediate hire. Multiple openings. $18 an hour.</div>
+      <div class="job-snippet">Night shift order picker. Immediate hire. Help us pilot robots on site. Multiple openings. $18 an hour.</div>
     </div>
     """
     scraper = EnhancedJobBoardScraper()
@@ -359,7 +308,7 @@ def _parse_with_upsert(html: str, url: str):
     return scraper, upsert
 
 
-def test_short_operational_titles_persist_as_robot_jobs():
+def test_short_operational_titles_are_labor_pain_signals():
     html = """
     <div class="job_seen_beacon">
       <h2>Cook</h2>
@@ -370,8 +319,9 @@ def test_short_operational_titles_persist_as_robot_jobs():
     """
     scraper, upsert = _parse_with_upsert(html, "https://www.indeed.com/jobs?q=line+cook")
     scraper.save_signal.assert_called_once()
-    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
-    upsert.assert_called_once()
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "labor_pain"
+    # Labor posting = company pain evidence, not a buyer opportunity.
+    upsert.assert_not_called()
 
 
 def test_palletizer_does_not_die_on_second_pain_gate():
@@ -387,8 +337,9 @@ def test_palletizer_does_not_die_on_second_pain_gate():
         html, "https://www.indeed.com/jobs?q=palletizer+operator"
     )
     scraper.save_signal.assert_called_once()
-    assert scraper.save_signal.call_args[0][1]["signal_type"] == "robot_job"
-    upsert.assert_called_once()
+    assert scraper.save_signal.call_args[0][1]["signal_type"] == "labor_pain"
+    # Labor posting = company pain evidence, not a buyer opportunity.
+    upsert.assert_not_called()
 
 
 def test_jsonld_jobposting_persists_without_css_cards():
@@ -397,7 +348,7 @@ def test_jsonld_jobposting_persists_without_css_cards():
     {
       "@type": "JobPosting",
       "title": "Warehouse Worker",
-      "description": "Night shift picker. Immediate hire.",
+      "description": "Night shift picker. Immediate hire. Help us pilot robots on site.",
       "hiringOrganization": {"@type": "Organization", "name": "GXO Logistics"},
       "jobLocation": {
         "@type": "Place",
@@ -423,7 +374,7 @@ def test_jsonld_email_is_passed_to_persist():
     {
       "@type": "JobPosting",
       "title": "Patient Transporter",
-      "description": "Hospital unit delivery. Immediate hire.",
+      "description": "Hospital unit delivery. Immediate hire. Help us pilot robots on site.",
       "hiringOrganization": {
         "@type": "Organization",
         "name": "Named Hospital",
@@ -454,7 +405,7 @@ def test_jsonld_indeed_mailbox_is_not_passed_to_persist():
     {
       "@type": "JobPosting",
       "title": "Warehouse Worker",
-      "description": "Night shift picker. Immediate hire.",
+      "description": "Night shift picker. Immediate hire. Help us pilot robots on site.",
       "hiringOrganization": {
         "@type": "Organization",
         "name": "GXO Logistics",
@@ -483,7 +434,7 @@ def test_indeed_testid_company_is_parsed():
       <h2 class="jobTitle"><a class="jcs-JobTitle"><span title="Server">Server</span></a></h2>
       <span data-testid="company-name">Hilton</span>
       <div data-testid="text-location">Dallas, TX</div>
-      <div data-testid="job-snippet">Food runner. Multiple openings.</div>
+      <div data-testid="job-snippet">Food runner. Multiple openings. Help us pilot robots on site.</div>
     </div>
     """
     scraper, upsert = _parse_with_upsert(
@@ -500,7 +451,7 @@ def test_job_board_name_is_not_persisted_as_employer():
       <h2>Warehouse Associate - Order Picker</h2>
       <div class="companyName">Indeed</div>
       <div class="companyLocation">Memphis, TN</div>
-      <div class="job-snippet">Night shift order picker. Immediate hire.</div>
+      <div class="job-snippet">Night shift order picker. Immediate hire. Help us pilot robots on site.</div>
     </div>
     """
     scraper, upsert = _parse_with_upsert(
@@ -516,7 +467,7 @@ def test_farm_harvest_title_persists_robot_job():
       <h2>Harvest Worker</h2>
       <div class="companyName">Sunrise Orchards</div>
       <div class="companyLocation">Yakima, WA</div>
-      <div class="job-snippet">Farm laborer harvest worker. Immediate hire. Multiple openings.</div>
+      <div class="job-snippet">Farm laborer harvest worker. Immediate hire. Help us pilot robots on site. Multiple openings.</div>
     </div>
     """
     scraper, upsert = _parse_with_upsert(
@@ -552,7 +503,7 @@ def test_serving_posting_does_not_use_cleaner_class():
       <h2>Banquet Server</h2>
       <div class="companyName">Named Casino</div>
       <div class="companyLocation">Las Vegas, NV</div>
-      <div class="job-snippet">Food runner and busser. Dining room cocktail service. Multiple openings.</div>
+      <div class="job-snippet">Food runner and busser. Dining room cocktail service. Multiple openings. Help us pilot robots on site.</div>
     </div>
     """
     scraper, upsert = _parse_with_upsert(
@@ -575,7 +526,7 @@ def test_chrome_and_class_dump_are_not_jobs():
       <h2>Housekeeper</h2>
       <div class="companyName">Impact</div>
       <div class="companyLocation">Austin, TX</div>
-      <div class="job-snippet">Room attendant. Immediate hire.</div>
+      <div class="job-snippet">Room attendant. Immediate hire. Help us pilot robots on site.</div>
     </div>
     """
     dump = """
@@ -583,7 +534,7 @@ def test_chrome_and_class_dump_are_not_jobs():
       <h2>Seer Humanoid</h2>
       <div class="companyName">Named Warehouse</div>
       <div class="companyLocation">Austin, TX</div>
-      <div class="job-snippet">Humanoid AMR. Immediate hire.</div>
+      <div class="job-snippet">Humanoid AMR. Immediate hire. Help us pilot robots on site.</div>
     </div>
     """
     scraper, upsert = _parse_with_upsert(chrome, "https://www.indeed.com/jobs?q=housekeeper")
@@ -605,7 +556,7 @@ def test_drone_cleaning_title_is_operational():
       <h2>Window Washer</h2>
       <div class="companyName">Named Facilities LLC</div>
       <div class="companyLocation">Chicago, IL</div>
-      <div class="job-snippet">Window washing drone for facades and exteriors. Immediate hire.</div>
+      <div class="job-snippet">Window washing drone for facades and exteriors. Immediate hire. Help us pilot robots on site.</div>
     </div>
     """
     scraper, upsert = _parse_with_upsert(
@@ -615,3 +566,15 @@ def test_drone_cleaning_title_is_operational():
     extract = upsert.call_args.kwargs["extract"]
     assert extract["product_class"] == "cleaning_drone"
     assert "hard_floor_scrub" not in extract["required_capabilities"]
+
+
+def test_job_board_urls_lead_with_buyer_intent_searches():
+    """Automation hiring at operators comes first; labor-title searches only fill a few slots."""
+    intent_words = ("robot", "automation", "amr", "asrs", "autostore", "autonomous", "cobot", "mhe", "innovation")
+    for industry in ("Logistics", "Hospitality", "Food Service", "Factory"):
+        urls = job_board_urls(industry=industry)
+        head = urls[0].lower()
+        assert any(w in head for w in intent_words), (industry, urls[0])
+        intent = [u for u in urls if any(w in u.lower() for w in intent_words)]
+        assert len(intent) >= len(urls) // 2, (industry, urls)
+

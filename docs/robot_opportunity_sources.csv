@@ -1,432 +1,390 @@
-lane,kind,label,endpoint,query,industries,workflow_families,needs_api_key,already_in_legacy_registry
-posting,amazon_jobs,Amazon Jobs · warehouse associate,https://www.amazon.jobs/en/search.json,query=warehouse associate,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · fulfillment center associate,https://www.amazon.jobs/en/search.json,query=fulfillment center associate,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · sortation center,https://www.amazon.jobs/en/search.json,query=sortation center,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · delivery station,https://www.amazon.jobs/en/search.json,query=delivery station,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · rme technician,https://www.amazon.jobs/en/search.json,query=rme technician,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · robotics technician,https://www.amazon.jobs/en/search.json,query=robotics technician,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · amazon robotics,https://www.amazon.jobs/en/search.json,query=amazon robotics,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · grocery associate,https://www.amazon.jobs/en/search.json,query=grocery associate,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · prime air ground,https://www.amazon.jobs/en/search.json,query=prime air ground,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · cold storage associate,https://www.amazon.jobs/en/search.json,query=cold storage associate,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · air hub associate,https://www.amazon.jobs/en/search.json,query=air hub associate,Logistics,,no,no
-posting,amazon_jobs,Amazon Jobs · returns center associate,https://www.amazon.jobs/en/search.json,query=returns center associate,Logistics,,no,no
-posting,adzuna,Adzuna · order picker,https://api.adzuna.com/v1/api/jobs/us/search/1,what=order picker,Logistics; Retail,picking,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · order picker,https://jooble.org/api/{key},keywords=order picker,Logistics; Retail,picking,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · packer warehouse,https://api.adzuna.com/v1/api/jobs/us/search/1,what=packer warehouse,Logistics; E-commerce,packing,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · packer warehouse,https://jooble.org/api/{key},keywords=packer warehouse,Logistics; E-commerce,packing,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · palletizer operator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=palletizer operator,Factory; Manufacturing; Food & Beverage,palletizing,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · palletizer operator,https://jooble.org/api/{key},keywords=palletizer operator,Factory; Manufacturing; Food & Beverage,palletizing,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · trailer unloader,https://api.adzuna.com/v1/api/jobs/us/search/1,what=trailer unloader,Logistics; Parcel,truck_unloading,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · trailer unloader,https://jooble.org/api/{key},keywords=trailer unloader,Logistics; Parcel,truck_unloading,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · material handler,https://api.adzuna.com/v1/api/jobs/us/search/1,what=material handler,Logistics; Manufacturing,material_handling,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · material handler,https://jooble.org/api/{key},keywords=material handler,Logistics; Manufacturing,material_handling,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · forklift operator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=forklift operator,Logistics; Manufacturing,forklift,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · forklift operator,https://jooble.org/api/{key},keywords=forklift operator,Logistics; Manufacturing,forklift,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · receiving clerk warehouse,https://api.adzuna.com/v1/api/jobs/us/search/1,what=receiving clerk warehouse,Logistics; Retail,receiving,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · receiving clerk warehouse,https://jooble.org/api/{key},keywords=receiving clerk warehouse,Logistics; Retail,receiving,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · parcel sorter,https://api.adzuna.com/v1/api/jobs/us/search/1,what=parcel sorter,Logistics; Parcel; Postal,sortation,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · parcel sorter,https://jooble.org/api/{key},keywords=parcel sorter,Logistics; Parcel; Postal,sortation,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · freezer order selector,https://api.adzuna.com/v1/api/jobs/us/search/1,what=freezer order selector,Logistics; Cold Chain; Food & Beverage,cold_storage,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · freezer order selector,https://jooble.org/api/{key},keywords=freezer order selector,Logistics; Cold Chain; Food & Beverage,cold_storage,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · cnc machine operator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=cnc machine operator,Factory; Manufacturing; Automotive,machine_tending,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · cnc machine operator,https://jooble.org/api/{key},keywords=cnc machine operator,Factory; Manufacturing; Automotive,machine_tending,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · assembler production,https://api.adzuna.com/v1/api/jobs/us/search/1,what=assembler production,Factory; Manufacturing; Electronics,assembly,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · assembler production,https://jooble.org/api/{key},keywords=assembler production,Factory; Manufacturing; Electronics,assembly,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · welder fabricator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=welder fabricator,Factory; Manufacturing; Metal Fabrication,welding,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · welder fabricator,https://jooble.org/api/{key},keywords=welder fabricator,Factory; Manufacturing; Metal Fabrication,welding,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · paint line operator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=paint line operator,Factory; Manufacturing; Aerospace,finishing,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · paint line operator,https://jooble.org/api/{key},keywords=paint line operator,Factory; Manufacturing; Aerospace,finishing,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · quality inspector production,https://api.adzuna.com/v1/api/jobs/us/search/1,what=quality inspector production,Factory; Manufacturing; Food Processing,quality_inspection,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · quality inspector production,https://jooble.org/api/{key},keywords=quality inspector production,Factory; Manufacturing; Food Processing,quality_inspection,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · poultry processing worker,https://api.adzuna.com/v1/api/jobs/us/search/1,what=poultry processing worker,Factory; Food Processing; Meat & Poultry,food_processing,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · poultry processing worker,https://jooble.org/api/{key},keywords=poultry processing worker,Factory; Food Processing; Meat & Poultry,food_processing,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · specimen processor,https://api.adzuna.com/v1/api/jobs/us/search/1,what=specimen processor,Healthcare; Pharma,lab_automation,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · specimen processor,https://jooble.org/api/{key},keywords=specimen processor,Healthcare; Pharma,lab_automation,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · line cook high volume,https://api.adzuna.com/v1/api/jobs/us/search/1,what=line cook high volume,Food Service; Restaurants,food_prep,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · line cook high volume,https://jooble.org/api/{key},keywords=line cook high volume,Food Service; Restaurants,food_prep,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · barista high volume,https://api.adzuna.com/v1/api/jobs/us/search/1,what=barista high volume,Food Service; Retail,beverage,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · barista high volume,https://jooble.org/api/{key},keywords=barista high volume,Food Service; Retail,beverage,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · dishwasher,https://api.adzuna.com/v1/api/jobs/us/search/1,what=dishwasher,Food Service; Restaurants,warewash,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · dishwasher,https://jooble.org/api/{key},keywords=dishwasher,Food Service; Restaurants,warewash,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · food runner,https://api.adzuna.com/v1/api/jobs/us/search/1,what=food runner,Food Service; Restaurants; Hospitality,serving,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · food runner,https://jooble.org/api/{key},keywords=food runner,Food Service; Restaurants; Hospitality,serving,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · drive thru cashier,https://api.adzuna.com/v1/api/jobs/us/search/1,what=drive thru cashier,Retail; Restaurants,cashier_ordering,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · drive thru cashier,https://jooble.org/api/{key},keywords=drive thru cashier,Retail; Restaurants,cashier_ordering,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · room attendant hotel,https://api.adzuna.com/v1/api/jobs/us/search/1,what=room attendant hotel,Hospitality; Hotels,housekeeping,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · room attendant hotel,https://jooble.org/api/{key},keywords=room attendant hotel,Hospitality; Hotels,housekeeping,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · laundry attendant,https://api.adzuna.com/v1/api/jobs/us/search/1,what=laundry attendant,Hospitality; Healthcare,laundry,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · laundry attendant,https://jooble.org/api/{key},keywords=laundry attendant,Hospitality; Healthcare,laundry,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · bellperson,https://api.adzuna.com/v1/api/jobs/us/search/1,what=bellperson,Hospitality; Hotels; Residential,guest_delivery,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · bellperson,https://jooble.org/api/{key},keywords=bellperson,Hospitality; Hotels; Residential,guest_delivery,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · front desk agent hotel,https://api.adzuna.com/v1/api/jobs/us/search/1,what=front desk agent hotel,Hospitality; Hotels; Healthcare,front_desk,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · front desk agent hotel,https://jooble.org/api/{key},keywords=front desk agent hotel,Hospitality; Hotels; Healthcare,front_desk,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · valet attendant,https://api.adzuna.com/v1/api/jobs/us/search/1,what=valet attendant,Hospitality; Hotels; Casinos,parking,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · valet attendant,https://jooble.org/api/{key},keywords=valet attendant,Hospitality; Hotels; Casinos,parking,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · janitor,https://api.adzuna.com/v1/api/jobs/us/search/1,what=janitor,Cleaning; Facilities; Retail,cleaning,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · janitor,https://jooble.org/api/{key},keywords=janitor,Cleaning; Facilities; Retail,cleaning,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · environmental services technician hospital,https://api.adzuna.com/v1/api/jobs/us/search/1,what=environmental services technician hospital,Cleaning; Healthcare; Senior Living,environmental_services,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · environmental services technician hospital,https://jooble.org/api/{key},keywords=environmental services technician hospital,Cleaning; Healthcare; Senior Living,environmental_services,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · window washer high rise,https://api.adzuna.com/v1/api/jobs/us/search/1,what=window washer high rise,Hospitality; Facilities; Real Estate,facade_cleaning,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · window washer high rise,https://jooble.org/api/{key},keywords=window washer high rise,Hospitality; Facilities; Real Estate,facade_cleaning,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · car wash attendant,https://api.adzuna.com/v1/api/jobs/us/search/1,what=car wash attendant,Cleaning; Automotive; Hospitality,pool_car_wash,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · car wash attendant,https://jooble.org/api/{key},keywords=car wash attendant,Cleaning; Automotive; Hospitality,pool_car_wash,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · recycling sorter,https://api.adzuna.com/v1/api/jobs/us/search/1,what=recycling sorter,Factory; Recycling; Waste Management,waste_recycling,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · recycling sorter,https://jooble.org/api/{key},keywords=recycling sorter,Factory; Recycling; Waste Management,waste_recycling,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · security officer patrol,https://api.adzuna.com/v1/api/jobs/us/search/1,what=security officer patrol,Facilities; Logistics,security_patrol,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · security officer patrol,https://jooble.org/api/{key},keywords=security officer patrol,Facilities; Logistics,security_patrol,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · plant operator rounds,https://api.adzuna.com/v1/api/jobs/us/search/1,what=plant operator rounds,Facilities; Energy; Oil & Gas,industrial_inspection,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · plant operator rounds,https://jooble.org/api/{key},keywords=plant operator rounds,Facilities; Energy; Oil & Gas,industrial_inspection,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · patient transporter,https://api.adzuna.com/v1/api/jobs/us/search/1,what=patient transporter,Healthcare; Senior Living,patient_transport,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · patient transporter,https://jooble.org/api/{key},keywords=patient transporter,Healthcare; Senior Living,patient_transport,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · hospital supply chain technician,https://api.adzuna.com/v1/api/jobs/us/search/1,what=hospital supply chain technician,Healthcare; Senior Living,hospital_logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · hospital supply chain technician,https://jooble.org/api/{key},keywords=hospital supply chain technician,Healthcare; Senior Living,hospital_logistics,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · central fill pharmacy technician,https://api.adzuna.com/v1/api/jobs/us/search/1,what=central fill pharmacy technician,Healthcare; Retail Pharmacy,pharmacy,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · central fill pharmacy technician,https://jooble.org/api/{key},keywords=central fill pharmacy technician,Healthcare; Retail Pharmacy,pharmacy,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · sterile processing technician,https://api.adzuna.com/v1/api/jobs/us/search/1,what=sterile processing technician,Healthcare; Surgery Centers,sterile_processing,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · sterile processing technician,https://jooble.org/api/{key},keywords=sterile processing technician,Healthcare; Surgery Centers,sterile_processing,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · patient sitter,https://api.adzuna.com/v1/api/jobs/us/search/1,what=patient sitter,Healthcare; Senior Living,patient_assist,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · patient sitter,https://jooble.org/api/{key},keywords=patient sitter,Healthcare; Senior Living,patient_assist,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · overnight stocker,https://api.adzuna.com/v1/api/jobs/us/search/1,what=overnight stocker,Retail; Grocery,replenishment,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · overnight stocker,https://jooble.org/api/{key},keywords=overnight stocker,Retail; Grocery,replenishment,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · delivery driver package,https://api.adzuna.com/v1/api/jobs/us/search/1,what=delivery driver package,Logistics; Food Delivery,last_mile,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · delivery driver package,https://jooble.org/api/{key},keywords=delivery driver package,Logistics; Food Delivery,last_mile,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · yard jockey,https://api.adzuna.com/v1/api/jobs/us/search/1,what=yard jockey,Logistics; Trucking,trucking,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · yard jockey,https://jooble.org/api/{key},keywords=yard jockey,Logistics; Trucking,trucking,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · farm worker harvest,https://api.adzuna.com/v1/api/jobs/us/search/1,what=farm worker harvest,Agriculture; Greenhouses,harvest,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · farm worker harvest,https://jooble.org/api/{key},keywords=farm worker harvest,Agriculture; Greenhouses,harvest,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · tractor operator farm,https://api.adzuna.com/v1/api/jobs/us/search/1,what=tractor operator farm,Agriculture; Turf,field_work,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · tractor operator farm,https://jooble.org/api/{key},keywords=tractor operator farm,Agriculture; Turf,field_work,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · dairy milker,https://api.adzuna.com/v1/api/jobs/us/search/1,what=dairy milker,Agriculture; Dairy; Livestock,dairy_livestock,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · dairy milker,https://jooble.org/api/{key},keywords=dairy milker,Agriculture; Dairy; Livestock,dairy_livestock,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · groundskeeper,https://api.adzuna.com/v1/api/jobs/us/search/1,what=groundskeeper,Facilities; Landscaping; Golf,landscaping,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · groundskeeper,https://jooble.org/api/{key},keywords=groundskeeper,Facilities; Landscaping; Golf,landscaping,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · construction laborer,https://api.adzuna.com/v1/api/jobs/us/search/1,what=construction laborer,Construction; Homebuilding,construction_labor,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · construction laborer,https://jooble.org/api/{key},keywords=construction laborer,Construction; Homebuilding,construction_labor,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · haul truck operator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=haul truck operator,Mining; Quarries,mining,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · haul truck operator,https://jooble.org/api/{key},keywords=haul truck operator,Mining; Quarries,mining,JOOBLE_API_KEY,no
-posting,adzuna,Adzuna · general laborer warehouse,https://api.adzuna.com/v1/api/jobs/us/search/1,what=general laborer warehouse,Manufacturing; Logistics,general_labor,ADZUNA_APP_ID; ADZUNA_APP_KEY,no
-posting,jooble,Jooble · general laborer warehouse,https://jooble.org/api/{key},keywords=general laborer warehouse,Manufacturing; Logistics,general_labor,JOOBLE_API_KEY,no
-posting,usajobs,USAJOBS · custodial worker,https://data.usajobs.gov/api/search,keyword=custodial worker,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · warehouse worker,https://data.usajobs.gov/api/search,keyword=warehouse worker,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · materials handler,https://data.usajobs.gov/api/search,keyword=materials handler,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · food service worker,https://data.usajobs.gov/api/search,keyword=food service worker,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · laundry worker,https://data.usajobs.gov/api/search,keyword=laundry worker,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · housekeeping aid,https://data.usajobs.gov/api/search,keyword=housekeeping aid,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · sterile processing,https://data.usajobs.gov/api/search,keyword=sterile processing,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · pharmacy technician,https://data.usajobs.gov/api/search,keyword=pharmacy technician,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · motor vehicle operator,https://data.usajobs.gov/api/search,keyword=motor vehicle operator,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · mail clerk,https://data.usajobs.gov/api/search,keyword=mail clerk,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · security guard,https://data.usajobs.gov/api/search,keyword=security guard,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · laborer,https://data.usajobs.gov/api/search,keyword=laborer,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · packer,https://data.usajobs.gov/api/search,keyword=packer,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · sales store checker,https://data.usajobs.gov/api/search,keyword=sales store checker,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · equipment cleaner,https://data.usajobs.gov/api/search,keyword=equipment cleaner,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-posting,usajobs,USAJOBS · cook,https://data.usajobs.gov/api/search,keyword=cook,Government,,USAJOBS_API_KEY; USAJOBS_EMAIL,no
-tender,sam_gov,SAM.gov tenders · robot,https://api.sam.gov/opportunities/v2/search,keyword=robot,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · robotic,https://api.sam.gov/opportunities/v2/search,keyword=robotic,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · autonomous,https://api.sam.gov/opportunities/v2/search,keyword=autonomous,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · autonomous mobile robot,https://api.sam.gov/opportunities/v2/search,keyword=autonomous mobile robot,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · automated guided vehicle,https://api.sam.gov/opportunities/v2/search,keyword=automated guided vehicle,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · conveyor,https://api.sam.gov/opportunities/v2/search,keyword=conveyor,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · automated storage,https://api.sam.gov/opportunities/v2/search,keyword=automated storage,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · palletizer,https://api.sam.gov/opportunities/v2/search,keyword=palletizer,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · floor scrubber,https://api.sam.gov/opportunities/v2/search,keyword=floor scrubber,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · cleaning robot,https://api.sam.gov/opportunities/v2/search,keyword=cleaning robot,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · disinfection robot,https://api.sam.gov/opportunities/v2/search,keyword=disinfection robot,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · UV disinfection,https://api.sam.gov/opportunities/v2/search,keyword=UV disinfection,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · material handling system,https://api.sam.gov/opportunities/v2/search,keyword=material handling system,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · sortation,https://api.sam.gov/opportunities/v2/search,keyword=sortation,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · security robot,https://api.sam.gov/opportunities/v2/search,keyword=security robot,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · delivery robot,https://api.sam.gov/opportunities/v2/search,keyword=delivery robot,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · pharmacy automation,https://api.sam.gov/opportunities/v2/search,keyword=pharmacy automation,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · automated dispensing,https://api.sam.gov/opportunities/v2/search,keyword=automated dispensing,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · food service automation,https://api.sam.gov/opportunities/v2/search,keyword=food service automation,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · automated warehouse,https://api.sam.gov/opportunities/v2/search,keyword=automated warehouse,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · automated parking,https://api.sam.gov/opportunities/v2/search,keyword=automated parking,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · drone inspection,https://api.sam.gov/opportunities/v2/search,keyword=drone inspection,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · window cleaning,https://api.sam.gov/opportunities/v2/search,keyword=window cleaning,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · robotic lawn,https://api.sam.gov/opportunities/v2/search,keyword=robotic lawn,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · automation,https://api.sam.gov/opportunities/v2/search,keyword=automation,Government,,SAM_GOV_API_KEY,no
-tender,sam_gov,SAM.gov tenders · cobot,https://api.sam.gov/opportunities/v2/search,keyword=cobot,Government,,SAM_GOV_API_KEY,no
-posting,greenhouse,Sweetgreen (greenhouse),https://boards-api.greenhouse.io/v1/boards/{token}/jobs,token=sweetgreen; company=Sweetgreen,,,no,no
-posting,job_board,Indeed · order picker,https://www.indeed.com/jobs?q=order+picker&l=United+States&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,Indeed · order selector warehouse,https://www.indeed.com/jobs?q=order+selector+warehouse&l=United+States&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,SimplyHired · order picker,https://www.simplyhired.com/search?q=order+picker&l=United+States&t=14,,Logistics; Retail,picking,no,no
-posting,job_board,Indeed · packer warehouse,https://www.indeed.com/jobs?q=packer+warehouse&l=United+States&sort=date&fromage=14,,Logistics; E-commerce,packing,no,no
-posting,job_board,Indeed · pack out associate,https://www.indeed.com/jobs?q=pack+out+associate&l=United+States&sort=date&fromage=14,,Logistics; E-commerce,packing,no,no
-posting,job_board,SimplyHired · packer warehouse,https://www.simplyhired.com/search?q=packer+warehouse&l=United+States&t=14,,Logistics; E-commerce,packing,no,no
-posting,job_board,Indeed · palletizer operator,https://www.indeed.com/jobs?q=palletizer+operator&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Food & Beverage,palletizing,no,no
-posting,job_board,Indeed · case stacker,https://www.indeed.com/jobs?q=case+stacker&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Food & Beverage,palletizing,no,no
-posting,job_board,SimplyHired · palletizer operator,https://www.simplyhired.com/search?q=palletizer+operator&l=United+States&t=14,,Factory; Manufacturing; Food & Beverage,palletizing,no,no
-posting,job_board,Indeed · trailer unloader,https://www.indeed.com/jobs?q=trailer+unloader&l=United+States&sort=date&fromage=14,,Logistics; Parcel,truck_unloading,no,no
-posting,job_board,Indeed · package handler,https://www.indeed.com/jobs?q=package+handler&l=United+States&sort=date&fromage=14,,Logistics; Parcel,truck_unloading,no,no
-posting,job_board,SimplyHired · trailer unloader,https://www.simplyhired.com/search?q=trailer+unloader&l=United+States&t=14,,Logistics; Parcel,truck_unloading,no,no
-posting,job_board,Indeed · material handler,https://www.indeed.com/jobs?q=material+handler&l=United+States&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,Indeed · tugger driver,https://www.indeed.com/jobs?q=tugger+driver&l=United+States&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,SimplyHired · material handler,https://www.simplyhired.com/search?q=material+handler&l=United+States&t=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,Indeed · forklift operator,https://www.indeed.com/jobs?q=forklift+operator&l=United+States&sort=date&fromage=14,,Logistics; Manufacturing,forklift,no,no
-posting,job_board,Indeed · reach truck operator,https://www.indeed.com/jobs?q=reach+truck+operator&l=United+States&sort=date&fromage=14,,Logistics; Manufacturing,forklift,no,no
-posting,job_board,SimplyHired · forklift operator,https://www.simplyhired.com/search?q=forklift+operator&l=United+States&t=14,,Logistics; Manufacturing,forklift,no,no
-posting,job_board,Indeed · receiving clerk warehouse,https://www.indeed.com/jobs?q=receiving+clerk+warehouse&l=United+States&sort=date&fromage=14,,Logistics; Retail,receiving,no,no
-posting,job_board,Indeed · inventory cycle counter,https://www.indeed.com/jobs?q=inventory+cycle+counter&l=United+States&sort=date&fromage=14,,Logistics; Retail,receiving,no,no
-posting,job_board,SimplyHired · receiving clerk warehouse,https://www.simplyhired.com/search?q=receiving+clerk+warehouse&l=United+States&t=14,,Logistics; Retail,receiving,no,no
-posting,job_board,Indeed · parcel sorter,https://www.indeed.com/jobs?q=parcel+sorter&l=United+States&sort=date&fromage=14,,Logistics; Parcel; Postal,sortation,no,no
-posting,job_board,Indeed · mail processing clerk,https://www.indeed.com/jobs?q=mail+processing+clerk&l=United+States&sort=date&fromage=14,,Logistics; Parcel; Postal,sortation,no,no
-posting,job_board,SimplyHired · parcel sorter,https://www.simplyhired.com/search?q=parcel+sorter&l=United+States&t=14,,Logistics; Parcel; Postal,sortation,no,no
-posting,job_board,Indeed · freezer order selector,https://www.indeed.com/jobs?q=freezer+order+selector&l=United+States&sort=date&fromage=14,,Logistics; Cold Chain; Food & Beverage,cold_storage,no,no
-posting,job_board,Indeed · cold storage warehouse associate,https://www.indeed.com/jobs?q=cold+storage+warehouse+associate&l=United+States&sort=date&fromage=14,,Logistics; Cold Chain; Food & Beverage,cold_storage,no,no
-posting,job_board,SimplyHired · freezer order selector,https://www.simplyhired.com/search?q=freezer+order+selector&l=United+States&t=14,,Logistics; Cold Chain; Food & Beverage,cold_storage,no,no
-posting,job_board,Indeed · cnc machine operator,https://www.indeed.com/jobs?q=cnc+machine+operator&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Automotive,machine_tending,no,no
-posting,job_board,Indeed · injection molding operator,https://www.indeed.com/jobs?q=injection+molding+operator&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Automotive,machine_tending,no,no
-posting,job_board,SimplyHired · cnc machine operator,https://www.simplyhired.com/search?q=cnc+machine+operator&l=United+States&t=14,,Factory; Manufacturing; Automotive,machine_tending,no,no
-posting,job_board,Indeed · assembler production,https://www.indeed.com/jobs?q=assembler+production&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Electronics,assembly,no,no
-posting,job_board,Indeed · assembly line worker,https://www.indeed.com/jobs?q=assembly+line+worker&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Electronics,assembly,no,no
-posting,job_board,SimplyHired · assembler production,https://www.simplyhired.com/search?q=assembler+production&l=United+States&t=14,,Factory; Manufacturing; Electronics,assembly,no,no
-posting,job_board,Indeed · welder fabricator,https://www.indeed.com/jobs?q=welder+fabricator&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Metal Fabrication,welding,no,no
-posting,job_board,Indeed · mig welder production,https://www.indeed.com/jobs?q=mig+welder+production&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Metal Fabrication,welding,no,no
-posting,job_board,SimplyHired · welder fabricator,https://www.simplyhired.com/search?q=welder+fabricator&l=United+States&t=14,,Factory; Manufacturing; Metal Fabrication,welding,no,no
-posting,job_board,Indeed · paint line operator,https://www.indeed.com/jobs?q=paint+line+operator&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Aerospace,finishing,no,no
-posting,job_board,Indeed · sander deburr finisher,https://www.indeed.com/jobs?q=sander+deburr+finisher&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Aerospace,finishing,no,no
-posting,job_board,SimplyHired · paint line operator,https://www.simplyhired.com/search?q=paint+line+operator&l=United+States&t=14,,Factory; Manufacturing; Aerospace,finishing,no,no
-posting,job_board,Indeed · quality inspector production,https://www.indeed.com/jobs?q=quality+inspector+production&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Food Processing,quality_inspection,no,no
-posting,job_board,Indeed · visual inspector,https://www.indeed.com/jobs?q=visual+inspector&l=United+States&sort=date&fromage=14,,Factory; Manufacturing; Food Processing,quality_inspection,no,no
-posting,job_board,SimplyHired · quality inspector production,https://www.simplyhired.com/search?q=quality+inspector+production&l=United+States&t=14,,Factory; Manufacturing; Food Processing,quality_inspection,no,no
-posting,job_board,Indeed · poultry processing worker,https://www.indeed.com/jobs?q=poultry+processing+worker&l=United+States&sort=date&fromage=14,,Factory; Food Processing; Meat & Poultry,food_processing,no,no
-posting,job_board,Indeed · food production line worker,https://www.indeed.com/jobs?q=food+production+line+worker&l=United+States&sort=date&fromage=14,,Factory; Food Processing; Meat & Poultry,food_processing,no,no
-posting,job_board,SimplyHired · poultry processing worker,https://www.simplyhired.com/search?q=poultry+processing+worker&l=United+States&t=14,,Factory; Food Processing; Meat & Poultry,food_processing,no,no
-posting,job_board,Indeed · specimen processor,https://www.indeed.com/jobs?q=specimen+processor&l=United+States&sort=date&fromage=14,,Healthcare; Pharma,lab_automation,no,no
-posting,job_board,Indeed · laboratory assistant accessioning,https://www.indeed.com/jobs?q=laboratory+assistant+accessioning&l=United+States&sort=date&fromage=14,,Healthcare; Pharma,lab_automation,no,no
-posting,job_board,SimplyHired · specimen processor,https://www.simplyhired.com/search?q=specimen+processor&l=United+States&t=14,,Healthcare; Pharma,lab_automation,no,no
-posting,job_board,Indeed · line cook high volume,https://www.indeed.com/jobs?q=line+cook+high+volume&l=United+States&sort=date&fromage=14,,Food Service; Restaurants,food_prep,no,no
-posting,job_board,Indeed · prep cook,https://www.indeed.com/jobs?q=prep+cook&l=United+States&sort=date&fromage=14,,Food Service; Restaurants,food_prep,no,no
-posting,job_board,SimplyHired · line cook high volume,https://www.simplyhired.com/search?q=line+cook+high+volume&l=United+States&t=14,,Food Service; Restaurants,food_prep,no,no
-posting,job_board,Indeed · barista high volume,https://www.indeed.com/jobs?q=barista+high+volume&l=United+States&sort=date&fromage=14,,Food Service; Retail,beverage,no,no
-posting,job_board,Indeed · beverage attendant,https://www.indeed.com/jobs?q=beverage+attendant&l=United+States&sort=date&fromage=14,,Food Service; Retail,beverage,no,no
-posting,job_board,SimplyHired · barista high volume,https://www.simplyhired.com/search?q=barista+high+volume&l=United+States&t=14,,Food Service; Retail,beverage,no,no
-posting,job_board,Indeed · dishwasher,https://www.indeed.com/jobs?q=dishwasher&l=United+States&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,Indeed · steward kitchen utility,https://www.indeed.com/jobs?q=steward+kitchen+utility&l=United+States&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,SimplyHired · dishwasher,https://www.simplyhired.com/search?q=dishwasher&l=United+States&t=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,Indeed · food runner,https://www.indeed.com/jobs?q=food+runner&l=United+States&sort=date&fromage=14,,Food Service; Restaurants; Hospitality,serving,no,no
-posting,job_board,Indeed · banquet server,https://www.indeed.com/jobs?q=banquet+server&l=United+States&sort=date&fromage=14,,Food Service; Restaurants; Hospitality,serving,no,no
-posting,job_board,SimplyHired · food runner,https://www.simplyhired.com/search?q=food+runner&l=United+States&t=14,,Food Service; Restaurants; Hospitality,serving,no,no
-posting,job_board,Indeed · drive thru cashier,https://www.indeed.com/jobs?q=drive+thru+cashier&l=United+States&sort=date&fromage=14,,Retail; Restaurants,cashier_ordering,no,no
-posting,job_board,Indeed · cashier crew member,https://www.indeed.com/jobs?q=cashier+crew+member&l=United+States&sort=date&fromage=14,,Retail; Restaurants,cashier_ordering,no,no
-posting,job_board,SimplyHired · drive thru cashier,https://www.simplyhired.com/search?q=drive+thru+cashier&l=United+States&t=14,,Retail; Restaurants,cashier_ordering,no,no
-posting,job_board,Indeed · room attendant hotel,https://www.indeed.com/jobs?q=room+attendant+hotel&l=United+States&sort=date&fromage=14,,Hospitality; Hotels,housekeeping,no,no
-posting,job_board,Indeed · housekeeper hotel,https://www.indeed.com/jobs?q=housekeeper+hotel&l=United+States&sort=date&fromage=14,,Hospitality; Hotels,housekeeping,no,no
-posting,job_board,SimplyHired · room attendant hotel,https://www.simplyhired.com/search?q=room+attendant+hotel&l=United+States&t=14,,Hospitality; Hotels,housekeeping,no,no
-posting,job_board,Indeed · laundry attendant,https://www.indeed.com/jobs?q=laundry+attendant&l=United+States&sort=date&fromage=14,,Hospitality; Healthcare,laundry,no,no
-posting,job_board,Indeed · linen attendant,https://www.indeed.com/jobs?q=linen+attendant&l=United+States&sort=date&fromage=14,,Hospitality; Healthcare,laundry,no,no
-posting,job_board,SimplyHired · laundry attendant,https://www.simplyhired.com/search?q=laundry+attendant&l=United+States&t=14,,Hospitality; Healthcare,laundry,no,no
-posting,job_board,Indeed · bellperson,https://www.indeed.com/jobs?q=bellperson&l=United+States&sort=date&fromage=14,,Hospitality; Hotels; Residential,guest_delivery,no,no
-posting,job_board,Indeed · hotel runner amenities,https://www.indeed.com/jobs?q=hotel+runner+amenities&l=United+States&sort=date&fromage=14,,Hospitality; Hotels; Residential,guest_delivery,no,no
-posting,job_board,SimplyHired · bellperson,https://www.simplyhired.com/search?q=bellperson&l=United+States&t=14,,Hospitality; Hotels; Residential,guest_delivery,no,no
-posting,job_board,Indeed · front desk agent hotel,https://www.indeed.com/jobs?q=front+desk+agent+hotel&l=United+States&sort=date&fromage=14,,Hospitality; Hotels; Healthcare,front_desk,no,no
-posting,job_board,Indeed · night auditor,https://www.indeed.com/jobs?q=night+auditor&l=United+States&sort=date&fromage=14,,Hospitality; Hotels; Healthcare,front_desk,no,no
-posting,job_board,SimplyHired · front desk agent hotel,https://www.simplyhired.com/search?q=front+desk+agent+hotel&l=United+States&t=14,,Hospitality; Hotels; Healthcare,front_desk,no,no
-posting,job_board,Indeed · valet attendant,https://www.indeed.com/jobs?q=valet+attendant&l=United+States&sort=date&fromage=14,,Hospitality; Hotels; Casinos,parking,no,no
-posting,job_board,Indeed · parking attendant,https://www.indeed.com/jobs?q=parking+attendant&l=United+States&sort=date&fromage=14,,Hospitality; Hotels; Casinos,parking,no,no
-posting,job_board,SimplyHired · valet attendant,https://www.simplyhired.com/search?q=valet+attendant&l=United+States&t=14,,Hospitality; Hotels; Casinos,parking,no,no
-posting,job_board,Indeed · janitor,https://www.indeed.com/jobs?q=janitor&l=United+States&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,Indeed · floor technician scrubber,https://www.indeed.com/jobs?q=floor+technician+scrubber&l=United+States&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,SimplyHired · janitor,https://www.simplyhired.com/search?q=janitor&l=United+States&t=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,Indeed · environmental services technician hospital,https://www.indeed.com/jobs?q=environmental+services+technician+hospital&l=United+States&sort=date&fromage=14,,Cleaning; Healthcare; Senior Living,environmental_services,no,no
-posting,job_board,Indeed · evs tech,https://www.indeed.com/jobs?q=evs+tech&l=United+States&sort=date&fromage=14,,Cleaning; Healthcare; Senior Living,environmental_services,no,no
-posting,job_board,SimplyHired · environmental services technician hospital,https://www.simplyhired.com/search?q=environmental+services+technician+hospital&l=United+States&t=14,,Cleaning; Healthcare; Senior Living,environmental_services,no,no
-posting,job_board,Indeed · window washer high rise,https://www.indeed.com/jobs?q=window+washer+high+rise&l=United+States&sort=date&fromage=14,,Hospitality; Facilities; Real Estate,facade_cleaning,no,no
-posting,job_board,Indeed · solar panel cleaner,https://www.indeed.com/jobs?q=solar+panel+cleaner&l=United+States&sort=date&fromage=14,,Hospitality; Facilities; Real Estate,facade_cleaning,no,no
-posting,job_board,SimplyHired · window washer high rise,https://www.simplyhired.com/search?q=window+washer+high+rise&l=United+States&t=14,,Hospitality; Facilities; Real Estate,facade_cleaning,no,no
-posting,job_board,Indeed · car wash attendant,https://www.indeed.com/jobs?q=car+wash+attendant&l=United+States&sort=date&fromage=14,,Cleaning; Automotive; Hospitality,pool_car_wash,no,no
-posting,job_board,Indeed · tank cleaner industrial,https://www.indeed.com/jobs?q=tank+cleaner+industrial&l=United+States&sort=date&fromage=14,,Cleaning; Automotive; Hospitality,pool_car_wash,no,no
-posting,job_board,SimplyHired · car wash attendant,https://www.simplyhired.com/search?q=car+wash+attendant&l=United+States&t=14,,Cleaning; Automotive; Hospitality,pool_car_wash,no,no
-posting,job_board,Indeed · recycling sorter,https://www.indeed.com/jobs?q=recycling+sorter&l=United+States&sort=date&fromage=14,,Factory; Recycling; Waste Management,waste_recycling,no,no
-posting,job_board,Indeed · mrf sorter,https://www.indeed.com/jobs?q=mrf+sorter&l=United+States&sort=date&fromage=14,,Factory; Recycling; Waste Management,waste_recycling,no,no
-posting,job_board,SimplyHired · recycling sorter,https://www.simplyhired.com/search?q=recycling+sorter&l=United+States&t=14,,Factory; Recycling; Waste Management,waste_recycling,no,no
-posting,job_board,Indeed · security officer patrol,https://www.indeed.com/jobs?q=security+officer+patrol&l=United+States&sort=date&fromage=14,,Facilities; Logistics,security_patrol,no,no
-posting,job_board,Indeed · fire watch guard,https://www.indeed.com/jobs?q=fire+watch+guard&l=United+States&sort=date&fromage=14,,Facilities; Logistics,security_patrol,no,no
-posting,job_board,SimplyHired · security officer patrol,https://www.simplyhired.com/search?q=security+officer+patrol&l=United+States&t=14,,Facilities; Logistics,security_patrol,no,no
-posting,job_board,Indeed · plant operator rounds,https://www.indeed.com/jobs?q=plant+operator+rounds&l=United+States&sort=date&fromage=14,,Facilities; Energy; Oil & Gas,industrial_inspection,no,no
-posting,job_board,Indeed · data center technician,https://www.indeed.com/jobs?q=data+center+technician&l=United+States&sort=date&fromage=14,,Facilities; Energy; Oil & Gas,industrial_inspection,no,no
-posting,job_board,SimplyHired · plant operator rounds,https://www.simplyhired.com/search?q=plant+operator+rounds&l=United+States&t=14,,Facilities; Energy; Oil & Gas,industrial_inspection,no,no
-posting,job_board,Indeed · patient transporter,https://www.indeed.com/jobs?q=patient+transporter&l=United+States&sort=date&fromage=14,,Healthcare; Senior Living,patient_transport,no,no
-posting,job_board,Indeed · hospital courier,https://www.indeed.com/jobs?q=hospital+courier&l=United+States&sort=date&fromage=14,,Healthcare; Senior Living,patient_transport,no,no
-posting,job_board,SimplyHired · patient transporter,https://www.simplyhired.com/search?q=patient+transporter&l=United+States&t=14,,Healthcare; Senior Living,patient_transport,no,no
-posting,job_board,Indeed · hospital supply chain technician,https://www.indeed.com/jobs?q=hospital+supply+chain+technician&l=United+States&sort=date&fromage=14,,Healthcare; Senior Living,hospital_logistics,no,no
-posting,job_board,Indeed · dietary aide tray line,https://www.indeed.com/jobs?q=dietary+aide+tray+line&l=United+States&sort=date&fromage=14,,Healthcare; Senior Living,hospital_logistics,no,no
-posting,job_board,SimplyHired · hospital supply chain technician,https://www.simplyhired.com/search?q=hospital+supply+chain+technician&l=United+States&t=14,,Healthcare; Senior Living,hospital_logistics,no,no
-posting,job_board,Indeed · central fill pharmacy technician,https://www.indeed.com/jobs?q=central+fill+pharmacy+technician&l=United+States&sort=date&fromage=14,,Healthcare; Retail Pharmacy,pharmacy,no,no
-posting,job_board,Indeed · pharmacy technician,https://www.indeed.com/jobs?q=pharmacy+technician&l=United+States&sort=date&fromage=14,,Healthcare; Retail Pharmacy,pharmacy,no,no
-posting,job_board,SimplyHired · central fill pharmacy technician,https://www.simplyhired.com/search?q=central+fill+pharmacy+technician&l=United+States&t=14,,Healthcare; Retail Pharmacy,pharmacy,no,no
-posting,job_board,Indeed · sterile processing technician,https://www.indeed.com/jobs?q=sterile+processing+technician&l=United+States&sort=date&fromage=14,,Healthcare; Surgery Centers,sterile_processing,no,no
-posting,job_board,Indeed · decontamination technician,https://www.indeed.com/jobs?q=decontamination+technician&l=United+States&sort=date&fromage=14,,Healthcare; Surgery Centers,sterile_processing,no,no
-posting,job_board,SimplyHired · sterile processing technician,https://www.simplyhired.com/search?q=sterile+processing+technician&l=United+States&t=14,,Healthcare; Surgery Centers,sterile_processing,no,no
-posting,job_board,Indeed · patient sitter,https://www.indeed.com/jobs?q=patient+sitter&l=United+States&sort=date&fromage=14,,Healthcare; Senior Living,patient_assist,no,no
-posting,job_board,Indeed · patient care companion,https://www.indeed.com/jobs?q=patient+care+companion&l=United+States&sort=date&fromage=14,,Healthcare; Senior Living,patient_assist,no,no
-posting,job_board,SimplyHired · patient sitter,https://www.simplyhired.com/search?q=patient+sitter&l=United+States&t=14,,Healthcare; Senior Living,patient_assist,no,no
-posting,job_board,Indeed · overnight stocker,https://www.indeed.com/jobs?q=overnight+stocker&l=United+States&sort=date&fromage=14,,Retail; Grocery,replenishment,no,no
-posting,job_board,Indeed · grocery stocker,https://www.indeed.com/jobs?q=grocery+stocker&l=United+States&sort=date&fromage=14,,Retail; Grocery,replenishment,no,no
-posting,job_board,SimplyHired · overnight stocker,https://www.simplyhired.com/search?q=overnight+stocker&l=United+States&t=14,,Retail; Grocery,replenishment,no,no
-posting,job_board,Indeed · delivery driver package,https://www.indeed.com/jobs?q=delivery+driver+package&l=United+States&sort=date&fromage=14,,Logistics; Food Delivery,last_mile,no,no
-posting,job_board,Indeed · courier delivery,https://www.indeed.com/jobs?q=courier+delivery&l=United+States&sort=date&fromage=14,,Logistics; Food Delivery,last_mile,no,no
-posting,job_board,SimplyHired · delivery driver package,https://www.simplyhired.com/search?q=delivery+driver+package&l=United+States&t=14,,Logistics; Food Delivery,last_mile,no,no
-posting,job_board,Indeed · yard jockey,https://www.indeed.com/jobs?q=yard+jockey&l=United+States&sort=date&fromage=14,,Logistics; Trucking,trucking,no,no
-posting,job_board,Indeed · cdl a driver local,https://www.indeed.com/jobs?q=cdl+a+driver+local&l=United+States&sort=date&fromage=14,,Logistics; Trucking,trucking,no,no
-posting,job_board,SimplyHired · yard jockey,https://www.simplyhired.com/search?q=yard+jockey&l=United+States&t=14,,Logistics; Trucking,trucking,no,no
-posting,job_board,Indeed · farm worker harvest,https://www.indeed.com/jobs?q=farm+worker+harvest&l=United+States&sort=date&fromage=14,,Agriculture; Greenhouses,harvest,no,no
-posting,job_board,Indeed · greenhouse worker,https://www.indeed.com/jobs?q=greenhouse+worker&l=United+States&sort=date&fromage=14,,Agriculture; Greenhouses,harvest,no,no
-posting,job_board,SimplyHired · farm worker harvest,https://www.simplyhired.com/search?q=farm+worker+harvest&l=United+States&t=14,,Agriculture; Greenhouses,harvest,no,no
-posting,job_board,Indeed · tractor operator farm,https://www.indeed.com/jobs?q=tractor+operator+farm&l=United+States&sort=date&fromage=14,,Agriculture; Turf,field_work,no,no
-posting,job_board,Indeed · pesticide applicator,https://www.indeed.com/jobs?q=pesticide+applicator&l=United+States&sort=date&fromage=14,,Agriculture; Turf,field_work,no,no
-posting,job_board,SimplyHired · tractor operator farm,https://www.simplyhired.com/search?q=tractor+operator+farm&l=United+States&t=14,,Agriculture; Turf,field_work,no,no
-posting,job_board,Indeed · dairy milker,https://www.indeed.com/jobs?q=dairy+milker&l=United+States&sort=date&fromage=14,,Agriculture; Dairy; Livestock,dairy_livestock,no,no
-posting,job_board,Indeed · poultry farm worker,https://www.indeed.com/jobs?q=poultry+farm+worker&l=United+States&sort=date&fromage=14,,Agriculture; Dairy; Livestock,dairy_livestock,no,no
-posting,job_board,SimplyHired · dairy milker,https://www.simplyhired.com/search?q=dairy+milker&l=United+States&t=14,,Agriculture; Dairy; Livestock,dairy_livestock,no,no
-posting,job_board,Indeed · groundskeeper,https://www.indeed.com/jobs?q=groundskeeper&l=United+States&sort=date&fromage=14,,Facilities; Landscaping; Golf,landscaping,no,no
-posting,job_board,Indeed · mower operator,https://www.indeed.com/jobs?q=mower+operator&l=United+States&sort=date&fromage=14,,Facilities; Landscaping; Golf,landscaping,no,no
-posting,job_board,SimplyHired · groundskeeper,https://www.simplyhired.com/search?q=groundskeeper&l=United+States&t=14,,Facilities; Landscaping; Golf,landscaping,no,no
-posting,job_board,Indeed · construction laborer,https://www.indeed.com/jobs?q=construction+laborer&l=United+States&sort=date&fromage=14,,Construction; Homebuilding,construction_labor,no,no
-posting,job_board,Indeed · drywall finisher,https://www.indeed.com/jobs?q=drywall+finisher&l=United+States&sort=date&fromage=14,,Construction; Homebuilding,construction_labor,no,no
-posting,job_board,SimplyHired · construction laborer,https://www.simplyhired.com/search?q=construction+laborer&l=United+States&t=14,,Construction; Homebuilding,construction_labor,no,no
-posting,job_board,Indeed · haul truck operator,https://www.indeed.com/jobs?q=haul+truck+operator&l=United+States&sort=date&fromage=14,,Mining; Quarries,mining,no,no
-posting,job_board,Indeed · underground miner,https://www.indeed.com/jobs?q=underground+miner&l=United+States&sort=date&fromage=14,,Mining; Quarries,mining,no,no
-posting,job_board,SimplyHired · haul truck operator,https://www.simplyhired.com/search?q=haul+truck+operator&l=United+States&t=14,,Mining; Quarries,mining,no,no
-posting,job_board,Indeed · general laborer warehouse,https://www.indeed.com/jobs?q=general+laborer+warehouse&l=United+States&sort=date&fromage=14,,Manufacturing; Logistics,general_labor,no,no
-posting,job_board,Indeed · production associate,https://www.indeed.com/jobs?q=production+associate&l=United+States&sort=date&fromage=14,,Manufacturing; Logistics,general_labor,no,no
-posting,job_board,SimplyHired · general laborer warehouse,https://www.simplyhired.com/search?q=general+laborer+warehouse&l=United+States&t=14,,Manufacturing; Logistics,general_labor,no,no
-posting,job_board,"Indeed · order picker · Las Vegas, NV",https://www.indeed.com/jobs?q=order+picker&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Las Vegas, NV",https://www.indeed.com/jobs?q=material+handler&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Las Vegas, NV",https://www.indeed.com/jobs?q=janitor&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Las Vegas, NV",https://www.indeed.com/jobs?q=dishwasher&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · room attendant hotel · Las Vegas, NV",https://www.indeed.com/jobs?q=room+attendant+hotel&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Hospitality; Hotels,housekeeping,no,no
-posting,job_board,"Indeed · line cook high volume · Las Vegas, NV",https://www.indeed.com/jobs?q=line+cook+high+volume&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Food Service; Restaurants,food_prep,no,no
-posting,job_board,"Indeed · security officer patrol · Las Vegas, NV",https://www.indeed.com/jobs?q=security+officer+patrol&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Facilities; Logistics,security_patrol,no,no
-posting,job_board,"Indeed · palletizer operator · Las Vegas, NV",https://www.indeed.com/jobs?q=palletizer+operator&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Factory; Manufacturing; Food & Beverage,palletizing,no,no
-posting,job_board,"Indeed · food runner · Las Vegas, NV",https://www.indeed.com/jobs?q=food+runner&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Food Service; Restaurants; Hospitality,serving,no,no
-posting,job_board,"Indeed · forklift operator · Las Vegas, NV",https://www.indeed.com/jobs?q=forklift+operator&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Logistics; Manufacturing,forklift,no,no
-posting,job_board,"Indeed · order picker · Dallas, TX",https://www.indeed.com/jobs?q=order+picker&l=Dallas%2C+TX&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Dallas, TX",https://www.indeed.com/jobs?q=material+handler&l=Dallas%2C+TX&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Dallas, TX",https://www.indeed.com/jobs?q=janitor&l=Dallas%2C+TX&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Dallas, TX",https://www.indeed.com/jobs?q=dishwasher&l=Dallas%2C+TX&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Ontario, CA",https://www.indeed.com/jobs?q=order+picker&l=Ontario%2C+CA&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Ontario, CA",https://www.indeed.com/jobs?q=material+handler&l=Ontario%2C+CA&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Ontario, CA",https://www.indeed.com/jobs?q=janitor&l=Ontario%2C+CA&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Ontario, CA",https://www.indeed.com/jobs?q=dishwasher&l=Ontario%2C+CA&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Atlanta, GA",https://www.indeed.com/jobs?q=order+picker&l=Atlanta%2C+GA&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Atlanta, GA",https://www.indeed.com/jobs?q=material+handler&l=Atlanta%2C+GA&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Atlanta, GA",https://www.indeed.com/jobs?q=janitor&l=Atlanta%2C+GA&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Atlanta, GA",https://www.indeed.com/jobs?q=dishwasher&l=Atlanta%2C+GA&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Chicago, IL",https://www.indeed.com/jobs?q=order+picker&l=Chicago%2C+IL&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Chicago, IL",https://www.indeed.com/jobs?q=material+handler&l=Chicago%2C+IL&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Chicago, IL",https://www.indeed.com/jobs?q=janitor&l=Chicago%2C+IL&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Chicago, IL",https://www.indeed.com/jobs?q=dishwasher&l=Chicago%2C+IL&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Phoenix, AZ",https://www.indeed.com/jobs?q=order+picker&l=Phoenix%2C+AZ&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Phoenix, AZ",https://www.indeed.com/jobs?q=material+handler&l=Phoenix%2C+AZ&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Phoenix, AZ",https://www.indeed.com/jobs?q=janitor&l=Phoenix%2C+AZ&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Phoenix, AZ",https://www.indeed.com/jobs?q=dishwasher&l=Phoenix%2C+AZ&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Houston, TX",https://www.indeed.com/jobs?q=order+picker&l=Houston%2C+TX&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Houston, TX",https://www.indeed.com/jobs?q=material+handler&l=Houston%2C+TX&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Houston, TX",https://www.indeed.com/jobs?q=janitor&l=Houston%2C+TX&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Houston, TX",https://www.indeed.com/jobs?q=dishwasher&l=Houston%2C+TX&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Columbus, OH",https://www.indeed.com/jobs?q=order+picker&l=Columbus%2C+OH&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Columbus, OH",https://www.indeed.com/jobs?q=material+handler&l=Columbus%2C+OH&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Columbus, OH",https://www.indeed.com/jobs?q=janitor&l=Columbus%2C+OH&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Columbus, OH",https://www.indeed.com/jobs?q=dishwasher&l=Columbus%2C+OH&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Indianapolis, IN",https://www.indeed.com/jobs?q=order+picker&l=Indianapolis%2C+IN&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Indianapolis, IN",https://www.indeed.com/jobs?q=material+handler&l=Indianapolis%2C+IN&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Indianapolis, IN",https://www.indeed.com/jobs?q=janitor&l=Indianapolis%2C+IN&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Indianapolis, IN",https://www.indeed.com/jobs?q=dishwasher&l=Indianapolis%2C+IN&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Memphis, TN",https://www.indeed.com/jobs?q=order+picker&l=Memphis%2C+TN&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Memphis, TN",https://www.indeed.com/jobs?q=material+handler&l=Memphis%2C+TN&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Memphis, TN",https://www.indeed.com/jobs?q=janitor&l=Memphis%2C+TN&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Memphis, TN",https://www.indeed.com/jobs?q=dishwasher&l=Memphis%2C+TN&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Reno, NV",https://www.indeed.com/jobs?q=order+picker&l=Reno%2C+NV&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Reno, NV",https://www.indeed.com/jobs?q=material+handler&l=Reno%2C+NV&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Reno, NV",https://www.indeed.com/jobs?q=janitor&l=Reno%2C+NV&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Reno, NV",https://www.indeed.com/jobs?q=dishwasher&l=Reno%2C+NV&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Allentown, PA",https://www.indeed.com/jobs?q=order+picker&l=Allentown%2C+PA&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Allentown, PA",https://www.indeed.com/jobs?q=material+handler&l=Allentown%2C+PA&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Allentown, PA",https://www.indeed.com/jobs?q=janitor&l=Allentown%2C+PA&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Allentown, PA",https://www.indeed.com/jobs?q=dishwasher&l=Allentown%2C+PA&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Nashville, TN",https://www.indeed.com/jobs?q=order+picker&l=Nashville%2C+TN&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Nashville, TN",https://www.indeed.com/jobs?q=material+handler&l=Nashville%2C+TN&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Nashville, TN",https://www.indeed.com/jobs?q=janitor&l=Nashville%2C+TN&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Nashville, TN",https://www.indeed.com/jobs?q=dishwasher&l=Nashville%2C+TN&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Orlando, FL",https://www.indeed.com/jobs?q=order+picker&l=Orlando%2C+FL&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Orlando, FL",https://www.indeed.com/jobs?q=material+handler&l=Orlando%2C+FL&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Orlando, FL",https://www.indeed.com/jobs?q=janitor&l=Orlando%2C+FL&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Orlando, FL",https://www.indeed.com/jobs?q=dishwasher&l=Orlando%2C+FL&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,"Indeed · order picker · Charlotte, NC",https://www.indeed.com/jobs?q=order+picker&l=Charlotte%2C+NC&sort=date&fromage=14,,Logistics; Retail,picking,no,no
-posting,job_board,"Indeed · material handler · Charlotte, NC",https://www.indeed.com/jobs?q=material+handler&l=Charlotte%2C+NC&sort=date&fromage=14,,Logistics; Manufacturing,material_handling,no,no
-posting,job_board,"Indeed · janitor · Charlotte, NC",https://www.indeed.com/jobs?q=janitor&l=Charlotte%2C+NC&sort=date&fromage=14,,Cleaning; Facilities; Retail,cleaning,no,no
-posting,job_board,"Indeed · dishwasher · Charlotte, NC",https://www.indeed.com/jobs?q=dishwasher&l=Charlotte%2C+NC&sort=date&fromage=14,,Food Service; Restaurants,warewash,no,no
-posting,job_board,Indeed · casino porter · Las Vegas,https://www.indeed.com/jobs?q=casino+porter&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Cleaning; Facilities; Retail; Hospitality,cleaning,no,no
-posting,job_board,Indeed · casino utility porter · Las Vegas,https://www.indeed.com/jobs?q=casino+utility+porter&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Cleaning; Facilities; Retail; Hospitality,cleaning,no,no
-posting,job_board,Indeed · banquet houseperson · Las Vegas,https://www.indeed.com/jobs?q=banquet+houseperson&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Food Service; Restaurants; Hospitality; Hospitality,serving,no,no
-posting,job_board,Indeed · room service server · Las Vegas,https://www.indeed.com/jobs?q=room+service+server&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Food Service; Restaurants; Hospitality; Hospitality,serving,no,no
-posting,job_board,Indeed · casino steward · Las Vegas,https://www.indeed.com/jobs?q=casino+steward&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Food Service; Restaurants; Hospitality,warewash,no,no
-posting,job_board,Indeed · cocktail server casino · Las Vegas,https://www.indeed.com/jobs?q=cocktail+server+casino&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Food Service; Restaurants; Hospitality; Hospitality,serving,no,no
-posting,job_board,Indeed · convention center custodian · Las Vegas,https://www.indeed.com/jobs?q=convention+center+custodian&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Cleaning; Facilities; Retail; Hospitality,cleaning,no,no
-posting,job_board,Indeed · public area attendant casino · Las Vegas,https://www.indeed.com/jobs?q=public+area+attendant+casino&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Cleaning; Facilities; Retail; Hospitality,cleaning,no,no
-posting,job_board,Indeed · buffet attendant · Las Vegas,https://www.indeed.com/jobs?q=buffet+attendant&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Food Service; Restaurants; Hospitality; Hospitality,serving,no,no
-posting,job_board,Indeed · hotel laundry attendant · Las Vegas,https://www.indeed.com/jobs?q=hotel+laundry+attendant&l=Las+Vegas%2C+NV&sort=date&fromage=14,,Hospitality; Healthcare; Hospitality,laundry,no,no
-intent_news,rss_feed,"Google News · ""deploys robots"" OR ""deployed robots"" warehouse",https://news.google.com/rss/search?q=%22deploys+robots%22+OR+%22deployed+robots%22+warehouse+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,"Google News · ""autonomous mobile robots"" distribution center rollout",https://news.google.com/rss/search?q=%22autonomous+mobile+robots%22+distribution+center+rollout+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,"Google News · ""robotic palletizing"" plant investment",https://news.google.com/rss/search?q=%22robotic+palletizing%22+plant+investment+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,,no,no
-intent_news,rss_feed,"Google News · ""automated storage and retrieval"" new facility",https://news.google.com/rss/search?q=%22automated+storage+and+retrieval%22+new+facility+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,"Google News · ""goods-to-person"" OR AutoStore installs grocer OR retailer",https://news.google.com/rss/search?q=%22goods-to-person%22+OR+AutoStore+installs+grocer+OR+retailer+when:30d&hl=en-US&gl=US&ceid=US:en,,Retail; Logistics,,no,no
-intent_news,rss_feed,"Google News · ""cleaning robots"" airport OR mall OR casino",https://news.google.com/rss/search?q=%22cleaning+robots%22+airport+OR+mall+OR+casino+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning; Hospitality,,no,no
-intent_news,rss_feed,"Google News · ""floor scrubbing robots"" deploy",https://news.google.com/rss/search?q=%22floor+scrubbing+robots%22+deploy+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,,no,no
-intent_news,rss_feed,"Google News · hotel ""delivery robot"" OR ""service robot"" guests",https://news.google.com/rss/search?q=hotel+%22delivery+robot%22+OR+%22service+robot%22+guests+when:30d&hl=en-US&gl=US&ceid=US:en,,Hospitality,,no,no
-intent_news,rss_feed,Google News · casino robots Las Vegas,https://news.google.com/rss/search?q=casino+robots+Las+Vegas+when:30d&hl=en-US&gl=US&ceid=US:en,,Hospitality,,no,no
-intent_news,rss_feed,"Google News · restaurant ""robot"" kitchen fry OR bowl OR burger chain",https://news.google.com/rss/search?q=restaurant+%22robot%22+kitchen+fry+OR+bowl+OR+burger+chain+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,,no,no
-intent_news,rss_feed,"Google News · ""robot servers"" OR ""serving robots"" restaurant chain",https://news.google.com/rss/search?q=%22robot+servers%22+OR+%22serving+robots%22+restaurant+chain+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,,no,no
-intent_news,rss_feed,"Google News · hospital ""robots"" deliver medications OR linens OR meals",https://news.google.com/rss/search?q=hospital+%22robots%22+deliver+medications+OR+linens+OR+meals+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,,no,no
-intent_news,rss_feed,"Google News · ""UV disinfection robots"" hospital",https://news.google.com/rss/search?q=%22UV+disinfection+robots%22+hospital+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,,no,no
-intent_news,rss_feed,"Google News · pharmacy automation ""central fill"" new",https://news.google.com/rss/search?q=pharmacy+automation+%22central+fill%22+new+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,,no,no
-intent_news,rss_feed,"Google News · ""security robots"" patrol property OR campus OR parking",https://news.google.com/rss/search?q=%22security+robots%22+patrol+property+OR+campus+OR+parking+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,,no,no
-intent_news,rss_feed,"Google News · ""robotic welding"" manufacturer expands",https://news.google.com/rss/search?q=%22robotic+welding%22+manufacturer+expands+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,,no,no
-intent_news,rss_feed,"Google News · ""cobots"" machine tending manufacturer",https://news.google.com/rss/search?q=%22cobots%22+machine+tending+manufacturer+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,,no,no
-intent_news,rss_feed,"Google News · ""humanoid robots"" pilot warehouse OR factory OR retailer",https://news.google.com/rss/search?q=%22humanoid+robots%22+pilot+warehouse+OR+factory+OR+retailer+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Factory,,no,no
-intent_news,rss_feed,"Google News · ""robotic harvesting"" OR ""harvest robots"" growers",https://news.google.com/rss/search?q=%22robotic+harvesting%22+OR+%22harvest+robots%22+growers+when:30d&hl=en-US&gl=US&ceid=US:en,,Agriculture,,no,no
-intent_news,rss_feed,"Google News · ""recycling robots"" MRF",https://news.google.com/rss/search?q=%22recycling+robots%22+MRF+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,,no,no
-intent_news,rss_feed,"Google News · ""construction robots"" contractor jobsite",https://news.google.com/rss/search?q=%22construction+robots%22+contractor+jobsite+when:30d&hl=en-US&gl=US&ceid=US:en,,Construction,,no,no
-intent_news,rss_feed,"Google News · ""autonomous forklifts"" deploy",https://news.google.com/rss/search?q=%22autonomous+forklifts%22+deploy+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,"Google News · ""automated truck unloading""",https://news.google.com/rss/search?q=%22automated+truck+unloading%22+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,"Google News · ""lights-out"" factory investment",https://news.google.com/rss/search?q=%22lights-out%22+factory+investment+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,,no,no
-intent_news,rss_feed,"Google News · ""automation investment"" food processing plant",https://news.google.com/rss/search?q=%22automation+investment%22+food+processing+plant+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,,no,no
-intent_news,rss_feed,"Google News · ""automation strategy"" CEO earnings warehouse OR stores",https://news.google.com/rss/search?q=%22automation+strategy%22+CEO+earnings+warehouse+OR+stores+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Retail,,no,no
-intent_news,rss_feed,"Google News · ""invest in automation"" labor costs",https://news.google.com/rss/search?q=%22invest+in+automation%22+labor+costs+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Factory,,no,no
-intent_news,rss_feed,"Google News · ""to automate"" distribution center million",https://news.google.com/rss/search?q=%22to+automate%22+distribution+center+million+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,"Google News · ""chief automation officer"" OR ""head of robotics"" appointed",https://news.google.com/rss/search?q=%22chief+automation+officer%22+OR+%22head+of+robotics%22+appointed+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Factory,,no,no
-intent_news,rss_feed,"Google News · ""vice president of automation"" named",https://news.google.com/rss/search?q=%22vice+president+of+automation%22+named+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Factory,,no,no
-intent_news,rss_feed,"Google News · ""new distribution center"" ""jobs"" 2026",https://news.google.com/rss/search?q=%22new+distribution+center%22+%22jobs%22+2026+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,"Google News · ""breaks ground"" fulfillment center",https://news.google.com/rss/search?q=%22breaks+ground%22+fulfillment+center+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,"Google News · ""new manufacturing plant"" ""jobs"" announce",https://news.google.com/rss/search?q=%22new+manufacturing+plant%22+%22jobs%22+announce+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,,no,no
-intent_news,rss_feed,"Google News · ""cold storage facility"" new construction",https://news.google.com/rss/search?q=%22cold+storage+facility%22+new+construction+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,Google News · new hotel casino opening Las Vegas hiring,https://news.google.com/rss/search?q=new+hotel+casino+opening+Las+Vegas+hiring+when:30d&hl=en-US&gl=US&ceid=US:en,,Hospitality,,no,no
-intent_news,rss_feed,"Google News · ""new hospital tower"" opening",https://news.google.com/rss/search?q=%22new+hospital+tower%22+opening+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,,no,no
-intent_news,rss_feed,"Google News · ""central kitchen"" OR commissary new facility chain",https://news.google.com/rss/search?q=%22central+kitchen%22+OR+commissary+new+facility+chain+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,,no,no
-intent_news,rss_feed,"Google News · ""labor shortage"" warehouse workers",https://news.google.com/rss/search?q=%22labor+shortage%22+warehouse+workers+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,"Google News · ""labor shortage"" hotel housekeepers",https://news.google.com/rss/search?q=%22labor+shortage%22+hotel+housekeepers+when:30d&hl=en-US&gl=US&ceid=US:en,,Hospitality,,no,no
-intent_news,rss_feed,"Google News · ""staffing shortage"" restaurant kitchen",https://news.google.com/rss/search?q=%22staffing+shortage%22+restaurant+kitchen+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,,no,no
-intent_news,rss_feed,"Google News · ""staffing shortage"" hospital environmental services OR trans",https://news.google.com/rss/search?q=%22staffing+shortage%22+hospital+environmental+services+OR+transporters+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,,no,no
-intent_news,rss_feed,"Google News · ""labor shortage"" farm harvest growers",https://news.google.com/rss/search?q=%22labor+shortage%22+farm+harvest+growers+when:30d&hl=en-US&gl=US&ceid=US:en,,Agriculture,,no,no
-intent_news,rss_feed,"Google News · ""worker shortage"" manufacturing plant",https://news.google.com/rss/search?q=%22worker+shortage%22+manufacturing+plant+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,,no,no
-intent_news,rss_feed,"Google News · ""janitorial"" staffing shortage",https://news.google.com/rss/search?q=%22janitorial%22+staffing+shortage+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,,no,no
-intent_news,rss_feed,"Google News · ""security guard shortage""",https://news.google.com/rss/search?q=%22security+guard+shortage%22+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,,no,no
-intent_news,rss_feed,"Google News · ""turnover"" warehouse associates automation",https://news.google.com/rss/search?q=%22turnover%22+warehouse+associates+automation+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,Google News · Culinary Union Las Vegas staffing,https://news.google.com/rss/search?q=Culinary+Union+Las+Vegas+staffing+when:30d&hl=en-US&gl=US&ceid=US:en,,Hospitality,,no,no
-intent_news,rss_feed,Google News · RFP robotic OR robots county OR city OR airport,https://news.google.com/rss/search?q=RFP+robotic+OR+robots+county+OR+city+OR+airport+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,,no,no
-intent_news,rss_feed,"Google News · ""request for proposals"" automation warehouse OR conveyor",https://news.google.com/rss/search?q=%22request+for+proposals%22+automation+warehouse+OR+conveyor+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,,no,no
-intent_news,rss_feed,"Google News · ""request for proposals"" cleaning robots OR ""autonomous scrub",https://news.google.com/rss/search?q=%22request+for+proposals%22+cleaning+robots+OR+%22autonomous+scrubber%22+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,,no,no
-intent_news,rss_feed,Google News · school district robots cleaning OR delivery bid,https://news.google.com/rss/search?q=school+district+robots+cleaning+OR+delivery+bid+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,,no,no
-intent_news,rss_feed,"Google News · airport ""robot"" pilot terminal",https://news.google.com/rss/search?q=airport+%22robot%22+pilot+terminal+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities; Cleaning,,no,no
-intent_news,rss_feed,"Google News · ""pilot program"" robots city",https://news.google.com/rss/search?q=%22pilot+program%22+robots+city+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,,no,no
-intent_news,rss_feed,"Google News · university campus ""delivery robots""",https://news.google.com/rss/search?q=university+campus+%22delivery+robots%22+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,,no,no
-intent_news,rss_feed,"Google News · ""senior living"" robots pilot",https://news.google.com/rss/search?q=%22senior+living%22+robots+pilot+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,,no,no
-intent_news,rss_feed,"Google News · grocery ""shelf-scanning robots"" OR ""inventory robots""",https://news.google.com/rss/search?q=grocery+%22shelf-scanning+robots%22+OR+%22inventory+robots%22+when:30d&hl=en-US&gl=US&ceid=US:en,,Retail,,no,no
-intent_news,rss_feed,"Google News · ""robotic car wash"" OR ""automated car wash"" chain expands",https://news.google.com/rss/search?q=%22robotic+car+wash%22+OR+%22automated+car+wash%22+chain+expands+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,,no,no
-intent_news,rss_feed,"Google News · ""robotic lawn mowers"" commercial OR municipal",https://news.google.com/rss/search?q=%22robotic+lawn+mowers%22+commercial+OR+municipal+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,,no,no
-intent_news,rss_feed,"Google News · data center ""robots"" operations",https://news.google.com/rss/search?q=data+center+%22robots%22+operations+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,,no,no
-intent_news,rss_feed,"Google News · ""automated parking"" garage",https://news.google.com/rss/search?q=%22automated+parking%22+garage+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,,no,no
+lane,kind,label,endpoint,query,industries,needs_api_key
+automation_hiring,amazon_jobs,Amazon Jobs · rme technician,https://www.amazon.jobs/en/search.json,query=rme technician,Logistics,no
+automation_hiring,amazon_jobs,Amazon Jobs · robotics technician,https://www.amazon.jobs/en/search.json,query=robotics technician,Logistics,no
+automation_hiring,amazon_jobs,Amazon Jobs · amazon robotics,https://www.amazon.jobs/en/search.json,query=amazon robotics,Logistics,no
+automation_hiring,amazon_jobs,Amazon Jobs · automation technician,https://www.amazon.jobs/en/search.json,query=automation technician,Logistics,no
+automation_hiring,amazon_jobs,Amazon Jobs · controls engineer,https://www.amazon.jobs/en/search.json,query=controls engineer,Logistics,no
+automation_hiring,amazon_jobs,Amazon Jobs · automation engineer,https://www.amazon.jobs/en/search.json,query=automation engineer,Logistics,no
+automation_hiring,adzuna,Adzuna · AMR technician warehouse,https://api.adzuna.com/v1/api/jobs/us/search/1,what=AMR technician warehouse,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · AMR technician warehouse,https://jooble.org/api/{key},keywords=AMR technician warehouse,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · autonomous mobile robot technician,https://api.adzuna.com/v1/api/jobs/us/search/1,what=autonomous mobile robot technician,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · autonomous mobile robot technician,https://jooble.org/api/{key},keywords=autonomous mobile robot technician,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · robotics technician distribution center,https://api.adzuna.com/v1/api/jobs/us/search/1,what=robotics technician distribution center,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · robotics technician distribution center,https://jooble.org/api/{key},keywords=robotics technician distribution center,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · automation technician distribution center,https://api.adzuna.com/v1/api/jobs/us/search/1,what=automation technician distribution center,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · automation technician distribution center,https://jooble.org/api/{key},keywords=automation technician distribution center,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · automation technician warehouse conveyor sortation,https://api.adzuna.com/v1/api/jobs/us/search/1,what=automation technician warehouse conveyor sortation,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · automation technician warehouse conveyor sortation,https://jooble.org/api/{key},keywords=automation technician warehouse conveyor sortation,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · ASRS technician,https://api.adzuna.com/v1/api/jobs/us/search/1,what=ASRS technician,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · ASRS technician,https://jooble.org/api/{key},keywords=ASRS technician,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · AutoStore technician,https://api.adzuna.com/v1/api/jobs/us/search/1,what=AutoStore technician,Logistics; Retail,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · AutoStore technician,https://jooble.org/api/{key},keywords=AutoStore technician,Logistics; Retail,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · MHE technician automation,https://api.adzuna.com/v1/api/jobs/us/search/1,what=MHE technician automation,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · MHE technician automation,https://jooble.org/api/{key},keywords=MHE technician automation,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · automation engineer distribution center,https://api.adzuna.com/v1/api/jobs/us/search/1,what=automation engineer distribution center,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · automation engineer distribution center,https://jooble.org/api/{key},keywords=automation engineer distribution center,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · automation manager warehouse,https://api.adzuna.com/v1/api/jobs/us/search/1,what=automation manager warehouse,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · automation manager warehouse,https://jooble.org/api/{key},keywords=automation manager warehouse,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · director of automation supply chain,https://api.adzuna.com/v1/api/jobs/us/search/1,what=director of automation supply chain,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · director of automation supply chain,https://jooble.org/api/{key},keywords=director of automation supply chain,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · automation project manager fulfillment,https://api.adzuna.com/v1/api/jobs/us/search/1,what=automation project manager fulfillment,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · automation project manager fulfillment,https://jooble.org/api/{key},keywords=automation project manager fulfillment,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · robotics engineer operations warehouse,https://api.adzuna.com/v1/api/jobs/us/search/1,what=robotics engineer operations warehouse,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · robotics engineer operations warehouse,https://jooble.org/api/{key},keywords=robotics engineer operations warehouse,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · autonomous forklift,https://api.adzuna.com/v1/api/jobs/us/search/1,what=autonomous forklift,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · autonomous forklift,https://jooble.org/api/{key},keywords=autonomous forklift,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · robot operator warehouse,https://api.adzuna.com/v1/api/jobs/us/search/1,what=robot operator warehouse,Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · robot operator warehouse,https://jooble.org/api/{key},keywords=robot operator warehouse,Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · robotic palletizer technician,https://api.adzuna.com/v1/api/jobs/us/search/1,what=robotic palletizer technician,Factory,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · robotic palletizer technician,https://jooble.org/api/{key},keywords=robotic palletizer technician,Factory,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · robot technician manufacturing plant,https://api.adzuna.com/v1/api/jobs/us/search/1,what=robot technician manufacturing plant,Factory,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · robot technician manufacturing plant,https://jooble.org/api/{key},keywords=robot technician manufacturing plant,Factory,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · cobot operator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=cobot operator,Factory,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · cobot operator,https://jooble.org/api/{key},keywords=cobot operator,Factory,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · robotic welding operator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=robotic welding operator,Factory,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · robotic welding operator,https://jooble.org/api/{key},keywords=robotic welding operator,Factory,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · robot programmer production,https://api.adzuna.com/v1/api/jobs/us/search/1,what=robot programmer production,Factory,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · robot programmer production,https://jooble.org/api/{key},keywords=robot programmer production,Factory,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · automation engineer food manufacturing,https://api.adzuna.com/v1/api/jobs/us/search/1,what=automation engineer food manufacturing,Factory,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · automation engineer food manufacturing,https://jooble.org/api/{key},keywords=automation engineer food manufacturing,Factory,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · automation specialist packaging,https://api.adzuna.com/v1/api/jobs/us/search/1,what=automation specialist packaging,Factory,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · automation specialist packaging,https://jooble.org/api/{key},keywords=automation specialist packaging,Factory,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · controls engineer automation plant,https://api.adzuna.com/v1/api/jobs/us/search/1,what=controls engineer automation plant,Factory,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · controls engineer automation plant,https://jooble.org/api/{key},keywords=controls engineer automation plant,Factory,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · director of automation manufacturing,https://api.adzuna.com/v1/api/jobs/us/search/1,what=director of automation manufacturing,Factory,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · director of automation manufacturing,https://jooble.org/api/{key},keywords=director of automation manufacturing,Factory,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · continuous improvement manager automation,https://api.adzuna.com/v1/api/jobs/us/search/1,what=continuous improvement manager automation,Factory; Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · continuous improvement manager automation,https://jooble.org/api/{key},keywords=continuous improvement manager automation,Factory; Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · industrial engineer automation,https://api.adzuna.com/v1/api/jobs/us/search/1,what=industrial engineer automation,Factory; Logistics,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · industrial engineer automation,https://jooble.org/api/{key},keywords=industrial engineer automation,Factory; Logistics,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · hotel robot,https://api.adzuna.com/v1/api/jobs/us/search/1,what=hotel robot,Hospitality,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · hotel robot,https://jooble.org/api/{key},keywords=hotel robot,Hospitality,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · robot attendant hotel,https://api.adzuna.com/v1/api/jobs/us/search/1,what=robot attendant hotel,Hospitality,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · robot attendant hotel,https://jooble.org/api/{key},keywords=robot attendant hotel,Hospitality,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · hospitality innovation technology director,https://api.adzuna.com/v1/api/jobs/us/search/1,what=hospitality innovation technology director,Hospitality,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · hospitality innovation technology director,https://jooble.org/api/{key},keywords=hospitality innovation technology director,Hospitality,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · casino technology innovation,https://api.adzuna.com/v1/api/jobs/us/search/1,what=casino technology innovation,Hospitality,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · casino technology innovation,https://jooble.org/api/{key},keywords=casino technology innovation,Hospitality,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · robot server restaurant,https://api.adzuna.com/v1/api/jobs/us/search/1,what=robot server restaurant,Food Service,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · robot server restaurant,https://jooble.org/api/{key},keywords=robot server restaurant,Food Service,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · kitchen automation,https://api.adzuna.com/v1/api/jobs/us/search/1,what=kitchen automation,Food Service,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · kitchen automation,https://jooble.org/api/{key},keywords=kitchen automation,Food Service,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · restaurant innovation automation,https://api.adzuna.com/v1/api/jobs/us/search/1,what=restaurant innovation automation,Food Service,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · restaurant innovation automation,https://jooble.org/api/{key},keywords=restaurant innovation automation,Food Service,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · food service robotics,https://api.adzuna.com/v1/api/jobs/us/search/1,what=food service robotics,Food Service,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · food service robotics,https://jooble.org/api/{key},keywords=food service robotics,Food Service,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · cleaning robot operator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=cleaning robot operator,Cleaning,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · cleaning robot operator,https://jooble.org/api/{key},keywords=cleaning robot operator,Cleaning,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · autonomous floor scrubber,https://api.adzuna.com/v1/api/jobs/us/search/1,what=autonomous floor scrubber,Cleaning,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · autonomous floor scrubber,https://jooble.org/api/{key},keywords=autonomous floor scrubber,Cleaning,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · robotic cleaning technician,https://api.adzuna.com/v1/api/jobs/us/search/1,what=robotic cleaning technician,Cleaning,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · robotic cleaning technician,https://jooble.org/api/{key},keywords=robotic cleaning technician,Cleaning,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · janitorial technology robotics,https://api.adzuna.com/v1/api/jobs/us/search/1,what=janitorial technology robotics,Cleaning,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · janitorial technology robotics,https://jooble.org/api/{key},keywords=janitorial technology robotics,Cleaning,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · hospital robotics coordinator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=hospital robotics coordinator,Healthcare,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · hospital robotics coordinator,https://jooble.org/api/{key},keywords=hospital robotics coordinator,Healthcare,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · pharmacy automation technician,https://api.adzuna.com/v1/api/jobs/us/search/1,what=pharmacy automation technician,Healthcare,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · pharmacy automation technician,https://jooble.org/api/{key},keywords=pharmacy automation technician,Healthcare,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · hospital automation supply chain,https://api.adzuna.com/v1/api/jobs/us/search/1,what=hospital automation supply chain,Healthcare,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · hospital automation supply chain,https://jooble.org/api/{key},keywords=hospital automation supply chain,Healthcare,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · lab automation specialist,https://api.adzuna.com/v1/api/jobs/us/search/1,what=lab automation specialist,Healthcare,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · lab automation specialist,https://jooble.org/api/{key},keywords=lab automation specialist,Healthcare,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · UV disinfection robot,https://api.adzuna.com/v1/api/jobs/us/search/1,what=UV disinfection robot,Healthcare,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · UV disinfection robot,https://jooble.org/api/{key},keywords=UV disinfection robot,Healthcare,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · security robot,https://api.adzuna.com/v1/api/jobs/us/search/1,what=security robot,Facilities,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · security robot,https://jooble.org/api/{key},keywords=security robot,Facilities,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · drone program manager inspection,https://api.adzuna.com/v1/api/jobs/us/search/1,what=drone program manager inspection,Facilities,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · drone program manager inspection,https://jooble.org/api/{key},keywords=drone program manager inspection,Facilities,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · data center robotics,https://api.adzuna.com/v1/api/jobs/us/search/1,what=data center robotics,Facilities,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · data center robotics,https://jooble.org/api/{key},keywords=data center robotics,Facilities,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · agricultural robotics operations,https://api.adzuna.com/v1/api/jobs/us/search/1,what=agricultural robotics operations,Agriculture,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · agricultural robotics operations,https://jooble.org/api/{key},keywords=agricultural robotics operations,Agriculture,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · autonomous tractor operator,https://api.adzuna.com/v1/api/jobs/us/search/1,what=autonomous tractor operator,Agriculture,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · autonomous tractor operator,https://jooble.org/api/{key},keywords=autonomous tractor operator,Agriculture,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · construction robotics,https://api.adzuna.com/v1/api/jobs/us/search/1,what=construction robotics,Construction,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · construction robotics,https://jooble.org/api/{key},keywords=construction robotics,Construction,JOOBLE_API_KEY
+automation_hiring,adzuna,Adzuna · retail store automation inventory robot,https://api.adzuna.com/v1/api/jobs/us/search/1,what=retail store automation inventory robot,Retail,ADZUNA_APP_ID; ADZUNA_APP_KEY
+automation_hiring,jooble,Jooble · retail store automation inventory robot,https://jooble.org/api/{key},keywords=retail store automation inventory robot,Retail,JOOBLE_API_KEY
+tender,sam_gov,SAM.gov tenders · robot,https://api.sam.gov/opportunities/v2/search,keyword=robot,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · robotic,https://api.sam.gov/opportunities/v2/search,keyword=robotic,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · autonomous,https://api.sam.gov/opportunities/v2/search,keyword=autonomous,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · autonomous mobile robot,https://api.sam.gov/opportunities/v2/search,keyword=autonomous mobile robot,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · automated guided vehicle,https://api.sam.gov/opportunities/v2/search,keyword=automated guided vehicle,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · conveyor,https://api.sam.gov/opportunities/v2/search,keyword=conveyor,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · automated storage,https://api.sam.gov/opportunities/v2/search,keyword=automated storage,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · palletizer,https://api.sam.gov/opportunities/v2/search,keyword=palletizer,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · floor scrubber,https://api.sam.gov/opportunities/v2/search,keyword=floor scrubber,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · cleaning robot,https://api.sam.gov/opportunities/v2/search,keyword=cleaning robot,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · disinfection robot,https://api.sam.gov/opportunities/v2/search,keyword=disinfection robot,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · UV disinfection,https://api.sam.gov/opportunities/v2/search,keyword=UV disinfection,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · material handling system,https://api.sam.gov/opportunities/v2/search,keyword=material handling system,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · sortation,https://api.sam.gov/opportunities/v2/search,keyword=sortation,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · security robot,https://api.sam.gov/opportunities/v2/search,keyword=security robot,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · delivery robot,https://api.sam.gov/opportunities/v2/search,keyword=delivery robot,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · pharmacy automation,https://api.sam.gov/opportunities/v2/search,keyword=pharmacy automation,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · automated dispensing,https://api.sam.gov/opportunities/v2/search,keyword=automated dispensing,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · food service automation,https://api.sam.gov/opportunities/v2/search,keyword=food service automation,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · automated warehouse,https://api.sam.gov/opportunities/v2/search,keyword=automated warehouse,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · automated parking,https://api.sam.gov/opportunities/v2/search,keyword=automated parking,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · drone inspection,https://api.sam.gov/opportunities/v2/search,keyword=drone inspection,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · window cleaning,https://api.sam.gov/opportunities/v2/search,keyword=window cleaning,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · robotic lawn,https://api.sam.gov/opportunities/v2/search,keyword=robotic lawn,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · automation,https://api.sam.gov/opportunities/v2/search,keyword=automation,Government,SAM_GOV_API_KEY
+tender,sam_gov,SAM.gov tenders · cobot,https://api.sam.gov/opportunities/v2/search,keyword=cobot,Government,SAM_GOV_API_KEY
+ats,greenhouse,Sweetgreen (greenhouse),https://boards-api.greenhouse.io/v1/boards/{token}/jobs,token=sweetgreen; company=Sweetgreen,,no
+automation_hiring,job_board,Indeed · AMR technician warehouse,https://www.indeed.com/jobs?q=AMR+technician+warehouse&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · AMR technician warehouse,https://www.simplyhired.com/search?q=AMR+technician+warehouse&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · autonomous mobile robot technician,https://www.indeed.com/jobs?q=autonomous+mobile+robot+technician&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · autonomous mobile robot technician,https://www.simplyhired.com/search?q=autonomous+mobile+robot+technician&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · robotics technician distribution center,https://www.indeed.com/jobs?q=robotics+technician+distribution+center&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · robotics technician distribution center,https://www.simplyhired.com/search?q=robotics+technician+distribution+center&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · automation technician distribution center,https://www.indeed.com/jobs?q=automation+technician+distribution+center&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · automation technician distribution center,https://www.simplyhired.com/search?q=automation+technician+distribution+center&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · automation technician warehouse conveyor sortation,https://www.indeed.com/jobs?q=automation+technician+warehouse+conveyor+sortation&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · automation technician warehouse conveyor sortation,https://www.simplyhired.com/search?q=automation+technician+warehouse+conveyor+sortation&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · ASRS technician,https://www.indeed.com/jobs?q=ASRS+technician&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · ASRS technician,https://www.simplyhired.com/search?q=ASRS+technician&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · AutoStore technician,https://www.indeed.com/jobs?q=AutoStore+technician&l=United+States&sort=date&fromage=30,,Logistics; Retail,no
+automation_hiring,job_board,SimplyHired · AutoStore technician,https://www.simplyhired.com/search?q=AutoStore+technician&l=United+States&t=30,,Logistics; Retail,no
+automation_hiring,job_board,Indeed · MHE technician automation,https://www.indeed.com/jobs?q=MHE+technician+automation&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · MHE technician automation,https://www.simplyhired.com/search?q=MHE+technician+automation&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · automation engineer distribution center,https://www.indeed.com/jobs?q=automation+engineer+distribution+center&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · automation engineer distribution center,https://www.simplyhired.com/search?q=automation+engineer+distribution+center&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · automation manager warehouse,https://www.indeed.com/jobs?q=automation+manager+warehouse&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · automation manager warehouse,https://www.simplyhired.com/search?q=automation+manager+warehouse&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · director of automation supply chain,https://www.indeed.com/jobs?q=director+of+automation+supply+chain&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · director of automation supply chain,https://www.simplyhired.com/search?q=director+of+automation+supply+chain&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · automation project manager fulfillment,https://www.indeed.com/jobs?q=automation+project+manager+fulfillment&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · automation project manager fulfillment,https://www.simplyhired.com/search?q=automation+project+manager+fulfillment&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · robotics engineer operations warehouse,https://www.indeed.com/jobs?q=robotics+engineer+operations+warehouse&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · robotics engineer operations warehouse,https://www.simplyhired.com/search?q=robotics+engineer+operations+warehouse&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · autonomous forklift,https://www.indeed.com/jobs?q=autonomous+forklift&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · autonomous forklift,https://www.simplyhired.com/search?q=autonomous+forklift&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · robot operator warehouse,https://www.indeed.com/jobs?q=robot+operator+warehouse&l=United+States&sort=date&fromage=30,,Logistics,no
+automation_hiring,job_board,SimplyHired · robot operator warehouse,https://www.simplyhired.com/search?q=robot+operator+warehouse&l=United+States&t=30,,Logistics,no
+automation_hiring,job_board,Indeed · robotic palletizer technician,https://www.indeed.com/jobs?q=robotic+palletizer+technician&l=United+States&sort=date&fromage=30,,Factory,no
+automation_hiring,job_board,SimplyHired · robotic palletizer technician,https://www.simplyhired.com/search?q=robotic+palletizer+technician&l=United+States&t=30,,Factory,no
+automation_hiring,job_board,Indeed · robot technician manufacturing plant,https://www.indeed.com/jobs?q=robot+technician+manufacturing+plant&l=United+States&sort=date&fromage=30,,Factory,no
+automation_hiring,job_board,SimplyHired · robot technician manufacturing plant,https://www.simplyhired.com/search?q=robot+technician+manufacturing+plant&l=United+States&t=30,,Factory,no
+automation_hiring,job_board,Indeed · cobot operator,https://www.indeed.com/jobs?q=cobot+operator&l=United+States&sort=date&fromage=30,,Factory,no
+automation_hiring,job_board,SimplyHired · cobot operator,https://www.simplyhired.com/search?q=cobot+operator&l=United+States&t=30,,Factory,no
+automation_hiring,job_board,Indeed · robotic welding operator,https://www.indeed.com/jobs?q=robotic+welding+operator&l=United+States&sort=date&fromage=30,,Factory,no
+automation_hiring,job_board,SimplyHired · robotic welding operator,https://www.simplyhired.com/search?q=robotic+welding+operator&l=United+States&t=30,,Factory,no
+automation_hiring,job_board,Indeed · robot programmer production,https://www.indeed.com/jobs?q=robot+programmer+production&l=United+States&sort=date&fromage=30,,Factory,no
+automation_hiring,job_board,SimplyHired · robot programmer production,https://www.simplyhired.com/search?q=robot+programmer+production&l=United+States&t=30,,Factory,no
+automation_hiring,job_board,Indeed · automation engineer food manufacturing,https://www.indeed.com/jobs?q=automation+engineer+food+manufacturing&l=United+States&sort=date&fromage=30,,Factory,no
+automation_hiring,job_board,SimplyHired · automation engineer food manufacturing,https://www.simplyhired.com/search?q=automation+engineer+food+manufacturing&l=United+States&t=30,,Factory,no
+automation_hiring,job_board,Indeed · automation specialist packaging,https://www.indeed.com/jobs?q=automation+specialist+packaging&l=United+States&sort=date&fromage=30,,Factory,no
+automation_hiring,job_board,SimplyHired · automation specialist packaging,https://www.simplyhired.com/search?q=automation+specialist+packaging&l=United+States&t=30,,Factory,no
+automation_hiring,job_board,Indeed · controls engineer automation plant,https://www.indeed.com/jobs?q=controls+engineer+automation+plant&l=United+States&sort=date&fromage=30,,Factory,no
+automation_hiring,job_board,SimplyHired · controls engineer automation plant,https://www.simplyhired.com/search?q=controls+engineer+automation+plant&l=United+States&t=30,,Factory,no
+automation_hiring,job_board,Indeed · director of automation manufacturing,https://www.indeed.com/jobs?q=director+of+automation+manufacturing&l=United+States&sort=date&fromage=30,,Factory,no
+automation_hiring,job_board,SimplyHired · director of automation manufacturing,https://www.simplyhired.com/search?q=director+of+automation+manufacturing&l=United+States&t=30,,Factory,no
+automation_hiring,job_board,Indeed · continuous improvement manager automation,https://www.indeed.com/jobs?q=continuous+improvement+manager+automation&l=United+States&sort=date&fromage=30,,Factory; Logistics,no
+automation_hiring,job_board,SimplyHired · continuous improvement manager automation,https://www.simplyhired.com/search?q=continuous+improvement+manager+automation&l=United+States&t=30,,Factory; Logistics,no
+automation_hiring,job_board,Indeed · industrial engineer automation,https://www.indeed.com/jobs?q=industrial+engineer+automation&l=United+States&sort=date&fromage=30,,Factory; Logistics,no
+automation_hiring,job_board,SimplyHired · industrial engineer automation,https://www.simplyhired.com/search?q=industrial+engineer+automation&l=United+States&t=30,,Factory; Logistics,no
+automation_hiring,job_board,Indeed · hotel robot,https://www.indeed.com/jobs?q=hotel+robot&l=United+States&sort=date&fromage=30,,Hospitality,no
+automation_hiring,job_board,SimplyHired · hotel robot,https://www.simplyhired.com/search?q=hotel+robot&l=United+States&t=30,,Hospitality,no
+automation_hiring,job_board,Indeed · robot attendant hotel,https://www.indeed.com/jobs?q=robot+attendant+hotel&l=United+States&sort=date&fromage=30,,Hospitality,no
+automation_hiring,job_board,SimplyHired · robot attendant hotel,https://www.simplyhired.com/search?q=robot+attendant+hotel&l=United+States&t=30,,Hospitality,no
+automation_hiring,job_board,Indeed · hospitality innovation technology director,https://www.indeed.com/jobs?q=hospitality+innovation+technology+director&l=United+States&sort=date&fromage=30,,Hospitality,no
+automation_hiring,job_board,SimplyHired · hospitality innovation technology director,https://www.simplyhired.com/search?q=hospitality+innovation+technology+director&l=United+States&t=30,,Hospitality,no
+automation_hiring,job_board,Indeed · casino technology innovation,https://www.indeed.com/jobs?q=casino+technology+innovation&l=United+States&sort=date&fromage=30,,Hospitality,no
+automation_hiring,job_board,SimplyHired · casino technology innovation,https://www.simplyhired.com/search?q=casino+technology+innovation&l=United+States&t=30,,Hospitality,no
+automation_hiring,job_board,Indeed · robot server restaurant,https://www.indeed.com/jobs?q=robot+server+restaurant&l=United+States&sort=date&fromage=30,,Food Service,no
+automation_hiring,job_board,SimplyHired · robot server restaurant,https://www.simplyhired.com/search?q=robot+server+restaurant&l=United+States&t=30,,Food Service,no
+automation_hiring,job_board,Indeed · kitchen automation,https://www.indeed.com/jobs?q=kitchen+automation&l=United+States&sort=date&fromage=30,,Food Service,no
+automation_hiring,job_board,SimplyHired · kitchen automation,https://www.simplyhired.com/search?q=kitchen+automation&l=United+States&t=30,,Food Service,no
+automation_hiring,job_board,Indeed · restaurant innovation automation,https://www.indeed.com/jobs?q=restaurant+innovation+automation&l=United+States&sort=date&fromage=30,,Food Service,no
+automation_hiring,job_board,SimplyHired · restaurant innovation automation,https://www.simplyhired.com/search?q=restaurant+innovation+automation&l=United+States&t=30,,Food Service,no
+automation_hiring,job_board,Indeed · food service robotics,https://www.indeed.com/jobs?q=food+service+robotics&l=United+States&sort=date&fromage=30,,Food Service,no
+automation_hiring,job_board,SimplyHired · food service robotics,https://www.simplyhired.com/search?q=food+service+robotics&l=United+States&t=30,,Food Service,no
+automation_hiring,job_board,Indeed · cleaning robot operator,https://www.indeed.com/jobs?q=cleaning+robot+operator&l=United+States&sort=date&fromage=30,,Cleaning,no
+automation_hiring,job_board,SimplyHired · cleaning robot operator,https://www.simplyhired.com/search?q=cleaning+robot+operator&l=United+States&t=30,,Cleaning,no
+automation_hiring,job_board,Indeed · autonomous floor scrubber,https://www.indeed.com/jobs?q=autonomous+floor+scrubber&l=United+States&sort=date&fromage=30,,Cleaning,no
+automation_hiring,job_board,SimplyHired · autonomous floor scrubber,https://www.simplyhired.com/search?q=autonomous+floor+scrubber&l=United+States&t=30,,Cleaning,no
+automation_hiring,job_board,Indeed · robotic cleaning technician,https://www.indeed.com/jobs?q=robotic+cleaning+technician&l=United+States&sort=date&fromage=30,,Cleaning,no
+automation_hiring,job_board,SimplyHired · robotic cleaning technician,https://www.simplyhired.com/search?q=robotic+cleaning+technician&l=United+States&t=30,,Cleaning,no
+automation_hiring,job_board,Indeed · janitorial technology robotics,https://www.indeed.com/jobs?q=janitorial+technology+robotics&l=United+States&sort=date&fromage=30,,Cleaning,no
+automation_hiring,job_board,SimplyHired · janitorial technology robotics,https://www.simplyhired.com/search?q=janitorial+technology+robotics&l=United+States&t=30,,Cleaning,no
+automation_hiring,job_board,Indeed · hospital robotics coordinator,https://www.indeed.com/jobs?q=hospital+robotics+coordinator&l=United+States&sort=date&fromage=30,,Healthcare,no
+automation_hiring,job_board,SimplyHired · hospital robotics coordinator,https://www.simplyhired.com/search?q=hospital+robotics+coordinator&l=United+States&t=30,,Healthcare,no
+automation_hiring,job_board,Indeed · pharmacy automation technician,https://www.indeed.com/jobs?q=pharmacy+automation+technician&l=United+States&sort=date&fromage=30,,Healthcare,no
+automation_hiring,job_board,SimplyHired · pharmacy automation technician,https://www.simplyhired.com/search?q=pharmacy+automation+technician&l=United+States&t=30,,Healthcare,no
+automation_hiring,job_board,Indeed · hospital automation supply chain,https://www.indeed.com/jobs?q=hospital+automation+supply+chain&l=United+States&sort=date&fromage=30,,Healthcare,no
+automation_hiring,job_board,SimplyHired · hospital automation supply chain,https://www.simplyhired.com/search?q=hospital+automation+supply+chain&l=United+States&t=30,,Healthcare,no
+automation_hiring,job_board,Indeed · lab automation specialist,https://www.indeed.com/jobs?q=lab+automation+specialist&l=United+States&sort=date&fromage=30,,Healthcare,no
+automation_hiring,job_board,SimplyHired · lab automation specialist,https://www.simplyhired.com/search?q=lab+automation+specialist&l=United+States&t=30,,Healthcare,no
+automation_hiring,job_board,Indeed · UV disinfection robot,https://www.indeed.com/jobs?q=UV+disinfection+robot&l=United+States&sort=date&fromage=30,,Healthcare,no
+automation_hiring,job_board,SimplyHired · UV disinfection robot,https://www.simplyhired.com/search?q=UV+disinfection+robot&l=United+States&t=30,,Healthcare,no
+automation_hiring,job_board,Indeed · security robot,https://www.indeed.com/jobs?q=security+robot&l=United+States&sort=date&fromage=30,,Facilities,no
+automation_hiring,job_board,SimplyHired · security robot,https://www.simplyhired.com/search?q=security+robot&l=United+States&t=30,,Facilities,no
+automation_hiring,job_board,Indeed · drone program manager inspection,https://www.indeed.com/jobs?q=drone+program+manager+inspection&l=United+States&sort=date&fromage=30,,Facilities,no
+automation_hiring,job_board,SimplyHired · drone program manager inspection,https://www.simplyhired.com/search?q=drone+program+manager+inspection&l=United+States&t=30,,Facilities,no
+automation_hiring,job_board,Indeed · data center robotics,https://www.indeed.com/jobs?q=data+center+robotics&l=United+States&sort=date&fromage=30,,Facilities,no
+automation_hiring,job_board,SimplyHired · data center robotics,https://www.simplyhired.com/search?q=data+center+robotics&l=United+States&t=30,,Facilities,no
+automation_hiring,job_board,Indeed · agricultural robotics operations,https://www.indeed.com/jobs?q=agricultural+robotics+operations&l=United+States&sort=date&fromage=30,,Agriculture,no
+automation_hiring,job_board,SimplyHired · agricultural robotics operations,https://www.simplyhired.com/search?q=agricultural+robotics+operations&l=United+States&t=30,,Agriculture,no
+automation_hiring,job_board,Indeed · autonomous tractor operator,https://www.indeed.com/jobs?q=autonomous+tractor+operator&l=United+States&sort=date&fromage=30,,Agriculture,no
+automation_hiring,job_board,SimplyHired · autonomous tractor operator,https://www.simplyhired.com/search?q=autonomous+tractor+operator&l=United+States&t=30,,Agriculture,no
+automation_hiring,job_board,Indeed · construction robotics,https://www.indeed.com/jobs?q=construction+robotics&l=United+States&sort=date&fromage=30,,Construction,no
+automation_hiring,job_board,SimplyHired · construction robotics,https://www.simplyhired.com/search?q=construction+robotics&l=United+States&t=30,,Construction,no
+automation_hiring,job_board,Indeed · retail store automation inventory robot,https://www.indeed.com/jobs?q=retail+store+automation+inventory+robot&l=United+States&sort=date&fromage=30,,Retail,no
+automation_hiring,job_board,SimplyHired · retail store automation inventory robot,https://www.simplyhired.com/search?q=retail+store+automation+inventory+robot&l=United+States&t=30,,Retail,no
+automation_hiring,job_board,"Indeed · robotics technician · Las Vegas, NV",https://www.indeed.com/jobs?q=robotics+technician&l=Las+Vegas%2C+NV&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Las Vegas, NV",https://www.indeed.com/jobs?q=automation+technician&l=Las+Vegas%2C+NV&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Las Vegas, NV",https://www.indeed.com/jobs?q=automation+engineer&l=Las+Vegas%2C+NV&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Las Vegas, NV",https://www.indeed.com/jobs?q=AMR+technician&l=Las+Vegas%2C+NV&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Dallas, TX",https://www.indeed.com/jobs?q=robotics+technician&l=Dallas%2C+TX&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Dallas, TX",https://www.indeed.com/jobs?q=automation+technician&l=Dallas%2C+TX&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Dallas, TX",https://www.indeed.com/jobs?q=automation+engineer&l=Dallas%2C+TX&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Dallas, TX",https://www.indeed.com/jobs?q=AMR+technician&l=Dallas%2C+TX&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Ontario, CA",https://www.indeed.com/jobs?q=robotics+technician&l=Ontario%2C+CA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Ontario, CA",https://www.indeed.com/jobs?q=automation+technician&l=Ontario%2C+CA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Ontario, CA",https://www.indeed.com/jobs?q=automation+engineer&l=Ontario%2C+CA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Ontario, CA",https://www.indeed.com/jobs?q=AMR+technician&l=Ontario%2C+CA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Atlanta, GA",https://www.indeed.com/jobs?q=robotics+technician&l=Atlanta%2C+GA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Atlanta, GA",https://www.indeed.com/jobs?q=automation+technician&l=Atlanta%2C+GA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Atlanta, GA",https://www.indeed.com/jobs?q=automation+engineer&l=Atlanta%2C+GA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Atlanta, GA",https://www.indeed.com/jobs?q=AMR+technician&l=Atlanta%2C+GA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Chicago, IL",https://www.indeed.com/jobs?q=robotics+technician&l=Chicago%2C+IL&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Chicago, IL",https://www.indeed.com/jobs?q=automation+technician&l=Chicago%2C+IL&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Chicago, IL",https://www.indeed.com/jobs?q=automation+engineer&l=Chicago%2C+IL&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Chicago, IL",https://www.indeed.com/jobs?q=AMR+technician&l=Chicago%2C+IL&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Phoenix, AZ",https://www.indeed.com/jobs?q=robotics+technician&l=Phoenix%2C+AZ&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Phoenix, AZ",https://www.indeed.com/jobs?q=automation+technician&l=Phoenix%2C+AZ&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Phoenix, AZ",https://www.indeed.com/jobs?q=automation+engineer&l=Phoenix%2C+AZ&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Phoenix, AZ",https://www.indeed.com/jobs?q=AMR+technician&l=Phoenix%2C+AZ&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Houston, TX",https://www.indeed.com/jobs?q=robotics+technician&l=Houston%2C+TX&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Houston, TX",https://www.indeed.com/jobs?q=automation+technician&l=Houston%2C+TX&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Houston, TX",https://www.indeed.com/jobs?q=automation+engineer&l=Houston%2C+TX&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Houston, TX",https://www.indeed.com/jobs?q=AMR+technician&l=Houston%2C+TX&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Columbus, OH",https://www.indeed.com/jobs?q=robotics+technician&l=Columbus%2C+OH&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Columbus, OH",https://www.indeed.com/jobs?q=automation+technician&l=Columbus%2C+OH&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Columbus, OH",https://www.indeed.com/jobs?q=automation+engineer&l=Columbus%2C+OH&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Columbus, OH",https://www.indeed.com/jobs?q=AMR+technician&l=Columbus%2C+OH&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Indianapolis, IN",https://www.indeed.com/jobs?q=robotics+technician&l=Indianapolis%2C+IN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Indianapolis, IN",https://www.indeed.com/jobs?q=automation+technician&l=Indianapolis%2C+IN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Indianapolis, IN",https://www.indeed.com/jobs?q=automation+engineer&l=Indianapolis%2C+IN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Indianapolis, IN",https://www.indeed.com/jobs?q=AMR+technician&l=Indianapolis%2C+IN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Memphis, TN",https://www.indeed.com/jobs?q=robotics+technician&l=Memphis%2C+TN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Memphis, TN",https://www.indeed.com/jobs?q=automation+technician&l=Memphis%2C+TN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Memphis, TN",https://www.indeed.com/jobs?q=automation+engineer&l=Memphis%2C+TN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Memphis, TN",https://www.indeed.com/jobs?q=AMR+technician&l=Memphis%2C+TN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Reno, NV",https://www.indeed.com/jobs?q=robotics+technician&l=Reno%2C+NV&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Reno, NV",https://www.indeed.com/jobs?q=automation+technician&l=Reno%2C+NV&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Reno, NV",https://www.indeed.com/jobs?q=automation+engineer&l=Reno%2C+NV&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Reno, NV",https://www.indeed.com/jobs?q=AMR+technician&l=Reno%2C+NV&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Allentown, PA",https://www.indeed.com/jobs?q=robotics+technician&l=Allentown%2C+PA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Allentown, PA",https://www.indeed.com/jobs?q=automation+technician&l=Allentown%2C+PA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Allentown, PA",https://www.indeed.com/jobs?q=automation+engineer&l=Allentown%2C+PA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Allentown, PA",https://www.indeed.com/jobs?q=AMR+technician&l=Allentown%2C+PA&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Nashville, TN",https://www.indeed.com/jobs?q=robotics+technician&l=Nashville%2C+TN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Nashville, TN",https://www.indeed.com/jobs?q=automation+technician&l=Nashville%2C+TN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Nashville, TN",https://www.indeed.com/jobs?q=automation+engineer&l=Nashville%2C+TN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Nashville, TN",https://www.indeed.com/jobs?q=AMR+technician&l=Nashville%2C+TN&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Orlando, FL",https://www.indeed.com/jobs?q=robotics+technician&l=Orlando%2C+FL&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Orlando, FL",https://www.indeed.com/jobs?q=automation+technician&l=Orlando%2C+FL&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Orlando, FL",https://www.indeed.com/jobs?q=automation+engineer&l=Orlando%2C+FL&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Orlando, FL",https://www.indeed.com/jobs?q=AMR+technician&l=Orlando%2C+FL&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · robotics technician · Charlotte, NC",https://www.indeed.com/jobs?q=robotics+technician&l=Charlotte%2C+NC&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation technician · Charlotte, NC",https://www.indeed.com/jobs?q=automation+technician&l=Charlotte%2C+NC&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · automation engineer · Charlotte, NC",https://www.indeed.com/jobs?q=automation+engineer&l=Charlotte%2C+NC&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,"Indeed · AMR technician · Charlotte, NC",https://www.indeed.com/jobs?q=AMR+technician&l=Charlotte%2C+NC&sort=date&fromage=30,,Logistics; Factory,no
+automation_hiring,job_board,Indeed · hotel robot · Las Vegas,https://www.indeed.com/jobs?q=hotel+robot&l=Las+Vegas%2C+NV&sort=date&fromage=30,,Hospitality,no
+automation_hiring,job_board,Indeed · casino technology innovation · Las Vegas,https://www.indeed.com/jobs?q=casino+technology+innovation&l=Las+Vegas%2C+NV&sort=date&fromage=30,,Hospitality,no
+automation_hiring,job_board,Indeed · kitchen automation · Las Vegas,https://www.indeed.com/jobs?q=kitchen+automation&l=Las+Vegas%2C+NV&sort=date&fromage=30,,Hospitality,no
+automation_hiring,job_board,Indeed · cleaning robot · Las Vegas,https://www.indeed.com/jobs?q=cleaning+robot&l=Las+Vegas%2C+NV&sort=date&fromage=30,,Hospitality,no
+automation_hiring,job_board,Indeed · robot server · Las Vegas,https://www.indeed.com/jobs?q=robot+server&l=Las+Vegas%2C+NV&sort=date&fromage=30,,Hospitality,no
+automation_hiring,job_board,Indeed · security robot · Las Vegas,https://www.indeed.com/jobs?q=security+robot&l=Las+Vegas%2C+NV&sort=date&fromage=30,,Hospitality,no
+deployment_news,rss_feed,"Google News · ""deploys robots"" OR ""deployed robots"" warehouse",https://news.google.com/rss/search?q=%22deploys+robots%22+OR+%22deployed+robots%22+warehouse+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""autonomous mobile robots"" distribution center rollout",https://news.google.com/rss/search?q=%22autonomous+mobile+robots%22+distribution+center+rollout+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""robotic palletizing"" plant investment",https://news.google.com/rss/search?q=%22robotic+palletizing%22+plant+investment+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""automated storage and retrieval"" new facility",https://news.google.com/rss/search?q=%22automated+storage+and+retrieval%22+new+facility+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""goods-to-person"" OR AutoStore installs grocer OR retailer",https://news.google.com/rss/search?q=%22goods-to-person%22+OR+AutoStore+installs+grocer+OR+retailer+when:30d&hl=en-US&gl=US&ceid=US:en,,Retail; Logistics,no
+deployment_news,rss_feed,"Google News · ""cleaning robots"" airport OR mall OR casino",https://news.google.com/rss/search?q=%22cleaning+robots%22+airport+OR+mall+OR+casino+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning; Hospitality,no
+deployment_news,rss_feed,"Google News · ""floor scrubbing robots"" deploy",https://news.google.com/rss/search?q=%22floor+scrubbing+robots%22+deploy+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,no
+deployment_news,rss_feed,"Google News · hotel ""delivery robot"" OR ""service robot"" guests",https://news.google.com/rss/search?q=hotel+%22delivery+robot%22+OR+%22service+robot%22+guests+when:30d&hl=en-US&gl=US&ceid=US:en,,Hospitality,no
+deployment_news,rss_feed,Google News · casino robots Las Vegas,https://news.google.com/rss/search?q=casino+robots+Las+Vegas+when:30d&hl=en-US&gl=US&ceid=US:en,,Hospitality,no
+deployment_news,rss_feed,"Google News · restaurant ""robot"" kitchen fry OR bowl OR burger chain",https://news.google.com/rss/search?q=restaurant+%22robot%22+kitchen+fry+OR+bowl+OR+burger+chain+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,no
+deployment_news,rss_feed,"Google News · ""robot servers"" OR ""serving robots"" restaurant chain",https://news.google.com/rss/search?q=%22robot+servers%22+OR+%22serving+robots%22+restaurant+chain+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,no
+deployment_news,rss_feed,"Google News · hospital ""robots"" deliver medications OR linens OR meals",https://news.google.com/rss/search?q=hospital+%22robots%22+deliver+medications+OR+linens+OR+meals+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,no
+deployment_news,rss_feed,"Google News · ""UV disinfection robots"" hospital",https://news.google.com/rss/search?q=%22UV+disinfection+robots%22+hospital+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,no
+deployment_news,rss_feed,"Google News · pharmacy automation ""central fill"" new",https://news.google.com/rss/search?q=pharmacy+automation+%22central+fill%22+new+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,no
+deployment_news,rss_feed,"Google News · ""security robots"" patrol property OR campus OR parking",https://news.google.com/rss/search?q=%22security+robots%22+patrol+property+OR+campus+OR+parking+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,no
+deployment_news,rss_feed,"Google News · ""robotic welding"" manufacturer expands",https://news.google.com/rss/search?q=%22robotic+welding%22+manufacturer+expands+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""cobots"" machine tending manufacturer",https://news.google.com/rss/search?q=%22cobots%22+machine+tending+manufacturer+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""humanoid robots"" pilot warehouse OR factory OR retailer",https://news.google.com/rss/search?q=%22humanoid+robots%22+pilot+warehouse+OR+factory+OR+retailer+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Factory,no
+deployment_news,rss_feed,"Google News · ""robotic harvesting"" OR ""harvest robots"" growers",https://news.google.com/rss/search?q=%22robotic+harvesting%22+OR+%22harvest+robots%22+growers+when:30d&hl=en-US&gl=US&ceid=US:en,,Agriculture,no
+deployment_news,rss_feed,"Google News · ""recycling robots"" MRF",https://news.google.com/rss/search?q=%22recycling+robots%22+MRF+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""construction robots"" contractor jobsite",https://news.google.com/rss/search?q=%22construction+robots%22+contractor+jobsite+when:30d&hl=en-US&gl=US&ceid=US:en,,Construction,no
+deployment_news,rss_feed,"Google News · ""autonomous forklifts"" deploy",https://news.google.com/rss/search?q=%22autonomous+forklifts%22+deploy+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""automated truck unloading""",https://news.google.com/rss/search?q=%22automated+truck+unloading%22+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""lights-out"" factory investment",https://news.google.com/rss/search?q=%22lights-out%22+factory+investment+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""automation investment"" food processing plant",https://news.google.com/rss/search?q=%22automation+investment%22+food+processing+plant+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""automation strategy"" CEO earnings warehouse OR stores",https://news.google.com/rss/search?q=%22automation+strategy%22+CEO+earnings+warehouse+OR+stores+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Retail,no
+deployment_news,rss_feed,"Google News · ""invest in automation"" labor costs",https://news.google.com/rss/search?q=%22invest+in+automation%22+labor+costs+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Factory,no
+deployment_news,rss_feed,"Google News · ""to automate"" distribution center million",https://news.google.com/rss/search?q=%22to+automate%22+distribution+center+million+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""chief automation officer"" OR ""head of robotics"" appointed",https://news.google.com/rss/search?q=%22chief+automation+officer%22+OR+%22head+of+robotics%22+appointed+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Factory,no
+deployment_news,rss_feed,"Google News · ""vice president of automation"" named",https://news.google.com/rss/search?q=%22vice+president+of+automation%22+named+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Factory,no
+deployment_news,rss_feed,"Google News · ""new distribution center"" ""jobs"" 2026",https://news.google.com/rss/search?q=%22new+distribution+center%22+%22jobs%22+2026+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""breaks ground"" fulfillment center",https://news.google.com/rss/search?q=%22breaks+ground%22+fulfillment+center+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""new manufacturing plant"" ""jobs"" announce",https://news.google.com/rss/search?q=%22new+manufacturing+plant%22+%22jobs%22+announce+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""cold storage facility"" new construction",https://news.google.com/rss/search?q=%22cold+storage+facility%22+new+construction+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,Google News · new hotel casino opening Las Vegas hiring,https://news.google.com/rss/search?q=new+hotel+casino+opening+Las+Vegas+hiring+when:30d&hl=en-US&gl=US&ceid=US:en,,Hospitality,no
+deployment_news,rss_feed,"Google News · ""new hospital tower"" opening",https://news.google.com/rss/search?q=%22new+hospital+tower%22+opening+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,no
+deployment_news,rss_feed,"Google News · ""central kitchen"" OR commissary new facility chain",https://news.google.com/rss/search?q=%22central+kitchen%22+OR+commissary+new+facility+chain+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,no
+deployment_news,rss_feed,"Google News · ""labor shortage"" warehouse workers",https://news.google.com/rss/search?q=%22labor+shortage%22+warehouse+workers+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""labor shortage"" hotel housekeepers",https://news.google.com/rss/search?q=%22labor+shortage%22+hotel+housekeepers+when:30d&hl=en-US&gl=US&ceid=US:en,,Hospitality,no
+deployment_news,rss_feed,"Google News · ""staffing shortage"" restaurant kitchen",https://news.google.com/rss/search?q=%22staffing+shortage%22+restaurant+kitchen+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,no
+deployment_news,rss_feed,"Google News · ""staffing shortage"" hospital environmental services OR trans",https://news.google.com/rss/search?q=%22staffing+shortage%22+hospital+environmental+services+OR+transporters+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,no
+deployment_news,rss_feed,"Google News · ""labor shortage"" farm harvest growers",https://news.google.com/rss/search?q=%22labor+shortage%22+farm+harvest+growers+when:30d&hl=en-US&gl=US&ceid=US:en,,Agriculture,no
+deployment_news,rss_feed,"Google News · ""worker shortage"" manufacturing plant",https://news.google.com/rss/search?q=%22worker+shortage%22+manufacturing+plant+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""janitorial"" staffing shortage",https://news.google.com/rss/search?q=%22janitorial%22+staffing+shortage+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,no
+deployment_news,rss_feed,"Google News · ""security guard shortage""",https://news.google.com/rss/search?q=%22security+guard+shortage%22+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,no
+deployment_news,rss_feed,"Google News · ""turnover"" warehouse associates automation",https://news.google.com/rss/search?q=%22turnover%22+warehouse+associates+automation+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,Google News · Culinary Union Las Vegas staffing,https://news.google.com/rss/search?q=Culinary+Union+Las+Vegas+staffing+when:30d&hl=en-US&gl=US&ceid=US:en,,Hospitality,no
+deployment_news,rss_feed,Google News · RFP robotic OR robots county OR city OR airport,https://news.google.com/rss/search?q=RFP+robotic+OR+robots+county+OR+city+OR+airport+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,no
+deployment_news,rss_feed,"Google News · ""request for proposals"" automation warehouse OR conveyor",https://news.google.com/rss/search?q=%22request+for+proposals%22+automation+warehouse+OR+conveyor+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""request for proposals"" cleaning robots OR ""autonomous scrub",https://news.google.com/rss/search?q=%22request+for+proposals%22+cleaning+robots+OR+%22autonomous+scrubber%22+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,no
+deployment_news,rss_feed,Google News · school district robots cleaning OR delivery bid,https://news.google.com/rss/search?q=school+district+robots+cleaning+OR+delivery+bid+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,no
+deployment_news,rss_feed,"Google News · airport ""robot"" pilot terminal",https://news.google.com/rss/search?q=airport+%22robot%22+pilot+terminal+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities; Cleaning,no
+deployment_news,rss_feed,"Google News · ""pilot program"" robots city",https://news.google.com/rss/search?q=%22pilot+program%22+robots+city+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,no
+deployment_news,rss_feed,"Google News · university campus ""delivery robots""",https://news.google.com/rss/search?q=university+campus+%22delivery+robots%22+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,no
+deployment_news,rss_feed,"Google News · ""senior living"" robots pilot",https://news.google.com/rss/search?q=%22senior+living%22+robots+pilot+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,no
+deployment_news,rss_feed,"Google News · grocery ""shelf-scanning robots"" OR ""inventory robots""",https://news.google.com/rss/search?q=grocery+%22shelf-scanning+robots%22+OR+%22inventory+robots%22+when:30d&hl=en-US&gl=US&ceid=US:en,,Retail,no
+deployment_news,rss_feed,"Google News · ""robotic car wash"" OR ""automated car wash"" chain expands",https://news.google.com/rss/search?q=%22robotic+car+wash%22+OR+%22automated+car+wash%22+chain+expands+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,no
+deployment_news,rss_feed,"Google News · ""robotic lawn mowers"" commercial OR municipal",https://news.google.com/rss/search?q=%22robotic+lawn+mowers%22+commercial+OR+municipal+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,no
+deployment_news,rss_feed,"Google News · data center ""robots"" operations",https://news.google.com/rss/search?q=data+center+%22robots%22+operations+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,no
+deployment_news,rss_feed,"Google News · ""automated parking"" garage",https://news.google.com/rss/search?q=%22automated+parking%22+garage+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,no
+deployment_news,rss_feed,"Google News · ""Locus Robotics"" (deploys OR selects OR ""partners with"" OR c",https://news.google.com/rss/search?q=%22Locus+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""Symbotic"" (deploys OR selects OR ""partners with"" OR custome",https://news.google.com/rss/search?q=%22Symbotic%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Retail,no
+deployment_news,rss_feed,"Google News · ""GreyOrange"" (deploys OR selects OR ""partners with"" OR custo",https://news.google.com/rss/search?q=%22GreyOrange%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""Geek+"" (deploys OR selects OR ""partners with"" OR customer O",https://news.google.com/rss/search?q=%22Geek%2B%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""AutoStore"" (deploys OR selects OR ""partners with"" OR custom",https://news.google.com/rss/search?q=%22AutoStore%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Retail,no
+deployment_news,rss_feed,"Google News · ""Dexterity"" (deploys OR selects OR ""partners with"" OR custom",https://news.google.com/rss/search?q=%22Dexterity%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""Plus One Robotics"" (deploys OR selects OR ""partners with"" O",https://news.google.com/rss/search?q=%22Plus+One+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""Fox Robotics"" (deploys OR selects OR ""partners with"" OR cus",https://news.google.com/rss/search?q=%22Fox+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""Seegrid"" (deploys OR selects OR ""partners with"" OR customer",https://news.google.com/rss/search?q=%22Seegrid%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Factory,no
+deployment_news,rss_feed,"Google News · ""Vecna Robotics"" (deploys OR selects OR ""partners with"" OR c",https://news.google.com/rss/search?q=%22Vecna+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""OTTO Motors"" (deploys OR selects OR ""partners with"" OR cust",https://news.google.com/rss/search?q=%22OTTO+Motors%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""Agility Robotics"" (deploys OR selects OR ""partners with"" OR",https://news.google.com/rss/search?q=%22Agility+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""Figure AI"" (deploys OR selects OR ""partners with"" OR custom",https://news.google.com/rss/search?q=%22Figure+AI%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""Apptronik"" (deploys OR selects OR ""partners with"" OR custom",https://news.google.com/rss/search?q=%22Apptronik%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics; Factory,no
+deployment_news,rss_feed,"Google News · ""Boston Dynamics Stretch"" (deploys OR selects OR ""partners w",https://news.google.com/rss/search?q=%22Boston+Dynamics+Stretch%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Logistics,no
+deployment_news,rss_feed,"Google News · ""Brain Corp"" (deploys OR selects OR ""partners with"" OR custo",https://news.google.com/rss/search?q=%22Brain+Corp%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning; Retail,no
+deployment_news,rss_feed,"Google News · ""Avidbots"" (deploys OR selects OR ""partners with"" OR custome",https://news.google.com/rss/search?q=%22Avidbots%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Cleaning,no
+deployment_news,rss_feed,"Google News · ""Simbe Robotics"" (deploys OR selects OR ""partners with"" OR c",https://news.google.com/rss/search?q=%22Simbe+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Retail,no
+deployment_news,rss_feed,"Google News · ""Knightscope"" (deploys OR selects OR ""partners with"" OR cust",https://news.google.com/rss/search?q=%22Knightscope%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Facilities,no
+deployment_news,rss_feed,"Google News · ""Bear Robotics"" (deploys OR selects OR ""partners with"" OR cu",https://news.google.com/rss/search?q=%22Bear+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,no
+deployment_news,rss_feed,"Google News · ""Pudu Robotics"" (deploys OR selects OR ""partners with"" OR cu",https://news.google.com/rss/search?q=%22Pudu+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service; Hospitality,no
+deployment_news,rss_feed,"Google News · ""Keenon Robotics"" (deploys OR selects OR ""partners with"" OR ",https://news.google.com/rss/search?q=%22Keenon+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service; Hospitality,no
+deployment_news,rss_feed,"Google News · ""Miso Robotics"" (deploys OR selects OR ""partners with"" OR cu",https://news.google.com/rss/search?q=%22Miso+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,no
+deployment_news,rss_feed,"Google News · ""Serve Robotics"" (deploys OR selects OR ""partners with"" OR c",https://news.google.com/rss/search?q=%22Serve+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,no
+deployment_news,rss_feed,"Google News · ""Starship Technologies"" (deploys OR selects OR ""partners wit",https://news.google.com/rss/search?q=%22Starship+Technologies%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Food Service,no
+deployment_news,rss_feed,"Google News · ""Diligent Robotics"" (deploys OR selects OR ""partners with"" O",https://news.google.com/rss/search?q=%22Diligent+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,no
+deployment_news,rss_feed,"Google News · ""Aethon TUG"" (deploys OR selects OR ""partners with"" OR custo",https://news.google.com/rss/search?q=%22Aethon+TUG%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Healthcare,no
+deployment_news,rss_feed,"Google News · ""Universal Robots"" (deploys OR selects OR ""partners with"" OR",https://news.google.com/rss/search?q=%22Universal+Robots%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""Path Robotics"" (deploys OR selects OR ""partners with"" OR cu",https://news.google.com/rss/search?q=%22Path+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Factory,no
+deployment_news,rss_feed,"Google News · ""Carbon Robotics"" (deploys OR selects OR ""partners with"" OR ",https://news.google.com/rss/search?q=%22Carbon+Robotics%22+%28deploys+OR+selects+OR+%22partners+with%22+OR+customer+OR+pilot+OR+rollout%29+when:30d&hl=en-US&gl=US&ceid=US:en,,Agriculture,no

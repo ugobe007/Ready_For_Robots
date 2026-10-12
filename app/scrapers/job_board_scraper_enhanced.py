@@ -652,12 +652,16 @@ class EnhancedJobBoardScraper(BaseScraper):
                 skipped_relevancy += 1
                 continue
 
-            # ── Classify: FIT × PAIN × INTENT (workflow_ontology) ─────────────
-            # Operational postings ARE the opportunity. Only robot builders and
-            # desk work with no physical workflow are dropped.
+            # ── Classify (workflow_ontology) ──────────────────────────────────
+            # We sell to COMPANIES ready to buy/pilot robots. Only postings that
+            # show automation intent (robots named, automation hire, tender)
+            # become robot_jobs. Plain labor postings are kept as `labor_pain`
+            # signals on the company — pain-at-scale evidence for buyer
+            # readiness (scripts/rank_buyers.py), never a lead by themselves.
             from app.services.automation_opportunity_classifier import (
                 classify_opportunity,
                 get_signal_type,
+                should_create_robot_job,
                 should_reject,
             )
 
@@ -668,9 +672,7 @@ class EnhancedJobBoardScraper(BaseScraper):
                 continue
 
             robot_job_extract = None
-            sig_type = get_signal_type(opp_class)
-            strength = {1: 0.85, 2: 0.70, 3: 0.55}.get(int(opp_tier), 0.5)
-            summary_text = f"Automation opportunity ({sig_type}): {title}"
+            job = None
             if should_persist_robot_job(title=title, employer=company_name):
                 job = extract_robot_job(
                     title=title,
@@ -681,18 +683,21 @@ class EnhancedJobBoardScraper(BaseScraper):
                     html=card.get("html") or "",
                     jsonld=card.get("jsonld"),
                 )
-                if job.get("persistable"):
-                    posting_state = status_from_posting_text(desc)
-                    job["status"] = posting_state["status"]
-                    job["opportunity_tier"] = int(opp_tier)
-                    job["opportunity_class"] = int(opp_class)
-                    sig_type = "robot_job"
-                    summary_text = format_robot_job_signal(job)
-                    robot_job_extract = job
-            if robot_job_extract is None and sig_type == "robot_job":
-                # Not persistable as a named job (chrome title, class dump): keep nothing.
+                if not job.get("persistable"):
+                    job = None
+            if job is None:
                 skipped_no_pain += 1
                 continue
+            job["status"] = status_from_posting_text(desc)["status"]
+            job["opportunity_tier"] = int(opp_tier)
+            job["opportunity_class"] = int(opp_class)
+            summary_text = format_robot_job_signal(job)
+            if should_create_robot_job(opp_tier):
+                sig_type, strength = "robot_job", 0.85
+                robot_job_extract = job
+            else:
+                sig_type = "labor_pain" if get_signal_type(opp_class) == "robot_job" else get_signal_type(opp_class)
+                strength = 0.35
 
             parts = location.split(",")
             city = parts[0].strip() if parts else location

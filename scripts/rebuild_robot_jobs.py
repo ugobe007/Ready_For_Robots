@@ -11,6 +11,11 @@ a signal row:
                   (older rows: 'ROBOT_JOB | ...')
     company_id, source_url, created_at
 
+NOTE (2026-10-11, Bob): we sell to companies ready to buy or pilot robots,
+not labor postings. ``from-signals`` therefore restores only postings with
+automation intent; plain labor postings stay where they are (signals) and feed
+company ranking:  python3 scripts/rank_buyers.py
+
 So there are two recovery paths. Both are DRY-RUN unless you pass --apply,
 and both are idempotent (upsert on job_key — safe to re-run, safe to run both).
 
@@ -187,9 +192,10 @@ def cmd_from_signals(args) -> int:
             if not extract.get("persistable"):
                 stats["gate_rejected"] += 1
                 continue
-            if extract.get("opportunity_tier") == 0:
-                # Robot builders / desk work were never opportunities. Left on signals.
-                stats["not_an_opportunity"] += 1
+            if extract.get("opportunity_tier") != 1:
+                # Labor postings stay as company signals (pain evidence for
+                # scripts/rank_buyers.py). Only buyer intent becomes a robot_job.
+                stats["labor_posting_kept_as_signal" if extract.get("opportunity_tier") else "not_an_opportunity"] += 1
                 continue
             # Signal text is the evidence we have; prefer it over a blank re-extract.
             if parsed["compensation"]["wage_min"] is not None:

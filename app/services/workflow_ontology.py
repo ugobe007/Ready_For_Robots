@@ -1,28 +1,22 @@
-"""Workflow ontology — where robots can be hired.
+"""Workflow ontology — classify one posting / headline / tender.
 
-A Robot Job is **human work a robot could be hired to do**. An operational job
-posting (order picker, dishwasher, EVS tech) is the *evidence* that the work
-exists at a named employer. It is the opportunity, not contamination.
+We sell to COMPANIES ready to buy or pilot robots. This module scores a single
+piece of evidence; company-level ranking lives in ``buyer_readiness``.
 
-Three evidence layers, scored independently:
+    FIT     the work maps to a workflow family commercial robots do today
+    PAIN    staffing pressure (volume, turnover, bonuses, 24/7, heavy/hazardous)
+    INTENT  the company is moving to automation: robots named, automation /
+            robotics hire at an operator, RFP/tender, deployment news
 
-    FIT     — the work maps to a workflow family that commercial robots do today
-    PAIN    — the employer is struggling to staff it (volume, turnover, bonuses,
-              24/7 shifts, heavy/repetitive/hazardous work)
-    INTENT  — the employer is already moving toward automation (robot / AMR /
-              automation named in the posting, automation or CI hires at an
-              operator, RFPs/tenders, deployment news)
+Tier (``robot_jobs.opportunity_tier``):
 
-Tier (stored on ``robot_jobs.opportunity_tier``):
+    1  AUTOMATION_INTENT   buyer evidence → robot_jobs row + signal
+    2  AUTOMATION_READY    labor posting with pain → `labor_pain` signal only
+    3  AUTOMATABLE_WORK    labor posting           → `labor_pain` signal only
+    0  NOT_AN_OPPORTUNITY  robot vendors / builders / desk work → dropped
 
-    1  AUTOMATION_INTENT   intent evidence + fit       → daily email first
-    2  AUTOMATION_READY    fit + pain, or high-automatability fit
-    3  AUTOMATABLE_WORK    fit only                    → pipeline / nurture
-    0  NOT_AN_OPPORTUNITY  robot builders at OEMs, desk work with no physical
-                           workflow — the ONLY thing we drop
-
-Nothing a robot could do is ever rejected for "looking like a human job".
-That is the whole market.
+Labor postings are never deleted and never leads; they are pain-at-scale
+evidence on the company.
 
 Robot categories match ``docs/calibration/vendor_seed_sheets/vendors.csv``
 (``robot_category``) so example vendors come from the curated seed.
@@ -601,7 +595,7 @@ INTENT_PATTERNS: tuple[tuple[str, float, str], ...] = (
      r" (?:\w+ ){0,3}(?:program|deployment|rollout|initiative|project|pilot|fleet|cell|system|implementation)",
      0.9, "automation_program"),
     (r"work(?:ing)? (?:alongside|with|next to) (?:robots?|cobots?|amrs?|automation|autonomous)", 0.8, "works_with_robots"),
-    (r"(?:monitor|supervis|oversee|troubleshoot|maintain|operate|run)\w* (?:\w+ ){0,3}"
+    (r"(?:monitor|supervis|oversee|troubleshoot|maintain|operate|run)\w* (?:\w+ ){0,5}"
      r"(?:robots?|robotic|amrs?|agvs?|cobots?|autonomous (?:mobile )?robots?|automated (?:equipment|systems?|lines?)|palletizing robots?)",
      0.8, "operates_robots"),
     (r"(?:automation|robotics|autonomous systems|industry 4\.0|smart (?:factory|warehouse)|lights[- ]out)"
@@ -612,7 +606,8 @@ INTENT_PATTERNS: tuple[tuple[str, float, str], ...] = (
      r"(?:\W+\w+){0,8}\W+(?:robot|robotic|automat|autonomous|amr|agv|conveyor|palletiz|scrubber|disinfection)", 1.0, "procurement"),
     (r"(?:cost to automate|automate (?:this|the|our)|looking to automate|seeking (?:an? )?automation|automation (?:partner|vendor|integrator))",
      1.0, "explicit_automation_ask"),
-    (r"\b(?:robot|cobot|amr|agv) (?:operator|attendant|tender|technician|supervisor|wrangler)s?\b", 0.7, "robot_operator_role"),
+    (r"\b(?:robot|robotic|robotics|cobot|amr|agv)s? (?:\w+ )?(?:operator|attendant|tender|technician|tech|supervisor|wrangler|specialist|coordinator)s?\b",
+     0.7, "robot_operator_role"),
 )
 
 # Operator-side automation roles: a company hiring these is a BUYER, not a builder.
@@ -816,7 +811,7 @@ def analyze_posting(title: str, description: str = "", company: str = "") -> Opp
 
     if builder and not fams:
         return OpportunityAnalysis(0, 0.0, [], intent, pain, buyer_role, True, "robot builder / supply side")
-    if vendor and not intent:
+    if vendor:
         # An OEM hiring a field tech or cleaner is not buying robots.
         return OpportunityAnalysis(0, 0.0, fams, intent, pain, buyer_role, True, "employer is a robot vendor")
 
