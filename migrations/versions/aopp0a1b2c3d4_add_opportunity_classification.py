@@ -1,7 +1,7 @@
 """Add opportunity classification to robot_jobs
 
 Revision ID: aopp0a1b2c3d4
-Revises: jcnt0a1b2c3d4
+Revises: djrt0a1b2c3d4
 Create Date: 2026-10-12 02:35:00.000000
 
 Adds opportunity_tier and opportunity_class columns to classify jobs:
@@ -18,7 +18,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'aopp0a1b2c3d4'
-down_revision = 'jcnt0a1b2c3d4'
+down_revision = 'djrt0a1b2c3d4'
 branch_labels = None
 depends_on = None
 
