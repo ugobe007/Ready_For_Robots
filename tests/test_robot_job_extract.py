@@ -26,8 +26,8 @@ def test_extracts_title_function_pay_and_specs():
     assert job["performance_specs"]["openings"] == 12
     assert "compensation" not in job["unknowns"]
     line = format_robot_job_signal(job)
-    assert "ROBOT_JOB" in line
-    assert "picking" in line
+    assert "ROBOT TASK SIGNAL" in line
+    assert "Picking" in line
     assert job["employer_email"] is None
 
 
@@ -235,13 +235,13 @@ def test_upsert_persists_email_when_contact_columns_exist(monkeypatch):
     db = MagicMock()
     db.query.return_value.filter.return_value.one_or_none.return_value = None
     extract = extract_robot_job(
-        title="Patient Transporter",
-        description="Hospital unit delivery.",
+        title="Hospital delivery robots",
+        description="Unit delivery routes.",
         company="Named Hospital",
         locality="Portland, OR",
         jsonld={
             "@type": "JobPosting",
-            "title": "Patient Transporter",
+            "title": "Hospital delivery robots",
             "hiringOrganization": {
                 "name": "Named Hospital",
                 "email": "ops@named-hospital.org",
@@ -269,8 +269,8 @@ def test_upsert_keeps_job_when_email_missing(monkeypatch):
     db = MagicMock()
     db.query.return_value.filter.return_value.one_or_none.return_value = None
     extract = extract_robot_job(
-        title="Harvest Worker",
-        description="Farm laborer harvest worker. Immediate hire.",
+        title="Orchard harvest robots",
+        description="Apple routes. Multiple openings.",
         company="Sunrise Orchards",
         locality="Yakima, WA",
     )

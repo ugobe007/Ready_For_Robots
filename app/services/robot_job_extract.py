@@ -277,6 +277,7 @@ def extract_robot_job(
         title=title or "",
         employer=company or "",
         job_function=function,
+        description=description or "",
     )
     return {
         "employer": (company or "").strip() or None,

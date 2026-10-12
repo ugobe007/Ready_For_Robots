@@ -319,9 +319,14 @@ def should_persist_robot_job(
     title: str,
     employer: str,
     job_function: Optional[str] = None,
+    description: str = "",
 ) -> bool:
-    """Drop class-dump titles, chrome employers, and empty/invented SKU names."""
-    from app.services.robot_job_extract import is_job_employer_name, job_function_from_title
+    """Keep a posting only when it asks for a robot, not a human occupation."""
+    from app.services.robot_job_extract import (
+        asks_for_a_robot,
+        is_job_employer_name,
+        job_function_from_title,
+    )
 
     if not (title or "").strip() or not (employer or "").strip():
         return False
@@ -333,5 +338,7 @@ def should_persist_robot_job(
         return False
     function = job_function or job_function_from_title(title)
     if not function and is_chrome_name(title):
+        return False
+    if not asks_for_a_robot(title, description or ""):
         return False
     return True

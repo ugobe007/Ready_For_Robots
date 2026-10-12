@@ -175,6 +175,7 @@ def upsert_robot_job_from_extract(
         title=title,
         employer=employer,
         job_function=extract.get("job_function"),
+        description=str(extract.get("job_description") or ""),
     ):
         return None
     key = robot_job_key(employer, title, extract.get("workplace") or "")

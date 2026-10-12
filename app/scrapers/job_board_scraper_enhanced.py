@@ -176,9 +176,12 @@ def operational_labor_hits(title: str, description: str = "") -> int:
 
 
 def is_operational_robot_job(title: str, description: str = "") -> bool:
+    """A robot job asks for a robot. Cook, bartender, and nurse are human hires."""
     if _is_builder_role(title, description):
         return False
-    return operational_labor_hits(title, description) > 0
+    from app.services.robot_job_extract import asks_for_a_robot
+
+    return asks_for_a_robot(title, description)
 
 
 def calculate_job_relevancy_score(title: str, description: str) -> float:
@@ -226,6 +229,10 @@ def calculate_job_relevancy_score(title: str, description: str) -> float:
         1.0,
         (buyer_matches * 0.20) + (pain_matches * 0.10) + (labor_matches * 0.25),
     )
+    from app.services.robot_job_extract import asks_for_a_robot
+
+    if asks_for_a_robot(title, description):
+        score = max(score, 0.50)
     return score
 
 # ─── DUPLICATE DETECTION ───────────────────────────────────────────────────────
@@ -649,7 +656,9 @@ class EnhancedJobBoardScraper(BaseScraper):
                 sig_type = "automation_intent"
                 summary_text = f"Automation intent hire: {title}"
             elif is_operational_robot_job(title, desc):
-                if not should_persist_robot_job(title=title, employer=company_name):
+                if not should_persist_robot_job(
+                    title=title, employer=company_name, description=desc
+                ):
                     skipped_no_pain += 1
                     continue
                 pain_score = operational_labor_hits(title, desc)
