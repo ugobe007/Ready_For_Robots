@@ -21,12 +21,12 @@ from typing import Any, Optional
 logger = logging.getLogger(__name__)
 
 STAGE_TITLES = {
-    "buying_now": "BUYING NOW — tender, pilot, purchase or vendor selection",
-    "evaluating": "EVALUATING — automation hires, budgets, programs, or modernizing under labor pressure",
-    "expanding": "EXPANDING — already running robots",
-    "preparing": "PREPARING — budgeting, modernizing, redesigning workflows, or labor pressure",
+    "rfp_open": "RFP OPEN — published RFP / vendor search, budget confirmed",
+    "expanding": "EXPANDING — has robots and wants more, or a new category",
+    "exploring": "EXPLORING — exploring, planning, budgeting or piloting, no vendor locked in",
+    "preparing": "PREPARING — modernizing or labor pressure; predicted needs, no statement yet",
 }
-DEFAULT_STAGES = ("buying_now", "evaluating", "preparing")
+DEFAULT_STAGES = ("rfp_open", "expanding", "exploring", "preparing")
 # Preparing can be long; the body shows the strongest N, the CSV has everyone.
 PREPARING_BODY_LIMIT = 40
 
@@ -57,9 +57,9 @@ def _serialize(company: Any, br: dict[str, Any]) -> dict[str, Any]:
         "score": float(br.get("score") or 0),
         "why": br.get("why") or "",
         "evidence": [
-            {"label": e.get("label") or "", "text": (e.get("text") or "")[:240],
+            {"kind": e.get("kind") or "", "label": e.get("label") or "", "text": (e.get("text") or "")[:240],
              "url": e.get("source_url") or "", "seen_at": (e.get("seen_at") or "")[:10]}
-            for e in ev[:3]
+            for e in ev[:12]
         ],
         "workflows": list(br.get("workflows") or []),
         "pain": list(br.get("pain_labels") or []),
@@ -69,6 +69,16 @@ def _serialize(company: Any, br: dict[str, Any]) -> dict[str, Any]:
         "website": getattr(company, "website", "") or "",
         "computed_at": (br.get("computed_at") or "")[:16],
         "also_listed_as": list(br.get("duplicate_names") or []),
+        "open": [
+            {"label": o.get("label"), "status": o.get("status"), "score": o.get("score"),
+             "vendors": o.get("vendors") or [], "evidence": (o.get("evidence") or [])[:1]}
+            for o in ((br.get("opportunities") or {}).get("open") or [])[:4]
+        ],
+        "already_has": [
+            {"label": o.get("label"), "vendors": o.get("vendors") or []}
+            for o in ((br.get("opportunities") or {}).get("already_has") or [])[:4]
+        ],
+        "predicted_next": [o.get("label") for o in ((br.get("opportunities") or {}).get("predicted_next") or [])[:3]],
     }
 
 
@@ -117,15 +127,13 @@ def compose_daily_buyers_report(db, *, refresh: Optional[bool] = None) -> dict[s
     }
 
 
-def _subject(report: dict[str, Any]) -> str:
+def _subject(report: dict[str, Any]) -> str:  # noqa: D401
     c = report.get("counts") or {}
     parts = []
-    if "buying_now" in c:
-        parts.append(f"{c['buying_now']} buying now")
-    if "evaluating" in c:
-        parts.append(f"{c['evaluating']} evaluating")
-    if "preparing" in c:
-        parts.append(f"{c['preparing']} preparing")
+    for st, word in (("rfp_open", "RFPs open"), ("expanding", "expanding"), ("exploring", "exploring"),
+                     ("preparing", "preparing")):
+        if st in c:
+            parts.append(f"{c[st]} {word}")
     return f"Robot buyers — {', '.join(parts)} — {report.get('date')}"
 
 
@@ -138,7 +146,30 @@ def _buyer_lines(b: dict[str, Any]) -> list[str]:
     out = [head, f"     Why: {b.get('why') or '—'}  [score {b.get('score', 0):.0f}]"]
     if b.get("also_listed_as"):
         out.append(f"     Also listed as: {', '.join(b['also_listed_as'][:4])}")
-    for e in b.get("evidence") or []:
+    status_word = {"rfp": "RFP", "expanding": "wants more", "exploring": "exploring", "piloting": "piloting"}
+    for o in b.get("open") or []:
+        line = f"     ▸ {o['label']}: {status_word.get(o['status'], o['status'])}"
+        if o.get("vendors"):
+            line += f" (incumbent: {', '.join(o['vendors'][:2])})"
+        out.append(line)
+        for e in o.get("evidence") or []:
+            out.append(f"         “{e.get('text', '')[:200]}”" + (f" ({e['seen_at']})" if e.get("seen_at") else ""))
+            if e.get("url"):
+                out.append(f"         {e['url']}")
+    if b.get("already_has"):
+        has = "; ".join(f"{h['label']}" + (f" ({', '.join(h['vendors'][:2])})" if h.get("vendors") else "")
+                        for h in b["already_has"])
+        out.append(f"     Already has: {has}")
+    if b.get("predicted_next"):
+        out.append(f"     Likely next: {', '.join(b['predicted_next'])}")
+    if b.get("open"):
+        return out
+    ev = b.get("evidence") or []
+    # Preparing/primed: lead with the pressure or modernization that reopened the door.
+    ev = [e for e in ev if e.get("kind") in ("preparing", "pressure")] or ev
+    seen_text: set = set()
+    ev = [e for e in ev if not (e.get("text") in seen_text or seen_text.add(e.get("text")))]
+    for e in ev[:3]:
         line = f"     • {e['label']}: {e['text']}"
         if e.get("seen_at"):
             line += f" ({e['seen_at']})"
@@ -153,9 +184,11 @@ def render_daily_buyers_text(report: dict[str, Any]) -> str:
     lines = [
         f"Companies ready to buy or pilot robots — {report.get('date')}",
         "",
-        "  ".join(f"{STAGE_TITLES[st].split(' —')[0].title()}: {c.get(st, 0)}" for st in report.get("stages") or []),
+        "  ".join(f"{STAGE_TITLES[st].split(' —')[0].capitalize().replace('Rfp', 'RFP')}: {c.get(st, 0)}"
+                  for st in report.get("stages") or []),
         "",
-        "Every company below has evidence on record. Robot vendors and junk names are excluded.",
+        "Every company below has an open door: no vendor locked in for the listed workflow.",
+        "Companies that already bought robots and said nothing new are left out (committed).",
         "",
     ]
     buyers = list(report.get("buyers") or [])
@@ -182,7 +215,7 @@ def render_daily_buyers_html(report: dict[str, Any]) -> str:
             f"{body}</pre></div>")
 
 
-CSV_COLUMNS = ("rank", "company", "stage", "score", "why", "evidence_1", "evidence_1_url", "evidence_2",
+CSV_COLUMNS = ("rank", "company", "stage", "score", "why", "open_categories", "already_has", "likely_next", "evidence_1", "evidence_1_url", "evidence_2",
                "evidence_2_url", "evidence_3", "evidence_3_url", "industry", "city", "state", "website",
                "workflows", "labor_pressure", "also_listed_as", "scored_at")
 
@@ -204,6 +237,10 @@ def render_daily_buyers_csv(report: dict[str, Any]) -> str:
             "workflows": "; ".join(b.get("workflows") or []), "labor_pressure": "; ".join(b.get("pain") or []),
             "scored_at": b.get("computed_at") or "",
             "also_listed_as": "; ".join(b.get("also_listed_as") or []),
+            "open_categories": "; ".join(f"{o['label']} ({o['status']})" for o in b.get("open") or []),
+            "already_has": "; ".join(h["label"] + (f" ({', '.join(h['vendors'][:2])})" if h.get("vendors") else "")
+                                     for h in b.get("already_has") or []),
+            "likely_next": "; ".join(b.get("predicted_next") or []),
         }
         for i in range(3):
             e = ev[i] or {}

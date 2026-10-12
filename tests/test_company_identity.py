@@ -104,17 +104,18 @@ def test_ranking_pools_duplicates_and_lists_once(db):
     a = Company(name="Target", industry="Retail")
     b = Company(name="Target Corporation", industry="Retail")
     db.add_all([a, b]); db.flush()
-    # Each row alone is only Preparing; together they are Evaluating.
+    # Alone: one row is Committed (has cleaning robots), the other Exploring.
+    # Together: has cleaning robots and is looking at more -> Expanding.
     db.add(Signal(company_id=a.id, signal_type="news", signal_strength=0.5,
-                  signal_text="Target is modernizing its supply chain"))
-    db.add(Signal(company_id=b.id, signal_type="labor_shortage", signal_strength=0.5,
-                  signal_text="Target faces store labor shortage"))
+                  signal_text="Target deploys floor-cleaning robots in 50 stores"))
+    db.add(Signal(company_id=b.id, signal_type="news", signal_strength=0.5,
+                  signal_text="Target is considering floor-cleaning robots for its remaining stores"))
     db.commit()
     stages, results = score_companies(db, apply=True)
-    assert len(results) == 1 and stages["evaluating"] == 1
+    assert len(results) == 1 and stages["expanding"] == 1
     for c in (a, b):
         db.refresh(c)
-        assert c.automation_profile["buyer_readiness"]["stage"] == "evaluating"
+        assert c.automation_profile["buyer_readiness"]["stage"] == "expanding"
     assert sum(c.automation_profile["buyer_readiness"]["is_primary"] for c in (a, b)) == 1
 
 

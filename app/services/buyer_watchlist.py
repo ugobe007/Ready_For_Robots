@@ -8,8 +8,8 @@ for that company + labor pressure/modernization. Evidence attaches straight to
 the company row, and the title must name the company.
 
 Who is watched, in priority order (least recently checked first within a bucket):
-  1. companies already at evaluating / expanding / preparing / primed  (keep fresh,
-     find the evidence that moves them up)
+  1. companies at preparing / primed / committed (find the statement that opens a
+     category), then rfp_open / expanding / exploring (keep fresh)
   2. labor-heavy companies in Watch with many open operational postings
      (pain at scale, intent not yet seen)
   3. the seed list app/data/operator_watchlist.txt (major operators, airports,
@@ -29,7 +29,7 @@ from typing import Any, Iterable, Optional
 logger = logging.getLogger(__name__)
 
 _SEED_PATH = Path(__file__).resolve().parents[1] / "data" / "operator_watchlist.txt"
-ACTIVE_STAGES = ("evaluating", "expanding", "preparing", "primed", "buying_now")
+ACTIVE_STAGES = ("rfp_open", "expanding", "exploring", "preparing", "primed", "committed")
 
 # One query for intent, one for pressure. OR-syntax keeps it to two requests per company.
 QUERY_TEMPLATES = (
@@ -103,7 +103,8 @@ def select_watchlist(db, limit: Optional[int] = None, *, min_postings: int = 5) 
     # 1. Companies already showing buyer stages.
     for c in db.query(Company).filter(Company.automation_profile.isnot(None)).yield_per(2000):
         if _stage(c) in ACTIVE_STAGES:
-            add(c, 0 if _stage(c) in ("preparing", "primed") else 1)
+            # Pre-decision companies first: their next statement is the one we sell into.
+            add(c, 0 if _stage(c) in ("preparing", "primed", "committed") else 1)
 
     # 2. Labor-heavy companies with many operational postings, no intent yet.
     rows = (

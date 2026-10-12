@@ -11,7 +11,7 @@ from typing import Any, Iterator
 
 logger = logging.getLogger(__name__)
 
-STAGE_RANK = {"buying_now": 0, "evaluating": 1, "expanding": 2, "preparing": 3, "primed": 4, "watch": 5}
+STAGE_RANK = {"rfp_open": 0, "expanding": 1, "exploring": 2, "preparing": 3, "primed": 4, "committed": 5, "watch": 6}
 
 
 def iter_company_signals(db) -> Iterator[tuple[Any, list[dict]]]:

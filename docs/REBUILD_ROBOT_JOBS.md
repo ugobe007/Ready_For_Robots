@@ -186,3 +186,43 @@ Now, each scheduled run:
 New evidence only changes stages after a re-score: run
 `python3 scripts/rank_buyers.py --apply` (or set `DAILY_BUYERS_REFRESH=1` once the
 DB connection is stable).
+
+## Sell into workflows, not companies (2026-10-12)
+
+Bob: a company that already deployed or bought robots is committed — *for that
+workflow*. Disney running cleaning robots may still want more cleaning robots,
+restroom/sanitizing robots, food prep, room-service delivery, entertainment
+robots. Read each company's intentions per workflow and score them against our
+prediction of what that kind of operator needs. A published RFP means the budget
+is confirmed.
+
+`app/services/opportunity_map.py` builds, per company, a map of 17 robot
+categories (cleaning, restroom/sanitizing, delivery/room service, food prep,
+entertainment, concierge, security, warehouse AMR, palletizing, forklift,
+inventory, laundry, manufacturing, hospital logistics, outdoor, last-mile,
+humanoid). Each category gets a status from the sentence it appears in:
+
+| status | language | open? |
+|---|---|---|
+| rfp | RFP / RFI / sources sought / tender / evaluating vendors | ★ budget confirmed |
+| expanding | has robots here + more / next phase / other sites | yes |
+| exploring | exploring / considering / plans / budgeting / investing / $X for | yes |
+| piloting | pilot / trial / testing | yes |
+| deployed | deployed / installed / bought / selected / with <vendor> | no (this workflow) |
+| predicted | nothing said; our industry model expects it | whitespace |
+
+Incumbent vendors named in the text are recorded (from `vendors.csv` + common
+names). Intent that matches the industry prediction scores higher; a company
+that already bought robots is a proven buyer, so its other predicted
+categories score higher.
+
+**Stages** (replace buying_now / evaluating): `rfp_open` → `expanding` →
+`exploring` → `preparing` → `primed` → `committed` → `watch`. **Committed** =
+bought robots, nothing new on record — left out of the email. A committed
+company under labor pressure moves to Preparing ("proven robot buyer under
+pressure — likely needs …").
+
+The daily email lists, per company: each open category with its status, the
+incumbent vendor if any, and the sentence that shows it; what they already
+have; and our predicted next needs. CSV adds `open_categories`, `already_has`,
+`likely_next`.

@@ -65,9 +65,9 @@ def test_select_prioritizes_buyer_stages_then_pain_then_seed(db, monkeypatch):
 
 def test_never_checked_go_before_recently_checked(db, monkeypatch):
     monkeypatch.setattr(bw, "seed_names", lambda: [])
-    a = Company(name="Aramark", industry="Food Service", automation_profile=_profile("evaluating"),
+    a = Company(name="Aramark", industry="Food Service", automation_profile=_profile("exploring"),
                 crm_metadata={"watch": {"last_checked": "2026-10-11T00:00:00+00:00"}})
-    b = Company(name="Sodexo", industry="Food Service", automation_profile=_profile("evaluating"))
+    b = Company(name="Sodexo", industry="Food Service", automation_profile=_profile("exploring"))
     db.add_all([a, b]); db.commit()
     assert [c.name for c in bw.select_watchlist(db, limit=2)] == ["Sodexo", "Aramark"]
 

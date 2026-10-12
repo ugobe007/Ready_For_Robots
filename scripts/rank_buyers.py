@@ -5,7 +5,7 @@
     python3 scripts/rank_buyers.py --apply                 # also stamp companies.automation_profile.buyer_readiness
     python3 scripts/rank_buyers.py --csv buyers.csv --min-stage evaluating
 
-Stages: buying_now > evaluating > expanding > preparing > primed > watch (see app/services/buyer_readiness.py).
+Stages: rfp_open > expanding > exploring > preparing > primed > committed > watch (see app/services/buyer_readiness.py).
 Reads every signal (job-posting signals included — they count as pain-at-scale,
 never as a buyer by themselves). Never deletes anything.
 """

@@ -603,8 +603,8 @@ def test_send_emails_buyers_by_default(monkeypatch, db_session):
                         lambda **kw: sent.append(kw) or {"resend_id": "re_test"})
     result = send_daily_jobs_report(db_session, force=True)
     assert result["sent"] is True and result["kind"] == "buyers"
-    assert result["counts"]["buying_now"] == 1
-    assert sent[0]["subject"].startswith("Robot buyers — 1 buying now")
+    assert result["counts"]["rfp_open"] == 1
+    assert sent[0]["subject"].startswith("Robot buyers — 1 RFPs open")
     assert "Clark County Department of Aviation" in sent[0]["body_text"]
     assert "https://example.com/rfp" in sent[0]["body_text"]
     att = sent[0]["attachments"][0]

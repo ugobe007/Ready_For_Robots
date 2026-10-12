@@ -1,23 +1,19 @@
-"""Buyer readiness — is this COMPANY ready to buy or pilot robots?
+"""Buyer readiness — is there an open door to sell this COMPANY robots?
 
-The unit is the company, not the job posting. Buyers rarely say "we will buy a
-robot". They say they are budgeting, modernizing, realigning workflows, or that
-they can't keep staff. Stages, strongest first:
+We sell into WORKFLOWS. Robots already bought for one job close that job (unless
+the company wants more), not the company. Each company gets a per-category
+opportunity map (``opportunity_map.py``): what it is trying to automate, the
+status of each category, scored against what we predict that kind of operator
+needs. Stages, strongest door first:
 
-  BUYING NOW   tender / RFP; pilot or purchase; vendor selection
-  EVALUATING   automation hire, automation program/budget/investment, new
-               automated facility — OR modernizing while under labor pressure
-  EXPANDING    already runs robots — next site / next workflow
-  PREPARING    indirect intent: budgeting/capex, modernizing or upgrading
-               operations, redesigning workflows, cost/efficiency programs,
-               workforce transformation — or labor pressure (turnover, shortage,
-               wage hikes) in a labor-heavy industry (restaurants, warehouses,
-               retail, janitorial, airports, commercial laundry, logistics,
-               factories, hotels/casinos, hospitals, farms)
-  PRIMED       heavy hiring volume for work robots do today, nothing else yet
-  WATCH        not enough evidence; robot vendors; junk names
-
-Score 0-100. Labor postings alone cap at PRIMED (max 45).
+  RFP_OPEN    published RFP / RFI / sources sought — budget confirmed
+  EXPANDING   has robots in a category and wants more, or a new category
+  EXPLORING   exploring / planning / budgeting / piloting, no vendor locked in
+  PREPARING   modernizing or under labor pressure (incl. robot owners under
+              pressure); predicted needs listed, nothing said yet
+  PRIMED      heavy hiring volume for work robots do today, nothing else yet
+  COMMITTED   already bought robots, nothing new on record — not a lead now
+  WATCH       not enough evidence; robot vendors; junk names
 """
 from __future__ import annotations
 
@@ -166,7 +162,7 @@ _NOT_ROBOT_AUTOMATION_RE = re.compile(
     re.I,
 )
 
-STAGES = ("buying_now", "evaluating", "expanding", "preparing", "primed", "watch")
+STAGES = ("rfp_open", "expanding", "exploring", "preparing", "primed", "committed", "watch")
 
 
 @dataclass
@@ -189,6 +185,7 @@ class BuyerReadiness:
     pain_labels: list[str] = field(default_factory=list)
     is_vendor: bool = False
     why: str = ""
+    opportunities: dict = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         d = asdict(self)
@@ -281,6 +278,7 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
 
     typed_seen: Counter = Counter()
     prep_labels: Counter = Counter()
+    map_signals: list[dict] = []
     for sig in signals:
         stype, text, url, ts = _signal_fields(sig)
         if not text:
@@ -303,6 +301,8 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
         recency = 1.0 if (ts is None or ts >= cutoff) else 0.5
         seen = ts.isoformat() if ts else None
         text = _NOT_ROBOT_AUTOMATION_RE.sub(" ", text)
+        map_signals.append({"signal_type": stype, "signal_text": text, "source_url": url,
+                            "seen_at": ts.isoformat()[:10] if hasattr(ts, "isoformat") else ""})
         title = _posting_title(text)
         blob = f"{stype} {text}"
 
@@ -317,6 +317,9 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
                     seen_labels.add(key)
                     weights["evaluating"] += 20 * recency
                     evidence.append(Evidence("evaluating", "automation hire", title, url, seen))
+                    map_signals.append({"signal_type": "automation_leadership_hire",
+                                        "signal_text": f"Hiring {title} for automation", "source_url": url,
+                                        "seen_at": (seen or "")[:10]})
             fams = match_families(title)
             if fams:
                 postings += 1
@@ -338,6 +341,9 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
                     break
                 seen_labels.add(key)
                 weights[kind] += w * recency
+                if title is not None and kind == "expanding":
+                    map_signals.append({"signal_type": "robot_installation", "signal_text": title,
+                                        "source_url": url, "seen_at": (seen or "")[:10]})
                 if kind == "preparing":
                     prep_labels[label] += w * recency
                 if kind == "pressure":
@@ -375,30 +381,55 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
     labor_focus = any(e.label in ("labor cost focus", "labor-light model", "workforce transformation") for e in evidence)
 
     name_problem = buyer_name_problem(company_name)
+
+    # Per-category opportunity map: what are they trying to automate, and is the door open?
+    from app.services.opportunity_map import OPEN_STATUSES, build_map, summarize
+
+    opp_map = build_map(map_signals, industry=industry, company_name=company_name)
+    opps = summarize(opp_map)
+    open_obs = [o for o in opp_map.values() if o.status in OPEN_STATUSES]
+    deployed = [o for o in opp_map.values() if o.status == "deployed"]
+    by_status = {st: [o.label for o in sorted(open_obs, key=lambda o: -o.score) if o.status == st]
+                 for st in OPEN_STATUSES}
+    predicted_best = max((o.score for o in opp_map.values() if o.status == "predicted"), default=0.0)
+    preparing_signal = (
+        (strong_prep >= 8 and under_pressure)
+        or (prep >= 20 and labor_heavy and labor_focus)
+        or (strong_prep >= 10 and (labor_heavy or distinct_prep >= 2)) or (strong_prep >= 8 and prep >= 15)
+        or (pressure >= 12 and labor_heavy)
+    )
+
+    def _labels(xs: list[str]) -> str:
+        return ", ".join(x.split(" / ")[0] for x in xs[:3])
+
+    if open_obs:
+        score = min(100.0, opps["best_open_score"] + 5 * (len(open_obs) - 1) + (5 if preparing_signal else 0))
+    else:
+        score = min(100.0, 0.6 * prep + 0.5 * pressure + primed * 0.8 + predicted_best * 0.3)
+
     if vendor:
         stage, score, why = "watch", min(score, 10.0), "robot vendor (supply side)"
     elif name_problem:
         stage, score, why = "watch", 0.0, name_problem
-    elif buy >= 30:
-        labels = list(dict.fromkeys(e.label for e in evidence if e.kind == "buy_now"))[:3]
-        stage, why = "buying_now", ", ".join(labels) or "tender, pilot or vendor selection on record"
-    elif evalu >= 20:
-        labels = list(dict.fromkeys(e.label for e in evidence if e.kind == "evaluating"))[:3]
-        stage, why = "evaluating", ", ".join(labels) or "automation evaluation on record"
-    elif strong_prep >= 8 and under_pressure:
-        stage, why = "evaluating", "modernizing operations while under labor pressure"
-    elif prep >= 20 and labor_heavy and labor_focus:
-        stage, why = "evaluating", "modernizing operations to reduce labor"
-    elif expand >= 18:
-        stage, why = "expanding", "already operates robots — next site or next workflow"
-    elif evalu >= 8 and (strong_prep >= 8 or under_pressure):
-        stage, why = "preparing", "automation interest plus modernization or labor pressure"
-    elif (strong_prep >= 10 and (labor_heavy or distinct_prep >= 2)) or (strong_prep >= 8 and prep >= 15):
-        stage, why = "preparing", "budgeting, modernizing or redesigning operations"
-    elif pressure >= 12 and labor_heavy:
-        stage, why = "preparing", "labor pressure in a labor-heavy industry"
+    elif open_obs:
+        words = {"rfp": "RFP / vendor search", "expanding": "wants more", "exploring": "exploring",
+                 "piloting": "piloting"}
+        parts = [f"{words[st]}: {_labels(by_status[st])}" for st in OPEN_STATUSES if by_status[st]]
+        if deployed:
+            parts.append(f"already has {_labels([o.label for o in deployed])}")
+        if by_status["rfp"]:
+            parts[0] += " (budget confirmed)"
+        stage = ("rfp_open" if by_status["rfp"] else "expanding" if by_status["expanding"] else "exploring")
+        why = "; ".join(parts)
+    elif preparing_signal or (deployed and (strong_prep >= 8 or pressure >= 10)):
+        nxt = _labels([p["label"] for p in opps["predicted_next"]])
+        lead = "proven robot buyer under pressure" if deployed else "modernizing / labor pressure, no vendor yet"
+        stage, why = "preparing", f"{lead} — likely needs {nxt}" if nxt else lead
     elif primed >= 24:
         stage, why = "primed", f"{postings} open postings for work robots do today"
+    elif deployed:
+        stage, score, why = "committed", min(score, 15.0), (
+            f"already has {_labels([o.label for o in deployed])}; no new interest on record")
     else:
         stage, why = "watch", "not enough buying evidence yet"
 
@@ -416,4 +447,5 @@ def assess_company(company_name: str, signals: Iterable[Any], *, now: Optional[d
         pain_labels=[k for k, _ in pain_labels.most_common()],
         is_vendor=vendor,
         why=why,
+        opportunities=opps,
     )
