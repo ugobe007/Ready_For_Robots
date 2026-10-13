@@ -279,6 +279,7 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
     """Test one robot and return results."""
     robot_id = robot['id']
     url = robot['url']
+    product_name = robot.get('product')  # Use benchmark product name if available
     
     print(f"\n{'='*80}")
     print(f"Testing {robot_id}: {robot['company']} - {robot['product']}")
@@ -354,11 +355,12 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
             result = match_robot_url_v1(
                 url,
                 page_text=page_text,
-                page_html=html
+                page_html=html,
+                product_name=product_name
             )
         else:
             # Live mode - fetch URL directly
-            result = match_robot_url_v1(url)
+            result = match_robot_url_v1(url, product_name=product_name)
         
         elapsed = time.time() - t0
         

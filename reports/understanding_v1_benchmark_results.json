@@ -1,24 +1,50 @@
 {
   "benchmark_version": "2026-10-13",
   "test_mode": "offline",
-  "timestamp": "2026-10-13 22:35:05 UTC",
+  "timestamp": "2026-10-13 23:12:29 UTC",
   "summary": {
     "total": 1,
     "fetch_failed": 0,
-    "extraction_failed": 1,
-    "passed": 0
+    "extraction_failed": 0,
+    "passed": 1
   },
   "results": [
     {
       "id": "con-03",
       "company": "Advanced Construction Robotics",
       "url": "https://www.constructionrobots.com",
-      "bucket": "EXTRACTION_FAILED",
-      "state": "needs_product_choice",
-      "capabilities_count": 0,
+      "bucket": "PASSED",
+      "state": "matches",
+      "extracted_company": "Advanced Construction Robotics",
+      "extracted_class": "construction",
+      "expected_class": "construction_robot",
+      "class_match": true,
+      "capabilities_extracted": [
+        "mobile",
+        "construction_task",
+        "construction_print",
+        "construction_block",
+        "construction_layout",
+        "classes"
+      ],
+      "expected_capabilities": [
+        "rebar_tying",
+        "rebar_placement",
+        "gantry_system",
+        "outdoor"
+      ],
+      "matched_capabilities": [
+        "rebar_tying",
+        "rebar_placement",
+        "gantry_system"
+      ],
+      "cap_count": 3,
+      "cap_score": true,
+      "job_count": 6,
+      "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:09.975471Z",
-      "pass": false,
-      "elapsed_sec": 0.11298108100891113
+      "pass": true,
+      "elapsed_sec": 0.8554501533508301
     }
   ]
 }
