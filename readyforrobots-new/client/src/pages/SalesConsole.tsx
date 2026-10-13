@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import CalProposalQuoteDrawer from "@/components/admin/CalProposalQuoteDrawer";
 import CalAutopilotSwitch from "@/components/admin/CalAutopilotSwitch";
+import SalesConsoleDesk, { type ReadyOutreach } from "@/components/admin/SalesConsoleDesk";
 import ResendEmailModal from "@/components/ResendEmailModal";
 
 type SalesMessage = {
@@ -136,7 +137,7 @@ export default function SalesConsole() {
   const [prospectMsg, setProspectMsg] = useState("");
   const [recipientOverride, setRecipientOverride] = useState("");
   const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
-  const [autopilotEnabled, setAutopilotEnabled] = useState(true);
+  const [autopilotEnabled, setAutopilotEnabled] = useState(false);
   const [stageFilter, setStageFilter] = useState("all");
   const [resendModal, setResendModal] = useState<{
     isOpen: boolean;
@@ -171,16 +172,24 @@ export default function SalesConsole() {
 
   const runAutomaticOutreachCycle = async () => {
     setBusy(true);
-    toast.info("Executing Phelan automatic outreach cycle...");
+    toast.info("Phelan is writing drafts…");
     try {
       const res = await authFetch("/api/admin/cal/autonomy-run", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dry_run: false }),
+        body: JSON.stringify({ dry_run: false, prepare_only: true }),
       });
-      toast.success(
-        `Phelan automatic outreach complete! Drafted: ${res?.drafted ?? 0}, Refreshed: ${res?.refreshed ?? 0}, Sent: ${res?.sent ?? 0}.`
-      );
+      const drafted = Number(res?.drafted ?? 0);
+      const firstError = res?.errors?.[0]?.error;
+      if (!drafted && firstError) {
+        toast.error(String(firstError));
+      } else {
+        toast.success(
+          drafted
+            ? `Phelan prepared ${drafted} draft${drafted === 1 ? "" : "s"}. Nothing was sent.`
+            : "Phelan finished. No new drafts were waiting."
+        );
+      }
       await loadRows();
     } catch (e) {
       toast.error(
@@ -569,7 +578,7 @@ export default function SalesConsole() {
               className="rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2 text-xs font-black uppercase tracking-wide shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5"
             >
               <Zap className="w-3.5 h-3.5 text-slate-950 fill-slate-950" />
-              Run Auto-Outreach Cycle
+              Prepare Phelan drafts
             </button>
             <button
               onClick={() => setIsProposalDrawerOpen(true)}
@@ -682,6 +691,23 @@ export default function SalesConsole() {
             ))}
           </div>
         </div>
+
+        <SalesConsoleDesk
+          authFetch={authFetch}
+          phelanEnabled={autopilotEnabled}
+          preparing={busy}
+          onPrepare={runAutomaticOutreachCycle}
+          onUseMessage={(item: ReadyOutreach) =>
+            setResendModal({
+              isOpen: true,
+              to: item.contact_email || "",
+              subject: item.subject,
+              body: item.body,
+              companyName: item.company,
+              crmAccountId: item.crm_account_id,
+            })
+          }
+        />
 
         {/* Phelan Robot Proposals OEM Approval Banner */}
         <div className="mt-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900/90 to-cyan-950/40 border border-cyan-500/30 p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">

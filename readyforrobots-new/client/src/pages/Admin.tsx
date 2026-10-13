@@ -1877,7 +1877,7 @@ export default function Admin() {
     try {
       const res = await adminFetch("/api/admin/cal/autonomy-run", {
         method: "POST",
-        body: JSON.stringify({ dry_run: dryRun }),
+        body: JSON.stringify({ dry_run: dryRun, prepare_only: !dryRun }),
       });
       const data = (await res.json().catch(() => ({}))) as Record<
         string,
@@ -1913,7 +1913,7 @@ export default function Admin() {
       setMessage(
         dryRun
           ? `Dry run: would draft ${data.drafted ?? 0}, refresh ${data.refreshed ?? 0}, send ${data.sent ?? 0}.${suffix ? ` ${suffix}` : ""}`
-          : `Phelan cycle: drafted ${data.drafted ?? 0}, refreshed ${data.refreshed ?? 0}, sent ${data.sent ?? 0}.${suffix ? ` ${suffix}` : data.drafted === 0 && data.sent === 0 ? " Queue may already be drafted — check sendable count and assembly blocks." : ""}`
+          : `Phelan prepared ${data.drafted ?? 0} draft(s) and refreshed ${data.refreshed ?? 0}. Nothing was sent.${suffix ? ` ${suffix}` : ""}`
       );
       void refreshOperatorView();
       void loadCalAutonomyStatus();

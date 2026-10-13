@@ -510,10 +510,27 @@ def _inbox_from_supply_replies(
     return items
 
 
+def _message_discarded(message: SalesMessage) -> bool:
+    payload = message.payload if isinstance(message.payload, dict) else {}
+    return bool(payload.get("discarded"))
+
+
+def _set_message_discarded(message: SalesMessage, discarded: bool) -> None:
+    payload = dict(message.payload or {}) if isinstance(message.payload, dict) else {}
+    if discarded:
+        payload["discarded"] = True
+        payload["discarded_at"] = datetime.now(timezone.utc).isoformat()
+    else:
+        payload.pop("discarded", None)
+        payload.pop("discarded_at", None)
+    message.payload = payload
+
+
 @router.get("/inbox")
 def list_sales_inbox(
     team_id: Optional[str] = Query(None),
     folder: Optional[str] = Query("all"),
+    direction: Optional[str] = Query("inbound"),
     db: Session = Depends(get_db),
     user: dict = Depends(_require_user),
 ):
@@ -524,11 +541,14 @@ def list_sales_inbox(
     is_admin_user = _is_admin(user.get("email") or "")
     team_id = _query_str(team_id)
     folder = _query_str(folder, "all") or "all"
+    direction = _query_str(direction, "inbound") or "inbound"
+    want_deleted = folder == "deleted"
     query = (
         db.query(SalesMessage, SalesOpportunity)
         .join(SalesOpportunity, SalesMessage.sales_opportunity_id == SalesOpportunity.id)
-        .filter(SalesMessage.direction == "inbound")
     )
+    if direction in ("inbound", "outbound"):
+        query = query.filter(SalesMessage.direction == direction)
     if is_admin_user and not team_id:
         pass
     else:
@@ -542,6 +562,8 @@ def list_sales_inbox(
                 )
             )
             items.sort(key=lambda item: item.get("received_at") or "", reverse=True)
+            if want_deleted:
+                return []
             if folder in ("main", "test"):
                 items = [item for item in items if item.get("folder") == folder]
             return items[:100]
@@ -556,7 +578,12 @@ def list_sales_inbox(
             if requested not in team_ids and not is_admin_user:
                 raise HTTPException(status_code=404, detail="Team not found or access denied")
             query = query.filter(SalesOpportunity.team_id == requested)
-    rows = query.order_by(desc(SalesMessage.created_at)).limit(100).all()
+    rows = query.order_by(desc(SalesMessage.created_at)).limit(200).all()
+    rows = [
+        (message, opportunity)
+        for message, opportunity in rows
+        if _message_discarded(message) == want_deleted
+    ][:100]
     items = [_serialize_inbox_item(db, message, opportunity) for message, opportunity in rows]
     already = {
         str(item.get("source_id") or "")
@@ -564,18 +591,114 @@ def list_sales_inbox(
         if item.get("source_type") in ("outreach_reply", "supply_outreach_reply")
         and item.get("source_id")
     }
-    items.extend(
-        _inbox_from_outreach_replies(
-            db, team_ids=team_ids, is_admin=is_admin_user, already=already
+    if not want_deleted:
+        items.extend(
+            _inbox_from_outreach_replies(
+                db, team_ids=team_ids, is_admin=is_admin_user, already=already
+            )
         )
-    )
-    items.extend(
-        _inbox_from_supply_replies(db, is_admin=is_admin_user, already=already)
-    )
+        items.extend(
+            _inbox_from_supply_replies(db, is_admin=is_admin_user, already=already)
+        )
     items.sort(key=lambda item: item.get("received_at") or "", reverse=True)
     if folder in ("main", "test"):
         items = [item for item in items if item.get("folder") == folder]
     return items[:100]
+
+
+def _sales_message_or_404(db: Session, message_id: str, user: dict) -> SalesMessage:
+    from app.api.auth_deps import _is_admin
+
+    uid = _uid_uuid(user)
+    team_ids = _team_ids_for_user(db, uid)
+    is_admin_user = _is_admin(user.get("email") or "")
+    query = (
+        db.query(SalesMessage)
+        .join(SalesOpportunity, SalesMessage.sales_opportunity_id == SalesOpportunity.id)
+        .filter(SalesMessage.id == _db_uuid(db, message_id))
+    )
+    if not is_admin_user:
+        if not team_ids:
+            raise HTTPException(status_code=404, detail="Message not found")
+        query = query.filter(
+            or_(
+                SalesOpportunity.team_id.in_(team_ids),
+                SalesOpportunity.team_id.is_(None),
+            )
+        )
+    message = query.first()
+    if not message:
+        raise HTTPException(status_code=404, detail="Message not found")
+    return message
+
+
+@router.post("/messages/{message_id}/discard")
+def discard_sales_message(
+    message_id: str,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    message = _sales_message_or_404(db, message_id, user)
+    _set_message_discarded(message, True)
+    db.commit()
+    return {"id": str(message.id), "discarded": True}
+
+
+@router.post("/messages/{message_id}/restore")
+def restore_sales_message(
+    message_id: str,
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    message = _sales_message_or_404(db, message_id, user)
+    _set_message_discarded(message, False)
+    db.commit()
+    return {"id": str(message.id), "discarded": False}
+
+
+@router.get("/outreach-ready")
+def list_outreach_ready(
+    db: Session = Depends(get_db),
+    user: dict = Depends(_require_user),
+):
+    """Companies with a Phelan draft that has not been sent."""
+    from app.api.auth_deps import _is_admin
+    from app.services.phelan_outreach_send import parse_cal_draft
+
+    is_admin_user = _is_admin(user.get("email") or "")
+    team_ids = _team_ids_for_user(db, _uid_uuid(user))
+    if not is_admin_user and not team_ids:
+        return []
+    query = db.query(CrmAccount).filter(
+        CrmAccount.outreach_draft.isnot(None),
+        CrmAccount.outreach_sent_at.is_(None),
+    )
+    if not is_admin_user:
+        query = query.filter(CrmAccount.team_id.in_(team_ids))
+    accounts = query.order_by(desc(CrmAccount.updated_at)).limit(40).all()
+    ready = []
+    for acct in accounts:
+        draft = (acct.outreach_draft or "").strip()
+        if not draft:
+            continue
+        subject, body = parse_cal_draft(draft, acct.name or "Unknown")
+        opp = (
+            db.query(SalesOpportunity)
+            .filter(SalesOpportunity.crm_account_id == acct.id)
+            .order_by(desc(SalesOpportunity.updated_at))
+            .first()
+        )
+        ready.append({
+            "crm_account_id": str(acct.id),
+            "opportunity_id": str(opp.id) if opp else None,
+            "company": acct.name,
+            "industry": acct.industry,
+            "contact_email": acct.contact_email,
+            "stage": (opp.current_stage if opp else None) or acct.outreach_stage or "ready_for_draft",
+            "subject": subject,
+            "body": body,
+        })
+    return ready
 
 
 @router.get("/learning")

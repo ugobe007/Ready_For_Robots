@@ -813,6 +813,7 @@ def run_phelan_autonomy_cycle(
     db: Session,
     *,
     dry_run: bool = False,
+    prepare_only: bool = False,
     admin_uid: Optional[uuid.UUID] = None,
     admin_email: str = "",
     manual: bool = False,
@@ -961,6 +962,36 @@ def run_phelan_autonomy_cycle(
         )
     if not dry_run and (old_fp != new_fp or old_fp is None):
         _persist_template_fingerprint(new_fp)
+
+    if prepare_only or not cal_buyer_sales_enabled():
+        if not dry_run:
+            db.commit()
+            _invalidate_admin_caches()
+        return {
+            "status": "ok",
+            "dry_run": dry_run,
+            "prepare_only": True,
+            "note": "Drafts are ready to review. Nothing was sent.",
+            "drafted": drafted,
+            "refreshed": refreshed,
+            "sent": 0,
+            "followups": {
+                "processed": 0,
+                "sent": 0,
+                "skipped": 0,
+                "failed": 0,
+                "status": "paused",
+                "reason": "Buyer-sales sending is off. Drafts are ready to review.",
+            },
+            "skipped_ineligible": skipped_ineligible,
+            "errors": [],
+            "template_fingerprint": new_fp,
+            "format_review_notified": format_notified,
+            "review_email": get_phelan_review_email(),
+            "admin_user_id": str(uid),
+            "active_variants": allowed_variants,
+            "buyer_sales_enabled": cal_buyer_sales_enabled(),
+        }
 
     sent = 0
     skipped_no_draft = 0

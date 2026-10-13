@@ -1358,6 +1358,7 @@ def phelan_ops_monitor(
 
 class CalAutonomyRunBody(BaseModel):
     dry_run: bool = False
+    prepare_only: bool = False
 
 
 @router.post("/cal/autonomy-run")
@@ -1371,6 +1372,7 @@ def cal_autonomy_run(
     return run_phelan_autonomy_cycle(
         db,
         dry_run=body.dry_run,
+        prepare_only=body.prepare_only,
         admin_uid=uuid.UUID(user["uid"]),
         admin_email=user.get("email") or "",
         manual=True,
