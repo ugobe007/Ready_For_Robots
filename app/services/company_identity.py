@@ -37,8 +37,7 @@ _HEADLINE_RE = re.compile(
     r"|\b(?:are|is|was|were|will|says?|said|could|would|announces?|reveals?|launch(?:es)?|plans?)\b.*\b\w+\b"
     r"|\bto (?:open|build|deploy|add|launch|use|test|buy|invest|expand|hire|cut|replace|roll)\b"
     r"|^(?:kill|preventing|preventing|enhancing|improving|transforming|addressing|tackling|exploring|examining)\b"
-    r"|\b(?:crackdown|analysis|overview|insights?|trends?|survey|surveys?|report|reports?|update|updates?)\b.*\blinked\b"
-    r"|^(?:fear|comes|new|technology|workplace|hospital|healthcare|immigration)\s",
+    r"|\b(?:crackdown|analysis|overview|insights?|trends?|survey|surveys?|report|reports?|update|updates?)\b.*\blinked\b",
     re.I,
 )
 # Long official names are fine: "Port Authority of New York and New Jersey".
@@ -100,7 +99,7 @@ _TOPIC_NAMES = frozenset({
     "ai agent", "actuator", "press", "moxie", "heartbeat", "compassion", "comes next", "donor pool",
     "hospital outsourcing", "workplace injuries", "new survey", "technology implementation", "early-june",
     "competitive analysis", "healthcare isn", "kill viruses", "passenger assistance - let", "us hospitals - ft",
-    "enhancing hospitality", "greening the future", "function health", "else labs", "doctronic",
+    "enhancing hospitality", "greening the future",
 })
 # Headline/topic endings: "Patient Testing Set", "Innovative Two-Step Treatment".
 _TOPIC_TAIL_RE = re.compile(
