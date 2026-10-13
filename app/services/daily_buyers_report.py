@@ -116,6 +116,7 @@ def compose_daily_buyers_report(db, *, refresh: Optional[bool] = None) -> dict[s
     stages = report_stages()
     buyers = select_buyers(db, stages=stages)
     counts = {st: sum(1 for b in buyers if b["stage"] == st) for st in stages}
+    by_stage = {st: [b for b in buyers if b["stage"] == st] for st in stages}
     return {
         "date": datetime.now(timezone.utc).date().isoformat(),
         "kind": "buyers",
@@ -123,6 +124,7 @@ def compose_daily_buyers_report(db, *, refresh: Optional[bool] = None) -> dict[s
         "counts": counts,
         "count": len(buyers),
         "buyers": buyers,
+        "by_stage": by_stage,
         "refreshed_counts": refreshed,
     }
 

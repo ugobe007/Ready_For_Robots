@@ -76,6 +76,12 @@ def extract_budget(text: str) -> Optional[str]:
     elif "£" in amount_str or "GBP" in amount_str.upper():
         currency = "£"
         amount_str = amount_str.replace("£", "").replace("GBP", "").replace("gbp", "")
+    elif "CHF" in amount_str.upper():
+        currency = "CHF"
+        amount_str = amount_str.replace("CHF", "").replace("chf", "")
+    elif "CAD" in amount_str.upper():
+        currency = "CAD"
+        amount_str = amount_str.replace("CAD", "").replace("cad", "")
     elif "¥" in amount_str:
         currency = "¥"
         amount_str = amount_str.replace("¥", "")
@@ -87,7 +93,10 @@ def extract_budget(text: str) -> Optional[str]:
     if not num_match:
         return None
     
-    value = float(num_match.group(1))
+    try:
+        value = float(num_match.group(1))
+    except ValueError:
+        return None
     unit = num_match.group(2).upper() or ""
     
     # Check for "million" or "billion" words if no unit suffix
@@ -98,6 +107,16 @@ def extract_budget(text: str) -> Optional[str]:
             unit = "B"
         elif "thousand" in text.lower()[match.start():match.end()+20]:
             unit = "K"
+        else:
+            # No unit and no keyword: assume raw dollars, not millions
+            if value >= 1000000:
+                value = value / 1000000
+                unit = "M"
+            elif value >= 1000:
+                value = value / 1000
+                unit = "K"
+            else:
+                return None  # Too small to be meaningful
     
     # Normalize
     if unit == "K":
@@ -108,9 +127,6 @@ def extract_budget(text: str) -> Optional[str]:
         if value >= 1000:
             value = value / 1000
             unit = "B"
-    
-    if not unit:
-        unit = "M"  # Assume millions if no unit
     
     return f"{currency}{value:.1f}{unit}"
 
@@ -247,9 +263,15 @@ def build_job_opportunity(
     else:
         has_robots = "No"
     
-    # Extract budget and vendor from evidence
+    # Extract budget and vendor from evidence and opportunity map
     budget = None
     vendors = []
+    
+    # Get vendors from opportunity map first (already curated)
+    for cat, opp in primary_workflows:
+        vendors.extend(v for v in opp.vendors if v not in vendors)
+    
+    # Then extract from evidence text
     for ev in readiness.evidence[:5]:
         if not budget:
             budget = extract_budget(ev.text)
@@ -274,8 +296,10 @@ def build_job_opportunity(
     # Extract evidence quotes with dates
     evidence_quotes = []
     for ev in readiness.evidence[:3]:
-        # Try to extract date from source URL or text
-        date = extract_date_from_evidence(ev.source_url or "", ev.text)
+        # Use seen_at if available, otherwise try to extract from URL or text
+        date = ev.seen_at if hasattr(ev, 'seen_at') and ev.seen_at else ""
+        if not date:
+            date = extract_date_from_evidence(ev.source_url or "", ev.text)
         evidence_quotes.append((ev.text, date))
     
     # Timeline

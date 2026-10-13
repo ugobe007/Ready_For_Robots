@@ -76,7 +76,7 @@ def main() -> int:
                     "signal_text": s.signal_text,
                     "signal_strength": s.signal_strength,
                     "source_url": s.source_url,
-                    "date_published": s.date_published,
+                    "seen_at": s.created_at.date().isoformat() if s.created_at else "",
                 }
                 for s in signals
             ]

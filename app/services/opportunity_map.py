@@ -35,6 +35,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 
 CATEGORIES: dict[str, tuple[str, str]] = {
     # key: (label, regex of category language)
+    "general": ("Automation (unspecified)", r""),
     "restroom_sanitizing": ("Restroom / sanitizing / disinfection",
         r"restrooms?|bathrooms?|toilets?|saniti[sz]\w*|disinfect\w*|uv-?c|uv (?:light|robot)\w*|germ[- ]killing"),
     "cleaning": ("Floor & surface cleaning",
