@@ -284,6 +284,51 @@ def score_job(profile: CapabilityProfile, job: dict[str, Any]) -> tuple[float, l
     profile_fams = [f["id"] for f in profile.families]
     job_fams = list(job.get("families") or [])
     cap_keys = {c.key for c in profile.capabilities}
+    
+    # Domain task filtering: robots with domain-specific capabilities should only
+    # match jobs in that domain. Healthcare robots shouldn't match warehouse jobs.
+    DOMAIN_TASK_CAPS = {
+        "healthcare_task", "construction_task", "mining_task", "warehouse_task",
+        "logistics_task", "factory_task", "hospitality_task", "agriculture_task",
+    }
+    
+    robot_domain_caps = cap_keys & DOMAIN_TASK_CAPS
+    if robot_domain_caps:
+        # Robot has domain-specific capability - check if job matches
+        tape_family = str(job.get("tape_family") or "").lower()
+        industry = str(job.get("industry") or "").lower()
+        text = str(job.get("text") or "").lower()
+        title = str(job.get("title") or "").lower()
+        company = str(job.get("company_name") or "").lower()
+        
+        # Healthcare robots should only match healthcare/hospital jobs
+        if "healthcare_task" in robot_domain_caps:
+            is_healthcare_job = (
+                tape_family in ("clinical_delivery", "resident_services")
+                or any(kw in text + title + company for kw in ("hospital", "healthcare", "clinical", "patient", "nursing", "medical", "elder"))
+            )
+            if not is_healthcare_job:
+                # This is not a healthcare job - filter it out
+                return (0.0, ["Domain mismatch: healthcare robot should not match non-healthcare work"])
+        
+        # Warehouse robots should match warehouse/logistics jobs
+        elif "warehouse_task" in robot_domain_caps or "logistics_task" in robot_domain_caps:
+            is_warehouse_job = (
+                tape_family in ("warehouse", "pick_pack", "logistics", "pallet", "cart", "asrs")
+                or "warehouse" in industry
+                or "fulfillment" in industry
+            )
+            if not is_warehouse_job:
+                return (0.0, ["Domain mismatch: warehouse robot should not match non-warehouse work"])
+        
+        # Factory robots should match factory/manufacturing jobs
+        elif "factory_task" in robot_domain_caps:
+            is_factory_job = (
+                tape_family in ("pallet", "gripper", "factory")
+                or any(kw in industry for kw in ("manufactur", "factory", "plant"))
+            )
+            if not is_factory_job:
+                return (0.0, ["Domain mismatch: factory robot should not match non-factory work"])
 
     for i, fam in enumerate(profile_fams):
         if fam in job_fams:
@@ -492,6 +537,7 @@ def profile_from_robot_ready_caps(
     elif "medical" in tl or "healthcare" in tl:
         add("mobile", "Mobile / autonomous movement", rtype)
         add("material_transport", "Material transport", use_case or rtype)
+        add("healthcare_task", "Hospital / clinical assistant work", rtype)
 
     if "warehouse" in use_case.lower() or "logistics" in use_case.lower():
         add("material_transport", "Material transport", use_case)

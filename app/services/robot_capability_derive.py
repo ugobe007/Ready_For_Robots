@@ -135,7 +135,16 @@ def _truthy(facts: Iterable[dict[str, Any]], predicate: str) -> Optional[dict[st
 
 
 def _classes(facts: Iterable[dict[str, Any]]) -> set[str]:
-    return {str(f.get("value") or "").lower() for f in _values(facts, "product_class")}
+    """Extract product_class values, splitting on / to handle compound classes."""
+    classes = set()
+    for f in _values(facts, "product_class"):
+        val = str(f.get("value") or "").lower()
+        # Split on "/" to handle "medical/healthcare" → {"medical", "healthcare"}
+        for part in val.split("/"):
+            part = part.strip()
+            if part:
+                classes.add(part)
+    return classes
 
 
 def weeding_configuration_identity(profile: dict[str, Any]) -> bool:
