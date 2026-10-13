@@ -24,7 +24,7 @@ from bs4 import BeautifulSoup
 
 
 FIXTURES_DIR = Path("tests/fixtures/robot_pages")
-BENCHMARK_PATH = "/home/ubuntu/.cursor/projects/workspace/uploads/robot_benchmark_set_e5e6.json"
+BENCHMARK_PATH = Path("tests/fixtures/robot_benchmark_set_e5e6.json")
 
 
 def extract_text(html: str) -> str:

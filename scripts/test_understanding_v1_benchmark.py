@@ -34,7 +34,7 @@ from typing import Any
 from app.services.robot_job_capability_match import match_robot_url_v1
 
 
-BENCHMARK_PATH = Path("/home/ubuntu/.cursor/projects/workspace/uploads/robot_benchmark_set_e5e6.json")
+BENCHMARK_PATH = Path("tests/fixtures/robot_benchmark_set_e5e6.json")
 FIXTURES_DIR = Path("tests/fixtures/robot_pages")
 
 
