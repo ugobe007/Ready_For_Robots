@@ -35,6 +35,7 @@ _ROOT = Path(__file__).resolve().parents[2]
 
 CATEGORIES: dict[str, tuple[str, str]] = {
     # key: (label, regex of category language)
+    "general": ("Automation (unspecified)", r""),
     "restroom_sanitizing": ("Restroom / sanitizing / disinfection",
         r"restrooms?|bathrooms?|toilets?|saniti[sz]\w*|disinfect\w*|uv-?c|uv (?:light|robot)\w*|germ[- ]killing"),
     "cleaning": ("Floor & surface cleaning",
@@ -83,7 +84,7 @@ CATEGORIES: dict[str, tuple[str, str]] = {
     "humanoid": ("Humanoid / general-purpose",
         r"humanoids?"),
 }
-_CAT_RE = {k: re.compile(r"\b(?:" + rx + r")", re.I) for k, (_, rx) in CATEGORIES.items()}
+_CAT_RE = {k: re.compile(r"\b(?:" + rx + r")", re.I) for k, (_, rx) in CATEGORIES.items() if rx}
 _GENERAL_RE = re.compile(r"\b(?:robot\w*|cobots?|automat\w*|autonomous)\b", re.I)
 
 # ─── Status language ─────────────────────────────────────────────────────────
