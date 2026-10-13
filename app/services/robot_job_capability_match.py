@@ -311,6 +311,18 @@ def score_job(profile: CapabilityProfile, job: dict[str, Any]) -> tuple[float, l
                 # This is not a healthcare job - filter it out
                 return (0.0, ["Domain mismatch: healthcare robot should not match non-healthcare work"])
         
+        # Construction robots should only match construction jobs
+        elif "construction_task" in robot_domain_caps:
+            is_construction_job = (
+                tape_family == "construction"
+                or any(kw in text + title + company + industry for kw in ("construction", "jobsite", "drywall", "rebar", "framing", "concrete", "building site", "earthmoving"))
+            )
+            if not is_construction_job:
+                return (0.0, ["Domain mismatch: construction robot should not match non-construction work"])
+            # Give base score for domain match (construction jobs often have no families)
+            score += 5.0
+            notes.append("Construction domain match")
+        
         # Warehouse robots should match warehouse/logistics jobs
         elif "warehouse_task" in robot_domain_caps or "logistics_task" in robot_domain_caps:
             is_warehouse_job = (
@@ -538,6 +550,10 @@ def profile_from_robot_ready_caps(
     if "clean" in tl or "disinfect" in tl:
         add("scrub", "Floor cleaning / disinfection", rtype)
         add("mobile", "Mobile / autonomous movement", rtype)
+    elif "construction" in tl or "jobsite" in tl:
+        add("mobile", "Mobile / autonomous movement", rtype)
+        # Construction Robot type means dedicated construction robot
+        add("construction_task", "Construction site work (drywall/layout/rebar/earthmoving)", rtype)
     elif "warehouse" in tl or "logistics" in tl or "delivery" in tl or "transport" in tl:
         add("mobile", "Mobile / autonomous movement", rtype)
         add("material_transport", "Material transport", rtype)
@@ -568,7 +584,11 @@ def profile_from_robot_ready_caps(
     # Additional domain detection from use case (ONLY for non-general-purpose robots)
     # Skip if use_case is "General Automation" or robot is humanoid
     if not is_general_purpose:
-        if "warehouse" in ucl or "fulfillment" in ucl:
+        if "construction" in ucl or "jobsite" in ucl:
+            add("mobile", "Mobile / autonomous movement", use_case)
+            if "construction_task" not in seen:
+                add("construction_task", "Construction site work (drywall/layout/rebar/earthmoving)", use_case)
+        elif "warehouse" in ucl or "fulfillment" in ucl:
             add("material_transport", "Material transport", use_case)
             add("mobile", "Mobile / autonomous movement", use_case)
             add("warehouse_task", "Warehouse / fulfillment work", use_case)

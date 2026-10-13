@@ -37,7 +37,9 @@ def analyze_robot_capabilities(robot_name: str, page_text: str) -> Dict[str, Any
     text_lower = f"{robot_name or ''} {page_text or ''}".lower()
 
     robot_type = "Unknown"
-    if any(kw in text_lower for kw in ["delivery", "transport", "courier", "cart"]):
+    if any(kw in text_lower for kw in ["construction", "jobsite", "drywall", "rebar", "concrete", "framing"]):
+        robot_type = "Construction Robot"
+    elif any(kw in text_lower for kw in ["delivery", "transport", "courier", "cart"]):
         robot_type = "Delivery/Transport"
     elif any(kw in text_lower for kw in ["disinfect", "uv", "sanitize", "clean"]):
         robot_type = "Disinfection/Cleaning"
@@ -68,11 +70,15 @@ def analyze_robot_capabilities(robot_name: str, page_text: str) -> Dict[str, Any
         industry_matches.append("logistics")
     if "industrial" in text_lower or "manufacturing" in text_lower or "factory" in text_lower:
         industry_matches.append("industrial")
+    if "construction" in text_lower or "jobsite" in text_lower or "building site" in text_lower:
+        industry_matches.append("construction")
     
     # Only assign specific use case if robot primarily serves 1-2 industries
     # If 3+ industries mentioned, it's a multi-industry platform → keep "General Automation"
     if len(industry_matches) <= 2:
-        if "hospitality" in industry_matches:
+        if "construction" in industry_matches:
+            use_case = "Construction Operations"
+        elif "hospitality" in industry_matches:
             use_case = "Hospitality Services"
         elif "healthcare" in industry_matches:
             use_case = "Healthcare Operations"
