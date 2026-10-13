@@ -1,0 +1,77 @@
+{
+  "benchmark_version": "v2-taxonomy",
+  "taxonomy_version": "v1",
+  "timestamp": "2026-10-13 23:57:15 UTC",
+  "summary": {
+    "total": 1,
+    "fetch_failed": 0,
+    "extraction_failed": 1,
+    "passed": 0
+  },
+  "per_field_accuracy": {
+    "offering_type": 0.0,
+    "form": 0.0,
+    "primary_class": 0.0,
+    "functions": 0.0,
+    "industries": 0.0,
+    "overall": 0.0
+  },
+  "results": [
+    {
+      "id": "ag-02",
+      "company": "Carbon Robotics",
+      "url": "https://carbonrobotics.com",
+      "bucket": "EXTRACTION_FAILED",
+      "score": {
+        "offering_type": {
+          "pass": false,
+          "reason": "offering_type is empty"
+        },
+        "form": {
+          "pass": false,
+          "reason": "form is empty"
+        },
+        "primary_class": {
+          "pass": false,
+          "reason": "primary_class is empty"
+        },
+        "functions": {
+          "pass": false,
+          "reason": "functions is empty",
+          "details": {}
+        },
+        "industries": {
+          "pass": false,
+          "reason": "missing required industries: ['agriculture']",
+          "details": {
+            "extracted": [],
+            "required": [
+              "agriculture"
+            ],
+            "any_of": [],
+            "must_not": [
+              "warehouse_3pl"
+            ],
+            "ok_extra": [],
+            "missing_required": [
+              "agriculture"
+            ],
+            "forbidden_found": [],
+            "unexpected": []
+          }
+        },
+        "robot_pass": false
+      },
+      "extracted": {
+        "offering_type": "",
+        "form": "",
+        "primary_class": "",
+        "functions": [],
+        "industries": []
+      },
+      "snapshot_date": "2026-10-13T22:16:42.706905Z",
+      "elapsed_sec": 0.7228660583496094,
+      "used_product_hint": true
+    }
+  ]
+}

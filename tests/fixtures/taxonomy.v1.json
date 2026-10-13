@@ -1,0 +1,91 @@
+{
+  "name": "Ready For Robots robot taxonomy",
+  "version": "v1",
+  "date": "2026-10-13",
+  "purpose": "Closed vocabulary for classifying robots. Extraction must choose ONLY from these values. Anything that does not fit goes in unclassified_notes and is logged, never invented. Buyer opportunities are indexed with the same industries list so matching is a join, not a semantic guess.",
+  "pipeline": [
+    "1. company: name + URL",
+    "2. products: one record per robot product (multi-product sites get several records); set offering_type",
+    "3. functions: what the robot is designed for (pick 1-3)",
+    "4. industries: where it is sold (pick all that apply)",
+    "5. classification: form (pick 1) + primary_class (pick 1, the index shelf)"
+  ],
+  "offering_type": {
+    "robot_product": "Company sells or leases a physical robot",
+    "robotics_as_a_service": "Company deploys and operates robots, charging by hour/output/contract",
+    "autonomy_software": "Company sells autonomy that runs on other makers' machines",
+    "developer_tooling": "SDKs, simulation, or platforms for building robots; not a deployable product",
+    "mixed_equipment_maker": "Conventional equipment maker with an autonomous product line",
+    "non_robot": "No robot offering"
+  },
+  "functions": {
+    "delivery_transport": "Moves items or materials from A to B",
+    "cleaning": "Floor scrubbing, vacuuming, surface cleaning",
+    "disinfection": "UV or chemical pathogen reduction",
+    "food_beverage_prep": "Cooks, assembles, portions, or makes food or drinks",
+    "serving_hospitality": "Table service, guest-facing runs, bussing",
+    "picking_packing_palletizing": "Picks, packs, sorts, loads/unloads, palletizes, handles totes/cases",
+    "machine_tending_assembly": "Loads machines, assembles, welds, screws, finishes parts",
+    "inspection": "Scans, measures, or monitors assets, shelves, or infrastructure",
+    "security_patrol": "Patrols, surveils, detects anomalies",
+    "construction_task": "Layout, rebar, finishing, installation, or material work on jobsites",
+    "agricultural_task": "Weeding, harvest assist, hauling, spraying on farms",
+    "customer_interaction": "Greets, guides, advertises, or converses with people",
+    "general_purpose": "Marketed as able to do many tasks without a defined primary one"
+  },
+  "industries": {
+    "healthcare_hospital": "Hospitals, clinics, labs, pharmacies",
+    "senior_living": "Senior living, long-term care, assisted living",
+    "hotel": "Hotels and resorts",
+    "restaurant_qsr": "Restaurants, QSR, fast casual, cafes, bars",
+    "casino_entertainment": "Casinos, stadiums, venues, theme parks",
+    "retail_grocery": "Retail stores, grocery, big box, malls",
+    "warehouse_3pl": "Warehouses, distribution centers, 3PL, e-commerce fulfillment, parcel",
+    "factory_manufacturing": "Discrete and process manufacturing (non-food)",
+    "food_manufacturing": "Food production plants, meal kits, co-packers",
+    "construction": "Contractors, EPCs, jobsites",
+    "energy_utilities": "Power generation, oil and gas, utilities, solar/wind, mining",
+    "agriculture": "Farms, vineyards, orchards, nurseries, greenhouses",
+    "airport_transit": "Airports, train stations, transit hubs",
+    "office_campus": "Corporate offices, campuses, data centers, commercial real estate",
+    "education": "Universities and schools",
+    "public_sector": "Government, municipalities, defense, DOTs, parking authorities"
+  },
+  "form": {
+    "humanoid": "Human-shaped body, arms and legs or torso",
+    "amr_mobile_robot": "Wheeled autonomous mobile robot without a manipulator",
+    "robotic_arm_cobot": "Fixed-base arm or cobot, including dual-arm stations",
+    "mobile_manipulator": "Mobile base plus arm(s)",
+    "legged_robot": "Quadruped or other legged non-humanoid",
+    "autonomous_vehicle_equipment": "Autonomous tractor, implement, sidewalk vehicle, or other vehicle-class machine",
+    "retrofit_kit_autonomy_software": "Kit or software that makes existing equipment autonomous",
+    "fixed_gantry_system": "Gantry, rail, or bridge-mounted system",
+    "crawler_climbing": "Magnetic or wall-climbing crawler",
+    "portable_stationary_unit": "Positioned by people, operates in place (e.g., UV tower)",
+    "drone": "Aerial robot"
+  },
+  "primary_class": {
+    "humanoid": "Index shelf for humanoids",
+    "service_robot": "Guest/customer-facing service in hospitality, retail, healthcare",
+    "amr_logistics": "Warehouse, fulfillment, and material-handling robots",
+    "cleaning": "Cleaning robots",
+    "construction": "Construction robots",
+    "healthcare": "Clinical and hospital-specific robots",
+    "factory_industrial": "Manufacturing, cobots, industrial automation",
+    "food_robotics": "Kitchen, beverage, and food production robots",
+    "agriculture": "Farm robots",
+    "inspection": "Inspection and monitoring robots",
+    "security": "Security robots",
+    "delivery": "Last-mile and outdoor delivery robots"
+  },
+  "record_fields_per_product": {
+    "company": "string",
+    "product_name": "string",
+    "offering_type": "one of offering_type",
+    "functions": "1-3 of functions, each with confidence 0-1 and evidence snippet",
+    "industries": "list of industries, each with confidence and evidence",
+    "form": "one of form, with confidence and evidence",
+    "primary_class": "one of primary_class, with confidence and evidence",
+    "unclassified_notes": "anything that did not fit the lists; logged for taxonomy review"
+  }
+}
