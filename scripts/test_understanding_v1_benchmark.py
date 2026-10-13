@@ -279,6 +279,7 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
     """Test one robot and return results."""
     robot_id = robot['id']
     url = robot['url']
+    product_name = robot.get('product')  # Use benchmark product name if available
     
     print(f"\n{'='*80}")
     print(f"Testing {robot_id}: {robot['company']} - {robot['product']}")
@@ -343,15 +344,26 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
     # Run Understanding v1
     try:
         t0 = time.time()
+        timings = {}  # Collect timing info
         
-        # Call match_robot_url_v1 with cached page if available
-        if page_text:
-            # For now, match_robot_url_v1 doesn't accept page_text directly
-            # We'll need to enhance it or test through the full pipeline
-            # For this iteration, test with URL and note it will fetch live
-            result = match_robot_url_v1(url)
+        # In offline mode, pass cached page text
+        if snapshot and not use_live:
+            # Assert we're passing snapshot text
+            word_count = len(page_text.strip().split())
+            if word_count == 0:
+                raise ValueError(f"Snapshot text is empty for {robot_id}")
+            
+            # Note: match_robot_url_v1 doesn't yet expose timings, but build_robot_profile does
+            # We're passing page_text, so fetch should be "cached"
+            result = match_robot_url_v1(
+                url,
+                page_text=page_text,
+                page_html=html,
+                product_name=product_name
+            )
         else:
-            result = match_robot_url_v1(url)
+            # Live mode - fetch URL directly
+            result = match_robot_url_v1(url, product_name=product_name)
         
         elapsed = time.time() - t0
         
@@ -360,6 +372,11 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
         job_count = result.get('job_count', 0)
         capabilities = result.get('capabilities', [])
         robot_caps = result.get('robot_capabilities', {}) or {}
+        
+        # In offline mode with snapshot, log extraction details
+        if snapshot and not use_live:
+            if len(capabilities) == 0 and state in ['needs_product_choice', 'could_not_understand']:
+                print(f"⚠️  Zero capabilities extracted. Snapshot had {len(page_text)} chars ({len(page_text.split())} words)")
         
         print(f"\nResult: state={state}, company={company}, jobs={job_count}, time={elapsed:.1f}s")
         print(f"Extracted type: {robot_caps.get('type', 'Unknown')}")
@@ -411,7 +428,7 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
             if not class_match:
                 reasons.append(f"class mismatch (got '{extracted_class}' expected '{expected_class}')")
             if not cap_score:
-                reasons.append(f"only {len(matched_caps)}/2 caps matched")
+                reasons.append(f"only {matched_count}/2 caps matched")
             if job_count == 0:
                 reasons.append("no jobs matched")
             if forbidden_match:
@@ -527,11 +544,13 @@ def main():
     if fetch_failed:
         print(f"\n❌ FETCH FAILED ({len(fetch_failed)}):")
         for r in fetch_failed:
-            print(f"  - {r['id']}: {r['company']} - {r.get('fetch_error', 'Unknown')}")
+            company_or_desc = r.get('company') or r.get('description', 'Unknown')
+            print(f"  - {r['id']}: {company_or_desc} - {r.get('fetch_error', 'Unknown')}")
     
     if extraction_failed:
         print(f"\n⚠️  EXTRACTION FAILED ({len(extraction_failed)}):")
         for r in extraction_failed:
+            company_or_desc = r.get('company') or r.get('description', 'Unknown')
             reasons = []
             if r.get('capabilities_count') == 0:
                 reasons.append("zero capabilities")
@@ -543,12 +562,13 @@ def main():
                 reasons.append(f"only {r.get('cap_count', 0)} caps matched")
             if r.get('job_count', 0) == 0:
                 reasons.append("no jobs")
-            print(f"  - {r['id']}: {r['company']} - {', '.join(reasons) or 'unknown'}")
+            print(f"  - {r['id']}: {company_or_desc} - {', '.join(reasons) or 'unknown'}")
     
     if passed:
         print(f"\n✓ PASSED ({len(passed)}):")
         for r in passed:
-            print(f"  - {r['id']}: {r['company']}")
+            company_or_desc = r.get('company') or r.get('description', 'Unknown')
+            print(f"  - {r['id']}: {company_or_desc}")
     
     # Detailed results JSON
     results_path = Path("reports") / "understanding_v1_benchmark_results.json"
