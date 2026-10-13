@@ -429,7 +429,7 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
             if not class_match:
                 reasons.append(f"class mismatch (got '{extracted_class}' expected '{expected_class}')")
             if not cap_score:
-                reasons.append(f"only {len(matched_caps)}/2 caps matched")
+                reasons.append(f"only {matched_count}/2 caps matched")
             if job_count == 0:
                 reasons.append("no jobs matched")
             if forbidden_match:
@@ -545,11 +545,13 @@ def main():
     if fetch_failed:
         print(f"\n❌ FETCH FAILED ({len(fetch_failed)}):")
         for r in fetch_failed:
-            print(f"  - {r['id']}: {r['company']} - {r.get('fetch_error', 'Unknown')}")
+            company_or_desc = r.get('company') or r.get('description', 'Unknown')
+            print(f"  - {r['id']}: {company_or_desc} - {r.get('fetch_error', 'Unknown')}")
     
     if extraction_failed:
         print(f"\n⚠️  EXTRACTION FAILED ({len(extraction_failed)}):")
         for r in extraction_failed:
+            company_or_desc = r.get('company') or r.get('description', 'Unknown')
             reasons = []
             if r.get('capabilities_count') == 0:
                 reasons.append("zero capabilities")
@@ -561,12 +563,13 @@ def main():
                 reasons.append(f"only {r.get('cap_count', 0)} caps matched")
             if r.get('job_count', 0) == 0:
                 reasons.append("no jobs")
-            print(f"  - {r['id']}: {r['company']} - {', '.join(reasons) or 'unknown'}")
+            print(f"  - {r['id']}: {company_or_desc} - {', '.join(reasons) or 'unknown'}")
     
     if passed:
         print(f"\n✓ PASSED ({len(passed)}):")
         for r in passed:
-            print(f"  - {r['id']}: {r['company']}")
+            company_or_desc = r.get('company') or r.get('description', 'Unknown')
+            print(f"  - {r['id']}: {company_or_desc}")
     
     # Detailed results JSON
     results_path = Path("reports") / "understanding_v1_benchmark_results.json"
