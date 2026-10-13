@@ -5,24 +5,24 @@ Tests match_robot_url_v1 against robot_benchmark_set.json using OFFLINE SNAPSHOT
 No live network calls - uses pre-cached pages from tests/fixtures/robot_pages/.
 
 Scores:
-- Product class extraction
-- Capability derivation  
-- Buyer vertical matching
-- Must-not-match filtering
+- Product class extraction (flexible matching with parent/child classes)
+- Capability derivation (≥2 expected capabilities)
+- Buyer vertical matching (at least one match)
+- Must-not-match filtering (zero forbidden matches)
 
 Reports three buckets:
-- FETCH FAILED: Network/snapshot issue (doesn't count against v1)
-- EXTRACTION FAILED: Zero facts extracted (v1 extraction problem)
+- FETCH FAILED: Network/snapshot issue or thin content (doesn't count against v1)
+- EXTRACTION FAILED: Zero facts extracted or wrong classification (v1 problem)
 - PASSED: Meets all criteria
 
 Usage:
-    # First, snapshot pages (from machine with internet):
-    python3 scripts/snapshot_robot_pages.py
-    
-    # Then run benchmark (works offline):
+    # Offline mode (uses snapshots):
     python3 scripts/test_understanding_v1_benchmark.py
     
-    # Or test with live URLs (requires internet):
+    # Test specific robot:
+    python3 scripts/test_understanding_v1_benchmark.py --robot hc-01
+    
+    # Live mode (requires internet):
     python3 scripts/test_understanding_v1_benchmark.py --live
 """
 import json
@@ -32,10 +32,14 @@ from pathlib import Path
 from typing import Any
 
 from app.services.robot_job_capability_match import match_robot_url_v1
+from scripts.benchmark_scoring import score_product_class, score_capabilities
 
 
 BENCHMARK_PATH = Path("tests/fixtures/robot_benchmark_set_e5e6.json")
 FIXTURES_DIR = Path("tests/fixtures/robot_pages")
+
+# Thin content threshold: pages with fewer words are treated as FETCH_FAILED
+THIN_CONTENT_WORD_THRESHOLD = 150
 
 
 def load_benchmark() -> dict[str, Any]:
@@ -166,6 +170,111 @@ def map_capability_to_ontology(plain_english: str) -> str:
     return mapping.get(plain_english, plain_english)
 
 
+def test_negative_control(control: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
+    """Test a negative control and check expected behavior."""
+    control_id = control['id']
+    url = control['url']
+    
+    print(f"\n{'='*80}")
+    print(f"Testing NEGATIVE CONTROL {control_id}")
+    print(f"URL: {url}")
+    print(f"Expected: {control['expected_behavior'][:80]}...")
+    
+    # Load snapshot or check live
+    snapshot = None if use_live else load_snapshot(control_id)
+    
+    if snapshot is None and not use_live:
+        print(f"❌ FETCH FAILED: No snapshot found for {control_id}")
+        return {
+            'id': control_id,
+            'description': control['description'],
+            'url': url,
+            'bucket': 'FETCH_FAILED',
+            'fetch_error': 'No snapshot found',
+            'pass': False,
+        }
+    
+    if snapshot:
+        metadata = snapshot['metadata']
+        if metadata.get('status_code') != 200:
+            print(f"⚠️  Snapshot fetch failed: {metadata.get('error', 'Unknown')[:80]}")
+            return {
+                'id': control_id,
+                'description': control['description'],
+                'url': url,
+                'bucket': 'FETCH_FAILED',
+                'fetch_error': metadata.get('error', 'Unknown'),
+                'snapshot_date': metadata.get('fetch_date'),
+                'pass': False,
+            }
+        
+        page_text = snapshot['text']
+        word_count = len(page_text.strip().split())
+        if word_count < THIN_CONTENT_WORD_THRESHOLD:
+            print(f"⚠️  Thin content ({word_count} words)")
+            return {
+                'id': control_id,
+                'description': control['description'],
+                'url': url,
+                'bucket': 'FETCH_FAILED',
+                'fetch_error': f'Thin content ({word_count} words)',
+                'snapshot_date': metadata.get('fetch_date'),
+                'pass': False,
+            }
+        
+        print(f"Using snapshot ({word_count} words, fetched {metadata.get('fetch_date', 'unknown')})")
+    else:
+        print(f"Using live URL (--live mode)")
+    
+    # Run extraction
+    try:
+        t0 = time.time()
+        result = match_robot_url_v1(url)
+        elapsed = time.time() - t0
+        
+        state = result.get('state', 'unknown')
+        job_count = result.get('job_count', 0)
+        
+        print(f"\nResult: state={state}, jobs={job_count}, time={elapsed:.1f}s")
+        
+        # Negative controls should either:
+        # 1. Extract nothing (state=could_not_understand or needs_product_choice)
+        # 2. Extract with low confidence and source_type flag
+        # 3. Not match to buyer opportunities
+        
+        passed = state in ['could_not_understand', 'needs_product_choice'] or job_count == 0
+        bucket = 'PASSED' if passed else 'EXTRACTION_FAILED'
+        
+        if passed:
+            print(f"✓ PASSED: Correctly identified as non-robot or low-confidence")
+        else:
+            print(f"❌ FAILED: Incorrectly matched {job_count} jobs")
+        
+        return {
+            'id': control_id,
+            'description': control['description'],
+            'url': url,
+            'bucket': bucket,
+            'state': state,
+            'job_count': job_count,
+            'snapshot_date': snapshot['metadata'].get('fetch_date') if snapshot else None,
+            'pass': passed,
+            'elapsed_sec': elapsed,
+        }
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        return {
+            'id': control_id,
+            'description': control['description'],
+            'url': url,
+            'bucket': 'EXTRACTION_FAILED',
+            'error': str(e),
+            'snapshot_date': snapshot['metadata'].get('fetch_date') if snapshot else None,
+            'pass': False,
+        }
+
+
 def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
     """Test one robot and return results."""
     robot_id = robot['id']
@@ -210,15 +319,16 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
                 'pass': False,
             }
         
-        # HTTP 200 but empty/useless text (navigation only, cookie banners, etc.)
-        if len(page_text.strip()) < 50:
-            print(f"⚠️  Snapshot has no content (empty page or navigation-only)")
+        # HTTP 200 but thin/useless text (navigation only, cookie banners, etc.)
+        word_count = len(page_text.strip().split())
+        if word_count < THIN_CONTENT_WORD_THRESHOLD:
+            print(f"⚠️  Snapshot has thin content ({word_count} words < {THIN_CONTENT_WORD_THRESHOLD} threshold)")
             return {
                 'id': robot_id,
                 'company': robot['company'],
                 'url': url,
                 'bucket': 'FETCH_FAILED',
-                'fetch_error': 'Empty text content (< 50 chars)',
+                'fetch_error': f'Thin content ({word_count} words, likely navigation/cookie banner only)',
                 'snapshot_date': metadata.get('fetch_date'),
                 'pass': False,
             }
@@ -271,15 +381,15 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
                 'elapsed_sec': elapsed,
             }
         
-        # Score product class
+        # Score product class (flexible matching with parent/child classes)
         extracted_class = robot_caps.get('type', '').lower().replace(' ', '_') if robot_caps.get('type') else ''
-        expected_class = robot['expected_product_class'].lower()
-        class_match = extracted_class in expected_class or expected_class in extracted_class or extracted_class == expected_class.replace('_', '')
+        expected_class = robot['expected_product_class']
+        class_match = score_product_class(extracted_class, expected_class)
         
-        # Score capabilities
-        expected_caps_mapped = [map_capability_to_ontology(c) for c in robot['expected_capabilities']]
-        matched_caps = [c for c in expected_caps_mapped if c in cap_keys]
-        cap_score = len(matched_caps) >= 2
+        # Score capabilities (flexible matching via ontology)
+        cap_keys = [c.get('key') for c in capabilities]
+        matched_count, matched_labels = score_capabilities(cap_keys, robot['expected_capabilities'])
+        cap_score = matched_count >= 2
         
         # Check jobs (buyer verticals)
         jobs = result.get('jobs', [])[:10]
@@ -321,9 +431,9 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
             'expected_class': expected_class,
             'class_match': class_match,
             'capabilities_extracted': cap_keys,
-            'expected_capabilities': expected_caps_mapped,
-            'matched_capabilities': matched_caps,
-            'cap_count': len(matched_caps),
+            'expected_capabilities': robot['expected_capabilities'],
+            'matched_capabilities': matched_labels,
+            'cap_count': matched_count,
             'cap_score': cap_score,
             'job_count': job_count,
             'forbidden_match': forbidden_match,
@@ -377,15 +487,25 @@ def main():
     
     # Filter robots if --robot specified
     robots_to_test = benchmark['robots']
+    negative_controls = benchmark.get('negative_controls', [])
+    
     if args.robot:
+        # Check if it's a robot or negative control
         robots_to_test = [r for r in robots_to_test if r['id'] == args.robot]
-        if not robots_to_test:
-            print(f"❌ Robot '{args.robot}' not found in benchmark")
+        negative_controls = [n for n in negative_controls if n['id'] == args.robot]
+        if not robots_to_test and not negative_controls:
+            print(f"❌ ID '{args.robot}' not found in benchmark")
             return 1
     
+    # Test robots
     results = []
     for robot in robots_to_test:
         result = test_robot(robot, use_live=args.live)
+        results.append(result)
+    
+    # Test negative controls
+    for control in negative_controls:
+        result = test_negative_control(control, use_live=args.live)
         results.append(result)
     
     # Bucket results
