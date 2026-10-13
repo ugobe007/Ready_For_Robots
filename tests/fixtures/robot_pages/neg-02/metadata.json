@@ -1,0 +1,10 @@
+{
+  "id": "neg-02",
+  "description": "Robotics developer platform / simulation software, not a deployable robot",
+  "url": "https://developer.nvidia.com/isaac",
+  "final_url": "https://developer.nvidia.com/isaac",
+  "status_code": 200,
+  "fetch_date": "2026-10-13T22:17:01.925008Z",
+  "error": null,
+  "expected_behavior": "Classify as software/tooling. Should NOT produce buyer-opportunity matches for end users like hospitals or restaurants."
+}

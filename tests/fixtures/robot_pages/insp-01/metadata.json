@@ -1,0 +1,10 @@
+{
+  "id": "insp-01",
+  "company": "ANYbotics",
+  "product": "ANYmal",
+  "url": "https://www.anybotics.com",
+  "final_url": "https://www.anybotics.com/",
+  "status_code": 403,
+  "fetch_date": "2026-10-13T22:16:45.004458Z",
+  "error": "HTTP 403"
+}

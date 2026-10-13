@@ -1,0 +1,10 @@
+{
+  "id": "neg-03",
+  "description": "Non-robot automation company (industrial equipment, no robotics claim)",
+  "url": "https://www.tennantco.com",
+  "final_url": "https://www.tennantco.com/en_us/localeselector.html?nolocale=true",
+  "status_code": 200,
+  "fetch_date": "2026-10-13T22:17:04.065431Z",
+  "error": null,
+  "expected_behavior": "Tennant sells both manual and autonomous scrubbers. Should detect the autonomous line if present, but NOT label the whole company as a robot maker with full confidence. Tests partial-robot companies."
+}

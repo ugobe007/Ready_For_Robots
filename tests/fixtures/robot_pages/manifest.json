@@ -1,0 +1,286 @@
+{
+  "snapshot_date": "2026-10-13T22:16:00.736858Z",
+  "benchmark_version": "2026-10-13",
+  "robots": [
+    {
+      "id": "hc-01",
+      "company": "Diligent Robotics",
+      "product": "Moxi",
+      "url": "https://www.diligentrobotics.com",
+      "final_url": "https://www.diligentrobotics.com",
+      "status_code": 0,
+      "fetch_date": "2026-10-13T22:16:00.737058Z",
+      "error": "HTTPSConnectionPool(host='www.diligentrobotics.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='www.diligentrobotics.com', port=443): Failed to r"
+    },
+    {
+      "id": "hc-02",
+      "company": "Relay Robotics",
+      "product": "RelayRx / Relay2",
+      "url": "https://relayrobotics.com",
+      "final_url": "https://relayrobotics.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:02.045526Z",
+      "error": null
+    },
+    {
+      "id": "hc-03",
+      "company": "Xenex",
+      "product": "LightStrike",
+      "url": "https://xenex.com",
+      "final_url": "https://xenex.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:03.828912Z",
+      "error": null
+    },
+    {
+      "id": "con-01",
+      "company": "Gritt",
+      "product": "Gritt physical AI system",
+      "url": "https://gritt.ai",
+      "final_url": "https://www.gritt.ai/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:06.206752Z",
+      "error": null
+    },
+    {
+      "id": "con-02",
+      "company": "Dusty Robotics",
+      "product": "FieldPrinter",
+      "url": "https://www.dustyrobotics.com",
+      "final_url": "https://www.dustyrobotics.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:08.652393Z",
+      "error": null
+    },
+    {
+      "id": "con-03",
+      "company": "Advanced Construction Robotics",
+      "product": "TyBot / IronBot",
+      "url": "https://www.constructionrobots.com",
+      "final_url": "https://www.constructionrobots.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:09.975471Z",
+      "error": null
+    },
+    {
+      "id": "con-04",
+      "company": "Canvas",
+      "product": "Drywall finishing system",
+      "url": "https://www.canvas.build",
+      "final_url": "https://www.canvas.build",
+      "status_code": 0,
+      "fetch_date": "2026-10-13T22:16:11.385366Z",
+      "error": "HTTPSConnectionPool(host='www.canvas.build', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLError(1, '[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:103"
+    },
+    {
+      "id": "hos-01",
+      "company": "Bear Robotics",
+      "product": "Servi",
+      "url": "https://www.bearrobotics.ai",
+      "final_url": "https://www.bearrobotics.ai/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:12.789324Z",
+      "error": null
+    },
+    {
+      "id": "hos-02",
+      "company": "Pudu Robotics",
+      "product": "BellaBot",
+      "url": "https://www.pudurobotics.com",
+      "final_url": "https://www.pudurobotics.com/en",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:15.566121Z",
+      "error": null
+    },
+    {
+      "id": "hos-03",
+      "company": "Richtech Robotics",
+      "product": "ADAM",
+      "url": "https://www.richtechrobotics.com",
+      "final_url": "https://richtechrobotics.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:17.857981Z",
+      "error": null
+    },
+    {
+      "id": "cln-01",
+      "company": "Avidbots",
+      "product": "Neo",
+      "url": "https://avidbots.com",
+      "final_url": "https://avidbots.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:20.633612Z",
+      "error": null
+    },
+    {
+      "id": "cln-02",
+      "company": "Brain Corp",
+      "product": "BrainOS",
+      "url": "https://www.braincorp.com",
+      "final_url": "https://www.braincorp.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:23.761315Z",
+      "error": null
+    },
+    {
+      "id": "food-01",
+      "company": "Miso Robotics",
+      "product": "Flippy",
+      "url": "https://misorobotics.com",
+      "final_url": "https://www.misorobotics.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:25.337439Z",
+      "error": null
+    },
+    {
+      "id": "food-02",
+      "company": "Chef Robotics",
+      "product": "Chef+",
+      "url": "https://www.chefrobotics.ai",
+      "final_url": "https://www.chefrobotics.ai/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:27.563258Z",
+      "error": null
+    },
+    {
+      "id": "log-01",
+      "company": "Locus Robotics",
+      "product": "LocusONE AMRs",
+      "url": "https://locusrobotics.com",
+      "final_url": "https://locusrobotics.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:29.351170Z",
+      "error": null
+    },
+    {
+      "id": "log-02",
+      "company": "Boston Dynamics",
+      "product": "Stretch",
+      "url": "https://bostondynamics.com/products/stretch",
+      "final_url": "https://bostondynamics.com/products/stretch",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:30.839105Z",
+      "error": null
+    },
+    {
+      "id": "log-03",
+      "company": "Agility Robotics",
+      "product": "Digit",
+      "url": "https://www.agilityrobotics.com",
+      "final_url": "https://www.agilityrobotics.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:32.943224Z",
+      "error": null
+    },
+    {
+      "id": "sec-01",
+      "company": "Knightscope",
+      "product": "Autonomous Security Robots",
+      "url": "https://www.knightscope.com",
+      "final_url": "https://knightscope.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:34.624889Z",
+      "error": null
+    },
+    {
+      "id": "sec-02",
+      "company": "Cobalt Robotics",
+      "product": "Cobalt security robot",
+      "url": "https://www.cobaltrobotics.com",
+      "final_url": "https://www.cobaltai.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:37.173090Z",
+      "error": null
+    },
+    {
+      "id": "ag-01",
+      "company": "Burro",
+      "product": "Burro / Burro Grande",
+      "url": "https://burro.ai",
+      "final_url": "https://burro.ai/",
+      "status_code": 403,
+      "fetch_date": "2026-10-13T22:16:41.088517Z",
+      "error": "HTTP 403"
+    },
+    {
+      "id": "ag-02",
+      "company": "Carbon Robotics",
+      "product": "LaserWeeder",
+      "url": "https://carbonrobotics.com",
+      "final_url": "https://carbonrobotics.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:42.706905Z",
+      "error": null
+    },
+    {
+      "id": "insp-01",
+      "company": "ANYbotics",
+      "product": "ANYmal",
+      "url": "https://www.anybotics.com",
+      "final_url": "https://www.anybotics.com/",
+      "status_code": 403,
+      "fetch_date": "2026-10-13T22:16:45.004458Z",
+      "error": "HTTP 403"
+    },
+    {
+      "id": "insp-02",
+      "company": "Gecko Robotics",
+      "product": "Wall-climbing inspection robots",
+      "url": "https://www.geckorobotics.com",
+      "final_url": "https://www.geckorobotics.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:47.195076Z",
+      "error": null
+    },
+    {
+      "id": "ret-01",
+      "company": "Simbe",
+      "product": "Tally",
+      "url": "https://www.simberobotics.com",
+      "final_url": "https://www.simberobotics.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:48.798619Z",
+      "error": null
+    },
+    {
+      "id": "del-01",
+      "company": "Starship Technologies",
+      "product": "Sidewalk delivery robot",
+      "url": "https://www.starship.xyz",
+      "final_url": "https://www.starship.xyz/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:51.398031Z",
+      "error": null
+    },
+    {
+      "id": "mfg-01",
+      "company": "Universal Robots",
+      "product": "UR cobot arms",
+      "url": "https://www.universal-robots.com",
+      "final_url": "https://www.universal-robots.com/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:54.369470Z",
+      "error": null
+    },
+    {
+      "id": "mfg-02",
+      "company": "Formic",
+      "product": "Robots-as-a-Service",
+      "url": "https://formic.co",
+      "final_url": "https://formic.co/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:56.827003Z",
+      "error": null
+    },
+    {
+      "id": "gen-01",
+      "company": "Figure AI",
+      "product": "Figure humanoid",
+      "url": "https://www.figure.ai",
+      "final_url": "https://www.figure.ai/",
+      "status_code": 200,
+      "fetch_date": "2026-10-13T22:16:58.694257Z",
+      "error": null
+    }
+  ]
+}

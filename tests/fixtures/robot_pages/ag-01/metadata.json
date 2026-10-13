@@ -1,0 +1,10 @@
+{
+  "id": "ag-01",
+  "company": "Burro",
+  "product": "Burro / Burro Grande",
+  "url": "https://burro.ai",
+  "final_url": "https://burro.ai/",
+  "status_code": 403,
+  "fetch_date": "2026-10-13T22:16:41.088517Z",
+  "error": "HTTP 403"
+}

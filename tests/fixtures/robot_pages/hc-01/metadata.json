@@ -1,0 +1,10 @@
+{
+  "id": "hc-01",
+  "company": "Diligent Robotics",
+  "product": "Moxi",
+  "url": "https://www.diligentrobotics.com",
+  "final_url": "https://www.diligentrobotics.com",
+  "status_code": 0,
+  "fetch_date": "2026-10-13T22:16:00.737058Z",
+  "error": "HTTPSConnectionPool(host='www.diligentrobotics.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='www.diligentrobotics.com', port=443): Failed to r"
+}
