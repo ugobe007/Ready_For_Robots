@@ -194,21 +194,37 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
     if snapshot:
         # Check snapshot status
         metadata = snapshot['metadata']
+        page_text = snapshot['text']
+        
+        # Fetch failures: DNS, SSL, HTTP errors, blocked
         if metadata.get('status_code') != 200:
-            print(f"⚠️  Snapshot fetch failed: {metadata.get('error', 'Unknown')}")
+            error_msg = metadata.get('error', 'Unknown error')
+            print(f"⚠️  Snapshot fetch failed: HTTP {metadata.get('status_code')} - {error_msg[:80]}")
             return {
                 'id': robot_id,
                 'company': robot['company'],
                 'url': url,
                 'bucket': 'FETCH_FAILED',
-                'fetch_error': metadata.get('error', 'HTTP error'),
+                'fetch_error': error_msg,
                 'snapshot_date': metadata.get('fetch_date'),
                 'pass': False,
             }
         
-        page_text = snapshot['text']
+        # HTTP 200 but empty/useless text (navigation only, cookie banners, etc.)
+        if len(page_text.strip()) < 50:
+            print(f"⚠️  Snapshot has no content (empty page or navigation-only)")
+            return {
+                'id': robot_id,
+                'company': robot['company'],
+                'url': url,
+                'bucket': 'FETCH_FAILED',
+                'fetch_error': 'Empty text content (< 50 chars)',
+                'snapshot_date': metadata.get('fetch_date'),
+                'pass': False,
+            }
+        
         html = snapshot['html']
-        print(f"Using snapshot (fetched {metadata.get('fetch_date', 'unknown')})")
+        print(f"Using snapshot (fetched {metadata.get('fetch_date', 'unknown')}, {len(page_text)} chars)")
     else:
         page_text = None
         html = None
