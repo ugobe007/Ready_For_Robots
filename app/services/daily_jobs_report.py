@@ -987,13 +987,26 @@ def _send_daily_buyers_report(
         render_daily_buyers_csv,
         render_daily_buyers_html,
         render_daily_buyers_text,
+        render_sales_ready_report,
     )
 
     try:
         report = compose_daily_buyers_report(db)
         subject = _subject(report)
-        body = render_daily_buyers_text(report)
-        html_body = render_daily_buyers_html(report)
+        
+        # Check format preference (default to standard format)
+        report_format = (os.getenv("DAILY_BUYERS_FORMAT") or "standard").strip().lower()
+        
+        if report_format == "sales":
+            # Use sales-ready PDF-style format
+            body = render_sales_ready_report(report)
+            # HTML version still uses standard for now
+            html_body = render_daily_buyers_html(report)
+        else:
+            # Use standard format
+            body = render_daily_buyers_text(report)
+            html_body = render_daily_buyers_html(report)
+        
         csv_text = render_daily_buyers_csv(report)
         store_daily_jobs_report_edition(db, report, body_text=body, csv_text=csv_text)
         from app.services.resend_email import ResendEmailError, send_email_via_resend

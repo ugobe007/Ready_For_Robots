@@ -254,3 +254,164 @@ def buyers_csv_attachment(report: dict[str, Any], csv_text: str) -> dict[str, st
     return {"filename": _csv_filename(report),
             "content": base64.b64encode(csv_text.encode("utf-8")).decode("ascii"),
             "content_type": "text/csv"}
+
+
+# ─── Sales-Ready Report Format ────────────────────────────────────────────────
+
+def render_sales_ready_report(report: dict[str, Any]) -> str:
+    """Render report in sales-ready PDF format with job cards."""
+    from app.services.sales_report import (
+        ROBOT_TYPES,
+        extract_budget,
+        extract_vendor,
+        estimate_timeline,
+    )
+    
+    lines = []
+    lines.append(f"Robot Buyer Intelligence Report — {report.get('date')}")
+    lines.append("")
+    
+    # Group by section
+    rfp_open = []
+    exploring = []
+    
+    for stage_name in report.get("stages") or []:
+        for b in report.get("by_stage", {}).get(stage_name) or []:
+            card_lines = _format_sales_card(b, report)
+            
+            if stage_name == "rfp_open":
+                rfp_open.extend(card_lines)
+            elif stage_name in ("exploring", "expanding", "preparing", "piloting"):
+                exploring.extend(card_lines)
+    
+    # RFP Open section
+    if rfp_open:
+        lines.append("RFP Open — Published RFP / Vendor Search, Budget Confirmed")
+        lines.append("")
+        lines.extend(rfp_open)
+    
+    # Exploring section
+    if exploring:
+        lines.append("Exploring — Planning, Budgeting or Piloting, No Vendor Locked In")
+        lines.append("")
+        lines.extend(exploring)
+    
+    return "\n".join(lines)
+
+
+def _format_sales_card(b: dict[str, Any], report: dict[str, Any]) -> list[str]:
+    """Format one buyer as a sales card."""
+    from app.services.sales_report import (
+        ROBOT_TYPES,
+        extract_budget,
+        extract_vendor,
+    )
+    
+    lines = []
+    
+    # Header: rank, company, industry, location
+    where = ", ".join(p for p in (b.get("city"), b.get("state")) if p)
+    lines.append(f"{b['rank']:03d}  {b['company']}")
+    if where:
+        lines.append(f"{b.get('industry') or 'Unknown'} · {where}")
+    else:
+        lines.append(f"{b.get('industry') or 'Unknown'}")
+    
+    # Job workflows (top 1-2 open categories)
+    open_cats = [o for o in (b.get("open") or [])[:2]]
+    if open_cats:
+        lines.append(f"Job: {'; '.join(o['label'] for o in open_cats)}")
+    
+    # Robot types
+    if open_cats:
+        robot_types = []
+        for o in open_cats:
+            # Try to map category label back to key
+            for cat_key, (cat_label, _) in __import__("app.services.opportunity_map", fromlist=["CATEGORIES"]).CATEGORIES.items():
+                if cat_label == o['label']:
+                    robot_types.append(ROBOT_TYPES.get(cat_key, cat_label))
+                    break
+            else:
+                robot_types.append(o['label'])
+        
+        lines.append(f"Robot Types: {'; '.join(robot_types)}")
+    
+    # Sales intelligence line
+    intel_parts = []
+    
+    # Timeline (estimate from stage)
+    stage = b.get("stage") or "exploring"
+    if stage == "rfp_open":
+        timeline = "High-intent window (est. 45–120 days)"
+    elif stage in ("exploring", "piloting"):
+        timeline = "Capital program phase (est. 90–210 days)"
+    elif stage == "expanding":
+        timeline = "Expansion window (est. 60–180 days)"
+    else:
+        timeline = "Capital program phase (est. 90–210 days)"
+    
+    intel_parts.append(f"Schedule: {timeline}")
+    
+    # Has robots
+    already_has = b.get("already_has") or []
+    if already_has:
+        has_str = "; ".join(h["label"] for h in already_has[:2])
+        if len(already_has) > 2:
+            has_str += f" (+{len(already_has) - 2} more)"
+        intel_parts.append(f"Has Robots: Yes — {has_str}")
+    else:
+        intel_parts.append("Has Robots: No")
+    
+    # Budget (extract from evidence)
+    budget = None
+    for ev in (b.get("evidence") or [])[:5]:
+        budget = extract_budget(ev.get("text") or "")
+        if budget:
+            break
+    
+    if budget:
+        intel_parts.append(f"Budget: {budget}")
+    
+    lines.append(" | ".join(intel_parts))
+    
+    # Status line
+    status_parts = []
+    if stage == "rfp_open":
+        status_parts.append("RFP")
+    elif stage in ("exploring", "piloting"):
+        status_parts.append("Exploring")
+    elif stage == "expanding":
+        status_parts.append("Expanding")
+    
+    # Extract incumbent from evidence or open categories
+    vendors = []
+    for o in (b.get("open") or []):
+        vendors.extend(o.get("vendors") or [])
+    
+    if not vendors:
+        for ev in (b.get("evidence") or [])[:5]:
+            vendor = extract_vendor(ev.get("text") or "")
+            if vendor and vendor not in vendors:
+                vendors.append(vendor)
+    
+    if status_parts:
+        if vendors:
+            status_parts.append(f"(incumbent: {vendors[0]})")
+        lines.append(f"Status: {' '.join(status_parts)}")
+    
+    # Evidence quotes
+    for ev in (b.get("evidence") or [])[:3]:
+        text = ev.get("text") or ""
+        date = ev.get("seen_at") or ""
+        date_str = f" ({date})" if date else ""
+        lines.append(f'"{text}"{date_str}')
+    
+    # Likely next
+    likely_next = b.get("predicted_next") or []
+    if likely_next:
+        lines.append(f"Likely Next: {', '.join(likely_next[:4])}")
+    
+    lines.append("")  # Blank line between cards
+    
+    return lines
+
