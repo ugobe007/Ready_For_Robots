@@ -9,6 +9,9 @@ Fetches each URL from robot_benchmark_set.json and saves:
 Usage:
     python3 scripts/snapshot_robot_pages.py
     
+    # Re-fetch specific robots with browser User-Agent (for blocked/dynamic pages):
+    python3 scripts/snapshot_robot_pages.py --render --robots hc-01 con-04 hos-02 ag-01 insp-01 neg-01
+    
 Run this from a machine with full internet access (not Cloud Agent VM).
 Commit the snapshots to tests/fixtures/robot_pages/ for reproducible testing.
 """
@@ -149,6 +152,15 @@ def snapshot_robot(robot: dict[str, Any], output_dir: Path) -> dict[str, Any]:
 
 def main():
     """Snapshot all robot pages from benchmark."""
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="Snapshot robot pages for offline benchmark")
+    parser.add_argument("--render", action="store_true",
+                        help="Use browser User-Agent (for blocked/dynamic pages)")
+    parser.add_argument("--robots", nargs="+",
+                        help="Snapshot specific robot IDs only (e.g., hc-01 con-04)")
+    args = parser.parse_args()
+    
     # Create output directory
     FIXTURES_DIR.mkdir(parents=True, exist_ok=True)
     
@@ -160,7 +172,16 @@ def main():
     print("Snapshotting Robot Pages for Offline Benchmark")
     print("=" * 80)
     print(f"Benchmark version: {benchmark['version']}")
-    print(f"Total robots: {len(benchmark['robots'])}")
+    
+    # Filter robots if --robots specified
+    robots_to_fetch = benchmark["robots"]
+    if args.robots:
+        robot_ids = set(args.robots)
+        robots_to_fetch = [r for r in robots_to_fetch if r['id'] in robot_ids]
+        print(f"Fetching specific robots: {', '.join(args.robots)}")
+    else:
+        print(f"Total robots: {len(robots_to_fetch)}")
+    
     print(f"Output directory: {FIXTURES_DIR}")
     print()
     
@@ -171,7 +192,7 @@ def main():
     }
     
     # Snapshot each robot
-    for robot in benchmark["robots"]:
+    for robot in robots_to_fetch:
         try:
             metadata = snapshot_robot(robot, FIXTURES_DIR)
             manifest["robots"].append(metadata)

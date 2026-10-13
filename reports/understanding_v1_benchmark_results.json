@@ -1,12 +1,12 @@
 {
   "benchmark_version": "2026-10-13",
   "test_mode": "offline",
-  "timestamp": "2026-10-13 23:14:17 UTC",
+  "timestamp": "2026-10-13 23:38:16 UTC",
   "summary": {
     "total": 31,
     "fetch_failed": 6,
-    "extraction_failed": 13,
-    "passed": 12
+    "extraction_failed": 24,
+    "passed": 1
   },
   "results": [
     {
@@ -42,22 +42,25 @@
       ],
       "matched_capabilities": [
         "mobile_navigation",
-        "secure_cargo",
-        "item_delivery"
+        "secure_cargo"
       ],
-      "cap_count": 3,
-      "cap_score": true,
+      "matched_via": {
+        "mobile_navigation": "mobile",
+        "secure_cargo": "transport"
+      },
+      "cap_count": 0,
+      "cap_score": false,
       "job_count": 3,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:02.045526Z",
       "pass": false,
-      "elapsed_sec": 0.6711547374725342
+      "elapsed_sec": 0.7191905975341797
     },
     {
       "id": "hc-03",
       "company": "Xenex",
       "url": "https://xenex.com",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "matches",
       "extracted_company": "Xenex",
       "extracted_class": "healthcare",
@@ -77,13 +80,17 @@
         "uv_disinfection",
         "semi_mobile"
       ],
-      "cap_count": 2,
-      "cap_score": true,
+      "matched_via": {
+        "uv_disinfection": "disinfect",
+        "semi_mobile": "mobile"
+      },
+      "cap_count": 1,
+      "cap_score": false,
       "job_count": 3,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:03.828912Z",
-      "pass": true,
-      "elapsed_sec": 0.38474011421203613
+      "pass": false,
+      "elapsed_sec": 0.386044979095459
     },
     {
       "id": "con-01",
@@ -94,13 +101,13 @@
       "capabilities_count": 0,
       "snapshot_date": "2026-10-13T22:16:06.206752Z",
       "pass": false,
-      "elapsed_sec": 0.20660638809204102
+      "elapsed_sec": 0.2970404624938965
     },
     {
       "id": "con-02",
       "company": "Dusty Robotics",
       "url": "https://www.dustyrobotics.com",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "matches",
       "extracted_company": "Dusty Robotics",
       "extracted_class": "construction_robot",
@@ -122,19 +129,23 @@
         "mobile_navigation",
         "floor_printing"
       ],
-      "cap_count": 2,
-      "cap_score": true,
+      "matched_via": {
+        "mobile_navigation": "mobile",
+        "floor_printing": "construction_layout"
+      },
+      "cap_count": 1,
+      "cap_score": false,
       "job_count": 3,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:08.652393Z",
-      "pass": true,
-      "elapsed_sec": 0.0910494327545166
+      "pass": false,
+      "elapsed_sec": 0.08998751640319824
     },
     {
       "id": "con-03",
       "company": "Advanced Construction Robotics",
       "url": "https://www.constructionrobots.com",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "matches",
       "extracted_company": "Advanced Construction Robotics",
       "extracted_class": "construction",
@@ -156,16 +167,19 @@
       ],
       "matched_capabilities": [
         "rebar_tying",
-        "rebar_placement",
         "gantry_system"
       ],
-      "cap_count": 3,
-      "cap_score": true,
+      "matched_via": {
+        "rebar_tying": "construction_task",
+        "gantry_system": "mobile"
+      },
+      "cap_count": 0,
+      "cap_score": false,
       "job_count": 6,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:09.975471Z",
-      "pass": true,
-      "elapsed_sec": 0.38621091842651367
+      "pass": false,
+      "elapsed_sec": 0.3870809078216553
     },
     {
       "id": "con-04",
@@ -180,7 +194,7 @@
       "id": "hos-01",
       "company": "Bear Robotics",
       "url": "https://www.bearrobotics.ai",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "matches",
       "extracted_company": "Bear Robotics",
       "extracted_class": "serving",
@@ -201,16 +215,19 @@
       ],
       "matched_capabilities": [
         "mobile_navigation",
-        "tray_delivery",
-        "table_service"
+        "tray_delivery"
       ],
-      "cap_count": 3,
-      "cap_score": true,
+      "matched_via": {
+        "mobile_navigation": "mobile",
+        "tray_delivery": "serving_task"
+      },
+      "cap_count": 0,
+      "cap_score": false,
       "job_count": 3,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:12.789324Z",
-      "pass": true,
-      "elapsed_sec": 0.7009670734405518
+      "pass": false,
+      "elapsed_sec": 0.7014923095703125
     },
     {
       "id": "hos-02",
@@ -245,19 +262,22 @@
       "matched_capabilities": [
         "beverage_preparation"
       ],
-      "cap_count": 1,
+      "matched_via": {
+        "beverage_preparation": "serving_task"
+      },
+      "cap_count": 0,
       "cap_score": false,
       "job_count": 20,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:17.857981Z",
       "pass": false,
-      "elapsed_sec": 0.1776878833770752
+      "elapsed_sec": 0.17730093002319336
     },
     {
       "id": "cln-01",
       "company": "Avidbots",
       "url": "https://avidbots.com",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "matches",
       "extracted_company": "Avidbots",
       "extracted_class": "cleaning",
@@ -277,33 +297,64 @@
       ],
       "matched_capabilities": [
         "autonomous_floor_scrubbing",
-        "mobile_navigation",
-        "large_area_coverage"
+        "mobile_navigation"
       ],
-      "cap_count": 3,
-      "cap_score": true,
+      "matched_via": {
+        "autonomous_floor_scrubbing": "hard_floor_scrub",
+        "mobile_navigation": "mobile"
+      },
+      "cap_count": 1,
+      "cap_score": false,
       "job_count": 3,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:20.633612Z",
-      "pass": true,
-      "elapsed_sec": 0.43783020973205566
+      "pass": false,
+      "elapsed_sec": 0.4334533214569092
     },
     {
       "id": "cln-02",
       "company": "Brain Corp",
       "url": "https://www.braincorp.com",
       "bucket": "EXTRACTION_FAILED",
-      "state": "could_not_understand",
-      "capabilities_count": 0,
+      "state": "matches",
+      "extracted_company": "Brain Corp",
+      "extracted_class": "cleaning",
+      "expected_class": "autonomy_software_platform",
+      "class_match": false,
+      "capabilities_extracted": [
+        "mobile",
+        "transport",
+        "surface_clean",
+        "shelf_scan",
+        "pallet_move",
+        "healthcare_task",
+        "hard_floor_scrub",
+        "classes"
+      ],
+      "expected_capabilities": [
+        "autonomy_retrofit",
+        "floor_cleaning",
+        "inventory_scanning"
+      ],
+      "matched_capabilities": [
+        "floor_cleaning"
+      ],
+      "matched_via": {
+        "floor_cleaning": "hard_floor_scrub"
+      },
+      "cap_count": 1,
+      "cap_score": false,
+      "job_count": 3,
+      "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:23.761315Z",
       "pass": false,
-      "elapsed_sec": 0.21177411079406738
+      "elapsed_sec": 0.5764358043670654
     },
     {
       "id": "food-01",
       "company": "Miso Robotics",
       "url": "https://misorobotics.com",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "matches",
       "extracted_company": "Miso Robotics",
       "extracted_class": "food_prep",
@@ -320,33 +371,53 @@
         "food_preparation"
       ],
       "matched_capabilities": [
-        "frying",
-        "food_preparation"
+        "frying"
       ],
-      "cap_count": 2,
-      "cap_score": true,
+      "matched_via": {
+        "frying": "food_prep"
+      },
+      "cap_count": 0,
+      "cap_score": false,
       "job_count": 20,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:25.337439Z",
-      "pass": true,
-      "elapsed_sec": 0.23371195793151855
+      "pass": false,
+      "elapsed_sec": 0.26857995986938477
     },
     {
       "id": "food-02",
       "company": "Chef Robotics",
       "url": "https://www.chefrobotics.ai",
       "bucket": "EXTRACTION_FAILED",
-      "state": "could_not_understand",
-      "capabilities_count": 0,
+      "state": "thin_corpus",
+      "extracted_company": "Chef Robotics",
+      "extracted_class": "",
+      "expected_class": "food_manufacturing_robot",
+      "class_match": false,
+      "capabilities_extracted": [
+        "transport"
+      ],
+      "expected_capabilities": [
+        "manipulation_arm",
+        "meal_assembly",
+        "portioning",
+        "conveyor_line_integration"
+      ],
+      "matched_capabilities": [],
+      "matched_via": {},
+      "cap_count": 0,
+      "cap_score": false,
+      "job_count": 0,
+      "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:27.563258Z",
       "pass": false,
-      "elapsed_sec": 0.3382108211517334
+      "elapsed_sec": 0.42951464653015137
     },
     {
       "id": "log-01",
       "company": "Locus Robotics",
       "url": "https://locusrobotics.com",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "matches",
       "extracted_company": "Locus Robotics",
       "extracted_class": "warehouse",
@@ -366,19 +437,23 @@
         "mobile_navigation",
         "order_picking_assist"
       ],
-      "cap_count": 2,
-      "cap_score": true,
+      "matched_via": {
+        "mobile_navigation": "mobile",
+        "order_picking_assist": "warehouse_task"
+      },
+      "cap_count": 1,
+      "cap_score": false,
       "job_count": 3,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:29.351170Z",
-      "pass": true,
-      "elapsed_sec": 0.3921384811401367
+      "pass": false,
+      "elapsed_sec": 0.38430356979370117
     },
     {
       "id": "log-02",
       "company": "Boston Dynamics",
       "url": "https://bostondynamics.com/products/stretch",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "matches",
       "extracted_company": "Boston Dynamics",
       "extracted_class": "warehouse",
@@ -402,19 +477,23 @@
         "mobile_navigation",
         "manipulation_arm"
       ],
-      "cap_count": 2,
-      "cap_score": true,
+      "matched_via": {
+        "mobile_navigation": "mobile",
+        "manipulation_arm": "manipulate"
+      },
+      "cap_count": 0,
+      "cap_score": false,
       "job_count": 15,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:30.839105Z",
-      "pass": true,
-      "elapsed_sec": 0.364107608795166
+      "pass": false,
+      "elapsed_sec": 0.3487825393676758
     },
     {
       "id": "log-03",
       "company": "Agility Robotics",
       "url": "https://www.agilityrobotics.com",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "matches",
       "extracted_company": "Agility Robotics",
       "extracted_class": "humanoid",
@@ -436,13 +515,17 @@
         "bipedal_mobility",
         "manipulation"
       ],
-      "cap_count": 2,
-      "cap_score": true,
+      "matched_via": {
+        "bipedal_mobility": "mobile",
+        "manipulation": "manipulate"
+      },
+      "cap_count": 0,
+      "cap_score": false,
       "job_count": 28,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:32.943224Z",
-      "pass": true,
-      "elapsed_sec": 0.1524031162261963
+      "pass": false,
+      "elapsed_sec": 0.14626717567443848
     },
     {
       "id": "sec-01",
@@ -453,7 +536,7 @@
       "capabilities_count": 0,
       "snapshot_date": "2026-10-13T22:16:34.624889Z",
       "pass": false,
-      "elapsed_sec": 0.30203843116760254
+      "elapsed_sec": 0.2898519039154053
     },
     {
       "id": "sec-02",
@@ -476,13 +559,14 @@
         "remote_monitoring"
       ],
       "matched_capabilities": [],
+      "matched_via": {},
       "cap_count": 0,
       "cap_score": false,
       "job_count": 3,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:37.173090Z",
       "pass": false,
-      "elapsed_sec": 0.934715986251831
+      "elapsed_sec": 0.900648832321167
     },
     {
       "id": "ag-01",
@@ -518,13 +602,17 @@
         "computer_vision_weeding",
         "tractor_implement"
       ],
+      "matched_via": {
+        "computer_vision_weeding": "agriculture_task",
+        "tractor_implement": "agriculture_weed"
+      },
       "cap_count": 2,
       "cap_score": true,
       "job_count": 20,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:42.706905Z",
       "pass": true,
-      "elapsed_sec": 0.2547943592071533
+      "elapsed_sec": 0.2539534568786621
     },
     {
       "id": "insp-01",
@@ -544,7 +632,7 @@
       "capabilities_count": 0,
       "snapshot_date": "2026-10-13T22:16:47.195076Z",
       "pass": false,
-      "elapsed_sec": 0.21709036827087402
+      "elapsed_sec": 0.31920766830444336
     },
     {
       "id": "ret-01",
@@ -574,13 +662,16 @@
       "matched_capabilities": [
         "mobile_navigation"
       ],
-      "cap_count": 1,
+      "matched_via": {
+        "mobile_navigation": "mobile"
+      },
+      "cap_count": 0,
       "cap_score": false,
       "job_count": 20,
       "forbidden_match": false,
       "snapshot_date": "2026-10-13T22:16:48.798619Z",
       "pass": false,
-      "elapsed_sec": 0.28381800651550293
+      "elapsed_sec": 0.2837860584259033
     },
     {
       "id": "del-01",
@@ -591,7 +682,7 @@
       "capabilities_count": 0,
       "snapshot_date": "2026-10-13T22:16:51.398031Z",
       "pass": false,
-      "elapsed_sec": 0.18986034393310547
+      "elapsed_sec": 0.21483826637268066
     },
     {
       "id": "mfg-01",
@@ -602,7 +693,7 @@
       "capabilities_count": 0,
       "snapshot_date": "2026-10-13T22:16:54.369470Z",
       "pass": false,
-      "elapsed_sec": 0.16716432571411133
+      "elapsed_sec": 0.166456937789917
     },
     {
       "id": "mfg-02",
@@ -613,7 +704,7 @@
       "capabilities_count": 0,
       "snapshot_date": "2026-10-13T22:16:56.827003Z",
       "pass": false,
-      "elapsed_sec": 0.26352477073669434
+      "elapsed_sec": 0.29202890396118164
     },
     {
       "id": "gen-01",
@@ -624,7 +715,7 @@
       "capabilities_count": 0,
       "snapshot_date": "2026-10-13T22:16:58.694257Z",
       "pass": false,
-      "elapsed_sec": 0.11219024658203125
+      "elapsed_sec": 0.11101388931274414
     },
     {
       "id": "neg-01",
@@ -639,23 +730,29 @@
       "id": "neg-02",
       "description": "Robotics developer platform / simulation software, not a deployable robot",
       "url": "https://developer.nvidia.com/isaac",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "needs_product_choice",
+      "extracted_type": "",
       "job_count": 0,
+      "correct_classification": false,
+      "classification_reason": "Isaac should be software/tooling (got '', state=needs_product_choice)",
       "snapshot_date": "2026-10-13T22:17:01.925008Z",
-      "pass": true,
-      "elapsed_sec": 1.4382565021514893
+      "pass": false,
+      "elapsed_sec": 0.3254413604736328
     },
     {
       "id": "neg-03",
       "description": "Non-robot automation company (industrial equipment, no robotics claim)",
       "url": "https://www.tennantco.com",
-      "bucket": "PASSED",
+      "bucket": "EXTRACTION_FAILED",
       "state": "needs_product_choice",
+      "extracted_type": "",
       "job_count": 0,
+      "correct_classification": false,
+      "classification_reason": "Tennant should be cleaning equipment (got '', state=needs_product_choice)",
       "snapshot_date": "2026-10-13T22:17:04.065431Z",
-      "pass": true,
-      "elapsed_sec": 0.03338122367858887
+      "pass": false,
+      "elapsed_sec": 0.12416601181030273
     }
   ]
 }

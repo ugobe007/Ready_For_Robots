@@ -171,7 +171,13 @@ def map_capability_to_ontology(plain_english: str) -> str:
 
 
 def test_negative_control(control: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
-    """Test a negative control and check expected behavior."""
+    """
+    Test a negative control and check expected behavior.
+    
+    Negative controls must be correctly classified (not just "couldn't understand"):
+    - neg-02 (NVIDIA Isaac): software/tooling classification + 0 buyer matches
+    - neg-03 (Tennant): partial-robot / equipment with autonomous line + 0 matches
+    """
     control_id = control['id']
     url = control['url']
     
@@ -237,21 +243,50 @@ def test_negative_control(control: dict[str, Any], use_live: bool = False) -> di
         
         state = result.get('state', 'unknown')
         job_count = result.get('job_count', 0)
+        robot_caps = result.get('robot_capabilities', {}) or {}
+        extracted_type = robot_caps.get('type', '').lower() if robot_caps.get('type') else ''
         
-        print(f"\nResult: state={state}, jobs={job_count}, time={elapsed:.1f}s")
+        print(f"\nResult: state={state}, jobs={job_count}, type={extracted_type}, time={elapsed:.1f}s")
         
-        # Negative controls should either:
-        # 1. Extract nothing (state=could_not_understand or needs_product_choice)
-        # 2. Extract with low confidence and source_type flag
-        # 3. Not match to buyer opportunities
+        # Check classification correctness
+        # neg-02 (NVIDIA Isaac): expect software/tooling classification
+        # neg-03 (Tennant): expect partial-robot / equipment detection
+        correct_classification = False
+        classification_reason = ""
         
-        passed = state in ['could_not_understand', 'needs_product_choice'] or job_count == 0
+        if control_id == 'neg-02':
+            # Should classify as software/tooling, not a robot product
+            correct_classification = (
+                'software' in extracted_type or
+                'platform' in extracted_type or
+                'tooling' in extracted_type
+            )
+            classification_reason = f"Isaac should be software/tooling (got '{extracted_type}', state={state})"
+        elif control_id == 'neg-03':
+            # Tennant: should detect as equipment manufacturer with autonomous line, not full robot OEM
+            correct_classification = (
+                'cleaning' in extracted_type or
+                'equipment' in extracted_type
+            )
+            classification_reason = f"Tennant should be cleaning equipment (got '{extracted_type}', state={state})"
+        else:
+            # Other negative controls: just check no jobs matched
+            correct_classification = True
+            classification_reason = "Generic negative control"
+        
+        # Negative controls pass if: correct classification AND zero buyer matches
+        passed = correct_classification and job_count == 0
         bucket = 'PASSED' if passed else 'EXTRACTION_FAILED'
         
         if passed:
-            print(f"✓ PASSED: Correctly identified as non-robot or low-confidence")
+            print(f"✓ PASSED: {classification_reason} + 0 jobs")
         else:
-            print(f"❌ FAILED: Incorrectly matched {job_count} jobs")
+            reasons = []
+            if not correct_classification:
+                reasons.append(classification_reason)
+            if job_count > 0:
+                reasons.append(f"matched {job_count} jobs")
+            print(f"❌ FAILED: {'; '.join(reasons)}")
         
         return {
             'id': control_id,
@@ -259,7 +294,10 @@ def test_negative_control(control: dict[str, Any], use_live: bool = False) -> di
             'url': url,
             'bucket': bucket,
             'state': state,
+            'extracted_type': extracted_type,
             'job_count': job_count,
+            'correct_classification': correct_classification,
+            'classification_reason': classification_reason,
             'snapshot_date': snapshot['metadata'].get('fetch_date') if snapshot else None,
             'pass': passed,
             'elapsed_sec': elapsed,
@@ -406,10 +444,14 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
         expected_class = robot['expected_product_class']
         class_match = score_product_class(extracted_class, expected_class)
         
-        # Score capabilities (flexible matching via ontology)
+        # Score capabilities (1-to-1 matching, generic terms excluded from threshold)
         cap_keys = [c.get('key') for c in capabilities]
-        matched_count, matched_labels = score_capabilities(cap_keys, robot['expected_capabilities'])
+        matched_count, matched_labels, matched_via = score_capabilities(cap_keys, robot['expected_capabilities'])
         cap_score = matched_count >= 2
+        
+        # Log matched_via for transparency
+        if matched_via:
+            print(f"Matched via: {matched_via}")
         
         # Check jobs (buyer verticals)
         jobs = result.get('jobs', [])[:10]
@@ -453,6 +495,7 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
             'capabilities_extracted': cap_keys,
             'expected_capabilities': robot['expected_capabilities'],
             'matched_capabilities': matched_labels,
+            'matched_via': matched_via,
             'cap_count': matched_count,
             'cap_score': cap_score,
             'job_count': job_count,

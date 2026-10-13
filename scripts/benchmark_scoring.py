@@ -158,13 +158,24 @@ def score_product_class(extracted_type: str, expected_class: str) -> bool:
     return False
 
 
+# Generic terms that don't count toward minimum match threshold
+GENERIC_TERMS = {
+    "mobile", "construction_task", "indoor", "outdoor", "manipulate",
+    "transport", "inspect", "food_prep", "humanoid", "carry", "serving_task"
+}
+
+
 def score_capabilities(
     extracted_caps: list[str],
     expected_caps: list[str],
     min_required: int = 2,
-) -> tuple[int, list[str]]:
+) -> tuple[int, list[str], dict[str, str]]:
     """
     Count how many expected capabilities were extracted.
+    
+    Enforces 1-to-1 matching: each extracted capability can satisfy at most
+    one expected capability. Generic terms (mobile, construction_task) don't
+    count toward the minimum threshold.
     
     Args:
         extracted_caps: List of ontology capability keys from extraction
@@ -172,21 +183,36 @@ def score_capabilities(
         min_required: Minimum number required to pass (default 2)
         
     Returns:
-        (matched_count, list_of_matched_benchmark_labels)
+        (matched_count, list_of_matched_benchmark_labels, matched_via_dict)
+        where matched_via_dict maps expected_label -> extracted_predicate
     """
     extracted_norm = [c.lower().replace(' ', '_').replace('-', '_') for c in extracted_caps]
     
     matched = []
+    matched_via = {}  # expected_label -> extracted_predicate
+    used_extracted = set()  # Track which extracted capabilities have been used
+    
     for expected_cap in expected_caps:
         expected_norm = expected_cap.lower().replace(' ', '_').replace('-', '_')
         
         # Get acceptable ontology terms for this benchmark capability
         acceptable_terms = CAPABILITY_MAP.get(expected_norm, [expected_norm])
         
-        # Check if any extracted capability matches
+        # Find the first extracted capability that matches and hasn't been used
         for term in acceptable_terms:
-            if any(term in ext or ext in term for ext in extracted_norm):
-                matched.append(expected_cap)
+            for i, ext in enumerate(extracted_norm):
+                if i not in used_extracted and (term in ext or ext in term):
+                    matched.append(expected_cap)
+                    matched_via[expected_cap] = ext
+                    used_extracted.add(i)
+                    break
+            if expected_cap in matched:
                 break
     
-    return len(matched), matched
+    # Count only non-generic matches toward threshold
+    non_generic_matches = [
+        label for label in matched
+        if matched_via.get(label) not in GENERIC_TERMS
+    ]
+    
+    return len(non_generic_matches), matched, matched_via
