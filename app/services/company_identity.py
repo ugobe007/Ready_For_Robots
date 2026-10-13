@@ -34,6 +34,7 @@ _PLACE_NAME_BRANDS = frozenset({
 
 _HEADLINE_RE = re.compile(
     r"^(?:how|why|what|when|where|who|which|is|are|can|will|this|these|top|best|inside|watch|video|report)\b"
+    r"|^(?:fear|comes|new|technology|workplace|hospital|healthcare|immigration)\b"
     r"|\b(?:are|is|was|were|will|says?|said|could|would|announces?|reveals?|launch(?:es)?|plans?)\b.*\b\w+\b"
     r"|\bto (?:open|build|deploy|add|launch|use|test|buy|invest|expand|hire|cut|replace|roll)\b"
     r"|^(?:kill|preventing|preventing|enhancing|improving|transforming|addressing|tackling|exploring|examining)\b"
