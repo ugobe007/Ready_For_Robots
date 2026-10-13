@@ -229,7 +229,10 @@ def test_negative_control(control: dict[str, Any], use_live: bool = False) -> di
     # Run extraction
     try:
         t0 = time.time()
-        result = match_robot_url_v1(url)
+        if snapshot and not use_live:
+            result = match_robot_url_v1(url, page_text=snapshot['text'], page_html=snapshot['html'])
+        else:
+            result = match_robot_url_v1(url)
         elapsed = time.time() - t0
         
         state = result.get('state', 'unknown')

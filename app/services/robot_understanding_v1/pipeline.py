@@ -134,6 +134,10 @@ def build_robot_profile(
     else:
         safe = assert_public_http_url(url)
     
+    # Original live fetch logic
+    live_budget = _source_budget_sec()
+    live_deadline = (time.monotonic() + live_budget) if live_budget is not None else None
+    
     # If page_text is provided (offline mode), skip live fetch
     if page_text is not None:
         home = FetchedPage(
@@ -151,9 +155,6 @@ def build_robot_profile(
         if timings is not None:
             timings["home_fetch"] = "cached"
     else:
-        # Original live fetch logic
-        live_budget = _source_budget_sec()
-        live_deadline = (time.monotonic() + live_budget) if live_budget is not None else None
         # Indexed OEM homepages (and SKU URLs) skip live fetch — Reflex-class
         # sites where every SKU URL is the homepage are normal, not an error.
         # Unknown hosts still load the submitted page under live_deadline; never
@@ -248,6 +249,8 @@ def build_robot_profile(
     home_blocked = bool(
         getattr(home, "fetch_degraded", False) and not (home.text or "").strip()
     )
+    # Offline mode: treat cached text like catalog path (skip fan-out)
+    cached_offline = page_text is not None
     if catalog_skus:
         # Indexed vendor: identity and specs come from the vendor index.
         # The submitted URL was not fetched; do not guess hubs.
@@ -261,6 +264,18 @@ def build_robot_profile(
         notes_extra.append(
             "Catalog vendor — skipped live manufacturer fetch and source fan-out; "
             "facts come from the vendor index."
+        )
+    elif cached_offline:
+        # Offline mode with cached text — skip source fan-out
+        collected = []
+        home_src = collected_from_page(home)
+        if home_src:
+            collected.append(home_src)
+        if timings is not None:
+            timings["sources_ms"] = int((time.perf_counter() - t_sources) * 1000)
+            timings["source_strategy"] = "cached_offline"
+        notes_extra.append(
+            "Using cached page text (offline mode) — skipped live source fan-out."
         )
     elif home_blocked:
         collected = []
