@@ -125,6 +125,12 @@ def test_ranking_pools_duplicates_and_lists_once(db):
     ("Health Care", "topic"), ("Coming Soon", "topic"), ("Patient Testing Set", "topic"),
     ("Innovative Two-Step Treatment", "topic"), ("Rewiring the future", "sentence"),
     ("Detroit News", "outlet"), ("Washington Post", "outlet"), ("USA Today", "outlet"),
+    ("Kill Viruses", "topic"), ("Fear Grips Wall Street", "headline"), ("Comes Next", "topic"),
+    ("Greening the future", "topic"), ("AI agent", "topic"), ("Actuator", "topic"),
+    ("Competitive Analysis", "topic"), ("Enhancing hospitality", "topic"),
+    ("Immigration Crackdown Linked", "headline"), ("Hospital Outsourcing", "topic"),
+    ("Healthcare Isn", "topic"), ("Early-June", "topic"), ("Press", "topic"), ("Moxie", "topic"),
+    ("New Survey", "topic"), ("Technology Implementation", "topic"), ("Workplace Injuries", "topic"),
 ])
 def test_review_junk_names(name, kind):
     reason = junk_name_reason(name)
