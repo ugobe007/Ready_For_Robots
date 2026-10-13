@@ -835,3 +835,151 @@ def match_from_chip(chip: str, robot_name: str = "your robot") -> dict[str, Any]
     out["needs_product_choice"] = False
     out["robot_capabilities"] = None
     return out
+
+
+def match_robot_url_v1(
+    url: str,
+    *,
+    chip: str | None = None,
+    product_name: str | None = None,
+) -> dict[str, Any]:
+    """
+    URL → Understanding v1 pipeline → derive capabilities → match jobs.
+    
+    Uses the full ontology-driven understanding system instead of keyword matching.
+    Handles hundreds of robot types automatically via 33 inference rules (R1-R33).
+    """
+    from app.services.robot_understanding_v1.pipeline import build_robot_profile
+    from app.services.robot_capability_derive import derive_capabilities
+    
+    stages = [
+        {"id": "identify_company", "label": "Identifying company", "status": "pending", "detail": None},
+        {"id": "research_capabilities", "label": "Understanding capabilities", "status": "pending", "detail": None},
+        {"id": "match_jobs", "label": "Searching jobs", "status": "pending", "detail": None},
+    ]
+    
+    try:
+        # Use Understanding v1 pipeline to extract grounded facts
+        robot_profile = build_robot_profile(url, product_name=product_name)
+        
+        stages[0]["status"] = "done"
+        stages[0]["detail"] = robot_profile.company.name
+        
+        # Check if product choice is needed
+        if robot_profile.needs_product_choice:
+            return {
+                "state": "needs_product_choice",
+                "robot_name": robot_profile.company.name,
+                "company_name": robot_profile.company.name,
+                "products": [{"id": p.id, "name": p.name, "display_class": p.display_class} for p in robot_profile.products],
+                "needs_product_choice": True,
+                "research_stages": stages,
+                "source_url": url,
+                "capabilities": [],
+                "families": [],
+                "jobs": [],
+                "job_count": 0,
+            }
+        
+        stages[1]["status"] = "done"
+        
+        # Derive capabilities from grounded facts using ontology
+        profile_dict = robot_profile.to_dict()
+        derived_caps = derive_capabilities(profile_dict)
+        
+        # Convert derived capabilities to CapabilityProfile for matcher
+        profile = CapabilityProfile(
+            robot_name=robot_profile.selected_product.name if robot_profile.selected_product else robot_profile.company.name,
+            robot_class=robot_profile.selected_product.display_class if robot_profile.selected_product else None,
+        )
+        
+        for cap_key, cap in derived_caps.items():
+            if cap.present:
+                profile.capabilities.append(
+                    CapabilitySignal(
+                        key=cap_key,
+                        label=cap.label,
+                        confidence=0.85,
+                        excerpt=cap.evidence,
+                        truth_state="confirmed" if cap.derivation == "explicit" else "inferred",
+                    )
+                )
+        
+        # Set evidence count and understood flag
+        profile.evidence_count = len(
+            [c for c in profile.capabilities if c.truth_state == "confirmed"]
+        )
+        
+        # Derive families from capabilities
+        from app.services.robot_capability_profile import _families_from_capabilities
+        profile.families = _families_from_capabilities(profile.capabilities, profile.robot_class)
+        
+        # Set understood flag
+        confirmed_keys = {c.key for c in profile.capabilities if c.truth_state == "confirmed"}
+        profile.understood = (
+            profile.evidence_count >= 2
+            or bool(
+                confirmed_keys
+                & {
+                    "mobile",
+                    "humanoid",
+                    "dual_arm",
+                    "scrub",
+                    "inspect",
+                    "load_unload",
+                    "dexterous",
+                    "tote_handling",
+                    "carry",
+                    "pallet_move",
+                    "manipulate",
+                    "transport",
+                    "healthcare_task",
+                    "construction_task",
+                    "agriculture_task",
+                    "warehouse_task",
+                }
+            )
+        )
+        
+        stages[2]["status"] = "done"
+        
+        # Match jobs using derived capabilities
+        result = match_jobs_for_profile(profile)
+        result["research_stages"] = stages
+        result["company_name"] = robot_profile.company.name
+        result["products"] = [{"id": p.id, "name": p.name, "display_class": p.display_class} for p in robot_profile.products]
+        result["needs_product_choice"] = False
+        result["source_url"] = url
+        result["evidence_urls"] = [s.url for s in robot_profile.sources[:3]]
+        result["robot_capabilities"] = {
+            "type": robot_profile.selected_product.display_class if robot_profile.selected_product else "Unknown",
+            "use_case": "General Automation",  # Could derive from facts
+            "capabilities": [cap.label for cap in derived_caps.values() if cap.present],
+            "profile_score": 85,  # Could use robot_profile.profile_confidence
+        }
+        
+        return result
+        
+    except UrlSafetyError:
+        raise
+    except Exception as e:
+        # Fallback to chip-based matching if Understanding v1 fails
+        if chip:
+            return match_from_chip(chip, robot_name="your robot")
+        
+        # Return error state
+        return {
+            "state": "could_not_understand",
+            "robot_name": "your robot",
+            "capabilities": [],
+            "families": [],
+            "jobs": [],
+            "job_count": 0,
+            "company_name": None,
+            "products": [],
+            "needs_product_choice": False,
+            "research_stages": stages,
+            "source_url": url,
+            "robot_capabilities": None,
+            "error": str(e),
+        }
