@@ -35,25 +35,33 @@ def test_healthcare_robot_matches_only_healthcare():
         assert is_healthcare, f"Healthcare robot matched non-healthcare job: {company} - {title}"
 
 
-def test_locus_healthcare_operations_matches_healthcare():
-    """Locus with 'Healthcare Operations' use case should match healthcare jobs."""
+def test_locus_multi_industry_matches_broadly():
+    """Locus serves multiple industries (healthcare, retail, 3PL, pharma) and should match broadly."""
     result = post_robot_job_match(
         RobotJobMatchIn(url="https://locusrobotics.com/")
     )
     
     caps = {c["key"] for c in result["capabilities"]}
-    assert "healthcare_task" in caps, "Locus with Healthcare Operations should have healthcare_task"
+    
+    # Locus lists 7+ industries, so should NOT have domain-specific task capability
+    domain_caps = {"healthcare_task", "warehouse_task", "factory_task", "logistics_task"}
+    assert not (caps & domain_caps), f"Multi-industry Locus should not have domain task caps, got: {caps & domain_caps}"
+    
+    # Should have use_case = "General Automation" since it serves 3+ industries
+    robot_caps = result.get("robot_capabilities", {})
+    assert robot_caps.get("use_case") == "General Automation", f"Locus should have General Automation use case, got: {robot_caps.get('use_case')}"
     
     jobs = result["jobs"]
-    assert len(jobs) > 0
+    assert len(jobs) > 10, "Multi-industry robot should match many jobs"
     
-    # Should match hospital jobs
-    healthcare_jobs = [
-        j for j in jobs
-        if any(kw in (j.get("company_name", "") + " " + j.get("title", "")).lower()
-               for kw in ["hospital", "healthcare", "medical"])
-    ]
-    assert len(healthcare_jobs) > 0, "Healthcare-focused Locus should match hospital jobs"
+    # Should match jobs from multiple domains
+    companies = [j.get("company_name", "").lower() for j in jobs]
+    has_hospital = any("hospital" in c or "health" in c for c in companies)
+    has_warehouse = any(any(kw in c for kw in ["sanmar", "warehouse", "fulfillment"]) for c in companies)
+    has_mfg = any(any(kw in c for kw in ["surgical", "industrial", "intuitive"]) for c in companies)
+    
+    domain_count = sum([has_hospital, has_warehouse, has_mfg])
+    assert domain_count >= 2, f"Multi-industry Locus should match multiple domains, got: hospital={has_hospital}, warehouse={has_warehouse}, mfg={has_mfg}"
 
 
 def test_generic_warehouse_matches_broadly():

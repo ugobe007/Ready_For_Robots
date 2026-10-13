@@ -528,51 +528,60 @@ def profile_from_robot_ready_caps(
     tl = rtype.lower()
     ucl = use_case.lower()
     
+    # Humanoid and general-purpose robots should NOT get domain restrictions
+    is_general_purpose = (
+        "humanoid" in tl or 
+        "general" in ucl or 
+        ucl in {"", "general automation"}
+    )
+    
     if "clean" in tl or "disinfect" in tl:
         add("scrub", "Floor cleaning / disinfection", rtype)
         add("mobile", "Mobile / autonomous movement", rtype)
     elif "warehouse" in tl or "logistics" in tl or "delivery" in tl or "transport" in tl:
         add("mobile", "Mobile / autonomous movement", rtype)
         add("material_transport", "Material transport", rtype)
-        # Add domain task capability based on type OR use case
-        if "warehouse" in tl or "fulfillment" in tl or "warehouse" in ucl or "fulfillment" in ucl:
-            add("warehouse_task", "Warehouse / fulfillment work", rtype if "warehouse" in tl else use_case)
-        elif "logistics" in tl or "3pl" in tl or "logistics" in ucl:
-            add("logistics_task", "3PL / cross-dock / sortation work", rtype if "logistics" in tl else use_case)
-        elif "healthcare" in ucl or "hospital" in ucl or "clinical" in ucl or "medical" in ucl:
-            add("healthcare_task", "Hospital / clinical assistant work", use_case)
-        elif "hospitality" in ucl or "hotel" in ucl or "restaurant" in ucl:
-            add("hospitality_task", "Hotel / guest / housekeeping work", use_case)
+        # Only add domain tasks for dedicated (non-general-purpose) robots
+        if not is_general_purpose:
+            if "warehouse" in tl or "fulfillment" in tl:
+                add("warehouse_task", "Warehouse / fulfillment work", rtype)
+            elif "logistics" in tl or "3pl" in tl:
+                add("logistics_task", "3PL / cross-dock / sortation work", rtype)
     elif "manufactur" in tl or "factory" in tl or "industrial" in tl or "cnc" in tl:
         add("mobile", "Mobile / autonomous movement", rtype)
         add("material_transport", "Material transport", rtype)
-        add("factory_task", "Factory / plant machine-tend work", rtype)
+        if not is_general_purpose:
+            add("factory_task", "Factory / plant machine-tend work", rtype)
     elif "service" in tl:
         add("mobile", "Mobile / autonomous movement", rtype)
     elif "medical" in tl or "healthcare" in tl:
         add("mobile", "Mobile / autonomous movement", rtype)
         add("material_transport", "Material transport", use_case or rtype)
+        # Medical/Healthcare in TYPE means dedicated healthcare robot (like Moxi)
         add("healthcare_task", "Hospital / clinical assistant work", rtype)
     elif "hospitality" in tl or "hotel" in tl or "restaurant" in tl:
         add("mobile", "Mobile / autonomous movement", rtype)
         add("material_transport", "Material transport", rtype)
-        add("hospitality_task", "Hotel / guest / housekeeping work", rtype)
+        if not is_general_purpose:
+            add("hospitality_task", "Hotel / guest / housekeeping work", rtype)
 
-    # Additional domain detection from use case
-    if "warehouse" in ucl or "fulfillment" in ucl:
-        add("material_transport", "Material transport", use_case)
-        add("mobile", "Mobile / autonomous movement", use_case)
-        add("warehouse_task", "Warehouse / fulfillment work", use_case)
-    elif "logistics" in ucl:
-        add("material_transport", "Material transport", use_case)
-        add("mobile", "Mobile / autonomous movement", use_case)
-        add("logistics_task", "3PL / cross-dock / sortation work", use_case)
-    elif "healthcare" in ucl or "hospital" in ucl or "clinical" in ucl:
-        if "healthcare_task" not in seen:
-            add("healthcare_task", "Hospital / clinical assistant work", use_case)
-    elif "hospitality" in ucl or "hotel" in ucl:
-        if "hospitality_task" not in seen:
-            add("hospitality_task", "Hotel / guest / housekeeping work", use_case)
+    # Additional domain detection from use case (ONLY for non-general-purpose robots)
+    # Skip if use_case is "General Automation" or robot is humanoid
+    if not is_general_purpose:
+        if "warehouse" in ucl or "fulfillment" in ucl:
+            add("material_transport", "Material transport", use_case)
+            add("mobile", "Mobile / autonomous movement", use_case)
+            add("warehouse_task", "Warehouse / fulfillment work", use_case)
+        elif "logistics" in ucl:
+            add("material_transport", "Material transport", use_case)
+            add("mobile", "Mobile / autonomous movement", use_case)
+            add("logistics_task", "3PL / cross-dock / sortation work", use_case)
+        elif "healthcare" in ucl or "hospital" in ucl or "clinical" in ucl:
+            if "healthcare_task" not in seen:
+                add("healthcare_task", "Hospital / clinical assistant work", use_case)
+        elif "hospitality" in ucl or "hotel" in ucl:
+            if "hospitality_task" not in seen:
+                add("hospitality_task", "Hotel / guest / housekeeping work", use_case)
 
     for cap in ready_caps:
         label = str(cap).strip()

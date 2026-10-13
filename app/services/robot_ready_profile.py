@@ -48,15 +48,39 @@ def analyze_robot_capabilities(robot_name: str, page_text: str) -> Dict[str, Any
     elif any(kw in text_lower for kw in ["surgery", "patient", "medical", "healthcare"]):
         robot_type = "Medical/Healthcare"
 
+    # Detect use case — only assign specific use case if robot serves primarily ONE industry
+    # If robot lists multiple industries (3+), keep as "General Automation"
     use_case = "General Automation"
+    
+    # Count how many industry keywords are present
+    industry_matches = []
     if "hotel" in text_lower or "hospitality" in text_lower:
-        use_case = "Hospitality Services"
-    elif re.search(r"\bhospitals?\b|\bhealthcare\b|\bmedical\b|\bclinic\b|\bpatient\b", text_lower):
-        use_case = "Healthcare Operations"
-    elif "warehouse" in text_lower or "distribution" in text_lower:
-        use_case = "Warehouse Logistics"
-    elif "restaurant" in text_lower or "food service" in text_lower:
-        use_case = "Food Service"
+        industry_matches.append("hospitality")
+    if re.search(r"\bhospitals?\b|\bhealthcare\b|\bmedical\b|\bclinic\b|\bpatient\b|\bpharma\b", text_lower):
+        industry_matches.append("healthcare")
+    if "warehouse" in text_lower or "distribution" in text_lower or "fulfillment" in text_lower:
+        industry_matches.append("warehouse")
+    if "restaurant" in text_lower or "food service" in text_lower:
+        industry_matches.append("food_service")
+    if "retail" in text_lower or "e-commerce" in text_lower or "grocery" in text_lower:
+        industry_matches.append("retail")
+    if re.search(r"\b3pl\b", text_lower) or "logistics" in text_lower:
+        industry_matches.append("logistics")
+    if "industrial" in text_lower or "manufacturing" in text_lower or "factory" in text_lower:
+        industry_matches.append("industrial")
+    
+    # Only assign specific use case if robot primarily serves 1-2 industries
+    # If 3+ industries mentioned, it's a multi-industry platform → keep "General Automation"
+    if len(industry_matches) <= 2:
+        if "hospitality" in industry_matches:
+            use_case = "Hospitality Services"
+        elif "healthcare" in industry_matches:
+            use_case = "Healthcare Operations"
+        elif "warehouse" in industry_matches:
+            use_case = "Warehouse Logistics"
+        elif "food_service" in industry_matches:
+            use_case = "Food Service"
+    # else: 3+ industries → remains "General Automation"
 
     capabilities = []
     capability_keywords = {
