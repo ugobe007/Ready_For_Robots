@@ -298,6 +298,9 @@ def build_job_opportunity(
     for ev in readiness.evidence[:3]:
         # Use seen_at if available, otherwise try to extract from URL or text
         date = ev.seen_at if hasattr(ev, 'seen_at') and ev.seen_at else ""
+        if date:
+            # Truncate to YYYY-MM-DD if it's a full timestamp
+            date = date[:10] if len(date) > 10 else date
         if not date:
             date = extract_date_from_evidence(ev.source_url or "", ev.text)
         evidence_quotes.append((ev.text, date))
