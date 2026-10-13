@@ -840,6 +840,8 @@ def match_from_chip(chip: str, robot_name: str = "your robot") -> dict[str, Any]
 def match_robot_url_v1(
     url: str,
     *,
+    page_text: str | None = None,
+    page_html: str | None = None,
     chip: str | None = None,
     product_name: str | None = None,
 ) -> dict[str, Any]:
@@ -848,6 +850,13 @@ def match_robot_url_v1(
     
     Uses the full ontology-driven understanding system instead of keyword matching.
     Handles hundreds of robot types automatically via 33 inference rules (R1-R33).
+    
+    Args:
+        url: Robot page URL
+        page_text: Optional cached page text (for offline testing)
+        page_html: Optional cached HTML (for offline testing)
+        chip: Optional identity chip
+        product_name: Optional product name hint
     """
     from app.services.robot_understanding_v1.pipeline import build_robot_profile
     from app.services.robot_capability_derive import derive_capabilities
@@ -860,7 +869,12 @@ def match_robot_url_v1(
     
     try:
         # Use Understanding v1 pipeline to extract grounded facts
-        robot_profile = build_robot_profile(url, product_name=product_name)
+        robot_profile = build_robot_profile(
+            url, 
+            page_text=page_text,
+            page_html=page_html,
+            product_name=product_name
+        )
         
         stages[0]["status"] = "done"
         stages[0]["detail"] = robot_profile.company.name

@@ -89,6 +89,8 @@ def _source_budget_sec() -> float | None:
 def build_robot_profile(
     url: str,
     *,
+    page_text: str | None = None,
+    page_html: str | None = None,
     product_name: str | None = None,
     max_sources: int = 6,
     auto_select_single: bool = True,
@@ -103,6 +105,16 @@ def build_robot_profile(
 
     When product_name is supplied (CLI/API), it ALWAYS becomes selected_product
     even if homepage resolve missed the string — company-level research is fallback only.
+
+    Args:
+        url: Robot page URL
+        page_text: Optional cached page text (for offline testing). If provided,
+                   skips live fetch and uses this text instead.
+        page_html: Optional cached HTML (for offline testing). Used with page_text.
+        product_name: Optional product name hint
+        max_sources: Maximum sources to collect
+        auto_select_single: Auto-select if only one product found
+        timings: Optional dict to fill with timing info
 
     timings, if provided, is filled with resolve_ms and profile_ms.
     """
@@ -121,39 +133,58 @@ def build_robot_profile(
         safe = normalized
     else:
         safe = assert_public_http_url(url)
-    live_budget = _source_budget_sec()
-    live_deadline = (time.monotonic() + live_budget) if live_budget is not None else None
-    # Indexed OEM homepages (and SKU URLs) skip live fetch — Reflex-class
-    # sites where every SKU URL is the homepage are normal, not an error.
-    # Unknown hosts still load the submitted page under live_deadline; never
-    # Wayback it (archive copies of challenged hosts sat FIND on a ~90s spinner).
-    if catalog_skus:
-        home = _catalog_identity_page(safe)
-        if timings is not None:
-            timings["home_fetch"] = "skipped"
-    else:
-        home_timeout = timeout_for_deadline(
-            live_deadline, default=DEFAULT_PAGE_TIMEOUT
+    
+    # If page_text is provided (offline mode), skip live fetch
+    if page_text is not None:
+        home = FetchedPage(
+            url=safe,
+            final_url=safe,
+            status_code=200,
+            title="",
+            text=page_text,
+            html=page_html or "",
+            links=[],
+            fetch_degraded=False,
+            fetch_notes=["Using cached page text (offline mode)"],
+            content_type="text/html",
         )
-        if home_timeout is None:
-            home = FetchedPage(
-                url=safe,
-                final_url=safe,
-                status_code=0,
-                title=None,
-                text="",
-                html="",
-                links=[],
-                fetch_degraded=True,
-                fetch_notes=["Live manufacturer fetch skipped — FIND deadline exhausted."],
-                content_type="text/html",
-            )
-        else:
-            home = fetch_page(
-                safe, timeout=home_timeout, allow_archive=False
-            )
         if timings is not None:
-            timings["home_fetch"] = "live"
+            timings["home_fetch"] = "cached"
+    else:
+        # Original live fetch logic
+        live_budget = _source_budget_sec()
+        live_deadline = (time.monotonic() + live_budget) if live_budget is not None else None
+        # Indexed OEM homepages (and SKU URLs) skip live fetch — Reflex-class
+        # sites where every SKU URL is the homepage are normal, not an error.
+        # Unknown hosts still load the submitted page under live_deadline; never
+        # Wayback it (archive copies of challenged hosts sat FIND on a ~90s spinner).
+        if catalog_skus:
+            home = _catalog_identity_page(safe)
+            if timings is not None:
+                timings["home_fetch"] = "skipped"
+        else:
+            home_timeout = timeout_for_deadline(
+                live_deadline, default=DEFAULT_PAGE_TIMEOUT
+            )
+            if home_timeout is None:
+                home = FetchedPage(
+                    url=safe,
+                    final_url=safe,
+                    status_code=0,
+                    title=None,
+                    text="",
+                    html="",
+                    links=[],
+                    fetch_degraded=True,
+                    fetch_notes=["Live manufacturer fetch skipped — FIND deadline exhausted."],
+                    content_type="text/html",
+                )
+            else:
+                home = fetch_page(
+                    safe, timeout=home_timeout, allow_archive=False
+                )
+            if timings is not None:
+                timings["home_fetch"] = "live"
     resolved = resolve_identity(safe, home, product_hint=product_name)
     resolve_ms = int((time.perf_counter() - t0) * 1000)
     if timings is not None:
