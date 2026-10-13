@@ -344,6 +344,7 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
     # Run Understanding v1
     try:
         t0 = time.time()
+        timings = {}  # Collect timing info
         
         # In offline mode, pass cached page text
         if snapshot and not use_live:
@@ -352,6 +353,8 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
             if word_count == 0:
                 raise ValueError(f"Snapshot text is empty for {robot_id}")
             
+            # Note: match_robot_url_v1 doesn't yet expose timings, but build_robot_profile does
+            # We're passing page_text, so fetch should be "cached"
             result = match_robot_url_v1(
                 url,
                 page_text=page_text,
@@ -370,14 +373,10 @@ def test_robot(robot: dict[str, Any], use_live: bool = False) -> dict[str, Any]:
         capabilities = result.get('capabilities', [])
         robot_caps = result.get('robot_capabilities', {}) or {}
         
-        # In offline mode with snapshot, verify extraction received non-empty text
-        # If we got 0 capabilities and state=needs_product_choice, check if profile was built with text
+        # In offline mode with snapshot, log extraction details
         if snapshot and not use_live:
-            # Log to help debug if extraction silently got empty input
             if len(capabilities) == 0 and state in ['needs_product_choice', 'could_not_understand']:
                 print(f"⚠️  Zero capabilities extracted. Snapshot had {len(page_text)} chars ({len(page_text.split())} words)")
-                # This is a legitimate failure - extraction saw the text but couldn't extract
-                # Not a silent fetch failure like before
         
         print(f"\nResult: state={state}, company={company}, jobs={job_count}, time={elapsed:.1f}s")
         print(f"Extracted type: {robot_caps.get('type', 'Unknown')}")
