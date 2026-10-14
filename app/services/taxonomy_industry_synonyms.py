@@ -88,6 +88,9 @@ def taxonomy_function_keys() -> frozenset[str]:
 
 def classify_industry(text: str | None) -> str | None:
     """Return one taxonomy industry key, or None when the label is not exact."""
+    raw_key = (text or "").strip().lower()
+    if raw_key in taxonomy_industry_keys():
+        return raw_key
     normalized = normalize_industry_text(text)
     if not normalized:
         return None
