@@ -68,6 +68,10 @@ celerybeat.pid
 # Runtime cache (newsletter edition, etc.)
 uploads/jobs_crm/
 data/
+# Root data/ stays ignored except data/seed/ (Bob's seed files and lexicon).
+!/data/
+/data/*
+!/data/seed/
 !app/data/
 !app/data/industry_sector_ontology.json
 !app/data/vendor_robots_index.json

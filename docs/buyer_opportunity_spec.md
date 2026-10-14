@@ -1,6 +1,6 @@
 # RFR Build Spec: Buyer Opportunities v1
 
-**Owner:** Bob Christopher · **Status:** approved for build · **Version:** 1.1 (2026-10-14, pilot industries confirmed)
+**Owner:** Bob Christopher · **Status:** approved for build · **Version:** 1.2 (2026-10-14: "robot job" definition, automation-intent signals, stage mapping, Phase 0.5)
 **Location in repo:** `docs/buyer_opportunity_spec.md`
 
 This document is the source of truth for what the agent builds next. If code, older docs, or `AGENTS.md` disagree with it, this document wins. If something here is unclear or seems wrong, **stop and ask Bob**; do not decide product meaning yourself. Changes to this spec require Bob's approval.
@@ -11,7 +11,9 @@ This document is the source of truth for what the agent builds next. If code, ol
 
 Ready For Robots finds companies that are ready to buy or pilot robots, and tells robot sellers **which company, which workflow, and why now**.
 
+- **A "job" in RFR is work a robot can perform.** A person may do that work today; what makes it a robot job is that the company is moving to **automate** it. Companies looking for automation are looking for robots, not people. "Robot Job Cards" stays as the product term, with this meaning only.
 - A **robot job** (buyer opportunity) = **company × workflow × readiness signals.**
+- Companies rarely say "we want robots." They describe **automation intent** in their own words ("streamline our production line," "improve operational efficiency," "reduce workflow friction"). Recognizing that language and tying it to a workflow is core to the product (§5a).
 - A **workflow** is a kind of work at a company that a robot could be hired to do (cleaning, delivery, food prep…). Workflows use the same values as the robot taxonomy's `functions`, so robots and buyers join directly.
 - A company that already deployed robots in a workflow is **committed in that workflow**, not as a company. Other workflows at that company can still be open.
 - The sales window is **before** a company commits: budgeting, modernizing, labor pressure, exploring, piloting. **A published RFP means budget is confirmed, which makes it the strongest signal.**
@@ -137,6 +139,7 @@ One row per buyer × workflow that matters.
 | workflow | taxonomy function, nullable (company-wide signal) |
 | signal_type | see §5 |
 | tier | `A`–`E` (derived from type) |
+| intent_strength | `explicit` or `implicit` (§5a); null for signal types where it doesn't apply |
 | title | short, human-readable |
 | evidence_text | quote from the source |
 | source_url | required (except `bob_seed`) |
@@ -181,12 +184,38 @@ Rules:
 
 ---
 
+## 5a. Automation intent: reading how companies say it
+
+Companies signal robot jobs in business language, not robot language. The classifier must recognize the **meaning**, the same way the robot extractor reads "physical AI for the construction workforce" as a construction robot.
+
+**Do not build this as keyword or regex matching.** Use the same approach as the robot extractor: an LLM reads the source, chooses from closed values (signal type, workflow, intent strength), and quotes its evidence, which must pass the evidence check. The lexicon file below is a set of **examples and test cases**, not a list of patterns.
+
+**Intent strength**
+
+| Strength | What it sounds like | Examples | Treatment |
+|---|---|---|---|
+| **explicit** | Names automation, robots, or a specific automation technology | "automate our fulfillment centers", "deploying AMRs", "robotic palletizing pilot", "automation engineer" | Full weight for its signal type |
+| **implicit** | Business goals that, **tied to a physical workflow**, mean automation | "streamline our production line" (Clorox-style), "improve operational efficiencies" or "reduce workflow friction" in distribution (Sysco-style), "increase throughput", "reduce manual handling", "modernize our warehouses", "labor productivity initiatives", "capex for supply chain transformation" | `modernization_plan` at **0.6 × weight**. Must name or clearly imply a workflow; otherwise company-wide |
+| **generic** | Corporate language with no physical workflow | "operational excellence", "digital transformation", "efficiency across the enterprise" | **Not a signal.** Not stored. |
+
+**Rules**
+- Implicit intent counts only when the text ties it to physical work the taxonomy covers (production line, warehouse, kitchen, housekeeping, patient transport, cleaning…). "Efficiency" about software, finance, or staffing alone is generic.
+- One source can produce several signals (e.g., a 10-K mentioning both warehouse automation and store modernization). Each gets its own workflow and evidence quote.
+- The industry rule still applies: the buyer is the company doing the work (Clorox = `manufacturing`; Sysco = `warehouse_distribution` / `logistics_parcel`).
+
+**Lexicon file:** `data/seed/automation_intent_lexicon.csv`. Each row is an example phrase with its intent strength, workflows, industries, and signal type. Bob adds rows as he spots new phrasing. Used in the classifier prompt as examples **and** as a test set: every row must classify as labeled before a classifier change merges. Hold-out discipline applies: new rows are added before a run, never in response to that run's results.
+
+**Best sources for this language:** public filings (SEC EDGAR 10-K, 10-Q, 8-K), earnings call transcripts, investor-day presentations, capex announcements, and press releases. These are where companies like Clorox and Sysco describe operational plans.
+
+---
+
 ## 6. Workflow status and scoring
 
 **Status rules**
-- A `deployment` signal (or a matching `deployment_events` row with stage live/committed) sets that workflow to `committed`. `committed` is sticky: no later signal changes it.
+- A `deployment` signal sets that workflow to `committed`.
+- Existing `deployment_events.deployment_stage` maps as follows. **Confirmed by Bob:** `PILOT` and `PROOF_OF_CONCEPT` → `piloting`. **Proposed (Bob to confirm):** `EVALUATION` → `exploring`; `LIVE_DEPLOYMENT` and `COMMERCIAL_DEPLOYMENT` → `committed`; any other stage → no status change, listed in a report. The mapping lives in config.
 - `pilot_or_budget` sets `piloting` or `exploring` per the evidence.
-- `rfp_open` sets `exploring`.
+- `rfp_open` sets `exploring` unless already `committed`.
 - Otherwise `open` if any signal exists, else `unknown`.
 
 **Committed workflows are never shown as opportunities.** The card for that buyer can mention them ("already using cleaning robots"), which also tells the seller about adjacent workflows.
@@ -213,7 +242,7 @@ For a robot product R (current row, `page_type = manufacturer_product_page`):
 2. Candidate buyers = buyers with an industry in `R.industries` ∩ pilot industries **and** a workflow row in the candidate workflows whose status is not `committed`.
 3. If R has no industries, use the industries most common for its `primary_class` (config map), and label the card "industry inferred".
 4. Exclude `is_robot_maker` buyers.
-5. Rank primary-function matches above all secondary matches; within each group, rank per §6.
+5. Rank per §6.
 
 Reverse view (for the home page): opportunities sorted by §6, each listing the robot products that match its workflow and industry.
 
@@ -241,7 +270,8 @@ API: `GET /api/v1/rfr/opportunities?robot_url=…` and `GET /api/v1/rfr/opportun
 |---|---|---|
 | **Bob's seed list** (`data/seed/rfr_seed_accounts.csv`) | buyers, industries, workflows, known deployments | Highest trust. Import script is idempotent and only inserts/updates `rfr_*` rows. |
 | **Backfill from `companies`** | buyers, industries | Map free-text `companies.industry` to taxonomy via `data/seed/industry_synonyms.csv`. Unmapped companies go in a review report, not guessed. Skip companies whose only source was job-posting feeds unless Bob approves. |
-| **SAM.gov** (running) | `rfp_open`, `procurement_award` | Buyer = the agency (industry `government`/`defense`, or `hospital` for VA medical centers). Keyword list in config. Respect `SAM_GOV_DAILY_REQUEST_LIMIT`. |
+| **SAM.gov** (running) | `rfp_open`, `procurement_award` | Buyer = the agency or facility. Tag `government`/`defense` **and** the industry of the facility doing the work (VA medical center → `hospital`, distribution depot → `warehouse_distribution`, airport authority → `airport`), so government RFPs show up in pilot industries. Keyword list in config. Respect `SAM_GOV_DAILY_REQUEST_LIMIT`. |
+| **SEC filings + earnings calls** (new) | `modernization_plan`, `pilot_or_budget`, `expansion`, `deployment` | SEC EDGAR (free API) for 10-K/10-Q/8-K; earnings transcripts where licensed. Classified per §5a. Start with public companies in Bob's seed list. |
 | **RFP marketplace scraper** (idle) | `rfp_open` | Revive outside Celery (Fly scheduled machine or GitHub Action). Separate PR. |
 | **News / RSS** (existing) | `pilot_or_budget`, `modernization_plan`, `expansion`, `deployment` | Classify each article into a signal type with an evidence quote; same evidence check as the extractor. |
 | **deployment_events** (existing) | workflow status | Read-only. Map `work_type` / `workflow` to taxonomy functions. |
@@ -253,7 +283,17 @@ API: `GET /api/v1/rfr/opportunities?robot_url=…` and `GET /api/v1/rfr/opportun
 
 **Phase 0: Baseline (no code)**
 List what the live site does today, end to end, for 3 robot URLs, with screenshots or API output. Confirms what "broken" means.
-*Accept:* Bob agrees the list is accurate.
+*Accept:* Bob agrees the list is accurate. **Done 2026-10-14 (PR #318).** Finding: today's cards come from a bundled file of 134 seed/demo entries with no sources, and several card details are generated.
+
+**Phase 0.5: Honesty patch on the current site (small, ships first)**
+The new pipeline takes several phases; until then the live site must not present made-up details as fact. Changes to the **current** flow only:
+- Remove hash-generated deadlines, "spots open," and "applicants" values.
+- Remove hard-coded "30–90 day buying window," "$60–90k/yr public budget," "Operations Director," and "verified buyer" text.
+- Stop returning generated contact emails (`operations@<name>.com`) from any API.
+- Label every bundled seed/demo card clearly as **"Example"** on the card.
+- Never show a robot maker as a buyer (e.g., Intuitive Surgical); filter them out of the bundled cards.
+- Fix the Relay bug: the site's request adds two fields that turn a valid result into "no jobs." The site and API must return the same result for the same robot.
+*Accept:* for Locus Origin, ADAM, and Relay, every field on every card is either sourced or labeled Example; no generated emails anywhere in API responses; Relay shows its hospital results.
 
 **Phase 1: Tables + seed import**
 Migrations for §4 tables. Seed CSV import script. Industry synonym map plus backfill **report** (dry run; writes nothing).
@@ -286,7 +326,7 @@ Run on preview after Phase 4 and again after Phase 5. Bob picks the final 5; sug
 
 1. **A warehouse robot** (e.g., Locus): warehouses/3PLs, ranked with RFP or pilot signals first.
 2. **A factory robot** (e.g., OTTO Motors or a Universal Robots cobot): manufacturers, not warehouses, as buyers for in-plant work.
-3. **A RichTech product** (e.g., ADAM or Matradee): casinos, hotels, restaurants; Las Vegas filter shows local buyers.
+3. **RichTech ADAM** (drink-making and serving: cocktails, coffee): hotels, restaurants and bars, nightclubs (`restaurant` covers bars and clubs; casino clubs and lounges are `casino`). Workflow must be `food_beverage_prep`, not bussing, room service, or food running. Las Vegas filter shows local buyers.
 4. **Relay or Aethon** (hospital delivery): hospitals with delivery workflows; committed hospitals excluded for delivery.
 5. **A cleaning robot** (e.g., Avidbots): airports, retail, office buildings, hotels; excluding any already committed to cleaning robots.
 
@@ -309,6 +349,8 @@ For each: list the top 10 cards with reasons. Bob marks each card right / wrong 
 
 1. ~~Confirm pilot industries (§2).~~ Confirmed 2026-10-14: 8 groups in priority order.
 2. Provide the seed list (`rfr_seed_accounts.csv`), even 50–100 rows to start.
-3. Whether companies created only by job-posting feeds are kept in the backfill (§9).
-4. When to re-enable ATS feeds for `robotics_hiring` only (§9).
-5. Final 5 acceptance robots (§11).
+3. Confirm the rest of the stage mapping (§6): EVALUATION → exploring; LIVE and COMMERCIAL deployment → committed.
+4. Whether companies created only by job-posting feeds are kept in the backfill (§9).
+5. When to re-enable ATS feeds for `robotics_hiring` only (§9).
+6. Final 5 acceptance robots (§11).
+7. Keep adding automation-intent phrasing to the lexicon (§5a).

@@ -1,0 +1,21 @@
+example_phrase,intent_strength,signal_type,workflows,industries,notes
+streamline our production line,implicit,modernization_plan,machine_tending_assembly|picking_packing_palletizing,manufacturing|food_manufacturing,Bob's example (Clorox-style manufacturer language)
+improve operational efficiencies in our distribution network,implicit,modernization_plan,picking_packing_palletizing|delivery_transport,warehouse_distribution|logistics_parcel,Bob's example (Sysco-style distributor language)
+reduce workflow friction in our warehouses,implicit,modernization_plan,picking_packing_palletizing|delivery_transport,warehouse_distribution|3pl,Bob's example (Sysco-style); counts only because it names warehouses
+increase throughput at our fulfillment centers,implicit,modernization_plan,picking_packing_palletizing,warehouse_distribution|3pl,
+reduce manual handling on the line,implicit,modernization_plan,picking_packing_palletizing|machine_tending_assembly,manufacturing|food_manufacturing,
+modernize our distribution centers,implicit,modernization_plan,picking_packing_palletizing|delivery_transport,warehouse_distribution,
+supply chain transformation capex,implicit,modernization_plan,picking_packing_palletizing|delivery_transport,warehouse_distribution|manufacturing,Company-wide unless a site or workflow is named
+labor productivity initiatives in our stores,implicit,modernization_plan,cleaning|inspection,retail_store|grocery,
+improving the guest experience while managing labor costs in housekeeping,implicit,modernization_plan,cleaning|delivery_transport,hotel|casino,
+reduce nurse time spent on non-clinical tasks,implicit,modernization_plan,delivery_transport,hospital,Hospital delivery is the classic fit
+we are automating our fulfillment centers,explicit,pilot_or_budget,picking_packing_palletizing,warehouse_distribution|3pl,
+piloting autonomous mobile robots,explicit,pilot_or_budget,delivery_transport|picking_packing_palletizing,warehouse_distribution|manufacturing,
+robotic palletizing pilot at our plant,explicit,pilot_or_budget,picking_packing_palletizing,manufacturing|food_manufacturing,
+testing autonomous floor scrubbers in our terminals,explicit,pilot_or_budget,cleaning,airport,
+deploying service robots in our restaurants,explicit,pilot_or_budget,serving_hospitality|food_beverage_prep,restaurant|qsr_fast_food,
+hiring an automation engineer for our distribution center,explicit,robotics_hiring,picking_packing_palletizing,warehouse_distribution,Buyer hiring; never a robot maker
+robotics program manager for hospital operations,explicit,robotics_hiring,delivery_transport,hospital,
+operational excellence across the enterprise,generic,none,,,Not a signal: no physical workflow
+digital transformation to improve efficiency,generic,none,,,Not a signal: software/IT language
+efficiency in our finance and HR processes,generic,none,,,Not a signal: not physical work the taxonomy covers
