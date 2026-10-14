@@ -276,6 +276,28 @@ def test_job_board_kill_switch_leaves_intelligence(monkeypatch):
     assert "job-board-scraper" not in started
 
 
+def test_opportunity_feeds_start_with_job_boards_off(monkeypatch):
+    started = []
+
+    class FakeThread:
+        def __init__(self, target=None, daemon=None, name=None):
+            self.name = name
+
+        def start(self):
+            started.append(self.name)
+
+    monkeypatch.setenv("SKIP_CELERY", "1")
+    monkeypatch.setenv("FLY_APP_NAME", "ready-2-robot")
+    monkeypatch.setenv("ENABLE_SCHEDULED_JOB_BOARD", "0")
+    monkeypatch.setenv("ENABLE_OPPORTUNITY_FEEDS", "1")
+    monkeypatch.setattr("app.runtime_role.is_worker_process", lambda: True)
+    monkeypatch.setattr("app.main.threading.Thread", FakeThread)
+    from app.main import _start_scheduled_job_board
+
+    _start_scheduled_job_board()
+    assert started == ["opportunity-feeds"]
+
+
 def test_run_job_boards_uses_in_process_when_celery_skipped(monkeypatch):
     monkeypatch.setenv("SKIP_CELERY", "1")
     assert celery_disabled() is True

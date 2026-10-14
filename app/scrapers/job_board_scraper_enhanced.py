@@ -620,21 +620,27 @@ class EnhancedJobBoardScraper(BaseScraper):
 
         soup = BeautifulSoup(html, "html.parser")
         cards = self._collect_cards(soup, url)
-        try:
-            from app.scrapers.opportunity_feed_scraper import register_ats_boards_from_text
+        from app.services.job_posting_ingest_pause import source_kind_paused
 
-            register_ats_boards_from_text(self.db, html, found_on=url)
-        except Exception:
-            logger.debug("[JobBoardScraper] ATS discovery skipped", exc_info=True)
+        if not source_kind_paused("job_board"):
+            try:
+                from app.scrapers.opportunity_feed_scraper import register_ats_boards_from_text
+
+                register_ats_boards_from_text(self.db, html, found_on=url)
+            except Exception:
+                logger.debug("[JobBoardScraper] ATS discovery skipped", exc_info=True)
         return self.process_cards(cards, url)
 
-    def process_cards(self, cards: List[Dict[str, Any]], url: str) -> Dict[str, int]:
-        """Classify + persist normalized job cards (HTML boards, ATS APIs, aggregators)."""
-        from app.services.job_posting_ingest_pause import job_posting_ingest_paused
+    def process_cards(
+        self, cards: List[Dict[str, Any]], url: str, source_kind: str = "job_board"
+    ) -> Dict[str, int]:
+        """Classify + persist normalized job cards (HTML boards, ATS APIs, aggregators, tenders)."""
+        from app.services.job_posting_ingest_pause import source_kind_paused
 
         logger.info(f"[JobBoardScraper] Found {len(cards)} job postings from {url}")
-        if job_posting_ingest_paused():
-            logger.warning("[JobBoardScraper] paused (PAUSE_JOB_POSTING_INGEST); persisted 0 of %d", len(cards))
+        if source_kind_paused(source_kind):
+            logger.warning("[JobBoardScraper] %s paused (PAUSE_JOB_POSTING_INGEST); persisted 0 of %d",
+                           source_kind, len(cards))
             return {
                 "found": len(cards),
                 "robot_jobs": 0,

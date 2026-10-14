@@ -395,6 +395,8 @@ def run_sources(
     pause_s: float = 1.0,
     on_result: Optional[Callable[[OpportunitySource, Optional[dict], Optional[Exception]], None]] = None,
 ) -> dict[str, Any]:
+    from app.services.job_posting_ingest_pause import source_kind_paused
+
     scraper = _scraper(db)
     totals: dict[str, int] = {"sources": 0, "skipped_no_key": 0, "failed": 0, "found": 0, "robot_jobs": 0}
     missing_keys: set[str] = set()
@@ -407,9 +409,10 @@ def run_sources(
         totals["sources"] += 1
         try:
             cards = fetch(src)
-            for c in cards:
-                register_ats_boards_from_text(db, f"{c.get('url', '')} {c.get('html', '')}", found_on=src.label)
-            stats = scraper.process_cards(cards, src.label)
+            if not source_kind_paused(src.kind):
+                for c in cards:
+                    register_ats_boards_from_text(db, f"{c.get('url', '')} {c.get('html', '')}", found_on=src.label)
+            stats = scraper.process_cards(cards, src.label, source_kind=src.kind)
             totals["found"] += stats.get("found", 0)
             totals["robot_jobs"] += stats.get("robot_jobs", 0)
             logger.info("[OpportunityFeeds] %s found=%s robot_jobs=%s", src.label, stats.get("found"), stats.get("robot_jobs"))
@@ -435,22 +438,24 @@ def run_sources(
 def run_opportunity_feeds(kinds: Optional[Iterable[str]] = None, max_sources: Optional[int] = None) -> dict[str, Any]:
     """Scheduled entry point: catalog API sources + discovered ATS boards."""
     from app.database import SessionLocal
-    from app.services.job_posting_ingest_pause import PAUSED_RESULT, job_posting_ingest_paused
-
-    if job_posting_ingest_paused():
-        logger.warning("Opportunity feeds paused (PAUSE_JOB_POSTING_INGEST)")
-        return dict(PAUSED_RESULT)
+    from app.services.job_posting_ingest_pause import source_kind_paused
 
     cap = max_sources or int(os.getenv("OPPORTUNITY_FEEDS_MAX_SOURCES", "60"))
     db = SessionLocal()
     try:
         static = api_sources(kinds)
+        paused_kinds = sorted({s.kind for s in static if source_kind_paused(s.kind)})
+        static = [s for s in static if s.kind not in paused_kinds]
+        if paused_kinds:
+            logger.warning("Opportunity feeds: people-posting kinds paused (PAUSE_JOB_POSTING_INGEST): %s",
+                           ", ".join(paused_kinds))
         # Rotate so every API query runs over a day, not just the first `cap`.
         if len(static) > cap:
             cycle = int(time.time() // 3600)
             start = (cycle * cap) % len(static)
             static = (static[start:] + static[:start])[:cap]
-        discovered = discovered_board_sources(db, limit=max(10, cap // 2))
+        discovered = [(row, src) for row, src in discovered_board_sources(db, limit=max(10, cap // 2))
+                      if not source_kind_paused(src.kind)]
         by_src = {id(src): row for row, src in discovered}
 
         def on_result(src, stats, exc):
@@ -474,6 +479,7 @@ def run_opportunity_feeds(kinds: Optional[Iterable[str]] = None, max_sources: Op
         result = run_sources(db, static + [src for _, src in discovered], on_result=on_result)
         result["status"] = "ok"
         result["discovered_boards"] = len(discovered)
+        result["paused_kinds"] = paused_kinds
         return result
     finally:
         db.close()

@@ -5,11 +5,30 @@ from fastapi import HTTPException
 
 from app.scrapers import opportunity_feed_scraper as feeds
 from app.scrapers.job_board_scraper_enhanced import EnhancedJobBoardScraper
+from app.scrapers.robot_opportunity_sources import OpportunitySource, catalog
 from app.services import job_board_scraper_runner as runner
-from app.services.job_posting_ingest_pause import job_posting_ingest_paused
+from app.services.job_posting_ingest_pause import (
+    BUYER_SIGNAL,
+    FEED_CLASSIFICATION,
+    PEOPLE_POSTING,
+    job_posting_ingest_paused,
+    source_kind_paused,
+)
 
 CARD = {"title": "Warehouse Associate - Picker", "company": "Acme Logistics", "location": "Reno, NV",
         "desc": "Apply now, $18/hr", "url": "https://example.com/job/1"}
+PEOPLE_KINDS = ("job_board", "amazon_jobs", "greenhouse", "lever", "ashby", "smartrecruiters",
+                "workday", "adzuna", "jooble", "usajobs")
+
+
+def _scraper():
+    scraper = EnhancedJobBoardScraper.__new__(EnhancedJobBoardScraper)
+    scraper.db = MagicMock()
+    scraper.save_company = MagicMock()
+    scraper.save_signal = MagicMock()
+    scraper.request_count = 0
+    scraper.session_seen_fingerprints = set()
+    return scraper
 
 
 def test_paused_by_default(monkeypatch):
@@ -21,29 +40,81 @@ def test_paused_by_default(monkeypatch):
 def test_only_explicit_off_unpauses(monkeypatch, value):
     monkeypatch.setenv("PAUSE_JOB_POSTING_INGEST", value)
     assert job_posting_ingest_paused() is False
+    assert not any(source_kind_paused(k) for k in PEOPLE_KINDS)
 
 
-def test_paused_entry_points_touch_nothing(monkeypatch):
+def test_classification_people_paused_procurement_runs(monkeypatch):
+    monkeypatch.delenv("PAUSE_JOB_POSTING_INGEST", raising=False)
+    assert {k for k, v in FEED_CLASSIFICATION.items() if v == PEOPLE_POSTING} == set(PEOPLE_KINDS)
+    assert {k for k, v in FEED_CLASSIFICATION.items() if v == BUYER_SIGNAL} == {"sam_gov"}
+    assert all(source_kind_paused(k) for k in PEOPLE_KINDS)
+    assert source_kind_paused("sam_gov") is False
+    assert source_kind_paused("some_new_feed") is True
+
+
+def test_every_card_feed_kind_is_classified():
+    card_kinds = {s.kind for s in catalog() if s.kind != "rss_feed"}
+    assert card_kinds <= set(FEED_CLASSIFICATION)
+
+
+def test_job_board_entry_points_touch_nothing(monkeypatch):
     monkeypatch.delenv("PAUSE_JOB_POSTING_INGEST", raising=False)
     monkeypatch.setattr(runner, "job_board_urls", lambda **_: pytest.fail("fetched URLs while paused"))
     assert runner.run_scheduled_job_board_cycle()["status"] == "paused"
     assert runner.run_job_board_scraper_sync(industry="Logistics")["status"] == "paused"
-    monkeypatch.setattr(feeds, "api_sources", lambda *_: pytest.fail("loaded feeds while paused"))
-    assert feeds.run_opportunity_feeds()["status"] == "paused"
 
 
-def test_paused_process_cards_writes_nothing(monkeypatch):
+def test_opportunity_feeds_run_only_procurement_while_paused(monkeypatch):
+    import app.database
+
     monkeypatch.delenv("PAUSE_JOB_POSTING_INGEST", raising=False)
-    scraper = EnhancedJobBoardScraper.__new__(EnhancedJobBoardScraper)
-    scraper.db = MagicMock()
-    scraper.save_company = MagicMock()
-    scraper.save_signal = MagicMock()
-    stats = scraper.process_cards([CARD], "https://example.com/board")
-    assert stats["paused"] is True and stats["robot_jobs"] == 0 and stats["signals_only"] == 0
-    scraper.save_company.assert_not_called()
-    scraper.save_signal.assert_not_called()
-    scraper.db.add.assert_not_called()
-    scraper.db.commit.assert_not_called()
+    monkeypatch.setattr(app.database, "SessionLocal", MagicMock)
+    monkeypatch.setattr(feeds, "discovered_board_sources", lambda db, limit: [
+        (MagicMock(), OpportunitySource("greenhouse", "Acme (greenhouse, discovered)", params=(("token", "acme"),)))])
+    ran = []
+    monkeypatch.setattr(feeds, "run_sources", lambda db, srcs, **_: ran.extend(srcs) or {})
+    out = feeds.run_opportunity_feeds()
+    assert ran and {s.kind for s in ran} == {"sam_gov"}
+    assert out["discovered_boards"] == 0
+    assert set(out["paused_kinds"]) == {"adzuna", "amazon_jobs", "greenhouse", "jooble"}
+
+
+def test_paused_kind_process_cards_writes_nothing(monkeypatch):
+    monkeypatch.delenv("PAUSE_JOB_POSTING_INGEST", raising=False)
+    for kind in ("job_board", "adzuna"):
+        scraper = _scraper()
+        stats = scraper.process_cards([CARD], "https://example.com/board", source_kind=kind)
+        assert stats["paused"] is True and stats["robot_jobs"] == 0 and stats["signals_only"] == 0
+        scraper.save_company.assert_not_called()
+        scraper.save_signal.assert_not_called()
+        scraper.db.add.assert_not_called()
+        scraper.db.commit.assert_not_called()
+
+
+def test_html_board_default_kind_is_paused(monkeypatch):
+    monkeypatch.delenv("PAUSE_JOB_POSTING_INGEST", raising=False)
+    assert _scraper().process_cards([CARD], "https://www.indeed.com/jobs?q=x")["paused"] is True
+
+
+def test_sam_gov_cards_are_not_paused(monkeypatch):
+    monkeypatch.delenv("PAUSE_JOB_POSTING_INGEST", raising=False)
+    stats = _scraper().process_cards([], "SAM.gov tenders · robot", source_kind="sam_gov")
+    assert "paused" not in stats
+
+
+def test_run_sources_passes_kind_and_skips_ats_registration_for_paused_kinds(monkeypatch):
+    monkeypatch.delenv("PAUSE_JOB_POSTING_INGEST", raising=False)
+    seen = []
+    fake = MagicMock()
+    fake.process_cards.side_effect = lambda cards, label, source_kind: seen.append(source_kind) or {}
+    monkeypatch.setattr(feeds, "_scraper", lambda db: fake)
+    registered = []
+    monkeypatch.setattr(feeds, "register_ats_boards_from_text", lambda db, text, found_on="": registered.append(found_on))
+    card = {"url": "https://boards.greenhouse.io/acme/jobs/1", "html": ""}
+    feeds.run_sources(MagicMock(), [OpportunitySource("adzuna", "a"), OpportunitySource("sam_gov", "s")],
+                      fetch=lambda s: [card], pause_s=0)
+    assert seen == ["adzuna", "sam_gov"]
+    assert registered == ["s"]
 
 
 def test_manual_job_board_trigger_refused_while_paused(monkeypatch):
