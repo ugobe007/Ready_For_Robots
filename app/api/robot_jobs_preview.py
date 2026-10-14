@@ -115,8 +115,9 @@ def get_robot_jobs_preview(
     limit: int = Query(default=3, ge=1, le=_PREVIEW_CAP),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    rows = select_daily_report_rows(db, limit=limit)
+    rows = select_daily_report_rows(db, limit=50)
     jobs = [_public_job(row, rank) for rank, row in enumerate(rows, start=1)]
+    jobs = [j for j in jobs if not is_robot_maker_employer({"company_name": j["employer"]})][:limit]
     source = "live"
     if not jobs:
         jobs = corpus_preview_jobs(limit)

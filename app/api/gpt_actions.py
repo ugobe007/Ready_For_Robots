@@ -37,7 +37,7 @@ class GptRobotRecommendIn(BaseModel):
 
 
 def _summary(jobs: list[dict[str, Any]], what: str) -> str:
-    examples = sum(1 for j in jobs if j.get("is_example"))
+    examples = sum(1 for j in jobs if j.get("is_example", True))
     text = f"Found {len(jobs)} {what}."
     if examples:
         text += f" {examples} of them are examples with no source link, not confirmed buyers."
@@ -68,7 +68,7 @@ def gpt_match_jobs(payload: GptJobMatchIn):
         "robot_name": res.get("robot_name", payload.robot_name or "Robot"),
         "matched_job_count": len(jobs),
         "jobs": formatted_jobs,
-        "summary": _summary(formatted_jobs, f"jobs that fit {res.get('robot_name', payload.robot_name or 'this robot')}"),
+        "summary": _summary(jobs, f"jobs that fit {res.get('robot_name', payload.robot_name or 'this robot')}"),
         "activation_url": f"https://readyforrobots.com/pipeline?src=chatgpt&url={effective_url}"
     }
 
