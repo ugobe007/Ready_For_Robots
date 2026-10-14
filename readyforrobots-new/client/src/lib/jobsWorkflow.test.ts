@@ -608,13 +608,18 @@ describe("jobsWorkflow", () => {
     expect(
       defaultCheckedKeysForLineup([{ productName: "Fourier N1", jobs: n1Jobs }])
     ).toEqual(["a", "b", "c"]);
-    expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
-      /example jobs Fourier N1/
-    );
-    expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
-      /Rows start checked/i
-    );
-    expect(jobsListHint({ robotCount: 5, productName: "Fourier N1" })).toMatch(
+    expect(
+      jobsListHint({ robotCount: 1, productName: "Fourier N1", jobCount: 11 })
+    ).toMatch(/^11 jobs Fourier N1 can do/);
+    expect(
+      jobsListHint({ robotCount: 1, productName: "Fourier N1", jobCount: 1 })
+    ).toMatch(/^1 job Fourier N1 can do/);
+    expect(
+      jobsListHint({ robotCount: 1, productName: "Fourier N1", jobCount: 3 })
+    ).toMatch(/Rows start checked/i);
+    expect(
+      jobsListHint({ robotCount: 5, productName: "Fourier N1", jobCount: 5 })
+    ).toMatch(
       /one sample job per robot/i
     );
     const workspace = readFileSync(

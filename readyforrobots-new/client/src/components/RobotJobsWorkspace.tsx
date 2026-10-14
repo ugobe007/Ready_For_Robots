@@ -3443,6 +3443,7 @@ function JobsPanel({
           {jobsListHint({
             robotCount,
             productName: analysis.productName,
+            jobCount: rawBaseJobs.length,
           })}{" "}
           <span className="font-semibold text-emerald-200">
             {JOBS_KEEP_LABEL} is on. Uncheck a row to skip it.

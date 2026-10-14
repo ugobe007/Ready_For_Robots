@@ -280,12 +280,18 @@ export default function LiveJobTape({
             {title}
           </p>
           <p className="font-mono text-[13px] font-bold uppercase tracking-[0.08em] tabular-nums text-emerald-400 sm:text-[14px]">
-            <span>{jobsFoundLabel(foundCount)}</span>
+            <span>
+              {revealing
+                ? jobsFoundLabel(foundCount)
+                : `${padCount(foundCount)} ${JOB_CARD_EXAMPLE_LABEL}s`}
+            </span>
           </p>
         </div>
-        <p className="mt-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-          {revealing ? "Matching work to your robot" : "Example jobs"}
-        </p>
+        {revealing ? (
+          <p className="mt-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+            Matching work to your robot
+          </p>
+        ) : null}
         {subtitle ? (
           <p className="mt-1.5 max-w-xl text-[11px] leading-snug normal-case tracking-normal text-slate-500">
             {subtitle}
