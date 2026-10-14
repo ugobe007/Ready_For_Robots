@@ -17,6 +17,7 @@ from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlparse
 
+from app.services.form_fit import indexed_sku, is_stationary_sku, jobs_fit_form
 from app.services.job_card_provenance import (
     buyer_rows,
     is_example_job,
@@ -740,6 +741,11 @@ def match_robot_url(
     stages[1]["detail"] = caps.get("type") or f"{len(profile.capabilities)} signals"
 
     result = match_jobs_for_profile(profile)
+    if is_stationary_sku(indexed_sku(url, robot_name)):
+        result["jobs"] = jobs_fit_form(result.get("jobs") or [], stationary=True)
+        result["job_count"] = len(result["jobs"])
+        if len(result["jobs"]) < MATCHES_MIN:
+            result["state"] = "thin_corpus"
     stages[2]["status"] = "done"
     stages[2]["detail"] = f"{result.get('job_count') or 0} jobs"
     result["research_stages"] = stages
