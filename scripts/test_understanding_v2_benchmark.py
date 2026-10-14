@@ -138,6 +138,25 @@ def extract_robot_taxonomy_values(
     }, result.get("extraction_metadata", {})
 
 
+def score_negative_control(extracted: dict[str, Any], expected: dict[str, Any]) -> dict[str, Any]:
+    """Check only the taxonomy fields the answer key states for a control.
+
+    `buyer_matches` is not checkable here because this runner does no matching.
+    """
+    checks = []
+    passed = True
+    for field in ("offering_type", "primary_class"):
+        if field in expected:
+            ok = extracted.get(field) == expected[field]
+            passed = passed and ok
+            checks.append(f"{field}={extracted.get(field)!r} expected {expected[field]!r} -> {'ok' if ok else 'FAIL'}")
+    if not checks:
+        return {"pass": False, "checks": ["no checkable taxonomy fields in answer key"]}
+    if "buyer_matches" in expected:
+        checks.append("buyer_matches not checked (no matching in this runner)")
+    return {"pass": passed, "checks": checks}
+
+
 def test_robot(
     robot: dict[str, Any],
     use_product_hint: bool = False
@@ -275,10 +294,10 @@ def test_robot(
                     if not field_score['pass']:
                         print(f"  - {field}: {field_score['reason']}")
         else:
-            # For negative controls, just report extraction without scoring
-            print(f"ℹ️  Negative control extracted (scoring not implemented)")
             score = None
-            bucket = 'EXTRACTION_FAILED'  # Placeholder
+            neg = score_negative_control(extracted, robot['expected'])
+            bucket = 'NEG_PASS' if neg['pass'] else 'NEG_FAIL'
+            print(f"{'✅' if neg['pass'] else '❌'} Negative control: {'; '.join(neg['checks'])}")
         
         return {
             'id': robot_id,
@@ -293,6 +312,7 @@ def test_robot(
             'elapsed_sec': elapsed,
             'used_product_hint': use_product_hint,
             'is_negative_control': is_negative_control,
+            'negative_control_score': neg if is_negative_control else None,
         }
         
     except Exception as e:
@@ -312,137 +332,104 @@ def test_robot(
         }
 
 
+def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
+    """Robots and negative controls are summarized separately, never pooled."""
+    robots = [r for r in results if not r.get('is_negative_control') and not r['id'].startswith('neg-')]
+    negs = [r for r in results if r.get('is_negative_control') or r['id'].startswith('neg-')]
+    readable = [r for r in robots if r.get('bucket') != 'FETCH_FAILED']
+    return {
+        'robots': {
+            'total': len(robots),
+            'unreadable': [r['id'] for r in robots if r.get('bucket') == 'FETCH_FAILED'],
+            'readable': len(readable),
+            'passed': [r['id'] for r in readable if r.get('bucket') == 'PASSED'],
+            'failed': [r['id'] for r in readable if r.get('bucket') != 'PASSED'],
+            'per_field_accuracy': compute_per_field_accuracy(robots),
+        },
+        'negative_controls': {
+            r['id']: ('NOT READ' if r.get('bucket') == 'FETCH_FAILED'
+                      else 'PASS' if r.get('bucket') == 'NEG_PASS' else 'FAIL')
+            for r in negs
+        },
+    }
+
+
 def main():
     """Run the v2 benchmark."""
     import argparse
-    
+    global BENCHMARK_PATH, FIXTURES_DIR
+
     parser = argparse.ArgumentParser(description="Run Understanding v2 benchmark (taxonomy-based)")
     parser.add_argument("--robot", type=str, help="Test a specific robot by ID")
+    parser.add_argument("--hint", choices=["on", "off"], default="on",
+                        help="Pass the answer key's target_product to the extractor")
+    parser.add_argument("--benchmark", type=Path, default=BENCHMARK_PATH)
+    parser.add_argument("--fixtures", type=Path, default=FIXTURES_DIR)
+    parser.add_argument("--output", type=Path,
+                        default=Path("reports") / "understanding_v2_benchmark_results.json")
     args = parser.parse_args()
-    
+    BENCHMARK_PATH, FIXTURES_DIR = args.benchmark, args.fixtures
+    use_hint = args.hint == "on"
+
     taxonomy = load_taxonomy()
     benchmark = load_benchmark()
-    
-    print("="*80)
-    print("Understanding v2 Benchmark (Taxonomy-Based)")
-    print("="*80)
-    print(f"Benchmark version: {benchmark['version']}")
+
+    print("=" * 80)
+    print(f"Understanding v2 Benchmark — hint {args.hint.upper()}")
+    print("=" * 80)
+    print(f"Benchmark: {BENCHMARK_PATH} ({benchmark['version']})")
     print(f"Taxonomy: {taxonomy['name']} {taxonomy['version']}")
-    print(f"Total robots: {len(benchmark['robots'])}")
-    print(f"Negative controls: {len(benchmark.get('negative_controls', []))}")
-    print(f"Using snapshots from {FIXTURES_DIR}")
-    print()
-    
-    # Combine robots and negative controls for testing
-    all_test_cases = benchmark['robots'] + benchmark.get('negative_controls', [])
-    
-    # Filter if --robot specified
-    cases_to_test = all_test_cases
+    print(f"Robots: {len(benchmark['robots'])}, negative controls: {len(benchmark.get('negative_controls', []))}")
+    print(f"Snapshots: {FIXTURES_DIR}")
+
+    cases = benchmark['robots'] + benchmark.get('negative_controls', [])
     if args.robot:
-        cases_to_test = [r for r in all_test_cases if r['id'] == args.robot]
-        if not cases_to_test:
+        cases = [r for r in cases if r['id'] == args.robot]
+        if not cases:
             print(f"❌ ID '{args.robot}' not found in benchmark")
             return 1
-    
-    # Test with product hints (will also run without hints later)
-    print("="*80)
-    print("Testing WITH product hints")
-    print("="*80)
-    
-    results_with_hint = []
-    for robot in cases_to_test:
-        result = test_robot(robot, use_product_hint=True)
-        results_with_hint.append(result)
-    
-    # Compute per-field accuracy
-    accuracy = compute_per_field_accuracy(results_with_hint)
-    
-    # Collect unclassified_notes
-    all_unclassified = []
-    for result in results_with_hint:
-        extracted = result.get('extracted', {})
-        notes = extracted.get('unclassified_notes', '')
-        if notes and notes.strip():
-            all_unclassified.append({
-                'robot_id': result['id'],
-                'company': result['company'],
-                'notes': notes
-            })
-    
-    # Collect cost and latency stats
-    total_tokens = sum(r.get('metadata', {}).get('tokens_used', 0) for r in results_with_hint)
-    total_elapsed = sum(r.get('elapsed_sec', 0) for r in results_with_hint)
-    avg_latency = total_elapsed / len(results_with_hint) if results_with_hint else 0
-    
-    # Summary
-    fetch_failed = [r for r in results_with_hint if r.get('bucket') == 'FETCH_FAILED']
-    extraction_failed = [r for r in results_with_hint if r.get('bucket') == 'EXTRACTION_FAILED']
-    passed = [r for r in results_with_hint if r.get('bucket') == 'PASSED']
-    
-    total = len(results_with_hint)
-    
-    print("\n" + "="*80)
-    print("Summary (WITH product hints)")
-    print("="*80)
-    print(f"\nThree-Bucket Breakdown:")
-    print(f"  FETCH FAILED:       {len(fetch_failed):2d}/{total} ({100*len(fetch_failed)/total:.0f}%)")
-    print(f"  EXTRACTION FAILED:  {len(extraction_failed):2d}/{total} ({100*len(extraction_failed)/total:.0f}%)")
-    print(f"  PASSED:             {len(passed):2d}/{total} ({100*len(passed)/total:.0f}%)")
-    
-    print(f"\nPer-Field Accuracy:")
-    for field, acc in accuracy.items():
+
+    results = [test_robot(r, use_product_hint=use_hint) for r in cases]
+    summary = summarize(results)
+    rob = summary['robots']
+
+    total_tokens = sum(r.get('metadata', {}).get('tokens_used', 0) for r in results)
+    total_elapsed = sum(r.get('elapsed_sec', 0) for r in results)
+
+    print("\n" + "=" * 80)
+    print(f"Summary — hint {args.hint.upper()}")
+    print("=" * 80)
+    print(f"Robots: {len(rob['passed'])} of {rob['readable']} readable passed "
+          f"({rob['total']} total, {len(rob['unreadable'])} unreadable: {rob['unreadable']})")
+    for field, acc in rob['per_field_accuracy'].items():
         print(f"  {field:20s}: {acc:5.1%}")
-    
-    print(f"\nCost and Latency:")
-    print(f"  Total tokens:  {total_tokens:,}")
-    print(f"  Total time:    {total_elapsed:.1f}s")
-    print(f"  Avg per page:  {avg_latency:.1f}s")
-    
-    if all_unclassified:
-        print(f"\nUnclassified Notes ({len(all_unclassified)} robots):")
-        for entry in all_unclassified:
-            print(f"  {entry['robot_id']} ({entry['company']}): {entry['notes'][:100]}")
-    else:
-        print(f"\nNo unclassified notes (all info fit taxonomy)")
-    
-    # Print detailed failures
-    if extraction_failed:
-        print(f"\n❌ EXTRACTION FAILED ({len(extraction_failed)}):")
-        for r in extraction_failed:
-            print(f"  {r['id']}: {r['company']}")
-            score = r.get('score', {})
-            if score:
-                for field in ['offering_type', 'form', 'primary_class', 'functions', 'industries']:
-                    if field in score and not score[field].get('pass'):
-                        print(f"    - {field}: {score[field].get('reason', 'unknown')}")
-    
-    # Save results
-    results_path = Path("reports") / "understanding_v2_benchmark_results.json"
-    results_path.parent.mkdir(exist_ok=True)
-    with open(results_path, 'w') as f:
+    print("Robot failures:")
+    for r in results:
+        if r['id'] in rob['failed']:
+            score = r.get('score') or {}
+            reasons = [f"{f}: {score[f]['reason']}" for f in
+                       ('offering_type', 'form', 'primary_class', 'functions', 'industries')
+                       if f in score and not score[f]['pass']] or [r.get('error', 'no score')]
+            print(f"  {r['id']}: " + " | ".join(reasons))
+    print("Negative controls:")
+    for nid, verdict in summary['negative_controls'].items():
+        print(f"  {nid}: {verdict}")
+    print(f"Tokens: {total_tokens:,}  Time: {total_elapsed:.1f}s")
+
+    args.output.parent.mkdir(parents=True, exist_ok=True)
+    with open(args.output, 'w') as f:
         json.dump({
+            'benchmark_path': str(BENCHMARK_PATH),
             'benchmark_version': benchmark['version'],
             'taxonomy_version': taxonomy['version'],
+            'hint': args.hint,
             'timestamp': time.strftime('%Y-%m-%d %H:%M:%S UTC', time.gmtime()),
-            'summary': {
-                'total': total,
-                'fetch_failed': len(fetch_failed),
-                'extraction_failed': len(extraction_failed),
-                'passed': len(passed),
-            },
-            'per_field_accuracy': accuracy,
-            'cost_and_latency': {
-                'total_tokens': total_tokens,
-                'total_elapsed_sec': total_elapsed,
-                'avg_latency_per_page': avg_latency,
-            },
-            'unclassified_notes': all_unclassified,
-            'results': results_with_hint,
+            'summary': summary,
+            'cost_and_latency': {'total_tokens': total_tokens, 'total_elapsed_sec': total_elapsed},
+            'results': results,
         }, f, indent=2)
-    
-    print(f"\nDetailed results: {results_path}")
-    
-    return 0 if len(extraction_failed) == 0 else 1
+    print(f"\nDetailed results: {args.output}")
+    return 0
 
 
 if __name__ == '__main__':
