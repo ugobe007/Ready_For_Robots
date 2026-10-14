@@ -41,13 +41,16 @@ The model first classifies the page itself as one of `page_types` in the config.
 **Benchmark scoring** (fixed before hold-out v2):
 
 1. Extraction runs without the product hint. That is the headline. The run with the hint is reported second, as a reference.
-2. The runner matches the answer key's `target_product` against the extracted product names and scores only that record with the frozen scorer. It never falls back to the first record.
-3. Name match (`names_match` in `scripts/test_understanding_v2_benchmark.py`):
+2. The runner matches the answer key's `target_product` and `target_aliases` against the extracted product names. It never falls back to an unmatched record.
+3. `target_aliases` are the model names for the target product line, taken only from that entry's snapshot `page.txt` (never from extractor output), and approved before the freeze. For a family target, every model in the family is an alias. The name rule is not loosened to make up for missing aliases: picking the record by a field that is also scored would inflate results.
+4. Name match (`names_match` in `scripts/test_understanding_v2_benchmark.py`):
    - Both names are normalized: lowercase, `™ ® ©` removed, split into letter/digit tokens (punctuation and `+` are separators), and a trailing plural `s` removed from tokens longer than 3 letters.
    - It is a match if the token lists are equal, or if the shorter list appears as a contiguous run inside the longer one and is not made only of generic words (`a an the and of robot robotic robotics system series autonomous`).
-   - An exact match wins; otherwise the first record that matches.
-4. If no record matches (including pages that produced no records), the entry fails as `target_not_extracted`. That is its own failure type, listed separately with the extracted names. Per-field accuracy is computed only over entries whose target record was found.
-5. Gap probes use the same selection. Negative controls have no target and must produce no records (Reporting).
+5. The entry is scored with the frozen scorer on the first record, in extraction order, that matches `target_product` or any alias. Field accuracy is also reported across every matched record (`per_field_accuracy_all_matched_records`, pass/total per field).
+6. If no record matches (including pages that produced no records), the entry fails as `target_not_extracted`. That is its own failure type, listed separately with the extracted names. Per-field accuracy is computed only over entries whose target record was found.
+7. An entry with `unreadable_reason` in the key is reported as unreadable with that reason and is not extracted (e.g. the company was acquired and the URL now serves another company's site; no substitute company is used).
+8. Extraction uses the snapshot's `final_url` (after redirects or a same-company `--url` retake), not the key's original URL.
+9. Gap probes use the same selection. Negative controls have no target and must produce no records (Reporting).
 
 ## Settings
 

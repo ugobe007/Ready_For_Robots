@@ -129,11 +129,79 @@ def test_names_match(target, name, expected):
     assert names_match(target, name) is expected
 
 
-def test_select_prefers_exact_then_first_containment():
+def test_select_takes_first_match_in_extraction_order():
     products = [{"product_name": "X10 Dock"}, {"product_name": "Spot"}, {"product_name": "Spot Arm"}]
     assert select_target_record(products, "Spot") == 1
     assert select_target_record(products, "Skydio X10 / Dock") == 0
     assert select_target_record(products, "TUG") is None
+
+
+def test_alias_match_takes_first_record_matching_target_or_any_alias():
+    products = [{"product_name": "Geek+ P800"}, {"product_name": "OTTO 600"}, {"product_name": "OTTO 1500"}]
+    assert select_target_record(products, "OTTO autonomous mobile robots") is None
+    assert select_target_record(products, "OTTO autonomous mobile robots", ["OTTO 1500", "OTTO 600"]) == 1
+    assert runner_module().matched_record_indexes(products, "OTTO AMRs", ["OTTO 600", "OTTO 1500"]) == [1, 2]
+
+
+def runner_module():
+    import scripts.test_understanding_v2_benchmark as runner
+    return runner
+
+
+def test_alias_matched_records_all_returned_and_first_is_scored(monkeypatch):
+    runner = _fake_extract(monkeypatch, ["T3 Robot", "TUG", "Carrello"])
+    extracted, meta = runner.extract_robot_taxonomy_values("u", "t", target_product="Aethon robots",
+                                                           target_aliases=["TUG", "T3 Robot"])
+    assert meta["matched_record_indexes"] == [0, 1]
+    assert extracted["form"] == "form-T3 Robot"
+    assert [r["form"] for r in meta["matched_records"]] == ["form-T3 Robot", "form-TUG"]
+    assert meta["target_aliases"] == ["TUG", "T3 Robot"]
+
+
+def _fake_snapshot(monkeypatch, runner, final_url="https://final.example/p", words=200):
+    monkeypatch.setattr(runner, "load_snapshot", lambda _id: {
+        "metadata": {"status_code": 200, "final_url": final_url, "fetch_date": "2026-10-14"},
+        "text": "word " * words, "html": ""})
+
+
+def test_unreadable_reason_in_key_is_fetch_failed_with_reason(monkeypatch):
+    runner = runner_module()
+    _fake_snapshot(monkeypatch, runner)
+    called = []
+    monkeypatch.setattr(runner, "extract_robot_taxonomy_values", lambda **kw: called.append(kw))
+    r = runner.test_robot({"id": "v2-12", "company": "SafeAI", "url": "https://safeai.ai",
+                           "target_product": "SafeAI autonomy", "unreadable_reason": "Acquired by Pronto"})
+    assert r["bucket"] == "FETCH_FAILED" and r["unreadable_reason"] == "Acquired by Pronto"
+    assert called == []
+    r["group"] = "robot"
+    assert summarize([r])["robots"]["unreadable_reasons"] == {"v2-12": "Acquired by Pronto"}
+
+
+def test_runner_uses_snapshot_final_url_aliases_and_scores_all_matched(monkeypatch):
+    runner = runner_module()
+    _fake_snapshot(monkeypatch, runner)
+    seen = {}
+    rec = {"offering_type": "robot_product", "form": "amr", "primary_class": "logistics",
+           "primary_function": {"value": "transport"}, "secondary_functions": [], "industries": []}
+    other = {**rec, "form": "arm"}
+
+    def fake(**kw):
+        seen.update(kw)
+        return rec, {"product_names": ["A", "B"], "matched_record_indexes": [0, 1],
+                     "matched_records": [rec, other], "target_record_index": 0, "target_not_extracted": False}
+
+    monkeypatch.setattr(runner, "extract_robot_taxonomy_values", fake)
+    robot = {"id": "v2-11", "company": "ExRobotics", "url": "https://old.example", "target_product": "ExR",
+             "target_aliases": ["ExR-2.5"], "offering_type_ok": ["robot_product"], "form_ok": ["amr"],
+             "primary_class_ok": ["logistics"], "functions_required": [], "functions_any": [],
+             "industries_required": [], "industries_any": []}
+    r = runner.test_robot(robot)
+    assert seen["url"] == "https://final.example/p" and r["url"] == "https://final.example/p"
+    assert seen["target_aliases"] == ["ExR-2.5"]
+    assert [s["form"]["pass"] for s in r["all_matched_scores"]] == [True, False]
+    r["group"] = "robot"
+    acc = summarize([r])["robots"]["per_field_accuracy_all_matched_records"]
+    assert acc["form"] == {"pass": 1, "total": 2} and acc["offering_type"] == {"pass": 2, "total": 2}
 
 
 def _fake_extract(monkeypatch, names, page_type="manufacturer_product_page"):

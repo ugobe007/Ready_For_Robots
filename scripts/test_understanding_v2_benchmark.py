@@ -31,6 +31,7 @@ BENCHMARK_PATH = Path("tests/fixtures/robot_benchmark_set.v2.json")
 FIXTURES_DIR = Path("tests/fixtures/robot_pages")
 THIN_CONTENT_WORD_THRESHOLD = 150
 GROUPS = (("robots", "robot"), ("taxonomy_gap_probes", "gap_probe"), ("negative_controls", "negative_control"))
+SCORED_FIELDS = ("offering_type", "form", "primary_class", "functions", "industries")
 UNSUPPORTED_FIELDS = ("offering_type", "form", "primary_class", "primary_function", "secondary_functions", "industries")
 
 # Fixed before each hold-out run. Automated first pass only; the verbatim
@@ -107,16 +108,17 @@ def names_match(target: str, name: str) -> bool:
     return any(long_[i:i + len(short)] == short for i in range(len(long_) - len(short) + 1))
 
 
-def select_target_record(products: list[dict[str, Any]], target: str) -> int | None:
-    """Index of the record whose name matches target_product: exact token match first, then containment."""
-    names = [p.get("product_name", "") for p in products]
-    for i, name in enumerate(names):
-        if name_tokens(name) == name_tokens(target) and name_tokens(name):
-            return i
-    for i, name in enumerate(names):
-        if names_match(target, name):
-            return i
-    return None
+def matched_record_indexes(products: list[dict[str, Any]], target: str, aliases: list[str] = ()) -> list[int]:
+    """Records, in extraction order, whose name matches target_product or any target_alias."""
+    names = [target, *aliases]
+    return [i for i, p in enumerate(products)
+            if any(names_match(n, p.get("product_name", "")) for n in names)]
+
+
+def select_target_record(products: list[dict[str, Any]], target: str, aliases: list[str] = ()) -> int | None:
+    """The first matching record is the one the entry is scored on."""
+    matched = matched_record_indexes(products, target, aliases)
+    return matched[0] if matched else None
 
 
 def _empty_extraction(offering_type: str, note: str) -> dict[str, Any]:
@@ -137,6 +139,7 @@ def extract_robot_taxonomy_values(
     page_text: str,
     product_name_hint: str | None = None,
     target_product: str | None = None,
+    target_aliases: list[str] = (),
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Extract taxonomy values using semantic extraction.
@@ -169,13 +172,16 @@ def extract_robot_taxonomy_values(
                 "product_names": [p.get("product_name", "") for p in products]}
     page_offering = (page or {}).get("offering_type", "")
     if target_product is not None:
-        index = select_target_record(products, target_product)
+        matched = matched_record_indexes(products, target_product, target_aliases)
         metadata["target_product"] = target_product
-        metadata["target_record_index"] = index
-        metadata["target_not_extracted"] = index is None
-        if index is None:
+        metadata["target_aliases"] = list(target_aliases)
+        metadata["matched_record_indexes"] = matched
+        metadata["matched_records"] = [_flatten_product(products[i]) for i in matched]
+        metadata["target_record_index"] = matched[0] if matched else None
+        metadata["target_not_extracted"] = not matched
+        if not matched:
             return _empty_extraction(page_offering if not products else "", "target_not_extracted"), metadata
-        return _flatten_product(products[index]), metadata
+        return metadata["matched_records"][0], metadata
     if not products:
         return _empty_extraction(page_offering, "No products extracted"), metadata
     return _flatten_product(products[0]), metadata
@@ -326,6 +332,19 @@ def test_robot(
     # Check snapshot status
     metadata = snapshot['metadata']
     page_text = snapshot['text']
+
+    if robot.get('unreadable_reason'):
+        print(f"⚠️  Unreadable per answer key: {robot['unreadable_reason']}")
+        return {
+            'id': robot_id,
+            'company': robot.get('company', ''),
+            'url': metadata.get('final_url') or url,
+            'bucket': 'FETCH_FAILED',
+            'fetch_error': 'unreadable_reason',
+            'unreadable_reason': robot['unreadable_reason'],
+            'snapshot_date': metadata.get('fetch_date'),
+            'used_product_hint': use_product_hint,
+        }
     
     if metadata.get('status_code') != 200:
         error_msg = metadata.get('error', 'Unknown error')
@@ -355,7 +374,11 @@ def test_robot(
     
     html = snapshot['html']
     metadata_snapshot = snapshot['metadata']
-    print(f"Using snapshot ({word_count} words, fetched {metadata_snapshot.get('fetch_date', 'unknown')})")
+    url = metadata_snapshot.get('final_url') or url
+    target_aliases = [] if is_negative_control else list(robot.get('target_aliases', []))
+    print(f"Using snapshot ({word_count} words, fetched {metadata_snapshot.get('fetch_date', 'unknown')}, final URL {url})")
+    if target_aliases:
+        print(f"Target aliases: {target_aliases}")
     
     # Run extraction
     try:
@@ -366,6 +389,7 @@ def test_robot(
             page_text=page_text,
             product_name_hint=product_name,
             target_product=None if is_negative_control else robot.get('target_product'),
+            target_aliases=target_aliases,
         )
         
         elapsed = time.time() - t0
@@ -399,9 +423,11 @@ def test_robot(
         
         # Score against expected (only for regular robots, not negative controls)
         gap = None
+        all_matched_scores = None
         if not is_negative_control:
             idx = metadata.get('target_record_index')
             print(f"Target record: {'NOT EXTRACTED' if idx is None else repr(metadata['product_names'][idx])}")
+            print(f"Matched records: {[metadata['product_names'][i] for i in metadata.get('matched_record_indexes', [])]}")
         if not is_negative_control and metadata.get('target_not_extracted'):
             score = None
             bucket = 'TARGET_NOT_EXTRACTED'
@@ -416,6 +442,7 @@ def test_robot(
                 print(f"  {field}: {'ok' if fs['pass'] else 'FAIL'} ({fs['reason']})")
         elif not is_negative_control:
             score = score_robot(extracted, robot)
+            all_matched_scores = [score_robot(rec, robot) for rec in metadata.get('matched_records', [])]
             
             bucket = 'PASSED' if score['robot_pass'] else 'EXTRACTION_FAILED'
             
@@ -440,6 +467,7 @@ def test_robot(
             'url': url,
             'bucket': bucket,
             'score': score,
+            'all_matched_scores': all_matched_scores,
             'extracted': extracted,
             'metadata': metadata,
             'snapshot_date': metadata_snapshot.get('fetch_date'),
@@ -476,6 +504,17 @@ def unsupported_by_field(results: list[dict[str, Any]]) -> dict[str, int]:
     return counts
 
 
+def per_field_accuracy_all_matched(results: list[dict[str, Any]]) -> dict[str, dict[str, int]]:
+    """Pass/total per field over every alias-matched record, not just the scored first one."""
+    out = {f: {'pass': 0, 'total': 0} for f in SCORED_FIELDS}
+    for r in results:
+        for s in r.get('all_matched_scores') or []:
+            for f in SCORED_FIELDS:
+                out[f]['total'] += 1
+                out[f]['pass'] += bool(s[f]['pass'])
+    return out
+
+
 def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
     """Robots, gap probes and negative controls are summarized separately, never pooled."""
     by_group = {g: [r for r in results if r.get('group') == g] for _, g in GROUPS}
@@ -507,6 +546,8 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
         'robots': {
             'total': len(robots),
             'unreadable': [r['id'] for r in robots if r.get('bucket') == 'FETCH_FAILED'],
+            'unreadable_reasons': {r['id']: r.get('unreadable_reason') or r.get('fetch_error')
+                                   for r in robots if r.get('bucket') == 'FETCH_FAILED'},
             'readable': len(readable),
             'crashed': [r['id'] for r in readable if 'error' in r],
             'passed': [r['id'] for r in readable if r.get('bucket') == 'PASSED'],
@@ -514,9 +555,12 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
             'target_not_extracted': [r['id'] for r in readable if r.get('bucket') == 'TARGET_NOT_EXTRACTED'],
             'target_records': {r['id']: {'target': (r.get('metadata') or {}).get('target_product'),
                                          'records': (r.get('metadata') or {}).get('product_names'),
+                                         'aliases': (r.get('metadata') or {}).get('target_aliases'),
+                                         'matched_indexes': (r.get('metadata') or {}).get('matched_record_indexes'),
                                          'index': (r.get('metadata') or {}).get('target_record_index')}
                                for r in readable if 'metadata' in r},
             'per_field_accuracy': compute_per_field_accuracy(robots),
+            'per_field_accuracy_all_matched_records': per_field_accuracy_all_matched(robots),
             'unsupported_by_field': unsupported_by_field(robots),
             'page_types': page_types(robots),
         },
@@ -590,10 +634,15 @@ def main():
     print(f"Robots: {len(rob['passed'])} of {rob['readable']} readable passed "
           f"({rob['total']} total, {len(rob['unreadable'])} unreadable: {rob['unreadable']}, "
           f"crashed: {rob['crashed']})")
+    for rid, reason in rob['unreadable_reasons'].items():
+        print(f"  unreadable {rid}: {reason}")
     print(f"Target not extracted: {len(rob['target_not_extracted'])} {rob['target_not_extracted']}")
-    print("Per-field accuracy (records that matched target_product):")
+    print("Per-field accuracy (first alias-matched record per entry):")
     for field, acc in rob['per_field_accuracy'].items():
         print(f"  {field:20s}: {acc:5.1%}")
+    print("Per-field accuracy (all alias-matched records):")
+    for field, c in rob['per_field_accuracy_all_matched_records'].items():
+        print(f"  {field:20s}: {c['pass']}/{c['total']}")
     print("Robot failures:")
     for r in results:
         if r['id'] in rob['failed']:
