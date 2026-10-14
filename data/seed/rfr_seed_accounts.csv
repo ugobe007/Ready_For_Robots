@@ -1,0 +1,2 @@
+company_name,website,industries,hq_city,hq_state,priority,workflows_of_interest,known_deployments,notes
+EXAMPLE Resort & Casino (delete this row),example.com,casino|hotel,Las Vegas,NV,A,cleaning|delivery_transport|food_beverage_prep,cleaning:VendorName,"Industries and workflows use taxonomy values, separated by |. known_deployments = workflow:vendor, separated by |."
