@@ -22,6 +22,7 @@ PILOT_INDUSTRY_GROUPS: tuple[tuple[int, str, tuple[str, ...]], ...] = (
     (6, "Restaurants and bars", ("restaurant", "qsr_fast_food", "bar_nightclub")),
     (7, "Airports", ("airport",)),
     (8, "Office buildings", ("office_building", "commercial_building", "corporate_campus")),
+    (9, "Auto dealerships", ("automotive_dealership",)),
 )
 
 NEVER_BUYER_INDUSTRIES = frozenset({"residential_consumer"})

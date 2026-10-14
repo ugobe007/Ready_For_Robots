@@ -49,9 +49,14 @@ GAP_RULES = {
 
 
 def load_benchmark() -> dict[str, Any]:
-    """Load the v2 benchmark."""
+    """Load the v2 benchmark. Product entries live under `products`; older sets use `robots`."""
     with open(BENCHMARK_PATH, 'r') as f:
-        return json.load(f)
+        return normalize_benchmark(json.load(f))
+
+
+def normalize_benchmark(benchmark: dict[str, Any]) -> dict[str, Any]:
+    entries = list(benchmark.get('products') or []) + list(benchmark.get('robots') or [])
+    return {**benchmark, 'robots': entries}
 
 
 def load_snapshot(robot_id: str) -> dict[str, Any] | None:

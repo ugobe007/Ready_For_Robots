@@ -84,7 +84,7 @@ def test_unrelated_extra_is_still_unexpected():
 
 def test_pilot_groups_use_taxonomy_values_and_spec_order():
     assert ind.invalid_pilot_values() == []
-    assert [rank for rank, _, _ in ind.PILOT_INDUSTRY_GROUPS] == list(range(1, 9))
+    assert [rank for rank, _, _ in ind.PILOT_INDUSTRY_GROUPS] == list(range(1, 10))
 
 
 @pytest.mark.parametrize("industry,group", [
@@ -92,13 +92,14 @@ def test_pilot_groups_use_taxonomy_values_and_spec_order():
     ("surgery_center", (4, "Hospitals")),
     ("3pl", (1, "Warehouse, logistics, 3PL")),
     ("corporate_campus", (8, "Office buildings")),
+    ("automotive_dealership", (9, "Auto dealerships")),
 ])
 def test_pilot_group_membership(industry, group):
     assert ind.pilot_group(industry) == group
 
 
 @pytest.mark.parametrize("industry", [
-    "k12_school", "college_university", "automotive_dealership", "transportation_transit",
+    "k12_school", "college_university", "transportation_transit",
     "residential_consumer", "construction",
 ])
 def test_hidden_industries(industry):

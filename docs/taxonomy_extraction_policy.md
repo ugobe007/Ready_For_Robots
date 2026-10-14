@@ -1,6 +1,6 @@
 # Taxonomy extraction policy
 
-Rules the robot classifier (`app/services/robot_understanding_v1/taxonomy_extraction.py`) follows. Rules 1–2 were adopted 2026-10-14 at prompt `v3`; rules 3–5 at prompt `v4`. Prompt `v5` changes no rule: it carries taxonomy v1.2's new enum values (six industries, `surgical_assistance`) and keeps `v4` cache entries from being reused. Hold-out v2 measured `v4` on taxonomy v1.1; the first fresh set after it measures `v5` on v1.2. Each design change is measured on a hold-out set it was not designed against. Hold-out v1 informed the `v4` changes, so `v4` results on v1 are "seen data", reference only; the `v4` number comes from hold-out v2.
+Rules the robot classifier (`app/services/robot_understanding_v1/taxonomy_extraction.py`) follows. Rules 1–2 were adopted 2026-10-14 at prompt `v3`; rules 3–5 at prompt `v4`. Prompt `v5` changed no rule: it carried taxonomy v1.2's new enum values (six industries, `surgical_assistance`). It never ran on a test set. Prompt `v6` adds rule 1a (industry descriptions in the prompt). Hold-out v2 measured `v4` on taxonomy v1.1; the first fresh set after it measures `v6` on v1.2. Each design change is measured on a hold-out set it was not designed against. Hold-out v1 informed the `v4` changes, so `v4` results on v1 are "seen data", reference only; the `v4` number comes from hold-out v2.
 
 ## 1. Industry means the buyer-operator's industry
 
@@ -10,6 +10,10 @@ An industry is the industry of the organization that **buys and operates** the r
 - A warehouse robot doing pharma logistics is `warehouse_distribution` or `3pl`.
 
 Source of truth: `industries._definition` in `tests/fixtures/taxonomy.v1.json`. The extractor puts that text into the prompt verbatim. Keys starting with `_` are documentation and never become enum values.
+
+### 1a. Industry descriptions in the prompt (prompt `v6`)
+
+The prompt lists every industry as `- value: description`, with the description copied verbatim from the taxonomy, instead of the bare value names. Descriptions carry boundaries the names alone don't, e.g. `restaurant` includes the bars inside restaurants, while `bar_nightclub` is only for standalone bars, lounges and nightclubs (Bob, spec v1.6 §1). This is a rule change, so it is measured on the next fresh test set, not on hold-out v1 or v2.
 
 ## 2. Unsupported facts are excluded
 
