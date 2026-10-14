@@ -78,7 +78,15 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
   # Web machine: API only — Celery workers compete for Supabase pool slots on 1024MB.
   SKIP_CELERY = "1"
   # Job-board Robot Jobs: in-app worker thread (Celery Beat is not consumed on Fly).
-  ENABLE_SCHEDULED_JOB_BOARD = "1"
+  # Paused: postings for people must not be written as leads (CLAUDE.md v2).
+  # PAUSE_JOB_POSTING_INGEST stops every people-posting kind (job boards, Amazon, ATS,
+  # Adzuna, Jooble, USAJOBS); the opportunity-feeds thread keeps running SAM.gov tenders.
+  PAUSE_JOB_POSTING_INGEST = "1"
+  ENABLE_SCHEDULED_JOB_BOARD = "0"
+  ENABLE_OPPORTUNITY_FEEDS = "1"
+  # GSA: a personal key with no SAM.gov role is 10 requests per 24 hours.
+  # Raise this only after confirming the key's role. 26 keywords hourly is 624 calls/day.
+  SAM_GOV_DAILY_REQUEST_LIMIT = "10"
   JOB_BOARD_EVERY_HOURS = "6"
   JOB_BOARD_FIRST_RUN_DELAY_MINUTES = "12"
   JOB_SCRAPER_MAX_URLS_PER_RUN = "25"

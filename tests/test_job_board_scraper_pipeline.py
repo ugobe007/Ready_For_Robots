@@ -1,6 +1,8 @@
 """Job-board Robot Job pipeline — Fly worker loop + industry URL resolution."""
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.runtime_role import celery_disabled
 from app.scrapers.job_board_scraper_enhanced import (
     EnhancedJobBoardScraper,
@@ -13,6 +15,12 @@ from app.services.job_board_scraper_runner import (
     run_job_board_scraper_sync,
     scheduled_industries,
 )
+
+
+@pytest.fixture(autouse=True)
+def _ingest_unpaused(monkeypatch):
+    """These tests cover the classify/persist path itself, which stays paused in production."""
+    monkeypatch.setenv("PAUSE_JOB_POSTING_INGEST", "0")
 
 
 def test_job_board_urls_match_lowercase_beat_kwargs():
@@ -266,6 +274,28 @@ def test_job_board_kill_switch_leaves_intelligence(monkeypatch):
     _start_scheduled_job_board()
     assert "intelligence-scraper" in started
     assert "job-board-scraper" not in started
+
+
+def test_opportunity_feeds_start_with_job_boards_off(monkeypatch):
+    started = []
+
+    class FakeThread:
+        def __init__(self, target=None, daemon=None, name=None):
+            self.name = name
+
+        def start(self):
+            started.append(self.name)
+
+    monkeypatch.setenv("SKIP_CELERY", "1")
+    monkeypatch.setenv("FLY_APP_NAME", "ready-2-robot")
+    monkeypatch.setenv("ENABLE_SCHEDULED_JOB_BOARD", "0")
+    monkeypatch.setenv("ENABLE_OPPORTUNITY_FEEDS", "1")
+    monkeypatch.setattr("app.runtime_role.is_worker_process", lambda: True)
+    monkeypatch.setattr("app.main.threading.Thread", FakeThread)
+    from app.main import _start_scheduled_job_board
+
+    _start_scheduled_job_board()
+    assert started == ["opportunity-feeds"]
 
 
 def test_run_job_boards_uses_in_process_when_celery_skipped(monkeypatch):

@@ -395,6 +395,8 @@ def run_sources(
     pause_s: float = 1.0,
     on_result: Optional[Callable[[OpportunitySource, Optional[dict], Optional[Exception]], None]] = None,
 ) -> dict[str, Any]:
+    from app.services.job_posting_ingest_pause import source_kind_paused
+
     scraper = _scraper(db)
     totals: dict[str, int] = {"sources": 0, "skipped_no_key": 0, "failed": 0, "found": 0, "robot_jobs": 0}
     missing_keys: set[str] = set()
@@ -407,9 +409,10 @@ def run_sources(
         totals["sources"] += 1
         try:
             cards = fetch(src)
-            for c in cards:
-                register_ats_boards_from_text(db, f"{c.get('url', '')} {c.get('html', '')}", found_on=src.label)
-            stats = scraper.process_cards(cards, src.label)
+            if not source_kind_paused(src.kind):
+                for c in cards:
+                    register_ats_boards_from_text(db, f"{c.get('url', '')} {c.get('html', '')}", found_on=src.label)
+            stats = scraper.process_cards(cards, src.label, source_kind=src.kind)
             totals["found"] += stats.get("found", 0)
             totals["robot_jobs"] += stats.get("robot_jobs", 0)
             logger.info("[OpportunityFeeds] %s found=%s robot_jobs=%s", src.label, stats.get("found"), stats.get("robot_jobs"))
@@ -432,20 +435,66 @@ def run_sources(
     return totals
 
 
+def sam_gov_schedule(source_count: int, daily_limit: int | None = None) -> tuple[int, int]:
+    """Return (calls this run, minutes until the next run).
+
+    GSA caps a personal SAM.gov key by role: 10 requests per 24 hours with no
+    role, 1,000 with a role (SAM.gov System Account User Guide). One keyword
+    search is one request. ``SAM_GOV_DAILY_REQUEST_LIMIT`` is that cap. The
+    wait is long enough that repeating this run across a day stays inside it.
+    The default is the no-role cap, not an hourly sweep.
+    """
+    if daily_limit is None:
+        daily_limit = int(os.getenv("SAM_GOV_DAILY_REQUEST_LIMIT", "10"))
+    daily_limit = max(0, int(daily_limit))
+    n = max(0, int(source_count))
+    if daily_limit == 0 or n == 0:
+        return 0, 24 * 60
+    calls = min(n, daily_limit)
+    runs = max(1, daily_limit // calls)
+    # Account for fencepost: N runs need N-1 intervals to stay within 24 hours
+    interval = max(15, (24 * 60) // max(1, runs - 1)) if runs > 1 else 24 * 60
+    return calls, interval
+
+
+def _apply_sam_gov_budget(sources: list[OpportunitySource]) -> tuple[list[OpportunitySource], int]:
+    """Keep every non-SAM source. Take only as many SAM.gov keywords as today's cap allows."""
+    sam = [s for s in sources if s.kind == "sam_gov"]
+    rest = [s for s in sources if s.kind != "sam_gov"]
+    calls, interval = sam_gov_schedule(len(sam))
+    if not sam or calls == 0:
+        return rest, interval
+    start = (datetime.now(timezone.utc).date().toordinal() * calls) % len(sam)
+    chosen = (sam[start:] + sam[:start])[:calls]
+    logger.info(
+        "SAM.gov budget: %s of %s keywords this run, next run in %s min (SAM_GOV_DAILY_REQUEST_LIMIT=%s)",
+        len(chosen), len(sam), interval, os.getenv("SAM_GOV_DAILY_REQUEST_LIMIT", "10"),
+    )
+    return rest + chosen, interval
+
+
 def run_opportunity_feeds(kinds: Optional[Iterable[str]] = None, max_sources: Optional[int] = None) -> dict[str, Any]:
     """Scheduled entry point: catalog API sources + discovered ATS boards."""
     from app.database import SessionLocal
+    from app.services.job_posting_ingest_pause import source_kind_paused
 
     cap = max_sources or int(os.getenv("OPPORTUNITY_FEEDS_MAX_SOURCES", "60"))
     db = SessionLocal()
     try:
         static = api_sources(kinds)
+        paused_kinds = sorted({s.kind for s in static if source_kind_paused(s.kind)})
+        static = [s for s in static if s.kind not in paused_kinds]
+        if paused_kinds:
+            logger.warning("Opportunity feeds: people-posting kinds paused (PAUSE_JOB_POSTING_INGEST): %s",
+                           ", ".join(paused_kinds))
+        static, sam_interval = _apply_sam_gov_budget(static)
         # Rotate so every API query runs over a day, not just the first `cap`.
         if len(static) > cap:
             cycle = int(time.time() // 3600)
             start = (cycle * cap) % len(static)
             static = (static[start:] + static[:start])[:cap]
-        discovered = discovered_board_sources(db, limit=max(10, cap // 2))
+        discovered = [(row, src) for row, src in discovered_board_sources(db, limit=max(10, cap // 2))
+                      if not source_kind_paused(src.kind)]
         by_src = {id(src): row for row, src in discovered}
 
         def on_result(src, stats, exc):
@@ -469,6 +518,8 @@ def run_opportunity_feeds(kinds: Optional[Iterable[str]] = None, max_sources: Op
         result = run_sources(db, static + [src for _, src in discovered], on_result=on_result)
         result["status"] = "ok"
         result["discovered_boards"] = len(discovered)
+        result["paused_kinds"] = paused_kinds
+        result["sam_gov_interval_minutes"] = sam_interval
         return result
     finally:
         db.close()

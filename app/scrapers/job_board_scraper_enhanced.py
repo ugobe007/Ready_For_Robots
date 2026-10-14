@@ -620,17 +620,36 @@ class EnhancedJobBoardScraper(BaseScraper):
 
         soup = BeautifulSoup(html, "html.parser")
         cards = self._collect_cards(soup, url)
-        try:
-            from app.scrapers.opportunity_feed_scraper import register_ats_boards_from_text
+        from app.services.job_posting_ingest_pause import source_kind_paused
 
-            register_ats_boards_from_text(self.db, html, found_on=url)
-        except Exception:
-            logger.debug("[JobBoardScraper] ATS discovery skipped", exc_info=True)
+        if not source_kind_paused("job_board"):
+            try:
+                from app.scrapers.opportunity_feed_scraper import register_ats_boards_from_text
+
+                register_ats_boards_from_text(self.db, html, found_on=url)
+            except Exception:
+                logger.debug("[JobBoardScraper] ATS discovery skipped", exc_info=True)
         return self.process_cards(cards, url)
 
-    def process_cards(self, cards: List[Dict[str, Any]], url: str) -> Dict[str, int]:
-        """Classify + persist normalized job cards (HTML boards, ATS APIs, aggregators)."""
+    def process_cards(
+        self, cards: List[Dict[str, Any]], url: str, source_kind: str = "job_board"
+    ) -> Dict[str, int]:
+        """Classify + persist normalized job cards (HTML boards, ATS APIs, aggregators, tenders)."""
+        from app.services.job_posting_ingest_pause import source_kind_paused
+
         logger.info(f"[JobBoardScraper] Found {len(cards)} job postings from {url}")
+        if source_kind_paused(source_kind):
+            logger.warning("[JobBoardScraper] %s paused (PAUSE_JOB_POSTING_INGEST); persisted 0 of %d",
+                           source_kind, len(cards))
+            return {
+                "found": len(cards),
+                "robot_jobs": 0,
+                "signals_only": 0,
+                "skipped_relevancy": 0,
+                "skipped_no_company": 0,
+                "skipped_not_opportunity": 0,
+                "paused": True,
+            }
         skipped_no_company = skipped_relevancy = skipped_no_pain = 0
         kept_robot_job = kept_hire = 0
 
