@@ -17,6 +17,10 @@ from typing import Any
 from app.services.robot_understanding_v1.taxonomy_extraction import extract_robot_taxonomy
 from scripts.benchmark_scoring_v2 import (
     score_robot,
+    score_offering_type,
+    score_form,
+    score_primary_class,
+    score_industries,
     compute_per_field_accuracy,
     load_taxonomy,
 )
@@ -25,6 +29,15 @@ from scripts.benchmark_scoring_v2 import (
 BENCHMARK_PATH = Path("tests/fixtures/robot_benchmark_set.v2.json")
 FIXTURES_DIR = Path("tests/fixtures/robot_pages")
 THIN_CONTENT_WORD_THRESHOLD = 150
+GROUPS = (("robots", "robot"), ("taxonomy_gap_probes", "gap_probe"), ("negative_controls", "negative_control"))
+UNSUPPORTED_FIELDS = ("offering_type", "form", "primary_class", "primary_function", "secondary_functions", "industries")
+
+# Fixed before the hold-out run. Automated first pass only; the verbatim
+# unclassified_notes are saved for a human to confirm the gap is named.
+GAP_TERMS = {
+    "gp-01": ("lab automation", "laboratory automation", "liquid handling", "liquid-handling", "pipett"),
+    "gp-02": ("surgery", "surgical"),
+}
 
 
 def load_benchmark() -> dict[str, Any]:
@@ -156,9 +169,40 @@ def score_negative_control(extracted: dict[str, Any], expected: dict[str, Any]) 
     return {"pass": passed, "checks": checks}
 
 
+def score_gap_probe(extracted: dict[str, Any], probe: dict[str, Any]) -> dict[str, Any]:
+    """Probe passes if unclassified_notes names the gap. Taxonomy fields the
+    key states are scored with the frozen scorer and reported beside it;
+    functions are never scored on a probe."""
+    notes = (extracted.get("unclassified_notes") or "").lower()
+    terms = GAP_TERMS.get(probe["id"], ())
+    hits = [t for t in terms if t in notes]
+    fields = {}
+    ok, reason = score_offering_type(extracted.get("offering_type", ""), probe["offering_type_ok"])
+    fields["offering_type"] = {"pass": ok, "reason": reason}
+    ok, reason = score_form(extracted.get("form", ""), probe["form_ok"])
+    fields["form"] = {"pass": ok, "reason": reason}
+    if "primary_class_ok" in probe:
+        ok, reason = score_primary_class(extracted.get("primary_class", ""), probe["primary_class_ok"])
+        fields["primary_class"] = {"pass": ok, "reason": reason}
+    industries = [i["value"] if isinstance(i, dict) else i for i in extracted.get("industries", [])]
+    ok, reason, _ = score_industries(
+        industries, probe["industries_required"], probe.get("industries_any", []),
+        probe.get("industries_must_not", []), probe.get("industries_ok_extra", []),
+    )
+    fields["industries"] = {"pass": ok, "reason": reason}
+    return {
+        "gap_named": bool(hits),
+        "gap_terms_matched": hits,
+        "gap_terms_checked": list(terms),
+        "unclassified_notes": extracted.get("unclassified_notes", ""),
+        "fields": fields,
+    }
+
+
 def test_robot(
     robot: dict[str, Any],
-    use_product_hint: bool = False
+    use_product_hint: bool = False,
+    group: str | None = None,
 ) -> dict[str, Any]:
     """
     Test one robot and return taxonomy-based scores.
@@ -179,7 +223,9 @@ def test_robot(
     url = robot['url']
     
     # Handle negative controls which have different structure
-    is_negative_control = 'expected' in robot
+    group = group or ('negative_control' if 'expected' in robot else 'robot')
+    is_negative_control = group == 'negative_control'
+    is_gap_probe = group == 'gap_probe'
     if is_negative_control:
         product_name = None
         display_name = robot.get('description', robot_id)
@@ -279,7 +325,15 @@ def test_robot(
             print(f"Unclassified notes: {extracted['unclassified_notes']}")
         
         # Score against expected (only for regular robots, not negative controls)
-        if not is_negative_control:
+        gap = None
+        if is_gap_probe:
+            score = None
+            gap = score_gap_probe(extracted, robot)
+            bucket = 'GAP_NAMED' if gap['gap_named'] else 'GAP_NOT_NAMED'
+            print(f"{'✅' if gap['gap_named'] else '❌'} Gap probe: matched {gap['gap_terms_matched']}")
+            for field, fs in gap['fields'].items():
+                print(f"  {field}: {'ok' if fs['pass'] else 'FAIL'} ({fs['reason']})")
+        elif not is_negative_control:
             score = score_robot(extracted, robot)
             
             bucket = 'PASSED' if score['robot_pass'] else 'EXTRACTION_FAILED'
@@ -312,6 +366,7 @@ def test_robot(
             'used_product_hint': use_product_hint,
             'is_negative_control': is_negative_control,
             'negative_control_score': neg if is_negative_control else None,
+            'gap_probe_score': gap,
         }
         
     except Exception as e:
@@ -331,24 +386,48 @@ def test_robot(
         }
 
 
+def unsupported_by_field(results: list[dict[str, Any]]) -> dict[str, int]:
+    """Count facts the evidence policy blanked or dropped, by field."""
+    counts = {f: 0 for f in UNSUPPORTED_FIELDS}
+    for r in results:
+        for fact in (r.get('extracted') or {}).get('unsupported_facts') or []:
+            counts[fact.get('field', 'unknown')] = counts.get(fact.get('field', 'unknown'), 0) + 1
+    return counts
+
+
 def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
-    """Robots and negative controls are summarized separately, never pooled."""
-    robots = [r for r in results if not r.get('is_negative_control') and not r['id'].startswith('neg-')]
-    negs = [r for r in results if r.get('is_negative_control') or r['id'].startswith('neg-')]
+    """Robots, gap probes and negative controls are summarized separately, never pooled."""
+    by_group = {g: [r for r in results if r.get('group') == g] for _, g in GROUPS}
+    robots = by_group['robot']
     readable = [r for r in robots if r.get('bucket') != 'FETCH_FAILED']
+
+    def verdict(r: dict[str, Any], pass_bucket: str) -> str:
+        if r.get('bucket') == 'FETCH_FAILED':
+            return 'NOT READ'
+        if 'error' in r:
+            return 'CRASHED'
+        return 'PASS' if r.get('bucket') == pass_bucket else 'FAIL'
+
     return {
         'robots': {
             'total': len(robots),
             'unreadable': [r['id'] for r in robots if r.get('bucket') == 'FETCH_FAILED'],
             'readable': len(readable),
+            'crashed': [r['id'] for r in readable if 'error' in r],
             'passed': [r['id'] for r in readable if r.get('bucket') == 'PASSED'],
             'failed': [r['id'] for r in readable if r.get('bucket') != 'PASSED'],
             'per_field_accuracy': compute_per_field_accuracy(robots),
+            'unsupported_by_field': unsupported_by_field(robots),
+        },
+        'taxonomy_gap_probes': {
+            'verdicts': {r['id']: verdict(r, 'GAP_NAMED') for r in by_group['gap_probe']},
+            'fields': {r['id']: {f: v['pass'] for f, v in r['gap_probe_score']['fields'].items()}
+                       for r in by_group['gap_probe'] if r.get('gap_probe_score')},
+            'unsupported_by_field': unsupported_by_field(by_group['gap_probe']),
         },
         'negative_controls': {
-            r['id']: ('NOT READ' if r.get('bucket') == 'FETCH_FAILED'
-                      else 'PASS' if r.get('bucket') == 'NEG_PASS' else 'FAIL')
-            for r in negs
+            'verdicts': {r['id']: verdict(r, 'NEG_PASS') for r in by_group['negative_control']},
+            'unsupported_by_field': unsupported_by_field(by_group['negative_control']),
         },
     }
 
@@ -378,17 +457,21 @@ def main():
     print("=" * 80)
     print(f"Benchmark: {BENCHMARK_PATH} ({benchmark['version']})")
     print(f"Taxonomy: {taxonomy['name']} {taxonomy['version']}")
-    print(f"Robots: {len(benchmark['robots'])}, negative controls: {len(benchmark.get('negative_controls', []))}")
+    print("Groups: " + ", ".join(f"{key} {len(benchmark.get(key, []))}" for key, _ in GROUPS))
     print(f"Snapshots: {FIXTURES_DIR}")
 
-    cases = benchmark['robots'] + benchmark.get('negative_controls', [])
+    cases = [(r, group) for key, group in GROUPS for r in benchmark.get(key, [])]
     if args.robot:
-        cases = [r for r in cases if r['id'] == args.robot]
+        cases = [(r, g) for r, g in cases if r['id'] == args.robot]
         if not cases:
             print(f"❌ ID '{args.robot}' not found in benchmark")
             return 1
 
-    results = [test_robot(r, use_product_hint=use_hint) for r in cases]
+    results = []
+    for case, group in cases:
+        result = test_robot(case, use_product_hint=use_hint, group=group)
+        result['group'] = group
+        results.append(result)
     summary = summarize(results)
     rob = summary['robots']
 
@@ -399,7 +482,8 @@ def main():
     print(f"Summary — hint {args.hint.upper()}")
     print("=" * 80)
     print(f"Robots: {len(rob['passed'])} of {rob['readable']} readable passed "
-          f"({rob['total']} total, {len(rob['unreadable'])} unreadable: {rob['unreadable']})")
+          f"({rob['total']} total, {len(rob['unreadable'])} unreadable: {rob['unreadable']}, "
+          f"crashed: {rob['crashed']})")
     for field, acc in rob['per_field_accuracy'].items():
         print(f"  {field:20s}: {acc:5.1%}")
     print("Robot failures:")
@@ -410,9 +494,15 @@ def main():
                        ('offering_type', 'form', 'primary_class', 'functions', 'industries')
                        if f in score and not score[f]['pass']] or [r.get('error', 'no score')]
             print(f"  {r['id']}: " + " | ".join(reasons))
+    print(f"Robot fields blanked as unsupported: {rob['unsupported_by_field']}")
+    print("Taxonomy gap probes:")
+    for pid, verdict in summary['taxonomy_gap_probes']['verdicts'].items():
+        print(f"  {pid}: {verdict}  fields: {summary['taxonomy_gap_probes']['fields'].get(pid)}")
+    print(f"  blanked as unsupported: {summary['taxonomy_gap_probes']['unsupported_by_field']}")
     print("Negative controls:")
-    for nid, verdict in summary['negative_controls'].items():
+    for nid, verdict in summary['negative_controls']['verdicts'].items():
         print(f"  {nid}: {verdict}")
+    print(f"  blanked as unsupported: {summary['negative_controls']['unsupported_by_field']}")
     print(f"Tokens: {total_tokens:,}  Time: {total_elapsed:.1f}s")
 
     args.output.parent.mkdir(parents=True, exist_ok=True)

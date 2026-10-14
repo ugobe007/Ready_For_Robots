@@ -26,5 +26,10 @@ Settings live in `app/services/robot_understanding_v1/extraction_config.json`:
 | `evidence_check` | `normalized_substring` | How evidence is checked against page text |
 | `exclude_unsupported_facts` | `true` | Remove unsupported facts from the record (set `false` to keep them with capped confidence) |
 | `unsupported_confidence_cap` | `0.3` | Confidence recorded for logged unsupported facts |
+| `max_malformed_output_retries` | `1` | Extra calls allowed when the response has no tool call or its products cannot be parsed. Never retried on content. Tokens from every attempt are counted. |
 
 The answer key and scorer are unchanged by either rule.
+
+## 3. Reporting
+
+The benchmark runner reports robots, taxonomy gap probes and negative controls as separate results, each with a count of fields blanked as unsupported, by field. Results without the product hint are the production number and come first.
