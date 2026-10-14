@@ -81,7 +81,17 @@
         "hospital",
         "restaurant"
       ],
-      "notes": "Multi-product warehouse line."
+      "notes": "Multi-product warehouse line.",
+      "target_aliases": [
+        "RoboShuttle",
+        "RoboShuttle Hyper",
+        "PopPick",
+        "Skycube",
+        "P800",
+        "P1200",
+        "RS Air",
+        "RoboArm"
+      ]
     },
     {
       "id": "v2-02",
@@ -117,7 +127,10 @@
         "restaurant",
         "hospital"
       ],
-      "notes": "Mirror of Symbotic: retailers operating their own DCs. Retail or warehouse both acceptable."
+      "notes": "Mirror of Symbotic: retailers operating their own DCs. Retail or warehouse both acceptable.",
+      "target_aliases": [
+        "Skypod"
+      ]
     },
     {
       "id": "v2-03",
@@ -151,6 +164,13 @@
       "notes": "Material transport INSIDE factories: buyer is a manufacturer, not a warehouse.",
       "industries_ok_extra": [
         "warehouse_distribution"
+      ],
+      "target_aliases": [
+        "OTTO 100",
+        "OTTO 600",
+        "OTTO 1200",
+        "OTTO 1500",
+        "OTTO Lifter"
       ]
     },
     {
@@ -184,7 +204,13 @@
         "restaurant",
         "hospital"
       ],
-      "notes": ""
+      "notes": "",
+      "target_aliases": [
+        "Lift EL1",
+        "Lift RS1",
+        "Lift CR1",
+        "Tow Tractor"
+      ]
     },
     {
       "id": "v2-05",
@@ -220,7 +246,10 @@
         "hospital",
         "restaurant"
       ],
-      "notes": ""
+      "notes": "",
+      "target_aliases": [
+        "Vecna AFL"
+      ]
     },
     {
       "id": "v2-06",
@@ -256,7 +285,10 @@
         "hospital",
         "construction"
       ],
-      "notes": "Multi-product (also robotaxis). Score the sidewalk delivery robot only."
+      "notes": "Multi-product (also robotaxis). Score the sidewalk delivery robot only.",
+      "target_aliases": [
+        "Delivery Robot"
+      ]
     },
     {
       "id": "v2-07",
@@ -285,7 +317,8 @@
       "industries_must_not": [
         "warehouse_distribution"
       ],
-      "notes": "Australian copy."
+      "notes": "Australian copy.",
+      "target_not_on_page": "The saved page does not name SwarmBot."
     },
     {
       "id": "v2-08",
@@ -326,7 +359,8 @@
       "industries_must_not": [
         "construction"
       ],
-      "notes": "Site may present partner robots it distributes. If the page is mainly a reseller catalog, say so in unclassified_notes."
+      "notes": "Site may present partner robots it distributes. If the page is mainly a reseller catalog, say so in unclassified_notes.",
+      "target_not_on_page": "The saved page does not name a cleaning robot."
     },
     {
       "id": "v2-09",
@@ -361,7 +395,10 @@
         "manufacturing",
         "construction"
       ],
-      "notes": "Hotel room-service/minibar robot (European)."
+      "notes": "Hotel room-service/minibar robot (European).",
+      "target_aliases": [
+        "JEEVES"
+      ]
     },
     {
       "id": "v2-10",
@@ -400,7 +437,8 @@
         "restaurant",
         "hotel"
       ],
-      "notes": "Security-as-a-service with two robot forms; either form accepted."
+      "notes": "Security-as-a-service with two robot forms; either form accepted.",
+      "unreadable_reason": "The snapshot is a security block for another site, not Asylon's product page."
     },
     {
       "id": "v2-11",
@@ -431,7 +469,10 @@
         "restaurant",
         "hospital"
       ],
-      "notes": "Oil and gas / chemical sites."
+      "notes": "Oil and gas / chemical sites.",
+      "target_aliases": [
+        "ExR-2.5"
+      ]
     },
     {
       "id": "v2-12",
@@ -465,7 +506,8 @@
         "restaurant",
         "warehouse_distribution"
       ],
-      "notes": "Buyer-industry test: mining operators = energy_utilities (definition includes mining). Offering must be autonomy_software."
+      "notes": "Buyer-industry test: mining operators = energy_utilities (definition includes mining). Offering must be autonomy_software.",
+      "unreadable_reason": "Pronto acquired SafeAI. safeai.ai redirects to pronto.ai and the page has 127 words. No substitution."
     },
     {
       "id": "v2-13",
@@ -501,6 +543,9 @@
       "notes": "Rail lift on scaffolding; industrial maintenance sites allowed as extra.",
       "industries_ok_extra": [
         "energy_utilities"
+      ],
+      "target_aliases": [
+        "LIFTBOT"
       ]
     },
     {
@@ -536,6 +581,10 @@
         "senior_living",
         "airport",
         "hotel"
+      ],
+      "target_aliases": [
+        "UVD Robot",
+        "UVD Robot Pharma"
       ]
     },
     {
@@ -570,7 +619,10 @@
       "industries_must_not": [
         "construction"
       ],
-      "notes": "Airport coverage."
+      "notes": "Airport coverage.",
+      "target_aliases": [
+        "Ottobot"
+      ]
     },
     {
       "id": "v2-16",
@@ -608,6 +660,22 @@
         "restaurant",
         "qsr_fast_food",
         "food_manufacturing"
+      ],
+      "target_aliases": [
+        "P3020",
+        "H2515",
+        "H2017",
+        "M1509",
+        "M1013",
+        "M0617",
+        "M0609",
+        "A0912S",
+        "A0912F",
+        "A0912",
+        "A0509S",
+        "A0509F",
+        "A0509",
+        "E0509"
       ]
     },
     {
@@ -645,6 +713,9 @@
       "industries_ok_extra": [
         "food_manufacturing",
         "warehouse_distribution"
+      ],
+      "target_aliases": [
+        "CRX-10iA/L Paint"
       ]
     },
     {
@@ -679,7 +750,10 @@
         "restaurant",
         "hospital"
       ],
-      "notes": "Drone or camera-on-forklift inventory scanning; either form accepted."
+      "notes": "Drone or camera-on-forklift inventory scanning; either form accepted.",
+      "target_aliases": [
+        "Gather AI"
+      ]
     },
     {
       "id": "v2-19",
@@ -715,7 +789,12 @@
       "industries_must_not": [
         "construction"
       ],
-      "notes": "Singapore copy."
+      "notes": "Singapore copy.",
+      "target_aliases": [
+        "R5",
+        "R3 Scrub Pro",
+        "R3 Vac"
+      ]
     }
   ],
   "taxonomy_gap_probes": [
@@ -737,7 +816,10 @@
         "grocery",
         "restaurant"
       ],
-      "expected_gap": "Licenses autonomy to automakers/mobility companies: no matching industry value. PASS = notes name automotive/mobility as unmapped, and the old grocery/pizza delivery business is NOT tagged."
+      "expected_gap": "Licenses autonomy to automakers/mobility companies: no matching industry value. PASS = notes name automotive/mobility as unmapped, and the old grocery/pizza delivery business is NOT tagged.",
+      "target_aliases": [
+        "Nuro Driver"
+      ]
     },
     {
       "id": "gp2-02",
@@ -759,7 +841,12 @@
         "restaurant",
         "warehouse_distribution"
       ],
-      "expected_gap": "Wearable exoskeleton: no matching form value. PASS = notes name exoskeleton/wearable as unmapped. Form is not scored."
+      "expected_gap": "Wearable exoskeleton: no matching form value. PASS = notes name exoskeleton/wearable as unmapped. Form is not scored.",
+      "target_aliases": [
+        "EksoNR",
+        "Ekso Indego Personal",
+        "Ekso EVO"
+      ]
     },
     {
       "id": "gp2-03",
@@ -782,7 +869,29 @@
       "industries_must_not": [
         "restaurant"
       ],
-      "expected_gap": "Sold largely as research/education/developer platforms: no fitting primary class. PASS = notes say so. Primary class and function not scored."
+      "expected_gap": "Sold largely as research/education/developer platforms: no fitting primary class. PASS = notes say so. Primary class and function not scored.",
+      "target_aliases": [
+        "As2",
+        "As2-W",
+        "Go2",
+        "Go1",
+        "A1",
+        "A2",
+        "B2",
+        "B1",
+        "AlienGo",
+        "H2",
+        "H1",
+        "H1-2",
+        "G1",
+        "R1",
+        "H2-D",
+        "R1-A",
+        "R1-A-D",
+        "G1-D",
+        "G1-Comp",
+        "G1-Boxing"
+      ]
     }
   ],
   "negative_controls": [

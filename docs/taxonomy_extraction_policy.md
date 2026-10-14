@@ -49,6 +49,7 @@ The model first classifies the page itself as one of `page_types` in the config.
 5. The entry is scored with the frozen scorer on the first record, in extraction order, that matches `target_product` or any alias. Field accuracy is also reported across every matched record (`per_field_accuracy_all_matched_records`, pass/total per field).
 6. If no record matches (including pages that produced no records), the entry fails as `target_not_extracted`. That is its own failure type, listed separately with the extracted names. Per-field accuracy is computed only over entries whose target record was found.
 7. An entry with `unreadable_reason` in the key is reported as unreadable with that reason and is not extracted (e.g. the company was acquired and the URL now serves another company's site; no substitute company is used).
+7a. An entry with `target_not_on_page` (the saved page loaded, but it does not describe the target robot) is reported as `target_not_on_page` and is not extracted. It is not an extraction failure and not `target_not_extracted`.
 8. Extraction uses the snapshot's `final_url` (after redirects or a same-company `--url` retake), not the key's original URL.
 9. Gap probes use the same selection. Negative controls have no target and must produce no records (Reporting).
 

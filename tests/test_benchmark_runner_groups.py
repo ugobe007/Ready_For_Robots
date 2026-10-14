@@ -164,6 +164,22 @@ def _fake_snapshot(monkeypatch, runner, final_url="https://final.example/p", wor
         "text": "word " * words, "html": ""})
 
 
+def test_target_not_on_page_is_separate_from_extraction_failure(monkeypatch):
+    runner = runner_module()
+    _fake_snapshot(monkeypatch, runner)
+    called = []
+    monkeypatch.setattr(runner, "extract_robot_taxonomy_values", lambda **kw: called.append(kw))
+    r = runner.test_robot({"id": "v2-07", "company": "SwarmFarm Robotics", "url": "https://www.swarmfarm.com",
+                           "target_product": "SwarmBot",
+                           "target_not_on_page": "The saved page does not name SwarmBot."})
+    assert r["bucket"] == "TARGET_NOT_ON_PAGE"
+    assert called == []
+    r["group"] = "robot"
+    summary = summarize([r])["robots"]
+    assert summary["target_not_on_page"] == {"v2-07": "The saved page does not name SwarmBot."}
+    assert summary["failed"] == [] and summary["target_not_extracted"] == [] and summary["readable"] == 0
+
+
 def test_unreadable_reason_in_key_is_fetch_failed_with_reason(monkeypatch):
     runner = runner_module()
     _fake_snapshot(monkeypatch, runner)

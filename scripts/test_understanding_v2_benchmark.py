@@ -345,6 +345,19 @@ def test_robot(
             'snapshot_date': metadata.get('fetch_date'),
             'used_product_hint': use_product_hint,
         }
+
+    if robot.get('target_not_on_page'):
+        reason = robot['target_not_on_page']
+        print(f"⚠️  target_not_on_page: {reason}")
+        return {
+            'id': robot_id,
+            'company': robot.get('company', ''),
+            'url': metadata.get('final_url') or url,
+            'bucket': 'TARGET_NOT_ON_PAGE',
+            'target_not_on_page': reason,
+            'snapshot_date': metadata.get('fetch_date'),
+            'used_product_hint': use_product_hint,
+        }
     
     if metadata.get('status_code') != 200:
         error_msg = metadata.get('error', 'Unknown error')
@@ -519,7 +532,7 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
     """Robots, gap probes and negative controls are summarized separately, never pooled."""
     by_group = {g: [r for r in results if r.get('group') == g] for _, g in GROUPS}
     robots = by_group['robot']
-    readable = [r for r in robots if r.get('bucket') != 'FETCH_FAILED']
+    readable = [r for r in robots if r.get('bucket') not in ('FETCH_FAILED', 'TARGET_NOT_ON_PAGE')]
 
     def verdict(r: dict[str, Any], pass_bucket: str) -> str:
         if r.get('bucket') == 'FETCH_FAILED':
@@ -548,6 +561,8 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
             'unreadable': [r['id'] for r in robots if r.get('bucket') == 'FETCH_FAILED'],
             'unreadable_reasons': {r['id']: r.get('unreadable_reason') or r.get('fetch_error')
                                    for r in robots if r.get('bucket') == 'FETCH_FAILED'},
+            'target_not_on_page': {r['id']: r.get('target_not_on_page')
+                                   for r in robots if r.get('bucket') == 'TARGET_NOT_ON_PAGE'},
             'readable': len(readable),
             'crashed': [r['id'] for r in readable if 'error' in r],
             'passed': [r['id'] for r in readable if r.get('bucket') == 'PASSED'],
@@ -636,6 +651,7 @@ def main():
           f"crashed: {rob['crashed']})")
     for rid, reason in rob['unreadable_reasons'].items():
         print(f"  unreadable {rid}: {reason}")
+    print(f"Target not on page: {rob['target_not_on_page']}")
     print(f"Target not extracted: {len(rob['target_not_extracted'])} {rob['target_not_extracted']}")
     print("Per-field accuracy (first alias-matched record per entry):")
     for field, acc in rob['per_field_accuracy'].items():
