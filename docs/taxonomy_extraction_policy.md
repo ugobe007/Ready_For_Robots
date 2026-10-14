@@ -34,6 +34,21 @@ The model first classifies the page itself as one of `page_types` in the config.
 - Output limit: `max_output_tokens` (8,192).
 - At most `max_records_per_page` (5) records per page: the hinted target product plus at most 4 others, or the first 5 without a hint. The extra records are dropped and counted in `records_dropped_by_cap`.
 
+## 6. Record selection
+
+**Production** keeps every product record on a page (up to the rule 5 cap). No record is picked as "the" robot for the URL; each record is a separate robot and is matched to jobs separately.
+
+**Benchmark scoring** (fixed before hold-out v2):
+
+1. Extraction runs without the product hint. That is the headline. The run with the hint is reported second, as a reference.
+2. The runner matches the answer key's `target_product` against the extracted product names and scores only that record with the frozen scorer. It never falls back to the first record.
+3. Name match (`names_match` in `scripts/test_understanding_v2_benchmark.py`):
+   - Both names are normalized: lowercase, `™ ® ©` removed, split into letter/digit tokens (punctuation and `+` are separators), and a trailing plural `s` removed from tokens longer than 3 letters.
+   - It is a match if the token lists are equal, or if the shorter list appears as a contiguous run inside the longer one and is not made only of generic words (`a an the and of robot robotic robotics system series autonomous`).
+   - An exact match wins; otherwise the first record that matches.
+4. If no record matches (including pages that produced no records), the entry fails as `target_not_extracted`. That is its own failure type, listed separately with the extracted names. Per-field accuracy is computed only over entries whose target record was found.
+5. Gap probes use the same selection. Negative controls have no target and must produce no records (Reporting).
+
 ## Settings
 
 All in `app/services/robot_understanding_v1/extraction_config.json`:
@@ -49,7 +64,7 @@ All in `app/services/robot_understanding_v1/extraction_config.json`:
 | `page_types` | 4 types with definitions | Rule 4; the definitions go into the prompt verbatim |
 | `record_page_types` | `manufacturer_product_page` | Rule 4 |
 
-The answer key and scorer are unchanged by these rules.
+The answer key and the field scorer (`scripts/benchmark_scoring_v2.py`) are unchanged by these rules.
 
 ## Reporting
 

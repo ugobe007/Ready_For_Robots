@@ -9,6 +9,7 @@ Usage:
     python3 scripts/test_understanding_v2_benchmark.py --robot hc-01
 """
 import json
+import re
 import sys
 import time
 from pathlib import Path
@@ -84,10 +85,58 @@ def load_snapshot(robot_id: str) -> dict[str, Any] | None:
     }
 
 
+GENERIC_NAME_TOKENS = {"a", "an", "the", "and", "of", "robot", "robotic", "robotics", "system", "serie", "autonomous"}
+
+
+def name_tokens(name: str) -> list[str]:
+    """Lowercase alphanumeric tokens; ™/®/punctuation dropped; a trailing plural 's' removed."""
+    tokens = re.findall(r"[a-z0-9]+", re.sub(r"[™®©]", "", (name or "").lower()))
+    return [t[:-1] if len(t) > 3 and t.endswith("s") and not t.endswith("ss") else t for t in tokens]
+
+
+def names_match(target: str, name: str) -> bool:
+    """Equal token lists, or one is a contiguous run inside the other that is not only generic words."""
+    t, n = name_tokens(target), name_tokens(name)
+    if not t or not n:
+        return False
+    if t == n:
+        return True
+    short, long_ = (n, t) if len(n) <= len(t) else (t, n)
+    if all(tok in GENERIC_NAME_TOKENS for tok in short):
+        return False
+    return any(long_[i:i + len(short)] == short for i in range(len(long_) - len(short) + 1))
+
+
+def select_target_record(products: list[dict[str, Any]], target: str) -> int | None:
+    """Index of the record whose name matches target_product: exact token match first, then containment."""
+    names = [p.get("product_name", "") for p in products]
+    for i, name in enumerate(names):
+        if name_tokens(name) == name_tokens(target) and name_tokens(name):
+            return i
+    for i, name in enumerate(names):
+        if names_match(target, name):
+            return i
+    return None
+
+
+def _empty_extraction(offering_type: str, note: str) -> dict[str, Any]:
+    return {
+        "offering_type": offering_type,
+        "form": "",
+        "primary_class": "",
+        "primary_function": {},
+        "secondary_functions": [],
+        "industries": [],
+        "unsupported_facts": [],
+        "unclassified_notes": note,
+    }
+
+
 def extract_robot_taxonomy_values(
     url: str,
     page_text: str,
-    product_name_hint: str | None = None
+    product_name_hint: str | None = None,
+    target_product: str | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     """
     Extract taxonomy values using semantic extraction.
@@ -118,27 +167,18 @@ def extract_robot_taxonomy_values(
     metadata = {**result.get("extraction_metadata", {}),
                 "page": page,
                 "product_names": [p.get("product_name", "") for p in products]}
+    page_offering = (page or {}).get("offering_type", "")
+    if target_product is not None:
+        index = select_target_record(products, target_product)
+        metadata["target_product"] = target_product
+        metadata["target_record_index"] = index
+        metadata["target_not_extracted"] = index is None
+        if index is None:
+            return _empty_extraction(page_offering if not products else "", "target_not_extracted"), metadata
+        return _flatten_product(products[index]), metadata
     if not products:
-        return {
-            "offering_type": (page or {}).get("offering_type", ""),
-            "form": "",
-            "primary_class": "",
-            "primary_function": {},
-            "secondary_functions": [],
-            "industries": [],
-            "unsupported_facts": [],
-            "unclassified_notes": "No products extracted",
-        }, metadata
-
-    chosen = products[0]
-    if product_name_hint:
-        hint_lower = product_name_hint.lower()
-        for product in products:
-            product_name_lower = product.get("product_name", "").lower()
-            if hint_lower in product_name_lower or product_name_lower in hint_lower:
-                chosen = product
-                break
-    return _flatten_product(chosen), metadata
+        return _empty_extraction(page_offering, "No products extracted"), metadata
+    return _flatten_product(products[0]), metadata
 
 
 def _flatten_product(product: dict[str, Any]) -> dict[str, Any]:
@@ -324,7 +364,8 @@ def test_robot(
         extracted, metadata = extract_robot_taxonomy_values(
             url=url,
             page_text=page_text,
-            product_name_hint=product_name
+            product_name_hint=product_name,
+            target_product=None if is_negative_control else robot.get('target_product'),
         )
         
         elapsed = time.time() - t0
@@ -358,7 +399,14 @@ def test_robot(
         
         # Score against expected (only for regular robots, not negative controls)
         gap = None
-        if is_gap_probe:
+        if not is_negative_control:
+            idx = metadata.get('target_record_index')
+            print(f"Target record: {'NOT EXTRACTED' if idx is None else repr(metadata['product_names'][idx])}")
+        if not is_negative_control and metadata.get('target_not_extracted'):
+            score = None
+            bucket = 'TARGET_NOT_EXTRACTED'
+            print(f"❌ target_not_extracted: {robot.get('target_product')!r} not among {metadata.get('product_names')}")
+        elif is_gap_probe:
             score = None
             gap = score_gap_probe(extracted, robot)
             bucket = 'GAP_NAMED' if gap['gap_pass'] else 'GAP_NOT_NAMED'
@@ -439,6 +487,8 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
             return 'NOT READ'
         if 'error' in r:
             return 'CRASHED'
+        if r.get('bucket') == 'TARGET_NOT_EXTRACTED':
+            return 'TARGET_NOT_EXTRACTED'
         return 'PASS' if r.get('bucket') == pass_bucket else 'FAIL'
 
     def page_types(rows: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
@@ -461,6 +511,11 @@ def summarize(results: list[dict[str, Any]]) -> dict[str, Any]:
             'crashed': [r['id'] for r in readable if 'error' in r],
             'passed': [r['id'] for r in readable if r.get('bucket') == 'PASSED'],
             'failed': [r['id'] for r in readable if r.get('bucket') != 'PASSED'],
+            'target_not_extracted': [r['id'] for r in readable if r.get('bucket') == 'TARGET_NOT_EXTRACTED'],
+            'target_records': {r['id']: {'target': (r.get('metadata') or {}).get('target_product'),
+                                         'records': (r.get('metadata') or {}).get('product_names'),
+                                         'index': (r.get('metadata') or {}).get('target_record_index')}
+                               for r in readable if 'metadata' in r},
             'per_field_accuracy': compute_per_field_accuracy(robots),
             'unsupported_by_field': unsupported_by_field(robots),
             'page_types': page_types(robots),
@@ -535,15 +590,20 @@ def main():
     print(f"Robots: {len(rob['passed'])} of {rob['readable']} readable passed "
           f"({rob['total']} total, {len(rob['unreadable'])} unreadable: {rob['unreadable']}, "
           f"crashed: {rob['crashed']})")
+    print(f"Target not extracted: {len(rob['target_not_extracted'])} {rob['target_not_extracted']}")
+    print("Per-field accuracy (records that matched target_product):")
     for field, acc in rob['per_field_accuracy'].items():
         print(f"  {field:20s}: {acc:5.1%}")
     print("Robot failures:")
     for r in results:
         if r['id'] in rob['failed']:
             score = r.get('score') or {}
-            reasons = [f"{f}: {score[f]['reason']}" for f in
-                       ('offering_type', 'form', 'primary_class', 'functions', 'industries')
-                       if f in score and not score[f]['pass']] or [r.get('error', 'no score')]
+            if r.get('bucket') == 'TARGET_NOT_EXTRACTED':
+                reasons = [f"target_not_extracted (records: {r['metadata'].get('product_names')})"]
+            else:
+                reasons = [f"{f}: {score[f]['reason']}" for f in
+                           ('offering_type', 'form', 'primary_class', 'functions', 'industries')
+                           if f in score and not score[f]['pass']] or [r.get('error', 'no score')]
             print(f"  {r['id']}: " + " | ".join(reasons))
     print(f"Robot fields blanked as unsupported: {rob['unsupported_by_field']}")
     print("Taxonomy gap probes:")

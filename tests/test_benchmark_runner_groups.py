@@ -1,4 +1,12 @@
-from scripts.test_understanding_v2_benchmark import score_gap_probe, score_negative_control, summarize
+import pytest
+
+from scripts.test_understanding_v2_benchmark import (
+    names_match,
+    score_gap_probe,
+    score_negative_control,
+    select_target_record,
+    summarize,
+)
 
 PROBE = {
     "id": "gp-02",
@@ -103,6 +111,76 @@ def test_summary_keeps_three_groups_separate_and_counts_unsupported_by_field():
     assert s["taxonomy_gap_probes"]["unsupported_by_field"]["primary_function"] == 1
     assert s["negative_controls"]["verdicts"] == {"neg-h1": "FAIL"}
     assert s["negative_controls"]["unsupported_by_field"]["offering_type"] == 1
+
+
+@pytest.mark.parametrize("target,name,expected", [
+    ("Spot", "Spot", True),
+    ("Vision 60", "Vision 60 (Q-UGV)", True),
+    ("Skydio X10 / Dock", "X10", True),
+    ("LIFTBOT scaffolding robot", "LIFTBOT™", True),
+    ("UVD Robot", "UVD Robots", True),
+    ("Geek+ warehouse robots", "Geek+ P800", False),
+    ("TUG", "T3 Robot", False),
+    ("Cartken delivery robots", "Cartken Hauler", False),
+    ("UVD Robot", "Robot", False),
+    ("Badger retail robot", "Badger Technologies Digital Teammate (Autonomous Retail Robot)", False),
+])
+def test_names_match(target, name, expected):
+    assert names_match(target, name) is expected
+
+
+def test_select_prefers_exact_then_first_containment():
+    products = [{"product_name": "X10 Dock"}, {"product_name": "Spot"}, {"product_name": "Spot Arm"}]
+    assert select_target_record(products, "Spot") == 1
+    assert select_target_record(products, "Skydio X10 / Dock") == 0
+    assert select_target_record(products, "TUG") is None
+
+
+def _fake_extract(monkeypatch, names, page_type="manufacturer_product_page"):
+    import scripts.test_understanding_v2_benchmark as runner
+
+    products = [{"product_name": n, "offering_type": {"value": "robot_product"}, "form": {"value": f"form-{n}"},
+                 "primary_class": {"value": "x"}, "industries": []} for n in names]
+    page = {"page_type": page_type, "produces_records": page_type == "manufacturer_product_page",
+            "offering_type": "robot_product" if page_type == "manufacturer_product_page" else "non_robot"}
+    monkeypatch.setattr(runner, "extract_robot_taxonomy",
+                        lambda **_: {"page": page, "products": products, "extraction_metadata": {}})
+    return runner
+
+
+def test_scoring_uses_target_record_not_first(monkeypatch):
+    runner = _fake_extract(monkeypatch, ["T3 Robot", "TUG", "Carrello"])
+    extracted, meta = runner.extract_robot_taxonomy_values("u", "t", target_product="TUG")
+    assert extracted["form"] == "form-TUG"
+    assert meta["target_record_index"] == 1 and meta["target_not_extracted"] is False
+
+
+def test_target_not_extracted_is_flagged_and_empty(monkeypatch):
+    runner = _fake_extract(monkeypatch, ["T3 Robot", "Carrello"])
+    extracted, meta = runner.extract_robot_taxonomy_values("u", "t", target_product="TUG")
+    assert meta["target_not_extracted"] is True and meta["target_record_index"] is None
+    assert extracted["form"] == "" and extracted["unclassified_notes"] == "target_not_extracted"
+    assert meta["product_names"] == ["T3 Robot", "Carrello"]
+
+
+def test_non_manufacturer_page_robot_is_target_not_extracted(monkeypatch):
+    runner = _fake_extract(monkeypatch, [], page_type="news_press")
+    extracted, meta = runner.extract_robot_taxonomy_values("u", "t", target_product="TUG")
+    assert meta["target_not_extracted"] is True and extracted["offering_type"] == "non_robot"
+
+
+def test_summary_lists_target_not_extracted_as_failure_type():
+    results = [
+        {"id": "v2-01", "group": "robot", "bucket": "TARGET_NOT_EXTRACTED", "score": None,
+         "metadata": {"target_product": "Geek+ warehouse robots", "product_names": ["P800"], "target_record_index": None}},
+        {"id": "v2-02", "group": "robot", "bucket": "PASSED", "score": None, "metadata": {}},
+        {"id": "gp2-01", "group": "gap_probe", "bucket": "TARGET_NOT_EXTRACTED"},
+    ]
+    s = summarize(results)
+    assert s["robots"]["target_not_extracted"] == ["v2-01"]
+    assert "v2-01" in s["robots"]["failed"] and s["robots"]["passed"] == ["v2-02"]
+    assert s["robots"]["target_records"]["v2-01"]["records"] == ["P800"]
+    assert s["taxonomy_gap_probes"]["verdicts"] == {"gp2-01": "TARGET_NOT_EXTRACTED"}
 
 
 def test_page_type_only_result_flattens_to_non_robot(monkeypatch):
