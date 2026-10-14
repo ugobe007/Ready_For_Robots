@@ -1,6 +1,6 @@
 # RFR Build Spec: Buyer Opportunities v1
 
-**Owner:** Bob Christopher · **Status:** approved for build · **Version:** 1.2 (2026-10-14: "robot job" definition, automation-intent signals, stage mapping, Phase 0.5)
+**Owner:** Bob Christopher · **Status:** approved for build · **Version:** 1.3 (2026-10-14: form-fits-work matching rule; earlier: "robot job" definition, automation-intent signals, stage mapping, Phase 0.5)
 **Location in repo:** `docs/buyer_opportunity_spec.md`
 
 This document is the source of truth for what the agent builds next. If code, older docs, or `AGENTS.md` disagree with it, this document wins. If something here is unclear or seems wrong, **stop and ask Bob**; do not decide product meaning yourself. Changes to this spec require Bob's approval.
@@ -242,7 +242,8 @@ For a robot product R (current row, `page_type = manufacturer_product_page`):
 2. Candidate buyers = buyers with an industry in `R.industries` ∩ pilot industries **and** a workflow row in the candidate workflows whose status is not `committed`.
 3. If R has no industries, use the industries most common for its `primary_class` (config map), and label the card "industry inferred".
 4. Exclude `is_robot_maker` buyers.
-5. Rank per §6.
+5. **Form must fit the work.** Workflows that move through a building (`delivery_transport`, `serving_hospitality` table-running and bussing, `cleaning`, `security_patrol`) require a mobile form (AMR, mobile manipulator, legged, humanoid, autonomous vehicle, drone). A fixed or stationary robot (`robotic_arm_cobot`, `fixed_gantry_system`, `portable_stationary_unit`) never matches them, even if the industry fits. Example: RichTech ADAM is a stationary drink-making and drink-serving station for restaurants, hotels and bars; it matches `food_beverage_prep` (drink stations, bars, cafés), never bussing, room service, or food running. The compatibility table lives in config.
+6. Rank per §6.
 
 Reverse view (for the home page): opportunities sorted by §6, each listing the robot products that match its workflow and industry.
 
