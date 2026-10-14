@@ -130,6 +130,7 @@ CONFIGURATION_WORK_CAPABILITIES = frozenset(
         "hospitality_task",
         "serving_task",
         "food_prep",
+        "beverage_prep",
         "surface_clean",
         "hard_floor_scrub",
         "aerospace_task",
