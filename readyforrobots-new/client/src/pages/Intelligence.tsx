@@ -215,7 +215,7 @@ export default function Intelligence() {
                       3,000+
                     </span>
                     <span className="ml-2 font-display text-sm font-bold uppercase tracking-wider text-emerald-400">
-                      Verified Buyer Leads
+                      Buyer Leads
                     </span>
                   </div>
                 </div>

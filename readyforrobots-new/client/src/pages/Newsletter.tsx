@@ -155,7 +155,7 @@ function cleanHeadline(text?: string): string {
 function cleanSubheadline(text?: string): string {
   let s = cleanScrapedText(text || "");
   if (!s || s.includes("15 hot leads") || s.includes("25 buyer leads")) {
-    return "3,000+ verified buyer leads with 25 actionable daily signals — CapEx moves, labor pressure, deployments, and executive hires sourced from SIGNAL.";
+    return "3,000+ buyer leads with 25 actionable daily signals — CapEx moves, labor pressure, deployments, and executive hires sourced from SIGNAL.";
   }
   return s.replace(/\b15\s+hot\s+leads\b/gi, "3,000+ buyer leads");
 }
@@ -1093,7 +1093,7 @@ export default function Newsletter() {
 
         <WorkflowDriveBanner
           title="Turn Humanoid Intelligence into Buyer Pipeline"
-          subtitle="Paste your robot URL to instantly analyze task feasibility and generate 25 verified buyer leads."
+          subtitle="Paste your robot URL to instantly analyze task feasibility and generate 25 buyer leads."
           buttonText="Build 25 Lead Pipeline"
         />
       </main>

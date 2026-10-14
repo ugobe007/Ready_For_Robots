@@ -420,7 +420,7 @@ export function MarketingVsGenericAI() {
           <p className="mt-3 text-sm leading-relaxed text-slate-400">
             Horizontal &ldquo;AI&rdquo; search and data tools hand you a list.
             ReadyForRobots hands you a moving pipeline built for robot companies
-            — verified buyer intent, the right SKU, and deals advancing in CRM.
+            — buyer intent, the right SKU, and deals advancing in CRM.
           </p>
         </div>
 
