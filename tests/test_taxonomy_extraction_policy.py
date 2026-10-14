@@ -78,6 +78,26 @@ def test_string_encoded_products_are_parsed(raw):
     assert te._coerce_products(raw)[0]["company"] == "Acme"
 
 
+def _response(products):
+    block = SimpleNamespace(type="tool_use", name="classify_robot", input={"products": products})
+    return SimpleNamespace(content=[block], usage=SimpleNamespace(input_tokens=10, output_tokens=5),
+                           model="fake", stop_reason="tool_use")
+
+
+def test_malformed_output_is_retried_and_tokens_counted():
+    replies = iter([_response('[{"evidence": "an "unescaped" quote"}]'), _response([product()])])
+    client = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: next(replies)))
+    products, call = te._call_with_retry(client, {}, retries=1)
+    assert products[0]["company"] == "Acme"
+    assert call["attempts"] == 2 and call["input_tokens"] == 20 and len(call["errors"]) == 1
+
+
+def test_retry_gives_up_after_limit():
+    client = SimpleNamespace(messages=SimpleNamespace(create=lambda **kw: _response("not json")))
+    with pytest.raises(ValueError, match="after 2 attempts"):
+        te._call_with_retry(client, {}, retries=1)
+
+
 def test_prompt_carries_definition_and_version(monkeypatch):
     captured = {}
 

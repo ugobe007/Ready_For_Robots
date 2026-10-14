@@ -1,5 +1,6 @@
 {
   "evidence_check": "normalized_substring",
   "exclude_unsupported_facts": true,
-  "unsupported_confidence_cap": 0.3
+  "unsupported_confidence_cap": 0.3,
+  "max_malformed_output_retries": 1
 }

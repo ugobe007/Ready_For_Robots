@@ -318,6 +318,31 @@ def _coerce_products(raw: Any) -> list[dict[str, Any]]:
     return products
 
 
+def _call_with_retry(client: Any, request: dict[str, Any], retries: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    """Retry only when the response has no usable structure; never on content.
+
+    Tokens from every attempt are counted.
+    """
+    call = {"input_tokens": 0, "output_tokens": 0, "attempts": 0, "errors": [], "model": None}
+    for _ in range(retries + 1):
+        response = client.messages.create(**request)
+        call["attempts"] += 1
+        call["input_tokens"] += response.usage.input_tokens
+        call["output_tokens"] += response.usage.output_tokens
+        call["model"] = response.model
+        tool_result = next(
+            (b.input for b in response.content if b.type == "tool_use" and b.name == "classify_robot"),
+            None,
+        )
+        try:
+            if not tool_result:
+                raise ValueError(f"No tool call returned from LLM (stop_reason={response.stop_reason})")
+            return _coerce_products(tool_result.get("products", [])), call
+        except ValueError as e:
+            call["errors"].append(str(e)[:200])
+    raise ValueError(f"Malformed output after {call['attempts']} attempts: {call['errors'][-1]}")
+
+
 def extract_robot_taxonomy(
     url: str,
     page_text: str,
@@ -420,10 +445,9 @@ def extract_robot_taxonomy(
     
     prompt = "\n".join(prompt_parts)
     
-    # Call LLM with structured output
+    config = load_extraction_config()
     client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
-    
-    response = client.messages.create(
+    request = dict(
         model="claude-sonnet-4-6",
         max_tokens=4096,
         system=[
@@ -433,12 +457,7 @@ def extract_robot_taxonomy(
                 "cache_control": {"type": "ephemeral"}
             }
         ],
-        messages=[
-            {
-                "role": "user",
-                "content": prompt
-            }
-        ],
+        messages=[{"role": "user", "content": prompt}],
         tools=[
             {
                 "name": "classify_robot",
@@ -446,35 +465,24 @@ def extract_robot_taxonomy(
                 "input_schema": schema
             }
         ],
-        tool_choice={"type": "tool", "name": "classify_robot"}
+        tool_choice={"type": "tool", "name": "classify_robot"},
     )
-    
-    # Extract tool call result
-    tool_result = None
-    for block in response.content:
-        if block.type == "tool_use" and block.name == "classify_robot":
-            tool_result = block.input
-            break
-    
-    if not tool_result:
-        raise ValueError(f"No tool call returned from LLM (stop_reason={response.stop_reason})")
-    
-    config = load_extraction_config()
-    validated_products = [
-        apply_evidence_policy(product, page_text, config)
-        for product in _coerce_products(tool_result.get("products", []))
-    ]
-    
+    raw_products, call = _call_with_retry(client, request, config.get("max_malformed_output_retries", 0))
+
+    validated_products = [apply_evidence_policy(product, page_text, config) for product in raw_products]
+
     return {
         "products": validated_products,
         "extraction_metadata": {
             "taxonomy_version": taxonomy_version,
             "prompt_version": prompt_version,
             "cache_key": cache_key,
-            "tokens_used": response.usage.input_tokens + response.usage.output_tokens,
-            "input_tokens": response.usage.input_tokens,
-            "output_tokens": response.usage.output_tokens,
-            "model": response.model,
+            "tokens_used": call["input_tokens"] + call["output_tokens"],
+            "input_tokens": call["input_tokens"],
+            "output_tokens": call["output_tokens"],
+            "model": call["model"],
+            "attempts": call["attempts"],
+            "malformed_attempt_errors": call["errors"],
             "extraction_config": config,
         }
     }
