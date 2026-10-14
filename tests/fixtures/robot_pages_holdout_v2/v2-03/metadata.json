@@ -1,0 +1,15 @@
+{
+  "id": "v2-03",
+  "section": "robots",
+  "company": "OTTO Motors (Rockwell)",
+  "product": "OTTO autonomous mobile robots",
+  "url": "https://ottomotors.com",
+  "original_url": null,
+  "final_url": "https://ottomotors.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:10:00.733139Z",
+  "method": "playwright",
+  "word_count": 1241,
+  "snapshot_status": "OK",
+  "error": null
+}

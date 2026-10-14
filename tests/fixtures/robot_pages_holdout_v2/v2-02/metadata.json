@@ -1,0 +1,15 @@
+{
+  "id": "v2-02",
+  "section": "robots",
+  "company": "Exotec",
+  "product": "Skypod system",
+  "url": "https://www.exotec.com",
+  "original_url": null,
+  "final_url": "https://www.exotec.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:09:47.072835Z",
+  "method": "playwright",
+  "word_count": 1307,
+  "snapshot_status": "OK",
+  "error": null
+}

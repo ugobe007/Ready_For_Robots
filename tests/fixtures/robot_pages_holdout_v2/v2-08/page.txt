@@ -1,0 +1,24 @@
+SoftBank Robotics Group Corp. E m p o w e r i n g t h e F u t u r e w i t h R o b o t i c s & A I ABOUT US NEWS SOLUTION GROUP PROFILE JP EN REGION Japan EMEA Americas China APAC MENU Would you like to visit the SoftBank Robotics country site closer to you? Visit SoftBank Robotics America No thanks, I'll stay here CLOSE ABOUT US NEWS SOLUTION GROUP PROFILE JP EN REGION Japan EMEA Americas China APAC ABOUT US WE ARE A ROBOT INTEGRATOR We are a robot integrator. We create value through robotics globally by leveraging our proprietary knowledge and data as the worldwide leader in robotics solutions. Learn more about our company’s vision and mission We are a robot integrator. We create value through robotics globally by leveraging our proprietary knowledge and data as the worldwide leader in robotics solutions. NEWS Latest news from SoftBank Robotics Group Find our latest news and topics Oct 12, 2026 Singapore Business SJ Integrated Solutions and SoftBank Robotics Singapore Partner to Develop AI-Powered Facility Management Solution for Better-Performing Buildings Sep 30, 2026 France Solution SoftBank Robotics Expands AI & Robotics Solutions for Foodservice in EMEA Sep 28, 2026 Japan Solution SoftBank Robotics Launches Next-Generation Serving Robot “Servi Q” in Japan, Designed for Smooth, Reliable Operation in Compact Venues SOLUTION The challenge today is no longer how to build robots. It is how to get the most out of them Learn more about our robotic solutions GROUP Our group companies around the world See the list of our group companies PROFILE SoftBank Robotics Group corporate profile Learn more Japan Europe / Middle East / Africa Americas China APAC Information Security Policy Privacy Policy Product Brand Strategy Copyright © SoftBank Robotics Group. All rights reserved. ＜script＞
+   (function() {
+     var script = document.createElement('script');
+     script.src = 'https://unpkg.com/web-vitals@0.2.3/dist/web-vitals.es5.umd.min.js';
+     function sendToDataLayer(metric) {
+     var name = metric.name;
+     var delta = metric.delta;
+     var value = metric.value;
+   dataLayer.push({
+       event: 'web-vitals',
+       event_category: 'Web Vitals',
+       event_action: name,
+       event_value: Math.round(name === 'CLS' ? delta * 1000 : delta),
+     })
+   }
+   script.onload = function(){
+     webVitals.getCLS(sendToDataLayer);
+     webVitals.getFID(sendToDataLayer);
+     webVitals.getLCP(sendToDataLayer);
+     webVitals.getTTFB(sendToDataLayer);
+   }
+     document.head.appendChild(script);
+   }())
+＜/script＞

@@ -1,0 +1,15 @@
+{
+  "id": "gp2-01",
+  "section": "taxonomy_gap_probes",
+  "company": "Nuro",
+  "product": "Nuro Driver",
+  "url": "https://www.nuro.ai",
+  "original_url": null,
+  "final_url": "https://www.nuro.ai/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:11:40.115244Z",
+  "method": "playwright",
+  "word_count": 737,
+  "snapshot_status": "OK",
+  "error": null
+}

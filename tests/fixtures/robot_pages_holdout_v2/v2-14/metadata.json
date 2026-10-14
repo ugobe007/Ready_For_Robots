@@ -1,0 +1,15 @@
+{
+  "id": "v2-14",
+  "section": "robots",
+  "company": "UVD Robots (Blue Ocean Robotics)",
+  "product": "UVD Robot",
+  "url": "https://uvd.blue-ocean-robotics.com",
+  "original_url": null,
+  "final_url": "https://uvd.blue-ocean-robotics.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:11:08.789445Z",
+  "method": "playwright",
+  "word_count": 1117,
+  "snapshot_status": "OK",
+  "error": null
+}

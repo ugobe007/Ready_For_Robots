@@ -1,0 +1,15 @@
+{
+  "id": "v2-12",
+  "section": "robots",
+  "company": "SafeAI",
+  "product": "SafeAI autonomy retrofit",
+  "url": "https://safeai.ai",
+  "original_url": null,
+  "final_url": "https://pronto.ai/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:10:59.902702Z",
+  "method": "playwright",
+  "word_count": 127,
+  "snapshot_status": "THIN_CONTENT",
+  "error": null
+}

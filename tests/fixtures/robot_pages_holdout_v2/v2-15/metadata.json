@@ -1,0 +1,15 @@
+{
+  "id": "v2-15",
+  "section": "robots",
+  "company": "Ottonomy",
+  "product": "Ottobot delivery robot",
+  "url": "https://www.ottonomy.io",
+  "original_url": null,
+  "final_url": "https://ottonomy.io/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:11:14.309343Z",
+  "method": "playwright",
+  "word_count": 1394,
+  "snapshot_status": "OK",
+  "error": null
+}

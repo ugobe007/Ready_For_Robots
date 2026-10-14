@@ -1,0 +1,15 @@
+{
+  "id": "v2-13",
+  "section": "robots",
+  "company": "Kewazo",
+  "product": "LIFTBOT scaffolding robot",
+  "url": "https://www.kewazo.com",
+  "original_url": null,
+  "final_url": "https://www.kewazo.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:11:04.748415Z",
+  "method": "playwright",
+  "word_count": 792,
+  "snapshot_status": "OK",
+  "error": null
+}

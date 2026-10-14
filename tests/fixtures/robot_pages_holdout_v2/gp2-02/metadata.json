@@ -1,0 +1,15 @@
+{
+  "id": "gp2-02",
+  "section": "taxonomy_gap_probes",
+  "company": "Ekso Bionics",
+  "product": "Ekso exoskeletons",
+  "url": "https://eksobionics.com",
+  "original_url": null,
+  "final_url": "https://eksobionics.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:11:42.466183Z",
+  "method": "playwright",
+  "word_count": 2577,
+  "snapshot_status": "OK",
+  "error": null
+}

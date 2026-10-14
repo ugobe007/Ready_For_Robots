@@ -1,0 +1,15 @@
+{
+  "id": "v2-04",
+  "section": "robots",
+  "company": "Seegrid",
+  "product": "Seegrid autonomous pallet trucks and tow tractors",
+  "url": "https://seegrid.com",
+  "original_url": null,
+  "final_url": "https://seegrid.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:10:03.604544Z",
+  "method": "playwright",
+  "word_count": 4019,
+  "snapshot_status": "OK",
+  "error": null
+}

@@ -1,0 +1,15 @@
+{
+  "id": "v2-09",
+  "section": "robots",
+  "company": "Robotise",
+  "product": "JEEVES hotel robot",
+  "url": "https://www.robotise.eu",
+  "original_url": null,
+  "final_url": "https://robotise.eu/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:10:44.838815Z",
+  "method": "playwright",
+  "word_count": 565,
+  "snapshot_status": "OK",
+  "error": null
+}

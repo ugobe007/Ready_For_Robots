@@ -1,0 +1,15 @@
+{
+  "id": "v2-19",
+  "section": "robots",
+  "company": "LionsBot",
+  "product": "LionsBot cleaning robots",
+  "url": "https://www.lionsbot.com",
+  "original_url": null,
+  "final_url": "https://www.lionsbot.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:11:31.459819Z",
+  "method": "playwright",
+  "word_count": 2177,
+  "snapshot_status": "OK",
+  "error": null
+}

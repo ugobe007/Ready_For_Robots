@@ -1,0 +1,15 @@
+{
+  "id": "neg-v2-2",
+  "section": "negative_controls",
+  "company": "Job board search for people (custodian jobs, Las Vegas)",
+  "product": "",
+  "url": "https://www.indeed.com/q-custodian-l-las-vegas,-nv-jobs.html",
+  "original_url": null,
+  "final_url": "https://www.indeed.com/q-custodian-l-las-vegas,-nv-jobs.html",
+  "status_code": 403,
+  "fetch_date": "2026-10-14T05:12:01.485036Z",
+  "method": "playwright",
+  "word_count": 0,
+  "snapshot_status": "FETCH_FAILED",
+  "error": "HTTP 403"
+}

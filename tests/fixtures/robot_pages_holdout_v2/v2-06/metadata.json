@@ -1,0 +1,15 @@
+{
+  "id": "v2-06",
+  "section": "robots",
+  "company": "Avride",
+  "product": "Avride sidewalk delivery robot",
+  "url": "https://www.avride.ai",
+  "original_url": null,
+  "final_url": "https://www.avride.ai/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:10:10.345523Z",
+  "method": "playwright",
+  "word_count": 451,
+  "snapshot_status": "OK",
+  "error": null
+}

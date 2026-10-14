@@ -1,0 +1,15 @@
+{
+  "id": "v2-18",
+  "section": "robots",
+  "company": "Gather AI",
+  "product": "Gather AI inventory monitoring",
+  "url": "https://www.gather.ai",
+  "original_url": null,
+  "final_url": "https://gather.ai/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:11:28.809168Z",
+  "method": "playwright",
+  "word_count": 723,
+  "snapshot_status": "OK",
+  "error": null
+}

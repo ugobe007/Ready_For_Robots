@@ -1,0 +1,15 @@
+{
+  "id": "v2-01",
+  "section": "robots",
+  "company": "Geek+",
+  "product": "Geek+ warehouse robots",
+  "url": "https://www.geekplus.com",
+  "original_url": null,
+  "final_url": "https://www.geekplus.com/en",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:09:34.965691Z",
+  "method": "playwright",
+  "word_count": 32127,
+  "snapshot_status": "OK",
+  "error": null
+}

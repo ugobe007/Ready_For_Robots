@@ -1,0 +1,15 @@
+{
+  "id": "v2-07",
+  "section": "robots",
+  "company": "SwarmFarm Robotics",
+  "product": "SwarmBot",
+  "url": "https://www.swarmfarm.com",
+  "original_url": null,
+  "final_url": "https://www.swarmfarm.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:10:26.000576Z",
+  "method": "playwright",
+  "word_count": 161,
+  "snapshot_status": "OK",
+  "error": null
+}

@@ -1,0 +1,15 @@
+{
+  "id": "v2-11",
+  "section": "robots",
+  "company": "ExRobotics",
+  "product": "ExR explosion-proof inspection robot",
+  "url": "https://www.exrobotics.com/products",
+  "original_url": "https://www.exrobotics.global",
+  "final_url": "https://www.exrobotics.com/products",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T14:31:16.703948Z",
+  "method": "playwright",
+  "word_count": 669,
+  "snapshot_status": "OK",
+  "error": null
+}

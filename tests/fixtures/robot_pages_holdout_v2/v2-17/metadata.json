@@ -1,0 +1,15 @@
+{
+  "id": "v2-17",
+  "section": "robots",
+  "company": "FANUC America",
+  "product": "FANUC industrial robots",
+  "url": "https://www.fanucamerica.com",
+  "original_url": null,
+  "final_url": "https://www.fanucamerica.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:11:26.294755Z",
+  "method": "playwright",
+  "word_count": 2604,
+  "snapshot_status": "OK",
+  "error": null
+}

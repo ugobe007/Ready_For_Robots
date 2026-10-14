@@ -1,0 +1,15 @@
+{
+  "id": "v2-10",
+  "section": "robots",
+  "company": "Asylon",
+  "product": "Asylon robotic security (drones and robot dogs)",
+  "url": "https://www.asylon.com",
+  "original_url": null,
+  "final_url": "https://www.safebrowse.io/warn.html?url=http://quickresultonline.com/?dn=asylon.com&sksubid=61649&_slsen=1&token=a1929ae9",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:10:48.319064Z",
+  "method": "playwright",
+  "word_count": 154,
+  "snapshot_status": "OK",
+  "error": null
+}

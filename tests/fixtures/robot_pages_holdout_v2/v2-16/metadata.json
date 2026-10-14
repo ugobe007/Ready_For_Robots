@@ -1,0 +1,15 @@
+{
+  "id": "v2-16",
+  "section": "robots",
+  "company": "Doosan Robotics",
+  "product": "Doosan cobots",
+  "url": "https://www.doosanrobotics.com",
+  "original_url": null,
+  "final_url": "https://www.doosanrobotics.com/en/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:11:23.956124Z",
+  "method": "playwright",
+  "word_count": 4320,
+  "snapshot_status": "OK",
+  "error": null
+}

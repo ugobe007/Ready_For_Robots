@@ -1,0 +1,15 @@
+{
+  "id": "v2-05",
+  "section": "robots",
+  "company": "Vecna Robotics",
+  "product": "Vecna autonomous forklifts",
+  "url": "https://www.vecnarobotics.com",
+  "original_url": null,
+  "final_url": "https://www.vecnarobotics.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T05:10:08.787663Z",
+  "method": "playwright",
+  "word_count": 3141,
+  "snapshot_status": "OK",
+  "error": null
+}
