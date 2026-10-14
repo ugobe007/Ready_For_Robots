@@ -270,8 +270,8 @@ def compute_per_field_accuracy(results: list[dict]) -> dict[str, float]:
     if not results:
         return {}
     
-    # Filter out fetch failures - they have no score
-    extraction_results = [r for r in results if r.get("bucket") != "FETCH_FAILED" and "score" in r]
+    # Filter out fetch failures and rows with no valid score
+    extraction_results = [r for r in results if r.get("bucket") != "FETCH_FAILED" and r.get("score") is not None]
     
     if not extraction_results:
         return {}

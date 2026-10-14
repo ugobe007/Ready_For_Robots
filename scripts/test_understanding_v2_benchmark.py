@@ -136,7 +136,7 @@ def test_robot(
         print(f"❌ FETCH FAILED: No snapshot found for {robot_id}")
         return {
             'id': robot_id,
-            'company': robot['company'],
+            'company': robot.get('company', ''),
             'url': url,
             'bucket': 'FETCH_FAILED',
             'fetch_error': 'No snapshot found',
@@ -152,7 +152,7 @@ def test_robot(
         print(f"⚠️  Snapshot fetch failed: HTTP {metadata.get('status_code')} - {error_msg[:80]}")
         return {
             'id': robot_id,
-            'company': robot['company'],
+            'company': robot.get('company', ''),
             'url': url,
             'bucket': 'FETCH_FAILED',
             'fetch_error': error_msg,
@@ -165,7 +165,7 @@ def test_robot(
         print(f"⚠️  Snapshot has thin content ({word_count} words)")
         return {
             'id': robot_id,
-            'company': robot['company'],
+            'company': robot.get('company', ''),
             'url': url,
             'bucket': 'FETCH_FAILED',
             'fetch_error': f'Thin content ({word_count} words)',
