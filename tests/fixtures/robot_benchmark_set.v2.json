@@ -15,6 +15,18 @@
     "product_hint": "Run every robot twice: with product_name passed as a hint and without. Report both. Both extractors get identical treatment.",
     "multi_product_sites": "Score only the record whose product matches target_product. Extracting other products from the same site is fine and not penalized."
   },
+  "changelog": [
+    {
+      "date": "2026-10-14",
+      "id": "hos-03",
+      "field": "industries_any",
+      "change": "added corporate_campus, retail_store",
+      "type": "expert_correction",
+      "source": "Bob (domain expert review)",
+      "model_driven": false,
+      "note": "Expert correction by the key owner, not derived from model output. The added values happen to equal what the model extracted for ADAM in the 2026-10-13 calibration runs, so calibration results for hos-03 are reported under both the original and the corrected key."
+    }
+  ],
   "robots": [
     {
       "id": "hc-01",
@@ -336,7 +348,9 @@
         "restaurant",
         "qsr_fast_food",
         "casino",
-        "stadium_venue"
+        "stadium_venue",
+        "corporate_campus",
+        "retail_store"
       ],
       "industries_must_not": [
         "agriculture"
