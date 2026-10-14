@@ -358,7 +358,7 @@ def extract_robot_taxonomy(
     client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
     
     response = client.messages.create(
-        model="claude-sonnet-4-20250514",
+        model="claude-sonnet-4-6",
         max_tokens=4096,
         system=[
             {
