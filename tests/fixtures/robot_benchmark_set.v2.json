@@ -1,0 +1,1005 @@
+{
+  "name": "RFR robot classification benchmark",
+  "version": "v2-taxonomy",
+  "date": "2026-10-13",
+  "taxonomy": "taxonomy.v1.json (v1.1)",
+  "purpose": "Answer key in closed taxonomy values. Replaces free-text capability scoring. Every field is scored by exact match against these lists, so the scorer cannot drift with wording.",
+  "scoring_rules": {
+    "offering_type": "PASS if extracted value is in offering_type_ok",
+    "form": "PASS if extracted value is in form_ok",
+    "primary_class": "PASS if extracted value is in primary_class_ok (first value is preferred; others are acceptable alternates)",
+    "functions": "PASS if every value in functions_required is extracted AND every extracted value is in functions_required or functions_ok",
+    "industries": "PASS if every value in industries_required is extracted AND (industries_any is empty OR at least one of industries_any is extracted) AND none of industries_must_not is extracted. Other extra industries are not penalized; industries_ok_extra just lists extras we expect may appear. Industry values were expanded in taxonomy v1.1; where an old broad value split into several new ones, the robot's requirement became 'any of' the new values.",
+    "robot_pass": "All five fields PASS",
+    "report": "Report per-field accuracy across all robots, not just overall pass/fail. Per-field accuracy shows WHERE an extractor is weak.",
+    "product_hint": "Run every robot twice: with product_name passed as a hint and without. Report both. Both extractors get identical treatment.",
+    "multi_product_sites": "Score only the record whose product matches target_product. Extracting other products from the same site is fine and not penalized."
+  },
+  "changelog": [
+    {
+      "date": "2026-10-14",
+      "id": "hos-03",
+      "field": "industries_any",
+      "change": "added corporate_campus, retail_store",
+      "type": "expert_correction",
+      "source": "Bob (domain expert review)",
+      "model_driven": false,
+      "note": "Expert correction by the key owner, not derived from model output. The added values happen to equal what the model extracted for ADAM in the 2026-10-13 calibration runs, so calibration results for hos-03 are reported under both the original and the corrected key."
+    }
+  ],
+  "robots": [
+    {
+      "id": "hc-01",
+      "company": "Diligent Robotics",
+      "target_product": "Moxi",
+      "url": "https://www.diligentrobotics.com",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "mobile_manipulator"
+      ],
+      "primary_class_ok": [
+        "healthcare",
+        "service_robot"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [
+        "customer_interaction"
+      ],
+      "industries_required": [
+        "hospital"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "construction",
+        "agriculture"
+      ],
+      "notes": "Regression control."
+    },
+    {
+      "id": "hc-02",
+      "company": "Relay Robotics",
+      "target_product": "Relay / RelayRx",
+      "url": "https://relayrobotics.com",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "service_robot",
+        "delivery",
+        "healthcare"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "hospital",
+        "hotel"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "construction",
+        "agriculture"
+      ],
+      "notes": "Multi-industry: both hospital AND hotel required."
+    },
+    {
+      "id": "hc-03",
+      "company": "Xenex",
+      "target_product": "LightStrike",
+      "url": "https://xenex.com",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "portable_stationary_unit"
+      ],
+      "primary_class_ok": [
+        "healthcare"
+      ],
+      "functions_required": [
+        "disinfection"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "hospital"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel",
+        "construction"
+      ],
+      "notes": "Page may not say 'robot' prominently."
+    },
+    {
+      "id": "con-01",
+      "company": "Gritt",
+      "target_product": "Gritt physical AI system",
+      "url": "https://gritt.ai",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "retrofit_kit_autonomy_software",
+        "mobile_manipulator"
+      ],
+      "primary_class_ok": [
+        "construction"
+      ],
+      "functions_required": [
+        "construction_task"
+      ],
+      "functions_ok": [
+        "delivery_transport",
+        "inspection"
+      ],
+      "industries_required": [
+        "construction"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "hospital",
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "notes": "KEY TEST. Page says 'physical AI', 'construction workforce', 'attachments to common equipment', never 'construction robot'.",
+      "industries_ok_extra": [
+        "energy_utilities"
+      ]
+    },
+    {
+      "id": "con-02",
+      "company": "Dusty Robotics",
+      "target_product": "FieldPrinter",
+      "url": "https://www.dustyrobotics.com",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "construction"
+      ],
+      "functions_required": [
+        "construction_task"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "construction"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "hospital"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "con-03",
+      "company": "Advanced Construction Robotics",
+      "target_product": "TyBot",
+      "url": "https://www.constructionrobots.com",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "fixed_gantry_system"
+      ],
+      "primary_class_ok": [
+        "construction"
+      ],
+      "functions_required": [
+        "construction_task"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "construction"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "notes": "public_sector (DOT bridge work) acceptable if extracted.",
+      "industries_ok_extra": [
+        "government"
+      ]
+    },
+    {
+      "id": "con-04",
+      "company": "Canvas",
+      "target_product": "Drywall finishing system",
+      "url": "https://www.canvas.build",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "mobile_manipulator"
+      ],
+      "primary_class_ok": [
+        "construction"
+      ],
+      "functions_required": [
+        "construction_task"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "construction"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "agriculture"
+      ],
+      "notes": "Interior construction."
+    },
+    {
+      "id": "hos-01",
+      "company": "Bear Robotics",
+      "target_product": "Servi",
+      "url": "https://www.bearrobotics.ai",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "service_robot"
+      ],
+      "functions_required": [
+        "serving_hospitality"
+      ],
+      "functions_ok": [
+        "delivery_transport"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "industries_must_not": [
+        "construction"
+      ],
+      "notes": "",
+      "industries_ok_extra": [
+        "casino",
+        "stadium_venue",
+        "hotel",
+        "senior_living",
+        "airport"
+      ]
+    },
+    {
+      "id": "hos-02",
+      "company": "Pudu Robotics",
+      "target_product": "BellaBot",
+      "url": "https://www.pudurobotics.com",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "service_robot"
+      ],
+      "functions_required": [
+        "serving_hospitality"
+      ],
+      "functions_ok": [
+        "delivery_transport",
+        "customer_interaction"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "industries_must_not": [
+        "construction"
+      ],
+      "notes": "Multi-product site (also cleaning robots). Score the BellaBot record only.",
+      "industries_ok_extra": [
+        "hotel",
+        "retail_store",
+        "grocery",
+        "shopping_mall",
+        "casino",
+        "stadium_venue"
+      ]
+    },
+    {
+      "id": "hos-03",
+      "company": "Richtech Robotics",
+      "target_product": "ADAM",
+      "url": "https://www.richtechrobotics.com",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot",
+        "humanoid"
+      ],
+      "primary_class_ok": [
+        "food_robotics",
+        "service_robot"
+      ],
+      "functions_required": [
+        "food_beverage_prep"
+      ],
+      "functions_ok": [
+        "customer_interaction"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "restaurant",
+        "qsr_fast_food",
+        "casino",
+        "stadium_venue",
+        "corporate_campus",
+        "retail_store"
+      ],
+      "industries_must_not": [
+        "agriculture"
+      ],
+      "notes": "Multi-product site (ADAM, Titan, Matradee, Medbot). Score ADAM only.",
+      "industries_ok_extra": [
+        "hotel"
+      ]
+    },
+    {
+      "id": "cln-01",
+      "company": "Avidbots",
+      "target_product": "Neo",
+      "url": "https://avidbots.com",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "cleaning"
+      ],
+      "functions_required": [
+        "cleaning"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "airport",
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel",
+        "retail_store",
+        "grocery",
+        "shopping_mall",
+        "office_building",
+        "corporate_campus",
+        "commercial_building",
+        "data_center",
+        "college_university",
+        "hospital",
+        "manufacturing",
+        "shopping_mall"
+      ],
+      "industries_must_not": [
+        "construction"
+      ],
+      "notes": "Cleaning sells broadly; any one core venue is enough."
+    },
+    {
+      "id": "cln-02",
+      "company": "Brain Corp",
+      "target_product": "BrainOS",
+      "url": "https://www.braincorp.com",
+      "offering_type_ok": [
+        "autonomy_software"
+      ],
+      "form_ok": [
+        "retrofit_kit_autonomy_software"
+      ],
+      "primary_class_ok": [
+        "cleaning",
+        "inspection"
+      ],
+      "functions_required": [
+        "cleaning"
+      ],
+      "functions_ok": [
+        "inspection",
+        "delivery_transport"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "retail_store",
+        "grocery",
+        "shopping_mall",
+        "airport"
+      ],
+      "industries_must_not": [
+        "construction"
+      ],
+      "notes": "Software layer on other makers' machines. offering_type must be autonomy_software."
+    },
+    {
+      "id": "food-01",
+      "company": "Miso Robotics",
+      "target_product": "Flippy",
+      "url": "https://misorobotics.com",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot"
+      ],
+      "primary_class_ok": [
+        "food_robotics"
+      ],
+      "functions_required": [
+        "food_beverage_prep"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "industries_must_not": [
+        "construction"
+      ],
+      "notes": "",
+      "industries_ok_extra": [
+        "casino",
+        "stadium_venue"
+      ]
+    },
+    {
+      "id": "food-02",
+      "company": "Chef Robotics",
+      "target_product": "Chef+",
+      "url": "https://www.chefrobotics.ai",
+      "offering_type_ok": [
+        "robotics_as_a_service",
+        "robot_product"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot"
+      ],
+      "primary_class_ok": [
+        "food_robotics"
+      ],
+      "functions_required": [
+        "food_beverage_prep"
+      ],
+      "functions_ok": [
+        "picking_packing_palletizing"
+      ],
+      "industries_required": [
+        "food_manufacturing"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "notes": "Buyers are food MANUFACTURERS. restaurant_qsr is a fail: tests that 'food' does not auto-route to restaurants."
+    },
+    {
+      "id": "log-01",
+      "company": "Locus Robotics",
+      "target_product": "Locus AMRs",
+      "url": "https://locusrobotics.com",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "picking_packing_palletizing"
+      ],
+      "functions_ok": [
+        "delivery_transport"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel"
+      ],
+      "industries_must_not": [
+        "hospital"
+      ],
+      "notes": "",
+      "industries_ok_extra": [
+        "retail_store",
+        "grocery",
+        "shopping_mall"
+      ]
+    },
+    {
+      "id": "log-02",
+      "company": "Boston Dynamics",
+      "target_product": "Stretch",
+      "url": "https://bostondynamics.com/products/stretch",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "mobile_manipulator"
+      ],
+      "primary_class_ok": [
+        "amr_logistics",
+        "factory_industrial"
+      ],
+      "functions_required": [
+        "picking_packing_palletizing"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "notes": "Truck/container unloading = picking_packing_palletizing. Score Stretch only, not Spot or Atlas.",
+      "industries_ok_extra": [
+        "retail_store",
+        "grocery",
+        "shopping_mall",
+        "manufacturing"
+      ]
+    },
+    {
+      "id": "log-03",
+      "company": "Agility Robotics",
+      "target_product": "Digit",
+      "url": "https://www.agilityrobotics.com",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "humanoid"
+      ],
+      "primary_class_ok": [
+        "humanoid",
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "picking_packing_palletizing"
+      ],
+      "functions_ok": [
+        "delivery_transport",
+        "general_purpose"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel",
+        "manufacturing"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "notes": "Humanoid with a defined logistics job (tote handling)."
+    },
+    {
+      "id": "sec-01",
+      "company": "Knightscope",
+      "target_product": "Autonomous Security Robots",
+      "url": "https://www.knightscope.com",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "security"
+      ],
+      "functions_required": [
+        "security_patrol"
+      ],
+      "functions_ok": [
+        "customer_interaction"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "government",
+        "casino",
+        "stadium_venue",
+        "office_building",
+        "corporate_campus",
+        "commercial_building",
+        "data_center",
+        "hospital",
+        "retail_store",
+        "grocery",
+        "shopping_mall",
+        "college_university",
+        "shopping_mall",
+        "apartment_building"
+      ],
+      "industries_must_not": [
+        "agriculture"
+      ],
+      "notes": "Hospitals are valid SECURITY buyers here: industry is where it sells, not what it does."
+    },
+    {
+      "id": "sec-02",
+      "company": "Cobalt Robotics",
+      "target_product": "Cobalt security robot",
+      "url": "https://www.cobaltrobotics.com",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "security"
+      ],
+      "functions_required": [
+        "security_patrol"
+      ],
+      "functions_ok": [
+        "inspection"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "office_building",
+        "corporate_campus",
+        "commercial_building",
+        "data_center",
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel",
+        "data_center"
+      ],
+      "industries_must_not": [
+        "agriculture"
+      ],
+      "notes": "Indoor security."
+    },
+    {
+      "id": "ag-01",
+      "company": "Burro",
+      "target_product": "Burro",
+      "url": "https://burro.ai",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot",
+        "autonomous_vehicle_equipment"
+      ],
+      "primary_class_ok": [
+        "agriculture"
+      ],
+      "functions_required": [
+        "agricultural_task"
+      ],
+      "functions_ok": [
+        "delivery_transport"
+      ],
+      "industries_required": [
+        "agriculture"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "hospital",
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel"
+      ],
+      "notes": "Hauls like a warehouse AMR but sells to farms. warehouse_3pl is a fail."
+    },
+    {
+      "id": "ag-02",
+      "company": "Carbon Robotics",
+      "target_product": "LaserWeeder",
+      "url": "https://carbonrobotics.com",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "autonomous_vehicle_equipment",
+        "retrofit_kit_autonomy_software"
+      ],
+      "primary_class_ok": [
+        "agriculture"
+      ],
+      "functions_required": [
+        "agricultural_task"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "agriculture"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel"
+      ],
+      "notes": "Tractor-pulled implement; may not read as a 'robot'."
+    },
+    {
+      "id": "insp-01",
+      "company": "ANYbotics",
+      "target_product": "ANYmal",
+      "url": "https://www.anybotics.com",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "legged_robot"
+      ],
+      "primary_class_ok": [
+        "inspection"
+      ],
+      "functions_required": [
+        "inspection"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "energy_utilities",
+        "manufacturing"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "insp-02",
+      "company": "Gecko Robotics",
+      "target_product": "Gecko inspection robots",
+      "url": "https://www.geckorobotics.com",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "crawler_climbing"
+      ],
+      "primary_class_ok": [
+        "inspection"
+      ],
+      "functions_required": [
+        "inspection"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "energy_utilities",
+        "government",
+        "manufacturing",
+        "defense"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "notes": "Software/data-first messaging; robot detection test."
+    },
+    {
+      "id": "ret-01",
+      "company": "Simbe",
+      "target_product": "Tally",
+      "url": "https://www.simberobotics.com",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "retail",
+        "inspection"
+      ],
+      "functions_required": [
+        "inspection"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "retail_store",
+        "grocery",
+        "shopping_mall"
+      ],
+      "industries_must_not": [
+        "construction"
+      ],
+      "notes": "Shelf scanning = inspection function; primary class retail."
+    },
+    {
+      "id": "del-01",
+      "company": "Starship Technologies",
+      "target_product": "Starship delivery robot",
+      "url": "https://www.starship.xyz",
+      "offering_type_ok": [
+        "robotics_as_a_service",
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot",
+        "autonomous_vehicle_equipment"
+      ],
+      "primary_class_ok": [
+        "delivery"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "college_university",
+        "grocery",
+        "retail_store",
+        "government",
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "industries_must_not": [
+        "hospital"
+      ],
+      "notes": "Universities are a key buyer."
+    },
+    {
+      "id": "mfg-01",
+      "company": "Universal Robots",
+      "target_product": "UR cobots",
+      "url": "https://www.universal-robots.com",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot"
+      ],
+      "primary_class_ok": [
+        "factory_industrial"
+      ],
+      "functions_required": [
+        "machine_tending_assembly"
+      ],
+      "functions_ok": [
+        "picking_packing_palletizing",
+        "general_purpose"
+      ],
+      "industries_required": [
+        "manufacturing"
+      ],
+      "industries_any": [],
+      "industries_must_not": [],
+      "notes": "General-purpose arm, manufacturing-weighted.",
+      "industries_ok_extra": [
+        "food_manufacturing",
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel"
+      ]
+    },
+    {
+      "id": "mfg-02",
+      "company": "Formic",
+      "target_product": "Formic RaaS",
+      "url": "https://formic.co",
+      "offering_type_ok": [
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot",
+        "fixed_gantry_system"
+      ],
+      "primary_class_ok": [
+        "factory_industrial"
+      ],
+      "functions_required": [
+        "picking_packing_palletizing"
+      ],
+      "functions_ok": [
+        "machine_tending_assembly"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "manufacturing",
+        "food_manufacturing"
+      ],
+      "industries_must_not": [
+        "hospital"
+      ],
+      "notes": "Service model, not a single robot. offering_type must be robotics_as_a_service."
+    },
+    {
+      "id": "gen-01",
+      "company": "Figure AI",
+      "target_product": "Figure humanoid",
+      "url": "https://www.figure.ai",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "humanoid"
+      ],
+      "primary_class_ok": [
+        "humanoid"
+      ],
+      "functions_required": [
+        "general_purpose"
+      ],
+      "functions_ok": [
+        "machine_tending_assembly",
+        "picking_packing_palletizing"
+      ],
+      "industries_required": [],
+      "industries_any": [],
+      "industries_must_not": [],
+      "notes": "Vague copy. Correct output: humanoid with LOW confidence on industries. Any industry extracted at confidence > 0.7 without page evidence = fail."
+    }
+  ],
+  "negative_controls": [
+    {
+      "id": "neg-01",
+      "description": "Press release about Gritt on a news wire, not the company's site",
+      "url": "https://www.businesswire.com/news/home/20260720470414/en/",
+      "expected": {
+        "company": "Gritt (NOT Business Wire)",
+        "source_type": "press",
+        "classification": "Same as con-01 if extracted, with source_type=press flagged"
+      }
+    },
+    {
+      "id": "neg-02",
+      "description": "Robotics developer platform / simulation, not a deployable robot",
+      "url": "https://developer.nvidia.com/isaac",
+      "expected": {
+        "offering_type": "developer_tooling",
+        "buyer_matches": 0,
+        "note": "'Could not understand' is NOT a pass. It must be recognized as developer_tooling."
+      }
+    },
+    {
+      "id": "neg-03",
+      "description": "Conventional equipment maker with an autonomous line",
+      "url": "https://www.tennantco.com",
+      "expected": {
+        "offering_type": "mixed_equipment_maker",
+        "primary_class": "cleaning",
+        "note": "Buyer matches allowed only for the autonomous product line, not the whole catalog."
+      }
+    }
+  ]
+}

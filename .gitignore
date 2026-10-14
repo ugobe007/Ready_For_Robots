@@ -89,3 +89,7 @@ reports/*_triage_*.csv
 reports/*_eval_*.csv
 reports/*_rescue_*.csv
 reports/*_junk_*.csv
+reports/understanding_v2_benchmark_results.json
+reports/semantic_extraction_results_v2.md
+reports/grace_gong_*.json
+reports/grace_gong_*.md

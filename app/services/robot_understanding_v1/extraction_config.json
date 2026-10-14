@@ -1,0 +1,15 @@
+{
+  "evidence_check": "normalized_pieces_in_order",
+  "exclude_unsupported_facts": true,
+  "unsupported_confidence_cap": 0.3,
+  "max_malformed_output_retries": 1,
+  "max_output_tokens": 8192,
+  "max_records_per_page": 5,
+  "page_types": {
+    "manufacturer_product_page": "A robot maker's own site or page describing robots it makes or sells (including its own product, solution, or docs pages).",
+    "news_press": "News, blog, or press coverage about robots or companies, written by a publisher rather than the maker of the robots described.",
+    "buyer_corporate_site": "The site of an organization that is not a robot maker, such as a company that buys or operates robots, or any other business.",
+    "directory_or_multi_company": "A directory, list, marketplace, or comparison of products from many different companies."
+  },
+  "record_page_types": ["manufacturer_product_page"]
+}
