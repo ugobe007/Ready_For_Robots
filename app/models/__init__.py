@@ -78,3 +78,4 @@ from app.models.special_project import (
     SpecialProjectUpdate,
 )
 from app.models.understanding_shadow import UnderstandingShadowObservation
+from app.models.company_taxonomy_industry import CompanyTaxonomyIndustry
