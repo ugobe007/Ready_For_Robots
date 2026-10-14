@@ -15,12 +15,27 @@ from anthropic import Anthropic
 
 
 TAXONOMY_PATH = Path(__file__).resolve().parent.parent.parent.parent / "tests/fixtures/taxonomy.v1.json"
+CONFIG_PATH = Path(__file__).resolve().parent / "extraction_config.json"
+PROMPT_VERSION = "v3"
+
+SINGLE_VALUE_FIELDS = ("offering_type", "form", "primary_class", "primary_function")
+LIST_FIELDS = ("secondary_functions", "industries")
 
 
 def load_taxonomy() -> dict[str, Any]:
     """Load taxonomy (single source of truth)."""
     with open(TAXONOMY_PATH) as f:
         return json.load(f)
+
+
+def load_extraction_config() -> dict[str, Any]:
+    with open(CONFIG_PATH) as f:
+        return json.load(f)
+
+
+def taxonomy_values(taxonomy: dict[str, Any], section: str) -> list[str]:
+    """Closed values for a section; keys starting with '_' are documentation."""
+    return [k for k in taxonomy[section] if not k.startswith("_")]
 
 
 def get_taxonomy_version() -> str:
@@ -36,11 +51,11 @@ def build_extraction_schema(taxonomy: dict[str, Any]) -> dict[str, Any]:
     This enforces that the model can only return values from the closed lists.
     """
     # Extract enum values from taxonomy
-    offering_types = list(taxonomy["offering_type"].keys())
-    functions = list(taxonomy["functions"].keys())
-    industries = list(taxonomy["industries"].keys())
-    forms = list(taxonomy["form"].keys())
-    primary_classes = list(taxonomy["primary_class"].keys())
+    offering_types = taxonomy_values(taxonomy, "offering_type")
+    functions = taxonomy_values(taxonomy, "functions")
+    industries = taxonomy_values(taxonomy, "industries")
+    forms = taxonomy_values(taxonomy, "form")
+    primary_classes = taxonomy_values(taxonomy, "primary_class")
     
     schema = {
         "type": "object",
@@ -229,77 +244,78 @@ def validate_evidence(evidence: str, page_text: str) -> bool:
     return evidence_norm in page_norm
 
 
-def validate_and_cap_confidence(
+def apply_evidence_policy(
     product: dict[str, Any],
-    page_text: str
+    page_text: str,
+    config: dict[str, Any],
 ) -> dict[str, Any]:
     """
-    Validate evidence snippets and cap confidence at 0.3 for unsupported facts.
-    
-    This prevents the model from inventing industries for vague pages.
+    Remove facts whose evidence is not a normalized substring of the page.
+
+    Removed facts are moved to `unsupported_facts` with confidence capped, so
+    they stay visible in logs but nothing downstream (scoring, matching) can
+    read them from the product record. An unsupported single-value field is
+    set to None.
     """
-    validated = product.copy()
-    
-    # Check offering_type
-    if not validate_evidence(product["offering_type"]["evidence"], page_text):
-        validated["offering_type"]["confidence"] = min(
-            validated["offering_type"]["confidence"],
-            0.3
-        )
-        validated["offering_type"]["evidence_validated"] = False
-    else:
-        validated["offering_type"]["evidence_validated"] = True
-    
-    # Check form
-    if not validate_evidence(product["form"]["evidence"], page_text):
-        validated["form"]["confidence"] = min(validated["form"]["confidence"], 0.3)
-        validated["form"]["evidence_validated"] = False
-    else:
-        validated["form"]["evidence_validated"] = True
-    
-    # Check primary_class
-    if not validate_evidence(product["primary_class"]["evidence"], page_text):
-        validated["primary_class"]["confidence"] = min(
-            validated["primary_class"]["confidence"],
-            0.3
-        )
-        validated["primary_class"]["evidence_validated"] = False
-    else:
-        validated["primary_class"]["evidence_validated"] = True
-    
-    # Check primary_function
-    if not validate_evidence(product["primary_function"]["evidence"], page_text):
-        validated["primary_function"]["confidence"] = min(
-            validated["primary_function"]["confidence"],
-            0.3
-        )
-        validated["primary_function"]["evidence_validated"] = False
-    else:
-        validated["primary_function"]["evidence_validated"] = True
-    
-    # Check secondary_functions
-    validated["secondary_functions"] = []
-    for func in product.get("secondary_functions", []):
-        validated_func = func.copy()
-        if not validate_evidence(func["evidence"], page_text):
-            validated_func["confidence"] = min(validated_func["confidence"], 0.3)
-            validated_func["evidence_validated"] = False
+    cap = config["unsupported_confidence_cap"]
+    exclude = config["exclude_unsupported_facts"]
+    out = dict(product)
+    unsupported = []
+
+    def supported(fact: Any) -> bool:
+        return isinstance(fact, dict) and validate_evidence(fact.get("evidence", ""), page_text)
+
+    def log(field: str, fact: Any) -> None:
+        entry = dict(fact) if isinstance(fact, dict) else {"value": fact}
+        entry["field"] = field
+        entry["confidence"] = min(float(entry.get("confidence") or 0), cap)
+        unsupported.append(entry)
+
+    for field in SINGLE_VALUE_FIELDS:
+        fact = product.get(field)
+        if fact is None:
+            continue
+        if supported(fact):
+            out[field] = {**fact, "evidence_validated": True}
         else:
-            validated_func["evidence_validated"] = True
-        validated["secondary_functions"].append(validated_func)
-    
-    # Check industries
-    validated["industries"] = []
-    for ind in product.get("industries", []):
-        validated_ind = ind.copy()
-        if not validate_evidence(ind["evidence"], page_text):
-            validated_ind["confidence"] = min(validated_ind["confidence"], 0.3)
-            validated_ind["evidence_validated"] = False
-        else:
-            validated_ind["evidence_validated"] = True
-        validated["industries"].append(validated_ind)
-    
-    return validated
+            log(field, fact)
+            out[field] = None if exclude else {**fact, "confidence": min(fact.get("confidence", 0), cap), "evidence_validated": False}
+
+    for field in LIST_FIELDS:
+        kept = []
+        for fact in product.get(field) or []:
+            if supported(fact):
+                kept.append({**fact, "evidence_validated": True})
+            else:
+                log(field, fact)
+                if not exclude and isinstance(fact, dict):
+                    kept.append({**fact, "confidence": min(fact.get("confidence", 0), cap), "evidence_validated": False})
+        out[field] = kept
+
+    out["unsupported_facts"] = unsupported
+    return out
+
+
+def _coerce_products(raw: Any) -> list[dict[str, Any]]:
+    """The model occasionally returns the products list, or an item, as a JSON string."""
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except json.JSONDecodeError:
+            raise ValueError(f"products is an unparseable string: {raw[:120]!r}")
+    if isinstance(raw, dict):
+        raw = [raw]
+    products = []
+    for item in raw or []:
+        if isinstance(item, str):
+            try:
+                item = json.loads(item)
+            except json.JSONDecodeError:
+                raise ValueError(f"product is an unparseable string: {item[:120]!r}")
+        if not isinstance(item, dict):
+            raise ValueError(f"product has unexpected type {type(item).__name__}")
+        products.append(item)
+    return products
 
 
 def extract_robot_taxonomy(
@@ -347,7 +363,7 @@ def extract_robot_taxonomy(
     # Build cache key
     page_hash = hashlib.sha256(page_text.encode()).hexdigest()[:16]
     taxonomy_version = get_taxonomy_version()
-    prompt_version = "v2"  # Bumped: primary_function + secondary_functions split, industry evidence requirement
+    prompt_version = PROMPT_VERSION
     hint_suffix = f":{product_name_hint}" if product_name_hint else ""
     cache_key = f"{url}:{page_hash}:{taxonomy_version}:{prompt_version}:{cache_key_extra}{hint_suffix}"
     
@@ -374,11 +390,14 @@ def extract_robot_taxonomy(
     prompt_parts.extend([
         "TAXONOMY:",
         "",
-        f"offering_type: {', '.join(taxonomy['offering_type'].keys())}",
-        f"functions: {', '.join(taxonomy['functions'].keys())}",
-        f"industries: {', '.join(taxonomy['industries'].keys())}",
-        f"form: {', '.join(taxonomy['form'].keys())}",
-        f"primary_class: {', '.join(taxonomy['primary_class'].keys())}",
+        f"offering_type: {', '.join(taxonomy_values(taxonomy, 'offering_type'))}",
+        f"functions: {', '.join(taxonomy_values(taxonomy, 'functions'))}",
+        f"industries: {', '.join(taxonomy_values(taxonomy, 'industries'))}",
+        f"form: {', '.join(taxonomy_values(taxonomy, 'form'))}",
+        f"primary_class: {', '.join(taxonomy_values(taxonomy, 'primary_class'))}",
+        "",
+        "INDUSTRY DEFINITION:",
+        taxonomy["industries"]["_definition"],
         "",
         "INDUSTRY EVIDENCE REQUIREMENT:",
         "Only output an industry if the page explicitly NAMES:",
@@ -438,13 +457,13 @@ def extract_robot_taxonomy(
             break
     
     if not tool_result:
-        raise ValueError("No tool call returned from LLM")
+        raise ValueError(f"No tool call returned from LLM (stop_reason={response.stop_reason})")
     
-    # Validate evidence and cap confidence for unsupported facts
-    validated_products = []
-    for product in tool_result.get("products", []):
-        validated = validate_and_cap_confidence(product, page_text)
-        validated_products.append(validated)
+    config = load_extraction_config()
+    validated_products = [
+        apply_evidence_policy(product, page_text, config)
+        for product in _coerce_products(tool_result.get("products", []))
+    ]
     
     return {
         "products": validated_products,
@@ -456,5 +475,6 @@ def extract_robot_taxonomy(
             "input_tokens": response.usage.input_tokens,
             "output_tokens": response.usage.output_tokens,
             "model": response.model,
+            "extraction_config": config,
         }
     }

@@ -108,34 +108,33 @@ def extract_robot_taxonomy_values(
             "unclassified_notes": "No products extracted"
         }, result.get("extraction_metadata", {})
     
-    # If product_name_hint provided, try to find matching product
+    chosen = products[0]
     if product_name_hint:
         hint_lower = product_name_hint.lower()
         for product in products:
             product_name_lower = product.get("product_name", "").lower()
-            # Match if either string contains the other (bidirectional)
             if hint_lower in product_name_lower or product_name_lower in hint_lower:
-                return {
-                    "offering_type": product["offering_type"]["value"],
-                    "form": product["form"]["value"],
-                    "primary_class": product["primary_class"]["value"],
-                    "primary_function": product.get("primary_function", {}),
-                    "secondary_functions": product.get("secondary_functions", []),
-                    "industries": product.get("industries", []),
-                    "unclassified_notes": product.get("unclassified_notes", "")
-                }, result.get("extraction_metadata", {})
-    
-    # Return first product
-    product = products[0]
+                chosen = product
+                break
+    return _flatten_product(chosen), result.get("extraction_metadata", {})
+
+
+def _flatten_product(product: dict[str, Any]) -> dict[str, Any]:
+    """Unsupported single-value fields arrive as None and score as empty."""
+    def value(field: str) -> str:
+        fact = product.get(field)
+        return fact.get("value", "") if isinstance(fact, dict) else ""
+
     return {
-        "offering_type": product["offering_type"]["value"],
-        "form": product["form"]["value"],
-        "primary_class": product["primary_class"]["value"],
-        "primary_function": product.get("primary_function", {}),
+        "offering_type": value("offering_type"),
+        "form": value("form"),
+        "primary_class": value("primary_class"),
+        "primary_function": product.get("primary_function") or {},
         "secondary_functions": product.get("secondary_functions", []),
         "industries": product.get("industries", []),
-        "unclassified_notes": product.get("unclassified_notes", "")
-    }, result.get("extraction_metadata", {})
+        "unsupported_facts": product.get("unsupported_facts", []),
+        "unclassified_notes": product.get("unclassified_notes", ""),
+    }
 
 
 def score_negative_control(extracted: dict[str, Any], expected: dict[str, Any]) -> dict[str, Any]:

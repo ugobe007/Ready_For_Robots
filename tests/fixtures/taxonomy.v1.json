@@ -34,6 +34,7 @@
     "general_purpose": "Marketed as able to do many tasks without a defined primary one"
   },
   "industries": {
+    "_definition": "Industry means the industry of the organization that buys and operates the robot. It is not the building type, the project type, or the industry of that organization's customers. A construction robot used on a hospital project is construction. A warehouse robot doing pharma logistics is warehouse_distribution or 3pl. Keys starting with '_' are documentation, not values.",
     "retail_store": "Retail stores, big box, specialty retail",
     "grocery": "Grocery and supermarkets",
     "shopping_mall": "Shopping malls and retail centers",
