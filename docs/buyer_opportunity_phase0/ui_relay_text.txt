@@ -1,0 +1,61 @@
+final URL: https://readyforrobots.com/?visit=jobs
+
+API calls:
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://ready-2-robot.fly.dev/api/robot-job-search
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://ready-2-robot.fly.dev/api/robot-job-search
+POST https://readyforrobots.com/api/track/visit
+
+Visible text:
+ReadyForRobots
+Jobs
+Explore
+Newsletter
+About
+CRM
+Sign In
+CREATE FREE ACCOUNT →
+
+YOUR ROBOT
+
+Relay
+
+relayrobotics.com
+
+COMPANY IDENTITY NOT FULLY VERIFIED
+
+PROFILE
+C
+
+Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each. Run each SKU by itself, then Open CRM. Apply from the desk.
+
++ NEW ROBOT
+Jobs for Relay
+QUERY SPECIFIC JOB TYPES
+→
+
+✦
+JOBS FOR ROBOTS — HOW TO USE THIS FEED
+
+Select your job definition category below or enter your industry to match your robot to active buyer demand. Click any job card to expand full operational requirements, equipment specs, and estimated contract value.
+
+OPEN CRM
+→
+
+0 selected. Uncheck a row to skip it. Open CRM to save the list. Apply from the desk..
+
+NO JOBS YET
+
+No healthcare jobs for this robot yet.
+
+We do not have work represented for this robot type yet. This is a coverage gap on our side, not a limitation of the robot. CRM stays empty until there are jobs to keep.
+
+OPEN CRM
+→
+
+0 selected. Uncheck a row to skip it. Open CRM to save the list. Apply from the desk..

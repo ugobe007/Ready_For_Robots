@@ -1,0 +1,189 @@
+final URL: https://readyforrobots.com/?visit=jobs
+
+API calls:
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://ready-2-robot.fly.dev/api/robot-job-search
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+
+Visible text:
+ReadyForRobots
+Jobs
+Explore
+Newsletter
+About
+CRM
+Sign In
+CREATE FREE ACCOUNT →
+
+YOUR ROBOT
+
+Locus Origin
+
+Locus Robotics
+
+PROFILE
+B
+3 EXAMPLE JOBS
+
+Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each. Run each SKU by itself, then Open CRM. Apply from the desk.
+
++ NEW ROBOT
+Jobs for Locus Origin
+3 JOBS FOR LOCUS ORIGIN
+QUERY SPECIFIC JOB TYPES
+→
+
+✦
+JOBS FOR ROBOTS — HOW TO USE THIS FEED
+
+Select your job definition category below or enter your industry to match your robot to active buyer demand. Click any job card to expand full operational requirements, equipment specs, and estimated contract value.
+
+25 example jobs Locus Origin can do. Rows start checked. Uncheck any you do not want, then Open CRM. Apply from the desk. Keep is on. Uncheck a row to skip it.
+
+OPEN CRM
+→
+
+3 selected. Uncheck a row to skip it. Open CRM to save the list. Apply from the desk..
+
+SHOWCASE OPPORTUNITY (5 OF 12)
+Auto-rotating live demand · Hover to pause
+✦ ROBOT JOB CARD
+PENDING ROBOT RÉSUMÉ
+⧉
+Enterprise Buyer
+·
+North America · Specialty pharma
+
+[2] ROBOT JOB & DESCRIPTION
+
+Return empty pharma totes
+
+Return empty pharma totes
+
+[3] TIME FRAME
+
+30–90 days
+
+Active buying window extracted from signals.
+
+[4] DECISION OWNER
+
+Operations Director (Plant Automation Owner)
+
+Sign-off authority for robot procurement.
+
+[5] ROBOTS NEEDED
+
+Locus Origin
+
+Hardware spec matched to work requirements.
+
+[6] JOB VALUE (WORTH)
+
+$5,000–$7,500 / month
+$60,000–$90,000 / year · Public budget: $60,000–$90,000/yr
+
+Estimate of robot pay — not an employer quote.
+
+[7] PLACEMENT WORKFLOW & NEXT STEPS
+
+1
+Site assessment — verify payload, reach & workplace safety.
+2
+License task model pack for this SKU class.
+3
+Send outreach note & lock robot deployment quote.
+START FREE WORKSPACE — SAVE JOB
+Active Jobs (3)
+[Pending] Spots Full (2)
+Job Archive (8+ Wks)
+Max 3 Applicants / Job · 8 Wk Archive
+KEEP
+Move aircraft production kits
+AGING
+Intuitive Surgical · United States (med-device mfg)
+Job 00001
+·
+2 Spots Open · Deadline: Oct 18, 2026 (4d left)
+Task library · 2–8 weeks · oem + integrator
++
+KEEP
+Deliver supplies and amenities between gates and lounges
+FRESH MATCH
+Skyline Airport Services · Denver, CO
+Job 00002
+·
+3 Spots Open · Deadline: Nov 26, 2026 (43d left)
+Task library · 2–8 weeks · oem + integrator
++
+SKIP
+Deliver guest luggage to hotel rooms
+AGING
+Hilton Worldwide · McLean, VA
+Job 00003
+·
+1 Spot Open · Deadline: Nov 8, 2026 (25d left)
+Task library · 1–4 weeks · oem + customer ops
++
+SKIP
+Deliver guest luggage to hotel rooms
+AGING
+Hilton Worldwide · McLean, VA
+Job 00004
+·
+1 Spot Open · Deadline: Nov 8, 2026 (25d left)
+Task library · 1–4 weeks · oem + customer ops
++
+SKIP
+Return empty pharma totes
+AGING
+CuraScript SD · Tempe, AZ
+Job 00005
+·
+3 Spots Open · Deadline: Oct 31, 2026 (17d left)
+Task library · 1–4 weeks · oem + customer ops
++
+SKIP
+Move system carts
+AGING
+Intuitive Surgical · United States (med-device mfg)
+Job 00006
+·
+2 Spots Open · Deadline: Nov 15, 2026 (32d left)
+Task library · 1–4 weeks · oem + customer ops
++
+FULL
+Deliver medication carts
+PENDING REVIEW
+Mercy General Hospital · Columbus, OH
+Job 00007
+·
+3/3 Applicant Spots Filled · Proposals Under Review
+
+⚠️ Applicants under review (3/3 spots filled). No further proposals are currently accepted to avoid spamming the opportunity.
+
+Task library · 1–4 weeks · oem + customer ops
++
+Unlock 9+ More Job Opportunities
+
+Free users can view up to 3 active job opportunities. Upgrade your workspace to unlock all verified employer job matches.
+
+SIGN UP TO UNLOCK ALL JOBS →
+OPEN CRM
+→
+
+3 selected. Uncheck a row to skip it. Open CRM to save the list. Apply from the desk..
+
+AFTER JOB CARDS
+
+Build a product presentation
+
+After Job Cards: a product presentation for this robot company. Sign up and pay first. We do not fake a finished deck.
+
+SIGN UP AND PAY TO ORDER →

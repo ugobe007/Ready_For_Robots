@@ -1,0 +1,52 @@
+{
+  "ok": true,
+  "worth_driving": true,
+  "site": "https://readyforrobots.com",
+  "fly": "https://ready-2-robot.fly.dev",
+  "checks": [
+    {
+      "id": "fly_health",
+      "ok": true,
+      "url": "https://ready-2-robot.fly.dev/health",
+      "status": 200
+    },
+    {
+      "id": "fly_pipeline",
+      "ok": true,
+      "url": "https://ready-2-robot.fly.dev/api/leads/pipeline",
+      "status": 200,
+      "built_at": "2026-10-14T15:30:54.271134+00:00",
+      "leads_count": 5
+    },
+    {
+      "id": "site_html",
+      "ok": true,
+      "url": "https://readyforrobots.com/",
+      "status": 200,
+      "js_path": "/assets/index-DJra3M2u.js",
+      "skip_green_stale_js": false
+    },
+    {
+      "id": "jobs_js_canary",
+      "ok": true,
+      "url": "https://readyforrobots.com/assets/index-DJra3M2u.js",
+      "status": 200,
+      "bytes": 2947719,
+      "hits": {
+        "Jobs for": true,
+        "Find jobs for your robot": true,
+        "jobs_activate": true
+      }
+    },
+    {
+      "id": "fly_jobs_preview",
+      "ok": true,
+      "url": "https://ready-2-robot.fly.dev/api/robot-jobs/preview?limit=3",
+      "status": 200,
+      "json": true,
+      "jobs_count": 3
+    }
+  ],
+  "alerts": [],
+  "skip_green": false
+}

@@ -1,0 +1,185 @@
+final URL: https://readyforrobots.com/?visit=jobs
+
+API calls:
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://ready-2-robot.fly.dev/api/robot-job-search
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+POST https://readyforrobots.com/api/track/visit
+
+Visible text:
+ReadyForRobots
+Jobs
+Explore
+Newsletter
+About
+CRM
+Sign In
+CREATE FREE ACCOUNT →
+
+YOUR ROBOT
+
+ADAM
+
+Richtech Robotics
+
+PROFILE
+B
+3 EXAMPLE JOBS
+
+Each job is tagged with its robot. One SKU shows five jobs, all starting checked. Several robots show one each. Run each SKU by itself, then Open CRM. Apply from the desk.
+
++ NEW ROBOT
+Jobs for ADAM
+3 JOBS FOR ADAM
+QUERY SPECIFIC JOB TYPES
+→
+
+✦
+JOBS FOR ROBOTS — HOW TO USE THIS FEED
+
+Select your job definition category below or enter your industry to match your robot to active buyer demand. Click any job card to expand full operational requirements, equipment specs, and estimated contract value.
+
+25 example jobs ADAM can do. Rows start checked. Uncheck any you do not want, then Open CRM. Apply from the desk. Keep is on. Uncheck a row to skip it.
+
+OPEN CRM
+→
+
+3 selected. Uncheck a row to skip it. Open CRM to save the list. Apply from the desk..
+
+SHOWCASE OPPORTUNITY (2 OF 3)
+Auto-rotating live demand · Hover to pause
+✦ ROBOT JOB CARD
+PENDING ROBOT RÉSUMÉ
+⧉
+Enterprise Buyer
+·
+North America · Hotel
+
+[2] ROBOT JOB & DESCRIPTION
+
+Run room-service orders to guest rooms
+
+Run room-service orders to guest rooms
+
+[3] TIME FRAME
+
+30–90 days
+
+Active buying window extracted from signals.
+
+[4] DECISION OWNER
+
+Operations Director (Plant Automation Owner)
+
+Sign-off authority for robot procurement.
+
+[5] ROBOTS NEEDED
+
+ADAM
+
+Hardware spec matched to work requirements.
+
+[6] JOB VALUE (WORTH)
+
+$5,000–$7,500 / month
+$60,000–$90,000 / year · Public budget: $60,000–$90,000/yr
+
+Estimate of robot pay — not an employer quote.
+
+[7] PLACEMENT WORKFLOW & NEXT STEPS
+
+1
+Site assessment — verify payload, reach & workplace safety.
+2
+License task model pack for this SKU class.
+3
+Send outreach note & lock robot deployment quote.
+START FREE WORKSPACE — SAVE JOB
+Active Jobs (3)
+[Pending] Spots Full (0)
+Job Archive (8+ Wks)
+Max 3 Applicants / Job · 8 Wk Archive
+KEEP
+Bus tables and return dishware to the kitchen
+AGING
+Darden Restaurants · Orlando, FL
+Job 00001
+·
+3 Spots Open · Deadline: Oct 29, 2026 (15d left)
+Site-adapted · 4–12 weeks · oem + integrator
+−
+EMPLOYER
+Darden Restaurants
+WORKPLACE
+Orlando, FL
+WORK BEING PERFORMED
+Bus tables and return dishware to the kitchen
+JOB DESCRIPTION
+bus tables return dishes dishware to kitchen restaurant serving
+POTENTIAL CONTRACT VALUE
+$5,000–$7,500 / month · $60,000–$90,000 / year
+Estimate of robot pay — not an employer quote.
+CONDITIONAL
+Pending your review, a site assessment, and a task model for this work.
+
+TASK MODELS
+
+Kitchen / hospitality task policy · Not yet confirmed
+Food-prep station policy · Not yet confirmed
+Dining-floor table / drink / bussing policy · Not yet confirmed
+Dining-floor serving policy · Not yet confirmed
+
+To place this job
+
+1. Name the slot. Kitchen / hospitality task policy
+2. License a task-library pack. Ask the OEM which pack covers this SKU class. Do not train a foundation VLA.
+3. Budget site adapt. oem + integrator · typical 4–12 weeks
+4. Bring workplace data. site map / layout, work objects, demonstration traces, failure cases, sop and safety envelope
+5. Qualify on this workplace. A checkpoint is not qualified until this site says so.
+6. Write the field-data clause. Field traces do not automatically reduce the model price unless the OEM contract says so.
+OpenVLA
+π0.5
+GR00T N1.5
+
+WHY THIS IS LISTED
+
+✓ table / drink / bussing service
+✓ mobile platform
+
+Next step: Site assessment — can the robot actually work here?
+
+KEEP
+Run room-service orders to guest rooms
+FRESH MATCH
+Marriott International · Bethesda, MD
+Job 00002
+·
+3 Spots Open · Deadline: Nov 28, 2026 (45d left)
+Task library · 4–12 weeks · oem
++
+KEEP
+Run food and drinks to dining tables
+FRESH MATCH
+The Cheesecake Factory · Calabasas, CA
+Job 00003
+·
+3 Spots Open · Deadline: Dec 6, 2026 (53d left)
+Site-adapted · 4–12 weeks · oem + integrator
++
+OPEN CRM
+→
+
+3 selected. Uncheck a row to skip it. Open CRM to save the list. Apply from the desk..
+
+AFTER JOB CARDS
+
+Build a product presentation
+
+After Job Cards: a product presentation for this robot company. Sign up and pay first. We do not fake a finished deck.
+
+SIGN UP AND PAY TO ORDER →

@@ -1,0 +1,22 @@
+[
+ {
+  "url": "https://ready-2-robot.fly.dev/api/robot-job-search",
+  "status": 200,
+  "request": "{\"url\":\"https://relayrobotics.com\",\"product\":\"Relay\",\"max_sources\":6,\"asserted_class\":null,\"lookup_grain\":\"product\"}",
+  "state": "qualify_robot",
+  "robot_class": null,
+  "job_count": 0,
+  "zero_reason": null,
+  "jobs": []
+ },
+ {
+  "url": "https://ready-2-robot.fly.dev/api/robot-job-search",
+  "status": 200,
+  "request": "{\"url\":\"https://relayrobotics.com\",\"product\":\"Relay\",\"max_sources\":6,\"asserted_class\":\"healthcare\",\"lookup_grain\":\"product\"}",
+  "state": "thin_corpus",
+  "robot_class": null,
+  "job_count": 0,
+  "zero_reason": "insufficient_profile_evidence",
+  "jobs": []
+ }
+]
