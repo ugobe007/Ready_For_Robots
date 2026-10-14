@@ -82,7 +82,8 @@ python3 scripts/agent_verify.py ci --evidence "$EVIDENCE"
 
 Stable UI handles (browser):
 
-- FIND form: `aria-label="Find jobs for your robot"`; url input placeholder `Paste robot product URL`
+- `/` hero form (`form.rfr-landing-hero-form`, no form name): text input `aria-label="Robot product URL"`, placeholder starts `Paste a robot product URL`; submit button **Find jobs →**. Submit navigates to `/?visit=jobs&url=<encoded URL>`.
+- `/?visit=jobs` FIND form: `aria-label="Find jobs for your robot"`; input `#robot-url` (label `Robot product URL`), placeholder `Paste robot product URL`. The input is disabled while the SKU picker is open.
 - FIND has no process bar. CRM desk: `aria-label="Jobs process"`; step 03 is CRM
 - Jobs header: wordmark → `/?new=1`; nav **Jobs** / **About**; **no Pipeline** on `/`
 - Next: `Open CRM →` on the list, not on the card
