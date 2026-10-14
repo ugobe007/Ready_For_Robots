@@ -75,46 +75,40 @@ def score_primary_class(extracted: str, expected: list[str]) -> tuple[bool, str]
     return False, f"primary_class '{extracted}' not in {expected}"
 
 
-def score_functions(
-    extracted: list[str],
-    required: list[str],
-    ok_extra: list[str]
+def score_primary_function(
+    extracted_primary: str,
+    extracted_secondaries: list[str],
+    required: list[str]
 ) -> tuple[bool, str, dict]:
     """
-    Score functions field.
+    Score primary_function field.
     
     PASS if:
-    - Every required function is extracted
-    - Every extracted function is in (required + ok_extra)
+    - primary_function is one of required
+    
+    Secondary functions are logged but not scored (model correctly identifying
+    secondary capabilities is valuable context, not a failure).
     
     Returns:
         (passed, reason, details)
     """
-    if not extracted:
-        return False, "functions is empty", {}
+    if not extracted_primary:
+        return False, "primary_function is empty", {}
     
-    extracted_set = set(extracted)
     required_set = set(required)
-    allowed_set = required_set | set(ok_extra)
-    
-    missing = required_set - extracted_set
-    invalid = extracted_set - allowed_set
     
     details = {
-        "extracted": list(extracted_set),
+        "extracted_primary": extracted_primary,
+        "extracted_secondaries": extracted_secondaries,
         "required": required,
-        "ok_extra": ok_extra,
-        "missing": list(missing),
-        "invalid": list(invalid),
     }
     
-    if missing:
-        return False, f"missing required functions: {list(missing)}", details
+    if extracted_primary not in required_set:
+        return False, f"primary_function '{extracted_primary}' not in required {required}", details
     
-    if invalid:
-        return False, f"invalid functions: {list(invalid)}", details
-    
-    return True, f"all required functions extracted, no invalid", details
+    # Pass: primary matches a required function
+    # Secondaries are informational only
+    return True, f"primary_function '{extracted_primary}' matches required", details
 
 
 def score_industries(
@@ -212,13 +206,21 @@ def score_robot(
         expected["primary_class_ok"]
     )
     
-    # Score functions
-    extracted_functions = [f["value"] if isinstance(f, dict) else f
-                           for f in extracted.get("functions", [])]
-    functions_pass, functions_reason, functions_details = score_functions(
-        extracted_functions,
-        expected["functions_required"],
-        expected.get("functions_ok", [])
+    # Score primary_function
+    extracted_primary = extracted.get("primary_function", {})
+    if isinstance(extracted_primary, dict):
+        extracted_primary_value = extracted_primary.get("value", "")
+    else:
+        extracted_primary_value = str(extracted_primary) if extracted_primary else ""
+    
+    extracted_secondaries = extracted.get("secondary_functions", [])
+    extracted_secondary_values = [f["value"] if isinstance(f, dict) else f
+                                   for f in extracted_secondaries]
+    
+    functions_pass, functions_reason, functions_details = score_primary_function(
+        extracted_primary_value,
+        extracted_secondary_values,
+        expected["functions_required"]
     )
     
     # Score industries

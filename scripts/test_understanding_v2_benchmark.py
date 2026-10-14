@@ -82,7 +82,8 @@ def extract_robot_taxonomy_values(
             "offering_type": str,
             "form": str,
             "primary_class": str,
-            "functions": [{"value": str, "confidence": float, "evidence": str}],
+            "primary_function": {"value": str, "confidence": float, "evidence": str},
+            "secondary_functions": [{"value": str, "confidence": float, "evidence": str}],
             "industries": [{"value": str, "confidence": float, "evidence": str}],
             "unclassified_notes": str
         }
@@ -101,7 +102,8 @@ def extract_robot_taxonomy_values(
             "offering_type": "",
             "form": "",
             "primary_class": "",
-            "functions": [],
+            "primary_function": {},
+            "secondary_functions": [],
             "industries": [],
             "unclassified_notes": "No products extracted"
         }, result.get("extraction_metadata", {})
@@ -117,7 +119,8 @@ def extract_robot_taxonomy_values(
                     "offering_type": product["offering_type"]["value"],
                     "form": product["form"]["value"],
                     "primary_class": product["primary_class"]["value"],
-                    "functions": product.get("functions", []),
+                    "primary_function": product.get("primary_function", {}),
+                    "secondary_functions": product.get("secondary_functions", []),
                     "industries": product.get("industries", []),
                     "unclassified_notes": product.get("unclassified_notes", "")
                 }, result.get("extraction_metadata", {})
@@ -128,7 +131,8 @@ def extract_robot_taxonomy_values(
         "offering_type": product["offering_type"]["value"],
         "form": product["form"]["value"],
         "primary_class": product["primary_class"]["value"],
-        "functions": product.get("functions", []),
+        "primary_function": product.get("primary_function", {}),
+        "secondary_functions": product.get("secondary_functions", []),
         "industries": product.get("industries", []),
         "unclassified_notes": product.get("unclassified_notes", "")
     }, result.get("extraction_metadata", {})
@@ -237,12 +241,20 @@ def test_robot(
               f"form={extracted.get('form', 'N/A')}, "
               f"primary_class={extracted.get('primary_class', 'N/A')}")
         
-        functions_list = [f.get('value') if isinstance(f, dict) else f 
-                          for f in extracted.get('functions', [])]
+        primary_func = extracted.get('primary_function', {})
+        primary_func_value = primary_func.get('value') if isinstance(primary_func, dict) else primary_func
+        
+        secondary_funcs = extracted.get('secondary_functions', [])
+        secondary_func_values = [f.get('value') if isinstance(f, dict) else f for f in secondary_funcs]
+        
+        functions_display = f"[{primary_func_value}]"
+        if secondary_func_values:
+            functions_display += f" + secondaries: {secondary_func_values}"
+        
         industries_list = [i.get('value') if isinstance(i, dict) else i 
                            for i in extracted.get('industries', [])]
         
-        print(f"Functions: {functions_list}")
+        print(f"Functions: {functions_display}")
         print(f"Industries: {industries_list}")
         
         if extracted.get('unclassified_notes'):

@@ -120,18 +120,38 @@ def build_extraction_schema(taxonomy: dict[str, Any]) -> dict[str, Any]:
                             },
                             "required": ["value", "confidence", "evidence"]
                         },
-                        "functions": {
+                        "primary_function": {
+                            "type": "object",
+                            "description": "The ONE primary function this robot is designed for",
+                            "properties": {
+                                "value": {
+                                    "type": "string",
+                                    "enum": functions,
+                                    "description": "Primary function from taxonomy"
+                                },
+                                "confidence": {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 1
+                                },
+                                "evidence": {
+                                    "type": "string",
+                                    "description": "Exact quote from page"
+                                }
+                            },
+                            "required": ["value", "confidence", "evidence"]
+                        },
+                        "secondary_functions": {
                             "type": "array",
-                            "description": "1-3 functions the robot is designed for",
-                            "minItems": 1,
-                            "maxItems": 3,
+                            "description": "0-2 secondary functions. Leave empty if robot is single-purpose.",
+                            "maxItems": 2,
                             "items": {
                                 "type": "object",
                                 "properties": {
                                     "value": {
                                         "type": "string",
                                         "enum": functions,
-                                        "description": "Function from taxonomy"
+                                        "description": "Secondary function from taxonomy"
                                     },
                                     "confidence": {
                                         "type": "number",
@@ -181,7 +201,7 @@ def build_extraction_schema(taxonomy: dict[str, Any]) -> dict[str, Any]:
                         "offering_type",
                         "form",
                         "primary_class",
-                        "functions",
+                        "primary_function",
                         "industries"
                     ]
                 }
@@ -247,16 +267,26 @@ def validate_and_cap_confidence(
     else:
         validated["primary_class"]["evidence_validated"] = True
     
-    # Check functions
-    validated["functions"] = []
-    for func in product.get("functions", []):
+    # Check primary_function
+    if not validate_evidence(product["primary_function"]["evidence"], page_text):
+        validated["primary_function"]["confidence"] = min(
+            validated["primary_function"]["confidence"],
+            0.3
+        )
+        validated["primary_function"]["evidence_validated"] = False
+    else:
+        validated["primary_function"]["evidence_validated"] = True
+    
+    # Check secondary_functions
+    validated["secondary_functions"] = []
+    for func in product.get("secondary_functions", []):
         validated_func = func.copy()
         if not validate_evidence(func["evidence"], page_text):
             validated_func["confidence"] = min(validated_func["confidence"], 0.3)
             validated_func["evidence_validated"] = False
         else:
             validated_func["evidence_validated"] = True
-        validated["functions"].append(validated_func)
+        validated["secondary_functions"].append(validated_func)
     
     # Check industries
     validated["industries"] = []
@@ -296,7 +326,8 @@ def extract_robot_taxonomy(
                     "offering_type": {"value": str, "confidence": float, "evidence": str},
                     "form": {...},
                     "primary_class": {...},
-                    "functions": [{"value": str, "confidence": float, "evidence": str}],
+                    "primary_function": {"value": str, "confidence": float, "evidence": str},
+                    "secondary_functions": [{"value": str, "confidence": float, "evidence": str}],  # 0-2
                     "industries": [...],
                     "unclassified_notes": str
                 }
@@ -305,7 +336,8 @@ def extract_robot_taxonomy(
                 "taxonomy_version": str,
                 "cache_key": str,
                 "tokens_used": int,
-                "model": str
+                "model": str,
+                "prompt_version": str
             }
         }
     """
@@ -315,8 +347,9 @@ def extract_robot_taxonomy(
     # Build cache key
     page_hash = hashlib.sha256(page_text.encode()).hexdigest()[:16]
     taxonomy_version = get_taxonomy_version()
+    prompt_version = "v2"  # Bumped: primary_function + secondary_functions split, industry evidence requirement
     hint_suffix = f":{product_name_hint}" if product_name_hint else ""
-    cache_key = f"{url}:{page_hash}:{taxonomy_version}:{cache_key_extra}{hint_suffix}"
+    cache_key = f"{url}:{page_hash}:{taxonomy_version}:{prompt_version}:{cache_key_extra}{hint_suffix}"
     
     # Build prompt
     prompt_parts = [
@@ -346,6 +379,20 @@ def extract_robot_taxonomy(
         f"industries: {', '.join(taxonomy['industries'].keys())}",
         f"form: {', '.join(taxonomy['form'].keys())}",
         f"primary_class: {', '.join(taxonomy['primary_class'].keys())}",
+        "",
+        "INDUSTRY EVIDENCE REQUIREMENT:",
+        "Only output an industry if the page explicitly NAMES:",
+        "- That market (e.g., 'for hospitals', 'in warehouses')",
+        "- A customer in it (e.g., 'FedEx uses this robot')",
+        "- A deployment there (e.g., 'deployed at manufacturing sites')",
+        "",
+        "Do NOT infer industries from robot capabilities alone.",
+        "Vision equipment ≠ inspection robot. Material handling ≠ delivery service.",
+        "",
+        "PRIMARY FUNCTION:",
+        "Choose exactly ONE primary function - the robot's main purpose.",
+        "Only add secondary functions (0-2) if the page explicitly describes",
+        "additional capabilities the robot is designed for.",
         "",
         "PAGE TEXT:",
         "",
@@ -403,6 +450,7 @@ def extract_robot_taxonomy(
         "products": validated_products,
         "extraction_metadata": {
             "taxonomy_version": taxonomy_version,
+            "prompt_version": prompt_version,
             "cache_key": cache_key,
             "tokens_used": response.usage.input_tokens + response.usage.output_tokens,
             "input_tokens": response.usage.input_tokens,
