@@ -2,6 +2,7 @@ import pytest
 
 from scripts.test_understanding_v2_benchmark import (
     names_match,
+    normalize_benchmark,
     score_gap_probe,
     score_negative_control,
     select_target_record,
@@ -276,3 +277,10 @@ def test_page_type_only_result_flattens_to_non_robot(monkeypatch):
     extracted, metadata = runner.extract_robot_taxonomy_values("https://news.example", "text")
     assert extracted["offering_type"] == "non_robot" and extracted["primary_class"] == ""
     assert metadata["page"] == page and metadata["product_names"] == []
+
+
+def test_runner_reads_products_and_still_accepts_robots():
+    assert normalize_benchmark({"products": [{"id": "p1"}]})["robots"] == [{"id": "p1"}]
+    assert normalize_benchmark({"robots": [{"id": "r1"}]})["robots"] == [{"id": "r1"}]
+    both = normalize_benchmark({"products": [{"id": "p1"}], "robots": [{"id": "r1"}]})
+    assert [e["id"] for e in both["robots"]] == ["p1", "r1"]
