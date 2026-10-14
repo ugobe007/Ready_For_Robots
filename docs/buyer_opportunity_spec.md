@@ -1,11 +1,25 @@
 # RFR Build Spec: Buyer Opportunities v1
 
-**Owner:** Bob Christopher · **Status:** approved for build · **Version:** 1.5 (2026-10-14: taxonomy v1.2 industries in pilot groups; v1.4 product-not-company rule and maker catalog discovery; v1.3 form-fits-work matching rule; earlier: "robot job" definition, automation-intent signals, stage mapping, Phase 0.5)
+**Owner:** Bob Christopher · **Status:** approved for build · **Version:** 1.6 (2026-10-14: lexicon §0, 9th group auto dealerships, restaurants include bars, signal dedupe by workflow; v1.5 taxonomy v1.2 industries in pilot groups; v1.4 product-not-company rule and maker catalog discovery; v1.3 form-fits-work matching rule; earlier: "robot job" definition, automation-intent signals, stage mapping, Phase 0.5)
 **Location in repo:** `docs/buyer_opportunity_spec.md`
 
 This document is the source of truth for what the agent builds next. If code, older docs, or `AGENTS.md` disagree with it, this document wins. If something here is unclear or seems wrong, **stop and ask Bob**; do not decide product meaning yourself. Changes to this spec require Bob's approval.
 
 ---
+
+## 0. Words we use (Bob's lexicon)
+
+| Word | Meaning |
+|---|---|
+| **Robot** | A **classification**: what kind of robot it is (form, primary class, functions, industries from the taxonomy). "A cleaning AMR," "a stationary drink-making arm." |
+| **Product** | A specific named item a maker sells, and its **description** (its product page). ADAM, Titan, DUST-E S. Each product is classified as a robot. |
+| **Maker** (OEM) | The company that makes products. One maker usually has many products of different robot classes. Supply, never a buyer. |
+| **Robot job** | Work a robot can perform at a company that is moving to automate it. |
+| **Workflow** | The kind of work (taxonomy `functions`) at a buyer, e.g., cleaning, drink-making. |
+| **Buyer** | A company that could buy robots for its workflows. |
+| **Signal** | Sourced evidence that a buyer is moving to automate a workflow. |
+
+In code and files: entries describing specific items are **products** (e.g., the RichTech set uses `products`); the benchmark runner reads `products` and still accepts the older `robots` key.
 
 ## 1. What we are building
 
@@ -51,8 +65,11 @@ Buyers ──► workflows (status: open/exploring/piloting/committed)
   | 6 | Restaurants and bars | `restaurant`, `qsr_fast_food`, `bar_nightclub` |
   | 7 | Airports | `airport` |
   | 8 | Office buildings | `office_building`, `commercial_building`, `corporate_campus` |
+  | 9 | Auto dealerships | `automotive_dealership` (sales, service and parts departments) |
 
-  Matching and the UI show only buyers in these industries until Bob expands the list. **Priority order sets build order:** when a phase can't cover every group at once (sources, seed import checks, signal classifiers), do group 1 first and work down. Other taxonomy industries (construction, energy, government, defense, automotive dealerships, schools, transit, etc.) stay in the data model but are hidden. `residential_consumer` is never a buyer. Taxonomy is v1.2 (adds bars/nightclubs, surgery centers, automotive dealerships, K-12 schools, transit, residential); `industry_parents` in the taxonomy says which new industries also count as an older one.
+  Matching and the UI show only buyers in these industries until Bob expands the list. **Priority order sets build order:** when a phase can't cover every group at once (sources, seed import checks, signal classifiers), do group 1 first and work down. Other taxonomy industries (construction, energy, government, defense, schools, transit, etc.) stay in the data model but are hidden. `residential_consumer` is never a buyer. Taxonomy is v1.2 (adds bars/nightclubs, surgery centers, automotive dealerships, K-12 schools, transit, residential); `industry_parents` in the taxonomy says which new industries also count as an older one.
+
+  **Restaurants include their bars** (Bob: almost all restaurants have bars). `restaurant` covers the restaurant and its bar; `bar_nightclub` is for standalone bars, lounges and nightclubs, and counts as `restaurant` through `industry_parents`. So a drink robot like ADAM matches restaurants as well as standalone bars. The extractor prompt includes each industry's **description**, not just its name, so the model sees these definitions (rule change: measured on the next fresh test set).
 - **Geography:** United States. Las Vegas metro is a priority view (filter), not a limit.
 - **Robots:** any robot the extractor classifies. Buyers are shown only for robots whose industries overlap the pilot industries.
 
@@ -71,7 +88,7 @@ Buyers ──► workflows (status: open/exploring/piloting/committed)
 
 ## 4. Data model (new tables, prefix `rfr_`)
 
-All IDs are integers unless stated. `taxonomy` refers to `tests/fixtures/taxonomy.v1.json` (v1.1); enum values come from that file, never hard-coded.
+All IDs are integers unless stated. `taxonomy` refers to `tests/fixtures/taxonomy.v1.json` (v1.2); enum values come from that file, never hard-coded.
 
 ### 4.1 `rfr_robot_products`
 One row per robot product classified by the extractor.
@@ -148,7 +165,7 @@ One row per buyer × workflow that matters.
 | expires_at | e.g., RFP response deadline |
 | created_at | |
 
-Dedupe on (buyer_id, signal_type, source_url).
+Dedupe on (buyer_id, signal_type, workflow, source_url), since one source can give one signal per workflow (§5a).
 
 ### 4.6 `rfr_opportunities`
 Computed by the matcher (Phase 4). Rebuilt on a schedule; safe to truncate and recompute **this table only**.
@@ -342,7 +359,7 @@ For each: list the top 10 cards with reasons. Bob marks each card right / wrong 
 
 ## 12. Out of scope for v1 (do not build)
 
-- Contacts, outreach, sequences, CRM features
+- Contacts, outreach, sequences, CRM features. (Later: an opportunity usually has **several decision makers**, e.g., operations, facilities, F&B, IT, procurement, finance. Design for many-per-opportunity when contacts are added.)
 - Pricing, upgrade, or signup prompts on cards
 - Ingesting postings for people as leads
 - Supply-side hiring (robot makers) as a buyer source
