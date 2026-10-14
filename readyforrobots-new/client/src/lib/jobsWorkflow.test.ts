@@ -1335,7 +1335,8 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/Work being performed/);
     expect(desk).not.toMatch(/Open questions/);
     expect(desk).toMatch(/Job description/);
-    expect(desk).toMatch(/payEstimate/);
+    expect(desk).not.toMatch(/payEstimate/);
+    expect(desk).toMatch(/card\.sourceUrl \? JOB_CARD_SOURCE_LABEL : JOB_CARD_EXAMPLE_LABEL/);
     expect(desk).toMatch(/Task models/);
     expect(desk).not.toMatch(/setSelectedKeys\(\[\]\)/);
   });

@@ -53,7 +53,7 @@ export const LANDING_HOW_STEPS = [
   {
     n: "02",
     title: "Available jobs",
-    body: "Inspect employment cards: employer, workplace, work. Evidence shown on every verified match.",
+    body: "Inspect employment cards: employer, workplace, work. Cards without a source are marked Example.",
     href: "/?visit=jobs",
     cta: "See available jobs →",
   },
@@ -67,7 +67,7 @@ export const LANDING_HOW_STEPS = [
 ] as const;
 
 export const LANDING_STATS = [
-  { value: "3,000+", label: "Verified Job Leads", pulse: true },
+  { value: "3,000+", label: "Job Leads", pulse: true },
   { value: "109+", label: "Benchmarked Humanoids", pulse: false },
   { value: "25", label: "Free Preview Leads", pulse: false },
 ] as const;
@@ -75,7 +75,8 @@ export const LANDING_STATS = [
 export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
 export const LANDING_BRIEF_HEADLINE = "Jobs for robots.";
 export const LANDING_BRIEF_JOB_FIELD = "Jobs";
-export const LANDING_BRIEF_NOTE = "Evidence shown on every verified match.";
+export const LANDING_BRIEF_NOTE =
+  "Cards with a source link to it. Cards without one are marked Example.";
 
 export type LandingBriefJob = {
   id: string;

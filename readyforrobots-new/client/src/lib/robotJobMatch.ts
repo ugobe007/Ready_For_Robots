@@ -37,6 +37,8 @@ export type MatchJob = {
   tape_family?: string;
   unknowns?: string[];
   source?: string;
+  source_url?: string | null;
+  is_example?: boolean;
   verdict?: "POSSIBLE_MATCH" | "NOT_A_MATCH" | "INSUFFICIENT";
   why?: string[];
   still_unknown?: string[];

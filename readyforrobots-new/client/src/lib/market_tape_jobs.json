@@ -32,13 +32,6 @@
       "family": "transport"
     },
     {
-      "key": "origin_intuitive_smkt",
-      "title": "Point-of-use replenishment and packing-system cart/kit movement",
-      "industry": "Intuitive Surgical",
-      "path": "SMKT → LINE",
-      "family": "transport"
-    },
-    {
       "key": "neo_moa_bloomington",
       "title": "Overnight scrub of mall common-area hard floors (concourse / food court)",
       "industry": "Mall of America · Bloomington",

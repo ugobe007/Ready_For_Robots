@@ -36,7 +36,13 @@ import ExperimentHeader from "@/components/ExperimentHeader";
 import JobsProcessChrome from "@/components/JobsProcessChrome";
 import { jobsFindHref } from "@/lib/jobsLanding";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
-import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
+import {
+  JOB_CARD_EXAMPLE_LABEL,
+  JOB_CARD_EXAMPLE_NOTE,
+  JOB_CARD_SOURCE_LABEL,
+  jobModelListLine,
+  robotJobCardFromMatch,
+} from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
@@ -835,18 +841,22 @@ function CollectedJobInspect({ job }: { job: MatchJob }) {
           </div>
         ) : null}
         <div>
-          <dt className={eyebrow}>{card.payEstimate.heading}</dt>
-          <dd className="mt-0.5">
-            <span className="text-emerald-300">
-              {card.payEstimate.monthlyLabel}
-            </span>
-            {" · "}
-            <span className="text-emerald-300">
-              {card.payEstimate.annualLabel}
-            </span>
-            <span className="mt-0.5 block text-slate-400">
-              {card.payEstimate.disclaimer}
-            </span>
+          <dt className={eyebrow}>
+            {card.sourceUrl ? JOB_CARD_SOURCE_LABEL : JOB_CARD_EXAMPLE_LABEL}
+          </dt>
+          <dd className="mt-0.5 text-slate-300">
+            {card.sourceUrl ? (
+              <a
+                href={card.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="underline decoration-slate-600 underline-offset-2"
+              >
+                {card.sourceUrl}
+              </a>
+            ) : (
+              JOB_CARD_EXAMPLE_NOTE
+            )}
           </dd>
         </div>
         <div>

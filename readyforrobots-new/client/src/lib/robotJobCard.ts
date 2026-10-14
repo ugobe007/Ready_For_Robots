@@ -146,52 +146,32 @@ export type RobotJobCardView = {
   taskModels: RequiredTaskModel[];
   modelLinks: TaskModelLookup[];
   modelContract: TaskModelCardContract | null;
-  payEstimate: JobCardPayEstimate;
+  isExample: boolean;
+  sourceUrl: string | null;
 };
 
-/** Operator formula for robot pay on a Job Card. Labeled estimate, not an employer quote. */
-export const JOB_CARD_PAY_MONTHLY_LOW = 5000;
-export const JOB_CARD_PAY_MONTHLY_HIGH = 7500;
-export const JOB_CARD_PAY_HEADING = "Potential contract value";
-export const JOB_CARD_PAY_DISCLAIMER =
-  "Estimate of robot pay — not an employer quote.";
+/** Shown on every card that has no source link (all bundled seed/demo rows). */
+export const JOB_CARD_EXAMPLE_LABEL = "Example";
+export const JOB_CARD_EXAMPLE_NOTE =
+  "Example job. We have no source yet showing this employer is moving to automate this work.";
+export const JOB_CARD_SOURCE_LABEL = "Source";
+export const JOB_TAPE_EXAMPLE_SUBTITLE =
+  "Sample jobs from our example set. None has a source yet. Paste a robot URL to see the jobs it matches.";
 
-export type JobCardPayEstimate = {
-  monthlyLow: number;
-  monthlyHigh: number;
-  annualLow: number;
-  annualHigh: number;
-  monthlyLabel: string;
-  annualLabel: string;
-  heading: string;
-  disclaimer: string;
-};
-
-function usdBand(low: number, high: number): string {
-  const fmt = (n: number) =>
-    n.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-      maximumFractionDigits: 0,
-    });
-  return `${fmt(low)}–${fmt(high)}`;
+/** A card is sourced only when it links to evidence. */
+export function jobSourceUrl(job: {
+  source_url?: string | null;
+  is_example?: boolean | null;
+}): string | null {
+  const url = (job.source_url || "").trim();
+  return /^https?:\/\//i.test(url) ? url : null;
 }
 
-export function jobCardPayEstimate(): JobCardPayEstimate {
-  const monthlyLow = JOB_CARD_PAY_MONTHLY_LOW;
-  const monthlyHigh = JOB_CARD_PAY_MONTHLY_HIGH;
-  const annualLow = monthlyLow * 12;
-  const annualHigh = monthlyHigh * 12;
-  return {
-    monthlyLow,
-    monthlyHigh,
-    annualLow,
-    annualHigh,
-    monthlyLabel: `${usdBand(monthlyLow, monthlyHigh)} / month`,
-    annualLabel: `${usdBand(annualLow, annualHigh)} / year`,
-    heading: JOB_CARD_PAY_HEADING,
-    disclaimer: JOB_CARD_PAY_DISCLAIMER,
-  };
+export function isExampleJob(job: {
+  source_url?: string | null;
+  is_example?: boolean | null;
+}): boolean {
+  return job.is_example === true || jobSourceUrl(job) === null;
 }
 
 function jobDescriptionFromMatch(job: {
@@ -489,6 +469,8 @@ export function robotJobCardFromMatch(job: {
   industry?: string | null;
   text?: string | null;
   required_task_models?: MatchTaskModelIn[] | null;
+  source_url?: string | null;
+  is_example?: boolean | null;
 }): RobotJobCardView {
   const taskModels = normalizeTaskModels(job.required_task_models);
   const modelLinks = cardModelLinks(
@@ -525,7 +507,8 @@ export function robotJobCardFromMatch(job: {
     taskModels,
     modelLinks,
     modelContract: taskModels.find(m => m.cardContract)?.cardContract || null,
-    payEstimate: jobCardPayEstimate(),
+    isExample: isExampleJob(job),
+    sourceUrl: jobSourceUrl(job),
   };
 }
 
