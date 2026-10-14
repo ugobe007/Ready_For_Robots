@@ -1295,6 +1295,7 @@ def match_jobs_from_profile(
     *,
     limit: int = 12,
     include_rejections: bool = False,
+    stationary: bool = False,
 ) -> dict[str, Any]:
     product = (profile.get("selected_product") or {}).get("name")
     company = (profile.get("company") or {}).get("name")
@@ -1313,9 +1314,10 @@ def match_jobs_from_profile(
     caps = derive_capabilities(profile)
     cards: list[JobMatchCard] = []
     gold = load_gold_jobs()
+    from app.services.form_fit import jobs_fit_form
     from app.services.robot_job_live_corpus import merge_live_jobs
 
-    for row in buyer_rows(merge_live_jobs(load_corpus())):
+    for row in jobs_fit_form(buyer_rows(merge_live_jobs(load_corpus())), stationary=stationary):
         spec = gold.get(row.get("job_key") or "")
         if spec is None:
             spec = {

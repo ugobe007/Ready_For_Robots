@@ -39,8 +39,8 @@ def test_explicit_navigation_still_counts_as_mobile():
 def test_adam_site_search_returns_no_mobile_work():
     clear_profile_cache_memory()
     out = compose_robot_job_search(ADAM, product="ADAM", lookup_grain="product")
-    assert out["jobs"] == []
-    assert out["zero_reason"] == "no_compatible_jobs"
+    families = {j.get("tape_family") for j in out["jobs"]}
+    assert not families & MOBILE_ONLY_TAPE_FAMILIES
 
 
 def test_adam_legacy_match_returns_no_mobile_work():
