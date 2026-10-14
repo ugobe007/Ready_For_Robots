@@ -44,6 +44,8 @@ The signup card was asking visitors to choose among five options. Three of them 
 | pstack_release | ✅ exit 0 |
 | `tsc --noEmit` (Signup.tsx) | ✅ no errors |
 
+**Deploy:** commit `153bc0fa` pushed to `main` → Vercel production bundle `index-DJra3M2u.js` serving "Skip the wait — continue with Google" (verified on readyforrobots.com about 1 min after push); post-deploy site_health ✅. No Fly deploy needed (harness script only, no API change).
+
 Pipeline cache: `built_at` 2026-10-14T14:03Z, 5 leads, so no refresh was needed.
 
 ## Metrics (before; after measurable next cycle)
