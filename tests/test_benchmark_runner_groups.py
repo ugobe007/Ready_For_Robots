@@ -1,4 +1,4 @@
-from scripts.test_understanding_v2_benchmark import score_gap_probe, summarize
+from scripts.test_understanding_v2_benchmark import score_gap_probe, score_negative_control, summarize
 
 PROBE = {
     "id": "gp-02",
@@ -35,6 +35,50 @@ def test_gap_probe_not_named_and_blanked_field_scores_wrong():
     gap = score_gap_probe(_extracted("Hospital robot.", primary_class=""), PROBE)
     assert gap["gap_named"] is False
     assert gap["fields"]["primary_class"]["pass"] is False
+
+
+def test_gap_probe_without_form_key_skips_form():
+    probe = {k: v for k, v in PROBE.items() if k != "form_ok"}
+    gap = score_gap_probe(_extracted("Surgical robot."), probe)
+    assert "form" not in gap["fields"] and gap["gap_pass"] is True
+
+
+def test_forbid_must_not_probe_fails_when_forbidden_industry_tagged():
+    probe = {"id": "gp2-01", "offering_type_ok": ["autonomy_software"], "industries_required": [],
+             "industries_must_not": ["grocery", "restaurant"]}
+    notes = "Automotive and mobility customers have no industry value."
+    clean = score_gap_probe(_extracted(notes, industries=[]), probe)
+    tagged = score_gap_probe(_extracted(notes, industries=[{"value": "grocery"}]), probe)
+    assert clean["gap_pass"] is True
+    assert tagged["gap_named"] is True and tagged["gap_pass"] is False
+    assert tagged["forbidden_industries_found"] == ["grocery"]
+
+
+def test_negative_control_with_page_type_requires_match_and_zero_records():
+    expected = {"page_type": "directory_or_multi_company", "offering_type": "non_robot"}
+    page_only = {"page": {"page_type": "directory_or_multi_company"}, "product_names": []}
+    assert score_negative_control({"offering_type": "non_robot"}, expected, page_only)["pass"] is True
+    wrong_type = {"page": {"page_type": "manufacturer_product_page"}, "product_names": ["X"]}
+    neg = score_negative_control({"offering_type": "robot_product"}, expected, wrong_type)
+    assert neg["pass"] is False and len(neg["checks"]) == 3
+    only_page_type = score_negative_control({}, {"page_type": "news_press"},
+                                            {"page": {"page_type": "news_press"}, "product_names": []})
+    assert only_page_type["pass"] is True
+
+
+def test_summary_reports_page_type_per_entry():
+    results = [
+        {"id": "v2-01", "group": "robot", "bucket": "PASSED", "expected_page_type": "manufacturer_product_page",
+         "metadata": {"page": {"page_type": "news_press"}}},
+        {"id": "v2-02", "group": "robot", "bucket": "FETCH_FAILED", "expected_page_type": "manufacturer_product_page"},
+        {"id": "gp2-01", "group": "gap_probe", "bucket": "GAP_NAMED", "expected_page_type": None,
+         "gap_probe_score": {"fields": {}}, "metadata": {"page": {"page_type": "manufacturer_product_page"}}},
+    ]
+    s = summarize(results)
+    assert s["robots"]["page_types"]["v2-01"] == {"expected": "manufacturer_product_page",
+                                                  "assigned": "news_press", "match": False}
+    assert s["robots"]["page_types"]["v2-02"]["assigned"] == "NOT READ"
+    assert s["taxonomy_gap_probes"]["page_types"]["gp2-01"]["match"] is None
 
 
 def test_summary_keeps_three_groups_separate_and_counts_unsupported_by_field():

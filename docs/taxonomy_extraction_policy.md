@@ -53,4 +53,9 @@ The answer key and scorer are unchanged by these rules.
 
 ## Reporting
 
-The benchmark runner reports robots, taxonomy gap probes and negative controls as separate results, each with a count of fields blanked as unsupported, by field. Results without the product hint are the production number and come first. The runner also saves the page record and every extracted product name per page.
+The benchmark runner reports robots, taxonomy gap probes and negative controls as separate results, each with a count of fields blanked as unsupported, by field. Results without the product hint are the production number and come first. The runner also saves the page record and every extracted product name per page, and reports the page type assigned to every entry next to the expected page type (robots: `expected_page_type`; negative controls: `expected.page_type`).
+
+How the runner applies the answer key (the scorer itself is unchanged):
+
+- A negative control passes only if every field its key states matches. When the key states a `page_type`, the assigned page type must match and the page must produce zero robot records.
+- A gap probe passes if `unclassified_notes` names the gap (terms per probe in `GAP_RULES`). For probes marked `forbid_must_not` (Nuro), it also fails if any `industries_must_not` value is tagged. Taxonomy fields are scored and reported beside the verdict only when the key states them (Ekso has no `form_ok`, so form is not scored).

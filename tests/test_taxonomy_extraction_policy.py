@@ -127,7 +127,7 @@ def test_prompt_carries_definition_version_and_limits(monkeypatch):
     assert [i["value"] for i in result["products"][0]["industries"]] == ["airport"]
 
 
-@pytest.mark.parametrize("page_type", ["news_press", "buyer_corporate_site", "directory_multi_company"])
+@pytest.mark.parametrize("page_type", ["news_press", "buyer_corporate_site", "directory_or_multi_company"])
 def test_non_manufacturer_page_produces_only_a_page_record(monkeypatch, page_type):
     _fake_client(monkeypatch, _response([product()], page_type=page_type))
     result = te.extract_robot_taxonomy("https://news.example", PAGE)
