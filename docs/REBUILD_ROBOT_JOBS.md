@@ -82,7 +82,7 @@ and score with the evidence lines that justify it.
 Job-board rotation now leads with these automation-hiring searches; the old
 labor-title searches only fill 4 rotating slots (`JOB_SCRAPER_LEGACY_URLS_PER_RUN`).
 
-Env knobs: `ENABLE_OPPORTUNITY_FEEDS`, `OPPORTUNITY_FEEDS_EVERY_MINUTES` (60),
+Env knobs: `ENABLE_OPPORTUNITY_FEEDS`, `SAM_GOV_DAILY_REQUEST_LIMIT` (10, the no-role cap; the wait is derived from it),
 `OPPORTUNITY_FEEDS_MAX_SOURCES` (60), `JOB_SCRAPER_LEGACY_URLS_PER_RUN` (4),
 `ENABLE_ONTOLOGY_TARGETS`, and the API keys in `robot_opportunity_sources.py`.
 

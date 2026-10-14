@@ -765,11 +765,21 @@ def _scheduled_job_board_loop():
         time.sleep(max(3600, int(interval_hours * 3600)))
 
 
+def _opportunity_feeds_interval_minutes() -> int:
+    """SAM.gov's wait comes from SAM_GOV_DAILY_REQUEST_LIMIT, not a 60-minute default."""
+    from app.scrapers.opportunity_feed_scraper import sam_gov_schedule
+    from app.scrapers.robot_opportunity_sources import api_sources
+
+    sam_count = sum(1 for src in api_sources() if src.kind == "sam_gov")
+    _, every_min = sam_gov_schedule(sam_count)
+    return every_min
+
+
 def _scheduled_opportunity_feeds_loop():
-    """API feeds (Amazon, ATS boards, Adzuna/Jooble/USAJOBS/SAM.gov). Hourly, rotating."""
+    """API feeds. SAM.gov runs only as often as its daily request cap allows."""
     from app.scrapers.opportunity_feed_scraper import run_opportunity_feeds
 
-    every_min = max(15, int(os.getenv("OPPORTUNITY_FEEDS_EVERY_MINUTES", "60")))
+    every_min = _opportunity_feeds_interval_minutes()
     time.sleep(max(60, int(os.getenv("OPPORTUNITY_FEEDS_FIRST_RUN_DELAY_MINUTES", "8")) * 60))
     while True:
         try:
@@ -805,7 +815,11 @@ def _start_scheduled_job_board():
         threading.Thread(
             target=_scheduled_opportunity_feeds_loop, daemon=True, name="opportunity-feeds"
         ).start()
-        logger.info("Opportunity feeds thread started (every %s min)", os.getenv("OPPORTUNITY_FEEDS_EVERY_MINUTES", "60"))
+        logger.info(
+            "Opportunity feeds thread started (every %s min, SAM_GOV_DAILY_REQUEST_LIMIT=%s)",
+            _opportunity_feeds_interval_minutes(),
+            os.getenv("SAM_GOV_DAILY_REQUEST_LIMIT", "10"),
+        )
     if os.getenv("ENABLE_SCHEDULED_JOB_BOARD", "1").strip().lower() in ("0", "false", "no"):
         logger.info("In-app scheduled job-board scraper disabled (ENABLE_SCHEDULED_JOB_BOARD=0)")
         return

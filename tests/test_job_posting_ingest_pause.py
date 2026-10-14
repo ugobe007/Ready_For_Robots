@@ -126,3 +126,27 @@ def test_manual_job_board_trigger_refused_while_paused(monkeypatch):
     with pytest.raises(HTTPException) as exc:
         asyncio.run(run_specific_scraper("job_boards", MagicMock(), db=MagicMock()))
     assert exc.value.status_code == 409
+
+
+def test_sam_gov_schedule_defaults_to_the_no_role_daily_cap():
+    calls, interval = feeds.sam_gov_schedule(26, daily_limit=10)
+    assert calls == 10
+    assert interval == 24 * 60
+    assert calls * (1440 // interval) <= 10
+
+
+def test_sam_gov_schedule_stays_inside_a_role_limit():
+    calls, interval = feeds.sam_gov_schedule(26, daily_limit=1000)
+    assert calls == 26
+    assert calls * (1440 // interval) <= 1000
+
+
+def test_sam_gov_budget_takes_only_as_many_keywords_as_the_cap(monkeypatch):
+    sources = [OpportunitySource("sam_gov", f"k{i}", params=(("keyword", str(i)),)) for i in range(26)]
+    sources.append(OpportunitySource("rss_feed", "news"))
+    monkeypatch.setenv("SAM_GOV_DAILY_REQUEST_LIMIT", "10")
+    chosen, interval = feeds._apply_sam_gov_budget(sources)
+    sam = [s for s in chosen if s.kind == "sam_gov"]
+    assert len(sam) == 10
+    assert interval == 24 * 60
+    assert any(s.kind == "rss_feed" for s in chosen)
