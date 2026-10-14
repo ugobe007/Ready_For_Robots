@@ -8,6 +8,7 @@ against page text.
 import hashlib
 import json
 import os
+import re
 from pathlib import Path
 from typing import Any
 
@@ -16,10 +17,17 @@ from anthropic import Anthropic
 
 TAXONOMY_PATH = Path(__file__).resolve().parent.parent.parent.parent / "tests/fixtures/taxonomy.v1.json"
 CONFIG_PATH = Path(__file__).resolve().parent / "extraction_config.json"
-PROMPT_VERSION = "v3"
+PROMPT_VERSION = "v4"
 
 SINGLE_VALUE_FIELDS = ("offering_type", "form", "primary_class", "primary_function")
 LIST_FIELDS = ("secondary_functions", "industries")
+
+_EVIDENCE_CHARS = str.maketrans({
+    "\u2018": "'", "\u2019": "'", "\u201a": "'", "\u201b": "'", "\u2032": "'",
+    "\u201c": '"', "\u201d": '"', "\u201e": '"', "\u201f": '"', "\u2033": '"',
+    "\u2010": "-", "\u2011": "-", "\u2012": "-", "\u2013": "-", "\u2014": "-", "\u2015": "-", "\u2212": "-",
+})
+_ELLIPSIS = re.compile(r"\.{3,}|\u2026")
 
 
 def load_taxonomy() -> dict[str, Any]:
@@ -44,7 +52,7 @@ def get_taxonomy_version() -> str:
     return taxonomy.get("version", "v1")
 
 
-def build_extraction_schema(taxonomy: dict[str, Any]) -> dict[str, Any]:
+def build_extraction_schema(taxonomy: dict[str, Any], config: dict[str, Any] | None = None) -> dict[str, Any]:
     """
     Build JSON schema with enums loaded from taxonomy.
     
@@ -56,13 +64,28 @@ def build_extraction_schema(taxonomy: dict[str, Any]) -> dict[str, Any]:
     industries = taxonomy_values(taxonomy, "industries")
     forms = taxonomy_values(taxonomy, "form")
     primary_classes = taxonomy_values(taxonomy, "primary_class")
+    config = config or load_extraction_config()
     
     schema = {
         "type": "object",
         "properties": {
+            "page_type": {
+                "type": "object",
+                "description": "Step 1: what kind of page this is, decided before any product record",
+                "properties": {
+                    "value": {"type": "string", "enum": list(config["page_types"])},
+                    "confidence": {"type": "number", "minimum": 0, "maximum": 1},
+                    "evidence": {
+                        "type": "string",
+                        "description": "One contiguous quote copied exactly from the page",
+                    },
+                },
+                "required": ["value", "confidence", "evidence"],
+            },
             "products": {
                 "type": "array",
-                "description": "List of robot products found on this page. One record per product.",
+                "description": "Robot products on this page, one record per product. Empty unless page_type is manufacturer_product_page.",
+                "maxItems": config["max_records_per_page"],
                 "items": {
                     "type": "object",
                     "properties": {
@@ -222,26 +245,37 @@ def build_extraction_schema(taxonomy: dict[str, Any]) -> dict[str, Any]:
                 }
             }
         },
-        "required": ["products"]
+        "required": ["page_type", "products"]
     }
     
     return schema
 
 
+def normalize_for_evidence(text: str) -> str:
+    """Whitespace, curly/straight quotes, dashes, and case."""
+    return " ".join(text.translate(_EVIDENCE_CHARS).split()).lower()
+
+
 def validate_evidence(evidence: str, page_text: str) -> bool:
     """
-    Check if evidence snippet is an exact substring of page text.
-    
-    Case-insensitive and whitespace-normalized comparison.
+    Evidence is split on "..." and every piece must appear on the page, in order.
+
+    Both sides are normalized first (see normalize_for_evidence).
     """
     if not evidence or not page_text:
         return False
-    
-    # Normalize whitespace
-    evidence_norm = " ".join(evidence.split()).lower()
-    page_norm = " ".join(page_text.split()).lower()
-    
-    return evidence_norm in page_norm
+    page = normalize_for_evidence(page_text)
+    pieces = [p.strip() for p in _ELLIPSIS.split(normalize_for_evidence(evidence))]
+    pieces = [p for p in pieces if p]
+    if not pieces:
+        return False
+    pos = 0
+    for piece in pieces:
+        found = page.find(piece, pos)
+        if found < 0:
+            return False
+        pos = found + len(piece)
+    return True
 
 
 def apply_evidence_policy(
@@ -318,7 +352,7 @@ def _coerce_products(raw: Any) -> list[dict[str, Any]]:
     return products
 
 
-def _call_with_retry(client: Any, request: dict[str, Any], retries: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+def _call_with_retry(client: Any, request: dict[str, Any], retries: int) -> tuple[dict[str, Any], dict[str, Any]]:
     """Retry only when the response has no usable structure; never on content.
 
     Tokens from every attempt are counted.
@@ -337,10 +371,41 @@ def _call_with_retry(client: Any, request: dict[str, Any], retries: int) -> tupl
         try:
             if not tool_result:
                 raise ValueError(f"No tool call returned from LLM (stop_reason={response.stop_reason})")
-            return _coerce_products(tool_result.get("products", [])), call
+            return {**tool_result, "products": _coerce_products(tool_result.get("products", []))}, call
         except ValueError as e:
             call["errors"].append(str(e)[:200])
     raise ValueError(f"Malformed output after {call['attempts']} attempts: {call['errors'][-1]}")
+
+
+def _matches_hint(product: dict[str, Any], hint: str) -> bool:
+    name = (product.get("product_name") or "").lower()
+    hint = hint.lower()
+    return bool(name) and (hint in name or name in hint)
+
+
+def cap_records(products: list[dict[str, Any]], hint: str | None, cap: int) -> list[dict[str, Any]]:
+    """The hinted product (if any) plus the first others, at most `cap` in total."""
+    if hint:
+        target = [p for p in products if _matches_hint(p, hint)][:1]
+        products = target + [p for p in products if p not in target]
+    return products[:cap]
+
+
+def page_record(raw_page_type: Any, page_text: str, config: dict[str, Any]) -> dict[str, Any]:
+    """Page-level classification. Evidence is checked and logged but never blanks the page type."""
+    fact = raw_page_type if isinstance(raw_page_type, dict) else {"value": raw_page_type}
+    value = fact.get("value")
+    produces_records = value in config["record_page_types"]
+    record = {
+        "page_type": value,
+        "confidence": fact.get("confidence"),
+        "evidence": fact.get("evidence", ""),
+        "evidence_validated": validate_evidence(fact.get("evidence", ""), page_text),
+        "produces_records": produces_records,
+    }
+    if not produces_records:
+        record["offering_type"] = "non_robot"
+    return record
 
 
 def extract_robot_taxonomy(
@@ -383,7 +448,9 @@ def extract_robot_taxonomy(
         }
     """
     taxonomy = load_taxonomy()
-    schema = build_extraction_schema(taxonomy)
+    config = load_extraction_config()
+    schema = build_extraction_schema(taxonomy, config)
+    cap = config["max_records_per_page"]
     
     # Build cache key
     page_hash = hashlib.sha256(page_text.encode()).hexdigest()[:16]
@@ -394,12 +461,23 @@ def extract_robot_taxonomy(
     
     # Build prompt
     prompt_parts = [
-        "Extract robot product classification from this company page.",
+        "Extract robot product classification from this page.",
+        "",
+        "STEP 1 - PAGE TYPE. Classify the page itself before anything else:",
+        *[f"- {name}: {meaning}" for name, meaning in config["page_types"].items()],
+        f"Only {' or '.join(config['record_page_types'])} produces product records.",
+        "For any other page type, return page_type and an EMPTY products list.",
+        "",
+        "STEP 2 - PRODUCT RECORDS (manufacturer pages only).",
         "",
         "CRITICAL RULES:",
         "1. Use ONLY values from the provided taxonomy. Never invent categories.",
-        "2. Extract one record per robot product. Multi-product sites get multiple records.",
-        "3. Every field must have an evidence snippet that is an EXACT QUOTE from the page.",
+        f"2. One record per robot product, at most {cap} records in total"
+        + (f": the FOCUS product plus at most {cap - 1} others." if product_name_hint
+           else ": the most prominent robot products on the page."),
+        "3. Every evidence value is ONE contiguous passage copied exactly from the page text,",
+        "   character for character. Do not join separate passages, do not use '...',",
+        "   do not join a heading to the text under it, do not add, drop, or reword anything.",
         "4. Set confidence based on evidence clarity (0.0-1.0).",
         "5. If information doesn't fit the taxonomy, note it in unclassified_notes.",
         "",
@@ -445,11 +523,10 @@ def extract_robot_taxonomy(
     
     prompt = "\n".join(prompt_parts)
     
-    config = load_extraction_config()
     client = Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
     request = dict(
         model="claude-sonnet-4-6",
-        max_tokens=4096,
+        max_tokens=config["max_output_tokens"],
         system=[
             {
                 "type": "text",
@@ -467,11 +544,15 @@ def extract_robot_taxonomy(
         ],
         tool_choice={"type": "tool", "name": "classify_robot"},
     )
-    raw_products, call = _call_with_retry(client, request, config.get("max_malformed_output_retries", 0))
+    tool_result, call = _call_with_retry(client, request, config.get("max_malformed_output_retries", 0))
 
-    validated_products = [apply_evidence_policy(product, page_text, config) for product in raw_products]
+    page = page_record(tool_result.get("page_type"), page_text, config)
+    raw_products = tool_result["products"] if page["produces_records"] else []
+    kept = cap_records(raw_products, product_name_hint, cap)
+    validated_products = [apply_evidence_policy(product, page_text, config) for product in kept]
 
     return {
+        "page": page,
         "products": validated_products,
         "extraction_metadata": {
             "taxonomy_version": taxonomy_version,
@@ -483,6 +564,9 @@ def extract_robot_taxonomy(
             "model": call["model"],
             "attempts": call["attempts"],
             "malformed_attempt_errors": call["errors"],
+            "records_returned": len(raw_products),
+            "records_dropped_by_page_type": 0 if page["produces_records"] else len(tool_result["products"]),
+            "records_dropped_by_cap": len(raw_products) - len(kept),
             "extraction_config": config,
         }
     }

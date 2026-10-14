@@ -108,19 +108,23 @@ def extract_robot_taxonomy_values(
         cache_key_extra="v1"
     )
     
-    # Extract first product (or empty if none)
     products = result.get("products", [])
+    page = result.get("page")
+    metadata = {**result.get("extraction_metadata", {}),
+                "page": page,
+                "product_names": [p.get("product_name", "") for p in products]}
     if not products:
         return {
-            "offering_type": "",
+            "offering_type": (page or {}).get("offering_type", ""),
             "form": "",
             "primary_class": "",
             "primary_function": {},
             "secondary_functions": [],
             "industries": [],
-            "unclassified_notes": "No products extracted"
-        }, result.get("extraction_metadata", {})
-    
+            "unsupported_facts": [],
+            "unclassified_notes": "No products extracted",
+        }, metadata
+
     chosen = products[0]
     if product_name_hint:
         hint_lower = product_name_hint.lower()
@@ -129,7 +133,7 @@ def extract_robot_taxonomy_values(
             if hint_lower in product_name_lower or product_name_lower in hint_lower:
                 chosen = product
                 break
-    return _flatten_product(chosen), result.get("extraction_metadata", {})
+    return _flatten_product(chosen), metadata
 
 
 def _flatten_product(product: dict[str, Any]) -> dict[str, Any]:
@@ -301,6 +305,8 @@ def test_robot(
         
         print(f"\nExtraction time: {elapsed:.1f}s")
         print(f"Tokens: {metadata.get('tokens_used', 0)} ({metadata.get('input_tokens', 0)} in, {metadata.get('output_tokens', 0)} out)")
+        if metadata.get('page'):
+            print(f"Page type: {metadata['page'].get('page_type')}  records: {metadata.get('product_names')}")
         print(f"Extracted: offering_type={extracted.get('offering_type', 'N/A')}, "
               f"form={extracted.get('form', 'N/A')}, "
               f"primary_class={extracted.get('primary_class', 'N/A')}")

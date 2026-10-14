@@ -59,3 +59,14 @@ def test_summary_keeps_three_groups_separate_and_counts_unsupported_by_field():
     assert s["taxonomy_gap_probes"]["unsupported_by_field"]["primary_function"] == 1
     assert s["negative_controls"]["verdicts"] == {"neg-h1": "FAIL"}
     assert s["negative_controls"]["unsupported_by_field"]["offering_type"] == 1
+
+
+def test_page_type_only_result_flattens_to_non_robot(monkeypatch):
+    import scripts.test_understanding_v2_benchmark as runner
+
+    page = {"page_type": "news_press", "produces_records": False, "offering_type": "non_robot"}
+    monkeypatch.setattr(runner, "extract_robot_taxonomy",
+                        lambda **_: {"page": page, "products": [], "extraction_metadata": {"tokens_used": 3}})
+    extracted, metadata = runner.extract_robot_taxonomy_values("https://news.example", "text")
+    assert extracted["offering_type"] == "non_robot" and extracted["primary_class"] == ""
+    assert metadata["page"] == page and metadata["product_names"] == []
