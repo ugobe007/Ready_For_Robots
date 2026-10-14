@@ -165,7 +165,7 @@ One row per buyer × workflow that matters.
 | expires_at | e.g., RFP response deadline |
 | created_at | |
 
-Dedupe on (buyer_id, signal_type, workflow, source_url), since one source can give one signal per workflow (§5a).
+Dedupe on (buyer_id, signal_type, workflow, source_url), since one source can give one signal per workflow (§5a). The unique index must treat a null `workflow` as one value (`UNIQUE NULLS NOT DISTINCT`, or index `COALESCE(workflow, '')`), so a company-wide signal from one source stays one row on re-import.
 
 ### 4.6 `rfr_opportunities`
 Computed by the matcher (Phase 4). Rebuilt on a schedule; safe to truncate and recompute **this table only**.
