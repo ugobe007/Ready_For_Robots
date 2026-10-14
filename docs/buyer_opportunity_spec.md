@@ -1,6 +1,6 @@
 # RFR Build Spec: Buyer Opportunities v1
 
-**Owner:** Bob Christopher · **Status:** approved for build · **Version:** 1.3 (2026-10-14: form-fits-work matching rule; earlier: "robot job" definition, automation-intent signals, stage mapping, Phase 0.5)
+**Owner:** Bob Christopher · **Status:** approved for build · **Version:** 1.5 (2026-10-14: taxonomy v1.2 industries in pilot groups; v1.4 product-not-company rule and maker catalog discovery; v1.3 form-fits-work matching rule; earlier: "robot job" definition, automation-intent signals, stage mapping, Phase 0.5)
 **Location in repo:** `docs/buyer_opportunity_spec.md`
 
 This document is the source of truth for what the agent builds next. If code, older docs, or `AGENTS.md` disagree with it, this document wins. If something here is unclear or seems wrong, **stop and ask Bob**; do not decide product meaning yourself. Changes to this spec require Bob's approval.
@@ -46,13 +46,13 @@ Buyers ──► workflows (status: open/exploring/piloting/committed)
   | 1 | Warehouse, logistics, 3PL | `warehouse_distribution`, `3pl`, `logistics_parcel` |
   | 2 | Factories | `manufacturing`, `food_manufacturing` |
   | 3 | Hotels and casinos | `hotel`, `casino` |
-  | 4 | Hospitals | `hospital` |
+  | 4 | Hospitals | `hospital`, `surgery_center` |
   | 5 | Retail | `retail_store`, `grocery`, `shopping_mall` |
-  | 6 | Restaurants | `restaurant`, `qsr_fast_food` |
+  | 6 | Restaurants and bars | `restaurant`, `qsr_fast_food`, `bar_nightclub` |
   | 7 | Airports | `airport` |
   | 8 | Office buildings | `office_building`, `commercial_building`, `corporate_campus` |
 
-  Matching and the UI show only buyers in these industries until Bob expands the list. **Priority order sets build order:** when a phase can't cover every group at once (sources, seed import checks, signal classifiers), do group 1 first and work down. Other taxonomy industries (construction, energy, government, defense, etc.) stay in the data model but are hidden.
+  Matching and the UI show only buyers in these industries until Bob expands the list. **Priority order sets build order:** when a phase can't cover every group at once (sources, seed import checks, signal classifiers), do group 1 first and work down. Other taxonomy industries (construction, energy, government, defense, automotive dealerships, schools, transit, etc.) stay in the data model but are hidden. `residential_consumer` is never a buyer. Taxonomy is v1.2 (adds bars/nightclubs, surgery centers, automotive dealerships, K-12 schools, transit, residential); `industry_parents` in the taxonomy says which new industries also count as an older one.
 - **Geography:** United States. Las Vegas metro is a priority view (filter), not a limit.
 - **Robots:** any robot the extractor classifies. Buyers are shown only for robots whose industries overlap the pilot industries.
 
@@ -302,7 +302,12 @@ Migrations for §4 tables. Seed CSV import script. Industry synonym map plus bac
 
 **Phase 2: Robot side wired**
 The taxonomy extractor (prompt v4) writes `rfr_robot_products` for any submitted robot URL, behind the flag.
-*Accept:* the 5 acceptance robots (§11) produce product rows with sensible fields; one row per product on multi-product pages.
+**Robot makers make many robots.** A maker is not one robot: RichTech makes a drink station (ADAM), a bartender arm (Scorpion), a restaurant server (Matradee Plus), heavy delivery (Titan), pallet moving (Pallet Jack), two floor cleaners (DUST-E MX, DUST-E S) and an industrial humanoid (Dex), each for different work and buyers. So:
+- The unit is the **product**, never the company. Each product gets its own `rfr_robot_products` row and its own matches.
+- If the submitted URL is a maker's homepage or catalog, discover its product pages (e.g., `/solutions/*`, `/products/*`) and classify each one. Show the user the list of products found and let them pick, rather than merging them into one robot.
+- If the submitted URL is a product page, classify that product only.
+
+*Accept:* the 5 acceptance robots (§11) produce product rows with sensible fields; one row per product on multi-product pages. **Plus the RichTech set** (`tests/fixtures/robot_oem_richtech_set.v1.json`): each of the 8 product URLs classifies per its answer key, and submitting `richtechrobotics.com` finds all 8 products as separate records.
 
 **Phase 3: Signals**
 SAM.gov → `rfr_signals`; news classifier → signals; `deployment_events` → workflow status. Bob confirms pilot industries before this phase.
@@ -327,7 +332,7 @@ Run on preview after Phase 4 and again after Phase 5. Bob picks the final 5; sug
 
 1. **A warehouse robot** (e.g., Locus): warehouses/3PLs, ranked with RFP or pilot signals first.
 2. **A factory robot** (e.g., OTTO Motors or a Universal Robots cobot): manufacturers, not warehouses, as buyers for in-plant work.
-3. **RichTech ADAM** (drink-making and serving: cocktails, coffee): hotels, restaurants and bars, nightclubs (`restaurant` covers bars and clubs; casino clubs and lounges are `casino`). Workflow must be `food_beverage_prep`, not bussing, room service, or food running. Las Vegas filter shows local buyers.
+3. **RichTech ADAM** (drink-making and serving: cocktails, coffee): bars and nightclubs (`bar_nightclub`), restaurants, hotels. Workflow must be `food_beverage_prep`, not bussing, room service, or food running. Las Vegas filter shows local buyers.
 4. **Relay or Aethon** (hospital delivery): hospitals with delivery workflows; committed hospitals excluded for delivery.
 5. **A cleaning robot** (e.g., Avidbots): airports, retail, office buildings, hotels; excluding any already committed to cleaning robots.
 
