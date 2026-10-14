@@ -110,7 +110,6 @@ export type TaskModelCardContract = {
   time: string;
   youProvide: string;
   fieldFeedback: string;
-  listLine: string;
   steps: TaskModelPlacementStep[];
 };
 
@@ -317,14 +316,6 @@ function stripPrefix(value: string, prefix: RegExp): string {
   return value.replace(prefix, "").trim();
 }
 
-function shortLayer(layer: string): string {
-  const t = stripPrefix(layer, /^Layer:\s*/i);
-  if (/site-adapted/i.test(t)) return "Site-adapted";
-  if (/task library/i.test(t)) return "Task library";
-  if (/foundation/i.test(t)) return "Foundation VLA";
-  return t.split("/")[0].trim() || t;
-}
-
 function shortTime(time: string): string {
   const t = stripPrefix(time, /^Typical time:\s*/i);
   const m = t.match(
@@ -403,9 +394,6 @@ function mapCardContract(
   const fieldFeedback = (raw.field_feedback || "").trim();
   const who = shortWho(whoTrains);
   const timeShort = shortTime(time);
-  const listLine =
-    (raw.list_line || "").trim() ||
-    [shortLayer(layer), timeShort, who].filter(Boolean).join(" · ");
   const steps = mapPlacementSteps(
     raw,
     defaultPlacementSteps({
@@ -423,7 +411,6 @@ function mapCardContract(
     time,
     youProvide,
     fieldFeedback,
-    listLine,
     steps,
   };
 }
@@ -510,13 +497,6 @@ export function robotJobCardFromMatch(job: {
     isExample: isExampleJob(job),
     sourceUrl: jobSourceUrl(job),
   };
-}
-
-/** Collapsed list / CRM taste — training burden without inventing a price. */
-export function jobModelListLine(
-  job: Parameters<typeof robotJobCardFromMatch>[0]
-): string {
-  return robotJobCardFromMatch(job).modelContract?.listLine || "";
 }
 
 export type RobcoJobCard = (typeof robcoPack)["jobs"][number];

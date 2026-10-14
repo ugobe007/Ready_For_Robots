@@ -1054,7 +1054,7 @@ describe("jobsWorkflow", () => {
     expect(signup).not.toMatch(/The pipeline is where more than 5 live/);
     expect(signup).toMatch(/readJobsHandoffSnapshot/);
     expect(signup).toMatch(/tasteJobs/);
-    expect(signup).toMatch(/jobModelListLine/);
+    expect(signup).not.toMatch(/jobModelListLine/);
     expect(signup).toMatch(/robotJobsIntent\) return/);
     expect(signup).toMatch(/liveProof &&\s*!robotJobsIntent/);
     expect(signup).toMatch(/jobs for\{" "\}/);
@@ -1841,7 +1841,7 @@ describe("jobsWorkflow", () => {
     expect(hero).toMatch(/CRM_HOW_TO_STEPS/);
     expect(hero).toMatch(/tasteJobs/);
     expect(hero).toMatch(/CRM_UNLOCKED_JOBS/);
-    expect(hero).toMatch(/jobModelListLine/);
+    expect(hero).not.toMatch(/jobModelListLine/);
 
     const intel = readFileSync(join(here, "../pages/Intelligence.tsx"), "utf8");
     expect(intel).toMatch(/ExperimentHeader/);

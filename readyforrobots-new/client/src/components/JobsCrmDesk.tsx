@@ -40,7 +40,6 @@ import {
   JOB_CARD_EXAMPLE_LABEL,
   JOB_CARD_EXAMPLE_NOTE,
   JOB_CARD_SOURCE_LABEL,
-  jobModelListLine,
   robotJobCardFromMatch,
 } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
@@ -568,11 +567,6 @@ export default function JobsCrmDesk({
                             .filter(Boolean)
                             .join(" · ")}
                         </span>
-                        {jobModelListLine(job) ? (
-                          <span className="mt-1 block font-mono text-sm text-slate-500">
-                            {jobModelListLine(job)}
-                          </span>
-                        ) : null}
                         <span className="mt-1 block font-mono text-sm text-slate-500">
                           {workTaskModelListLine(
                             parseWorkTaskModel(rowByKey.get(job.job_key))
@@ -973,7 +967,6 @@ function ApplyPanel({
   const brief = placementAgentBrief(job, record, robotName);
   const lane = placementMoneyLane(gaps, record);
   const card = robotJobCardFromMatch(job);
-  const modelLine = jobModelListLine(job);
 
   function note(kind: PipelineActivityEvent["kind"], label: string) {
     const company = robotJobCardFromMatch(job).employer || undefined;
@@ -1056,9 +1049,6 @@ function ApplyPanel({
         Your move: {nextLabel.replace(/ →$/, "")}
       </h2>
       <p className="mt-2 text-lg leading-relaxed text-slate-200">{brief}</p>
-      {modelLine ? (
-        <p className="mt-2 font-mono text-sm text-slate-400">{modelLine}</p>
-      ) : null}
       {lane === "pack" ? (
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-slate-400">
           {gaps.find(g => g.id === "model_pack")?.howToFix}

@@ -3794,11 +3794,6 @@ function JobCard({
             <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-xs text-slate-400">
               <span>{jobIndexLabel(index)}</span>
             </div>
-            {card.modelContract?.listLine ? (
-              <span className={JOBS_PLACE_CLASS}>
-                {card.modelContract.listLine}
-              </span>
-            ) : null}
           </span>
           <span className="font-mono text-xs text-slate-500">
             {selected ? "−" : "+"}

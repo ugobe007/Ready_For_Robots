@@ -237,8 +237,7 @@ describe("robotJobCard", () => {
     expect(card.modelContract?.fieldFeedback).toMatch(
       /do not automatically reduce/i
     );
-    expect(card.modelContract?.listLine).toMatch(/Task library/);
-    expect(card.modelContract?.listLine).toMatch(/2–8 weeks|2-8 weeks/);
+    expect(card.modelContract).not.toHaveProperty("listLine");
     expect(card.modelContract?.steps.map(s => s.n)).toEqual([1, 2, 3, 4, 5, 6]);
     expect(card.modelContract?.steps[0].body).toMatch(/pick-and-place/i);
     expect(card.modelContract?.steps[5].body).toMatch(
@@ -406,7 +405,7 @@ describe("robotJobCard", () => {
     expect(cardSrc).toMatch(/card.modelLinks/);
     expect(cardSrc).toMatch(/Task models/);
     expect(cardSrc).toMatch(/card.modelContract/);
-    expect(cardSrc).toMatch(/listLine/);
+    expect(cardSrc).not.toMatch(/listLine/);
     expect(cardSrc).toMatch(/card.modelContract.steps/);
     expect(cardSrc).toMatch(/Name the slot|step.label/);
     expect(cardSrc).not.toMatch(/How we qualify a candidate/);

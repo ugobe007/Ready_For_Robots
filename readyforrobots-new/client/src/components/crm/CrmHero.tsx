@@ -20,7 +20,6 @@ import {
   jobsFreshHomeHref,
   onJobsFreshHomeClick,
 } from "@/lib/jobsWorkflow";
-import { jobModelListLine } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
 
 export type JobsWatchStatus = {
@@ -129,7 +128,6 @@ export default function CrmHero({
           ) : null}
           <ul className="mt-3 space-y-1.5">
             {unlocked.map((job, i) => {
-              const modelLine = jobModelListLine(job);
               return (
                 <li
                   key={`${job.title || "job"}-${i}`}
@@ -137,9 +135,6 @@ export default function CrmHero({
                 >
                   • {job.title}
                   {job.company_name ? ` · ${job.company_name}` : ""}
-                  {modelLine ? (
-                    <span className="block text-slate-400">{modelLine}</span>
-                  ) : null}
                 </li>
               );
             })}
