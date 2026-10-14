@@ -65,7 +65,7 @@
     "defense": "Military and defense",
     "research_lab": "Research labs (academic, corporate, government)",
     "ships_maritime": "Ships, cruise lines, ports, maritime",
-    "bar_nightclub": "Standalone bars, lounges and nightclubs (counts as restaurant via industry_parents)",
+    "bar_nightclub": "Standalone bars, lounges and nightclubs",
     "surgery_center": "Ambulatory surgery centers and outpatient surgical facilities",
     "automotive_dealership": "Car and truck dealerships, including service and parts (fixed-ops) departments",
     "k12_school": "Primary and secondary schools and school districts",
