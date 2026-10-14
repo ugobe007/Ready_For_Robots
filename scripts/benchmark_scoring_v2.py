@@ -11,6 +11,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from app.services.robot_understanding_v1.industries import with_parents
+
 
 TAXONOMY_PATH = Path("tests/fixtures/taxonomy.v1.json")
 
@@ -126,22 +128,29 @@ def score_industries(
     - (any_of is empty OR at least one of any_of is extracted)
     - None of must_not is extracted
     - Extra industries not in ok_extra are logged but not penalized
+
+    An extracted child industry also counts as its taxonomy `industry_parents`
+    ancestors for every rule above (bar_nightclub satisfies restaurant, and is
+    forbidden where restaurant is). A parent never satisfies a child.
     
     Returns:
         (passed, reason, details)
     """
-    extracted_set = set(extracted)
+    raw_set = set(extracted)
+    extracted_set = with_parents(raw_set)
     required_set = set(required)
     any_of_set = set(any_of)
     must_not_set = set(must_not)
     ok_extra_set = set(ok_extra)
+    accepted = required_set | any_of_set | ok_extra_set
     
     missing_required = required_set - extracted_set
     forbidden_found = extracted_set & must_not_set
-    unexpected = extracted_set - (required_set | any_of_set | ok_extra_set)
+    unexpected = {i for i in raw_set if not (with_parents([i]) & accepted)}
     
     details = {
-        "extracted": list(extracted_set),
+        "extracted": list(raw_set),
+        "counted_as_parent": sorted(extracted_set - raw_set),
         "required": required,
         "any_of": any_of,
         "must_not": must_not,

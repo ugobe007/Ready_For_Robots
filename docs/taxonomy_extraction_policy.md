@@ -1,6 +1,6 @@
 # Taxonomy extraction policy
 
-Rules the robot classifier (`app/services/robot_understanding_v1/taxonomy_extraction.py`) follows. Rules 1–2 were adopted 2026-10-14 at prompt `v3`; rules 3–5 at prompt `v4`. Each design change is measured on a hold-out set it was not designed against. Hold-out v1 informed the `v4` changes, so `v4` results on v1 are "seen data", reference only; the `v4` number comes from hold-out v2.
+Rules the robot classifier (`app/services/robot_understanding_v1/taxonomy_extraction.py`) follows. Rules 1–2 were adopted 2026-10-14 at prompt `v3`; rules 3–5 at prompt `v4`. Prompt `v5` changes no rule: it carries taxonomy v1.2's new enum values (six industries, `surgical_assistance`) and keeps `v4` cache entries from being reused. Hold-out v2 measured `v4` on taxonomy v1.1; the first fresh set after it measures `v5` on v1.2. Each design change is measured on a hold-out set it was not designed against. Hold-out v1 informed the `v4` changes, so `v4` results on v1 are "seen data", reference only; the `v4` number comes from hold-out v2.
 
 ## 1. Industry means the buyer-operator's industry
 
@@ -69,6 +69,13 @@ All in `app/services/robot_understanding_v1/extraction_config.json`:
 | `record_page_types` | `manufacturer_product_page` | Rule 4 |
 
 The answer key and the field scorer (`scripts/benchmark_scoring_v2.py`) are unchanged by these rules.
+
+## Industry parents (taxonomy v1.2)
+
+`industry_parents` in the taxonomy says which newer industries also count as an older one: `bar_nightclub` → `restaurant`, `surgery_center` → `hospital`, `k12_school` → `college_university`. Answer keys written on v1.1 stay valid.
+
+- **Scoring:** an extracted child counts as its parent for `industries_required`, `industries_any` and `industries_must_not` (so `bar_nightclub` is forbidden where `restaurant` is), and is not an unexpected extra when its parent is accepted. A parent never satisfies a child.
+- **Pilot groups** (`PILOT_INDUSTRY_GROUPS` in `app/services/robot_understanding_v1/industries.py`, from `docs/buyer_opportunity_spec.md` §1): an industry is in a group if it or its parent is a member. `k12_school` stays hidden because `college_university` is in no group. `residential_consumer` is never a buyer.
 
 ## Reporting
 

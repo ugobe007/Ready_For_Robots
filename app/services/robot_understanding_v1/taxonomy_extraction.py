@@ -17,7 +17,7 @@ from anthropic import Anthropic
 
 TAXONOMY_PATH = Path(__file__).resolve().parent.parent.parent.parent / "tests/fixtures/taxonomy.v1.json"
 CONFIG_PATH = Path(__file__).resolve().parent / "extraction_config.json"
-PROMPT_VERSION = "v4"
+PROMPT_VERSION = "v5"
 
 SINGLE_VALUE_FIELDS = ("offering_type", "form", "primary_class", "primary_function")
 LIST_FIELDS = ("secondary_functions", "industries")
