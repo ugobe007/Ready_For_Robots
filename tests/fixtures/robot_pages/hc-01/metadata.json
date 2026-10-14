@@ -1,10 +1,15 @@
 {
   "id": "hc-01",
+  "section": "robots",
   "company": "Diligent Robotics",
   "product": "Moxi",
-  "url": "https://www.diligentrobotics.com",
-  "final_url": "https://www.diligentrobotics.com",
-  "status_code": 0,
-  "fetch_date": "2026-10-13T22:16:00.737058Z",
-  "error": "HTTPSConnectionPool(host='www.diligentrobotics.com', port=443): Max retries exceeded with url: / (Caused by NameResolutionError(\"HTTPSConnection(host='www.diligentrobotics.com', port=443): Failed to r"
+  "url": "https://www.diligentrobots.com/moxi",
+  "original_url": "https://www.diligentrobotics.com",
+  "final_url": "https://www.diligentrobots.com/moxi",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:40:34.271214Z",
+  "method": "playwright",
+  "word_count": 660,
+  "snapshot_status": "OK",
+  "error": null
 }

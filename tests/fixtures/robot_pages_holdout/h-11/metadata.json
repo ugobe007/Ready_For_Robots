@@ -1,0 +1,15 @@
+{
+  "id": "h-11",
+  "section": "robots",
+  "company": "Saildrone",
+  "product": "Saildrone uncrewed surface vehicles",
+  "url": "https://www.saildrone.com",
+  "original_url": null,
+  "final_url": "https://www.saildrone.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:36:13.591812Z",
+  "method": "playwright",
+  "word_count": 1159,
+  "snapshot_status": "OK",
+  "error": null
+}

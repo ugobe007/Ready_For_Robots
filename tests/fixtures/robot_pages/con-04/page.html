@@ -1,0 +1,571 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8" data-next-head=""><meta name="viewport" content="width=device-width" data-next-head=""><title data-next-head="">Canvas | Drywall Finishing Robot</title><meta datatype="og:description" content="Canvas, the world’s first robotic drywall finishing company, provides a new class of robotic tool for the drywall finishing trade." data-next-head=""><meta name="og:image" data-next-head=""><meta name="keywords" content="" data-next-head=""><meta name="og:type" content="" data-next-head=""><meta name="description" content="Canvas, the world’s first robotic drywall finishing company, provides a new class of robotic tool for the drywall finishing trade." data-next-head=""><style type="text/css">:root, :host {
+  --fa-font-solid: normal 900 1em/1 "Font Awesome 6 Free";
+  --fa-font-regular: normal 400 1em/1 "Font Awesome 6 Free";
+  --fa-font-light: normal 300 1em/1 "Font Awesome 6 Pro";
+  --fa-font-thin: normal 100 1em/1 "Font Awesome 6 Pro";
+  --fa-font-duotone: normal 900 1em/1 "Font Awesome 6 Duotone";
+  --fa-font-duotone-regular: normal 400 1em/1 "Font Awesome 6 Duotone";
+  --fa-font-duotone-light: normal 300 1em/1 "Font Awesome 6 Duotone";
+  --fa-font-duotone-thin: normal 100 1em/1 "Font Awesome 6 Duotone";
+  --fa-font-brands: normal 400 1em/1 "Font Awesome 6 Brands";
+  --fa-font-sharp-solid: normal 900 1em/1 "Font Awesome 6 Sharp";
+  --fa-font-sharp-regular: normal 400 1em/1 "Font Awesome 6 Sharp";
+  --fa-font-sharp-light: normal 300 1em/1 "Font Awesome 6 Sharp";
+  --fa-font-sharp-thin: normal 100 1em/1 "Font Awesome 6 Sharp";
+  --fa-font-sharp-duotone-solid: normal 900 1em/1 "Font Awesome 6 Sharp Duotone";
+  --fa-font-sharp-duotone-regular: normal 400 1em/1 "Font Awesome 6 Sharp Duotone";
+  --fa-font-sharp-duotone-light: normal 300 1em/1 "Font Awesome 6 Sharp Duotone";
+  --fa-font-sharp-duotone-thin: normal 100 1em/1 "Font Awesome 6 Sharp Duotone";
+}
+
+svg:not(:root).svg-inline--fa, svg:not(:host).svg-inline--fa {
+  overflow: visible;
+  box-sizing: content-box;
+}
+
+.svg-inline--fa {
+  display: var(--fa-display, inline-block);
+  height: 1em;
+  overflow: visible;
+  vertical-align: -0.125em;
+}
+.svg-inline--fa.fa-2xs {
+  vertical-align: 0.1em;
+}
+.svg-inline--fa.fa-xs {
+  vertical-align: 0em;
+}
+.svg-inline--fa.fa-sm {
+  vertical-align: -0.0714285705em;
+}
+.svg-inline--fa.fa-lg {
+  vertical-align: -0.2em;
+}
+.svg-inline--fa.fa-xl {
+  vertical-align: -0.25em;
+}
+.svg-inline--fa.fa-2xl {
+  vertical-align: -0.3125em;
+}
+.svg-inline--fa.fa-pull-left {
+  margin-right: var(--fa-pull-margin, 0.3em);
+  width: auto;
+}
+.svg-inline--fa.fa-pull-right {
+  margin-left: var(--fa-pull-margin, 0.3em);
+  width: auto;
+}
+.svg-inline--fa.fa-li {
+  width: var(--fa-li-width, 2em);
+  top: 0.25em;
+}
+.svg-inline--fa.fa-fw {
+  width: var(--fa-fw-width, 1.25em);
+}
+
+.fa-layers svg.svg-inline--fa {
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.fa-layers-counter, .fa-layers-text {
+  display: inline-block;
+  position: absolute;
+  text-align: center;
+}
+
+.fa-layers {
+  display: inline-block;
+  height: 1em;
+  position: relative;
+  text-align: center;
+  vertical-align: -0.125em;
+  width: 1em;
+}
+.fa-layers svg.svg-inline--fa {
+  transform-origin: center center;
+}
+
+.fa-layers-text {
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  transform-origin: center center;
+}
+
+.fa-layers-counter {
+  background-color: var(--fa-counter-background-color, #ff253a);
+  border-radius: var(--fa-counter-border-radius, 1em);
+  box-sizing: border-box;
+  color: var(--fa-inverse, #fff);
+  line-height: var(--fa-counter-line-height, 1);
+  max-width: var(--fa-counter-max-width, 5em);
+  min-width: var(--fa-counter-min-width, 1.5em);
+  overflow: hidden;
+  padding: var(--fa-counter-padding, 0.25em 0.5em);
+  right: var(--fa-right, 0);
+  text-overflow: ellipsis;
+  top: var(--fa-top, 0);
+  transform: scale(var(--fa-counter-scale, 0.25));
+  transform-origin: top right;
+}
+
+.fa-layers-bottom-right {
+  bottom: var(--fa-bottom, 0);
+  right: var(--fa-right, 0);
+  top: auto;
+  transform: scale(var(--fa-layers-scale, 0.25));
+  transform-origin: bottom right;
+}
+
+.fa-layers-bottom-left {
+  bottom: var(--fa-bottom, 0);
+  left: var(--fa-left, 0);
+  right: auto;
+  top: auto;
+  transform: scale(var(--fa-layers-scale, 0.25));
+  transform-origin: bottom left;
+}
+
+.fa-layers-top-right {
+  top: var(--fa-top, 0);
+  right: var(--fa-right, 0);
+  transform: scale(var(--fa-layers-scale, 0.25));
+  transform-origin: top right;
+}
+
+.fa-layers-top-left {
+  left: var(--fa-left, 0);
+  right: auto;
+  top: var(--fa-top, 0);
+  transform: scale(var(--fa-layers-scale, 0.25));
+  transform-origin: top left;
+}
+
+.fa-1x {
+  font-size: 1em;
+}
+
+.fa-2x {
+  font-size: 2em;
+}
+
+.fa-3x {
+  font-size: 3em;
+}
+
+.fa-4x {
+  font-size: 4em;
+}
+
+.fa-5x {
+  font-size: 5em;
+}
+
+.fa-6x {
+  font-size: 6em;
+}
+
+.fa-7x {
+  font-size: 7em;
+}
+
+.fa-8x {
+  font-size: 8em;
+}
+
+.fa-9x {
+  font-size: 9em;
+}
+
+.fa-10x {
+  font-size: 10em;
+}
+
+.fa-2xs {
+  font-size: 0.625em;
+  line-height: 0.1em;
+  vertical-align: 0.225em;
+}
+
+.fa-xs {
+  font-size: 0.75em;
+  line-height: 0.0833333337em;
+  vertical-align: 0.125em;
+}
+
+.fa-sm {
+  font-size: 0.875em;
+  line-height: 0.0714285718em;
+  vertical-align: 0.0535714295em;
+}
+
+.fa-lg {
+  font-size: 1.25em;
+  line-height: 0.05em;
+  vertical-align: -0.075em;
+}
+
+.fa-xl {
+  font-size: 1.5em;
+  line-height: 0.0416666682em;
+  vertical-align: -0.125em;
+}
+
+.fa-2xl {
+  font-size: 2em;
+  line-height: 0.03125em;
+  vertical-align: -0.1875em;
+}
+
+.fa-fw {
+  text-align: center;
+  width: 1.25em;
+}
+
+.fa-ul {
+  list-style-type: none;
+  margin-left: var(--fa-li-margin, 2.5em);
+  padding-left: 0;
+}
+.fa-ul > li {
+  position: relative;
+}
+
+.fa-li {
+  left: calc(-1 * var(--fa-li-width, 2em));
+  position: absolute;
+  text-align: center;
+  width: var(--fa-li-width, 2em);
+  line-height: inherit;
+}
+
+.fa-border {
+  border-color: var(--fa-border-color, #eee);
+  border-radius: var(--fa-border-radius, 0.1em);
+  border-style: var(--fa-border-style, solid);
+  border-width: var(--fa-border-width, 0.08em);
+  padding: var(--fa-border-padding, 0.2em 0.25em 0.15em);
+}
+
+.fa-pull-left {
+  float: left;
+  margin-right: var(--fa-pull-margin, 0.3em);
+}
+
+.fa-pull-right {
+  float: right;
+  margin-left: var(--fa-pull-margin, 0.3em);
+}
+
+.fa-beat {
+  animation-name: fa-beat;
+  animation-delay: var(--fa-animation-delay, 0s);
+  animation-direction: var(--fa-animation-direction, normal);
+  animation-duration: var(--fa-animation-duration, 1s);
+  animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+  animation-timing-function: var(--fa-animation-timing, ease-in-out);
+}
+
+.fa-bounce {
+  animation-name: fa-bounce;
+  animation-delay: var(--fa-animation-delay, 0s);
+  animation-direction: var(--fa-animation-direction, normal);
+  animation-duration: var(--fa-animation-duration, 1s);
+  animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+  animation-timing-function: var(--fa-animation-timing, cubic-bezier(0.28, 0.84, 0.42, 1));
+}
+
+.fa-fade {
+  animation-name: fa-fade;
+  animation-delay: var(--fa-animation-delay, 0s);
+  animation-direction: var(--fa-animation-direction, normal);
+  animation-duration: var(--fa-animation-duration, 1s);
+  animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+  animation-timing-function: var(--fa-animation-timing, cubic-bezier(0.4, 0, 0.6, 1));
+}
+
+.fa-beat-fade {
+  animation-name: fa-beat-fade;
+  animation-delay: var(--fa-animation-delay, 0s);
+  animation-direction: var(--fa-animation-direction, normal);
+  animation-duration: var(--fa-animation-duration, 1s);
+  animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+  animation-timing-function: var(--fa-animation-timing, cubic-bezier(0.4, 0, 0.6, 1));
+}
+
+.fa-flip {
+  animation-name: fa-flip;
+  animation-delay: var(--fa-animation-delay, 0s);
+  animation-direction: var(--fa-animation-direction, normal);
+  animation-duration: var(--fa-animation-duration, 1s);
+  animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+  animation-timing-function: var(--fa-animation-timing, ease-in-out);
+}
+
+.fa-shake {
+  animation-name: fa-shake;
+  animation-delay: var(--fa-animation-delay, 0s);
+  animation-direction: var(--fa-animation-direction, normal);
+  animation-duration: var(--fa-animation-duration, 1s);
+  animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+  animation-timing-function: var(--fa-animation-timing, linear);
+}
+
+.fa-spin {
+  animation-name: fa-spin;
+  animation-delay: var(--fa-animation-delay, 0s);
+  animation-direction: var(--fa-animation-direction, normal);
+  animation-duration: var(--fa-animation-duration, 2s);
+  animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+  animation-timing-function: var(--fa-animation-timing, linear);
+}
+
+.fa-spin-reverse {
+  --fa-animation-direction: reverse;
+}
+
+.fa-pulse,
+.fa-spin-pulse {
+  animation-name: fa-spin;
+  animation-direction: var(--fa-animation-direction, normal);
+  animation-duration: var(--fa-animation-duration, 1s);
+  animation-iteration-count: var(--fa-animation-iteration-count, infinite);
+  animation-timing-function: var(--fa-animation-timing, steps(8));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fa-beat,
+.fa-bounce,
+.fa-fade,
+.fa-beat-fade,
+.fa-flip,
+.fa-pulse,
+.fa-shake,
+.fa-spin,
+.fa-spin-pulse {
+    animation-delay: -1ms;
+    animation-duration: 1ms;
+    animation-iteration-count: 1;
+    transition-delay: 0s;
+    transition-duration: 0s;
+  }
+}
+@keyframes fa-beat {
+  0%, 90% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(var(--fa-beat-scale, 1.25));
+  }
+}
+@keyframes fa-bounce {
+  0% {
+    transform: scale(1, 1) translateY(0);
+  }
+  10% {
+    transform: scale(var(--fa-bounce-start-scale-x, 1.1), var(--fa-bounce-start-scale-y, 0.9)) translateY(0);
+  }
+  30% {
+    transform: scale(var(--fa-bounce-jump-scale-x, 0.9), var(--fa-bounce-jump-scale-y, 1.1)) translateY(var(--fa-bounce-height, -0.5em));
+  }
+  50% {
+    transform: scale(var(--fa-bounce-land-scale-x, 1.05), var(--fa-bounce-land-scale-y, 0.95)) translateY(0);
+  }
+  57% {
+    transform: scale(1, 1) translateY(var(--fa-bounce-rebound, -0.125em));
+  }
+  64% {
+    transform: scale(1, 1) translateY(0);
+  }
+  100% {
+    transform: scale(1, 1) translateY(0);
+  }
+}
+@keyframes fa-fade {
+  50% {
+    opacity: var(--fa-fade-opacity, 0.4);
+  }
+}
+@keyframes fa-beat-fade {
+  0%, 100% {
+    opacity: var(--fa-beat-fade-opacity, 0.4);
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(var(--fa-beat-fade-scale, 1.125));
+  }
+}
+@keyframes fa-flip {
+  50% {
+    transform: rotate3d(var(--fa-flip-x, 0), var(--fa-flip-y, 1), var(--fa-flip-z, 0), var(--fa-flip-angle, -180deg));
+  }
+}
+@keyframes fa-shake {
+  0% {
+    transform: rotate(-15deg);
+  }
+  4% {
+    transform: rotate(15deg);
+  }
+  8%, 24% {
+    transform: rotate(-18deg);
+  }
+  12%, 28% {
+    transform: rotate(18deg);
+  }
+  16% {
+    transform: rotate(-22deg);
+  }
+  20% {
+    transform: rotate(22deg);
+  }
+  32% {
+    transform: rotate(-12deg);
+  }
+  36% {
+    transform: rotate(12deg);
+  }
+  40%, 100% {
+    transform: rotate(0deg);
+  }
+}
+@keyframes fa-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+.fa-rotate-90 {
+  transform: rotate(90deg);
+}
+
+.fa-rotate-180 {
+  transform: rotate(180deg);
+}
+
+.fa-rotate-270 {
+  transform: rotate(270deg);
+}
+
+.fa-flip-horizontal {
+  transform: scale(-1, 1);
+}
+
+.fa-flip-vertical {
+  transform: scale(1, -1);
+}
+
+.fa-flip-both,
+.fa-flip-horizontal.fa-flip-vertical {
+  transform: scale(-1, -1);
+}
+
+.fa-rotate-by {
+  transform: rotate(var(--fa-rotate-angle, 0));
+}
+
+.fa-stack {
+  display: inline-block;
+  vertical-align: middle;
+  height: 2em;
+  position: relative;
+  width: 2.5em;
+}
+
+.fa-stack-1x,
+.fa-stack-2x {
+  bottom: 0;
+  left: 0;
+  margin: auto;
+  position: absolute;
+  right: 0;
+  top: 0;
+  z-index: var(--fa-stack-z-index, auto);
+}
+
+.svg-inline--fa.fa-stack-1x {
+  height: 1em;
+  width: 1.25em;
+}
+.svg-inline--fa.fa-stack-2x {
+  height: 2em;
+  width: 2.5em;
+}
+
+.fa-inverse {
+  color: var(--fa-inverse, #fff);
+}
+
+.sr-only,
+.fa-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.sr-only-focusable:not(:focus),
+.fa-sr-only-focusable:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+.svg-inline--fa .fa-primary {
+  fill: var(--fa-primary-color, currentColor);
+  opacity: var(--fa-primary-opacity, 1);
+}
+
+.svg-inline--fa .fa-secondary {
+  fill: var(--fa-secondary-color, currentColor);
+  opacity: var(--fa-secondary-opacity, 0.4);
+}
+
+.svg-inline--fa.fa-swap-opacity .fa-primary {
+  opacity: var(--fa-secondary-opacity, 0.4);
+}
+
+.svg-inline--fa.fa-swap-opacity .fa-secondary {
+  opacity: var(--fa-primary-opacity, 1);
+}
+
+.svg-inline--fa mask .fa-primary,
+.svg-inline--fa mask .fa-secondary {
+  fill: black;
+}</style><link rel="canonical" href="https://www.jlg.com/en/canvas" data-next-head=""><link rel="alternate" href="https://www.jlg.com/en/canvas" hreflang="en" data-next-head=""><link rel="alternate" href="https://www.jlg.com/en/canvas" hreflang="x-default" data-next-head=""><link rel="preload" href="/_next/static/css/76cf77ea6c917d8c.css" as="style"><link rel="preload" href="/_next/static/css/14ac6eb819a2a95e.css" as="style"><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-0XK325JGVM&amp;cx=c&amp;gtm=4e6ac1h1"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-ZC93P6XHXN&amp;cx=c&amp;gtm=4e6ac1h1"></script><script type="text/javascript" async="" src="https://www.googletagmanager.com/gtag/js?id=G-RZ8VDL792L&amp;cx=c&amp;gtm=4e6ac1h1"></script><script type="application/ld+json">{"@context":"https://schema.org","@type":"Organization","@id":"https://www.jlg.com/#organization","name":"JLG Industries, Inc.","url":"https://www.jlg.com/","legalName":"JLG Industries, Inc.","alternateName":["JLG","JLG Industries"],"foundingDate":"1969","parentOrganization":{"@type":"Organization","name":"Oshkosh Corporation","url":"https://www.oshkoshcorp.com/"},"logo":{"@type":"ImageObject","url":"https://www.jlg.com/dfsmedia/e4042b10c9ce4595b4cc059f1299f079/177630-source"},"image":"https://www.jlg.com/dfsmedia/e4042b10c9ce4595b4cc059f1299f079/177630-source","description":"JLG is a world-leading designer and manufacturer of access equipment, including MEWPs and telehandlers.","brand":[{"@type":"Brand","name":"JLG"},{"@type":"Brand","name":"SkyTrak"}],"address":{"@type":"PostalAddress","streetAddress":"1 JLG Drive","addressLocality":"McConnellsburg","addressRegion":"PA","postalCode":"17233","addressCountry":"US"},"contactPoint":[{"@type":"ContactPoint","contactType":"customer support","telephone":"+1-717-485-5161","areaServed":["US","CA","MX","GB","EU","AU","NZ","Global"],"availableLanguage":["en"]},{"@type":"ContactPoint","contactType":"toll-free","telephone":"+1-877-554-5438","areaServed":["US"],"availableLanguage":["en"]}],"sameAs":["https://www.youtube.com/JLGIndustriesInc","https://www.facebook.com/JLGindustries","https://www.instagram.com/jlgindustries/","https://www.linkedin.com/company/jlg-industries","https://x.com/JLG_Industries/","https://en.wikipedia.org/wiki/JLG_Industries"]}</script><link rel="stylesheet" href="/_next/static/css/76cf77ea6c917d8c.css" data-n-g=""><link rel="stylesheet" href="/_next/static/css/14ac6eb819a2a95e.css" data-n-p=""><noscript data-n-css=""></noscript><script defer="" nomodule="" src="/_next/static/chunks/polyfills-42372ed130431b0a.js"></script><script src="/_next/static/chunks/webpack-3b975f3a3de9f3d8.js" defer=""></script><script src="/_next/static/chunks/framework-80e129ccf466caf0.js" defer=""></script><script src="/_next/static/chunks/main-9b8521018e57131d.js" defer=""></script><script src="/_next/static/chunks/pages/_app-eee1434117909285.js" defer=""></script><script src="/_next/static/chunks/8891176c-0f948b37a9636e8f.js" defer=""></script><script src="/_next/static/chunks/9b6c5ff0-44011faf15b0a0cf.js" defer=""></script><script src="/_next/static/chunks/59-48da33094ef79ff1.js" defer=""></script><script src="/_next/static/chunks/243-3c9bcc43e944fc79.js" defer=""></script><script src="/_next/static/chunks/pages/%5B%5B...path%5D%5D-4274ab91a4eef193.js" defer=""></script><script src="/_next/static/7BHc_zpB4Cv0rm0Zu1Mxq/_buildManifest.js" defer=""></script><script src="/_next/static/7BHc_zpB4Cv0rm0Zu1Mxq/_ssgManifest.js" defer=""></script><script src="/_vercel/speed-insights/script.js" defer="" data-sdkn="@vercel/speed-insights/next" data-sdkv="1.2.0" data-sample-rate="0.2" data-route="/[...path]"></script></head><body><link rel="preconnect" href="https://use.typekit.net"><link rel="preconnect" href="https://p.typekit.net"><link rel="stylesheet" href="https://use.typekit.net/oqe6qzr.css" data-precedence="default"><link rel="stylesheet" href="https://p.typekit.net/p.css?s=1&amp;k=oqe6qzr&amp;ht=tk&amp;f=17373.17374.17375.17376.25308.25309.25312.25313.25314.25315&amp;a=226616&amp;app=typekit&amp;e=css" data-precedence="default"><div id="__next"><div class="prod-mode"><header class="dark"><div id="header"><!--$--><nav class="hidden lg:block h-14 items-center justify-between px-6 text-white leading-5 bg-black dark:bg-gray-80"><div class="m-auto max-w-6xl h-full flex items-center justify-between px-6 text-white leading-5"><div><ul class="flex justify-start items-center gap-7"><li data-cy="JLG Website"><a href="https://www.jlg.com" class="flex items-center text-sm font-semibold hover:text-primary text-white" target="_blank" rel="noopener noreferrer">JLG Website<svg width="10" height="20" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" class="ml-2 text-primary"><path d="M14 0V12.0719H11.3174V4.61078L2.8503 13.0359L1.92814 14L0 12.0719L0.964072 11.1497L9.38922 2.68263H1.92814V0H14Z" fill="currentColor"></path></svg></a></li></ul></div><div class="hidden lg:block"><ul class="flex justify-start items-center gap-7"></ul></div></div></nav><nav class="sticky z-40 bg-white dark:bg-black top-0 w-full pl-3 pr-5 flex leading-5 min-h-20 items-stretch justify-center" data-cy="main-navigation"><a href="#content" tabindex="1" class="min-w-40 text-center absolute -top-48 focus:top-3 text-gray-dark! bg-white border-2 border-primary w-32 h-12 font-bold font-header p-0">Skip to Content</a><div class="w-full max-w-6xl flex items-center lg:px-6"><a class="" data-cy="site-logo-link" href="/en/canvas"><img alt="JLG-canvas-logo" data-cy="site-logo" loading="lazy" width="116" height="35" decoding="async" data-nimg="1" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194277%2F-1.png&amp;w=128&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194277%2F-1.png&amp;w=256&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194277%2F-1.png&amp;w=256&amp;q=75"></a><div class="relative flex w-full h-full"><ul class="flex w-full h-full justify-end lg:justify-between items-center grow pl-12"><li class="hidden lg:list-item flex lg:h-full items-center justify-between focus:outline-hidden transition-colors duration-200 border-b-4 lg:px-2 border-transparent lg:hover:border-primary" data-cy="link-1200CX"><a class="h-full w-full flex justify-between items-center text-inherit dark:text-white" data-cy="nav-item-link" href="/en/canvas/1200cx"><div class="font-bold">1200CX</div><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right fa-xs lg:hidden! h-5 text-primary" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></a></li><li class="hidden lg:list-item flex lg:h-full items-center justify-between focus:outline-hidden transition-colors duration-200 border-b-4 lg:px-2 border-transparent lg:hover:border-primary" data-cy="link-2000CX"><a class="h-full w-full flex justify-between items-center text-inherit dark:text-white" data-cy="nav-item-link" href="/en/canvas/2000cx"><div class="font-bold">2000CX</div><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right fa-xs lg:hidden! h-5 text-primary" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></a></li><li class="hidden lg:list-item flex lg:h-full items-center justify-between focus:outline-hidden transition-colors duration-200 border-b-4 lg:px-2 border-transparent lg:hover:border-primary" data-cy="link-About Canvas"><a class="h-full w-full flex justify-between items-center text-inherit dark:text-white" data-cy="nav-item-link" href="/en/canvas/about-us"><div class="font-bold">About Canvas</div><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right fa-xs lg:hidden! h-5 text-primary" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></a></li><li class="hidden lg:list-item flex lg:h-full items-center justify-between focus:outline-hidden transition-colors duration-200 border-b-4 lg:px-2 border-transparent lg:hover:border-primary" data-cy="link-Careers"><a class="h-full w-full flex justify-between items-center text-inherit dark:text-white" data-cy="nav-item-link" href="/en/canvas/about-us/careers"><div class="font-bold">Careers</div><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right fa-xs lg:hidden! h-5 text-primary" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></a></li><li class="hidden lg:list-item flex lg:h-full items-center justify-between focus:outline-hidden transition-colors duration-200 border-b-4 lg:px-2 border-transparent lg:hover:border-primary" data-cy="link-Contact Us"><a class="h-full w-full flex justify-between items-center text-inherit dark:text-white" data-cy="nav-item-link" href="/en/canvas/about-us/contact"><div class="font-bold">Contact Us</div><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right fa-xs lg:hidden! h-5 text-primary" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg></a></li><li><button data-cy="open-search"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="magnifying-glass" class="svg-inline--fa fa-magnifying-glass fa-lg w-6 dark:text-white" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"></path></svg></button></li><li class="lg:hidden ml-5"><button class="flex items-center font-header dark:text-white font-semibold" data-cy="menu-toggle">Menu<svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="bars" class="svg-inline--fa fa-bars fa-xl ml-2 text-primary w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z"></path></svg></button></li></ul><div class="md:transition-all md:ease-in-out md:duration-700 absolute right-0 top-0 p-4 pb-0 bg-white dark:bg-black max-sm:transition-all max-sm:ease-in-out max-sm:duration-700 w-0 -z-10"><form class="relative md:transition-opacity md:ease-in-out md:duration-700 max-sm:transition-opacity max-sm:ease-in-out max-sm:duration-700 opacity-0" data-cy="global-search-form"><input type="text" class="rounded-none! mb-2 mt-1 w-full shadow-xs relative block border-0 py-2.5 px-3 ring-1 ring-inset focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6 outline-hidden disabled:cursor-not-allowed disabled:bg-gray-50 disabled:text-gray-500 disabled:ring-gray-200 text-gray-900 ring-gray-300 placeholder:text-gray-400 focus:ring-primary pointer-events-none opacity-0 invisible" placeholder="Search" data-cy="search-input" value=""><button class="absolute right-12 top-3" type="button" data-cy="close-search"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="xmark" class="svg-inline--fa fa-xmark fa-lg w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"></path></svg></button><button class="absolute right-4 top-3" type="submit" data-cy="submit-search" disabled=""><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right fa-lg w-6 text-primary" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg></button></form></div></div></div></nav><!--/$--><!--$--><div class="relative mx-auto max-w-(--breakpoint-xl) md:px-4 max-w-full! px-0! relative"><div class="" data-cy="sitecore-carousel-container"><div class="overflow-hidden"><div class="flex" data-cy="hero-standard-carousel" style="transform: translate3d(0px, 0px, 0px);"><div class="w-full flex-[0_0_auto]" data-cy="hero-standard-carousel-item-0" style="transform: translate3d(0px, 0px, 0px);"><div class="component bg-gray-80 w-full h-full lg:h-auto"><div class="w-full relative aspect-[2.4] object-cover"><img alt="Canvas_1200CX_banner_02_CLEAN" data-cy="hero-standard-image" loading="lazy" width="1440" height="600" decoding="async" data-nimg="1" class="w-full relative h-full lg:absolute" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194213%2F-1.jpg&amp;w=1920&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194213%2F-1.jpg&amp;w=3840&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194213%2F-1.jpg&amp;w=3840&amp;q=75"><div class="absolute top-0 left-0 w-full h-full bg-linear-to-b from-[rgba(0,0,0,0.85)] z-10 lg:bg-linear-to-r"></div><div class="sitecore-container z-30 lg:z-10 relative pt-5 lg:pt-0 sitecore-container pt-10! lg:pt-16!"><div class="flex" data-cy="hero-standard-heading"><h1 class="text-white text-[32px] lg:text-[55px] text-left normal-case font-header leading-10 md:leading-15 lg:max-w-xl">Introducing the Canvas 1200CX </h1></div><div class="flex text-2xl text-white font-header" data-cy="hero-standard-subheading"><div class="lg:max-w-xl" data-cy="hero-standard-subheading-text">Our latest, most compact drywall machine is here!</div></div><div class="flex mt-8"><a title="" class="button-primary" link="[object Object]" data-cy="sitecore-button" href="/en/canvas/1200cx">Explore</a></div></div></div></div></div><div class="w-full flex-[0_0_auto]" data-cy="hero-standard-carousel-item-1"><div class="component bg-gray-80 w-full h-full lg:h-auto"><div class="w-full relative aspect-[2.4] object-cover"><img alt="banner-2" data-cy="hero-standard-image" loading="lazy" width="1440" height="600" decoding="async" data-nimg="1" class="w-full relative h-full lg:absolute" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194212%2F-1.jpg&amp;w=1920&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194212%2F-1.jpg&amp;w=3840&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194212%2F-1.jpg&amp;w=3840&amp;q=75"><div class="absolute top-0 left-0 w-full h-full bg-linear-to-b from-[rgba(0,0,0,0.85)] z-10 lg:bg-linear-to-r"></div><div class="sitecore-container z-30 lg:z-10 relative pt-5 lg:pt-0 sitecore-container pt-10! lg:pt-16!"><div class="flex" data-cy="hero-standard-heading"><h1 class="text-white text-[32px] lg:text-[55px] text-left normal-case font-header leading-10 md:leading-15 lg:max-w-xl">Productivity Unleashed</h1></div><div class="flex text-2xl text-white font-header" data-cy="hero-standard-subheading"><div class="lg:max-w-xl" data-cy="hero-standard-subheading-text">Discover how Canvas Cut RQ's drywall machine is here!</div></div><div class="flex mt-8"><a href="https://www.wconline.com/articles/96827-rq-construction" class="button-primary" target="_blank" rel="noopener noreferrer" link="[object Object]" data-cy="sitecore-button">Learn More<svg class="inline-block ml-2 arrow-icon-size" width="11" height="12" viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.29702 1.58984H9.83228V9.1251" class="stroke-current" stroke-width="2" stroke-miterlimit="10"></path><path d="M9.83203 1.58984L1.01172 10.4102" class="stroke-current" stroke-width="2" stroke-miterlimit="10"></path></svg></a></div></div></div></div></div></div></div></div><div class="absolute top-72 md:top-80 lg:top-auto lg:bottom-8 w-full text-center top-28! md:top-72! lg:top-auto!"><button class="mx-1
+                    text-primary
+                  " data-cy="carousel-dot-0"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="circle" class="svg-inline--fa fa-circle fa-xs " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512z"></path></svg></button><button class="mx-1
+                    text-gray-05
+                  " data-cy="carousel-dot-1"><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="circle-dot" class="svg-inline--fa fa-circle-dot fa-xs " role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm0-352a96 96 0 1 1 0 192 96 96 0 1 1 0-192z"></path></svg></button></div></div><!--/$--></div></header><main><div id="content"><!--$--><div class="sitecore-spacing component"><div class="component-content sitecore-container mb-8"><div class="richtext-container" data-cy="richtext-container"><div><h2>Revolutionizing Drywall Finishing</h2>
+<p>Canvas, the world’s first robotic drywall finishing company, provides a new class of robotic tool for the drywall finishing trade. Delivering both Level 4 and Level 5 finishes, our machines improve the quality, speed, and affordability of drywall finishing while increasing the safety to workers.</p>
+</div></div></div></div><!--/$--><!--$--><div class="component sitecore-spacing"><div class="component-content sitecore-container"><h3 class="font-bold text-center text-gray-dark lg:text-start">The Canvas Advantage</h3><div class="flex flex-col lg:flex-row flex-wrap"><div class="flex flex-col lg:flex-row py-8 lg:basis-1/2"><img alt="Technology" loading="lazy" width="144" height="144" decoding="async" data-nimg="1" class="w-full lg:w-36 lg:h-36 aspect-square" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194222%2F-1.png&amp;w=256&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194222%2F-1.png&amp;w=384&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194222%2F-1.png&amp;w=384&amp;q=75"><div><div class="lg:max-w-[400px] lg:pl-8
+            "><h6 class="font-bold text-[22px] text-gray-dark">Trailblazing Technology for Interior Trades</h6><div class="richtext-container pt-5" data-cy="richtext-container"><div>First company globally to use the precision of robotics to develop a drywall machine</div></div></div></div></div><div class="flex flex-col lg:flex-row py-8 lg:basis-1/2"><img alt="Accelerate-Schedules" loading="lazy" width="144" height="144" decoding="async" data-nimg="1" class="w-full lg:w-36 lg:h-36 aspect-square" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194210%2F-1.png&amp;w=256&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194210%2F-1.png&amp;w=384&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194210%2F-1.png&amp;w=384&amp;q=75"><div><div class="lg:max-w-[400px] lg:pl-8
+            "><h6 class="font-bold text-[22px] text-gray-dark">Accelerate Schedules, Boost Productivity</h6><div class="richtext-container pt-5" data-cy="richtext-container"><div>Improve worker productivity by automating repetitive tasks and reducing skill dependent quality variations</div></div></div></div></div><div class="flex flex-col lg:flex-row py-8 lg:basis-1/2"><img alt="Competitive" loading="lazy" width="144" height="144" decoding="async" data-nimg="1" class="w-full lg:w-36 lg:h-36 aspect-square" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194217%2F-1.png&amp;w=256&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194217%2F-1.png&amp;w=384&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194217%2F-1.png&amp;w=384&amp;q=75"><div><div class="lg:max-w-[400px] lg:pl-8
+            "><h6 class="font-bold text-[22px] text-gray-dark">Drive Competitive Advantage</h6><div class="richtext-container pt-5" data-cy="richtext-container"><div>Stay ahead of the rising skilled labor shortage by leveraging advanced robotic machinery</div></div></div></div></div><div class="flex flex-col lg:flex-row py-8 lg:basis-1/2"><img alt="Workforce" loading="lazy" width="144" height="144" decoding="async" data-nimg="1" class="w-full lg:w-36 lg:h-36 aspect-square" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194224%2F-1.png&amp;w=256&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194224%2F-1.png&amp;w=384&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194224%2F-1.png&amp;w=384&amp;q=75"><div><div class="lg:max-w-[400px] lg:pl-8
+            "><h6 class="font-bold text-[22px] text-gray-dark">Improve the Lives of Our Workforce</h6><div class="richtext-container pt-5" data-cy="richtext-container"><div>Enhance worker well-being by reducing physical strain, reducing high-height work and minimizing exposure to hazardous materials</div></div></div></div></div></div></div></div><!--/$--><!--$--><div class="py-4 md:py-12 component w-full text-white bg-gray-80"><div class="component-content flex flex-col md:flex-row sitecore-container"><div class="w-full md:mr-3 md:w-1/2 flex flex-col items-start gap-6 md:justify-center px-11 order-2"><h2 class="my-0 pt-4 text-white">Check out the 1200CX</h2><div class="my-0 text-md md:text-lg less-ul-padding richtext-container"><div class="richtext-container" data-cy="richtext-container"><div>Our most compact machine with the highest reach in the world.</div></div></div><a title="" class="button-tertiary text-white" link="[object Object]" data-cy="featured-content-shop-parts-btn" href="/en/canvas/1200cx">Learn More</a></div><div class="w-full md:w-[48%] md:flex order-1"><div class="w-full h-auto"><img alt="1200cx-bg" loading="lazy" width="690" height="700" decoding="async" data-nimg="1" class="object-fill w-full h-auto" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194211%2F-1.jpg&amp;w=750&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194211%2F-1.jpg&amp;w=1920&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194211%2F-1.jpg&amp;w=1920&amp;q=75"></div></div></div></div><!--/$--><!--$--><div class="sitecore-spacing sitecore-container tabbed-content-component bg-white"><div class="heading-container pb-10 border-b-2 border-black lg:border-none "><h1 class="normal-case font-bold text-gray-dark">Projects</h1><div class="richtext-container py-4 text-gray-dark" data-cy="richtext-container"><div><br></div></div></div><div class="lg:flex"><div class="tabbed-content lg:w-2/5"><div class="tabbed-content-container"><button id="«R15ld6»-tab-0" type="button" aria-expanded="true" aria-controls="«R15ld6»-panel-0" class="w-full py-8 pl-3 border-b border-disabled-gray flex justify-between items-center lg:py-10 bg-gray-05 cursor-default"><span class="text-[22px] lg:text-left font-bold font-header my-0 text-gray-dark">SFO International Airport, Harvey Milk Terminal 1 | San Francisco, CA</span><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="arrow-right" class="svg-inline--fa fa-arrow-right text-primary text-[24px] hidden! lg:block! pr-14 pl-1" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M438.6 278.6c12.5-12.5 12.5-32.8 0-45.3l-160-160c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L338.8 224 32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l306.7 0L233.4 393.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0l160-160z"></path></svg><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-down" class="svg-inline--fa fa-chevron-down text-primary text-[24px] lg:hidden! pr-6.25 md:pr-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"></path></svg></button></div><div class="tabbed-content-container"><button id="«R15ld6»-tab-1" type="button" aria-expanded="false" class="w-full py-8 pl-3 border-b border-disabled-gray flex justify-between items-center lg:py-10"><span class="text-[22px] lg:text-left font-bold font-header my-0 text-gray-dark">Chase Arena Towers | San Francisco, CA</span><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right text-primary text-[24px] hidden! lg:block! pr-14 pl-1" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-up" class="svg-inline--fa fa-chevron-up text-primary text-[24px] lg:hidden! pr-6.25 md:pr-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z"></path></svg></button></div><div class="tabbed-content-container"><button id="«R15ld6»-tab-2" type="button" aria-expanded="false" class="w-full py-8 pl-3 border-b border-disabled-gray flex justify-between items-center lg:py-10"><span class="text-[22px] lg:text-left font-bold font-header my-0 text-gray-dark">UCSF Wayne and Gladys Valley Center for Vision | San Francisco, CA</span><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-right" class="svg-inline--fa fa-chevron-right text-primary text-[24px] hidden! lg:block! pr-14 pl-1" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512"><path fill="currentColor" d="M310.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-192 192c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L242.7 256 73.4 86.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l192 192z"></path></svg><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="chevron-up" class="svg-inline--fa fa-chevron-up text-primary text-[24px] lg:hidden! pr-6.25 md:pr-14" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path fill="currentColor" d="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z"></path></svg></button></div></div><div id="«R15ld6»-panel-0" role="region" aria-labelledby="«R15ld6»-tab-0" class="desktop-tabbed-content-container hidden lg:block w-162.5 pl-12 pr-2.5 bg-white"><div class="image-video-container relative"><img alt="SFO-1-2048x1110" loading="lazy" width="350" height="630" decoding="async" data-nimg="1" class="aspect-video relative block w-full" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194220%2F-1.jpg&amp;w=384&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194220%2F-1.jpg&amp;w=750&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F194220%2F-1.jpg&amp;w=750&amp;q=75"></div><div class="text-content-container px-6.25"><h6 class="pt-8.75 text-[28px] font-extrabold normal-case font-header text-gray-dark">SFO International Airport, Harvey Milk Terminal 1 | San Francisco, CA</h6><div class="richtext-container pt-5 text-[18px] text-gray-dark" data-cy="richtext-container"></div><div class="pt-5"></div></div></div></div><div class="call-to-action-container flex justify-center pt-10 pl-0 pb-5 lg:justify-normal lg:pb-0"></div></div><!--/$--><!--$--><div class="component sitecore-spacing"><div class="component-content sitecore-container mb-8"><h2 class="mb-5 lg:mb-8"></h2><div class="mb-4"></div><div class="relative"><video preload="metadata" controls="" disablepictureinpicture="" class="w-full h-full"><source src="https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/197853/-1.mp4?timestamp=2026-07-29T00%3a33%3a56.2658565" type="video/mp4">Your browser does not support HTML5 video.</video><button class="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-none" aria-label="Play video"><div class="hidden md:block absolute inset-0 bg-black opacity-65 z-10"></div><div class="relative pointer-events-auto z-10"><img alt="play" loading="lazy" width="208" height="208" decoding="async" data-nimg="1" class="m-auto w-16 h-16 md:w-52 md:h-52" style="color:transparent" srcset="/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fplay.3bda4736.svg&amp;w=256&amp;q=75 1x, /_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fplay.3bda4736.svg&amp;w=640&amp;q=75 2x" src="/_next/image?url=%2F_next%2Fstatic%2Fmedia%2Fplay.3bda4736.svg&amp;w=640&amp;q=75"></div></button></div></div></div><!--/$--></div></main><footer><div id="footer"><!--$--><footer class="text-white bg-[#262626] pt-3 pr-6 pb-7 pl-6" data-cy="footer"><div class="my-0 mx-auto max-w-280 flex flex-wrap gap-10 justify-between flex-col md:flex-row"><div data-cy="footer-column-0"><div class="mt-8"><p class="text-xl font-bold" data-cy="footer-column-group-title-about-us">About Us</p><p><a title="" class="text-white font-normal no-underline hover:underline decoration-primary" data-cy="link-About Canvas" href="/en/canvas/about-us">About Canvas</a></p><p><a title="" class="text-white font-normal no-underline hover:underline decoration-primary" data-cy="link-Careers at Canvas" href="/en/canvas/about-us/careers">Careers at Canvas</a></p><p><a title="" class="text-white font-normal no-underline hover:underline decoration-primary" data-cy="link-Contact Us" href="/en/canvas/about-us/contact">Contact Us</a></p></div></div><div data-cy="footer-column-1"><div class="mt-8"><p class="text-xl font-bold" data-cy="footer-column-group-title-products">Products</p><p><a title="" class="text-white font-normal no-underline hover:underline decoration-primary" data-cy="link-Canvas 1200CX" href="/en/canvas/1200cx">Canvas 1200CX</a></p><p><a title="" class="text-white font-normal no-underline hover:underline decoration-primary" data-cy="link-Canvas 2000CX" href="/en/canvas/2000cx">Canvas 2000CX</a></p></div></div><div data-cy="footer-column-2"><div class="mt-8"><p class="text-xl font-bold" data-cy="footer-column-group-title-about-jlg">About JLG</p><p><a href="https://www.jlg.com/en" class="text-white font-normal no-underline hover:underline decoration-primary" target="_blank" rel="noopener noreferrer" data-cy="link-JLG Website">JLG Website<svg class="inline-block ml-2 arrow-icon-size mb-2 w-2 text-primary text-primary" width="11" height="12" viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.29702 1.58984H9.83228V9.1251" class="stroke-current" stroke-width="2" stroke-miterlimit="10"></path><path d="M9.83203 1.58984L1.01172 10.4102" class="stroke-current" stroke-width="2" stroke-miterlimit="10"></path></svg></a></p><p><a href="https://www.jlg.com/en/about-jlg" class="text-white font-normal no-underline hover:underline decoration-primary" target="_blank" rel="noopener noreferrer" data-cy="link-About JLG">About JLG<svg class="inline-block ml-2 arrow-icon-size mb-2 w-2 text-primary text-primary" width="11" height="12" viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.29702 1.58984H9.83228V9.1251" class="stroke-current" stroke-width="2" stroke-miterlimit="10"></path><path d="M9.83203 1.58984L1.01172 10.4102" class="stroke-current" stroke-width="2" stroke-miterlimit="10"></path></svg></a></p><p><a href="https://www.jlg.com/en/about-jlg/innovation-history" class="text-white font-normal no-underline hover:underline decoration-primary" target="_blank" rel="noopener noreferrer" data-cy="link-JLG's Story">JLG's Story<svg class="inline-block ml-2 arrow-icon-size mb-2 w-2 text-primary text-primary" width="11" height="12" viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.29702 1.58984H9.83228V9.1251" class="stroke-current" stroke-width="2" stroke-miterlimit="10"></path><path d="M9.83203 1.58984L1.01172 10.4102" class="stroke-current" stroke-width="2" stroke-miterlimit="10"></path></svg></a></p><div><div class="my-8 ml-1" data-cy="footer-social-links"><a href="https://www.facebook.com/JLGindustries" class="mr-6" target="_blank" rel="noopener noreferrer" data-cy="footer-facebook-logo-transparent"><img alt="facebook-logo-transparent" assettypeid="4" title="facebook-logo-transparent" src_download="https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146318/-1.png?timestamp=2025-10-28T14%3a46%3a57.0704212&amp;download=true" assettypename="Image" downloadfilename="facebook-logo-transparent" loading="lazy" width="20" height="20" decoding="async" data-nimg="1" class="inline size-5" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146318%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.0704212&amp;w=32&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146318%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.0704212&amp;w=48&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146318%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.0704212&amp;w=48&amp;q=75"></a><a href="https://www.instagram.com/jlgindustries/" class="mr-6" title="Follow JLG Industries on Instagram" target="_blank" rel="noopener noreferrer" data-cy="footer-instagram-logo-transparent"><img alt="instagram-logo-transparent" assettypeid="4" title="instagram-logo-transparent" src_download="https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146338/-1.png?timestamp=2025-10-28T14%3a46%3a57.2171079&amp;download=true" assettypename="Image" downloadfilename="instagram-logo-transparent" loading="lazy" width="20" height="20" decoding="async" data-nimg="1" class="inline size-5" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146338%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.2171079&amp;w=32&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146338%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.2171079&amp;w=48&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146338%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.2171079&amp;w=48&amp;q=75"></a><a href="https://www.linkedin.com/company/jlg-industries" class="mr-6" target="_blank" rel="noopener noreferrer" data-cy="footer-linkedin-logo-transparent"><img alt="linkedin-logo-transparent" assettypeid="4" title="linkedin-logo-transparent" src_download="https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146319/-1.png?timestamp=2025-10-28T14%3a46%3a57.2470990&amp;download=true" assettypename="Image" downloadfilename="linkedin-logo-transparent" loading="lazy" width="20" height="20" decoding="async" data-nimg="1" class="inline size-5" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146319%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.2470990&amp;w=32&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146319%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.2470990&amp;w=48&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146319%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.2470990&amp;w=48&amp;q=75"></a><a href="https://x.com/JLG_Industries/" class="mr-6" title="Follow JLG Industries on X" target="_blank" rel="noopener noreferrer" data-cy="footer-x-logo-transparent"><img alt="x-logo-transparent" assettypeid="4" title="x-logo-transparent" src_download="https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146320/-1.png?timestamp=2025-10-28T14%3a46%3a57.3090504&amp;download=true" assettypename="Image" downloadfilename="x-logo-transparent" loading="lazy" width="20" height="20" decoding="async" data-nimg="1" class="inline size-5" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146320%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.3090504&amp;w=32&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146320%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.3090504&amp;w=48&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146320%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.3090504&amp;w=48&amp;q=75"></a><a href="https://www.youtube.com/user/JLGIndustriesInc" class="mr-6" target="_blank" rel="noopener noreferrer" data-cy="footer-youtube-logo-transparent"><img alt="youtube-logo-transparent" assettypeid="4" title="youtube-logo-transparent" src_download="https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146317/-1.png?timestamp=2025-10-28T14%3a46%3a57.4041686&amp;download=true" assettypename="Image" downloadfilename="youtube-logo-transparent" loading="lazy" width="20" height="20" decoding="async" data-nimg="1" class="inline size-5" style="color:transparent" srcset="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146317%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.4041686&amp;w=32&amp;q=75 1x, /_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146317%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.4041686&amp;w=48&amp;q=75 2x" src="/_next/image?url=https%3A%2F%2Fdam.jlg.com%2FDigizuiteCore%2FLegacyService%2Fapi%2Fassetstream%2F146317%2F-1.png%3Ftimestamp%3D2025-10-28T14%253A46%253A57.4041686&amp;w=48&amp;q=75"></a></div><div>Copyright © 2026 JLG Industries</div><a href="https://www.oshkoshcorp.com/privacy-policy" class="text-white font-normal no-underline hover:underline" target="_blank" rel="noopener noreferrer" data-cy="link-Privacy Policy"><span>Privacy Policy</span><svg class="inline-block ml-2 arrow-icon-size mb-2 w-2 text-primary text-primary" width="11" height="12" viewBox="0 0 11 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M2.29702 1.58984H9.83228V9.1251" class="stroke-current" stroke-width="2" stroke-miterlimit="10"></path><path d="M9.83203 1.58984L1.01172 10.4102" class="stroke-current" stroke-width="2" stroke-miterlimit="10"></path></svg></a><span class="px-2">|</span><a title="" class="text-white font-normal no-underline hover:underline" data-cy="link-Terms of Use" href="/en/terms"><span>Terms of Use</span></a><div class="w-[145px] mt-6 pb-6 -ml-2"></div></div></div></div></div></footer><!--/$--></div></footer></div><div id="bottom-banner" data-cy="cookie-banner" class="fixed bottom-0 left-0 z-50 w-full shadow-sm print:hidden bg-white border-t border-gray-200 p-4"><div class="mx-auto px-4 sitecore-container"><span data-cy="cookie-title" class="font-header text-lg font-black">Cookie Consent</span><div class="md:flex justify-between items-center"><div class="md:w-1/2" data-cy="cookie-description">JLG uses necessary cookies to make sure our site works.
+JLG would also like to set optional cookies to provide you the best user experience.
+For more detailed information about the cookies JLG uses, see our <a href="https://www.oshkoshcorp.com/privacy-policy">Privacy Policy</a>.</div><div class="md:w-1/2 text-right"><button type="button" data-cy="cookie-accept-btn" class="button-primary"><span>Accept All</span></button><button type="button" data-cy="cookie-reject-btn" class="button-text-large"><span>Reject All</span></button></div></div></div></div><!--$--><!--/$--></div><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"site":{"name":"JLG-Headless","language":"en","hostName":"*"},"locale":"en","layoutData":{"sitecore":{"context":{"pageEditing":false,"site":{"name":"JLG-Headless"},"pageState":"normal","language":"en","itemPath":"/en/canvas"},"route":{"name":"Canvas","displayName":"Canvas","fields":{"Content":{"value":""},"Heading":{"value":""},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false},"NavigationClass":null,"NavigationFilter":[],"NavigationTitle":{"value":"519"},"Priority":{"id":"19f3e919-4991-495f-9207-e1dadfd06f54","url":"https://sitecore.jlg.com/en/sitecore/service/sitecore/system/settings/foundation/experience-accelerator/sitemetadata/enums/sitemappriority/05","name":"05","displayName":"0.5","fields":{"Value":{"value":"0.5"}}},"ChangeFrequency":{"id":"d23b4654-53a5-4589-8b1b-5665a763d144","url":"https://sitecore.jlg.com/en/sitecore/service/sitecore/system/settings/foundation/experience-accelerator/sitemetadata/enums/sitemapchangefrequency/daily","name":"daily","displayName":"daily","fields":{"Value":{"value":"Daily"}}},"Page Design":null,"LayoutDesign":null,"mdBrowserTitle":{"value":"Canvas | Drywall Finishing Robot"},"mdDescription":{"value":"Canvas, the world’s first robotic drywall finishing company, provides a new class of robotic tool for the drywall finishing trade."},"mdKeywords":{"value":""},"mdType":{"value":""},"ogDescription":{"value":""},"ogImage":{"value":{}},"ogTitle":{"value":""},"sHideFromSearch":{"value":false}},"databaseName":"web","deviceId":"fe5d7fdf-89c0-4d99-9aa3-b5fbd009c9f3","itemId":"1a05741d-13c7-4ba9-b960-900663337afb","itemLanguage":"en","itemVersion":1,"layoutId":"96e5f4ba-a2cf-4a4c-a4e7-64da88226362","templateId":"0715a7ec-f635-4bf7-9ec3-9b2cf3d81aaa","templateName":"Basic Content Page","placeholders":{"headless-header":[{"uid":"349626da-0b7c-4739-8129-47a4d3163388","componentName":"nav-and-header","dataSource":"{A46C106A-7988-4C5F-B664-71BC35A0BF11}","fields":{"phDarkVersion":{"value":true},"phLinks":[{"id":"3d5bc6a5-6c43-4544-b226-3e4f62d01bc9","url":"/en/data/global/_headers/header/primary-header-container/canvas-header/1200cx","name":"1200CX","displayName":"1200CX","fields":{"niFeaturedContent":null,"niFeaturedEquipment":null,"niFeaturedMultiRow":[],"niFeaturedType":{"value":""},"niColumn1List":[],"niColumn2List":[],"niLinkURL":{"value":{"text":"1200CX","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{7BDBDE88-6CE3-4756-844D-84B14DA4BEA8}","href":"/en/canvas/1200cx"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"f3b83e48-bcb8-47b7-b084-081485bbad6f","url":"/en/data/global/_headers/header/primary-header-container/canvas-header/2000cx","name":"2000CX","displayName":"2000CX","fields":{"niFeaturedContent":null,"niFeaturedEquipment":null,"niFeaturedMultiRow":[],"niFeaturedType":{"value":""},"niColumn1List":[],"niColumn2List":[],"niLinkURL":{"value":{"text":"2000CX","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{7A2EC1EB-6FDC-453B-A8DF-7994483532D9}","href":"/en/canvas/2000cx"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"39ca3e0c-f189-4dca-b04c-1b1d6fbe4e57","url":"/en/data/global/_headers/header/primary-header-container/canvas-header/company","name":"Company","displayName":"Company","fields":{"niFeaturedContent":null,"niFeaturedEquipment":null,"niFeaturedMultiRow":[],"niFeaturedType":{"value":""},"niColumn1List":[],"niColumn2List":[],"niLinkURL":{"value":{"text":"About Canvas","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{AF14E96A-A10D-4545-BDCD-BFEFAD86AF8E}","href":"/en/canvas/about-us"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"9079b288-ecb3-4d6e-814a-5de65516d37a","url":"/en/data/global/_headers/header/primary-header-container/canvas-header/careers","name":"Careers","displayName":"Careers","fields":{"niFeaturedContent":null,"niFeaturedEquipment":null,"niFeaturedMultiRow":[],"niFeaturedType":{"value":""},"niColumn1List":[],"niColumn2List":[],"niLinkURL":{"value":{"text":"Careers","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{84862F09-08C6-4FAB-8FCA-7B6D5AC4B5D8}","href":"/en/canvas/about-us/careers"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"34ceaa68-d5c9-45ed-941f-57ac9cffa504","url":"/en/data/global/_headers/header/primary-header-container/canvas-header/contact","name":"Contact","displayName":"Contact Us","fields":{"niFeaturedContent":null,"niFeaturedEquipment":null,"niFeaturedMultiRow":[],"niFeaturedType":{"value":""},"niColumn1List":[],"niColumn2List":[],"niLinkURL":{"value":{"text":"Contact Us","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{4A4A79CA-1F90-4589-9424-17EDE1E82BA5}","href":"/en/canvas/about-us/contact"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}],"phLogo":{"value":{"assetTypeId":4,"title":"JLG-canvas-logo","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194277/-1.png","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194277/-1.png?download=true","alt":"JLG-canvas-logo","assetTypeName":"Image","downloadFilename":"JLG-canvas-logo"}},"phLogoLink":{"value":{"text":"","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{1A05741D-13C7-4BA9-B960-900663337AFB}","href":"/en/canvas"}},"nhTopHeader":{"id":"34baa999-5bd8-4604-8d9c-926087ef50ef","url":"/en/data/global/_headers/header/top-header-container/canvas-top-header","name":"Canvas Top Header","displayName":"Canvas Top Header","fields":{"thInternationalDropdownIcon":{"value":{}},"thInternationalLangList":[],"thInternationalModal":[],"thLeftSectionLinks":[{"id":"b2e0a362-9be1-4459-8aac-f1b599473363","url":"/en/data/link-lists/top-header/left-section-links/jlg-home","name":"JLG Home","displayName":"JLG Home","fields":{"linkURL":{"value":{"href":"http://www.jlg.com","text":"JLG Website","linktype":"external","url":"http://www.jlg.com","anchor":"","target":"_blank"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}],"thRightSectionLinks":[],"thSearchPage":{"value":{"href":""}}}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false},"isCountries":[],"isHeading":{"value":""}}},{"uid":"106ab12f-4ba3-4ed5-8614-44b6f83abbbc","componentName":"hero-standard-carousel","dataSource":"/sitecore/content/JLG-Headless/JLG-Headless/home/Canvas/Content/HeroStandardCarousel","fields":{"hscHeros":[{"id":"2864389d-a8be-4c65-93a1-b514460ae709","url":"/en/canvas/content/herostandardcarousel/1200cx","name":"1200CX","displayName":"1200CX","fields":{"hpContentOnRight":{"value":false},"hsBodyCopy":{"value":""},"hsEyebrow":{"value":""},"hsImageAccents":{"value":false},"hsLightVersion":{"value":""},"hsVideo":{"value":{}},"hbCallToAction":{"value":{"text":"Explore","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{7BDBDE88-6CE3-4756-844D-84B14DA4BEA8}","href":"/en/canvas/1200cx"}},"hbHeading":{"value":"Introducing the Canvas 1200CX "},"hbImage":{"value":{"assetTypeId":4,"title":"Canvas_1200CX_banner_02_CLEAN","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194213/-1.jpg","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194213/-1.jpg?download=true","alt":"Canvas_1200CX_banner_02_CLEAN","assetTypeName":"Image","downloadFilename":"Canvas_1200CX_banner_02_CLEAN"}},"hbImageGradient":{"value":true},"hbSubHeading":{"value":"Our latest, most compact drywall machine is here!"},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"3a220895-cf72-4b70-9f92-0de002530bc1","url":"/en/canvas/content/herostandardcarousel/productivity","name":"Productivity","displayName":"Productivity","fields":{"hpContentOnRight":{"value":false},"hsBodyCopy":{"value":""},"hsEyebrow":{"value":""},"hsImageAccents":{"value":false},"hsLightVersion":{"value":""},"hsVideo":{"value":{}},"hbCallToAction":{"value":{"href":"https://www.wconline.com/articles/96827-rq-construction","text":"Learn More","linktype":"external","url":"https://www.wconline.com/articles/96827-rq-construction","anchor":"","target":"_blank"}},"hbHeading":{"value":"Productivity Unleashed"},"hbImage":{"value":{"assetTypeId":4,"title":"banner-2","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194212/-1.jpg","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194212/-1.jpg?download=true","alt":"banner-2","assetTypeName":"Image","downloadFilename":"banner-2"}},"hbImageGradient":{"value":true},"hbSubHeading":{"value":"Discover how Canvas Cut RQ's drywall machine is here!"},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}]}}],"headless-main":[{"uid":"da06e15d-d409-4f78-bdd0-ff63648e2089","componentName":"richtext-content","dataSource":"/sitecore/content/JLG-Headless/JLG-Headless/home/Canvas/Content/Richtext Content","fields":{"rtBody":{"value":"\u003ch2\u003eRevolutionizing Drywall Finishing\u003c/h2\u003e\n\u003cp\u003eCanvas, the world’s first robotic drywall finishing company, provides a new class of robotic tool for the drywall finishing trade. Delivering both Level 4 and Level 5 finishes, our machines improve the quality, speed, and affordability of drywall finishing while increasing the safety to workers.\u003c/p\u003e\n"},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false},"enableBrushstroke":{"value":false},"brushstrokeVariant":{"value":""},"backgroundColor":{"value":""}}},{"uid":"9eba41d6-0ee8-4da5-ab81-be13f48e2e04","componentName":"generic-options","dataSource":"/sitecore/content/JLG-Headless/JLG-Headless/home/Canvas/Content/Generic Options Component","fields":{"genOptHeader":{"value":"The Canvas Advantage"},"genOptions":[{"id":"32a3c433-0c87-459d-9f58-4c86a5cfb7a8","url":"/en/canvas/content/generic-options-component/trailblazing-technology","name":"Trailblazing Technology","displayName":"Trailblazing Technology","fields":{"genOptCTA":{"value":{"href":""}},"genOptHeader":{"value":"Trailblazing Technology for Interior Trades"},"genOptImage":{"value":{"assetTypeId":4,"title":"Technology","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194222/-1.png","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194222/-1.png?download=true","alt":"Technology","assetTypeName":"Image","downloadFilename":"Technology"}},"genOptText":{"value":"First company globally to use the precision of robotics to develop a drywall machine"},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"1e424190-39dc-4fb4-a9ac-29090d3cf748","url":"/en/canvas/content/generic-options-component/productivity","name":"Productivity","displayName":"Productivity","fields":{"genOptCTA":{"value":{"href":""}},"genOptHeader":{"value":"Accelerate Schedules, Boost Productivity"},"genOptImage":{"value":{"assetTypeId":4,"title":"Accelerate-Schedules","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194210/-1.png","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194210/-1.png?download=true","alt":"Accelerate-Schedules","assetTypeName":"Image","downloadFilename":"Accelerate-Schedules"}},"genOptText":{"value":"Improve worker productivity by automating repetitive tasks and reducing skill dependent quality variations"},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"ae607992-a9cb-4bd5-9336-46b9edc1bd1c","url":"/en/canvas/content/generic-options-component/advantage","name":"Advantage","displayName":"Advantage","fields":{"genOptCTA":{"value":{"href":""}},"genOptHeader":{"value":"Drive Competitive Advantage"},"genOptImage":{"value":{"assetTypeId":4,"title":"Competitive","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194217/-1.png","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194217/-1.png?download=true","alt":"Competitive","assetTypeName":"Image","downloadFilename":"Competitive"}},"genOptText":{"value":"Stay ahead of the rising skilled labor shortage by leveraging advanced robotic machinery"},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"8f288db4-14e1-41ae-945d-ef6ffd400089","url":"/en/canvas/content/generic-options-component/workforce","name":"Workforce","displayName":"Workforce","fields":{"genOptCTA":{"value":{"href":""}},"genOptHeader":{"value":"Improve the Lives of Our Workforce"},"genOptImage":{"value":{"assetTypeId":4,"title":"Workforce","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194224/-1.png","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194224/-1.png?download=true","alt":"Workforce","assetTypeName":"Image","downloadFilename":"Workforce"}},"genOptText":{"value":"Enhance worker well-being by reducing physical strain, reducing high-height work and minimizing exposure to hazardous materials"},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}],"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"uid":"2e43f208-f607-4e8a-969b-0511271daa47","componentName":"featured-content","dataSource":"/sitecore/content/JLG-Headless/JLG-Headless/home/Canvas/Content/Featured Content - 1200CX","fields":{"fcBody":{"value":"Our most compact machine with the highest reach in the world."},"fcEyebrow":{"value":""},"fcHeading":{"value":"Check out the 1200CX"},"fcImage":{"value":{"assetTypeId":4,"title":"1200cx-bg","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194211/-1.jpg","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194211/-1.jpg?download=true","alt":"1200cx-bg","assetTypeName":"Image","downloadFilename":"1200cx-bg"}},"fcImageOnRight":{"value":false},"fcLink":{"value":{"text":"Learn More","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{7BDBDE88-6CE3-4756-844D-84B14DA4BEA8}","href":"/en/canvas/1200cx"}},"lightVersion":{"value":false},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"uid":"7efe3078-b502-4dfc-b1cb-ad5382f692fd","componentName":"tabbed-content","dataSource":"/sitecore/content/JLG-Headless/JLG-Headless/home/Canvas/Content/Tabbed Content","fields":{"tcCallToAction":{"value":{"href":""}},"tcContent":[{"id":"bc24370e-6bf9-40b6-813a-1070d7dd1bb8","url":"/en/canvas/content/tabbed-content/sfo","name":"SFO","displayName":"SFO","fields":{"tBody":{"value":""},"tHeading":{"value":"SFO International Airport, Harvey Milk Terminal 1 | San Francisco, CA"},"tImage":{"value":{"assetTypeId":4,"title":"SFO-1-2048x1110","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194220/-1.jpg","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194220/-1.jpg?download=true","alt":"SFO-1-2048x1110","assetTypeName":"Image","downloadFilename":"SFO-1-2048x1110"}},"tLink":{"value":{"href":""}},"digizuiteVideo":{"value":{}},"thumbnail":{"value":{}},"youtubeVideoID":{"value":""},"autoplay":{"value":false},"hideControls":{"value":false},"loopVideo":{"value":false},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"d9a0101e-c846-4dce-b7ed-f33d4ca81dbb","url":"/en/canvas/content/tabbed-content/chase-towers","name":"Chase Towers","displayName":"Chase Towers","fields":{"tBody":{"value":"\u003cbr /\u003e"},"tHeading":{"value":"Chase Arena Towers | San Francisco, CA"},"tImage":{"value":{"assetTypeId":4,"title":"ChaseTower","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194215/-1.jpg","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194215/-1.jpg?download=true","alt":"ChaseTower","assetTypeName":"Image","downloadFilename":"ChaseTower"}},"tLink":{"value":{"href":""}},"digizuiteVideo":{"value":{}},"thumbnail":{"value":{}},"youtubeVideoID":{"value":""},"autoplay":{"value":false},"hideControls":{"value":false},"loopVideo":{"value":false},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"807f74da-1fb9-4acf-aaf6-975615d55abd","url":"/en/canvas/content/tabbed-content/ucsf","name":"UCSF","displayName":"UCSF","fields":{"tBody":{"value":"\u003cbr /\u003e"},"tHeading":{"value":"UCSF Wayne and Gladys Valley Center for Vision | San Francisco, CA"},"tImage":{"value":{"assetTypeId":4,"title":"Wayne_Gladys_Valley_Center_Vision-p-1080","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194223/-1.jpg","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194223/-1.jpg?download=true","alt":"Wayne_Gladys_Valley_Center_Vision-p-1080","assetTypeName":"Image","downloadFilename":"Wayne_Gladys_Valley_Center_Vision-p-1080"}},"tLink":{"value":{"href":""}},"digizuiteVideo":{"value":{}},"thumbnail":{"value":{}},"youtubeVideoID":{"value":""},"autoplay":{"value":false},"hideControls":{"value":false},"loopVideo":{"value":false},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}],"tcHeading":{"value":"Projects"},"tcSubHeading":{"value":"\u003cbr /\u003e"},"lightVersion":{"value":true},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false},"headingOptions":null}},{"uid":"7fad56a4-a705-4729-afca-77d5e37db1da","componentName":"feature-video","dataSource":"/sitecore/content/JLG-Headless/JLG-Headless/home/Canvas/Content/Featured Video","fields":{"fvHeading":{"value":""},"fvSubHeading":{"value":""},"digizuiteVideo":{"value":{"assetTypeId":1,"title":"26-jlg-1994-JLG Canvas Robotics Video-c4","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/197853/-1.mp4?timestamp=2026-07-29T00%3a33%3a56.2658565","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/197853/51375.mp4?timestamp=2026-02-26T16%3a05%3a22.9332387\u0026download=true","alt":"26-jlg-1994-JLG Canvas Robotics Video-c4","assetTypeName":"Video","downloadFilename":"26-jlg-1994-JLG Canvas Robotics Video-c4"}},"thumbnail":{"value":{}},"youtubeVideoID":{"value":""},"autoplay":{"value":false},"hideControls":{"value":false},"loopVideo":{"value":false},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}],"headless-footer":[{"uid":"01d9d6fb-2dff-4ba6-9388-881829ebd0d5","componentName":"footer","dataSource":"{997E8CF1-CDF2-46B9-9733-309C41EA1F95}","fields":{"fFooterColumns":[{"id":"ea916bdf-4456-42a4-9c13-c048025c5bc7","url":"/en/data/global/_footers/canvas-footer/column","name":"Column","displayName":"Column","fields":{"cLinkGroups":[{"id":"304cb3b3-ea87-4ade-98ca-c3ed4a3be300","url":"/en/data/global/_footers/canvas-footer/column/about-canvas","name":"About Canvas","displayName":"About Canvas","fields":{"lgLinks":[{"id":"d07c9261-4446-4051-b019-b4c51cca1b07","url":"/en/data/global/_footers/canvas-footer/column/about-canvas/about-us","name":"About Us","displayName":"About Us","fields":{"linkURL":{"value":{"text":"About Canvas","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{AF14E96A-A10D-4545-BDCD-BFEFAD86AF8E}","href":"/en/canvas/about-us"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"72cff0b0-d9bf-41af-ae5e-a0f66a8dee40","url":"/en/data/global/_footers/canvas-footer/column/about-canvas/careers","name":"Careers","displayName":"Careers","fields":{"linkURL":{"value":{"text":"Careers at Canvas","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{84862F09-08C6-4FAB-8FCA-7B6D5AC4B5D8}","href":"/en/canvas/about-us/careers"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"cb4aaf01-d1e4-45eb-b146-107896001eeb","url":"/en/data/global/_footers/canvas-footer/column/about-canvas/contact-us","name":"Contact Us","displayName":"Contact Us","fields":{"linkURL":{"value":{"text":"Contact Us","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{4A4A79CA-1F90-4589-9424-17EDE1E82BA5}","href":"/en/canvas/about-us/contact"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}],"lgTitle":{"value":"About Us"},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}]}},{"id":"a5d15b79-0b73-4a1b-8347-de0e4ffb55bc","url":"/en/data/global/_footers/canvas-footer/column2","name":"Column2","displayName":"Column2","fields":{"cLinkGroups":[{"id":"16148457-a562-49b5-80e9-cb8081bb315e","url":"/en/data/global/_footers/canvas-footer/column2/products","name":"Products","displayName":"Products","fields":{"lgLinks":[{"id":"b515e148-84b8-44ee-ab46-bd8a0a4e9994","url":"/en/data/global/_footers/canvas-footer/column2/products/1200cx","name":"1200CX","displayName":"1200CX","fields":{"linkURL":{"value":{"text":"Canvas 1200CX","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{7BDBDE88-6CE3-4756-844D-84B14DA4BEA8}","href":"/en/canvas/1200cx"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"5682deda-53d4-4072-9787-eaf8631b161d","url":"/en/data/global/_footers/canvas-footer/column2/products/2000cx","name":"2000CX","displayName":"2000CX","fields":{"linkURL":{"value":{"text":"Canvas 2000CX","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{7A2EC1EB-6FDC-453B-A8DF-7994483532D9}","href":"/en/canvas/2000cx"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}],"lgTitle":{"value":"Products"},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}]}},{"id":"15fa57d8-5997-4558-add9-735a0e01163b","url":"/en/data/global/_footers/canvas-footer/column3","name":"Column3","displayName":"Column3","fields":{"cLinkGroups":[{"id":"1ce9a6d9-47b5-429d-b3e4-22f0f4cd667a","url":"/en/data/global/_footers/canvas-footer/column3/about-jlg","name":"About JLG","displayName":"About JLG","fields":{"lgLinks":[{"id":"ef349d8e-3789-4797-9b43-1c1b020a995c","url":"/en/data/global/_footers/canvas-footer/column3/about-jlg/jlg-home-page","name":"JLG Home Page","displayName":"JLG Home Page","fields":{"linkURL":{"value":{"href":"https://www.jlg.com/en","text":"JLG Website","linktype":"external","url":"https://www.jlg.com/en","anchor":"","target":"_blank"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"3cffe00b-3d21-49bc-9d1b-d707ddaef077","url":"/en/data/global/_footers/canvas-footer/column3/about-jlg/about-jlg","name":"About JLG","displayName":"About JLG","fields":{"linkURL":{"value":{"href":"https://www.jlg.com/en/about-jlg","text":"About JLG","linktype":"external","url":"https://www.jlg.com/en/about-jlg","anchor":"","target":"_blank"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"d02f6201-3ff5-4483-932c-d5a03a405390","url":"/en/data/global/_footers/canvas-footer/column3/about-jlg/story-of-jlg","name":"Story of JLG","displayName":"Story of JLG","fields":{"linkURL":{"value":{"href":"https://www.jlg.com/en/about-jlg/innovation-history","text":"JLG's Story","linktype":"external","url":"https://www.jlg.com/en/about-jlg/innovation-history","anchor":"","target":"_blank"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}],"lgTitle":{"value":"About JLG"},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}]}}],"fLegalDocumentLinkList":[{"id":"0c11feb9-b09d-46b3-9ffc-4fed66b74a2d","url":"/en/data/link-lists/legal-document-links/privacy-policy","name":"Privacy Policy","displayName":"Privacy Policy","fields":{"linkURL":{"value":{"href":"https://www.oshkoshcorp.com/privacy-policy","text":"Privacy Policy","linktype":"external","url":"https://www.oshkoshcorp.com/privacy-policy","anchor":"","target":"_blank"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}},{"id":"81aeb099-6d9b-4894-bdcf-9e580fdaa66b","url":"/en/data/link-lists/legal-document-links/terms-of-use","name":"Terms of Use","displayName":"Terms of Use","fields":{"linkURL":{"value":{"text":"Terms of Use","anchor":"","linktype":"internal","class":"","title":"","querystring":"","id":"{BC5A5382-7003-4DE6-A8C7-996D5EBED1E9}","href":"/en/terms"}},"XTM_Display item name in XTM":{"value":false},"XTM_Sent for translation by":{"value":""},"XTM_Target languages":[],"XTM_Translated":{"value":false},"XTM_Translated From":{"value":""},"XTM_Translation Date":{"value":"0001-01-01T00:00:00Z"},"XTM_Translation in progress":{"value":false}}}],"fLogo":{"value":{"assetTypeId":4,"title":"JLG-canvas-logo","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194277/-1.png","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/194277/-1.png?download=true","alt":"JLG-canvas-logo","assetTypeName":"Image","downloadFilename":"JLG-canvas-logo"}},"fLogoLink":{"value":{"href":""}},"fSocialLinkList":[{"id":"4b870350-cc6a-46f1-b1a7-7765c98ed1f1","url":"/en/data/link-lists/social-links/facebook","name":"Facebook","displayName":"Facebook","fields":{"slIcon":{"value":{"assetTypeId":4,"title":"facebook-logo-transparent","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146318/-1.png?timestamp=2025-10-28T14%3a46%3a57.0704212","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146318/-1.png?timestamp=2025-10-28T14%3a46%3a57.0704212\u0026download=true","alt":"facebook-logo-transparent","assetTypeName":"Image","downloadFilename":"facebook-logo-transparent"}},"slUrl":{"value":{"href":"https://www.facebook.com/JLGindustries","text":"facebook","linktype":"external","url":"https://www.facebook.com/JLGindustries","anchor":"","target":"_blank"}}}},{"id":"a76f3ea9-b438-4cd5-88aa-230ed307a00a","url":"/en/data/link-lists/social-links/instagram","name":"Instagram","displayName":"Instagram","fields":{"slIcon":{"value":{"assetTypeId":4,"title":"instagram-logo-transparent","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146338/-1.png?timestamp=2025-10-28T14%3a46%3a57.2171079","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146338/-1.png?timestamp=2025-10-28T14%3a46%3a57.2171079\u0026download=true","alt":"instagram-logo-transparent","assetTypeName":"Image","downloadFilename":"instagram-logo-transparent"}},"slUrl":{"value":{"href":"https://www.instagram.com/jlgindustries/","text":"Instagram","linktype":"external","url":"https://www.instagram.com/jlgindustries/","anchor":"","title":"Follow JLG Industries on Instagram","target":"_blank"}}}},{"id":"a62f5953-5b92-4067-9307-a5db0d76e621","url":"/en/data/link-lists/social-links/linkedin","name":"linkedin","displayName":"LinkedIn","fields":{"slIcon":{"value":{"assetTypeId":4,"title":"linkedin-logo-transparent","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146319/-1.png?timestamp=2025-10-28T14%3a46%3a57.2470990","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146319/-1.png?timestamp=2025-10-28T14%3a46%3a57.2470990\u0026download=true","alt":"linkedin-logo-transparent","assetTypeName":"Image","downloadFilename":"linkedin-logo-transparent"}},"slUrl":{"value":{"href":"https://www.linkedin.com/company/jlg-industries","text":"Linkdin","linktype":"external","url":"https://www.linkedin.com/company/jlg-industries","anchor":"","target":"_blank"}}}},{"id":"763f76d5-51c3-4a8b-bbd5-71618077bcc6","url":"/en/data/link-lists/social-links/x","name":"x","displayName":"X","fields":{"slIcon":{"value":{"assetTypeId":4,"title":"x-logo-transparent","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146320/-1.png?timestamp=2025-10-28T14%3a46%3a57.3090504","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146320/-1.png?timestamp=2025-10-28T14%3a46%3a57.3090504\u0026download=true","alt":"x-logo-transparent","assetTypeName":"Image","downloadFilename":"x-logo-transparent"}},"slUrl":{"value":{"href":"https://x.com/JLG_Industries/","text":"X","linktype":"external","url":"https://x.com/JLG_Industries/","anchor":"","title":"Follow JLG Industries on X","target":"_blank"}}}},{"id":"4fdb67c4-5204-462c-8302-41eaf6db972a","url":"/en/data/link-lists/social-links/youtube","name":"youtube","displayName":"YouTube","fields":{"slIcon":{"value":{"assetTypeId":4,"title":"youtube-logo-transparent","src":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146317/-1.png?timestamp=2025-10-28T14%3a46%3a57.4041686","src_download":"https://dam.jlg.com/DigizuiteCore/LegacyService/api/assetstream/146317/-1.png?timestamp=2025-10-28T14%3a46%3a57.4041686\u0026download=true","alt":"youtube-logo-transparent","assetTypeName":"Image","downloadFilename":"youtube-logo-transparent"}},"slUrl":{"value":{"href":"https://www.youtube.com/user/JLGIndustriesInc","text":"Youtube","linktype":"external","url":"https://www.youtube.com/user/JLGIndustriesInc","anchor":"","target":"_blank"}}}}],"fCopyrightText":{"value":"Copyright © 2025 JLG Industries"}}}]}}}},"dictionary":{"NewsletterSignupCTAText":"Subscribe Today","NewsletterSignupIntroText":"Get industry insights from #DirectAccess to your inbox.","RelatedAccessories":"Related Accessories","RelatedArticles":"Related Articles","RelatedParts":"Related Parts","share":"Share","select-a-topic":"Select a Topic","select-one":"Select One","select-a-category":"Select a Category","select-a-country":"Select a Country","select-a-state":"Select a State","current-press-releases":"Current Press Releases","access-101":"Access 101","aerial-industry-trends":"Industry Trends","agriculture":"Agriculture","equipment":"Equipment","finance":"Finance","innovations-technology":"Innovations","parts-service-product-support":"Parts \u0026 Service","safety":"Safety","tech-tips":"Tech Tips","training":"Training","category":"Category","clear-all-filters":"Clear All Filters","articles":"Articles","blog-post":"Blog Posts","case-study":"Case Studies","expert-qa":"Expert Q\u0026A","video-podcast":"Videos \u0026 Podcasts","white-paper":"White Papers \u0026 Ebooks","filter-by":"Filter by:","no-articles":"No articles could be found with your selected filter options. Please expand your filter criteria and try again.","read-the-article":"Read the Article","search-direct-access":"Search #DirectAccess","select-a-tag":"Select a Tag","show-more":"Show More","tag":"Tag","machine-type":"Machine Type","publication-type":"Publication Type","resource-type":"Resource Type","search-online-express":"Search","select-a-model":"Select a Model","download":"Download","horizontal-outreach-imperial":"Min - Max Feet","horizontal-outreach-metric":"Min - Max Meters","lift-capacity-imperial":"Min - Max LBs","lift-capacity-metric":"Min - Max KG","lift-height-imperial":"Min - Max Feet","lift-height-metric":"Min - Max Meters","EqSelAddFilter1Placeholder":"000000","EqSelAddFilter2Placeholder":"000000","EqSelAddFilter3Placeholder":"000000","EqSelDropdownDefault":"Select an option","select-machine-types":"Select Machine Types","spec-sheet":"Spec Sheet","date-ascending":"Date Ascending","date-descending":"Date Descending","Distance":"Distance","FilterByDistance":"Filter by Distance","FilterByServiceOfferings":"Filter by Service Offerings","kilometers":"kilometers","km":"km","LocationSearchHeadline":"Find a Location","mi":"mi","miles":"miles","NoLocationsFound":"No Locations Found","Relevant":"Relevant","Results":"Results","Major":"Major Repairs","Minor":"Minor Repairs","Road Service":"Road Service","SortBy":"Sort By","Tooltip":"Drag or Zoom within Map to Find More Locations","UseCurrentLocationPrompt":"Use your current location","LocationSearchInputTitle":"City or Zip Code","LocationSearchPlaceholder":"Search","LocationTypesFilterTitleDesktop":"View Location Types","LocationTypesFilterTitleMobile":"Location Filters","GetDirectionsText":"Directions","ServiceTypesFilterTitle":"Service Offerings","AuthorizedServiceProvider":"Authorized Service Provider","RentalProvider":"Rental/Sales Provider","JLGServiceLocation":"JLG Service Location ","LocationListView":"List View","LocationMapView":"Map View","Skip to Content":"Skip to Content","Header Search Placeholder":"Search","Menu":"Menu","Back to Menu":"Back to Menu","Heading1":"h1","Heading2":"h2","Heading3":"h3","Heading4":"h4","Heading5":"h5","Heading6":"h6","KeySpecification":"Key Specifications","SearchHeader":"Search Results","SearchPlaceholder":"Search Query","Imperial":"Imperial","international":"International","close":"Close","currentSelection":"Current Selection","AxleOscillation":"Axle Oscillation","Battery":"Battery","BucketCapacityHeaped":"Bucket Capacity Heaped","BucketCapacityWater":"BucketCapacityWater","CapacityMaximumLiftHeight":"Capacity at Max Height","CapacityMaximumReach":"Capacity at Max Reach","TrailerDeckLength":"Deck Length","TrailerDeckWidth":"Deck Width","DriveSpeed":"DriveSpeed","ElectricalSystem":"Electrical System","EngineHorsepower":"Engine Gross Power","EnginePower":"EnginePower","EngineTypeDiesel":"Engine Type (Diesel)","Gradeability":"Gradeability","HorizontalOutreach":"Horizontal Outreach","LuminousFlux":"Luminous Flux","LuminousOutput":"Luminous Output","MachineHeight":"Machine Height","MachineLength":"Machine Length","PlatformHeightLowered":"Machine Stowed Height","MachineWeight":"Machine Weight","MachineWeightANSIExportCSA":"Machine Weight","MachineWidth":"Machine Width","MachineWeightcCE":"Machine Weight","MastHeight":"Mast Height","MaxHeight":"Max Reach","MaximumLiftHeight":"Max Lift Height","MaxPlatformCapacity":"Max Platform Capacity","PlatformCapacityOutdoor":"Max Platform Capacity","MaxDriveHeight":"Max Platform Height","WorkingOutreach":"Max Working Outreach","MaximumDriveHeightInfo":"Max Platform Height","MaximumReach":"Maximum Reach","NumberOfLights":"Number of Lights","NumberofOccupantsOutdoor":"Number of Occupants (Outdoor)","NumberofOccupantsIndoor":"Number of Occupants (Indoor)","PlatformCapacityRestricted":"Max Platform Capacity","PlatformCapacityUnrestricted":"Platform Capacity Unrestricted","PlatformHeightElevated":"Max Platform Height","PlatformCapacityANSI":"Platform Capacity (ANSI)","PowerPerLight":"Power Input (Per Light)","PowerSource":"Power Source","RatedCapacity":"Rated Capacity","Swing":"Swing","Tailswing":"Tailswing","TrailerWeightGTM":"Trailer Weight - GTM","TrailerWeightTare":"Trailer Weight - Tare","Transmission":"Transmission","TurningRadiusOutside":"Turning Radius","TurningRadiusInside":"Turning Radius","UpAndOverHeight":"Up and Over Height","measurementFeet":"(Ft)","measurementKg":"(KG)","measurementMeters":"(M)","MeasurementLbs":"(LBS)","Menu1":"Menu1","Menu2":"Menu2","Metric":"Metric","missing-spec-data":"Not Available","item-number":"Item Number","parts-and-accessories-error":"Unable to display any parts and accessories.","view-accessory":"View Accessory\n","view-more":"View More","view-less":"View Less","press-release-archive":"Press Release Archive","bim-file-download":"BIM File Download","download-bim-file":"Download BIM File","missing-specs":"Machine Spec Not Available In This Measurement System","next-model":"Next Model","previous-model":"Previous Model","product-details":"Product Details","product-purchase-options":"Product Purchase Option","related-material":"Related Material","related-videos":"Related Videos","select-file-type":"Select File Type","view-the":"View the","bimFile":"BIM File","brochure":"Brochure","Equipment":"Equipment","load-more":"Load More","of":"of","pvc":"PVC","release-date":"Release Date","results":"results","search-results":"Search Results","select":"Select","show-filters":"Show Filters","showing":"Showing","showing-results-for":"Showing results for","major":"Major","minor":"Minor","road-service":"Road Service","annual-inspection":"Annual Inspection","test123":"test123"},"headLinks":[],"componentProps":{},"ocids":{"cookies.description-text":"JLG uses necessary cookies to make sure our site works.\r\nJLG would also like to set optional cookies to provide you the best user experience.\r\nFor more detailed information about the cookies JLG uses, see our \u003ca href=\"https://www.oshkoshcorp.com/privacy-policy\"\u003ePrivacy Policy\u003c/a\u003e.","cookies.title":"Cookie Consent","cookies.accept-label":"Accept All","cookies.reject-label":"Reject All"},"initialLanguage":{"name":"English","id":null},"languages":["en"]},"__N_SSP":true},"page":"/[[...path]]","query":{"path":["canvas"]},"buildId":"7BHc_zpB4Cv0rm0Zu1Mxq","isFallback":false,"isExperimentalCompile":false,"gssp":true,"locale":"en","locales":["default","en","en-br","en-gb","en-ae","en-za","en-in","en-au","en-ph","en-jp","pt-br","es-mx","de-de","nl-nl","fr-fr","it-it","pl-pl","es-es","zh-cn","ja-jp","ko-kr","cs-cz","da-dk","et-ee","fi-fi","hu-hu","lt-lt","nb-no","sv-se"],"defaultLocale":"default","scriptLoader":[]}</script><script>(function(){function c(){var b=a.contentDocument||(a.contentWindow&&a.contentWindow.document);if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a4a3903becccddab',t:'MTc5MTk0OTIzNA=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script><iframe height="1" width="1" style="position: absolute; top: 0px; left: 0px; border-width: medium; border-style: none; border-color: currentcolor; border-image: initial; visibility: hidden;"></iframe><script id="_next-gtm-init" data-nscript="afterInteractive">
+      (function(w,l){
+        w[l]=w[l]||[];
+        w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});
+        
+      })(window,'dataLayer');</script><script src="https://www.googletagmanager.com/gtm.js?id=GTM-P5DH4R9P&amp;gtm_auth=E6AEhnV5ZBYZjMClT2lbgg&amp;gtm_preview=env-1&amp;gtm_cookies_win=x" id="_next-gtm" data-ntpc="GTM" data-nscript="afterInteractive"></script><next-route-announcer><p aria-live="assertive" id="__next-route-announcer__" role="alert" style="border: 0px; clip: rect(0px, 0px, 0px, 0px); height: 1px; margin: -1px; overflow: hidden; padding: 0px; position: absolute; top: 0px; width: 1px; white-space: nowrap; overflow-wrap: normal;"></p></next-route-announcer></body></html>

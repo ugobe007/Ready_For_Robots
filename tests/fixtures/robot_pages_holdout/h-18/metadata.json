@@ -1,0 +1,15 @@
+{
+  "id": "h-18",
+  "section": "robots",
+  "company": "Zipline",
+  "product": "Zipline drone delivery",
+  "url": "https://www.flyzipline.com",
+  "original_url": null,
+  "final_url": "https://www.zipline.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:37:41.572027Z",
+  "method": "playwright",
+  "word_count": 490,
+  "snapshot_status": "OK",
+  "error": null
+}

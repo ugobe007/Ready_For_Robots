@@ -1,0 +1,15 @@
+{
+  "id": "h-03",
+  "section": "robots",
+  "company": "Badger Technologies",
+  "product": "Badger retail robot",
+  "url": "https://www.badger-technologies.com",
+  "original_url": null,
+  "final_url": "https://www.badger-technologies.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:35:06.110381Z",
+  "method": "playwright",
+  "word_count": 2203,
+  "snapshot_status": "OK",
+  "error": null
+}

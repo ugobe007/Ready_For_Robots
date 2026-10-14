@@ -1,0 +1,15 @@
+{
+  "id": "h-01",
+  "section": "robots",
+  "company": "Aethon",
+  "product": "TUG",
+  "url": "https://aethon.com",
+  "original_url": null,
+  "final_url": "https://aethon.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:34:46.895957Z",
+  "method": "playwright",
+  "word_count": 1997,
+  "snapshot_status": "OK",
+  "error": null
+}

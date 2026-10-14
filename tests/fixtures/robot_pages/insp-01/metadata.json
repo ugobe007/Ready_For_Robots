@@ -1,10 +1,15 @@
 {
   "id": "insp-01",
+  "section": "robots",
   "company": "ANYbotics",
   "product": "ANYmal",
   "url": "https://www.anybotics.com",
-  "final_url": "https://www.anybotics.com/",
+  "original_url": null,
+  "final_url": "https://www.anybotics.com/?ki-cf-botcl=1",
   "status_code": 403,
-  "fetch_date": "2026-10-13T22:16:45.004458Z",
+  "fetch_date": "2026-10-14T03:38:59.277793Z",
+  "method": "playwright",
+  "word_count": 0,
+  "snapshot_status": "FETCH_FAILED",
   "error": "HTTP 403"
 }

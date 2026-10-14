@@ -1,0 +1,15 @@
+{
+  "id": "h-14",
+  "section": "robots",
+  "company": "Hyphen",
+  "product": "Hyphen Makeline",
+  "url": "https://www.usehyphen.com/",
+  "original_url": "https://www.thehyphen.com",
+  "final_url": "https://www.usehyphen.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:39:01.043135Z",
+  "method": "playwright",
+  "word_count": 408,
+  "snapshot_status": "OK",
+  "error": null
+}

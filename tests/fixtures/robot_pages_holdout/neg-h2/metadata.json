@@ -1,0 +1,15 @@
+{
+  "id": "neg-h2",
+  "section": "negative_controls",
+  "company": "Robotics news site",
+  "product": "",
+  "url": "https://www.therobotreport.com",
+  "original_url": null,
+  "final_url": "https://www.therobotreport.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:38:04.149252Z",
+  "method": "playwright",
+  "word_count": 1629,
+  "snapshot_status": "OK",
+  "error": null
+}

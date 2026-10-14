@@ -1,0 +1,15 @@
+{
+  "id": "h-07",
+  "section": "robots",
+  "company": "Hilti",
+  "product": "Jaibot",
+  "url": "https://www.hilti.com/content/hilti/W1/US/en/business/business/trends/jaibot.html",
+  "original_url": "https://www.hilti.com",
+  "final_url": "https://www.hilti.com/content/hilti/W1/US/en/business/business/trends/jaibot.html",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:38:50.588333Z",
+  "method": "playwright",
+  "word_count": 996,
+  "snapshot_status": "OK",
+  "error": null
+}

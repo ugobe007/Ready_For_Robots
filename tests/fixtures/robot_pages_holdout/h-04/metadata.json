@@ -1,0 +1,15 @@
+{
+  "id": "h-04",
+  "section": "robots",
+  "company": "Symbotic",
+  "product": "Symbotic warehouse automation system",
+  "url": "https://www.symbotic.com",
+  "original_url": null,
+  "final_url": "https://www.symbotic.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:35:14.881409Z",
+  "method": "playwright",
+  "word_count": 1475,
+  "snapshot_status": "OK",
+  "error": null
+}

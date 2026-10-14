@@ -1,0 +1,15 @@
+{
+  "id": "h-02",
+  "section": "robots",
+  "company": "Keenon Robotics",
+  "product": "Keenon serving robots (T-series)",
+  "url": "https://www.keenon.com",
+  "original_url": null,
+  "final_url": "https://www.keenon.com/en",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:34:56.761728Z",
+  "method": "playwright",
+  "word_count": 2900,
+  "snapshot_status": "OK",
+  "error": null
+}

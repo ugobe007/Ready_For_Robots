@@ -1,0 +1,15 @@
+{
+  "id": "h-06",
+  "section": "robots",
+  "company": "Built Robotics",
+  "product": "Autonomous pile driving system",
+  "url": "https://www.builtrobotics.com",
+  "original_url": null,
+  "final_url": "https://www.builtrobotics.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:35:32.275542Z",
+  "method": "playwright",
+  "word_count": 616,
+  "snapshot_status": "OK",
+  "error": null
+}
