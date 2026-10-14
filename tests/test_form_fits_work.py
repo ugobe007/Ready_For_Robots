@@ -41,7 +41,9 @@ def test_adam_site_search_returns_drink_station_work_only():
     out = compose_robot_job_search(ADAM, product="ADAM", lookup_grain="product")
     keys = {j["job_key"] for j in out["jobs"]}
     assert {"beverage_espresso_bar", "beverage_cocktail_bar"} <= keys
-    assert {j.get("tape_family") for j in out["jobs"]} == {"beverage"}
+    families = {j.get("tape_family") for j in out["jobs"]}
+    assert not families & MOBILE_ONLY_TAPE_FAMILIES
+    assert families == {"beverage"}
 
 
 def test_adam_legacy_match_returns_no_mobile_work():

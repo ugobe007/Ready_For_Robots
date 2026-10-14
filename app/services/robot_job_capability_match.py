@@ -331,6 +331,7 @@ def match_jobs_for_profile(
     profile: CapabilityProfile,
     *,
     limit: int = 12,
+    stationary: bool = False,
 ) -> dict[str, Any]:
     if not profile.understood:
         return {
@@ -345,7 +346,8 @@ def match_jobs_for_profile(
     scored: list[tuple[float, dict[str, Any], list[str]]] = []
     from app.services.robot_job_live_corpus import merge_live_jobs
 
-    for job in buyer_rows(merge_live_jobs(load_match_corpus())):
+    rows = jobs_fit_form(buyer_rows(merge_live_jobs(load_match_corpus())), stationary=stationary)
+    for job in rows:
         s, notes = score_job(profile, job)
         if s >= SCORE_THRESHOLD:
             scored.append((s, job, notes))
@@ -740,12 +742,9 @@ def match_robot_url(
     stages[1]["status"] = "done"
     stages[1]["detail"] = caps.get("type") or f"{len(profile.capabilities)} signals"
 
-    result = match_jobs_for_profile(profile)
-    if is_stationary_sku(indexed_sku(url, robot_name)):
-        result["jobs"] = jobs_fit_form(result.get("jobs") or [], stationary=True)
-        result["job_count"] = len(result["jobs"])
-        if len(result["jobs"]) < MATCHES_MIN:
-            result["state"] = "thin_corpus"
+    result = match_jobs_for_profile(
+        profile, stationary=is_stationary_sku(indexed_sku(url, robot_name))
+    )
     stages[2]["status"] = "done"
     stages[2]["detail"] = f"{result.get('job_count') or 0} jobs"
     result["research_stages"] = stages
