@@ -113,3 +113,21 @@ def test_home_preview_fallback_rows_are_examples():
         assert row["is_example"] is True
         assert row["source_url"] is None
         assert "intuitive surgical" not in row["employer"].lower()
+
+
+def test_outbound_openings_do_not_claim_verified_job_openings():
+    from types import SimpleNamespace as NS
+
+    from app.services.agent_messaging import PHELAN_INTRO, phelan_opening, phelan_vendor_opening
+    from app.services.phelan_autonomy import cal_vendor_outreach_body
+
+    bodies = [
+        PHELAN_INTRO,
+        phelan_opening(audience="buyer"),
+        phelan_opening(audience="vendor"),
+        phelan_vendor_opening(),
+        phelan_vendor_opening(reminder=True),
+        cal_vendor_outreach_body(NS(name="Acme Robotics", industry="logistics")),
+    ]
+    for body in bodies:
+        assert "verified job" not in body.lower()
