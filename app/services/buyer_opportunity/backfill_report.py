@@ -26,6 +26,7 @@ SYNONYMS_PATH = REPO_ROOT / "data" / "seed" / "industry_synonyms.csv"
 SYNONYM_STATUSES = ("mapped", "needs_bob", "ignore")
 JOB_POSTING_SIGNAL_TYPES = frozenset({"job_posting"})
 PEOPLE_POSTING_SOURCES = frozenset(k for k, v in FEED_CLASSIFICATION.items() if v == PEOPLE_POSTING)
+NEEDS_BOB_EXAMPLES = 3
 
 
 def normalize_industry_text(value: str | None) -> str:
@@ -52,7 +53,12 @@ def load_synonyms(path: Path | str = SYNONYMS_PATH, taxonomy: dict[str, Any] | N
             bad = [v for v in industries if v not in known]
             if bad:
                 raise ValueError(f"line {line}: unknown industries {bad}")
-            out[key] = {"status": status, "industries": industries, "notes": (row.get("notes") or "").strip()}
+            out[key] = {
+                "raw_value": row["raw_value"].strip(),
+                "status": status,
+                "industries": industries,
+                "notes": (row.get("notes") or "").strip(),
+            }
     return out
 
 
@@ -81,6 +87,7 @@ def build_backfill_report(
     by_industry: Counter[str] = Counter()
     by_group: Counter[str] = Counter()
     needs_bob: Counter[str] = Counter()
+    needs_bob_examples: dict[str, list[str]] = {}
     unmapped: Counter[str] = Counter()
     ignored: Counter[str] = Counter()
     robot_makers: list[str] = []
@@ -113,10 +120,13 @@ def build_backfill_report(
             unmapped[raw.strip()] += 1
         elif entry["status"] == "ignore":
             buckets["unmapped_ignored_value"] += 1
-            ignored[raw.strip()] += 1
+            ignored[entry["raw_value"]] += 1
         elif entry["status"] == "needs_bob":
             buckets["needs_bob_decision"] += 1
-            needs_bob[raw.strip()] += 1
+            needs_bob[entry["raw_value"]] += 1
+            examples = needs_bob_examples.setdefault(entry["raw_value"], [])
+            if len(examples) < NEEDS_BOB_EXAMPLES:
+                examples.append(c["name"])
         else:
             buckets["mapped"] += 1
             groups = set()
@@ -134,6 +144,7 @@ def build_backfill_report(
         "mapped_by_industry": dict(by_industry.most_common()),
         "mapped_by_pilot_group": dict(sorted(by_group.items())),
         "needs_bob_by_raw_value": dict(needs_bob.most_common()),
+        "needs_bob_examples": {k: needs_bob_examples[k] for k, _ in needs_bob.most_common()},
         "unmapped_by_raw_value": dict(unmapped.most_common()),
         "ignored_by_raw_value": dict(ignored.most_common()),
         "robot_makers_excluded": robot_makers,
@@ -156,10 +167,14 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         *[f"- {k}: {v}" for k, v in report["counts"].items()],
     ]
+    lines += ["", "## Needs Bob's decision, by raw value", ""]
+    lines += [
+        f"- {k}: {v} (e.g. {', '.join(report['needs_bob_examples'].get(k) or [])})"
+        for k, v in report["needs_bob_by_raw_value"].items()
+    ] or ["- none"]
     for title, key in (
         ("Mapped, by taxonomy industry", "mapped_by_industry"),
         ("Mapped, by pilot group", "mapped_by_pilot_group"),
-        ("Needs Bob's decision, by raw value", "needs_bob_by_raw_value"),
         ("Unmapped, by raw value", "unmapped_by_raw_value"),
         ("Ignored values", "ignored_by_raw_value"),
     ):

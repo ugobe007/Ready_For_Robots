@@ -191,6 +191,9 @@ def test_backfill_report_counts_by_industry_and_writes_nothing(engine):
         dict(id=9, name="Indeed-sourced Co", industry="Manufacturing", source="job_board"),
         dict(id=10, name="Customer CRM row", industry="Manufacturing", tenant_id="t1"),
         dict(id=11, name="Cruise Co", industry="Cruise Lines"),
+        dict(id=12, name="Inn Co", industry="hospitality"),
+        dict(id=13, name="Lodge Co", industry="Hospitality"),
+        dict(id=14, name="Resort Co", industry="Hospitality"),
     ]
     with engine.begin() as conn:
         for company in companies:
@@ -210,16 +213,18 @@ def test_backfill_report_counts_by_industry_and_writes_nothing(engine):
 
     assert report["writes"] == 0
     assert report["counts"] == {
-        "companies_read": 11, "excluded_tenant_crm_rows": 1, "excluded_robot_makers": 1,
-        "skipped_job_posting_only": 2, "mapped": 4, "needs_bob_decision": 1, "unmapped": 1,
+        "companies_read": 14, "excluded_tenant_crm_rows": 1, "excluded_robot_makers": 1,
+        "skipped_job_posting_only": 2, "mapped": 4, "needs_bob_decision": 4, "unmapped": 1,
         "unmapped_blank_industry": 1,
     }
     assert report["mapped_by_industry"] == {"hotel": 2, "warehouse_distribution": 1, "logistics_parcel": 1, "ships_maritime": 1}
     assert report["mapped_by_pilot_group"] == {
         "1. Warehouse, logistics, 3PL": 1, "3. Hotels and casinos": 2, "hidden (not a pilot industry)": 1,
     }
-    assert report["needs_bob_by_raw_value"] == {"Hospitality": 1}
+    assert report["needs_bob_by_raw_value"] == {"Hospitality": 4}
+    assert report["needs_bob_examples"] == {"Hospitality": ["Mystery Co", "Inn Co", "Lodge Co"]}
     assert report["unmapped_by_raw_value"] == {"Space Logistics": 1}
     assert report["robot_makers_excluded"] == ["Richtech Robotics"]
     md = br.render_markdown(report)
     assert "nothing written" in md and "- hotel: 2" in md
+    assert "- Hospitality: 4 (e.g. Mystery Co, Inn Co, Lodge Co)" in md
