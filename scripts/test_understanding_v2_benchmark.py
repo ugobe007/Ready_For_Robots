@@ -14,7 +14,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from app.services.robot_job_capability_match import match_robot_url_v1
+from app.services.robot_understanding_v1.taxonomy_extraction import extract_robot_taxonomy
 from scripts.benchmark_scoring_v2 import (
     score_robot,
     compute_per_field_accuracy,
@@ -66,30 +66,69 @@ def load_snapshot(robot_id: str) -> dict[str, Any] | None:
     }
 
 
-def extract_robot_taxonomy_values(result: dict[str, Any]) -> dict[str, Any]:
+def extract_robot_taxonomy_values(
+    url: str,
+    page_text: str,
+    product_name_hint: str | None = None
+) -> tuple[dict[str, Any], dict[str, Any]]:
     """
-    Extract taxonomy values from match_robot_url_v1 result.
-    
-    For now, this is a stub that returns empty values.
-    The real implementation will come when semantic extraction is wired.
+    Extract taxonomy values using semantic extraction.
     
     Returns:
+        (extracted_values, metadata)
+        
+    extracted_values format:
         {
             "offering_type": str,
             "form": str,
             "primary_class": str,
             "functions": [{"value": str, "confidence": float, "evidence": str}],
             "industries": [{"value": str, "confidence": float, "evidence": str}],
+            "unclassified_notes": str
         }
     """
-    # TODO: Replace with actual taxonomy extraction
+    result = extract_robot_taxonomy(
+        url=url,
+        page_text=page_text,
+        product_name_hint=product_name_hint,
+        cache_key_extra="v1"
+    )
+    
+    # Extract first product (or empty if none)
+    products = result.get("products", [])
+    if not products:
+        return {
+            "offering_type": "",
+            "form": "",
+            "primary_class": "",
+            "functions": [],
+            "industries": [],
+            "unclassified_notes": "No products extracted"
+        }, result.get("extraction_metadata", {})
+    
+    # If product_name_hint provided, try to find matching product
+    if product_name_hint:
+        for product in products:
+            if product_name_hint.lower() in product.get("product_name", "").lower():
+                return {
+                    "offering_type": product["offering_type"]["value"],
+                    "form": product["form"]["value"],
+                    "primary_class": product["primary_class"]["value"],
+                    "functions": product.get("functions", []),
+                    "industries": product.get("industries", []),
+                    "unclassified_notes": product.get("unclassified_notes", "")
+                }, result.get("extraction_metadata", {})
+    
+    # Return first product
+    product = products[0]
     return {
-        "offering_type": "",
-        "form": "",
-        "primary_class": "",
-        "functions": [],
-        "industries": [],
-    }
+        "offering_type": product["offering_type"]["value"],
+        "form": product["form"]["value"],
+        "primary_class": product["primary_class"]["value"],
+        "functions": product.get("functions", []),
+        "industries": product.get("industries", []),
+        "unclassified_notes": product.get("unclassified_notes", "")
+    }, result.get("extraction_metadata", {})
 
 
 def test_robot(
@@ -174,30 +213,37 @@ def test_robot(
         }
     
     html = snapshot['html']
-    print(f"Using snapshot ({word_count} words, fetched {metadata.get('fetch_date', 'unknown')})")
+    metadata_snapshot = snapshot['metadata']
+    print(f"Using snapshot ({word_count} words, fetched {metadata_snapshot.get('fetch_date', 'unknown')})")
     
     # Run extraction
     try:
         t0 = time.time()
         
-        result = match_robot_url_v1(
-            url,
+        extracted, metadata = extract_robot_taxonomy_values(
+            url=url,
             page_text=page_text,
-            page_html=html,
-            product_name=product_name
+            product_name_hint=product_name
         )
         
         elapsed = time.time() - t0
         
-        # Extract taxonomy values from result
-        extracted = extract_robot_taxonomy_values(result)
-        
         print(f"\nExtraction time: {elapsed:.1f}s")
+        print(f"Tokens: {metadata.get('tokens_used', 0)} ({metadata.get('input_tokens', 0)} in, {metadata.get('output_tokens', 0)} out)")
         print(f"Extracted: offering_type={extracted.get('offering_type', 'N/A')}, "
               f"form={extracted.get('form', 'N/A')}, "
               f"primary_class={extracted.get('primary_class', 'N/A')}")
-        print(f"Functions: {[f.get('value') if isinstance(f, dict) else f for f in extracted.get('functions', [])]}")
-        print(f"Industries: {[i.get('value') if isinstance(i, dict) else i for i in extracted.get('industries', [])]}")
+        
+        functions_list = [f.get('value') if isinstance(f, dict) else f 
+                          for f in extracted.get('functions', [])]
+        industries_list = [i.get('value') if isinstance(i, dict) else i 
+                           for i in extracted.get('industries', [])]
+        
+        print(f"Functions: {functions_list}")
+        print(f"Industries: {industries_list}")
+        
+        if extracted.get('unclassified_notes'):
+            print(f"Unclassified notes: {extracted['unclassified_notes']}")
         
         # Score against expected (only for regular robots, not negative controls)
         if not is_negative_control:
@@ -227,7 +273,8 @@ def test_robot(
             'bucket': bucket,
             'score': score,
             'extracted': extracted,
-            'snapshot_date': metadata.get('fetch_date'),
+            'metadata': metadata,
+            'snapshot_date': metadata_snapshot.get('fetch_date'),
             'elapsed_sec': elapsed,
             'used_product_hint': use_product_hint,
             'is_negative_control': is_negative_control,
@@ -295,6 +342,23 @@ def main():
     # Compute per-field accuracy
     accuracy = compute_per_field_accuracy(results_with_hint)
     
+    # Collect unclassified_notes
+    all_unclassified = []
+    for result in results_with_hint:
+        extracted = result.get('extracted', {})
+        notes = extracted.get('unclassified_notes', '')
+        if notes and notes.strip():
+            all_unclassified.append({
+                'robot_id': result['id'],
+                'company': result['company'],
+                'notes': notes
+            })
+    
+    # Collect cost and latency stats
+    total_tokens = sum(r.get('metadata', {}).get('tokens_used', 0) for r in results_with_hint)
+    total_elapsed = sum(r.get('elapsed_sec', 0) for r in results_with_hint)
+    avg_latency = total_elapsed / len(results_with_hint) if results_with_hint else 0
+    
     # Summary
     fetch_failed = [r for r in results_with_hint if r.get('bucket') == 'FETCH_FAILED']
     extraction_failed = [r for r in results_with_hint if r.get('bucket') == 'EXTRACTION_FAILED']
@@ -314,6 +378,29 @@ def main():
     for field, acc in accuracy.items():
         print(f"  {field:20s}: {acc:5.1%}")
     
+    print(f"\nCost and Latency:")
+    print(f"  Total tokens:  {total_tokens:,}")
+    print(f"  Total time:    {total_elapsed:.1f}s")
+    print(f"  Avg per page:  {avg_latency:.1f}s")
+    
+    if all_unclassified:
+        print(f"\nUnclassified Notes ({len(all_unclassified)} robots):")
+        for entry in all_unclassified:
+            print(f"  {entry['robot_id']} ({entry['company']}): {entry['notes'][:100]}")
+    else:
+        print(f"\nNo unclassified notes (all info fit taxonomy)")
+    
+    # Print detailed failures
+    if extraction_failed:
+        print(f"\n❌ EXTRACTION FAILED ({len(extraction_failed)}):")
+        for r in extraction_failed:
+            print(f"  {r['id']}: {r['company']}")
+            score = r.get('score', {})
+            if score:
+                for field in ['offering_type', 'form', 'primary_class', 'functions', 'industries']:
+                    if field in score and not score[field].get('pass'):
+                        print(f"    - {field}: {score[field].get('reason', 'unknown')}")
+    
     # Save results
     results_path = Path("reports") / "understanding_v2_benchmark_results.json"
     results_path.parent.mkdir(exist_ok=True)
@@ -329,6 +416,12 @@ def main():
                 'passed': len(passed),
             },
             'per_field_accuracy': accuracy,
+            'cost_and_latency': {
+                'total_tokens': total_tokens,
+                'total_elapsed_sec': total_elapsed,
+                'avg_latency_per_page': avg_latency,
+            },
+            'unclassified_notes': all_unclassified,
             'results': results_with_hint,
         }, f, indent=2)
     
