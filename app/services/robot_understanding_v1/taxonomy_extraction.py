@@ -14,7 +14,7 @@ from typing import Any
 from anthropic import Anthropic
 
 
-TAXONOMY_PATH = Path("tests/fixtures/taxonomy.v1.json")
+TAXONOMY_PATH = Path(__file__).resolve().parent.parent.parent.parent / "tests/fixtures/taxonomy.v1.json"
 
 
 def load_taxonomy() -> dict[str, Any]:
@@ -315,7 +315,8 @@ def extract_robot_taxonomy(
     # Build cache key
     page_hash = hashlib.sha256(page_text.encode()).hexdigest()[:16]
     taxonomy_version = get_taxonomy_version()
-    cache_key = f"{url}:{page_hash}:{taxonomy_version}:{cache_key_extra}"
+    hint_suffix = f":{product_name_hint}" if product_name_hint else ""
+    cache_key = f"{url}:{page_hash}:{taxonomy_version}:{cache_key_extra}{hint_suffix}"
     
     # Build prompt
     prompt_parts = [
@@ -348,7 +349,7 @@ def extract_robot_taxonomy(
         "",
         "PAGE TEXT:",
         "",
-        page_text[:8000],  # Limit to avoid token overflow
+        page_text,
     ])
     
     prompt = "\n".join(prompt_parts)

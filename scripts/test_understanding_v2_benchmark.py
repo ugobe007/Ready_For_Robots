@@ -108,8 +108,11 @@ def extract_robot_taxonomy_values(
     
     # If product_name_hint provided, try to find matching product
     if product_name_hint:
+        hint_lower = product_name_hint.lower()
         for product in products:
-            if product_name_hint.lower() in product.get("product_name", "").lower():
+            product_name_lower = product.get("product_name", "").lower()
+            # Match if either string contains the other (bidirectional)
+            if hint_lower in product_name_lower or product_name_lower in hint_lower:
                 return {
                     "offering_type": product["offering_type"]["value"],
                     "form": product["form"]["value"],
