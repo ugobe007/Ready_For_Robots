@@ -2,14 +2,14 @@
   "name": "RFR robot classification benchmark",
   "version": "v2-taxonomy",
   "date": "2026-10-13",
-  "taxonomy": "taxonomy.v1.json",
+  "taxonomy": "taxonomy.v1.json (v1.1)",
   "purpose": "Answer key in closed taxonomy values. Replaces free-text capability scoring. Every field is scored by exact match against these lists, so the scorer cannot drift with wording.",
   "scoring_rules": {
     "offering_type": "PASS if extracted value is in offering_type_ok",
     "form": "PASS if extracted value is in form_ok",
     "primary_class": "PASS if extracted value is in primary_class_ok (first value is preferred; others are acceptable alternates)",
     "functions": "PASS if every value in functions_required is extracted AND every extracted value is in functions_required or functions_ok",
-    "industries": "PASS if every value in industries_required is extracted AND (industries_any is empty OR at least one of industries_any is extracted) AND none of industries_must_not is extracted. Other extra industries are not penalized; industries_ok_extra just lists extras we expect may appear.",
+    "industries": "PASS if every value in industries_required is extracted AND (industries_any is empty OR at least one of industries_any is extracted) AND none of industries_must_not is extracted. Other extra industries are not penalized; industries_ok_extra just lists extras we expect may appear. Industry values were expanded in taxonomy v1.1; where an old broad value split into several new ones, the robot's requirement became 'any of' the new values.",
     "robot_pass": "All five fields PASS",
     "report": "Report per-field accuracy across all robots, not just overall pass/fail. Per-field accuracy shows WHERE an extractor is weak.",
     "product_hint": "Run every robot twice: with product_name passed as a hint and without. Report both. Both extractors get identical treatment.",
@@ -38,7 +38,7 @@
         "customer_interaction"
       ],
       "industries_required": [
-        "healthcare_hospital"
+        "hospital"
       ],
       "industries_any": [],
       "industries_must_not": [
@@ -68,7 +68,7 @@
       ],
       "functions_ok": [],
       "industries_required": [
-        "healthcare_hospital",
+        "hospital",
         "hotel"
       ],
       "industries_any": [],
@@ -97,11 +97,13 @@
       ],
       "functions_ok": [],
       "industries_required": [
-        "healthcare_hospital"
+        "hospital"
       ],
       "industries_any": [],
       "industries_must_not": [
-        "warehouse_3pl",
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel",
         "construction"
       ],
       "notes": "Page may not say 'robot' prominently."
@@ -134,8 +136,9 @@
       ],
       "industries_any": [],
       "industries_must_not": [
-        "healthcare_hospital",
-        "restaurant_qsr"
+        "hospital",
+        "restaurant",
+        "qsr_fast_food"
       ],
       "notes": "KEY TEST. Page says 'physical AI', 'construction workforce', 'attachments to common equipment', never 'construction robot'.",
       "industries_ok_extra": [
@@ -165,7 +168,7 @@
       ],
       "industries_any": [],
       "industries_must_not": [
-        "healthcare_hospital"
+        "hospital"
       ],
       "notes": ""
     },
@@ -193,11 +196,12 @@
       ],
       "industries_any": [],
       "industries_must_not": [
-        "restaurant_qsr"
+        "restaurant",
+        "qsr_fast_food"
       ],
       "notes": "public_sector (DOT bridge work) acceptable if extracted.",
       "industries_ok_extra": [
-        "public_sector"
+        "government"
       ]
     },
     {
@@ -248,18 +252,21 @@
       "functions_ok": [
         "delivery_transport"
       ],
-      "industries_required": [
-        "restaurant_qsr"
+      "industries_required": [],
+      "industries_any": [
+        "restaurant",
+        "qsr_fast_food"
       ],
-      "industries_any": [],
       "industries_must_not": [
         "construction"
       ],
       "notes": "",
       "industries_ok_extra": [
-        "casino_entertainment",
+        "casino",
+        "stadium_venue",
         "hotel",
-        "senior_living"
+        "senior_living",
+        "airport"
       ]
     },
     {
@@ -283,18 +290,22 @@
         "delivery_transport",
         "customer_interaction"
       ],
-      "industries_required": [
-        "restaurant_qsr"
+      "industries_required": [],
+      "industries_any": [
+        "restaurant",
+        "qsr_fast_food"
       ],
-      "industries_any": [],
       "industries_must_not": [
         "construction"
       ],
       "notes": "Multi-product site (also cleaning robots). Score the BellaBot record only.",
       "industries_ok_extra": [
         "hotel",
-        "retail_grocery",
-        "casino_entertainment"
+        "retail_store",
+        "grocery",
+        "shopping_mall",
+        "casino",
+        "stadium_venue"
       ]
     },
     {
@@ -322,8 +333,10 @@
       ],
       "industries_required": [],
       "industries_any": [
-        "restaurant_qsr",
-        "casino_entertainment"
+        "restaurant",
+        "qsr_fast_food",
+        "casino",
+        "stadium_venue"
       ],
       "industries_must_not": [
         "agriculture"
@@ -353,13 +366,21 @@
       "functions_ok": [],
       "industries_required": [],
       "industries_any": [
-        "airport_transit",
-        "warehouse_3pl",
-        "retail_grocery",
-        "office_campus",
-        "education",
-        "healthcare_hospital",
-        "factory_manufacturing"
+        "airport",
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel",
+        "retail_store",
+        "grocery",
+        "shopping_mall",
+        "office_building",
+        "corporate_campus",
+        "commercial_building",
+        "data_center",
+        "college_university",
+        "hospital",
+        "manufacturing",
+        "shopping_mall"
       ],
       "industries_must_not": [
         "construction"
@@ -390,8 +411,10 @@
       ],
       "industries_required": [],
       "industries_any": [
-        "retail_grocery",
-        "airport_transit"
+        "retail_store",
+        "grocery",
+        "shopping_mall",
+        "airport"
       ],
       "industries_must_not": [
         "construction"
@@ -417,16 +440,18 @@
         "food_beverage_prep"
       ],
       "functions_ok": [],
-      "industries_required": [
-        "restaurant_qsr"
+      "industries_required": [],
+      "industries_any": [
+        "restaurant",
+        "qsr_fast_food"
       ],
-      "industries_any": [],
       "industries_must_not": [
         "construction"
       ],
       "notes": "",
       "industries_ok_extra": [
-        "casino_entertainment"
+        "casino",
+        "stadium_venue"
       ]
     },
     {
@@ -455,7 +480,8 @@
       ],
       "industries_any": [],
       "industries_must_not": [
-        "restaurant_qsr"
+        "restaurant",
+        "qsr_fast_food"
       ],
       "notes": "Buyers are food MANUFACTURERS. restaurant_qsr is a fail: tests that 'food' does not auto-route to restaurants."
     },
@@ -480,16 +506,20 @@
       "functions_ok": [
         "delivery_transport"
       ],
-      "industries_required": [
-        "warehouse_3pl"
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel"
       ],
-      "industries_any": [],
       "industries_must_not": [
-        "healthcare_hospital"
+        "hospital"
       ],
       "notes": "",
       "industries_ok_extra": [
-        "retail_grocery"
+        "retail_store",
+        "grocery",
+        "shopping_mall"
       ]
     },
     {
@@ -511,17 +541,22 @@
         "picking_packing_palletizing"
       ],
       "functions_ok": [],
-      "industries_required": [
-        "warehouse_3pl"
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel"
       ],
-      "industries_any": [],
       "industries_must_not": [
-        "restaurant_qsr"
+        "restaurant",
+        "qsr_fast_food"
       ],
       "notes": "Truck/container unloading = picking_packing_palletizing. Score Stretch only, not Spot or Atlas.",
       "industries_ok_extra": [
-        "retail_grocery",
-        "factory_manufacturing"
+        "retail_store",
+        "grocery",
+        "shopping_mall",
+        "manufacturing"
       ]
     },
     {
@@ -549,11 +584,14 @@
       ],
       "industries_required": [],
       "industries_any": [
-        "warehouse_3pl",
-        "factory_manufacturing"
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel",
+        "manufacturing"
       ],
       "industries_must_not": [
-        "restaurant_qsr"
+        "restaurant",
+        "qsr_fast_food"
       ],
       "notes": "Humanoid with a defined logistics job (tote handling)."
     },
@@ -580,12 +618,20 @@
       ],
       "industries_required": [],
       "industries_any": [
-        "public_sector",
-        "casino_entertainment",
-        "office_campus",
-        "healthcare_hospital",
-        "retail_grocery",
-        "education"
+        "government",
+        "casino",
+        "stadium_venue",
+        "office_building",
+        "corporate_campus",
+        "commercial_building",
+        "data_center",
+        "hospital",
+        "retail_store",
+        "grocery",
+        "shopping_mall",
+        "college_university",
+        "shopping_mall",
+        "apartment_building"
       ],
       "industries_must_not": [
         "agriculture"
@@ -615,8 +661,14 @@
       ],
       "industries_required": [],
       "industries_any": [
-        "office_campus",
-        "warehouse_3pl"
+        "office_building",
+        "corporate_campus",
+        "commercial_building",
+        "data_center",
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel",
+        "data_center"
       ],
       "industries_must_not": [
         "agriculture"
@@ -649,8 +701,10 @@
       ],
       "industries_any": [],
       "industries_must_not": [
-        "healthcare_hospital",
-        "warehouse_3pl"
+        "hospital",
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel"
       ],
       "notes": "Hauls like a warehouse AMR but sells to farms. warehouse_3pl is a fail."
     },
@@ -678,7 +732,9 @@
       ],
       "industries_any": [],
       "industries_must_not": [
-        "warehouse_3pl"
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel"
       ],
       "notes": "Tractor-pulled implement; may not read as a 'robot'."
     },
@@ -703,10 +759,11 @@
       "industries_required": [],
       "industries_any": [
         "energy_utilities",
-        "factory_manufacturing"
+        "manufacturing"
       ],
       "industries_must_not": [
-        "restaurant_qsr"
+        "restaurant",
+        "qsr_fast_food"
       ],
       "notes": ""
     },
@@ -732,11 +789,13 @@
       "industries_required": [],
       "industries_any": [
         "energy_utilities",
-        "public_sector",
-        "factory_manufacturing"
+        "government",
+        "manufacturing",
+        "defense"
       ],
       "industries_must_not": [
-        "restaurant_qsr"
+        "restaurant",
+        "qsr_fast_food"
       ],
       "notes": "Software/data-first messaging; robot detection test."
     },
@@ -753,21 +812,23 @@
         "amr_mobile_robot"
       ],
       "primary_class_ok": [
-        "inspection",
-        "service_robot"
+        "retail",
+        "inspection"
       ],
       "functions_required": [
         "inspection"
       ],
       "functions_ok": [],
-      "industries_required": [
-        "retail_grocery"
+      "industries_required": [],
+      "industries_any": [
+        "retail_store",
+        "grocery",
+        "shopping_mall"
       ],
-      "industries_any": [],
       "industries_must_not": [
         "construction"
       ],
-      "notes": "Shelf scanning = inspection. Note: taxonomy has no 'retail' primary class; flag in review if that is a gap."
+      "notes": "Shelf scanning = inspection function; primary class retail."
     },
     {
       "id": "del-01",
@@ -791,12 +852,15 @@
       "functions_ok": [],
       "industries_required": [],
       "industries_any": [
-        "education",
-        "retail_grocery",
-        "public_sector"
+        "college_university",
+        "grocery",
+        "retail_store",
+        "government",
+        "restaurant",
+        "qsr_fast_food"
       ],
       "industries_must_not": [
-        "healthcare_hospital"
+        "hospital"
       ],
       "notes": "Universities are a key buyer."
     },
@@ -822,14 +886,16 @@
         "general_purpose"
       ],
       "industries_required": [
-        "factory_manufacturing"
+        "manufacturing"
       ],
       "industries_any": [],
       "industries_must_not": [],
       "notes": "General-purpose arm, manufacturing-weighted.",
       "industries_ok_extra": [
         "food_manufacturing",
-        "warehouse_3pl"
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel"
       ]
     },
     {
@@ -855,11 +921,11 @@
       ],
       "industries_required": [],
       "industries_any": [
-        "factory_manufacturing",
+        "manufacturing",
         "food_manufacturing"
       ],
       "industries_must_not": [
-        "healthcare_hospital"
+        "hospital"
       ],
       "notes": "Service model, not a single robot. offering_type must be robotics_as_a_service."
     },
