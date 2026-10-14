@@ -452,7 +452,8 @@ def sam_gov_schedule(source_count: int, daily_limit: int | None = None) -> tuple
         return 0, 24 * 60
     calls = min(n, daily_limit)
     runs = max(1, daily_limit // calls)
-    interval = max(15, (24 * 60) // runs)
+    # Account for fencepost: N runs need N-1 intervals to stay within 24 hours
+    interval = max(15, (24 * 60) // max(1, runs - 1)) if runs > 1 else 24 * 60
     return calls, interval
 
 

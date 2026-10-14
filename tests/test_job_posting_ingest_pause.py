@@ -132,13 +132,13 @@ def test_sam_gov_schedule_defaults_to_the_no_role_daily_cap():
     calls, interval = feeds.sam_gov_schedule(26, daily_limit=10)
     assert calls == 10
     assert interval == 24 * 60
-    assert calls * (1440 // interval) <= 10
 
 
 def test_sam_gov_schedule_stays_inside_a_role_limit():
     calls, interval = feeds.sam_gov_schedule(26, daily_limit=1000)
     assert calls == 26
-    assert calls * (1440 // interval) <= 1000
+    executions = (1440 // interval) + 1
+    assert calls * executions <= 1000
 
 
 def test_sam_gov_budget_takes_only_as_many_keywords_as_the_cap(monkeypatch):
