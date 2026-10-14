@@ -613,3 +613,18 @@ describe("landing chrome hrefs cannot swap visits", () => {
     expect(FIND_JOBS_CTA).toBe("Find jobs →");
   });
 });
+
+describe("unsourced counts", () => {
+  it("home, About and the newsletter show no 3,000+ or 109+ counts", () => {
+    const files = [
+      "../lib/jobsLanding.ts",
+      "../components/JobsLanding.tsx",
+      "../pages/Intelligence.tsx",
+      "../pages/Newsletter.tsx",
+    ];
+    for (const f of files) {
+      const src = readFileSync(join(here, f), "utf8");
+      expect(src, f).not.toMatch(/3,000\+|109\+/);
+    }
+  });
+});

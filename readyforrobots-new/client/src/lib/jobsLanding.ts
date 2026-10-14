@@ -67,8 +67,6 @@ export const LANDING_HOW_STEPS = [
 ] as const;
 
 export const LANDING_STATS = [
-  { value: "3,000+", label: "Job Leads", pulse: true },
-  { value: "109+", label: "Benchmarked Humanoids", pulse: false },
   { value: "25", label: "Free Preview Leads", pulse: false },
 ] as const;
 
