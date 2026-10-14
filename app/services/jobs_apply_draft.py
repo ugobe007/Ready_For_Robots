@@ -100,10 +100,20 @@ def employer_contacts_from_job(job: dict[str, Any] | None) -> list[dict[str, str
     """Real emails already on the Job Card or stored public employer page. Never invent."""
     if not isinstance(job, dict):
         return []
+    from app.services.job_card_provenance import public_employer_email
+
     out: list[dict[str, str]] = []
     seen: set[str] = set()
     _walk_mapping(job, out, seen, "job_card")
-    return out
+    employer = next(
+        (
+            v
+            for v in (job.get("company_name"), job.get("employer_name"), job.get("employer"))
+            if isinstance(v, str) and v.strip()
+        ),
+        "",
+    )
+    return [c for c in out if public_employer_email(c["email"], employer)]
 
 
 def compose_apply_draft(

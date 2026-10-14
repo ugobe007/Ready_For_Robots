@@ -17,6 +17,12 @@ from pathlib import Path
 from typing import Any, Callable
 from urllib.parse import urlparse
 
+from app.services.job_card_provenance import (
+    buyer_rows,
+    is_example_job,
+    job_source_url,
+    public_employer_email,
+)
 from app.services.robot_capability_profile import (
     CapabilityProfile,
     CapabilitySignal,
@@ -68,89 +74,6 @@ ScrapeFn = Callable[[str], str]
 AnalyzeFn = Callable[[str, str], dict[str, Any]]
 
 
-def enrich_job_decision_maker(job: dict[str, Any]) -> dict[str, Any]:
-    """Ensure every job card has explicit Decision Maker Title, Name, Department, and Contact Info."""
-    title = (job.get("title") or "").lower()
-    industry = (job.get("industry") or "").lower()
-    company = (job.get("company_name") or "Employer").strip()
-
-    dm_name = job.get("decision_maker_name") or job.get("contact_name")
-    dm_title = job.get("decision_maker_title") or job.get("contact_title")
-    dm_dept = job.get("decision_maker_department")
-    dm_email = job.get("employer_email") or job.get("decision_maker_email")
-
-    if not dm_title:
-        if any(k in title or k in industry for k in ["clean", "scrub", "sanitiz", "janitor", "restroom", "floor", "concourse"]):
-            if "airport" in title or "airport" in industry:
-                dm_title = "Director of Airport Environmental Services (EVS)"
-                dm_dept = "Airport Operations & Facilities Maintenance"
-            elif "hospital" in title or "healthcare" in industry or "surgical" in industry:
-                dm_title = "Director of Infection Control & Facilities EVS"
-                dm_dept = "Healthcare Facilities & Environmental Services"
-            else:
-                dm_title = "Director of Property & Facilities Operations"
-                dm_dept = "Facilities Management"
-        elif any(k in title or k in industry for k in ["food", "tray", "restaurant", "dining", "dish", "prep", "bowl", "cafe", "bar"]):
-            if any(k in title for k in ["prep", "bowl", "kitchen"]):
-                dm_title = "Head of Kitchen Innovation & Culinary Automation"
-                dm_dept = "Culinary Operations & Technology"
-            else:
-                dm_title = "Vice President of Restaurant & Dining Operations"
-                dm_dept = "Hospitality & Restaurant Operations"
-        elif any(k in title or k in industry for k in ["hotel", "room service", "amenities", "guest", "resort"]):
-            dm_title = "Vice President of Hotel Operations & Guest Experience"
-            dm_dept = "Global Hotel Operations"
-        elif any(k in title or k in industry for k in ["amr", "tote", "cart", "warehouse", "logistics", "dc", "fulfillment", "parcel", "sort", "pallet", "transport"]):
-            dm_title = "Vice President of Supply Chain Engineering & Automation"
-            dm_dept = "Distribution & Supply Chain Technology"
-        elif any(k in title or k in industry for k in ["cnc", "machining", "laser", "cleanroom", "med device", "factory", "manufacturing", "assembly"]):
-            dm_title = "Director of Advanced Manufacturing Engineering (AME)"
-            dm_dept = "Manufacturing Operations Technology"
-        else:
-            dm_title = "Director of Operational Technology & Automation"
-            dm_dept = "Operations Technology"
-
-    if not dm_name:
-        company_clean = company.lower()
-        if "mall of america" in company_clean:
-            dm_name = "Marcus Vance"
-        elif "hmshost" in company_clean or "dfw" in company_clean:
-            dm_name = "Sarah Jenkins"
-        elif "cheesecake factory" in company_clean:
-            dm_name = "David Miller"
-        elif "marriott" in company_clean:
-            dm_name = "Elena Rostova"
-        elif "sanmar" in company_clean:
-            dm_name = "Robert Thorne"
-        elif "intuitive" in company_clean:
-            dm_name = "Dr. Arthur Pendelton"
-        elif "chipotle" in company_clean:
-            dm_name = "Carlos Rodriguez"
-        elif "compass group" in company_clean:
-            dm_name = "Amanda Prescott"
-        elif "napa" in company_clean or "replacement parts" in company_clean:
-            dm_name = "Jim Callahan"
-        elif "novolex" in company_clean or "pactiv" in company_clean:
-            dm_name = "Greg Harrison"
-        elif "fulcrum" in company_clean or "siemens" in company_clean:
-            dm_name = "Karl Weiss"
-        else:
-            dm_name = f"Operational Lead ({dm_title})"
-
-    if not dm_email:
-        clean_domain = company.lower().replace(" ", "").replace("/", "").replace("-", "").replace("(", "").replace(")", "")
-        dm_email = f"operations@{clean_domain}.com"
-
-    job["decision_maker_name"] = dm_name
-    job["decision_maker_title"] = dm_title
-    job["decision_maker_department"] = dm_dept
-    job["decision_maker_email"] = dm_email
-    job["employer_email"] = dm_email
-    job["contact_name"] = dm_name
-    job["contact_title"] = dm_title
-    return job
-
-
 @lru_cache(maxsize=1)
 def load_match_corpus() -> tuple[dict[str, Any], ...]:
     """Prefer bundled corpus (Fly); else assemble from demo + tape + ledger."""
@@ -158,7 +81,7 @@ def load_match_corpus() -> tuple[dict[str, Any], ...]:
         data = json.loads(CORPUS_PATH.read_text(encoding="utf-8"))
         jobs = data.get("jobs") or []
         if jobs:
-            return tuple(enrich_job_decision_maker(j) for j in jobs)
+            return buyer_rows(jobs)
 
     rows: list[dict[str, Any]] = []
 
@@ -274,8 +197,8 @@ def load_match_corpus() -> tuple[dict[str, Any], ...]:
         if not key or key in seen:
             continue
         seen.add(key)
-        out.append(enrich_job_decision_maker(row))
-    return tuple(out)
+        out.append(row)
+    return buyer_rows(out)
 
 
 def score_job(profile: CapabilityProfile, job: dict[str, Any]) -> tuple[float, list[str]]:
@@ -421,7 +344,7 @@ def match_jobs_for_profile(
     scored: list[tuple[float, dict[str, Any], list[str]]] = []
     from app.services.robot_job_live_corpus import merge_live_jobs
 
-    for job in merge_live_jobs(load_match_corpus()):
+    for job in buyer_rows(merge_live_jobs(load_match_corpus())):
         s, notes = score_job(profile, job)
         if s >= SCORE_THRESHOLD:
             scored.append((s, job, notes))
@@ -447,9 +370,13 @@ def match_jobs_for_profile(
                 "score": round(s, 2),
                 "unknowns": unknowns,
                 "source": job.get("source"),
-                "employer_email": job.get("employer_email"),
+                "employer_email": public_employer_email(
+                    job.get("employer_email"), job.get("company_name")
+                ),
                 "contact_url": job.get("contact_url"),
                 "apply_url": job.get("apply_url"),
+                "source_url": job_source_url(job),
+                "is_example": is_example_job(job),
             }
         )
 
