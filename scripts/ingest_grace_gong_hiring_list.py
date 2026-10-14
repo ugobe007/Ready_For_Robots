@@ -2,20 +2,36 @@
 """
 Ingest Grace Gong's Physical AI Hiring List into RFR monitoring.
 
+WARNING: This script was written before the supply-side / demand-side distinction
+was clarified. Under current guidance (CLAUDE.md v2):
+
+- Grace Gong lists track robot makers (SUPPLY SIDE)
+- Robot makers are NEVER buyer opportunities
+- This data is MARKET CONTEXT ONLY
+
+DO NOT RUN WITH --apply. The database writes create Company records tagged as
+"robotics_vendor" which could be confused with buyer opportunities.
+
+CURRENT USE: Run with --dry-run to generate market intelligence reports only.
+Reports are saved to docs/signals/supply_side_hiring.md for context.
+
+For buyer-side robotics hiring signals (automation roles at non-robot-makers),
+see the proposed implementation in HUMAN_JOB_LISTINGS_AUDIT_V2.md.
+
 Grace Gong publishes weekly "On My Radar" lists of physical AI companies
 actively hiring, ranked by % headcount growth in past 90 days. This is a
-high-signal deployment and employment indicator.
+high-signal deployment and employment indicator FOR SUPPLY-SIDE MARKET CONTEXT.
 
 This script:
-1. Cross-references the list against our companies database
-2. Adds new companies to our monitoring/scraping targets
-3. Generates a market intelligence report for docs/market_thesis.md
+1. Cross-references the list against our companies database (read-only by default)
+2. CAN add new companies to database with --apply (NOT RECOMMENDED - see WARNING above)
+3. Generates a market intelligence report for docs/signals/supply_side_hiring.md
 
 Source: https://www.linkedin.com/posts/grace-gong_physical-ai-companies-hiring-list-week-98-activity-xxxxx
 
 Usage:
-  python3 scripts/ingest_grace_gong_hiring_list.py --dry-run
-  python3 scripts/ingest_grace_gong_hiring_list.py --apply
+  python3 scripts/ingest_grace_gong_hiring_list.py --dry-run  # RECOMMENDED
+  python3 scripts/ingest_grace_gong_hiring_list.py --apply    # DO NOT USE (see WARNING)
 """
 from __future__ import annotations
 
