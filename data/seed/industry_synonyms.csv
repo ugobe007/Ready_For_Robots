@@ -1,0 +1,44 @@
+raw_value,industries,status,notes
+Manufacturing,manufacturing,mapped,
+Food Manufacturing & CPG,food_manufacturing,mapped,
+Food Processing & Manufacturing,food_manufacturing,mapped,
+Food Manufacturing (Contract Manufacturing),food_manufacturing,mapped,Co-packer
+Logistics & Warehousing,warehouse_distribution,mapped,
+Logistics & Warehousing (Cold Storage),warehouse_distribution,mapped,
+Logistics & Warehousing (3PL),3pl,mapped,
+Logistics & Supply Chain (3PL),3pl,mapped,
+Logistics & Fulfillment (3PL),3pl,mapped,
+Logistics & Freight,logistics_parcel,mapped,Taxonomy: freight carriers
+Food & Beverage Distribution,warehouse_distribution|logistics_parcel,mapped,Spec §5a: Sysco = warehouse_distribution / logistics_parcel
+Hospitality (Hotel Management),hotel,mapped,
+Hospitality (Hotels),hotel,mapped,
+Casinos & Gaming,casino,mapped,
+Healthcare (Hospital Systems),hospital,mapped,
+Healthcare (Skilled Nursing),senior_living,mapped,Taxonomy: long-term care
+Senior Living & Assisted Living,senior_living,mapped,
+Food Service (Restaurants),restaurant,mapped,
+Retail,retail_store,mapped,
+Cruise Lines,ships_maritime,mapped,
+Theme Parks & Entertainment,stadium_venue,mapped,Taxonomy: theme parks
+Government,government,mapped,
+Logistics,,needs_bob,"warehouse_distribution, 3pl or logistics_parcel?"
+Logistics & Supply Chain,,needs_bob,"warehouse_distribution, 3pl or logistics_parcel?"
+E-commerce & Logistics,,needs_bob,Retailer with its own DCs (retail_store or warehouse_distribution) or a 3PL?
+Retail logistics,,needs_bob,Retailer DCs: retail_store or warehouse_distribution?
+Retail & E-commerce,,needs_bob,retail_store or warehouse_distribution?
+Hospitality,,needs_bob,"hotel, casino, restaurant or bar_nightclub?"
+Entertainment & Hospitality,,needs_bob,"stadium_venue, casino or hotel?"
+Healthcare,,needs_bob,"hospital, surgery_center or senior_living?"
+Food Service,,needs_bob,"restaurant, qsr_fast_food or contract food service?"
+Food Service (Fast Casual),,needs_bob,restaurant or qsr_fast_food?
+Food Service & Catering,,needs_bob,No catering industry in the taxonomy
+Food Service & Hospitality,,needs_bob,"restaurant, hotel or casino?"
+Food Service & Facilities,,needs_bob,Contract food and facility services: no taxonomy industry
+Food Service & Distribution,,needs_bob,restaurant or warehouse_distribution?
+Facilities Services & Manufacturing Support,,needs_bob,Facility service contractor: no taxonomy industry
+Real Estate & Facilities,,needs_bob,"commercial_building, office_building or apartment_building?"
+Airports & Transportation,,needs_bob,airport or transportation_transit?
+Automotive,,needs_bob,Automaker (manufacturing) or dealership (automotive_dealership)?
+Unknown,,ignore,
+Other,,ignore,
+New,,ignore,
