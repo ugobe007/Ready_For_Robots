@@ -2,6 +2,8 @@
 
 This file is the **master charter** for autonomous development loops (Claude Agent SDK). It defines roles, priorities, gates, and how missions are run. Persistent rules live here and in `harness/` — not in one-off chat prompts.
 
+**Product source of truth: [`docs/buyer_opportunity_spec.md`](docs/buyer_opportunity_spec.md).** What RFR is, what a job is, and what gets built next come from the spec. If this file or any other doc disagrees with it, the spec wins. Changes to the spec need Bob's approval. If the spec is unclear, ask Bob; agents do not decide product meaning.
+
 ## Purpose
 
 Continuously improve **ReadyForRobots** toward product success by running closed loops:
@@ -18,19 +20,19 @@ Read `docs/product_market_fit.md`, **`docs/value_first_principle.md`**, and **`d
 
 **All agents optimize toward this outcome:**
 
-> ReadyForRobots is **recruitment and placement infrastructure for robotic labor**. The unit of value is the **Robot Job**. Customers register a robot as available for work and receive jobs it is qualified to perform. They keep those jobs in **native CRM** (`/pipeline?src=jobs_activate`) or HubSpot. A sale is an outcome of placement — not the object we optimize.
+> ReadyForRobots finds companies that are ready to buy or pilot robots, and tells robot sellers **which company, which workflow, and why now**. A **job** is work a robot can perform, which a company is moving to automate; a person may do it today. The unit of value is the **Robot Job** = company × workflow × readiness signals, shown as **Robot Job Cards** ("Robot Job Cards" keeps this meaning only). Job postings for people are never the product. Robot makers are supply, never buyers.
 
 | Lens | Question every mission must answer |
 |------|-----------------------------------|
-| **ICP** | Does this help a robot OEM/integrator **place robots into work**? |
-| **Activation** | Does this move URL → Job Cards → signup → unlocked jobs in CRM? |
-| **CRM path** | Does Jobs CRM stay on jobs (not SIGNAL buyers)? |
-| **Trust** | Are Job Cards real work with named employers, not invented economics? |
+| **ICP** | Does this help a robot seller find companies moving to automate work their robot can do? |
+| **Activation** | Does this move robot URL → Robot Job Cards (company, workflow, why now, matching robots)? |
+| **Workflow status** | Are workflows already committed to robots kept off the cards? |
+| **Trust** | Is every field on a card sourced or labeled Example? No invented buyers, dates, budgets or contacts. |
 | **Value proof** | Can an anonymous user see a Robot Job Card before signup? |
 
-Lead-quality north star (below) is **SIGNAL infrastructure**, not the product. Fix junk on that path; do not hop Jobs traffic onto HOT buyers.
+The lead-quality north star (below) applies to buyer names and signals: fix junk names before tuning ranking.
 
-**Hermes is retired (2026-08-26).** Do not spawn Hermes for FIND or Jobs. Do not follow [`docs/hermes_intelligence_bridge.md`](docs/hermes_intelligence_bridge.md) as production. The product loop is robot URL → Job Cards (`POST /api/robot-job-match`). Cursor **pstack** is the **Jobs release authority** (How / Act / Critic in [`pstack/`](pstack/README.md) + `scripts/pstack_release.py`). It is not a customer chatbot, not the matcher, and not protocol chrome on `/` or Jobs CRM. See [`docs/hermes_retired.md`](docs/hermes_retired.md) and [`docs/pstack_jobs.md`](docs/pstack_jobs.md). `.cursor/rules/pstack-jobs.mdc` + `.cursor/rules/pstack-rfr.mdc`. **No Jobs product PR without pstack release checks.**
+**Hermes is retired (2026-08-26).** Do not spawn Hermes for FIND or Jobs. Do not follow [`docs/hermes_intelligence_bridge.md`](docs/hermes_intelligence_bridge.md) as production. The current product loop is robot URL → Job Cards (`POST /api/robot-job-match`) until the spec's buyer-opportunity pipeline replaces it behind `RFR_BUYER_OPPORTUNITIES_V1`. Cursor **pstack** is the **Jobs release authority** (How / Act / Critic in [`pstack/`](pstack/README.md) + `scripts/pstack_release.py`). It is not a customer chatbot, not the matcher, and not protocol chrome on `/` or Jobs CRM. See [`docs/hermes_retired.md`](docs/hermes_retired.md) and [`docs/pstack_jobs.md`](docs/pstack_jobs.md). `.cursor/rules/pstack-jobs.mdc` + `.cursor/rules/pstack-rfr.mdc`. **No Jobs product PR without pstack release checks.**
 
 ## North star (strict priority)
 
