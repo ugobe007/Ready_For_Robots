@@ -184,9 +184,9 @@ Rules:
 ## 6. Workflow status and scoring
 
 **Status rules**
-- A `deployment` signal (or a matching `deployment_events` row with stage live/committed) sets that workflow to `committed`.
+- A `deployment` signal (or a matching `deployment_events` row with stage live/committed) sets that workflow to `committed`. `committed` is sticky: no later signal changes it.
 - `pilot_or_budget` sets `piloting` or `exploring` per the evidence.
-- `rfp_open` sets `exploring` unless already `committed`.
+- `rfp_open` sets `exploring`.
 - Otherwise `open` if any signal exists, else `unknown`.
 
 **Committed workflows are never shown as opportunities.** The card for that buyer can mention them ("already using cleaning robots"), which also tells the seller about adjacent workflows.
@@ -213,7 +213,7 @@ For a robot product R (current row, `page_type = manufacturer_product_page`):
 2. Candidate buyers = buyers with an industry in `R.industries` ∩ pilot industries **and** a workflow row in the candidate workflows whose status is not `committed`.
 3. If R has no industries, use the industries most common for its `primary_class` (config map), and label the card "industry inferred".
 4. Exclude `is_robot_maker` buyers.
-5. Rank per §6.
+5. Rank primary-function matches above all secondary matches; within each group, rank per §6.
 
 Reverse view (for the home page): opportunities sorted by §6, each listing the robot products that match its workflow and industry.
 
