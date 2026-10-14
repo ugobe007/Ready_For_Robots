@@ -928,6 +928,17 @@ export default function Signup() {
               </div>
               <button
                 type="button"
+                onClick={() => void oauth("google")}
+                disabled={!supabase || oauthPending !== null}
+                className="mt-5 flex w-full items-center justify-center gap-2  border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
+              >
+                <GoogleGlyph />
+                {oauthPending === "google"
+                  ? "Redirecting to Google..."
+                  : "Skip the wait — continue with Google"}
+              </button>
+              <button
+                type="button"
                 onClick={() => {
                   setStatus("idle");
                   setResendCooldown(0);
@@ -1029,7 +1040,7 @@ export default function Signup() {
                   type="button"
                   onClick={() => void oauth("google")}
                   disabled={!supabase || oauthPending !== null}
-                  className="flex w-full items-center justify-center gap-2  border border-emerald-500 px-4 py-3 text-sm font-bold text-emerald-300 transition-all hover:border-emerald-400 disabled:opacity-40"
+                  className="flex w-full items-center justify-center gap-2  border border-emerald-400 bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950 transition-all hover:bg-emerald-400 disabled:opacity-40"
                 >
                   <GoogleGlyph />
                   {oauthPending === "google"
@@ -1053,9 +1064,6 @@ export default function Signup() {
                     automatically · no password required
                   </p>
                 )}
-              </div>
-              <div className="mt-4  border border-cyan-700 px-4 py-3 text-xs text-cyan-300">
-                Microsoft sign in coming soon.
               </div>
               <div className="my-5 flex items-center gap-3">
                 <span className="h-px flex-1 bg-slate-700" />
@@ -1099,15 +1107,10 @@ export default function Signup() {
                 </button>
               </form>
               {!hubspotIntent && (
-                <div className="mt-4 text-center text-[11px] text-slate-400">
-                  <button
-                    type="button"
-                    disabled
-                    className="font-semibold text-slate-500 underline-offset-2 opacity-60"
-                  >
-                    Microsoft sign in coming soon.
-                  </button>
-                </div>
+                <p className="mt-3 text-center text-[11px] text-slate-400">
+                  Link slow to arrive? Google signs you in instantly — same
+                  account, nothing lost.
+                </p>
               )}
               <p className="mt-5 text-center text-xs text-slate-400">
                 Already have an account?{" "}

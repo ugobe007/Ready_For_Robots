@@ -488,9 +488,41 @@ def check_conversion_metrics(db=None) -> dict[str, Any]:
         except Exception:
             funnel_7d = {}
 
+        # Ground truth from Supabase auth.users — the email magic-link path silently
+        # stopped delivering on 2026-08-28 and the event table never noticed.
+        # Alert when email accounts are created but none confirm (delivery canary).
+        auth_email: dict[str, int] = {}
+        try:
+            row = db.execute(
+                text(
+                    """
+                    SELECT
+                      COUNT(*) FILTER (WHERE created_at >= now() - interval '14 days') AS created_14d,
+                      COUNT(*) FILTER (WHERE created_at >= now() - interval '14 days'
+                                         AND email_confirmed_at IS NOT NULL) AS confirmed_14d,
+                      COUNT(*) FILTER (WHERE email_confirmed_at IS NULL) AS unconfirmed_total
+                    FROM auth.users
+                    WHERE COALESCE(raw_app_meta_data->>'provider', 'email') = 'email'
+                    """
+                )
+            ).fetchone()
+            if row is not None:
+                auth_email = {
+                    "created_14d": int(row[0] or 0),
+                    "confirmed_14d": int(row[1] or 0),
+                    "unconfirmed_total": int(row[2] or 0),
+                }
+        except Exception:
+            try:
+                db.rollback()
+            except Exception:
+                pass
+            auth_email = {}
+
         block.update(
             {
                 "available": True,
+                "auth_email_14d": auth_email or None,
                 "signups_total": int(total_users),
                 "signups_7d": int(users_7d),
                 "paid_tier_users": int(paid_users),
@@ -506,6 +538,13 @@ def check_conversion_metrics(db=None) -> dict[str, Any]:
             }
         )
 
+        if auth_email.get("created_14d", 0) >= 3 and auth_email.get("confirmed_14d", 0) == 0:
+            block["alerts"].append(
+                f"Email sign-in delivery broken: {auth_email['created_14d']} email signups in 14d, 0 confirmed"
+            )
+            block["recommendations"].append(
+                "P0 operator: configure Supabase Auth custom SMTP (Resend) and re-invite unconfirmed email users."
+            )
         if users_7d == 0:
             block["alerts"].append("Zero new signups in 7 days — prioritize conversion missions")
             block["recommendations"].append(
