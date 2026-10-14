@@ -1,10 +1,15 @@
 {
   "id": "con-04",
+  "section": "robots",
   "company": "Canvas",
   "product": "Drywall finishing system",
-  "url": "https://www.canvas.build",
-  "final_url": "https://www.canvas.build",
-  "status_code": 0,
-  "fetch_date": "2026-10-13T22:16:11.385366Z",
-  "error": "HTTPSConnectionPool(host='www.canvas.build', port=443): Max retries exceeded with url: / (Caused by SSLError(SSLError(1, '[SSL: SSLV3_ALERT_HANDSHAKE_FAILURE] sslv3 alert handshake failure (_ssl.c:103"
+  "url": "https://www.jlg.com/en/canvas",
+  "original_url": "https://www.canvas.build",
+  "final_url": "https://www.jlg.com/en/canvas",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:40:43.415136Z",
+  "method": "playwright",
+  "word_count": 313,
+  "snapshot_status": "OK",
+  "error": null
 }

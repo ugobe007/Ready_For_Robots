@@ -1,0 +1,15 @@
+{
+  "id": "h-17",
+  "section": "robots",
+  "company": "Naio Technologies",
+  "product": "Naio weeding robots",
+  "url": "https://www.naio-technologies.com",
+  "original_url": null,
+  "final_url": "https://www.naio-technologies.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:37:20.010932Z",
+  "method": "playwright",
+  "word_count": 1004,
+  "snapshot_status": "OK",
+  "error": null
+}

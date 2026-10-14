@@ -1,0 +1,723 @@
+{
+  "name": "RFR robot classification HOLD-OUT set",
+  "version": "holdout-v1",
+  "date": "2026-10-13",
+  "taxonomy": "taxonomy.v1.json (v1.1)",
+  "purpose": "Fresh robots never used for prompt or rule changes. Measures real-world accuracy of the extractor after the rule changes (primary function, buyer-industry definition, unsupported-fact exclusion).",
+  "rules_for_use": [
+    "1. Snapshot all pages (use --render where blocked). Commit snapshots BEFORE running anything.",
+    "2. Score with the SAME frozen scorer and rules as robot_benchmark_set.v2.json. No scorer, prompt, or answer-key changes based on these results.",
+    "3. Run once with product hint and once without. Report both.",
+    "4. Report robots, taxonomy gap probes, and negative controls as three separate results. Never one blended percentage.",
+    "5. If any URL is wrong or dead, report it; do not substitute another company.",
+    "6. Industry = the industry of the organization that buys and operates the robot, not the building or project type."
+  ],
+  "special_cases": {
+    "buyer_industry_rule": [
+      "h-04",
+      "h-06",
+      "h-07",
+      "h-11"
+    ],
+    "food_mirror_of_chef": [
+      "h-14"
+    ],
+    "multi_product_sites": [
+      "h-02",
+      "h-07",
+      "h-08",
+      "h-15"
+    ],
+    "first_drones": [
+      "h-10",
+      "h-18"
+    ],
+    "defense_government": [
+      "h-09",
+      "h-10",
+      "h-11"
+    ],
+    "new_retail_class": [
+      "h-03"
+    ],
+    "non_us_copy": [
+      "h-15",
+      "h-17"
+    ],
+    "unmapped_relationships": [
+      "h-13"
+    ]
+  },
+  "robots": [
+    {
+      "id": "h-01",
+      "company": "Aethon",
+      "target_product": "TUG",
+      "url": "https://aethon.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "healthcare",
+        "delivery",
+        "service_robot"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "hospital"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "construction",
+        "restaurant"
+      ],
+      "notes": "Hospital delivery AMR. Baseline-style healthcare case."
+    },
+    {
+      "id": "h-02",
+      "company": "Keenon Robotics",
+      "target_product": "Keenon serving robots (T-series)",
+      "url": "https://www.keenon.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "service_robot"
+      ],
+      "functions_required": [
+        "serving_hospitality"
+      ],
+      "functions_ok": [
+        "delivery_transport",
+        "customer_interaction"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "restaurant",
+        "qsr_fast_food"
+      ],
+      "industries_must_not": [
+        "construction",
+        "manufacturing"
+      ],
+      "notes": "Multi-product site (serving, hotel delivery, cleaning). Score the serving robots only.",
+      "industries_ok_extra": [
+        "hotel",
+        "casino",
+        "senior_living",
+        "hospital"
+      ]
+    },
+    {
+      "id": "h-03",
+      "company": "Badger Technologies",
+      "target_product": "Badger retail robot",
+      "url": "https://www.badger-technologies.com",
+      "verified_url": true,
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "retail",
+        "inspection"
+      ],
+      "functions_required": [
+        "inspection"
+      ],
+      "functions_ok": [
+        "security_patrol"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "grocery",
+        "retail_store"
+      ],
+      "industries_must_not": [
+        "warehouse_distribution",
+        "hospital"
+      ],
+      "notes": "Shelf scanning and floor-hazard detection in grocery stores. First real test of the new retail class."
+    },
+    {
+      "id": "h-04",
+      "company": "Symbotic",
+      "target_product": "Symbotic warehouse automation system",
+      "url": "https://www.symbotic.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot",
+        "fixed_gantry_system"
+      ],
+      "primary_class_ok": [
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "picking_packing_palletizing"
+      ],
+      "functions_ok": [
+        "delivery_transport"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "3pl",
+        "grocery",
+        "retail_store"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hospital"
+      ],
+      "notes": "Buyer-definition test: customers are retailers/grocers operating their own distribution centers. Retail/grocery OR warehouse are both acceptable as buyer industry; restaurants/hospitals are not."
+    },
+    {
+      "id": "h-05",
+      "company": "Dexterity",
+      "target_product": "Mech",
+      "url": "https://www.dexterity.ai",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "mobile_manipulator"
+      ],
+      "primary_class_ok": [
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "picking_packing_palletizing"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "logistics_parcel",
+        "warehouse_distribution",
+        "3pl"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hospital"
+      ],
+      "notes": "Truck loading/unloading. Same function family as Stretch."
+    },
+    {
+      "id": "h-06",
+      "company": "Built Robotics",
+      "target_product": "Autonomous pile driving system",
+      "url": "https://www.builtrobotics.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "autonomous_vehicle_equipment",
+        "retrofit_kit_autonomy_software"
+      ],
+      "primary_class_ok": [
+        "construction"
+      ],
+      "functions_required": [
+        "construction_task"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "construction"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "hospital",
+        "restaurant"
+      ],
+      "notes": "Like Gritt: solar-farm construction. Buyer = construction contractor; energy_utilities allowed as extra.",
+      "industries_ok_extra": [
+        "energy_utilities"
+      ]
+    },
+    {
+      "id": "h-07",
+      "company": "Hilti",
+      "target_product": "Jaibot",
+      "url": "https://www.hilti.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "mixed_equipment_maker",
+        "robot_product"
+      ],
+      "form_ok": [
+        "mobile_manipulator"
+      ],
+      "primary_class_ok": [
+        "construction"
+      ],
+      "functions_required": [
+        "construction_task"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "construction"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "hospital",
+        "data_center",
+        "office_building"
+      ],
+      "notes": "KEY TEST of the buyer-industry rule: Jaibot drills ceilings on hospital, data center and office PROJECTS, but the buyer is the contractor. Also a tool maker with one robot product. Agent must locate and snapshot the Jaibot product page on hilti.com, not the homepage."
+    },
+    {
+      "id": "h-08",
+      "company": "Boston Dynamics",
+      "target_product": "Spot",
+      "url": "https://bostondynamics.com/products/spot",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "legged_robot"
+      ],
+      "primary_class_ok": [
+        "inspection"
+      ],
+      "functions_required": [
+        "inspection"
+      ],
+      "functions_ok": [
+        "security_patrol"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "energy_utilities",
+        "manufacturing",
+        "government",
+        "defense",
+        "construction"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hotel"
+      ],
+      "notes": "Multi-product site again, different product from Stretch."
+    },
+    {
+      "id": "h-09",
+      "company": "Ghost Robotics",
+      "target_product": "Vision 60",
+      "url": "https://www.ghostrobotics.io",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "legged_robot"
+      ],
+      "primary_class_ok": [
+        "security",
+        "inspection"
+      ],
+      "functions_required": [
+        "security_patrol"
+      ],
+      "functions_ok": [
+        "inspection"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "defense",
+        "government"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "retail_store"
+      ],
+      "notes": "Defense-market legged robot."
+    },
+    {
+      "id": "h-10",
+      "company": "Skydio",
+      "target_product": "Skydio X10 / Dock",
+      "url": "https://www.skydio.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "drone"
+      ],
+      "primary_class_ok": [
+        "inspection",
+        "security"
+      ],
+      "functions_required": [
+        "inspection"
+      ],
+      "functions_ok": [
+        "security_patrol"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "defense",
+        "government",
+        "energy_utilities"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hotel"
+      ],
+      "notes": "First drone in the benchmark."
+    },
+    {
+      "id": "h-11",
+      "company": "Saildrone",
+      "target_product": "Saildrone uncrewed surface vehicles",
+      "url": "https://www.saildrone.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robotics_as_a_service",
+        "robot_product"
+      ],
+      "form_ok": [
+        "autonomous_vehicle_equipment"
+      ],
+      "primary_class_ok": [
+        "inspection"
+      ],
+      "functions_required": [
+        "inspection"
+      ],
+      "functions_ok": [
+        "security_patrol"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "defense",
+        "government",
+        "research_lab"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "retail_store"
+      ],
+      "notes": "Operates at sea, but buyers are navies, agencies and researchers. ships_maritime acceptable as extra, not required.",
+      "industries_ok_extra": [
+        "ships_maritime"
+      ]
+    },
+    {
+      "id": "h-12",
+      "company": "Cartken",
+      "target_product": "Cartken delivery robots",
+      "url": "https://www.cartken.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "delivery"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "college_university",
+        "manufacturing",
+        "restaurant"
+      ],
+      "industries_must_not": [
+        "hospital"
+      ],
+      "notes": "Campus delivery plus industrial-campus material transport."
+    },
+    {
+      "id": "h-13",
+      "company": "Serve Robotics",
+      "target_product": "Serve sidewalk delivery robot",
+      "url": "https://www.serverobotics.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robotics_as_a_service",
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "delivery"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "restaurant",
+        "qsr_fast_food",
+        "retail_store",
+        "grocery"
+      ],
+      "industries_must_not": [
+        "hospital",
+        "construction"
+      ],
+      "notes": "Delivery-platform partnerships (e.g., Uber Eats) have no industry value; should go to unclassified_notes, not be forced."
+    },
+    {
+      "id": "h-14",
+      "company": "Hyphen",
+      "target_product": "Hyphen Makeline",
+      "url": "https://www.thehyphen.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "fixed_gantry_system",
+        "robotic_arm_cobot"
+      ],
+      "primary_class_ok": [
+        "food_robotics"
+      ],
+      "functions_required": [
+        "food_beverage_prep"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "qsr_fast_food",
+        "restaurant"
+      ],
+      "industries_must_not": [
+        "food_manufacturing"
+      ],
+      "notes": "Mirror of Chef Robotics: food assembly sold to RESTAURANTS. food_manufacturing is a fail."
+    },
+    {
+      "id": "h-15",
+      "company": "Gausium",
+      "target_product": "Gausium cleaning robots",
+      "url": "https://www.gausium.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "cleaning"
+      ],
+      "functions_required": [
+        "cleaning"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "airport",
+        "shopping_mall",
+        "office_building",
+        "commercial_building",
+        "hotel",
+        "hospital",
+        "manufacturing",
+        "warehouse_distribution",
+        "college_university"
+      ],
+      "industries_must_not": [
+        "restaurant"
+      ],
+      "notes": "Multi-product cleaning line; international copy."
+    },
+    {
+      "id": "h-16",
+      "company": "Path Robotics",
+      "target_product": "Path welding system",
+      "url": "https://www.path-robotics.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot"
+      ],
+      "primary_class_ok": [
+        "factory_industrial"
+      ],
+      "functions_required": [
+        "machine_tending_assembly"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "manufacturing"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "hospital",
+        "restaurant"
+      ],
+      "notes": "Welding must map to machine_tending_assembly (no separate welding value)."
+    },
+    {
+      "id": "h-17",
+      "company": "Naio Technologies",
+      "target_product": "Naio weeding robots",
+      "url": "https://www.naio-technologies.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "autonomous_vehicle_equipment"
+      ],
+      "primary_class_ok": [
+        "agriculture"
+      ],
+      "functions_required": [
+        "agricultural_task"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "agriculture"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "warehouse_distribution"
+      ],
+      "notes": "French site; tests non-US copy."
+    },
+    {
+      "id": "h-18",
+      "company": "Zipline",
+      "target_product": "Zipline drone delivery",
+      "url": "https://www.flyzipline.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robotics_as_a_service",
+        "robot_product"
+      ],
+      "form_ok": [
+        "drone"
+      ],
+      "primary_class_ok": [
+        "delivery"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "hospital",
+        "retail_store",
+        "restaurant",
+        "government"
+      ],
+      "industries_must_not": [
+        "construction"
+      ],
+      "notes": "Multi-industry drone delivery (health systems, retail, restaurants)."
+    }
+  ],
+  "taxonomy_gap_probes": [
+    {
+      "id": "gp-01",
+      "company": "Opentrons",
+      "target_product": "Opentrons lab robots",
+      "url": "https://opentrons.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "fixed_gantry_system",
+        "robotic_arm_cobot"
+      ],
+      "industries_required": [
+        "research_lab"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "restaurant",
+        "construction"
+      ],
+      "expected_gap": "Lab automation / liquid handling has no function or primary class value. PASS = unclassified_notes names the gap. Function and primary_class are not scored.",
+      "industries_ok_extra": [
+        "hospital"
+      ]
+    },
+    {
+      "id": "gp-02",
+      "company": "Intuitive Surgical",
+      "target_product": "da Vinci",
+      "url": "https://www.intuitive.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot"
+      ],
+      "industries_required": [
+        "hospital"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "restaurant",
+        "warehouse_distribution"
+      ],
+      "expected_gap": "Surgery has no function value. primary_class healthcare should still be scored. PASS = unclassified_notes names surgery as unmapped.",
+      "primary_class_ok": [
+        "healthcare"
+      ]
+    }
+  ],
+  "negative_controls": [
+    {
+      "id": "neg-h1",
+      "description": "A potential BUYER's site, not a robot maker",
+      "url": "https://www.marriott.com",
+      "expected": {
+        "offering_type": "non_robot",
+        "note": "Must not be classified as a robot product. (It is a buyer; that's the other side of the index.)"
+      }
+    },
+    {
+      "id": "neg-h2",
+      "description": "Robotics news site",
+      "url": "https://www.therobotreport.com",
+      "expected": {
+        "offering_type": "non_robot",
+        "note": "News coverage of many robots. Must not produce a single confident robot record."
+      }
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "id": "h-09",
+  "section": "robots",
+  "company": "Ghost Robotics",
+  "product": "Vision 60",
+  "url": "https://www.ghostrobotics.io",
+  "original_url": null,
+  "final_url": "https://www.ghostrobotics.io/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:35:55.246899Z",
+  "method": "playwright",
+  "word_count": 815,
+  "snapshot_status": "OK",
+  "error": null
+}

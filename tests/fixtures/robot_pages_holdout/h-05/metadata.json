@@ -1,0 +1,15 @@
+{
+  "id": "h-05",
+  "section": "robots",
+  "company": "Dexterity",
+  "product": "Mech",
+  "url": "https://www.dexterity.ai",
+  "original_url": null,
+  "final_url": "https://dexterity.ai/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:35:23.667782Z",
+  "method": "playwright",
+  "word_count": 349,
+  "snapshot_status": "OK",
+  "error": null
+}

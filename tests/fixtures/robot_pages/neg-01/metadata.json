@@ -1,10 +1,15 @@
 {
   "id": "neg-01",
-  "description": "Third-party news article about a robot company, not the company's own site",
+  "section": "negative_controls",
+  "company": "Press release about Gritt on a news wire, not the company's site",
+  "product": "",
   "url": "https://www.businesswire.com/news/home/20260720470414/en/",
+  "original_url": null,
   "final_url": "https://www.businesswire.com/news/home/20260720470414/en/",
-  "status_code": 403,
-  "fetch_date": "2026-10-13T22:17:00.463377Z",
-  "error": "HTTP 403",
-  "expected_behavior": "Should either extract Gritt facts with lower confidence and source_type=press, or flag 'not a product page'. Must NOT treat Business Wire as the robot company."
+  "status_code": 0,
+  "fetch_date": "2026-10-14T03:39:00.975145Z",
+  "method": "playwright",
+  "word_count": 0,
+  "snapshot_status": "FETCH_FAILED",
+  "error": "Page.goto: net::ERR_HTTP2_PROTOCOL_ERROR at https://www.businesswire.com/news/home/20260720470414/en/\nCall log:\n  - navigating to \"https://www.businesswire.com/news/home/20260720470414/en/\", waiting u"
 }

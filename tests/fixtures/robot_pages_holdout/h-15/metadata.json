@@ -1,0 +1,15 @@
+{
+  "id": "h-15",
+  "section": "robots",
+  "company": "Gausium",
+  "product": "Gausium cleaning robots",
+  "url": "https://www.gausium.com",
+  "original_url": null,
+  "final_url": "https://www.gausium.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:36:46.078076Z",
+  "method": "playwright",
+  "word_count": 2998,
+  "snapshot_status": "OK",
+  "error": null
+}

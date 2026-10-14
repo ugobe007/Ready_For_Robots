@@ -1,0 +1,15 @@
+{
+  "id": "h-16",
+  "section": "robots",
+  "company": "Path Robotics",
+  "product": "Path welding system",
+  "url": "https://www.path-robotics.com",
+  "original_url": null,
+  "final_url": "https://www.path-robotics.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:36:56.176869Z",
+  "method": "playwright",
+  "word_count": 766,
+  "snapshot_status": "OK",
+  "error": null
+}

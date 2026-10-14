@@ -1,10 +1,15 @@
 {
   "id": "ag-01",
+  "section": "robots",
   "company": "Burro",
-  "product": "Burro / Burro Grande",
+  "product": "Burro",
   "url": "https://burro.ai",
-  "final_url": "https://burro.ai/",
+  "original_url": null,
+  "final_url": "https://burro.ai/?ki-cf-botcl=1",
   "status_code": 403,
-  "fetch_date": "2026-10-13T22:16:41.088517Z",
+  "fetch_date": "2026-10-14T03:38:48.637605Z",
+  "method": "playwright",
+  "word_count": 0,
+  "snapshot_status": "FETCH_FAILED",
   "error": "HTTP 403"
 }

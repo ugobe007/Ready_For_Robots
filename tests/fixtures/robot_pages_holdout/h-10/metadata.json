@@ -1,0 +1,15 @@
+{
+  "id": "h-10",
+  "section": "robots",
+  "company": "Skydio",
+  "product": "Skydio X10 / Dock",
+  "url": "https://www.skydio.com",
+  "original_url": null,
+  "final_url": "https://www.skydio.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:36:04.782341Z",
+  "method": "playwright",
+  "word_count": 1481,
+  "snapshot_status": "OK",
+  "error": null
+}

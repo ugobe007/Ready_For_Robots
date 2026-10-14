@@ -1,0 +1,15 @@
+{
+  "id": "gp-02",
+  "section": "taxonomy_gap_probes",
+  "company": "Intuitive Surgical",
+  "product": "da Vinci",
+  "url": "https://www.intuitive.com",
+  "original_url": null,
+  "final_url": "https://www.intuitive.com/en-us",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:37:52.751091Z",
+  "method": "playwright",
+  "word_count": 1506,
+  "snapshot_status": "OK",
+  "error": null
+}

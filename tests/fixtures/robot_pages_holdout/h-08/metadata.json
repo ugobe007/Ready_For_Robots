@@ -1,0 +1,15 @@
+{
+  "id": "h-08",
+  "section": "robots",
+  "company": "Boston Dynamics",
+  "product": "Spot",
+  "url": "https://bostondynamics.com/products/spot",
+  "original_url": null,
+  "final_url": "https://bostondynamics.com/products/spot",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:35:44.285141Z",
+  "method": "playwright",
+  "word_count": 2182,
+  "snapshot_status": "OK",
+  "error": null
+}

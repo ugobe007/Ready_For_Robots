@@ -1,0 +1,15 @@
+{
+  "id": "neg-h1",
+  "section": "negative_controls",
+  "company": "A potential BUYER's site, not a robot maker",
+  "product": "",
+  "url": "https://news.marriott.com/",
+  "original_url": "https://www.marriott.com",
+  "final_url": "https://news.marriott.com/",
+  "status_code": 200,
+  "fetch_date": "2026-10-14T03:40:58.179469Z",
+  "method": "playwright",
+  "word_count": 704,
+  "snapshot_status": "OK",
+  "error": null
+}

@@ -1,10 +1,15 @@
 {
   "id": "hos-02",
+  "section": "robots",
   "company": "Pudu Robotics",
   "product": "BellaBot",
   "url": "https://www.pudurobotics.com",
+  "original_url": null,
   "final_url": "https://www.pudurobotics.com/en",
   "status_code": 200,
-  "fetch_date": "2026-10-13T22:16:15.566121Z",
+  "fetch_date": "2026-10-14T03:38:38.564529Z",
+  "method": "playwright",
+  "word_count": 784,
+  "snapshot_status": "OK",
   "error": null
 }
