@@ -562,7 +562,10 @@ async def run_specific_scraper(
             "check_leads": "/api/leads/summary",
         }
     from app.runtime_role import celery_disabled
+    from app.services.job_posting_ingest_pause import job_posting_ingest_paused
 
+    if scraper_type == "job_boards" and job_posting_ingest_paused():
+        raise HTTPException(status_code=409, detail="Job-posting ingest is paused (PAUSE_JOB_POSTING_INGEST).")
     if scraper_type == "job_boards" and celery_disabled():
         background_tasks.add_task(_run_job_board_scraper_sync)
         return {

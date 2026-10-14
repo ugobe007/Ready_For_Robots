@@ -11,6 +11,12 @@ from app.scrapers import opportunity_feed_scraper as feeds
 from app.scrapers.robot_opportunity_sources import OpportunitySource, catalog, summary
 
 
+@pytest.fixture(autouse=True)
+def _ingest_unpaused(monkeypatch):
+    """These tests cover the classify/persist path itself, which stays paused in production."""
+    monkeypatch.setenv("PAUSE_JOB_POSTING_INGEST", "0")
+
+
 @pytest.fixture()
 def db_session():
     engine = create_engine("sqlite:///:memory:", connect_args={"check_same_thread": False})

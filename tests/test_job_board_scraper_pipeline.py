@@ -1,6 +1,8 @@
 """Job-board Robot Job pipeline — Fly worker loop + industry URL resolution."""
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from app.runtime_role import celery_disabled
 from app.scrapers.job_board_scraper_enhanced import (
     EnhancedJobBoardScraper,
@@ -13,6 +15,12 @@ from app.services.job_board_scraper_runner import (
     run_job_board_scraper_sync,
     scheduled_industries,
 )
+
+
+@pytest.fixture(autouse=True)
+def _ingest_unpaused(monkeypatch):
+    """These tests cover the classify/persist path itself, which stays paused in production."""
+    monkeypatch.setenv("PAUSE_JOB_POSTING_INGEST", "0")
 
 
 def test_job_board_urls_match_lowercase_beat_kwargs():

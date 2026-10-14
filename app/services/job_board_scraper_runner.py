@@ -83,6 +83,11 @@ def run_job_board_scraper_sync(
     urls: Optional[Sequence[str]] = None,
 ) -> dict[str, Any]:
     """Scrape job boards in-process and persist Robot Jobs. Never raises for empty URL lists."""
+    from app.services.job_posting_ingest_pause import PAUSED_RESULT, job_posting_ingest_paused
+
+    if job_posting_ingest_paused():
+        logger.warning("Job board scraper paused (PAUSE_JOB_POSTING_INGEST)")
+        return {**PAUSED_RESULT, "industry": industry or "all"}
     from app.database import SessionLocal
     from app.scrapers.job_board_scraper_enhanced import EnhancedJobBoardScraper
 
@@ -115,6 +120,11 @@ def run_job_board_scraper_sync(
 
 def run_scheduled_job_board_cycle() -> dict[str, Any]:
     """One Beat-equivalent pass: each industry in isolation so one failure cannot abort the rest."""
+    from app.services.job_posting_ingest_pause import PAUSED_RESULT, job_posting_ingest_paused
+
+    if job_posting_ingest_paused():
+        logger.warning("Job board cycle paused (PAUSE_JOB_POSTING_INGEST)")
+        return dict(PAUSED_RESULT)
     results: list[dict[str, Any]] = []
     for industry in scheduled_industries():
         try:

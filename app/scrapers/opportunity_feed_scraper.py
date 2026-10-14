@@ -435,6 +435,11 @@ def run_sources(
 def run_opportunity_feeds(kinds: Optional[Iterable[str]] = None, max_sources: Optional[int] = None) -> dict[str, Any]:
     """Scheduled entry point: catalog API sources + discovered ATS boards."""
     from app.database import SessionLocal
+    from app.services.job_posting_ingest_pause import PAUSED_RESULT, job_posting_ingest_paused
+
+    if job_posting_ingest_paused():
+        logger.warning("Opportunity feeds paused (PAUSE_JOB_POSTING_INGEST)")
+        return dict(PAUSED_RESULT)
 
     cap = max_sources or int(os.getenv("OPPORTUNITY_FEEDS_MAX_SOURCES", "60"))
     db = SessionLocal()

@@ -630,7 +630,20 @@ class EnhancedJobBoardScraper(BaseScraper):
 
     def process_cards(self, cards: List[Dict[str, Any]], url: str) -> Dict[str, int]:
         """Classify + persist normalized job cards (HTML boards, ATS APIs, aggregators)."""
+        from app.services.job_posting_ingest_pause import job_posting_ingest_paused
+
         logger.info(f"[JobBoardScraper] Found {len(cards)} job postings from {url}")
+        if job_posting_ingest_paused():
+            logger.warning("[JobBoardScraper] paused (PAUSE_JOB_POSTING_INGEST); persisted 0 of %d", len(cards))
+            return {
+                "found": len(cards),
+                "robot_jobs": 0,
+                "signals_only": 0,
+                "skipped_relevancy": 0,
+                "skipped_no_company": 0,
+                "skipped_not_opportunity": 0,
+                "paused": True,
+            }
         skipped_no_company = skipped_relevancy = skipped_no_pain = 0
         kept_robot_job = kept_hire = 0
 
