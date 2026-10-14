@@ -1,0 +1,809 @@
+{
+  "name": "RFR robot classification HOLD-OUT set v2",
+  "version": "holdout-v2",
+  "date": "2026-10-13",
+  "taxonomy": "taxonomy.v1.json (v1.1)",
+  "purpose": "Fresh robots for measuring evidence-check v2, page-type detection, and the output-limit fix. Never used for any prompt, rule, or code change.",
+  "rules_for_use": [
+    "1. Freeze code and record the commit hash BEFORE snapshotting or running.",
+    "2. Snapshot with scripts/snapshot_pages.py --render into tests/fixtures/robot_pages_holdout_v2; commit snapshots before running.",
+    "3. Same frozen scorer and answer-key format as v1. Run once without the product hint (headline) and once with it.",
+    "4. Report robots, gap probes, and negative controls separately, per field, with blanked-field counts and a failure list by ID.",
+    "5. Report the page_type the extractor assigned for every entry; robots are expected to be manufacturer_product_page.",
+    "6. Dead or wrong URL: report it, fix with --url only if the same company's correct page exists, never substitute a company.",
+    "7. No changes to prompt, scorer, rules, or answer key based on these results."
+  ],
+  "special_cases": {
+    "buyer_industry_rule": [
+      "v2-02",
+      "v2-03",
+      "v2-12"
+    ],
+    "multi_product_or_parent_sites": [
+      "v2-01",
+      "v2-06",
+      "v2-08",
+      "v2-14",
+      "v2-16",
+      "v2-17"
+    ],
+    "offering_type_tests": [
+      "v2-12",
+      "v2-17",
+      "v2-18"
+    ],
+    "non_us_copy": [
+      "v2-07",
+      "v2-09",
+      "v2-19"
+    ],
+    "multiple_forms_accepted": [
+      "v2-10",
+      "v2-18"
+    ],
+    "drift_guard": [
+      "neg-v2-2"
+    ]
+  },
+  "robots": [
+    {
+      "id": "v2-01",
+      "company": "Geek+",
+      "target_product": "Geek+ warehouse robots",
+      "url": "https://www.geekplus.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "picking_packing_palletizing"
+      ],
+      "functions_ok": [
+        "delivery_transport"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "3pl",
+        "logistics_parcel",
+        "retail_store",
+        "manufacturing"
+      ],
+      "industries_must_not": [
+        "hospital",
+        "restaurant"
+      ],
+      "notes": "Multi-product warehouse line."
+    },
+    {
+      "id": "v2-02",
+      "company": "Exotec",
+      "target_product": "Skypod system",
+      "url": "https://www.exotec.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot",
+        "fixed_gantry_system"
+      ],
+      "primary_class_ok": [
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "picking_packing_palletizing"
+      ],
+      "functions_ok": [
+        "delivery_transport"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "3pl",
+        "retail_store",
+        "grocery"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hospital"
+      ],
+      "notes": "Mirror of Symbotic: retailers operating their own DCs. Retail or warehouse both acceptable."
+    },
+    {
+      "id": "v2-03",
+      "company": "OTTO Motors (Rockwell)",
+      "target_product": "OTTO autonomous mobile robots",
+      "url": "https://ottomotors.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "amr_logistics",
+        "factory_industrial"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "manufacturing"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "hospital",
+        "restaurant"
+      ],
+      "notes": "Material transport INSIDE factories: buyer is a manufacturer, not a warehouse.",
+      "industries_ok_extra": [
+        "warehouse_distribution"
+      ]
+    },
+    {
+      "id": "v2-04",
+      "company": "Seegrid",
+      "target_product": "Seegrid autonomous pallet trucks and tow tractors",
+      "url": "https://seegrid.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "autonomous_vehicle_equipment",
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "manufacturing",
+        "warehouse_distribution",
+        "3pl"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hospital"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "v2-05",
+      "company": "Vecna Robotics",
+      "target_product": "Vecna autonomous forklifts",
+      "url": "https://www.vecnarobotics.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "autonomous_vehicle_equipment",
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [
+        "picking_packing_palletizing"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "3pl",
+        "manufacturing"
+      ],
+      "industries_must_not": [
+        "hospital",
+        "restaurant"
+      ],
+      "notes": ""
+    },
+    {
+      "id": "v2-06",
+      "company": "Avride",
+      "target_product": "Avride sidewalk delivery robot",
+      "url": "https://www.avride.ai",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot",
+        "autonomous_vehicle_equipment"
+      ],
+      "primary_class_ok": [
+        "delivery"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "restaurant",
+        "qsr_fast_food",
+        "college_university",
+        "retail_store",
+        "grocery"
+      ],
+      "industries_must_not": [
+        "hospital",
+        "construction"
+      ],
+      "notes": "Multi-product (also robotaxis). Score the sidewalk delivery robot only."
+    },
+    {
+      "id": "v2-07",
+      "company": "SwarmFarm Robotics",
+      "target_product": "SwarmBot",
+      "url": "https://www.swarmfarm.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "autonomous_vehicle_equipment"
+      ],
+      "primary_class_ok": [
+        "agriculture"
+      ],
+      "functions_required": [
+        "agricultural_task"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "agriculture"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "warehouse_distribution"
+      ],
+      "notes": "Australian copy."
+    },
+    {
+      "id": "v2-08",
+      "company": "SoftBank Robotics",
+      "target_product": "SoftBank Robotics cleaning robots",
+      "url": "https://www.softbankrobotics.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service",
+        "mixed_equipment_maker"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "cleaning",
+        "service_robot"
+      ],
+      "functions_required": [
+        "cleaning"
+      ],
+      "functions_ok": [
+        "customer_interaction",
+        "delivery_transport"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "office_building",
+        "commercial_building",
+        "hotel",
+        "airport",
+        "retail_store",
+        "shopping_mall",
+        "college_university"
+      ],
+      "industries_must_not": [
+        "construction"
+      ],
+      "notes": "Site may present partner robots it distributes. If the page is mainly a reseller catalog, say so in unclassified_notes."
+    },
+    {
+      "id": "v2-09",
+      "company": "Robotise",
+      "target_product": "JEEVES hotel robot",
+      "url": "https://www.robotise.eu",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "service_robot",
+        "delivery"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [
+        "serving_hospitality",
+        "customer_interaction"
+      ],
+      "industries_required": [
+        "hotel"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "manufacturing",
+        "construction"
+      ],
+      "notes": "Hotel room-service/minibar robot (European)."
+    },
+    {
+      "id": "v2-10",
+      "company": "Asylon",
+      "target_product": "Asylon robotic security (drones and robot dogs)",
+      "url": "https://www.asylon.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robotics_as_a_service",
+        "robot_product"
+      ],
+      "form_ok": [
+        "drone",
+        "legged_robot"
+      ],
+      "primary_class_ok": [
+        "security"
+      ],
+      "functions_required": [
+        "security_patrol"
+      ],
+      "functions_ok": [
+        "inspection"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "corporate_campus",
+        "manufacturing",
+        "defense",
+        "government",
+        "data_center",
+        "energy_utilities"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hotel"
+      ],
+      "notes": "Security-as-a-service with two robot forms; either form accepted."
+    },
+    {
+      "id": "v2-11",
+      "company": "ExRobotics",
+      "target_product": "ExR explosion-proof inspection robot",
+      "url": "https://www.exrobotics.global",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "inspection"
+      ],
+      "functions_required": [
+        "inspection"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "energy_utilities"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hospital"
+      ],
+      "notes": "Oil and gas / chemical sites."
+    },
+    {
+      "id": "v2-12",
+      "company": "SafeAI",
+      "target_product": "SafeAI autonomy retrofit",
+      "url": "https://safeai.ai",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "autonomy_software"
+      ],
+      "form_ok": [
+        "retrofit_kit_autonomy_software"
+      ],
+      "primary_class_ok": [
+        "construction"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [
+        "construction_task"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "energy_utilities",
+        "construction"
+      ],
+      "industries_must_not": [
+        "hospital",
+        "restaurant",
+        "warehouse_distribution"
+      ],
+      "notes": "Buyer-industry test: mining operators = energy_utilities (definition includes mining). Offering must be autonomy_software."
+    },
+    {
+      "id": "v2-13",
+      "company": "Kewazo",
+      "target_product": "LIFTBOT scaffolding robot",
+      "url": "https://www.kewazo.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "fixed_gantry_system"
+      ],
+      "primary_class_ok": [
+        "construction"
+      ],
+      "functions_required": [
+        "construction_task"
+      ],
+      "functions_ok": [
+        "delivery_transport"
+      ],
+      "industries_required": [
+        "construction"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "hospital",
+        "restaurant"
+      ],
+      "notes": "Rail lift on scaffolding; industrial maintenance sites allowed as extra.",
+      "industries_ok_extra": [
+        "energy_utilities"
+      ]
+    },
+    {
+      "id": "v2-14",
+      "company": "UVD Robots (Blue Ocean Robotics)",
+      "target_product": "UVD Robot",
+      "url": "https://uvd.blue-ocean-robotics.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "healthcare"
+      ],
+      "functions_required": [
+        "disinfection"
+      ],
+      "functions_ok": [],
+      "industries_required": [
+        "hospital"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "construction",
+        "manufacturing"
+      ],
+      "notes": "Contrast with Xenex: autonomous, so amr_mobile_robot, not portable unit. Parent company has other products.",
+      "industries_ok_extra": [
+        "senior_living",
+        "airport",
+        "hotel"
+      ]
+    },
+    {
+      "id": "v2-15",
+      "company": "Ottonomy",
+      "target_product": "Ottobot delivery robot",
+      "url": "https://www.ottonomy.io",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "delivery"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "airport",
+        "hospital",
+        "college_university",
+        "restaurant",
+        "hotel"
+      ],
+      "industries_must_not": [
+        "construction"
+      ],
+      "notes": "Airport coverage."
+    },
+    {
+      "id": "v2-16",
+      "company": "Doosan Robotics",
+      "target_product": "Doosan cobots",
+      "url": "https://www.doosanrobotics.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot"
+      ],
+      "primary_class_ok": [
+        "factory_industrial",
+        "food_robotics"
+      ],
+      "functions_required": [
+        "machine_tending_assembly"
+      ],
+      "functions_ok": [
+        "food_beverage_prep",
+        "picking_packing_palletizing"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "manufacturing"
+      ],
+      "industries_must_not": [
+        "hospital"
+      ],
+      "notes": "Multi-industry arm: factory plus food & beverage solutions.",
+      "industries_ok_extra": [
+        "restaurant",
+        "qsr_fast_food",
+        "food_manufacturing"
+      ]
+    },
+    {
+      "id": "v2-17",
+      "company": "FANUC America",
+      "target_product": "FANUC industrial robots",
+      "url": "https://www.fanucamerica.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "mixed_equipment_maker"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot"
+      ],
+      "primary_class_ok": [
+        "factory_industrial"
+      ],
+      "functions_required": [
+        "machine_tending_assembly"
+      ],
+      "functions_ok": [
+        "picking_packing_palletizing"
+      ],
+      "industries_required": [
+        "manufacturing"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "restaurant",
+        "hospital"
+      ],
+      "notes": "Also sells CNC controls: mixed_equipment_maker acceptable.",
+      "industries_ok_extra": [
+        "food_manufacturing",
+        "warehouse_distribution"
+      ]
+    },
+    {
+      "id": "v2-18",
+      "company": "Gather AI",
+      "target_product": "Gather AI inventory monitoring",
+      "url": "https://www.gather.ai",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "autonomy_software"
+      ],
+      "form_ok": [
+        "drone",
+        "retrofit_kit_autonomy_software"
+      ],
+      "primary_class_ok": [
+        "inspection",
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "inspection"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "3pl"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hospital"
+      ],
+      "notes": "Drone or camera-on-forklift inventory scanning; either form accepted."
+    },
+    {
+      "id": "v2-19",
+      "company": "LionsBot",
+      "target_product": "LionsBot cleaning robots",
+      "url": "https://www.lionsbot.com",
+      "verified_url": false,
+      "expected_page_type": "manufacturer_product_page",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "cleaning"
+      ],
+      "functions_required": [
+        "cleaning"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "shopping_mall",
+        "airport",
+        "office_building",
+        "commercial_building",
+        "hotel",
+        "hospital",
+        "college_university"
+      ],
+      "industries_must_not": [
+        "construction"
+      ],
+      "notes": "Singapore copy."
+    }
+  ],
+  "taxonomy_gap_probes": [
+    {
+      "id": "gp2-01",
+      "company": "Nuro",
+      "target_product": "Nuro Driver",
+      "url": "https://www.nuro.ai",
+      "verified_url": false,
+      "offering_type_ok": [
+        "autonomy_software"
+      ],
+      "form_ok": [
+        "retrofit_kit_autonomy_software"
+      ],
+      "industries_required": [],
+      "industries_any": [],
+      "industries_must_not": [
+        "grocery",
+        "restaurant"
+      ],
+      "expected_gap": "Licenses autonomy to automakers/mobility companies: no matching industry value. PASS = notes name automotive/mobility as unmapped, and the old grocery/pizza delivery business is NOT tagged."
+    },
+    {
+      "id": "gp2-02",
+      "company": "Ekso Bionics",
+      "target_product": "Ekso exoskeletons",
+      "url": "https://eksobionics.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "primary_class_ok": [
+        "healthcare"
+      ],
+      "industries_required": [
+        "hospital"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "restaurant",
+        "warehouse_distribution"
+      ],
+      "expected_gap": "Wearable exoskeleton: no matching form value. PASS = notes name exoskeleton/wearable as unmapped. Form is not scored."
+    },
+    {
+      "id": "gp2-03",
+      "company": "Unitree Robotics",
+      "target_product": "Unitree quadrupeds and humanoids",
+      "url": "https://www.unitree.com",
+      "verified_url": false,
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "legged_robot",
+        "humanoid"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "research_lab",
+        "college_university"
+      ],
+      "industries_must_not": [
+        "restaurant"
+      ],
+      "expected_gap": "Sold largely as research/education/developer platforms: no fitting primary class. PASS = notes say so. Primary class and function not scored."
+    }
+  ],
+  "negative_controls": [
+    {
+      "id": "neg-v2-1",
+      "description": "Robot reseller catalog (many makers' robots)",
+      "url": "https://www.robotlab.com",
+      "expected": {
+        "page_type": "directory_or_multi_company",
+        "note": "Must not produce a confident single robot record or treat the reseller as the maker."
+      }
+    },
+    {
+      "id": "neg-v2-2",
+      "description": "Job board search for people (custodian jobs, Las Vegas)",
+      "url": "https://www.indeed.com/q-custodian-l-las-vegas,-nv-jobs.html",
+      "expected": {
+        "page_type": "directory_or_multi_company",
+        "offering_type": "non_robot",
+        "note": "Human job postings: no robot record, and never a buyer opportunity by itself. If blocked, report FETCH_FAILED; do not substitute."
+      }
+    }
+  ]
+}
