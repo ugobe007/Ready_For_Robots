@@ -270,6 +270,12 @@ def compute_per_field_accuracy(results: list[dict]) -> dict[str, float]:
     if not results:
         return {}
     
+    # Filter out fetch failures - they have no score
+    extraction_results = [r for r in results if r.get("bucket") != "FETCH_FAILED" and "score" in r]
+    
+    if not extraction_results:
+        return {}
+    
     field_totals = {
         "offering_type": 0,
         "form": 0,
@@ -278,17 +284,17 @@ def compute_per_field_accuracy(results: list[dict]) -> dict[str, float]:
         "industries": 0,
     }
     
-    for result in results:
+    for result in extraction_results:
         score = result.get("score", {})
         for field in field_totals:
             if score.get(field, {}).get("pass"):
                 field_totals[field] += 1
     
-    n = len(results)
+    n = len(extraction_results)
     accuracy = {field: count / n for field, count in field_totals.items()}
     
     # Overall = all fields pass
-    overall_pass = sum(1 for r in results if r.get("score", {}).get("robot_pass"))
+    overall_pass = sum(1 for r in extraction_results if r.get("score", {}).get("robot_pass"))
     accuracy["overall"] = overall_pass / n
     
     return accuracy

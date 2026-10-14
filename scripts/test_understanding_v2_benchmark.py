@@ -113,12 +113,20 @@ def test_robot(
     """
     robot_id = robot['id']
     url = robot['url']
-    product_name = robot.get('target_product') if use_product_hint else None
+    
+    # Handle negative controls which have different structure
+    is_negative_control = 'expected' in robot
+    if is_negative_control:
+        product_name = None
+        display_name = robot.get('description', robot_id)
+    else:
+        product_name = robot.get('target_product') if use_product_hint else None
+        display_name = f"{robot.get('company', 'Unknown')} - {robot.get('target_product', 'Unknown')}"
     
     print(f"\n{'='*80}")
-    print(f"Testing {robot_id}: {robot['company']} - {robot['target_product']}")
+    print(f"Testing {robot_id}: {display_name}")
     print(f"URL: {url}")
-    if use_product_hint:
+    if use_product_hint and product_name:
         print(f"Product hint: {product_name}")
     
     # Load snapshot
@@ -191,23 +199,30 @@ def test_robot(
         print(f"Functions: {[f.get('value') if isinstance(f, dict) else f for f in extracted.get('functions', [])]}")
         print(f"Industries: {[i.get('value') if isinstance(i, dict) else i for i in extracted.get('industries', [])]}")
         
-        # Score against expected
-        score = score_robot(extracted, robot)
-        
-        bucket = 'PASSED' if score['robot_pass'] else 'EXTRACTION_FAILED'
-        
-        if score['robot_pass']:
-            print(f"✅ PASSED")
+        # Score against expected (only for regular robots, not negative controls)
+        if not is_negative_control:
+            score = score_robot(extracted, robot)
+            
+            bucket = 'PASSED' if score['robot_pass'] else 'EXTRACTION_FAILED'
+            
+            if score['robot_pass']:
+                print(f"✅ PASSED")
+            else:
+                print(f"❌ FAILED:")
+                for field in ['offering_type', 'form', 'primary_class', 'functions', 'industries']:
+                    field_score = score[field]
+                    if not field_score['pass']:
+                        print(f"  - {field}: {field_score['reason']}")
         else:
-            print(f"❌ FAILED:")
-            for field in ['offering_type', 'form', 'primary_class', 'functions', 'industries']:
-                field_score = score[field]
-                if not field_score['pass']:
-                    print(f"  - {field}: {field_score['reason']}")
+            # For negative controls, just report extraction without scoring
+            print(f"ℹ️  Negative control extracted (scoring not implemented)")
+            score = None
+            bucket = 'EXTRACTION_FAILED'  # Placeholder
         
         return {
             'id': robot_id,
-            'company': robot['company'],
+            'company': robot.get('company', ''),
+            'description': robot.get('description', ''),
             'url': url,
             'bucket': bucket,
             'score': score,
@@ -215,6 +230,7 @@ def test_robot(
             'snapshot_date': metadata.get('fetch_date'),
             'elapsed_sec': elapsed,
             'used_product_hint': use_product_hint,
+            'is_negative_control': is_negative_control,
         }
         
     except Exception as e:
@@ -223,12 +239,14 @@ def test_robot(
         traceback.print_exc()
         return {
             'id': robot_id,
-            'company': robot['company'],
+            'company': robot.get('company', ''),
+            'description': robot.get('description', ''),
             'url': url,
             'bucket': 'EXTRACTION_FAILED',
             'error': str(e),
-            'snapshot_date': snapshot['metadata'].get('fetch_date'),
+            'snapshot_date': snapshot['metadata'].get('fetch_date') if snapshot else None,
             'used_product_hint': use_product_hint,
+            'is_negative_control': is_negative_control,
         }
 
 
@@ -249,14 +267,18 @@ def main():
     print(f"Benchmark version: {benchmark['version']}")
     print(f"Taxonomy: {taxonomy['name']} {taxonomy['version']}")
     print(f"Total robots: {len(benchmark['robots'])}")
+    print(f"Negative controls: {len(benchmark.get('negative_controls', []))}")
     print(f"Using snapshots from {FIXTURES_DIR}")
     print()
     
-    # Filter robots if --robot specified
-    robots_to_test = benchmark['robots']
+    # Combine robots and negative controls for testing
+    all_test_cases = benchmark['robots'] + benchmark.get('negative_controls', [])
+    
+    # Filter if --robot specified
+    cases_to_test = all_test_cases
     if args.robot:
-        robots_to_test = [r for r in robots_to_test if r['id'] == args.robot]
-        if not robots_to_test:
+        cases_to_test = [r for r in all_test_cases if r['id'] == args.robot]
+        if not cases_to_test:
             print(f"❌ ID '{args.robot}' not found in benchmark")
             return 1
     
@@ -266,7 +288,7 @@ def main():
     print("="*80)
     
     results_with_hint = []
-    for robot in robots_to_test:
+    for robot in cases_to_test:
         result = test_robot(robot, use_product_hint=True)
         results_with_hint.append(result)
     

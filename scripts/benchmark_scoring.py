@@ -198,16 +198,39 @@ def score_capabilities(
         # Get acceptable ontology terms for this benchmark capability
         acceptable_terms = CAPABILITY_MAP.get(expected_norm, [expected_norm])
         
-        # Find the first extracted capability that matches and hasn't been used
+        # Find the first non-generic extracted capability that matches and hasn't been used
+        matched_term = None
+        matched_idx = None
+        
         for term in acceptable_terms:
+            # Skip generic terms during matching, not after
+            if term in GENERIC_TERMS:
+                continue
             for i, ext in enumerate(extracted_norm):
                 if i not in used_extracted and (term in ext or ext in term):
-                    matched.append(expected_cap)
-                    matched_via[expected_cap] = ext
-                    used_extracted.add(i)
+                    matched_term = term
+                    matched_idx = i
                     break
-            if expected_cap in matched:
+            if matched_term:
                 break
+        
+        # If no non-generic match found, try generic terms as fallback
+        if not matched_term:
+            for term in acceptable_terms:
+                if term not in GENERIC_TERMS:
+                    continue
+                for i, ext in enumerate(extracted_norm):
+                    if i not in used_extracted and (term in ext or ext in term):
+                        matched_term = term
+                        matched_idx = i
+                        break
+                if matched_term:
+                    break
+        
+        if matched_term and matched_idx is not None:
+            matched.append(expected_cap)
+            matched_via[expected_cap] = extracted_norm[matched_idx]
+            used_extracted.add(matched_idx)
     
     # Count only non-generic matches toward threshold
     non_generic_matches = [

@@ -43,7 +43,7 @@ def extract_text(html: str) -> str:
         return ""
 
 
-def fetch_page(url: str, timeout: int = 10) -> dict[str, Any]:
+def fetch_page(url: str, timeout: int = 10, use_browser_agent: bool = False) -> dict[str, Any]:
     """
     Fetch a URL and return metadata + content.
     
@@ -58,9 +58,14 @@ def fetch_page(url: str, timeout: int = 10) -> dict[str, Any]:
             "error": error message if failed,
         }
     """
-    headers = {
-        "User-Agent": "Mozilla/5.0 (compatible; ReadyForRobotsCrawler/1.0)",
-    }
+    if use_browser_agent:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        }
+    else:
+        headers = {
+            "User-Agent": "Mozilla/5.0 (compatible; ReadyForRobotsCrawler/1.0)",
+        }
     
     result = {
         "url": url,
@@ -99,7 +104,7 @@ def fetch_page(url: str, timeout: int = 10) -> dict[str, Any]:
         return result
 
 
-def snapshot_robot(robot: dict[str, Any], output_dir: Path) -> dict[str, Any]:
+def snapshot_robot(robot: dict[str, Any], output_dir: Path, use_browser_agent: bool = False) -> dict[str, Any]:
     """
     Snapshot one robot's page.
     
@@ -111,7 +116,7 @@ def snapshot_robot(robot: dict[str, Any], output_dir: Path) -> dict[str, Any]:
     print(f"Fetching {robot_id}: {robot['company']} - {url}")
     
     # Fetch
-    result = fetch_page(url)
+    result = fetch_page(url, use_browser_agent=use_browser_agent)
     
     # Write files
     robot_dir = output_dir / robot_id
@@ -175,52 +180,69 @@ def main():
     
     # Filter robots if --robots specified
     robots_to_fetch = benchmark["robots"]
+    negative_controls_to_fetch = benchmark.get("negative_controls", [])
+    
     if args.robots:
         robot_ids = set(args.robots)
         robots_to_fetch = [r for r in robots_to_fetch if r['id'] in robot_ids]
-        print(f"Fetching specific robots: {', '.join(args.robots)}")
+        negative_controls_to_fetch = [n for n in negative_controls_to_fetch if n['id'] in robot_ids]
+        print(f"Fetching specific IDs: {', '.join(args.robots)}")
     else:
         print(f"Total robots: {len(robots_to_fetch)}")
+        print(f"Negative controls: {len(negative_controls_to_fetch)}")
     
     print(f"Output directory: {FIXTURES_DIR}")
     print()
     
-    manifest = {
-        "snapshot_date": datetime.utcnow().isoformat() + "Z",
-        "benchmark_version": benchmark["version"],
-        "robots": [],
-    }
+    # Load existing manifest if it exists
+    manifest_path = FIXTURES_DIR / "manifest.json"
+    if manifest_path.exists():
+        with open(manifest_path, "r") as f:
+            manifest = json.load(f)
+    else:
+        manifest = {
+            "snapshot_date": datetime.utcnow().isoformat() + "Z",
+            "benchmark_version": benchmark["version"],
+            "robots": [],
+        }
+    
+    # Update snapshot date
+    manifest["snapshot_date"] = datetime.utcnow().isoformat() + "Z"
+    
+    # Build a dict of existing entries for merging
+    existing_entries = {r["id"]: r for r in manifest.get("robots", [])}
     
     # Snapshot each robot
     for robot in robots_to_fetch:
         try:
-            metadata = snapshot_robot(robot, FIXTURES_DIR)
-            manifest["robots"].append(metadata)
+            metadata = snapshot_robot(robot, FIXTURES_DIR, use_browser_agent=args.render)
+            existing_entries[metadata["id"]] = metadata
             # Be nice to servers
             time.sleep(1)
         except Exception as e:
             print(f"  ✗ Error: {e}")
-            manifest["robots"].append({
+            existing_entries[robot["id"]] = {
                 "id": robot["id"],
                 "company": robot["company"],
                 "url": robot["url"],
                 "status_code": 0,
                 "error": str(e)[:200],
-            })
+            }
     
     # Snapshot negative controls
-    print("\n" + "=" * 80)
-    print("Negative Controls")
-    print("=" * 80)
+    if negative_controls_to_fetch:
+        print("\n" + "=" * 80)
+        print("Negative Controls")
+        print("=" * 80)
     
-    for i, neg in enumerate(benchmark.get("negative_controls", [])):
+    for neg in negative_controls_to_fetch:
         robot_id = neg["id"]
         url = neg["url"]
         
         print(f"Fetching {robot_id}: {neg['description'][:50]}... - {url}")
         
         try:
-            result = fetch_page(url)
+            result = fetch_page(url, use_browser_agent=args.render)
             
             robot_dir = FIXTURES_DIR / robot_id
             robot_dir.mkdir(parents=True, exist_ok=True)
@@ -241,6 +263,8 @@ def main():
             
             (robot_dir / "metadata.json").write_text(json.dumps(metadata, indent=2), encoding="utf-8")
             
+            existing_entries[robot_id] = metadata
+            
             status = "✓" if result.get("status_code") == 200 else "✗"
             print(f"  {status} HTTP {result.get('status_code', 0)}")
             
@@ -249,8 +273,10 @@ def main():
         except Exception as e:
             print(f"  ✗ Error: {e}")
     
+    # Rebuild manifest with merged entries
+    manifest["robots"] = list(existing_entries.values())
+    
     # Write manifest
-    manifest_path = FIXTURES_DIR / "manifest.json"
     with open(manifest_path, "w") as f:
         json.dump(manifest, f, indent=2)
     
