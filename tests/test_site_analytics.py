@@ -15,6 +15,9 @@ from app.services.site_analytics_service import (
     EVENT_FIRST_SAVE,
     EVENT_SIGNUP_COMPLETE,
     EVENT_SIGNUP_START,
+    EVENT_SIGNUP_BLOCKED,
+    EVENT_SIGNUP_METHOD_CLICK,
+    SIGNUP_FUNNEL_STAGES,
     EVENT_URL_SCAN,
     EVENT_VISIT,
     aggregate_site_metrics,
@@ -99,6 +102,28 @@ def test_signup_funnel_metrics_counts_and_rates(db_session):
     assert funnel["start_to_complete_rate"] == 50.0
     assert funnel["complete_to_save_rate"] == 50.0
     assert funnel["start_to_save_rate"] == 25.0
+
+
+def test_signup_funnel_metrics_decision_point(db_session):
+    cutoff = datetime.now(timezone.utc) - timedelta(days=30)
+    for _ in range(4):
+        record_site_event(db_session, EVENT_SIGNUP_START, {"src": "jobs_activate"})
+    record_site_event(db_session, EVENT_SIGNUP_METHOD_CLICK, {"method": "google"})
+    record_site_event(db_session, EVENT_SIGNUP_METHOD_CLICK, {"method": "email"})
+    record_site_event(db_session, EVENT_SIGNUP_BLOCKED, {"reason": "provider_error"})
+    record_site_event(db_session, EVENT_SIGNUP_COMPLETE, {})
+
+    funnel = signup_funnel_metrics(db_session, cutoff=cutoff)
+
+    assert funnel["method_click"] == 2
+    assert funnel["blocked"] == 1
+    assert funnel["start_to_click_rate"] == 50.0
+    assert funnel["click_to_complete_rate"] == 50.0
+
+
+def test_new_decision_point_stages_are_accepted():
+    assert EVENT_SIGNUP_METHOD_CLICK in SIGNUP_FUNNEL_STAGES
+    assert EVENT_SIGNUP_BLOCKED in SIGNUP_FUNNEL_STAGES
 
 
 def test_signup_funnel_metrics_zero_safe(db_session):

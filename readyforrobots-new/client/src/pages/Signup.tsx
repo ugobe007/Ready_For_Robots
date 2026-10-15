@@ -17,6 +17,9 @@ import {
   readSupplyAttribution,
   trackSupplyConversion,
   trackSignupStart,
+  trackSignupMethodClick,
+  trackSignupBlocked,
+  type SignupMethod,
 } from "@/lib/siteAnalytics";
 import {
   clearSupabaseOAuthParams,
@@ -483,13 +486,31 @@ export default function Signup() {
     };
   }, [hubspotIntent, buyerCo, robotJobsIntent]);
 
+  /** Decision-point context: which entry path the click/block came from. */
+  const funnelCtx = () => ({
+    src: params.get("src") || null,
+    next: params.get("next") || null,
+  });
+  const noteBlocked = (
+    method: SignupMethod,
+    reason: string,
+    message?: string
+  ) =>
+    trackSignupBlocked(method, reason, {
+      ...funnelCtx(),
+      message: message ? message.slice(0, 200) : null,
+    });
+
   async function oauth(provider: "google" | "github" | "azure") {
+    trackSignupMethodClick(provider, funnelCtx());
     if (!supabase) {
+      noteBlocked(provider, "auth_unavailable");
       setStatus("error");
       setErrMsg(AUTH_UNAVAILABLE_MSG);
       return;
     }
     if (hubspotIntent && !fullName.trim()) {
+      noteBlocked(provider, "full_name_missing");
       setStatus("error");
       setErrMsg(
         "Enter your full name so SIGNAL can authenticate your HubSpot workspace."
@@ -500,6 +521,7 @@ export default function Signup() {
       matchedUnlockIntent &&
       !isRobotWorkspaceProfileComplete(workspaceProfile)
     ) {
+      noteBlocked(provider, "workspace_profile_incomplete");
       setStatus("error");
       setErrMsg(
         "Add company name, robot category, and ICP before creating your account."
@@ -523,6 +545,7 @@ export default function Signup() {
       options: { redirectTo: supabaseOAuthRedirect(intendedPostAuthPath) },
     });
     if (error) {
+      noteBlocked(provider, "provider_error", error.message);
       setOauthPending(null);
       setStatus("error");
       setErrMsg(
@@ -551,6 +574,7 @@ export default function Signup() {
     }
     const reason = authEmailRejectReason(email);
     if (reason) {
+      noteBlocked("email", "email_rejected", reason);
       setStatus("error");
       setErrMsg(reason);
       return false;
@@ -564,6 +588,7 @@ export default function Signup() {
       options: { emailRedirectTo: redirectTo },
     });
     if (error) {
+      noteBlocked("email", "provider_error", error.message);
       setStatus("error");
       setErrMsg(error.message);
       return false;
@@ -579,7 +604,9 @@ export default function Signup() {
       return;
     }
     if (!email.trim()) return;
+    trackSignupMethodClick("email", funnelCtx());
     if (hubspotIntent && !fullName.trim()) {
+      noteBlocked("email", "full_name_missing");
       setStatus("error");
       setErrMsg(
         "Enter your full name so SIGNAL can authenticate your HubSpot workspace."
@@ -590,6 +617,7 @@ export default function Signup() {
       matchedUnlockIntent &&
       !isRobotWorkspaceProfileComplete(workspaceProfile)
     ) {
+      noteBlocked("email", "workspace_profile_incomplete");
       setStatus("error");
       setErrMsg(
         "Add company name, robot category, and ICP before creating your account."

@@ -30,8 +30,19 @@ EVENT_SUPPLY_SIGNUP_COMPLETE = "supply_signup_complete"
 EVENT_SIGNUP_START = "signup_start"
 EVENT_SIGNUP_COMPLETE = "signup_complete"
 EVENT_FIRST_SAVE = "first_save"
+# Decision-point events (2026-10-15): did the visitor click a sign-in method, and
+# did anything stop them (client gate or provider error)? start→complete was
+# 87→1 with no way to tell "never clicked" from "clicked and failed".
+EVENT_SIGNUP_METHOD_CLICK = "signup_method_click"
+EVENT_SIGNUP_BLOCKED = "signup_blocked"
 
-SIGNUP_FUNNEL_STAGES = (EVENT_SIGNUP_START, EVENT_SIGNUP_COMPLETE, EVENT_FIRST_SAVE)
+SIGNUP_FUNNEL_STAGES = (
+    EVENT_SIGNUP_START,
+    EVENT_SIGNUP_COMPLETE,
+    EVENT_FIRST_SAVE,
+    EVENT_SIGNUP_METHOD_CLICK,
+    EVENT_SIGNUP_BLOCKED,
+)
 
 
 def record_site_event(db: Session, event_type: str, payload: dict[str, Any] | None = None) -> None:
@@ -290,6 +301,10 @@ def signup_funnel_metrics(
             "signup_start": 0,
             "signup_complete": 0,
             "first_save": 0,
+            "method_click": 0,
+            "blocked": 0,
+            "start_to_click_rate": 0.0,
+            "click_to_complete_rate": 0.0,
             "start_to_complete_rate": 0.0,
             "complete_to_save_rate": 0.0,
             "start_to_save_rate": 0.0,
@@ -298,12 +313,18 @@ def signup_funnel_metrics(
     start, prev_start = _count_events(db, EVENT_SIGNUP_START, cutoff, prev_cutoff)
     complete, prev_complete = _count_events(db, EVENT_SIGNUP_COMPLETE, cutoff, prev_cutoff)
     first_save, prev_save = _count_events(db, EVENT_FIRST_SAVE, cutoff, prev_cutoff)
+    clicks, prev_clicks = _count_events(db, EVENT_SIGNUP_METHOD_CLICK, cutoff, prev_cutoff)
+    blocked, prev_blocked = _count_events(db, EVENT_SIGNUP_BLOCKED, cutoff, prev_cutoff)
 
     return {
         "available": True,
         "signup_start": start,
         "signup_complete": complete,
         "first_save": first_save,
+        "method_click": clicks,
+        "blocked": blocked,
+        "start_to_click_rate": _rate(clicks, start),
+        "click_to_complete_rate": _rate(complete, clicks),
         "start_to_complete_rate": _rate(complete, start),
         "complete_to_save_rate": _rate(first_save, complete),
         "start_to_save_rate": _rate(first_save, start),
@@ -311,6 +332,8 @@ def signup_funnel_metrics(
             "signup_start": prev_start,
             "signup_complete": prev_complete,
             "first_save": prev_save,
+            "method_click": prev_clicks,
+            "blocked": prev_blocked,
         },
     }
 

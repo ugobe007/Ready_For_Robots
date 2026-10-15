@@ -477,7 +477,8 @@ def check_conversion_metrics(db=None) -> dict[str, Any]:
                     """
                     SELECT event_type, COUNT(*) AS n
                     FROM site_analytics_events
-                    WHERE event_type IN ('signup_start', 'signup_complete', 'first_save')
+                    WHERE event_type IN ('signup_start', 'signup_complete', 'first_save',
+                                         'signup_method_click', 'signup_blocked')
                       AND created_at >= :since
                     GROUP BY event_type
                     """
@@ -534,6 +535,8 @@ def check_conversion_metrics(db=None) -> dict[str, Any]:
                     "signup_start": funnel_7d.get("signup_start", 0),
                     "signup_complete": funnel_7d.get("signup_complete", 0),
                     "first_save": funnel_7d.get("first_save", 0),
+                    "method_click": funnel_7d.get("signup_method_click", 0),
+                    "blocked": funnel_7d.get("signup_blocked", 0),
                 },
             }
         )
@@ -664,6 +667,10 @@ def render_daily_report_markdown(
         lines.append(
             f"- **Signup funnel (7d):** start {start} → complete {complete} ({s2c}) "
             f"→ first-save {saved} ({c2s})"
+        )
+        lines.append(
+            f"- **Signup decision point (7d):** method clicks {funnel.get('method_click', 0)} "
+            f"· blocked/errored {funnel.get('blocked', 0)}"
         )
         lines.append("")
     else:

@@ -88,13 +88,66 @@ export function trackRobotJobsFunnel(
  * Buyer signup funnel (conversion board #20): browse → signup → activate.
  * signup_start (intent) → signup_complete (account) → first_save (activated).
  */
-export type FunnelStage = "signup_start" | "signup_complete" | "first_save";
+export type FunnelStage =
+  | "signup_start"
+  | "signup_complete"
+  | "first_save"
+  | "signup_method_click"
+  | "signup_blocked";
+
+/**
+ * Per-tab funnel session id. sessionStorage survives the same-tab OAuth
+ * round-trip, so signup_start → method_click → signup_complete share one id
+ * and the funnel can be joined instead of compared as unrelated counts.
+ */
+function funnelSessionId(): string | null {
+  if (typeof window === "undefined") return null;
+  const key = "rfr_funnel_sid";
+  try {
+    const existing = window.sessionStorage.getItem(key);
+    if (existing) return existing;
+    const sid =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    window.sessionStorage.setItem(key, sid);
+    return sid;
+  } catch {
+    return null;
+  }
+}
 
 export function trackFunnelStage(
   stage: FunnelStage,
   payload: Record<string, unknown> = {}
 ) {
-  postEvent("/api/track/funnel", { stage, ...payload });
+  postEvent("/api/track/funnel", {
+    stage,
+    funnel_sid: funnelSessionId(),
+    ...payload,
+  });
+}
+
+export type SignupMethod = "google" | "github" | "azure" | "email";
+
+/** Visitor clicked a sign-in method on /signup (fires on every click). */
+export function trackSignupMethodClick(
+  method: SignupMethod,
+  payload: Record<string, unknown> = {}
+) {
+  trackFunnelStage("signup_method_click", { method, ...payload });
+}
+
+/**
+ * A sign-in attempt was stopped: a client-side gate (missing name / profile,
+ * invalid email) or a provider error. `reason` is a short stable code.
+ */
+export function trackSignupBlocked(
+  method: SignupMethod,
+  reason: string,
+  payload: Record<string, unknown> = {}
+) {
+  trackFunnelStage("signup_blocked", { method, reason, ...payload });
 }
 
 /** Fire an event at most once per browser (dedupes completion/activation across reloads). */
