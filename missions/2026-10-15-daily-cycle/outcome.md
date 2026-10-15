@@ -2,7 +2,7 @@
 
 **Date:** 2026-10-15
 **Agent:** Orchestrator → ProductSurface
-**Status:** built and gated; **draft PR open, not deployed** (see "Deploy" below)
+**Status:** built and gated; **branch pushed, not deployed, PR not yet opened** (see "Deploy" below)
 **Type:** build (signup instrumentation, conversion board #20 extension)
 
 ## Headline
@@ -67,7 +67,7 @@ What we ruled out: the required "company name / robot category / ICP" gate on `/
 
 ## Deploy
 
-The brief pre-approves autonomous push and deploy, but the checked-in **CLAUDE.md guardrail says: "work on a branch, open a draft PR, stop. Bob merges."** CLAUDE.md takes precedence, so this cycle pushed branch `mission/2026-10-15-signup-click-instrumentation` and opened a **draft PR**. Nothing went to `main`, Vercel or Fly.
+The brief pre-approves autonomous push and deploy, but the checked-in **CLAUDE.md guardrail says: "work on a branch, open a draft PR, stop. Bob merges."** CLAUDE.md takes precedence, so this cycle pushed branch `mission/2026-10-15-signup-click-instrumentation`. Nothing went to `main`, Vercel or Fly. **The draft PR could not be opened:** `gh` is not authenticated in this runner (no `GH_TOKEN`). Open it here: https://github.com/ugobe007/Ready_For_Robots/pull/new/mission/2026-10-15-signup-click-instrumentation
 
 When it is merged, **deploy Fly (API) as well as Vercel**. Until the API accepts the new stages, the new events get a 400. That is harmless (the events are fire-and-forget) but they won't be recorded.
 
@@ -89,8 +89,8 @@ Pipeline cache: `built_at` 2026-10-15T14:04Z with 5 leads, so it is fresh and no
 
 ## Follow-ups
 
-1. **P0 (Bob):** merge the draft PR and deploy **Fly + Vercel**. Then read `method_click` / `blocked` by `src` after 2–3 days.
+1. **P0 (Bob):** open a PR from the branch (link above), merge it, and deploy **Fly + Vercel**. Then read `method_click` / `blocked` by `src` after 2–3 days.
 2. **P0 (operator, open since 2026-09-17):** set up custom SMTP (Resend) for Supabase Auth, then re-invite the 59 unconfirmed users.
 3. **P1:** junk_rate is still climbing (6.5% → 11% → 13.8%), almost all vendor/OEM. Run the LeadQuality vendor-OEM live-flow sweep before it reaches the 5-lead proof surface.
 4. **P2:** `header_hero_boost` / `mobile_hero_boost` (48 per 14 days) send visitors straight to `/signup` without showing any Job Cards. Use the new click data to decide whether to route them to the Jobs URL box first.
-5. **Process:** settle the conflict between the brief's "autonomous deploy" and CLAUDE.md's "draft PR, stop". Agents currently have to pick one.
+5. **Process:** pass `GH_TOKEN` to the daily-harness workflow so agents can open draft PRs. Also settle the conflict between the brief's "autonomous deploy" and CLAUDE.md's "draft PR, stop". Agents currently have to pick one.
