@@ -24,6 +24,7 @@ PAGE_TEXT_CAP = 12_000
 ABOUT_LINK = re.compile(r"\b(about|who we are|our company|company overview|our story)\b", re.I)
 ABOUT_PATHS = ("/about", "/about-us", "/company")
 TOOL_NAME = "choose_industries"
+REASON_CAP = 240
 
 
 @dataclass
@@ -124,7 +125,7 @@ def build_prompt(company: CompanyToCheck, pages: list[SitePage], taxonomy: dict[
         "",
         "RULES:",
         "1. Pick an industry only if the website text shows the company itself operates in it.",
-        "   The industry of the company's customers does not count.",
+        "   The industry of the company's customers does not count, and a careers or hiring line is not evidence.",
         "2. For every pick, quote ONE contiguous passage copied exactly from the page text,",
         f"   at least {MIN_QUOTE_WORDS} words, character for character. No '...', no rewording.",
         "3. If the text does not clearly support any candidate, return no picks and say why.",
@@ -232,7 +233,8 @@ def check_company(
     elif decision.rejected:
         decision.reason = "no pick had a quote found on the site"
     else:
-        decision.reason = str(result.get("no_pick_reason") or "the site text supports no candidate").strip()
+        reason = " ".join(str(result.get("no_pick_reason") or "the site text supports no candidate").split())
+        decision.reason = reason if len(reason) <= REASON_CAP else reason[: REASON_CAP - 1].rstrip() + "…"
     return decision
 
 
