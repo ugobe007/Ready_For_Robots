@@ -38,6 +38,21 @@ SITE = {
 }
 
 
+def test_off_site_redirect_is_not_company_evidence():
+    def fetch(url):
+        if url == "https://parked.example/":
+            return _page("https://sedo.com/buy", "This domain is for sale.", links=[("/about", "About us")])
+        if url == "https://parked.example/about":
+            return _page("https://buyer.example/about", "We are a national grocery chain.")
+        if url == "https://parked.example/about-us":
+            return _page("https://parked.example/about-us", ABOUT)
+        return _page(url, "")
+
+    pages = icc.gather_site_pages("parked.example", fetch)
+    assert [p.url for p in pages] == ["https://parked.example/about-us"]
+    assert all("for sale" not in p.text and "grocery" not in p.text for p in pages)
+
+
 def test_gathers_homepage_and_own_about_page():
     fetch = _fetcher(SITE)
     pages = icc.gather_site_pages("grandlodge.com", fetch)

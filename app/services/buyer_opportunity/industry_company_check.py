@@ -82,15 +82,26 @@ def _same_site(url: str, domain: str) -> bool:
     return host == domain or host.endswith("." + domain)
 
 
+def _page_on_site(page: Any, requested: str, domain: str) -> SitePage | None:
+    """Keep the page only when the response stayed on this company's host."""
+    landed = getattr(page, "final_url", None) or requested
+    text = (getattr(page, "text", "") or "").strip()
+    if not text or not _same_site(landed, domain):
+        return None
+    return SitePage(landed, text)
+
+
 def gather_site_pages(domain: str, fetch: Callable[[str], Any]) -> list[SitePage]:
     """Homepage plus the first about page that has text. Only the company's own host."""
     pages: list[SitePage] = []
-    home = fetch(f"https://{domain}/")
-    home_text = (getattr(home, "text", "") or "").strip()
-    if home_text:
-        pages.append(SitePage(getattr(home, "final_url", None) or f"https://{domain}/", home_text))
+    home_url = f"https://{domain}/"
+    home = fetch(home_url)
+    home_page = _page_on_site(home, home_url, domain)
+    if home_page:
+        pages.append(home_page)
+    home_text = home_page.text if home_page else ""
     about_urls = [
-        urljoin(f"https://{domain}/", href)
+        urljoin(home_url, href)
         for href, anchor in (getattr(home, "links", None) or [])
         if ABOUT_LINK.search(anchor or "") or ABOUT_LINK.search(urlsplit(href or "").path.replace("-", " "))
     ]
@@ -99,10 +110,9 @@ def gather_site_pages(domain: str, fetch: Callable[[str], Any]) -> list[SitePage
     for url in dict.fromkeys(about_urls):
         if url.rstrip("/") in seen or not _same_site(url, domain):
             continue
-        page = fetch(url)
-        text = (getattr(page, "text", "") or "").strip()
-        if text and text != home_text:
-            pages.append(SitePage(getattr(page, "final_url", None) or url, text))
+        kept = _page_on_site(fetch(url), url, domain)
+        if kept and kept.text != home_text:
+            pages.append(kept)
             break
     return pages
 
