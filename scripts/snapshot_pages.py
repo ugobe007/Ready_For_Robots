@@ -97,9 +97,13 @@ def fetch_rendered(url: str, timeout: int, browser) -> dict[str, Any]:
 
 
 def entries(benchmark: dict[str, Any]) -> list[dict[str, Any]]:
-    """All snapshot-able entries: robots, gap probes, negative controls."""
+    """All snapshot-able entries: robots, products, gap probes, negative controls.
+
+    OEM sets such as the RichTech 8-product file store rows under ``products``.
+    Older hold-out files use ``robots``.
+    """
     out = []
-    for key in ("robots", "taxonomy_gap_probes", "negative_controls"):
+    for key in ("robots", "products", "taxonomy_gap_probes", "negative_controls"):
         for e in benchmark.get(key, []):
             out.append({
                 "id": e["id"],
