@@ -288,7 +288,7 @@ describe("jobsWorkflow", () => {
     expect(qualify).not.toMatch(/if \(!a\) return/);
     expect(qualify).not.toMatch(/fetchRobotJobMatch/);
     expect(qualify).not.toMatch(/prior\.jobs/);
-    expect(workspace).toMatch(/classJobsEmptyCopy/);
+    expect(workspace).toMatch(/RESULTS_EMPTY_HEADLINE/);
     expect(workspace).toMatch(/shouldShowClassPicker\(active\)/);
     expect(workspace).toMatch(/Finding jobs for that robot type/);
     expect(CRM_EMPTY_FIND_HINT).toMatch(/Nothing saved yet/);
@@ -628,7 +628,7 @@ describe("jobsWorkflow", () => {
       join(here, "../components/JobsHandoffBoard.tsx"),
       "utf8"
     );
-    expect(workspace).toMatch(/jobIndexLabel/);
+    expect(workspace).not.toMatch(/jobIndexLabel/);
     expect(workspace).not.toMatch(/jobIsForLabel/);
     expect(workspace).toMatch(/JOBS_RUN_ONE_ROBOT_CTA/);
     expect(workspace).toMatch(/lineupPreview/);
@@ -866,7 +866,7 @@ describe("jobsWorkflow", () => {
     expect(RAIL_STEP_HINT.pipeline).not.toMatch(/collect jobs/i);
     expect(RAIL_STEP_HINT.pipeline).toMatch(/jobs you kept/i);
     expect(JOBS_PLACE_CTA).toBe("Activate job list →");
-    expect(workspace).toMatch(/JOBS_NEXT_CTA/);
+    expect(workspace).toMatch(/RESULTS_SAVE_CTA/);
     expect(workspace).not.toMatch(/JobsProcessNav/);
     expect(workspace).not.toMatch(/JOBS_PROCESS_STEPS/);
     expect(workspace).toMatch(/rfr-jobs-start-bar/);
@@ -1216,7 +1216,7 @@ describe("jobsWorkflow", () => {
     expect(workspaceKeep).not.toMatch(/Keep \$\{/);
     expect(workspaceKeep).not.toMatch(/keepTheseJobsPrompt/);
     expect(workspaceKeep).not.toMatch(/data-jobs-keep-confirm/);
-    expect(workspaceKeep).toMatch(/JOBS_NEXT_CTA/);
+    expect(workspaceKeep).toMatch(/RESULTS_SAVE_CTA/);
     expect(deskKeep).not.toMatch(/Yes, keep them/i);
     expect(deskKeep).not.toMatch(/Keep \$\{/);
     expect(deskKeep).not.toMatch(/keepTheseJobsPrompt/);
@@ -1773,11 +1773,11 @@ describe("jobsWorkflow", () => {
       "utf8"
     );
     const card = workspace.slice(workspace.indexOf("function JobCard"));
-    expect(card).toMatch(/JOBS_ROBOT_NAME_CLASS\}>\{card\.jobTitle\}/);
+    expect(card).toMatch(/JOBS_ROBOT_NAME_CLASS\}>\{card\.employer\}/);
     expect(card).not.toMatch(/JOBS_ROBOT_NAME_CLASS\}>\{robotName\}/);
     expect(card).not.toMatch(/JOBS_JOB_TITLE_CLASS/);
     expect(card).not.toMatch(/jobIsForLabel/);
-    expect(card).toMatch(/jobIndexLabel\(index\)/);
+    expect(card).not.toMatch(/jobIndexLabel/);
     expect(card).not.toMatch(/robotName/);
     expect(card).toMatch(/JOBS_KEEP_LABEL/);
     expect(card).toMatch(/JOBS_SKIP_LABEL/);

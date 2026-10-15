@@ -142,7 +142,7 @@ describe("robot class picker options", () => {
     expect(workspace).toMatch(/beginJobsHandoffForUrl/);
     expect(workspace).toMatch(/Finding jobs for that robot type/);
     expect(workspace).toMatch(/shouldShowClassPicker/);
-    expect(workspace).toMatch(/classJobsEmptyCopy/);
+    expect(workspace).toMatch(/RESULTS_EMPTY_HEADLINE/);
     expect(workspace).toMatch(/data-jobs-class/);
     const goActivate = workspace.slice(
       workspace.indexOf("function goToActivate"),

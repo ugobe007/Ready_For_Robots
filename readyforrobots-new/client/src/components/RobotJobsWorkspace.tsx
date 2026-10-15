@@ -75,8 +75,6 @@ import {
   FIND_JOBS_HOME_HEADLINE,
   FIND_JOBS_HOME_SUBHEAD,
   FIND_JOBS_SUBHEAD_CLASS,
-  JOBS_NEXT_CTA,
-  JOBS_NEXT_HINT,
   JOBS_KEEP_LABEL,
   JOBS_SKIP_LABEL,
   JOBS_PIPELINE_CAP,
@@ -95,7 +93,6 @@ import {
   exampleJobsForLineup,
   isJobsFreshQuery,
   stripJobsFreshQuery,
-  jobIndexLabel,
   JOBS_EYEBROW_CLASS,
   JOBS_META_CLASS,
   JOBS_PLACE_CLASS,
@@ -103,12 +100,9 @@ import {
   JOBS_ROBOT_NAME_CLASS,
   jobsCrmOpenHref,
   jobsQueryHref,
-  jobsCountEyebrow,
   jobsDumpedToCrm,
   jobsForCrmDesk,
   recordPipelineActivity,
-  jobsHeading,
-  jobsListHint,
   jobsProductLimitForPlan,
   lineupJobLookups,
   lineupSegments,
@@ -120,7 +114,6 @@ import {
   productClassesFromLineup,
   qualifySearchLookupGrain,
   shouldShowClassPicker,
-  classJobsEmptyCopy,
   CLASS_PICKER_PROMPT,
   readNavigationType,
   shouldRestoreJobsWorkspace,
@@ -157,6 +150,7 @@ import {
   type FindResearchHandle,
 } from "@/lib/findResearch";
 import {
+  isExampleJob,
   isNamedRobotJob,
   JOB_CARD_EXAMPLE_LABEL,
   JOB_CARD_EXAMPLE_NOTE,
@@ -164,6 +158,21 @@ import {
   JOB_TAPE_EXAMPLE_SUBTITLE,
   robotJobCardFromMatch,
 } from "@/lib/robotJobCard";
+import {
+  cardIndustry,
+  RESULTS_EMPTY_BODY,
+  RESULTS_EMPTY_HEADLINE,
+  RESULTS_EMPTY_SAVE_PLACEHOLDER,
+  RESULTS_EMPTY_SAVE_TAIL,
+  RESULTS_EXAMPLE_NOTE_BODY,
+  RESULTS_EXAMPLE_NOTE_LEAD,
+  RESULTS_RAIL_HINT,
+  RESULTS_SAVE_CTA,
+  resultsHeading,
+  resultsSelectedHint,
+  robotSummaryLine,
+  showQualificationOnResults,
+} from "@/lib/resultsCopy";
 
 /* ------------------------------------------------------------------ */
 /* Types + constants                                                   */
@@ -190,11 +199,6 @@ type RobotAnalysis = {
   lookupGrain?: "robot_type" | "product";
   robotClass?: string | null;
 };
-
-type ZeroReason =
-  | "insufficient_profile_evidence"
-  | "no_compatible_jobs"
-  | "corpus_gap";
 
 type ProductChoice = {
   name: string;
@@ -504,7 +508,8 @@ function conflictFacts(profile: RobotProfileResult | null) {
 }
 
 function capabilitySummary(a: RobotAnalysis): string {
-  if (!a.matched) return "Not researched yet — open this SKU for its own jobs.";
+  if (!a.matched)
+    return "Not researched yet — open this product for its own buyers.";
   const labels = a.capabilities.filter(c => c.label).map(c => c.label);
   if (labels.length) return labels.slice(0, 3).join(" · ");
   const fams = [
@@ -513,12 +518,6 @@ function capabilitySummary(a: RobotAnalysis): string {
   return (
     fams.slice(0, 3).join(" · ") || "Work matched to confirmed capabilities"
   );
-}
-
-function tierColor(tier: "A" | "B" | "C"): string {
-  if (tier === "A") return "text-emerald-400";
-  if (tier === "B") return "text-amber-300";
-  return "text-slate-400";
 }
 
 /**
@@ -2154,31 +2153,24 @@ export default function RobotJobsWorkspace() {
               company={
                 portfolio[0] ? companyIdentity(portfolio[0]).label : companyName
               }
-              identityVerified={
-                portfolio[0] ? companyIdentity(portfolio[0]).verified : true
-              }
               count={portfolio.length}
               onNewRobot={newRobot}
             />
           ) : (
             <ContextRail
               company={active ? companyIdentity(active).label : companyName}
-              identityVerified={
-                active ? companyIdentity(active).verified : true
-              }
               product={
                 portfolio.length > 1
                   ? `${portfolio.length} robots`
                   : active?.productName || ""
               }
-              tier={active?.tier || "C"}
               matched={Boolean(active?.matched)}
               showCount={showActiveCount}
               jobCount={Math.min(JOBS_EXAMPLE_CAP, active?.jobs?.length || 0)}
               hint={
                 railTab === "profile"
                   ? RAIL_STEP_HINT.profile
-                  : RAIL_STEP_HINT.jobs
+                  : RESULTS_RAIL_HINT
               }
               portfolioCount={portfolio.length}
               onBackToPortfolio={
@@ -2265,7 +2257,6 @@ export default function RobotJobsWorkspace() {
                 );
                 void researchPortfolioRobot(idx >= 0 ? idx : 0, "jobs");
               }}
-              onActivate={goToActivate}
             />
           )}
 
@@ -2528,12 +2519,10 @@ function FindRail({
 
 function PortfolioRail({
   company,
-  identityVerified,
   count,
   onNewRobot,
 }: {
   company: string;
-  identityVerified: boolean;
   count: number;
   onNewRobot: () => void;
 }) {
@@ -2541,11 +2530,6 @@ function PortfolioRail({
     <div>
       <p className={eyebrow}>Portfolio</p>
       <h2 className={FIND_JOBS_HEADLINE_CLASS}>{company}</h2>
-      {!identityVerified ? (
-        <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-amber-300/80">
-          Company identity not fully verified
-        </p>
-      ) : null}
       <p className="mt-0.5 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
         {count} robots
       </p>
@@ -2571,9 +2555,7 @@ function PortfolioRail({
 
 function ContextRail({
   company,
-  identityVerified,
   product,
-  tier,
   matched,
   showCount,
   jobCount,
@@ -2583,9 +2565,7 @@ function ContextRail({
   onNewRobot,
 }: {
   company: string;
-  identityVerified: boolean;
   product: string;
-  tier: "A" | "B" | "C";
   matched: boolean;
   showCount: boolean;
   jobCount: number;
@@ -2601,22 +2581,11 @@ function ContextRail({
       {company && company !== product ? (
         <p className="mt-0.5 text-sm text-slate-400">{company}</p>
       ) : null}
-      {!identityVerified ? (
-        <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-amber-300/80">
-          Company identity not fully verified
+      {matched && showCount ? (
+        <p className="mt-3 font-mono text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-300">
+          {jobCount} examples
         </p>
       ) : null}
-      <div className="mt-3 flex items-center gap-2">
-        <span className={eyebrow}>Profile</span>
-        <span className={`font-mono text-base font-bold ${tierColor(tier)}`}>
-          {tier}
-        </span>
-        {matched && showCount ? (
-          <span className="ml-2 font-mono text-[11px] font-bold text-emerald-300">
-            {jobCount} EXAMPLE JOBS
-          </span>
-        ) : null}
-      </div>
 
       <p className="mt-4 text-[12px] leading-snug text-slate-400">{hint}</p>
 
@@ -2924,7 +2893,6 @@ function PortfolioPanel({
   onView,
   onReview,
   onSeeJobs,
-  onActivate,
 }: {
   company: string;
   robots: RobotAnalysis[];
@@ -2932,7 +2900,6 @@ function PortfolioPanel({
   onView: (idx: number) => void;
   onReview: (idx: number) => void;
   onSeeJobs: () => void;
-  onActivate: () => void;
 }) {
   return (
     <div className="p-6 sm:p-8">
@@ -2992,13 +2959,6 @@ function PortfolioPanel({
           <FaceCue onEmerald={false} />
           <FindJobsCtaLabel text={JOBS_SEE_JOBS_CTA} />
         </button>
-        <button
-          type="button"
-          onClick={onActivate}
-          className="inline-flex items-center justify-center gap-2 border border-emerald-500/50 px-5 py-3 text-sm font-bold uppercase tracking-[0.06em] text-emerald-300 transition hover:border-emerald-400"
-        >
-          <FindJobsCtaLabel text={JOBS_NEXT_CTA} />
-        </button>
       </div>
     </div>
   );
@@ -3043,20 +3003,7 @@ function ReviewPanel({
           </span>
         ) : null}
       </div>
-      {!companyIdentity(analysis).verified ? (
-        <p className="mt-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-amber-300/80">
-          Company identity not fully verified — showing domain
-        </p>
-      ) : null}
-      <div className="mt-3 flex items-center gap-2">
-        <span className={eyebrow}>Profile</span>
-        <span
-          className={`font-mono text-lg font-bold ${tierColor(analysis.tier)}`}
-        >
-          {analysis.tier}
-        </span>
-      </div>
-      <p className="mt-1 max-w-2xl text-[13px] leading-snug text-slate-400">
+      <p className="mt-3 max-w-2xl text-[13px] leading-snug text-slate-400">
         {profileConfidenceCopy(analysis.tier, {
           emptyResearch: sources.length === 0 && confirmed.length === 0,
         })}
@@ -3092,7 +3039,7 @@ function ReviewPanel({
                   key={f.id}
                   className="text-[13px] leading-snug text-amber-200/90"
                 >
-                  CONFLICTED — {formatFactLine(f)}
+                  Conflicting sources — {formatFactLine(f)}
                 </li>
               ))}
               {unknowns.map(f => (
@@ -3216,10 +3163,10 @@ function JobsActivateBar({
         className={`${ctaClass} w-full sm:w-auto`}
       >
         <FaceCue onEmerald={false} />
-        <FindJobsCtaLabel text={JOBS_NEXT_CTA} />
+        <FindJobsCtaLabel text={RESULTS_SAVE_CTA} />
       </button>
       <p className="mt-2 text-sm leading-snug text-slate-300">
-        {checkedCount} selected. {JOBS_NEXT_HINT}.
+        {resultsSelectedHint(checkedCount)}
       </p>
     </div>
   );
@@ -3324,12 +3271,10 @@ function JobsPanel({
   onOpenQueryModal?: () => void;
 }) {
   const sources = lineupPreview && lineup.length > 1 ? lineup : [analysis];
-  const heading = jobsHeading({
+  const heading = resultsHeading({
     productName: analysis.productName,
     companyName: companyName || analysis.companyName,
     robotCount,
-    lookupGrain: analysis.lookupGrain,
-    robotClass: analysis.robotClass,
   });
   const checkedCount = checkedJobKeys.filter(k =>
     (analysis.jobs || []).some(job => job.job_key === k)
@@ -3344,22 +3289,26 @@ function JobsPanel({
   }));
 
   const displayedJobs = rawBaseJobs.slice(0, JOBS_PIPELINE_CAP);
+  const summary = robotSummaryLine({
+    robotClass: analysis.robotClass,
+    work: analysis.capabilities.map(c => c.label),
+    industries: displayedJobs.map(job =>
+      cardIndustry(job.industry, [job.company_name, job.locality])
+    ),
+  });
+  const hasExamples = displayedJobs.some(job => isExampleJob(job));
 
   return (
     <div id="jobs-list" className="p-6 sm:p-8">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className={`${FIND_JOBS_HEADLINE_CLASS} text-white`}>{heading}</h2>
-        <span className="font-mono text-base font-bold text-emerald-300">
-          {jobsCountEyebrow({
-            visibleCount: displayedJobs.length,
-            productName: analysis.productName,
-            companyName: companyName || analysis.companyName,
-            robotCount,
-            lookupGrain: analysis.lookupGrain,
-            robotClass: analysis.robotClass,
-          })}
-        </span>
-      </div>
+      <h2 className={`${FIND_JOBS_HEADLINE_CLASS} text-white`}>{heading}</h2>
+      {summary ? (
+        <p
+          data-results-summary="true"
+          className="mt-1 text-base leading-snug text-slate-300"
+        >
+          {summary}
+        </p>
+      ) : null}
 
       {onOpenQueryModal ? (
         <div className="mt-3">
@@ -3370,29 +3319,17 @@ function JobsPanel({
         </div>
       ) : null}
 
-      {/* Left Panel Explanation Box */}
-      <div className="mt-4 mb-3 rounded-2xl border border-emerald-500/40 bg-gradient-to-r from-[#09152e] to-[#0a1836] p-4 text-slate-100 shadow-xl space-y-1">
-        <p className="text-[11px] font-mono font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1.5">
-          <span>✦</span> Jobs for robots — How to use this feed
+      {hasExamples ? (
+        <p
+          data-results-example-note="true"
+          className="mt-4 border border-amber-400/40 bg-amber-400/5 px-4 py-3 text-sm leading-relaxed text-slate-200"
+        >
+          <strong className="text-amber-300">
+            {RESULTS_EXAMPLE_NOTE_LEAD}
+          </strong>{" "}
+          {RESULTS_EXAMPLE_NOTE_BODY}
         </p>
-        <p className="text-xs leading-relaxed text-slate-200">
-          Click a job card to see the employer, the work, and why it fits your
-          robot. Cards marked Example come from our sample set: no source yet
-          shows that employer is moving to automate the work.
-        </p>
-      </div>
-      {rawBaseJobs.length > 0 && (
-        <p className="mt-2 text-base leading-relaxed text-slate-300">
-          {jobsListHint({
-            robotCount,
-            productName: analysis.productName,
-            jobCount: rawBaseJobs.length,
-          })}{" "}
-          <span className="font-semibold text-emerald-200">
-            {JOBS_KEEP_LABEL} is on. Uncheck a row to skip it.
-          </span>
-        </p>
-      )}
+      ) : null}
 
       {matchError ? (
         <p className="mt-3 border border-rose-800 bg-rose-950/40 px-3 py-2 text-xs text-rose-300">
@@ -3409,13 +3346,6 @@ function JobsPanel({
           />
         ) : null}
       </div>
-      {showCrmCtas ? (
-        <JobsActivateBar
-          onActivate={onActivate}
-          checkedCount={checkedCount}
-          className="mt-4"
-        />
-      ) : null}
       {lineupPreview ? (
         <button
           type="button"
@@ -3436,19 +3366,14 @@ function JobsPanel({
             onSelect={onSelectClass}
           />
         ) : (
-          <ZeroState
-            robotName={analysis.productName}
-            reason={analysis.zeroReason}
-            robotClass={analysis.robotClass}
-          />
+          <ZeroState />
         )
       ) : (
         <>
           <ol className="mt-6 space-y-3">
-            {displayedJobs.map((job, i) => (
+            {displayedJobs.map(job => (
               <JobCard
                 key={`${job.forRobot}:${job.job_key}`}
-                index={i + 1}
                 job={job}
                 selected={expandedJob === job.job_key}
                 checked={checkedJobKeys.includes(job.job_key)}
@@ -3459,7 +3384,7 @@ function JobsPanel({
           </ol>
         </>
       )}
-      {showCrmCtas ? (
+      {showCrmCtas && displayedJobs.length > 0 ? (
         <JobsActivateBar
           onActivate={onActivate}
           checkedCount={checkedCount}
@@ -3550,79 +3475,32 @@ function ClassPicker({
 
 /**
  * Truthful zero-state after the robot is understood. Class confusion is a
- * picker, not a dead-end. This block is only corpus gap / no compatible jobs.
+ * picker, not a dead-end.
  */
-function ZeroState({
-  robotName,
-  reason,
-  robotClass,
-}: {
-  robotName: string;
-  reason?: string | null;
-  robotClass?: string | null;
-}) {
-  if (robotClass) {
-    return (
-      <div className="mt-6 border border-slate-600 bg-[#081126] p-5">
-        <p className={JOBS_EYEBROW_CLASS}>No jobs yet</p>
-        <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
-          {classJobsEmptyCopy(robotClass, robotName)}
-        </h3>
-        <p className="mt-2 text-[13px] leading-snug text-slate-300">
-          We do not have work represented for this robot type yet. This is a
-          coverage gap on our side, not a limitation of the robot. CRM stays
-          empty until there are jobs to keep.
-        </p>
-      </div>
-    );
-  }
-  const r = (reason || "") as ZeroReason | "";
-  if (r === "corpus_gap") {
-    return (
-      <div className="mt-6 border border-slate-600 bg-[#081126] p-5">
-        <p className={JOBS_EYEBROW_CLASS}>Corpus gap</p>
-        <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
-          We understand {robotName}, but we don't have work represented for its
-          capabilities yet.
-        </h3>
-        <p className="mt-2 text-[13px] leading-snug text-slate-300">
-          The current job corpus is thin for this robot's capability domain.
-          This is a coverage gap on our side, not a limitation of the robot.
-        </p>
-      </div>
-    );
-  }
-  if (r === "no_compatible_jobs") {
-    return (
-      <div className="mt-6 border border-slate-600 bg-[#081126] p-5">
-        <p className={JOBS_EYEBROW_CLASS}>No compatible jobs</p>
-        <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
-          We understand {robotName}, but the current jobs don't meet its
-          requirements.
-        </h3>
-        <p className="mt-2 text-[13px] leading-snug text-slate-300">
-          Each candidate job has an unmet hard requirement for this robot.
-          Unknowns were kept unknown — nothing was promoted into a false match.
-        </p>
-      </div>
-    );
-  }
+function ZeroState() {
   return (
-    <p className="mt-8 text-sm text-slate-400">
-      No matched jobs for {robotName} yet.
-    </p>
+    <div
+      data-results-empty="true"
+      className="mt-6 border border-slate-600 bg-[#081126] p-5"
+    >
+      <h3 className="font-display text-lg font-bold text-slate-100">
+        {RESULTS_EMPTY_HEADLINE}
+      </h3>
+      <p className="mt-2 text-sm leading-snug text-slate-300">
+        {RESULTS_EMPTY_BODY} {RESULTS_EMPTY_SAVE_PLACEHOLDER}{" "}
+        {RESULTS_EMPTY_SAVE_TAIL}
+      </p>
+    </div>
   );
 }
 
 function JobCard({
-  index,
   job,
   selected,
   checked,
   onSelect,
   onToggle,
 }: {
-  index: number;
   job: MatchJob;
   selected: boolean;
   checked: boolean;
@@ -3631,7 +3509,13 @@ function JobCard({
 }) {
   const card = robotJobCardFromMatch(job);
   if (!card.employer || !card.workplace) return null;
-  const place = [card.employer, card.workplace].filter(Boolean).join(" · ");
+  const place = [
+    card.workplace,
+    cardIndustry(job.industry, [card.employer, card.workplace]),
+  ]
+    .filter(Boolean)
+    .join(" · ");
+  const forRobot = (job.forRobot || "").trim();
   return (
     <li
       className={`border bg-[#081126] transition-all ${
@@ -3647,7 +3531,7 @@ function JobCard({
             type="checkbox"
             checked={checked}
             onChange={onToggle}
-            aria-label={`${checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL} ${card.jobTitle} on the CRM desk`}
+            aria-label={`${checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL} ${card.employer}: ${card.jobTitle}`}
             className="h-5 w-5 accent-emerald-400"
           />
           <span
@@ -3665,7 +3549,7 @@ function JobCard({
         >
           <span className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className={JOBS_ROBOT_NAME_CLASS}>{card.jobTitle}</span>
+              <span className={JOBS_ROBOT_NAME_CLASS}>{card.employer}</span>
               {card.isExample ? (
                 <span
                   data-job-example="true"
@@ -3676,9 +3560,16 @@ function JobCard({
               ) : null}
             </div>
             {place ? <span className={JOBS_PLACE_CLASS}>{place}</span> : null}
-            <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-xs text-slate-400">
-              <span>{jobIndexLabel(index)}</span>
-            </div>
+            <span className="mt-1 block text-sm leading-snug text-slate-200">
+              <span className="text-slate-400">Work: </span>
+              {card.work}
+            </span>
+            {forRobot ? (
+              <span className="mt-0.5 block text-sm leading-snug text-slate-200">
+                <span className="text-slate-400">Matching robots: </span>
+                {forRobot}
+              </span>
+            ) : null}
           </span>
           <span className="font-mono text-xs text-slate-500">
             {selected ? "−" : "+"}
@@ -3728,12 +3619,14 @@ function JobCard({
                 )}
               </dd>
             </div>
-            <div>
-              <dt className={eyebrow}>{card.qualificationLabel}</dt>
-              <dd className="mt-0.5 text-slate-300">
-                {card.qualificationHint}
-              </dd>
-            </div>
+            {showQualificationOnResults(card.qualification) ? (
+              <div>
+                <dt className={eyebrow}>{card.qualificationLabel}</dt>
+                <dd className="mt-0.5 text-slate-300">
+                  {card.qualificationHint}
+                </dd>
+              </div>
+            ) : null}
           </dl>
 
           {card.taskModels.length || card.modelLinks.length ? (
