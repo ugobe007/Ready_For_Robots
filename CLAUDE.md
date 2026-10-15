@@ -4,9 +4,11 @@ Read **AGENTS.md** for the full harness constitution. This file is loaded on eve
 
 ## What RFR is (read first, every turn)
 
+**Source of truth: [`docs/buyer_opportunity_spec.md`](docs/buyer_opportunity_spec.md).** If this file, `AGENTS.md`, or any other doc disagrees with it, the spec wins. Changes to the spec need Bob's approval. If the spec is unclear, ask Bob; do not decide product meaning yourself.
+
 **Ready For Robots finds companies that are ready to buy or pilot robots** and tells robot sellers *which company, which workflow, and why now*.
 
-- **Robot sales opportunities are jobs for robots, not people.** A "robot job" = a workflow at a company that a robot could be hired to do. Whenever code or docs say "jobs" or "Job Cards," that is the only meaning.
+- **A "job" in RFR is work a robot can perform, which a company is moving to automate.** A person may do that work today; it is a robot job because the company is moving to automate it. "Robot Job Cards" stays the product term, with this meaning only. Whenever code or docs say "jobs" or "Job Cards," that is the only meaning.
 - **A robot job (buyer opportunity) = company × workflow × readiness signals.** That is the unit of the product.
 - **RFR is NOT:**
   - job postings for people as the product (cooks, pickers, housekeepers, security guards);

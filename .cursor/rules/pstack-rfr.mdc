@@ -5,6 +5,8 @@ alwaysApply: true
 
 # pstack — ReadyForRobots Cloud defaults
 
+Product meaning: `docs/buyer_opportunity_spec.md` (wins over this rule). A job is work a robot can perform, which a company is moving to automate; "Robot Job Cards" keeps that meaning only.
+
 Cloud agents often have no `~/.cursor/rules/pstack-models.mdc`. Use inherit-parent / auto unless the operator has a local setup-pstack rule. Real slugs belong only in a home rule after setup-pstack confirms them.
 
 # pstack model configuration. One line per role. inherit-parent / auto = parent chat model.
