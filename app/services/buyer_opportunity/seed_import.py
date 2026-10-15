@@ -89,7 +89,8 @@ def parse_seed_rows(lines: Iterable[str], taxonomy: dict[str, Any] | None = None
     functions_ok = set(taxonomy_values(taxonomy, "functions"))
     result = ImportResult()
     rows: list[SeedRow] = []
-    seen: dict[tuple[str, str], int] = {}
+    seen_names: dict[str, int] = {}
+    seen_domains: dict[str, int] = {}
 
     reader = csv.DictReader(lines)
     missing = [c for c in SEED_COLUMNS if c not in (reader.fieldnames or [])]
@@ -126,13 +127,18 @@ def parse_seed_rows(lines: Iterable[str], taxonomy: dict[str, Any] | None = None
         if priority not in (None, "A", "B", "C"):
             errors.append(f"priority {priority!r} is not A, B, C or blank")
         domain = normalize_domain(raw.get("website"))
-        key = ("domain", domain) if domain else ("name", normalize_name(name))
-        if not errors and key in seen:
-            errors.append(f"same buyer as line {seen[key]} ({key[0]} {key[1]!r})")
+        name_key = normalize_name(name)
+        if not errors and name_key and name_key in seen_names:
+            errors.append(f"same buyer as line {seen_names[name_key]} (name {name_key!r})")
+        elif not errors and domain and domain in seen_domains:
+            errors.append(f"same buyer as line {seen_domains[domain]} (domain {domain!r})")
         if errors:
             result.rejected.append({"line": line, "company_name": name, "errors": errors})
             continue
-        seen[key] = line
+        if name_key:
+            seen_names[name_key] = line
+        if domain:
+            seen_domains[domain] = line
         rows.append(SeedRow(
             line=line, name=name, domain=domain, name_normalized=normalize_name(name),
             hq_city=(raw.get("hq_city") or "").strip() or None,
@@ -146,11 +152,18 @@ def parse_seed_rows(lines: Iterable[str], taxonomy: dict[str, Any] | None = None
 
 
 def _company_id(conn: Connection, row: SeedRow) -> tuple[int | None, str]:
+    """Link only a public companies row. Tenant CRM copies are not buyers."""
     if row.domain:
-        query = sa.text("SELECT id FROM companies WHERE lower(website_domain) = :v ORDER BY id LIMIT 2")
+        query = sa.text(
+            "SELECT id FROM companies WHERE tenant_id IS NULL AND lower(website_domain) = :v "
+            "ORDER BY id LIMIT 2"
+        )
         ids = [r[0] for r in conn.execute(query, {"v": row.domain})]
     else:
-        query = sa.text("SELECT id FROM companies WHERE lower(name) = :v ORDER BY id LIMIT 2")
+        query = sa.text(
+            "SELECT id FROM companies WHERE tenant_id IS NULL AND lower(name) = :v "
+            "ORDER BY id LIMIT 2"
+        )
         ids = [r[0] for r in conn.execute(query, {"v": row.name.lower()})]
     if len(ids) == 1:
         return ids[0], "linked"
@@ -158,12 +171,18 @@ def _company_id(conn: Connection, row: SeedRow) -> tuple[int | None, str]:
 
 
 def _find_buyer(conn: Connection, row: SeedRow):
+    """Domain finds a row that already has it. The normalized name still finds
+    the row from before a website existed, or whose website changed."""
     b = rfr_buyers.c
     if row.domain:
-        cond = b.website_domain == row.domain
-    else:
-        cond = sa.and_(b.website_domain.is_(None), b.name_normalized == row.name_normalized)
-    return conn.execute(sa.select(rfr_buyers).where(cond)).mappings().first()
+        by_domain = conn.execute(
+            sa.select(rfr_buyers).where(b.website_domain == row.domain)
+        ).mappings().first()
+        if by_domain is not None:
+            return by_domain
+    return conn.execute(
+        sa.select(rfr_buyers).where(b.name_normalized == row.name_normalized).order_by(b.id)
+    ).mappings().first()
 
 
 def _upsert_buyer(conn: Connection, row: SeedRow, result: ImportResult) -> int:
@@ -181,6 +200,8 @@ def _upsert_buyer(conn: Connection, row: SeedRow, result: ImportResult) -> int:
     if existing is None:
         result.buyers["inserted"] += 1
         return conn.execute(rfr_buyers.insert().values(**values).returning(rfr_buyers.c.id)).scalar_one()
+    if link != "linked":
+        values.pop("company_id")
     changed = {k: v for k, v in values.items() if existing[k] != v}
     if not changed:
         result.buyers["unchanged"] += 1
@@ -213,12 +234,21 @@ def _ensure_workflows(conn: Connection, buyer_id: int, row: SeedRow, result: Imp
             sa.select(rfr_workflows).where(t.buyer_id == buyer_id)
         ).mappings()
     }
-    for workflow in dict.fromkeys(row.workflows + list(row.deployments)):
+    seed_committed = {
+        workflow for workflow, current in existing.items() if current["status_note"] == DEPLOYMENT_NOTE
+    }
+    cleared = {"status": "unknown", "committed_vendor": None, "status_note": None, "status_source_url": None}
+    for workflow in dict.fromkeys(list(row.workflows) + list(row.deployments) + list(seed_committed)):
         vendor = row.deployments.get(workflow)
-        wanted = (
-            {"status": "committed", "committed_vendor": vendor, "status_note": DEPLOYMENT_NOTE, "status_source_url": None}
-            if vendor else None
-        )
+        if vendor:
+            wanted = {
+                "status": "committed", "committed_vendor": vendor,
+                "status_note": DEPLOYMENT_NOTE, "status_source_url": None,
+            }
+        elif workflow in seed_committed:
+            wanted = cleared
+        else:
+            wanted = None
         current = existing.get(workflow)
         if current is None:
             conn.execute(rfr_workflows.insert().values(

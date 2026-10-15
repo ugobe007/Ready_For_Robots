@@ -1,11 +1,12 @@
 """Add rfr_ buyer-opportunity tables (buyer_opportunity_spec §4, Phase 1).
 
 Additive only: six new tables, no change to any existing table. Parented on
-the head merge mhd0a1b2c3d4, which is deployed on its own first; on a database
-already at mhd0a1b2c3d4 this revision only creates tables.
+djrt0a1b2c3d4 (a create_table) rather than aopp0a1b2c3d4 (ALTERs robot_jobs
+and sets opportunity_tier and opportunity_class to 0), so applying this
+revision never alters an existing table.
 
 Revision ID: rfr0a1b2c3d4
-Revises: mhd0a1b2c3d4
+Revises: djrt0a1b2c3d4
 """
 from typing import Sequence, Union
 
@@ -14,7 +15,7 @@ import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 
 revision: str = "rfr0a1b2c3d4"
-down_revision: Union[str, Sequence[str], None] = "mhd0a1b2c3d4"
+down_revision: Union[str, Sequence[str], None] = "djrt0a1b2c3d4"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

@@ -124,6 +124,88 @@ def test_seed_import_twice_gives_identical_rows(engine, tmp_path):
     assert after_first["rfr_signals"] == [] and after_first["rfr_opportunities"] == []
 
 
+WYNN = (
+    "Wynn Las Vegas,https://www.wynnlasvegas.com/,casino|hotel,Las Vegas,NV,A,"
+    "cleaning|delivery_transport,cleaning:Avidbots,"
+)
+WYNN_NO_DEPLOYMENT = (
+    "Wynn Las Vegas,https://www.wynnlasvegas.com/,casino|hotel,Las Vegas,NV,A,"
+    "delivery_transport,,"
+)
+
+
+def test_adding_or_changing_a_domain_updates_the_same_buyer(engine, tmp_path):
+    nameless = "Valley Surgery Center LLC,,surgery_center,Henderson,NV,,delivery_transport,,"
+    with engine.begin() as conn:
+        first = si.import_seed(conn, _write_seed(tmp_path, nameless))
+    with_site = "Valley Surgery Center LLC,https://www.valleysurgery.com/,surgery_center,Henderson,NV,,delivery_transport,,"
+    with engine.begin() as conn:
+        added = si.import_seed(conn, _write_seed(tmp_path, with_site))
+    changed_site = "Valley Surgery Center,valleysurgery.example,surgery_center,Henderson,NV,,delivery_transport,,"
+    with engine.begin() as conn:
+        changed = si.import_seed(conn, _write_seed(tmp_path, changed_site))
+        buyers = list(conn.execute(sa.text(
+            "SELECT name, name_normalized, website_domain FROM rfr_buyers ORDER BY id"
+        )).mappings())
+    assert first.buyers["inserted"] == 1
+    assert added.buyers == {"inserted": 0, "updated": 1, "unchanged": 0}
+    assert changed.buyers == {"inserted": 0, "updated": 1, "unchanged": 0}
+    assert buyers == [{
+        "name": "Valley Surgery Center",
+        "name_normalized": "valley surgery center",
+        "website_domain": "valleysurgery.example",
+    }]
+
+
+def test_one_file_rejects_a_name_with_and_without_a_domain():
+    rows, result = si.parse_seed_rows([
+        HEADER + "\n",
+        "Valley Surgery Center LLC,,surgery_center,Henderson,NV,,delivery_transport,,\n",
+        "Valley Surgery Center,valleysurgery.com,surgery_center,Henderson,NV,,delivery_transport,,\n",
+    ])
+    assert len(rows) == 1
+    assert "same buyer as line 2 (name 'valley surgery center')" in result.rejected[0]["errors"]
+
+
+def test_tenant_row_does_not_steal_or_clear_the_public_company_link(engine, tmp_path):
+    path = _write_seed(tmp_path, "Sysco Corporation,sysco.com,warehouse_distribution,Houston,TX,B,picking_packing_palletizing,,")
+    with engine.begin() as conn:
+        conn.execute(Company.__table__.insert(), [
+            dict(id=7, name="Sysco", website_domain="sysco.com", tenant_id=None),
+            dict(id=8, name="Sysco", website_domain="sysco.com", tenant_id="crm-tenant"),
+        ])
+        linked = si.import_seed(conn, path)
+        company_id = conn.execute(sa.text("SELECT company_id FROM rfr_buyers")).scalar_one()
+    assert linked.company_links == {"linked": 1, "none": 0, "ambiguous": 0}
+    assert company_id == 7
+    with engine.begin() as conn:
+        conn.execute(Company.__table__.insert().values(
+            id=9, name="Sysco Public Copy", website_domain="sysco.com", tenant_id=None,
+        ))
+        again = si.import_seed(conn, path)
+        company_id = conn.execute(sa.text("SELECT company_id FROM rfr_buyers")).scalar_one()
+    assert again.company_links["ambiguous"] == 1
+    assert again.buyers["updated"] == 0
+    assert company_id == 7
+
+
+def test_dropped_seed_deployment_returns_to_unknown(engine, tmp_path):
+    with engine.begin() as conn:
+        si.import_seed(conn, _write_seed(tmp_path, WYNN))
+    with engine.begin() as conn:
+        result = si.import_seed(conn, _write_seed(tmp_path, WYNN_NO_DEPLOYMENT))
+        rows = {
+            r["workflow"]: r for r in conn.execute(sa.text(
+                "SELECT workflow, status, committed_vendor, status_note FROM rfr_workflows"
+            )).mappings()
+        }
+    assert result.workflows["updated"] == 1
+    assert rows["cleaning"]["status"] == "unknown"
+    assert rows["cleaning"]["committed_vendor"] is None
+    assert rows["cleaning"]["status_note"] is None
+    assert rows["delivery_transport"]["status"] == "unknown"
+
+
 def test_changed_seed_updates_only_changed_rows(engine, tmp_path):
     with engine.begin() as conn:
         si.import_seed(conn, _write_seed(tmp_path, SEED[2]))
