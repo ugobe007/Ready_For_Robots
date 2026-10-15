@@ -81,6 +81,8 @@ The answer key and the field scorer (`scripts/benchmark_scoring_v2.py`) are unch
 - **Scoring:** an extracted child counts as its parent for `industries_required`, `industries_any` and `industries_must_not` (so `bar_nightclub` is forbidden where `restaurant` is), and is not an unexpected extra when its parent is accepted. A parent never satisfies a child.
 - **Pilot groups** (`PILOT_INDUSTRY_GROUPS` in `app/services/robot_understanding_v1/industries.py`, from `docs/buyer_opportunity_spec.md` §1): an industry is in a group if it or its parent is a member. `k12_school` stays hidden because `college_university` is in no group. `residential_consumer` is never a buyer.
 
+Taxonomy v1.3 adds `facility_services` (contract cleaning, food service and facility management companies) to pilot group 8. It has no parent. Prompt stays `v6`: no rule changed, and the cache key already carries the taxonomy version.
+
 ## Reporting
 
 The benchmark runner reports robots, taxonomy gap probes and negative controls as separate results, each with a count of fields blanked as unsupported, by field. Results without the product hint are the production number and come first. The runner also saves the page record and every extracted product name per page, and reports the page type assigned to every entry next to the expected page type (robots: `expected_page_type`; negative controls: `expected.page_type`).
