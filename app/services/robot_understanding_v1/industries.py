@@ -21,7 +21,7 @@ PILOT_INDUSTRY_GROUPS: tuple[tuple[int, str, tuple[str, ...]], ...] = (
     (5, "Retail", ("retail_store", "grocery", "shopping_mall")),
     (6, "Restaurants and bars", ("restaurant", "qsr_fast_food", "bar_nightclub")),
     (7, "Airports", ("airport",)),
-    (8, "Office buildings", ("office_building", "commercial_building", "corporate_campus")),
+    (8, "Office buildings and facility services", ("office_building", "commercial_building", "corporate_campus", "facility_services")),
     (9, "Auto dealerships", ("automotive_dealership",)),
 )
 
