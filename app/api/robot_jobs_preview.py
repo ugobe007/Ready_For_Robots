@@ -59,8 +59,8 @@ def _public_job(row: Any, rank: int) -> dict[str, Any]:
     if is_example_job(data):
         employer = example_employer_label(
             data.get("industry"),
-            data.get("job_type") or data.get("title"),
             employer,
+            data.get("job_type") or data.get("title"),
         )
     return {
         "job_key": data.get("job_key") or "",
@@ -90,9 +90,9 @@ def corpus_preview_jobs(limit: int) -> list[dict[str, Any]]:
         employer = str(raw.get("company_name") or "").strip()
         shown_employer = example_employer_label(
             raw.get("industry"),
+            employer,
             raw.get("title"),
             raw.get("path"),
-            employer,
         )
         locality = str(raw.get("locality") or "").strip()
         title = str(raw.get("title") or "").strip()
@@ -130,8 +130,11 @@ def get_robot_jobs_preview(
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     rows = select_daily_report_rows(db, limit=50)
-    jobs = [_public_job(row, rank) for rank, row in enumerate(rows, start=1)]
-    jobs = [j for j in jobs if not is_robot_maker_employer({"company_name": j["employer"]})][:limit]
+    rows = [
+        row for row in rows
+        if not is_robot_maker_employer({"company_name": getattr(row, "company_name", "")})
+    ]
+    jobs = [_public_job(row, rank) for rank, row in enumerate(rows, start=1)][:limit]
     source = "live"
     if not jobs:
         jobs = corpus_preview_jobs(limit)

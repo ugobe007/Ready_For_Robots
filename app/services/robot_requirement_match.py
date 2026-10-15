@@ -281,7 +281,7 @@ class JobMatchCard:
             "company_name": (
                 self.company_name
                 if self.source_url
-                else example_employer_label(self.industry, self.title, self.path, self.company_name)
+                else example_employer_label(self.industry, self.company_name, self.title, self.path)
             ),
             "locality": self.locality,
             "tape_family": self.tape_family,

@@ -21,7 +21,7 @@ _EXAMPLE_EMPLOYER_RULES: tuple[tuple[re.Pattern[str], str], ...] = (
     (re.compile(r"airport|aviation|avionics|terminal floor", re.I), "Airport operator"),
     (re.compile(r"university|college|\bcampus\b", re.I), "University"),
     (re.compile(r"cafe|coffee|espresso", re.I), "Cafe operator"),
-    (re.compile(r"hotel", re.I), "Hotel operator"),
+    (re.compile(r"hotel|marriott|hilton|hyatt|room-service|room service|guest rooms?", re.I), "Hotel operator"),
     (re.compile(r"\bbar\b|cocktail|nightclub", re.I), "Bar operator"),
     (re.compile(r"restaurant|dining|grill|quick-service|fast-casual|\bkitchen\b", re.I), "Restaurant operator"),
     (re.compile(r"pharma|pharmacy", re.I), "Pharmacy distribution operator"),
@@ -53,11 +53,16 @@ def is_example_job(row: dict[str, Any]) -> bool:
 
 
 def example_employer_label(*parts: str | None) -> str:
-    """Kind of organization for an example card. Never a company name."""
-    text = " ".join(part for part in parts if part)
-    for pattern, label in _EXAMPLE_EMPLOYER_RULES:
-        if pattern.search(text):
-            return label
+    """Kind of organization for an example card. Never a company name.
+
+    Parts are tried in order, so pass organization fields before work text.
+    """
+    for part in parts:
+        if not part:
+            continue
+        for pattern, label in _EXAMPLE_EMPLOYER_RULES:
+            if pattern.search(part):
+                return label
     return "Example employer"
 
 
@@ -68,9 +73,9 @@ def public_employer_name(row: dict[str, Any]) -> str:
         return name
     return example_employer_label(
         row.get("industry"),
+        name,
         row.get("title"),
         row.get("path"),
-        name,
     )
 
 

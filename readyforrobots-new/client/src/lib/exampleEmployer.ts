@@ -11,7 +11,7 @@ const EXAMPLE_EMPLOYER_RULES: Array<[RegExp, string]> = [
   [/airport|aviation|avionics|terminal floor/i, "Airport operator"],
   [/university|college|\bcampus\b/i, "University"],
   [/cafe|coffee|espresso/i, "Cafe operator"],
-  [/hotel/i, "Hotel operator"],
+  [/hotel|marriott|hilton|hyatt|room-service|room service|guest rooms?/i, "Hotel operator"],
   [/\bbar\b|cocktail|nightclub/i, "Bar operator"],
   [/restaurant|dining|grill|quick-service|fast-casual|\bkitchen\b/i, "Restaurant operator"],
   [/pharma|pharmacy/i, "Pharmacy distribution operator"],
@@ -29,10 +29,13 @@ const EXAMPLE_EMPLOYER_RULES: Array<[RegExp, string]> = [
   [/pallet|cases|returns/i, "Warehouse or logistics operator"],
 ];
 
+/** Parts are tried in order, so pass organization fields before work text. */
 export function exampleEmployerLabel(...parts: Array<string | null | undefined>): string {
-  const text = parts.filter(Boolean).join(" ");
-  for (const [pattern, label] of EXAMPLE_EMPLOYER_RULES) {
-    if (pattern.test(text)) return label;
+  for (const part of parts) {
+    if (!part) continue;
+    for (const [pattern, label] of EXAMPLE_EMPLOYER_RULES) {
+      if (pattern.test(part)) return label;
+    }
   }
   return "Example employer";
 }
@@ -41,6 +44,6 @@ export function exampleEmployerLabel(...parts: Array<string | null | undefined>)
 export function exampleTapeIndustry(industry: string, title = "", path = ""): string {
   const parts = industry.split("·").map(part => part.trim()).filter(Boolean);
   const place = parts.slice(1).join(" · ");
-  const label = exampleEmployerLabel(title, path, industry);
+  const label = exampleEmployerLabel(industry, title, path);
   return place ? `${label} · ${place}` : label;
 }
