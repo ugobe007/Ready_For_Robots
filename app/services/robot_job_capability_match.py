@@ -70,6 +70,14 @@ READY_CAP_TO_SIGNAL: dict[str, tuple[str, str]] = {
 
 SCORE_THRESHOLD = 3.0
 MATCHES_MIN = 3
+# Keyword typing invents these for "service" / "delivery" pages. A grounded
+# stationary SKU must not keep them, or a drink station scores pallet work.
+_INVENTED_MOBILE_KEYS = frozenset(
+    {"mobile", "material_transport", "carry", "tote_handling"}
+)
+_INVENTED_MOBILE_FAMILIES = frozenset(
+    {"transport_amr", "mobile_manipulation", "floor_scrub", "inspection_mobile"}
+)
 
 ScrapeFn = Callable[[str], str]
 AnalyzeFn = Callable[[str, str], dict[str, Any]]
@@ -266,6 +274,11 @@ def score_job(profile: CapabilityProfile, job: dict[str, Any]) -> tuple[float, l
             if not is_factory_job:
                 return (0.0, ["Domain mismatch: factory robot should not match non-factory work"])
 
+    tape = str(job.get("tape_family") or "").lower()
+    if tape == "beverage" and "beverage_prep" in cap_keys:
+        score += 5.0
+        notes.append("Drink-station work")
+
     for i, fam in enumerate(profile_fams):
         if fam in job_fams:
             score += 3.0 if i == 0 else 2.0
@@ -414,6 +427,40 @@ def _company_label(domain: str) -> str:
         stem = slug[: -len("robotics")]
         return f"{stem.replace('-', ' ').title()} Robotics"
     return slug.replace("-", " ").title()
+
+
+def _grant_catalog_beverage(profile: CapabilityProfile, sku: dict[str, Any] | None) -> None:
+    """Indexed claims_beverage_prep is the same evidence site search already uses."""
+    if not sku:
+        return
+    for claim in sku.get("catalog_claims") or []:
+        if not isinstance(claim, dict) or claim.get("predicate") != "claims_beverage_prep":
+            continue
+        if claim.get("value") not in (True, "true", 1):
+            continue
+        if not any(cap.key == "beverage_prep" for cap in profile.capabilities):
+            excerpt = str(claim.get("evidence_span") or "")[:160] or None
+            profile.capabilities.append(
+                CapabilitySignal(
+                    key="beverage_prep",
+                    label="beverage / drink preparation",
+                    confidence=0.9,
+                    excerpt=excerpt,
+                    truth_state="confirmed",
+                )
+            )
+        profile.evidence_count = max(profile.evidence_count, len(profile.capabilities))
+        profile.understood = True
+        return
+
+
+def _drop_invented_mobility(profile: CapabilityProfile) -> None:
+    profile.capabilities = [
+        cap for cap in profile.capabilities if cap.key not in _INVENTED_MOBILE_KEYS
+    ]
+    profile.families = [
+        fam for fam in profile.families if fam.get("id") not in _INVENTED_MOBILE_FAMILIES
+    ]
 
 
 def is_weak_robot_ready_profile(robot_caps: dict[str, Any] | None) -> bool:
@@ -712,7 +759,19 @@ def match_robot_url(
     stages[0]["status"] = "done"
     stages[0]["detail"] = company
 
-    if is_weak_robot_ready_profile(caps):
+    profile = profile_from_robot_ready_caps(
+        caps,
+        robot_name=robot_name or company,
+        page_text=text,
+        submitted_domain=domain,
+    )
+    sku = indexed_sku(url, robot_name)
+    _grant_catalog_beverage(profile, sku)
+    stationary = is_stationary_sku(sku)
+    if stationary:
+        _drop_invented_mobility(profile)
+    catalog_beverage = any(cap.key == "beverage_prep" for cap in profile.capabilities)
+    if is_weak_robot_ready_profile(caps) and not catalog_beverage:
         if chip:
             return match_from_chip(chip, robot_name=robot_name or company)
         stages[1]["status"] = "done"
@@ -732,19 +791,10 @@ def match_robot_url(
             "robot_capabilities": caps,
             "evidence_urls": [url],
         }
-
-    profile = profile_from_robot_ready_caps(
-        caps,
-        robot_name=robot_name or company,
-        page_text=text,
-        submitted_domain=domain,
-    )
     stages[1]["status"] = "done"
     stages[1]["detail"] = caps.get("type") or f"{len(profile.capabilities)} signals"
 
-    result = match_jobs_for_profile(
-        profile, stationary=is_stationary_sku(indexed_sku(url, robot_name))
-    )
+    result = match_jobs_for_profile(profile, stationary=stationary)
     stages[2]["status"] = "done"
     stages[2]["detail"] = f"{result.get('job_count') or 0} jobs"
     result["research_stages"] = stages

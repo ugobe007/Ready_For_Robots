@@ -107,7 +107,15 @@ def post_robot_job_match(body: RobotJobMatchIn) -> dict[str, Any]:
                 from app.services.robot_class_qualify import apply_asserted_class
 
                 profile = apply_asserted_class(profile, body.asserted_class)
-            result = match_jobs_from_profile(profile)
+            from app.services.form_fit import indexed_sku, is_stationary_for_jobs
+
+            indexed = (
+                indexed_sku(url, body.product_name or resolved_name) if url else None
+            )
+            result = match_jobs_from_profile(
+                profile,
+                stationary=is_stationary_for_jobs(profile, indexed),
+            )
         elif chip and not url and not body.robot_capabilities:
             result = match_from_chip(chip, robot_name=name)
         else:

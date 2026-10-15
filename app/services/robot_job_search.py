@@ -369,9 +369,11 @@ def compose_robot_job_search(
         }
 
     t_match = time.perf_counter()
-    from app.services.form_fit import indexed_sku, is_stationary_sku
+    from app.services.form_fit import indexed_sku, is_stationary_for_jobs
 
-    stationary = bool(safe) and is_stationary_sku(indexed_sku(safe, product_name))
+    stationary = bool(safe) and is_stationary_for_jobs(
+        profile_dict, indexed_sku(safe, product_name)
+    )
     match = match_jobs_from_profile(profile_dict, limit=12, stationary=stationary)
     match_ms = int((time.perf_counter() - t_match) * 1000)
     jobs = list(match.get("jobs") or [])
