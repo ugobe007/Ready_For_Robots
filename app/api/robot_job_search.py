@@ -71,6 +71,15 @@ def post_robot_job_search(
             asserted_class=body.asserted_class,
             lookup_grain=body.lookup_grain,
         )
+        classified = result.pop("classified_product", None) if isinstance(result, dict) else None
+        if classified:
+            try:
+                from app.services.buyer_opportunity.phase2_match import persist_classified_product
+
+                persist_classified_product(db, classified)
+            except Exception:
+                logger.exception("rfr_robot_product_persist_failed")
+                db.rollback()
         try:
             from app.services.robot_submission_service import (
                 record_robot_submission,
