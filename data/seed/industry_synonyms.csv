@@ -1,44 +1,44 @@
-raw_value,industries,status,notes
-Manufacturing,manufacturing,mapped,
-Food Manufacturing & CPG,food_manufacturing,mapped,
-Food Processing & Manufacturing,food_manufacturing,mapped,
-Food Manufacturing (Contract Manufacturing),food_manufacturing,mapped,Co-packer
-Logistics & Warehousing,warehouse_distribution,mapped,
-Logistics & Warehousing (Cold Storage),warehouse_distribution,mapped,
-Logistics & Warehousing (3PL),3pl,mapped,
-Logistics & Supply Chain (3PL),3pl,mapped,
-Logistics & Fulfillment (3PL),3pl,mapped,
-Logistics & Freight,logistics_parcel,mapped,Taxonomy: freight carriers
-Food & Beverage Distribution,warehouse_distribution|logistics_parcel,mapped,Spec §5a: Sysco = warehouse_distribution / logistics_parcel
-Hospitality (Hotel Management),hotel,mapped,
-Hospitality (Hotels),hotel,mapped,
-Casinos & Gaming,casino,mapped,
-Healthcare (Hospital Systems),hospital,mapped,
-Healthcare (Skilled Nursing),senior_living,mapped,Taxonomy: long-term care
-Senior Living & Assisted Living,senior_living,mapped,
-Food Service (Restaurants),restaurant,mapped,
-Retail,retail_store,mapped,
-Cruise Lines,ships_maritime,mapped,
-Theme Parks & Entertainment,stadium_venue,mapped,Taxonomy: theme parks
-Government,government,mapped,
-Logistics,,needs_bob,"warehouse_distribution, 3pl or logistics_parcel?"
-Logistics & Supply Chain,,needs_bob,"warehouse_distribution, 3pl or logistics_parcel?"
-E-commerce & Logistics,,needs_bob,Retailer with its own DCs (retail_store or warehouse_distribution) or a 3PL?
-Retail logistics,,needs_bob,Retailer DCs: retail_store or warehouse_distribution?
-Retail & E-commerce,,needs_bob,retail_store or warehouse_distribution?
-Hospitality,,needs_bob,"hotel, casino, restaurant or bar_nightclub?"
-Entertainment & Hospitality,,needs_bob,"stadium_venue, casino or hotel?"
-Healthcare,,needs_bob,"hospital, surgery_center or senior_living?"
-Food Service,,needs_bob,"restaurant, qsr_fast_food or contract food service?"
-Food Service (Fast Casual),,needs_bob,restaurant or qsr_fast_food?
-Food Service & Catering,,needs_bob,No catering industry in the taxonomy
-Food Service & Hospitality,,needs_bob,"restaurant, hotel or casino?"
-Food Service & Facilities,,needs_bob,Contract food and facility services: no taxonomy industry
-Food Service & Distribution,,needs_bob,restaurant or warehouse_distribution?
-Facilities Services & Manufacturing Support,,needs_bob,Facility service contractor: no taxonomy industry
-Real Estate & Facilities,,needs_bob,"commercial_building, office_building or apartment_building?"
-Airports & Transportation,,needs_bob,airport or transportation_transit?
-Automotive,,needs_bob,Automaker (manufacturing) or dealership (automotive_dealership)?
-Unknown,,ignore,
-Other,,ignore,
-New,,ignore,
+source_value,candidate_industries,default_if_unclear,needs_company_check,notes
+Manufacturing,manufacturing,manufacturing,no,
+Food Manufacturing & CPG,food_manufacturing,food_manufacturing,no,
+Food Processing & Manufacturing,food_manufacturing,food_manufacturing,no,
+Food Manufacturing (Contract Manufacturing),food_manufacturing,food_manufacturing,no,Co-packer
+Logistics & Warehousing,warehouse_distribution,warehouse_distribution,no,
+Logistics & Warehousing (Cold Storage),warehouse_distribution,warehouse_distribution,no,
+Logistics & Warehousing (3PL),3pl,3pl,no,
+Logistics & Supply Chain (3PL),3pl,3pl,no,
+Logistics & Fulfillment (3PL),3pl,3pl,no,
+Logistics & Freight,logistics_parcel,logistics_parcel,no,Taxonomy: freight carriers
+Food & Beverage Distribution,warehouse_distribution|logistics_parcel,warehouse_distribution|logistics_parcel,no,Spec §5a: Sysco = warehouse_distribution / logistics_parcel
+Hospitality (Hotel Management),hotel,hotel,no,
+Hospitality (Hotels),hotel,hotel,no,
+Casinos & Gaming,casino,casino,no,
+Healthcare (Hospital Systems),hospital,hospital,no,
+Healthcare (Skilled Nursing),senior_living,senior_living,no,Taxonomy: long-term care
+Senior Living & Assisted Living,senior_living,senior_living,no,
+Food Service (Restaurants),restaurant,restaurant,no,
+Retail,retail_store,retail_store,no,
+Cruise Lines,ships_maritime,ships_maritime,no,
+Theme Parks & Entertainment,stadium_venue,stadium_venue,no,Taxonomy: theme parks
+Government,government,government,no,
+Logistics,3pl|logistics_parcel|warehouse_distribution,3pl,yes,Pick per company from its website
+Logistics & Supply Chain,3pl|warehouse_distribution,3pl,yes,
+E-commerce & Logistics,warehouse_distribution|3pl,warehouse_distribution,no,E-commerce fulfillment
+Retail logistics,warehouse_distribution,warehouse_distribution,no,Retailer running its own DCs (buyer-industry rule)
+Retail & E-commerce,retail_store|warehouse_distribution,retail_store,yes,Stores vs. fulfillment depends on the company
+Hospitality,hotel|restaurant,hotel,yes,
+Entertainment & Hospitality,casino|hotel|stadium_venue,casino,yes,
+Healthcare,hospital|senior_living|surgery_center|warehouse_distribution,,yes,No default: pharma/medical distributors (e.g. CuraScript SD) are warehouse_distribution
+Food Service,restaurant,restaurant,no,Restaurants include their bars
+Food Service (Fast Casual),qsr_fast_food,qsr_fast_food,no,
+Food Service & Catering,restaurant|facility_services,restaurant,yes,Contract caterers (hospital/campus/stadium food) = facility_services if added
+Food Service & Hospitality,restaurant|hotel,restaurant,yes,
+Food Service & Facilities,facility_services,,yes,Contract service firms (Sodexo/Aramark-type); needs new industry facility_services
+Food Service & Distribution,warehouse_distribution|logistics_parcel,warehouse_distribution,no,Food distributors (Sysco-type)
+Facilities Services & Manufacturing Support,facility_services|manufacturing,,yes,Needs new industry facility_services
+Real Estate & Facilities,commercial_building|office_building,commercial_building,no,
+Airports & Transportation,airport|transportation_transit,airport,yes,
+Automotive,manufacturing|automotive_dealership|retail_store|warehouse_distribution,,yes,No default: automaker vs. dealership vs. parts retail (e.g. NAPA) differ
+Unknown,,,no,Ignored: not an industry
+Other,,,no,Ignored: not an industry
+New,,,no,Ignored: not an industry

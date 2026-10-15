@@ -175,7 +175,33 @@ def test_script_dry_run_writes_nothing(engine, tmp_path, capsys):
 def test_synonyms_file_is_valid():
     synonyms = br.load_synonyms()
     assert synonyms["food & beverage distribution"]["industries"] == ["warehouse_distribution", "logistics_parcel"]
-    assert synonyms["hospitality"]["status"] == "needs_bob"
+    hospitality = synonyms["hospitality"]
+    assert hospitality["status"] == "company_check"
+    assert hospitality["candidates"] == ["hotel", "restaurant"] and hospitality["default"] == ["hotel"]
+    assert synonyms["food service"]["industries"] == ["restaurant"]
+    assert synonyms["e-commerce & logistics"]["industries"] == ["warehouse_distribution"]
+    assert synonyms["healthcare"]["default"] == [] and synonyms["automotive"]["default"] == []
+    assert synonyms["food service & facilities"]["candidates"] == ["facility_services"]
+    assert synonyms["unknown"]["status"] == "ignore"
+    assert not any(e["status"] == "needs_bob" for e in synonyms.values())
+
+
+SYNONYM_HEADER = ",".join(br.SYNONYM_COLUMNS)
+
+
+@pytest.mark.parametrize("row,error", [
+    ("Hospitality,hotel|restaurant,casino,yes,", "not among candidate_industries"),
+    ("Hospitality,,,yes,", "needs candidate_industries"),
+    ("Hospitality,hotel|restaurant,,no,", "need needs_company_check = yes"),
+    ("Hospitality,hotel,hotel,maybe,", "not yes or no"),
+    ("Homes,residential_consumer,residential_consumer,no,", "never a buyer industry"),
+    ("Space,space_station,space_station,no,", "unknown industries"),
+])
+def test_synonym_rows_are_validated(tmp_path, row, error):
+    path = tmp_path / "synonyms.csv"
+    path.write_text(f"{SYNONYM_HEADER}\n{row}\n")
+    with pytest.raises(ValueError, match=error):
+        br.load_synonyms(path)
 
 
 def test_backfill_report_counts_by_industry_and_writes_nothing(engine):
@@ -214,17 +240,36 @@ def test_backfill_report_counts_by_industry_and_writes_nothing(engine):
     assert report["writes"] == 0
     assert report["counts"] == {
         "companies_read": 14, "excluded_tenant_crm_rows": 1, "excluded_robot_makers": 1,
-        "skipped_job_posting_only": 2, "mapped": 4, "needs_bob_decision": 4, "unmapped": 1,
+        "skipped_job_posting_only": 2, "mapped": 4, "needs_company_check": 4, "unmapped": 1,
         "unmapped_blank_industry": 1,
     }
     assert report["mapped_by_industry"] == {"hotel": 2, "warehouse_distribution": 1, "logistics_parcel": 1, "ships_maritime": 1}
     assert report["mapped_by_pilot_group"] == {
         "1. Warehouse, logistics, 3PL": 1, "3. Hotels and casinos": 2, "hidden (not a pilot industry)": 1,
     }
-    assert report["needs_bob_by_raw_value"] == {"Hospitality": 4}
-    assert report["needs_bob_examples"] == {"Hospitality": ["Mystery Co", "Inn Co", "Lodge Co"]}
+    assert report["needs_company_check_by_raw_value"] == {"Hospitality": 4}
+    assert report["needs_company_check_examples"] == {"Hospitality": ["Mystery Co", "Inn Co", "Lodge Co"]}
+    assert report["company_check_review"] == []
     assert report["unmapped_by_raw_value"] == {"Space Logistics": 1}
     assert report["robot_makers_excluded"] == ["Richtech Robotics"]
     md = br.render_markdown(report)
     assert "nothing written" in md and "- hotel: 2" in md
     assert "- Hospitality: 4 (e.g. Mystery Co, Inn Co, Lodge Co)" in md
+
+    checks = {
+        12: {"status": "decided", "industries": ["restaurant"]},
+        13: {"status": "review", "reason": "no pick had a quote found on the site"},
+    }
+    with engine.connect() as conn:
+        trans = conn.begin()
+        report = br.build_backfill_report(conn, company_checks=checks)
+        trans.rollback()
+    assert report["counts"]["mapped_by_company_check"] == 1
+    assert report["counts"]["company_check_review"] == 1
+    assert report["counts"]["needs_company_check"] == 2
+    assert report["mapped_by_industry"]["restaurant"] == 1
+    assert report["company_check_review"] == [{
+        "company_id": 13, "name": "Lodge Co", "raw_value": "Hospitality", "candidates": ["hotel", "restaurant"],
+        "suggestion": ["hotel"], "reason": "no pick had a quote found on the site",
+    }]
+    assert "- Lodge Co (Hospitality): suggest hotel; candidates hotel, restaurant." in br.render_markdown(report)
