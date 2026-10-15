@@ -226,6 +226,19 @@ def compose_robot_job_search(
     else:
         safe = assert_public_http_url(raw)
 
+    if safe:
+        from app.services.buyer_opportunity.phase2_match import (
+            buyer_opportunities_enabled,
+            try_phase2_search,
+        )
+
+        if buyer_opportunities_enabled():
+            phased = try_phase2_search(safe, product_name)
+            if phased is not None:
+                total_ms = int((time.perf_counter() - t0) * 1000)
+                phased["timings"] = _timings(total_ms=total_ms)
+                return phased
+
     if safe and grain == "robot_type":
         from app.services.robot_class_qualify import lookup_class_id, thin_class_profile
 

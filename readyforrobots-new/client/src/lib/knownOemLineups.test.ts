@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { hostFromOemUrl, lookupKnownOem } from "./knownOemLineups";
+import {
+  catalogProductForSubmittedUrl,
+  hostFromOemUrl,
+  lookupKnownOem,
+} from "./knownOemLineups";
 
 describe("knownOemLineups", () => {
   it("maps Reflex homepages to named robots without a network call", () => {
@@ -223,5 +227,61 @@ describe("knownOemLineups", () => {
     expect((sanctuary?.robots || []).map(r => r.name)).toContain(
       "Sanctuary Phoenix"
     );
+  });
+
+  it("does not substitute another product from the same maker", () => {
+    const richtech = lookupKnownOem("https://richtechrobotics.com/solutions/dust-e-s");
+    const lineup = (richtech?.robots || []).map(robot => ({
+      name: robot.name,
+      displayClass: robot.display_class,
+    }));
+    expect(lineup.some(robot => robot.name === "ADAM")).toBe(true);
+    expect(lineup.some(robot => robot.name === "DUST-E S")).toBe(false);
+    const dust = catalogProductForSubmittedUrl(
+      "https://richtechrobotics.com/solutions/dust-e-s",
+      lineup
+    );
+    expect(dust.kind).toBe("unrecognized");
+    if (dust.kind === "unrecognized") expect(dust.label).toBe("DUST-E S");
+
+    const adam = catalogProductForSubmittedUrl(
+      "https://www.richtechrobotics.com/adam",
+      lineup
+    );
+    expect(adam.kind).toBe("named");
+    if (adam.kind === "named") expect(adam.product.name).toBe("ADAM");
+
+    const titan = catalogProductForSubmittedUrl(
+      "https://www.richtechrobotics.com/titan",
+      lineup
+    );
+    expect(titan.kind).toBe("named");
+    if (titan.kind === "named") expect(titan.product.name).toBe("Titan");
+
+    const mx = catalogProductForSubmittedUrl(
+      "https://www.richtechrobotics.com/dust-e-mx",
+      lineup
+    );
+    expect(mx.kind).toBe("named");
+    if (mx.kind === "named") expect(mx.product.name).toBe("DUST-E MX");
+
+    const home = catalogProductForSubmittedUrl(
+      "https://www.locusrobotics.com/",
+      [
+        { name: "Locus Origin" },
+        { name: "Locus Vector" },
+      ]
+    );
+    expect(home.kind).toBe("choose");
+
+    const origin = catalogProductForSubmittedUrl(
+      "https://www.locusrobotics.com/products/origin",
+      [
+        { name: "Locus Origin" },
+        { name: "Locus Vector" },
+      ]
+    );
+    expect(origin.kind).toBe("named");
+    if (origin.kind === "named") expect(origin.product.name).toBe("Locus Origin");
   });
 });

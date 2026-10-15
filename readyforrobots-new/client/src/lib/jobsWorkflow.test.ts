@@ -1467,6 +1467,14 @@ describe("jobsWorkflow", () => {
         capabilities: [],
       })
     ).toBe(false);
+    expect(
+      shouldShowClassPicker({
+        matched: true,
+        zeroReason: "unrecognized_product",
+        jobs: [],
+        capabilities: [],
+      })
+    ).toBe(false);
     const fourier = lineupJobLookups([
       { name: "Fourier GR-1", displayClass: "humanoid" },
       { name: "Fourier GR-2", displayClass: "humanoid" },

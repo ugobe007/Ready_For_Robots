@@ -324,6 +324,7 @@ export function shouldShowClassPicker(analysis: ClassPickerAnalysis): boolean {
   const cls = String(analysis.robotClass || "").trim();
   if (cls) return false;
   if (analysis.needsClassChoice) return true;
+  if (analysis.zeroReason === "unrecognized_product") return false;
   if (analysis.zeroReason === "insufficient_profile_evidence") return true;
   if (
     analysis.matched &&

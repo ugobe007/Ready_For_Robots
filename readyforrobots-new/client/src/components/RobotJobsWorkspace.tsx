@@ -40,7 +40,11 @@ import {
   type RobotJobSearchResult,
 } from "@/lib/robotJobSearch";
 import { fetchOemListing, fetchRobotProfile } from "@/lib/robotProfile";
-import { hostFromOemUrl, lookupKnownOem } from "@/lib/knownOemLineups";
+import {
+  catalogProductForSubmittedUrl,
+  hostFromOemUrl,
+  lookupKnownOem,
+} from "@/lib/knownOemLineups";
 import { lookupKnownDistributor } from "@/lib/knownDistributorLineups";
 import {
   I_KNOW_THE_ROBOT_HINT,
@@ -135,6 +139,9 @@ import {
   ROBOT_JOB_SEARCH_TIMEOUT_MS,
   FIND_IDENTITY_TIMEOUT_MS,
 } from "@/lib/jobsWorkflow";
+
+/** Prompt v6 classification is slower than a catalog lookup. The cap is a ceiling, not a delay. */
+const CLASSIFY_PAGE_TIMEOUT_MS = Math.max(ROBOT_JOB_SEARCH_TIMEOUT_MS, 45_000);
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 import {
@@ -195,7 +202,8 @@ type RobotAnalysis = {
 type ZeroReason =
   | "insufficient_profile_evidence"
   | "no_compatible_jobs"
-  | "corpus_gap";
+  | "corpus_gap"
+  | "unrecognized_product";
 
 type ProductChoice = {
   name: string;
@@ -443,6 +451,57 @@ function analysisForSelectedSku(
     productName: name,
     lookupGrain: "product",
   };
+}
+
+function unrecognizedAnalysis(label: string, companyName: string): RobotAnalysis {
+  return {
+    productName: label || "This robot",
+    companyName,
+    tier: "A",
+    profile: null,
+    matched: true,
+    capabilities: [],
+    jobs: [],
+    jobCount: 0,
+    needsClassChoice: false,
+    zeroReason: "unrecognized_product",
+    lookupGrain: "product",
+  };
+}
+
+function lineupFromSearch(res: RobotJobSearchResult): ProductChoice[] {
+  const searchProducts =
+    (res.products && res.products.length ? res.products : res.profile?.products) || [];
+  return filterJobsLineupProducts(
+    searchProducts.map(p => ({
+      name: p.name,
+      displayClass:
+        ("display_class" in p ? p.display_class : null) ||
+        ("robot_class" in p ? p.robot_class : null) ||
+        null,
+      description:
+        "description" in p && typeof p.description === "string"
+          ? p.description
+          : undefined,
+    }))
+  );
+}
+
+/** Jobs from a search are shown only when the URL names that product. */
+function searchNamesSubmittedProduct(
+  url: string,
+  res: RobotJobSearchResult
+): string | null {
+  if (res.state === "select_product" || res.needs_product_choice) return null;
+  const returned =
+    res.robot_name ||
+    res.profile?.selected_product?.name ||
+    "";
+  if (!returned) return null;
+  const decision = catalogProductForSubmittedUrl(url, [{ name: returned }]);
+  if (decision.kind !== "named") return null;
+  if (!(res.jobs || []).some(isNamedRobotJob)) return null;
+  return decision.product.name;
 }
 
 function sessionProductClasses(
@@ -960,43 +1019,94 @@ export default function RobotJobsWorkspace() {
           }))
         );
         if (lineup.length > 0) {
-          const lowerUrl = submitUrl.toLowerCase();
-          const matchedProduct =
-            lineup.find(p => lowerUrl.includes(p.name.toLowerCase())) ||
-            lineup[0];
-          const name = matchedProduct.name;
-          const displayClass = matchedProduct.displayClass;
-          const cls = configurationClassForLookup(displayClass);
-          setResearchPhase("jobs");
+          const decision = catalogProductForSubmittedUrl(submitUrl, lineup);
+          if (decision.kind === "named") {
+            const name = decision.product.name;
+            const displayClass = decision.product.displayClass;
+            const cls = configurationClassForLookup(displayClass);
+            setResearchPhase("jobs");
+            let res: RobotJobSearchResult;
+            try {
+              res = await fetchRobotJobSearch({
+                url: submitUrl,
+                product: name || undefined,
+                assertedClass: cls || undefined,
+                lookupGrain: "product",
+                signal: ac.signal,
+                timeoutMs: CLASSIFY_PAGE_TIMEOUT_MS,
+              });
+            } catch (firstErr) {
+              if (!live()) return;
+              // The URL named this product. A timeout may retry that product only.
+              res = await fetchRobotJobSearch({
+                product: name || undefined,
+                assertedClass: cls || undefined,
+                lookupGrain: "product",
+                signal: ac.signal,
+                timeoutMs: 5000,
+              });
+            }
+            if (!live()) return;
+            submissionIdRef.current =
+              res.robot_submission_id ?? submissionIdRef.current;
+            const analysis = analysisForSelectedSku(res, name, displayClass);
+            openJobsFromAnalyses(
+              [analysis],
+              submitUrl,
+              name ? [name] : [],
+              research
+            );
+            return;
+          }
           let res: RobotJobSearchResult;
           try {
             res = await fetchRobotJobSearch({
               url: submitUrl,
-              product: name || undefined,
-              assertedClass: cls || undefined,
               lookupGrain: "product",
               signal: ac.signal,
-              timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+              timeoutMs: CLASSIFY_PAGE_TIMEOUT_MS,
             });
           } catch (firstErr) {
             if (!live()) return;
-            // Known OEM live-fetch fallback: if live URL scrape timed out, load jobs for known robot directly
-            res = await fetchRobotJobSearch({
-              product: name || undefined,
-              assertedClass: cls || undefined,
-              lookupGrain: "product",
-              signal: ac.signal,
-              timeoutMs: 5000,
-            });
+            if (decision.kind === "choose") {
+              setProducts(lineup);
+              setSelected([]);
+              setStage("select");
+              return;
+            }
+            openJobsFromAnalyses(
+              [unrecognizedAnalysis(decision.label, known.vendor_name || "")],
+              submitUrl,
+              [decision.label],
+              research
+            );
+            return;
           }
           if (!live()) return;
           submissionIdRef.current =
             res.robot_submission_id ?? submissionIdRef.current;
-          const analysis = analysisForSelectedSku(res, name, displayClass);
+          const named = searchNamesSubmittedProduct(submitUrl, res);
+          if (named) {
+            setResearchPhase("jobs");
+            openJobsFromAnalyses(
+              [analysisForSelectedSku(res, named, null)],
+              submitUrl,
+              [named],
+              research
+            );
+            return;
+          }
+          if (decision.kind === "choose") {
+            const serverLineup = lineupFromSearch(res);
+            setProducts(serverLineup.length > 1 ? serverLineup : lineup);
+            setSelected([]);
+            setStage("select");
+            return;
+          }
           openJobsFromAnalyses(
-            [analysis],
+            [unrecognizedAnalysis(decision.label, known.vendor_name || "")],
             submitUrl,
-            name ? [name] : [],
+            [decision.label],
             research
           );
           return;
@@ -1018,48 +1128,50 @@ export default function RobotJobsWorkspace() {
               description: p.description,
             }))
           );
-          if (lineup.length > 1) {
+          const decision = catalogProductForSubmittedUrl(submitUrl, lineup);
+          if (decision.kind === "choose") {
             setProducts(lineup);
             setSelected([]);
             setStage("select");
             return;
           }
-          const name = lineup[0]?.name || listing.robots[0]?.name || "";
-          const displayClass =
-            lineup[0]?.displayClass || listing.robots[0]?.display_class;
-          const cls = configurationClassForLookup(displayClass);
-          setResearchPhase("jobs");
-          let res: RobotJobSearchResult;
-          try {
-            res = await fetchRobotJobSearch({
-              url: submitUrl,
-              product: name || undefined,
-              assertedClass: cls || undefined,
-              lookupGrain: "product",
-              signal: ac.signal,
-              timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
-            });
-          } catch (firstErr) {
+          if (decision.kind === "named") {
+            const name = decision.product.name;
+            const displayClass = decision.product.displayClass;
+            const cls = configurationClassForLookup(displayClass);
+            setResearchPhase("jobs");
+            let res: RobotJobSearchResult;
+            try {
+              res = await fetchRobotJobSearch({
+                url: submitUrl,
+                product: name || undefined,
+                assertedClass: cls || undefined,
+                lookupGrain: "product",
+                signal: ac.signal,
+                timeoutMs: CLASSIFY_PAGE_TIMEOUT_MS,
+              });
+            } catch (firstErr) {
+              if (!live()) return;
+              res = await fetchRobotJobSearch({
+                product: name || undefined,
+                assertedClass: cls || undefined,
+                lookupGrain: "product",
+                signal: ac.signal,
+                timeoutMs: 5000,
+              });
+            }
             if (!live()) return;
-            res = await fetchRobotJobSearch({
-              product: name || undefined,
-              assertedClass: cls || undefined,
-              lookupGrain: "product",
-              signal: ac.signal,
-              timeoutMs: 5000,
-            });
+            submissionIdRef.current =
+              res.robot_submission_id ?? submissionIdRef.current;
+            const analysis = analysisForSelectedSku(res, name, displayClass);
+            openJobsFromAnalyses(
+              [analysis],
+              submitUrl,
+              name ? [name] : [],
+              research
+            );
+            return;
           }
-          if (!live()) return;
-          submissionIdRef.current =
-            res.robot_submission_id ?? submissionIdRef.current;
-          const analysis = analysisForSelectedSku(res, name, displayClass);
-          openJobsFromAnalyses(
-            [analysis],
-            submitUrl,
-            name ? [name] : [],
-            research
-          );
-          return;
         }
       } catch (listingErr) {
         if (
@@ -1089,25 +1201,29 @@ export default function RobotJobsWorkspace() {
       submissionIdRef.current =
         res.robot_submission_id ?? submissionIdRef.current;
       setCompanyName(res.company_name || res.profile?.company?.name || "");
-      const searchProducts =
-        (res.products && res.products.length
-          ? res.products
-          : res.profile?.products) || [];
-      const lineup = filterJobsLineupProducts(
-        searchProducts.map(p => ({
-          name: p.name,
-          displayClass:
-            ("display_class" in p ? p.display_class : null) ||
-            ("robot_class" in p ? p.robot_class : null) ||
-            null,
-          description:
-            "description" in p && typeof p.description === "string"
-              ? p.description
-              : undefined,
-        }))
-      );
+      const named = searchNamesSubmittedProduct(submitUrl, res);
+      if (named) {
+        openJobsFromAnalyses(
+          [analysisForSelectedSku(res, named, null)],
+          submitUrl,
+          [named],
+          research
+        );
+        return;
+      }
+      const lineup = lineupFromSearch(res);
       if (lineup.length === 0) {
-        setCompanyName(res.company_name || res.profile?.company?.name || "");
+        const slugDecision = catalogProductForSubmittedUrl(submitUrl, []);
+        if (slugDecision.kind === "unrecognized") {
+          setProducts([]);
+          openJobsFromAnalyses(
+            [unrecognizedAnalysis(slugDecision.label, res.company_name || "")],
+            submitUrl,
+            [slugDecision.label],
+            research
+          );
+          return;
+        }
         setProducts([]);
         const analysis = {
           ...searchToAnalysis(res),
@@ -1120,27 +1236,43 @@ export default function RobotJobsWorkspace() {
         openJobsFromAnalyses([analysis], submitUrl, [], research);
         return;
       }
+      const decision = catalogProductForSubmittedUrl(submitUrl, lineup);
+      if (decision.kind === "unrecognized") {
+        setProducts([]);
+        openJobsFromAnalyses(
+          [unrecognizedAnalysis(decision.label, res.company_name || "")],
+          submitUrl,
+          [decision.label],
+          research
+        );
+        return;
+      }
       if (
-        (res.needs_product_choice || lineup.length > 1) &&
-        lineup.length > 1
+        decision.kind === "choose" &&
+        (res.needs_product_choice || lineup.length > 1)
       ) {
         setProducts(lineup);
         setSelected([]);
         setStage("select");
         return;
       }
-      const name =
-        lineup[0]?.name ||
-        res.profile?.selected_product?.name ||
-        res.robot_name ||
-        res.company_name ||
-        "";
-      const displayClass =
-        lineup[0]?.displayClass ||
-        res.profile?.selected_product?.display_class ||
-        res.robot_class;
-      const analysis = analysisForSelectedSku(res, name, displayClass);
-      openJobsFromAnalyses([analysis], submitUrl, name ? [name] : [], research);
+      if (decision.kind === "named") {
+        const analysis = analysisForSelectedSku(
+          res,
+          decision.product.name,
+          decision.product.displayClass
+        );
+        openJobsFromAnalyses(
+          [analysis],
+          submitUrl,
+          [decision.product.name],
+          research
+        );
+        return;
+      }
+      setProducts(lineup);
+      setSelected([]);
+      setStage("select");
     } catch (err) {
       if (
         shouldIgnoreStaleFindError({
@@ -1183,14 +1315,36 @@ export default function RobotJobsWorkspace() {
           }))
         );
         if (lineup.length > 0) {
-          const name = lineup[0].name;
-          const displayClass = lineup[0].displayClass;
+          const decision = catalogProductForSubmittedUrl(submitUrl, lineup);
+          if (decision.kind === "choose") {
+            setProducts(lineup);
+            setSelected([]);
+            setStage("select");
+            return;
+          }
+          if (decision.kind === "unrecognized") {
+            openJobsFromAnalyses(
+              [
+                unrecognizedAnalysis(
+                  decision.label,
+                  fallbackKnown.vendor_name || ""
+                ),
+              ],
+              submitUrl,
+              [decision.label],
+              research
+            );
+            return;
+          }
+          const name = decision.product.name;
+          const displayClass = decision.product.displayClass;
           const cls = configurationClassForLookup(displayClass);
           try {
             const res = await fetchRobotJobSearch({
               product: name || undefined,
               assertedClass: cls || undefined,
               lookupGrain: "product",
+              signal: ac.signal,
               timeoutMs: 5000,
             });
             const analysis = analysisForSelectedSku(res, name, displayClass);
@@ -1265,7 +1419,7 @@ export default function RobotJobsWorkspace() {
           assertedClass: cls || undefined,
           lookupGrain: "product",
           signal: ac.signal,
-          timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+          timeoutMs: CLASSIFY_PAGE_TIMEOUT_MS,
         });
         submissionIdRef.current =
           res.robot_submission_id ?? submissionIdRef.current;
@@ -1317,7 +1471,7 @@ export default function RobotJobsWorkspace() {
               assertedClass: lookup.robotClass,
               lookupGrain: "robot_type",
               signal: ac.signal,
-              timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+              timeoutMs: CLASSIFY_PAGE_TIMEOUT_MS,
             });
             classResults.set(lookup.robotClass, res);
             return;
@@ -1328,7 +1482,7 @@ export default function RobotJobsWorkspace() {
             url: submitUrl,
             product,
             signal: ac.signal,
-            timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+            timeoutMs: CLASSIFY_PAGE_TIMEOUT_MS,
           });
           skuResults.set(product, res);
         })
@@ -2021,7 +2175,7 @@ export default function RobotJobsWorkspace() {
       const res = await fetchRobotJobSearch({
         assertedClass: chosen,
         lookupGrain: "robot_type",
-        timeoutMs: ROBOT_JOB_SEARCH_TIMEOUT_MS,
+        timeoutMs: CLASSIFY_PAGE_TIMEOUT_MS,
       });
       const analysis = typeMatchToAnalysis(
         res,
@@ -3703,6 +3857,19 @@ function ZeroState({
         <p className="mt-2 text-[13px] leading-snug text-slate-300">
           The current job corpus is thin for this robot's capability domain.
           This is a coverage gap on our side, not a limitation of the robot.
+        </p>
+      </div>
+    );
+  }
+  if (r === "unrecognized_product") {
+    return (
+      <div className="mt-6 border border-slate-600 bg-[#081126] p-5">
+        <p className={JOBS_EYEBROW_CLASS}>No jobs yet</p>
+        <h3 className="mt-2 font-display text-lg font-bold text-slate-100">
+          {robotName} is not a catalog product we can match.
+        </h3>
+        <p className="mt-2 text-[13px] leading-snug text-slate-300">
+          Jobs stay empty for this page until the product is recognized.
         </p>
       </div>
     );
