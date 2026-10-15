@@ -97,7 +97,7 @@ def test_sunday_memo_matches_named_kitchen_jobs_not_cnc(monkeypatch):
     titles = " ".join(j.get("title") or "" for j in jobs).lower()
     assert "cnc" not in titles
     employers = {j.get("company_name") for j in jobs}
-    assert "Starbucks" in employers or "Compass Group" in employers or "White Castle" in employers
+    assert "Cafe operator" in employers or "Restaurant operator" in employers
 
 
 def test_richtech_adam_catalog_matches_named_beverage_jobs(monkeypatch):

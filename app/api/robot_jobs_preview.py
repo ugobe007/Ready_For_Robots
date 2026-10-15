@@ -24,6 +24,7 @@ from app.services.daily_jobs_report import (
     select_daily_report_rows,
 )
 from app.services.job_card_provenance import (
+    example_employer_label,
     is_example_job,
     is_robot_maker_employer,
     job_source_url,
@@ -54,9 +55,16 @@ def _public_job(row: Any, rank: int) -> dict[str, Any]:
         if contact == CONTACT_HUNTER_MISS:
             contact = CONTACT_EMPTY
     
+    employer = str(data.get("employer") or "").strip()
+    if is_example_job(data):
+        employer = example_employer_label(
+            data.get("industry"),
+            data.get("job_type") or data.get("title"),
+            employer,
+        )
     return {
         "job_key": data.get("job_key") or "",
-        "employer": data.get("employer") or "",
+        "employer": employer,
         "workplace": data.get("locality") or "",
         "work": data.get("job_type") or data.get("title") or "",
         "description": data.get("description") or "",
@@ -80,6 +88,12 @@ def corpus_preview_jobs(limit: int) -> list[dict[str, Any]]:
         if not isinstance(raw, dict):
             continue
         employer = str(raw.get("company_name") or "").strip()
+        shown_employer = example_employer_label(
+            raw.get("industry"),
+            raw.get("title"),
+            raw.get("path"),
+            employer,
+        )
         locality = str(raw.get("locality") or "").strip()
         title = str(raw.get("title") or "").strip()
         key = str(raw.get("job_key") or "").strip()
@@ -94,7 +108,7 @@ def corpus_preview_jobs(limit: int) -> list[dict[str, Any]]:
         out.append(
             {
                 "job_key": key,
-                "employer": employer,
+                "employer": shown_employer,
                 "workplace": locality,
                 "work": title,
                 "description": "",

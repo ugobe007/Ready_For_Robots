@@ -2,6 +2,7 @@
  * Live job-tape corpus — named-employer jobs from the match corpus.
  * Short titles / paths for the terminal board (not marketing cards).
  */
+import { exampleTapeIndustry } from "@/lib/exampleEmployer";
 import tapeJson from "@/lib/market_tape_jobs.json";
 import {
   KARE_CART,
@@ -158,7 +159,11 @@ export const MARKET_TAPE_JOBS: TapeJob[] = (tapeJson.jobs || []).flatMap(
       {
         key,
         title,
-        industry: String(raw.industry || "").trim(),
+        industry: exampleTapeIndustry(
+          String(raw.industry || "").trim(),
+          title,
+          String(raw.path || "").trim()
+        ),
         path: String(raw.path || "WORKSITE → WORKSITE").trim(),
         family,
       },

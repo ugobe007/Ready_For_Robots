@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { exampleTapeIndustry } from "./exampleEmployer";
 import {
   fetchRobotJobsPreview,
   formatInlineJobLine,
@@ -12,6 +13,22 @@ import {
 const here = dirname(fileURLToPath(import.meta.url));
 
 describe("robotJobsPreview", () => {
+  it("shows the kind of organization on example tape cards", () => {
+    expect(
+      exampleTapeIndustry(
+        "Harris Health — LBJ Hospital · Houston",
+        "Night EVS hard-floor scrub routes",
+        "SCRUB"
+      )
+    ).toBe("Hospital system · Houston");
+    expect(
+      exampleTapeIndustry("Mall of America · Bloomington", "Scrub mall common areas", "")
+    ).toBe("Regional mall operator · Bloomington");
+    expect(
+      exampleTapeIndustry("CBRE · Dallas", "Clean office-building restrooms", "")
+    ).toBe("Facilities services company · Dallas");
+  });
+
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();

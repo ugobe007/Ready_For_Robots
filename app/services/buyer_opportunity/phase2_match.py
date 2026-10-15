@@ -18,6 +18,7 @@ from app.services.job_card_provenance import (
     is_example_job,
     job_source_url,
     public_employer_email,
+    public_employer_name,
 )
 from app.services.robot_understanding_v1.industries import with_parents
 
@@ -463,7 +464,7 @@ def jobs_for_classification(product: dict[str, Any], *, limit: int = 12) -> list
                 "title": job.get("title"),
                 "industry": job.get("industry"),
                 "path": job.get("path"),
-                "company_name": job.get("company_name"),
+                "company_name": public_employer_name(job),
                 "locality": job.get("locality"),
                 "tape_family": job.get("tape_family"),
                 "score": None,
