@@ -31,7 +31,7 @@ def test_class_picker_click_starts_search_not_crm():
     assert "if (!a) return" not in qualify
     assert "fetchRobotJobMatch" not in qualify
     assert "shouldShowClassPicker(active)" in go_activate
-    assert "classJobsEmptyCopy" in text
+    assert "RESULTS_EMPTY_HEADLINE" in text
     assert "Finding jobs for that robot type" in text
     assert "classJobsEmptyCopy" in workflow
     assert "jobs for this robot yet" in workflow

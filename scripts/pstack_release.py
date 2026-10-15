@@ -561,7 +561,7 @@ def phase_act() -> dict[str, Any]:
         and "CLASS_PICKER_PROMPT" in workspace
         and "What kind of robot is" not in workspace
         and "kid of robot" not in workspace.lower()
-        and "classJobsEmptyCopy" in workspace
+        and "RESULTS_EMPTY_HEADLINE" in workspace
         and "shouldShowClassPicker(active)" in workspace
     )
     checks.append(
