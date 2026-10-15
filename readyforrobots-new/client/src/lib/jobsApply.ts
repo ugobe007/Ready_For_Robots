@@ -3,7 +3,7 @@
  * Monthly rental is what the OEM/distributor plans to charge the employer.
  * Never invent a dollar figure.
  */
-import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
+import { robotJobCardFromMatch } from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
 
 export const JOBS_APPLY_STORAGE_KEY = "rfr_job_apply_v1";
@@ -130,7 +130,7 @@ export function placementOutreachDraft(
   const employer = card.employer || "the employer";
   const work = card.jobTitle;
   const place = card.workplace || "";
-  const model = jobModelListLine(job) || slotLine(card);
+  const model = slotLine(card);
   const pocRaw = (record.pocEvidence || "").trim();
   const poc = pocRaw
     ? pocRaw

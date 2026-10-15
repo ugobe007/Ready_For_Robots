@@ -11,12 +11,13 @@ import {
   JOB_CARD_MODEL_LINK_CAP,
   JOB_CARD_OPEN_QUESTION_CAP,
   cardModelLinks,
+  JOB_CARD_EXAMPLE_LABEL,
 } from "./robotJobCard";
 
 const here = dirname(fileURLToPath(import.meta.url));
 
 describe("robotJobCard", () => {
-  it("maps a matched job into employment-model fields with a labeled pay estimate", () => {
+  it("maps a matched job into employment-model fields with no invented pay", () => {
     const card = robotJobCardFromMatch({
       title: "Tend CNC mills/lathes — workpiece load/unload around cycle",
       company_name: "groninger",
@@ -41,13 +42,9 @@ describe("robotJobCard", () => {
     expect(card.currentLabor).toBeNull();
     expect(card.openQuestions).toEqual(["How much of role is tend vs program"]);
     expect(card.description).toBe("Payload in range");
-    expect(card.payEstimate.monthlyLow).toBe(5000);
-    expect(card.payEstimate.monthlyHigh).toBe(7500);
-    expect(card.payEstimate.annualLow).toBe(60000);
-    expect(card.payEstimate.annualHigh).toBe(90000);
-    expect(card.payEstimate.heading).toMatch(/Potential contract value/i);
-    expect(card.payEstimate.disclaimer).toMatch(/Estimate of robot pay/i);
-    expect(card.payEstimate.disclaimer).toMatch(/not an employer quote/i);
+    expect(card).not.toHaveProperty("payEstimate");
+    expect(card.isExample).toBe(true);
+    expect(card.sourceUrl).toBeNull();
     expect(card.nextStep).toMatch(/Site assessment/i);
   });
 
@@ -59,8 +56,33 @@ describe("robotJobCard", () => {
       text: "Tend CNC mills/lathes — workpiece load/unload around cycle on the night shift.",
     });
     expect(card.description).toMatch(/workpiece load\/unload/);
-    expect(card.payEstimate.monthlyLabel).toMatch(/5,000/);
-    expect(card.payEstimate.annualLabel).toMatch(/60,000/);
+  });
+
+  it("marks a card Example unless it links to a source", () => {
+    const sourced = robotJobCardFromMatch({
+      title: "Deliver pharmacy totes",
+      company_name: "Rochester Regional Health",
+      source_url: "https://example.org/rfp/123",
+    });
+    expect(sourced.isExample).toBe(false);
+    expect(sourced.sourceUrl).toBe("https://example.org/rfp/123");
+
+    const flagged = robotJobCardFromMatch({
+      title: "Deliver pharmacy totes",
+      company_name: "Rochester Regional Health",
+      source_url: "https://example.org/rfp/123",
+      is_example: true,
+    });
+    expect(flagged.isExample).toBe(true);
+
+    const notHttp = robotJobCardFromMatch({
+      title: "Deliver pharmacy totes",
+      company_name: "Rochester Regional Health",
+      source_url: "corpus:row-12",
+    });
+    expect(notHttp.isExample).toBe(true);
+    expect(notHttp.sourceUrl).toBeNull();
+    expect(JOB_CARD_EXAMPLE_LABEL).toBe("Example");
   });
 
   it("rejects incomplete rows that are not Robot Jobs", () => {
@@ -215,8 +237,7 @@ describe("robotJobCard", () => {
     expect(card.modelContract?.fieldFeedback).toMatch(
       /do not automatically reduce/i
     );
-    expect(card.modelContract?.listLine).toMatch(/Task library/);
-    expect(card.modelContract?.listLine).toMatch(/2–8 weeks|2-8 weeks/);
+    expect(card.modelContract).not.toHaveProperty("listLine");
     expect(card.modelContract?.steps.map(s => s.n)).toEqual([1, 2, 3, 4, 5, 6]);
     expect(card.modelContract?.steps[0].body).toMatch(/pick-and-place/i);
     expect(card.modelContract?.steps[5].body).toMatch(
@@ -384,7 +405,7 @@ describe("robotJobCard", () => {
     expect(cardSrc).toMatch(/card.modelLinks/);
     expect(cardSrc).toMatch(/Task models/);
     expect(cardSrc).toMatch(/card.modelContract/);
-    expect(cardSrc).toMatch(/listLine/);
+    expect(cardSrc).not.toMatch(/listLine/);
     expect(cardSrc).toMatch(/card.modelContract.steps/);
     expect(cardSrc).toMatch(/Name the slot|step.label/);
     expect(cardSrc).not.toMatch(/How we qualify a candidate/);
@@ -398,10 +419,11 @@ describe("robotJobCard", () => {
     expect(cardSrc).not.toMatch(/\|\| "Unknown"/);
     expect(cardSrc).toMatch(/Not yet confirmed/);
     expect(cardSrc).toMatch(/Job description/);
-    expect(cardSrc).toMatch(/card.payEstimate/);
-    expect(cardSrc).toMatch(
-      /Potential contract value|card.payEstimate.heading/
-    );
+    expect(cardSrc).not.toMatch(/payEstimate|Potential contract value/);
+    expect(cardSrc).toMatch(/card.isExample/);
+    expect(cardSrc).toMatch(/data-job-example="true"/);
+    expect(cardSrc).toMatch(/JOB_CARD_EXAMPLE_LABEL/);
+    expect(cardSrc).toMatch(/card.sourceUrl/);
     expect(cardSrc).not.toMatch(/Open questions/);
   });
 });

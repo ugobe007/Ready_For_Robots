@@ -127,6 +127,32 @@ def test_find_diligentrobots_is_healthcare_jobs_not_humanoid_empty(monkeypatch):
     assert families <= {"clinical_delivery", "resident_services"}
 
 
+def test_relay_site_payload_matches_api_payload(monkeypatch):
+    """The FIND page sends product + lookup_grain after the class pick; the
+    result must equal the same class without those fields."""
+    import app.services.robot_understanding_v1.pipeline as P
+
+    def boom(*_a, **_k):
+        raise AssertionError("indexed Relay must not crawl")
+
+    monkeypatch.setattr(P, "fetch_page", boom)
+    monkeypatch.setattr(P, "collect_source_pack", boom)
+    clear_profile_cache_memory()
+    site = compose_robot_job_search(
+        "https://relayrobotics.com",
+        product="Relay",
+        asserted_class="healthcare",
+        lookup_grain="product",
+    )
+    clear_profile_cache_memory()
+    api = compose_robot_job_search("https://relayrobotics.com", asserted_class="healthcare")
+    assert site["state"] == "matches"
+    assert site["zero_reason"] is None
+    assert [j["job_key"] for j in site["jobs"]] == [j["job_key"] for j in api["jobs"]]
+    families = {j.get("tape_family") for j in site["jobs"]}
+    assert families <= {"clinical_delivery", "resident_services"}
+
+
 def test_healthcare_class_search_posts_robot_type_grain():
     clear_profile_cache_memory()
     out = compose_robot_job_search(

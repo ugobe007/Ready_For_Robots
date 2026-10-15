@@ -58,7 +58,6 @@ import {
   crmSaveJobsRobotLabel,
 } from "@/lib/jobsWorkflow";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
-import { jobModelListLine } from "@/lib/robotJobCard";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
@@ -801,7 +800,6 @@ export default function Signup() {
                 {tasteJobs.length > 0 ? (
                   <ul className="mt-3 space-y-2">
                     {tasteJobs.map((job, i) => {
-                      const modelLine = jobModelListLine(job);
                       return (
                         <li
                           key={job.job_key || `${job.title}-${i}`}
@@ -812,11 +810,6 @@ export default function Signup() {
                             <span className="text-slate-400">
                               {" "}
                               · {job.company_name}
-                            </span>
-                          ) : null}
-                          {modelLine ? (
-                            <span className="block text-slate-400">
-                              {modelLine}
                             </span>
                           ) : null}
                         </li>

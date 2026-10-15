@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from app.services import robot_ontology
+from app.services.job_card_provenance import buyer_rows, job_source_url, public_employer_email
 from app.services.robot_capability_derive import (
     DerivedCapability,
     derive_capabilities,
@@ -129,6 +130,7 @@ CONFIGURATION_WORK_CAPABILITIES = frozenset(
         "hospitality_task",
         "serving_task",
         "food_prep",
+        "beverage_prep",
         "surface_clean",
         "hard_floor_scrub",
         "aerospace_task",
@@ -263,6 +265,7 @@ class JobMatchCard:
     employer_email: Optional[str] = None
     contact_url: Optional[str] = None
     apply_url: Optional[str] = None
+    source_url: Optional[str] = None
 
     def to_api_job(self) -> dict[str, Any]:
         return {
@@ -285,6 +288,8 @@ class JobMatchCard:
             "employer_email": self.employer_email,
             "contact_url": self.contact_url,
             "apply_url": self.apply_url,
+            "source_url": self.source_url,
+            "is_example": self.source_url is None,
         }
 
 
@@ -907,13 +912,13 @@ def evaluate_job(
         source="requirement_match",
         required_task_models=models,
         text=str(row.get("text") or job_spec.get("text") or "").strip(),
-        employer_email=(
-            row.get("employer_email")
-            or job_spec.get("employer_email")
-            or None
+        employer_email=public_employer_email(
+            row.get("employer_email") or job_spec.get("employer_email"),
+            row.get("company_name") or job_spec.get("company_name"),
         ),
         contact_url=row.get("contact_url") or job_spec.get("contact_url") or None,
         apply_url=row.get("apply_url") or job_spec.get("apply_url") or None,
+        source_url=job_source_url({**job_spec, **row}),
     )
 
 
@@ -1291,6 +1296,7 @@ def match_jobs_from_profile(
     *,
     limit: int = 12,
     include_rejections: bool = False,
+    stationary: bool = False,
 ) -> dict[str, Any]:
     product = (profile.get("selected_product") or {}).get("name")
     company = (profile.get("company") or {}).get("name")
@@ -1309,9 +1315,10 @@ def match_jobs_from_profile(
     caps = derive_capabilities(profile)
     cards: list[JobMatchCard] = []
     gold = load_gold_jobs()
+    from app.services.form_fit import jobs_fit_form
     from app.services.robot_job_live_corpus import merge_live_jobs
 
-    for row in merge_live_jobs(load_corpus()):
+    for row in jobs_fit_form(buyer_rows(merge_live_jobs(load_corpus())), stationary=stationary):
         spec = gold.get(row.get("job_key") or "")
         if spec is None:
             spec = {

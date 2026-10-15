@@ -74,7 +74,7 @@ export default function Welcome() {
                 <p className="mt-2 text-sm sm:text-base text-slate-300 max-w-2xl">
                   Your enterprise workspace is unlocked. You now have access to
                   independent engineering feasibility benchmarks, 3D cell
-                  evaluation reports, verified buyer leads, and turnkey
+                  evaluation reports, buyer leads, and turnkey
                   commercial proposal tools.
                 </p>
               </div>

@@ -14,7 +14,7 @@ from app.services.phelan_persona import PHELAN_BANNED_PHRASES, PHELAN_ORG, phela
 PHELAN_INTRO = (
     "I'm Phelan, Robot Coordinator at ReadyForRobots. ReadyForRobots is recruitment and placement infrastructure for robotic labor. "
     "We evaluate physical task feasibility, cell constraints, payload/throughput requirements, and hardware capabilities "
-    "to match qualified robotic labor directly to real, verified job openings at enterprise and industrial facilities."
+    "to match robots to physical work that companies are moving to automate."
 )
 
 PHELAN_BUYER_ROLE_LINE = (

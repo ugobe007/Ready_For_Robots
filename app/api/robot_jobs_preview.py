@@ -2,7 +2,8 @@
 
 Anonymous GET. Live RobotJob rows when the table has named employers.
 If that table is empty, named-employer corpus rows so the home board is
-not blank. Does not invent names, emails, or payback.
+not blank; those are flagged is_example. Does not invent names, emails, or
+payback.
 """
 from __future__ import annotations
 
@@ -21,6 +22,11 @@ from app.services.daily_jobs_report import (
     DECISION_MAKER_HUNTER_MISS,
     _serialize_job,
     select_daily_report_rows,
+)
+from app.services.job_card_provenance import (
+    is_example_job,
+    is_robot_maker_employer,
+    job_source_url,
 )
 from app.services.robot_job_extract import is_job_employer_name
 from app.services.robot_requirement_match import is_named_robot_job
@@ -57,6 +63,8 @@ def _public_job(row: Any, rank: int) -> dict[str, Any]:
         "timing": data.get("timing") or "",
         "decision_maker": decision,
         "contact": contact,
+        "source_url": job_source_url(data),
+        "is_example": is_example_job(data),
     }
 
 
@@ -81,6 +89,8 @@ def corpus_preview_jobs(limit: int) -> list[dict[str, Any]]:
             continue
         if not is_job_employer_name(employer, title=title):
             continue
+        if is_robot_maker_employer(raw):
+            continue
         out.append(
             {
                 "job_key": key,
@@ -91,6 +101,8 @@ def corpus_preview_jobs(limit: int) -> list[dict[str, Any]]:
                 "timing": "",
                 "decision_maker": DECISION_MAKER_EMPTY,
                 "contact": CONTACT_EMPTY,
+                "source_url": None,
+                "is_example": True,
             }
         )
         if len(out) >= cap:
@@ -103,8 +115,9 @@ def get_robot_jobs_preview(
     limit: int = Query(default=3, ge=1, le=_PREVIEW_CAP),
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
-    rows = select_daily_report_rows(db, limit=limit)
+    rows = select_daily_report_rows(db, limit=50)
     jobs = [_public_job(row, rank) for rank, row in enumerate(rows, start=1)]
+    jobs = [j for j in jobs if not is_robot_maker_employer({"company_name": j["employer"]})][:limit]
     source = "live"
     if not jobs:
         jobs = corpus_preview_jobs(limit)

@@ -9,7 +9,7 @@ export default function HeroLeadTicker() {
       maxVisible={25}
       tickMs={6000}
       title="Pipeline"
-      subtitle="Verified buyer signals"
+      subtitle="Buyer signals"
       showPipelineLink
     />
   );

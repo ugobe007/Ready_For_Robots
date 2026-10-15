@@ -25,7 +25,7 @@
           "catalog_claims": [
             {"predicate": "product_class", "value": "service_robot", "evidence_span": "ADAM is Richtech's autonomous bar and F&B robot."},
             {"predicate": "operating_environment", "value": "hospitality", "evidence_span": "Hospitality and food-service deployments."},
-            {"predicate": "has_mobile_base", "value": true, "evidence_span": "Wheeled indoor service platform."},
+            {"predicate": "has_mobile_base", "value": false, "evidence_span": "Stationary drink-making and drink-serving station for restaurants, hotels and bars (buyer_opportunity_spec v1.3 \u00a76)."},
             {"predicate": "claims_beverage_prep", "value": true, "evidence_span": "ADAM is Richtech's autonomous bar and F&B robot."}
           ]
         },

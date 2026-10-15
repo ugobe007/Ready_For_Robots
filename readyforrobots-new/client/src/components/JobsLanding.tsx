@@ -11,6 +11,7 @@ import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
 import CustomerQuoteBanner from "@/components/CustomerQuoteBanner";
 import QuickSignupModal from "@/components/QuickSignupModal";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
+import { JOB_TAPE_EXAMPLE_SUBTITLE } from "@/lib/robotJobCard";
 import { useTapeJobCard } from "@/lib/tapeJobCard";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
@@ -272,8 +273,8 @@ export default function JobsLanding() {
         <p className="rfr-landing-brief-note">{LANDING_BRIEF_NOTE}</p>
         <div className="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-[#081126] shadow-2xl">
           <LiveJobTape
-            title="Verified Physical Work Feed"
-            subtitle="Click any classified job opportunity to explore specs, ROI breakdown, and share direct links"
+            title="Example jobs"
+            subtitle={JOB_TAPE_EXAMPLE_SUBTITLE}
             corpus={MARKET_TAPE_JOBS}
             baseCount={MARKET_TAPE_JOBS.length}
             running={true}

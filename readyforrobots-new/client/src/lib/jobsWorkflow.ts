@@ -995,11 +995,13 @@ export function jobExplanation(input: JobExplanationInput): string {
 export function jobsListHint(opts: {
   robotCount: number;
   productName: string;
+  jobCount: number;
 }): string {
   if (opts.robotCount > 1) {
     return "One sample job per robot. Rows start checked. Run each robot by itself for 25 jobs, then Open CRM. Apply from the desk.";
   }
-  return `25 example jobs ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM. Apply from the desk.`;
+  const jobs = opts.jobCount === 1 ? "1 job" : `${opts.jobCount} jobs`;
+  return `${jobs} ${opts.productName} can do. Rows start checked. Uncheck any you do not want, then Open CRM. Apply from the desk.`;
 }
 
 export const JOBS_RUN_ONE_ROBOT_CTA = "Run one robot for 25 jobs →";

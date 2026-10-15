@@ -170,6 +170,14 @@ def corpus_row_from_robot_job(row: Any) -> Optional[dict[str, Any]]:
     if not apply_url:
         raw_a = req.get("apply_url")
         apply_url = str(raw_a).strip() if isinstance(raw_a, str) else None
+    provenance = getattr(row, "provenance", None)
+    raw_src = req.get("source_url") or (
+        provenance.get("source_url") if isinstance(provenance, dict) else None
+    )
+    source_url = str(raw_src).strip() if isinstance(raw_src, str) and raw_src.strip() else None
+    from app.services.job_card_provenance import public_employer_email
+
+    email = public_employer_email(email, employer)
     mapped = {
         "job_key": f"live_{key}",
         "title": title or function or "Operational work",
@@ -191,6 +199,7 @@ def corpus_row_from_robot_job(row: Any) -> Optional[dict[str, Any]]:
         "employer_email": email,
         "contact_url": contact_url,
         "apply_url": apply_url,
+        "source_url": source_url,
     }
     if product_class == "serving":
         mapped["families"] = [f for f in mapped["families"] if f != "floor_scrub"]

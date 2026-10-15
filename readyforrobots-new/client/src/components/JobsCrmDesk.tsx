@@ -36,7 +36,12 @@ import ExperimentHeader from "@/components/ExperimentHeader";
 import JobsProcessChrome from "@/components/JobsProcessChrome";
 import { jobsFindHref } from "@/lib/jobsLanding";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
-import { jobModelListLine, robotJobCardFromMatch } from "@/lib/robotJobCard";
+import {
+  JOB_CARD_EXAMPLE_LABEL,
+  JOB_CARD_EXAMPLE_NOTE,
+  JOB_CARD_SOURCE_LABEL,
+  robotJobCardFromMatch,
+} from "@/lib/robotJobCard";
 import type { MatchJob } from "@/lib/robotJobMatch";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsCrmNextSteps from "@/components/JobsCrmNextSteps";
@@ -562,11 +567,6 @@ export default function JobsCrmDesk({
                             .filter(Boolean)
                             .join(" · ")}
                         </span>
-                        {jobModelListLine(job) ? (
-                          <span className="mt-1 block font-mono text-sm text-slate-500">
-                            {jobModelListLine(job)}
-                          </span>
-                        ) : null}
                         <span className="mt-1 block font-mono text-sm text-slate-500">
                           {workTaskModelListLine(
                             parseWorkTaskModel(rowByKey.get(job.job_key))
@@ -835,18 +835,22 @@ function CollectedJobInspect({ job }: { job: MatchJob }) {
           </div>
         ) : null}
         <div>
-          <dt className={eyebrow}>{card.payEstimate.heading}</dt>
-          <dd className="mt-0.5">
-            <span className="text-emerald-300">
-              {card.payEstimate.monthlyLabel}
-            </span>
-            {" · "}
-            <span className="text-emerald-300">
-              {card.payEstimate.annualLabel}
-            </span>
-            <span className="mt-0.5 block text-slate-400">
-              {card.payEstimate.disclaimer}
-            </span>
+          <dt className={eyebrow}>
+            {card.sourceUrl ? JOB_CARD_SOURCE_LABEL : JOB_CARD_EXAMPLE_LABEL}
+          </dt>
+          <dd className="mt-0.5 text-slate-300">
+            {card.sourceUrl ? (
+              <a
+                href={card.sourceUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="underline decoration-slate-600 underline-offset-2"
+              >
+                {card.sourceUrl}
+              </a>
+            ) : (
+              JOB_CARD_EXAMPLE_NOTE
+            )}
           </dd>
         </div>
         <div>
@@ -963,7 +967,6 @@ function ApplyPanel({
   const brief = placementAgentBrief(job, record, robotName);
   const lane = placementMoneyLane(gaps, record);
   const card = robotJobCardFromMatch(job);
-  const modelLine = jobModelListLine(job);
 
   function note(kind: PipelineActivityEvent["kind"], label: string) {
     const company = robotJobCardFromMatch(job).employer || undefined;
@@ -1046,9 +1049,6 @@ function ApplyPanel({
         Your move: {nextLabel.replace(/ →$/, "")}
       </h2>
       <p className="mt-2 text-lg leading-relaxed text-slate-200">{brief}</p>
-      {modelLine ? (
-        <p className="mt-2 font-mono text-sm text-slate-400">{modelLine}</p>
-      ) : null}
       {lane === "pack" ? (
         <p className="mt-6 max-w-2xl text-sm leading-relaxed text-slate-400">
           {gaps.find(g => g.id === "model_pack")?.howToFix}

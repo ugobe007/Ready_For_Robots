@@ -27,6 +27,7 @@ from app.services.jobs_crm import (
     application_with_thread,
     get_application,
     record_activity,
+    stored_employer_email,
 )
 
 STATUS_APPLIED = "applied"
@@ -719,7 +720,7 @@ def accept_application(db: Session, token: str) -> dict[str, Any]:
         db,
         row,
         body=body,
-        from_email=row.employer_email,
+        from_email=stored_employer_email(row),
         subject="Application accepted",
     )
     record_activity(
@@ -768,7 +769,7 @@ def decline_application(
         db,
         row,
         body=body,
-        from_email=row.employer_email,
+        from_email=stored_employer_email(row),
         subject="Application declined",
     )
     record_activity(
@@ -834,7 +835,7 @@ def request_interview(
         db,
         row,
         body=body,
-        from_email=row.employer_email,
+        from_email=stored_employer_email(row),
         subject="Interview requested",
     )
     extra = []
@@ -844,7 +845,7 @@ def request_interview(
     else:
         extra.append("The employer did not pick a time. Arrange the 1-to-1 and confirm back.")
     notify_oem_status(db, None, row, event, extra_lines=extra)
-    if row.employer_email and row.oem_email:
+    if stored_employer_email(row) and row.oem_email:
         _email_interview_both_sides(row, when_label)
     record_activity(
         db,
@@ -903,7 +904,7 @@ def hold_slot(
         db,
         row,
         body=body,
-        from_email=row.employer_email,
+        from_email=stored_employer_email(row),
         subject="Interview slot held",
     )
     hold_link = oem_hold_url(row.oem_hold_token)
@@ -913,7 +914,7 @@ def hold_slot(
         f"Confirm or release: {hold_link}",
     ]
     notify_oem_status(db, None, row, STATUS_INTERVIEW_HELD, extra_lines=extra)
-    if row.employer_email and row.oem_email:
+    if stored_employer_email(row) and row.oem_email:
         _email_interview_both_sides(row, when_label, kind="held", hold_url=hold_link)
     record_activity(
         db,
@@ -976,7 +977,7 @@ def _confirm_hold_row(db: Session, row: JobApplication, *, user: dict | None) ->
         row,
         body=f"Robot company confirmed the held slot ({when}).",
         direction="outbound",
-        to_email=row.employer_email,
+        to_email=stored_employer_email(row),
         subject="Interview hold confirmed",
     )
     notify_oem_status(
@@ -986,7 +987,7 @@ def _confirm_hold_row(db: Session, row: JobApplication, *, user: dict | None) ->
         STATUS_INTERVIEW_CONFIRMED,
         extra_lines=[f"Confirmed held window: {when}"],
     )
-    if row.employer_email and row.oem_email:
+    if stored_employer_email(row) and row.oem_email:
         _email_interview_both_sides(row, when if (row.slot_start or row.interview_at) else None, kind="confirmed")
     record_activity(
         db,
@@ -1016,14 +1017,14 @@ def _release_hold_row(db: Session, row: JobApplication, *, user: dict | None) ->
         row,
         body=body,
         direction="outbound",
-        to_email=row.employer_email,
+        to_email=stored_employer_email(row),
         subject="Interview hold released",
     )
     extra = ["The held window is released. The employer can propose or hold a new time."]
     if when:
         extra.append(f"Released window: {when}")
     notify_oem_status(db, user, row, STATUS_HOLD_RELEASED, extra_lines=extra)
-    if row.employer_email and row.oem_email:
+    if stored_employer_email(row) and row.oem_email:
         _email_interview_both_sides(row, when, kind="released")
     record_activity(
         db,
@@ -1054,7 +1055,7 @@ def confirm_interview(db: Session, user: dict, application_id: str) -> dict[str,
         row,
         body=f"Robot company confirmed the interview ({when}).",
         direction="outbound",
-        to_email=row.employer_email,
+        to_email=stored_employer_email(row),
         subject="Interview confirmed",
     )
     notify_oem_status(
@@ -1064,7 +1065,7 @@ def confirm_interview(db: Session, user: dict, application_id: str) -> dict[str,
         STATUS_INTERVIEW_CONFIRMED,
         extra_lines=[f"Confirmed time/date: {when}"],
     )
-    if row.employer_email:
+    if stored_employer_email(row):
         _email_interview_both_sides(row, when if row.interview_at else None, confirmed=True)
     record_activity(
         db,
@@ -1133,7 +1134,7 @@ def _email_interview_both_sides(
     kind: str | None = None,
     hold_url: str | None = None,
 ) -> None:
-    if not row.employer_email or not row.oem_email:
+    if not stored_employer_email(row) or not row.oem_email:
         return
     verb = kind or ("confirmed" if confirmed else "proposed")
     subject = f"Interview {verb}: {row.work_title} at {row.employer_name}"
@@ -1167,7 +1168,7 @@ def _email_interview_both_sides(
         from app.services.resend_email import send_email_via_resend
 
         send_email_via_resend(
-            to_email=[row.oem_email, row.employer_email],
+            to_email=[row.oem_email, stored_employer_email(row)],
             subject=subject,
             body_text="\n".join(lines),
             from_display_name="Ready For Robots Jobs",

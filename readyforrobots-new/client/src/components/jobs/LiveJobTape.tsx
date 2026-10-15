@@ -14,6 +14,7 @@ import {
   shuffleTapeJobs,
   type TapeJob,
 } from "@/lib/jobsTapeCorpus";
+import { JOB_CARD_EXAMPLE_LABEL } from "@/lib/robotJobCard";
 
 const VISIBLE = 12;
 /** Fixed row height — animation translates by this amount only. */
@@ -279,12 +280,18 @@ export default function LiveJobTape({
             {title}
           </p>
           <p className="font-mono text-[13px] font-bold uppercase tracking-[0.08em] tabular-nums text-emerald-400 sm:text-[14px]">
-            <span>{jobsFoundLabel(foundCount)}</span>
+            <span>
+              {revealing
+                ? jobsFoundLabel(foundCount)
+                : `${padCount(foundCount)} ${JOB_CARD_EXAMPLE_LABEL}s`}
+            </span>
           </p>
         </div>
-        <p className="mt-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-          {revealing ? "Matching work to your robot" : "Live robot work"}
-        </p>
+        {revealing ? (
+          <p className="mt-0.5 font-mono text-[9px] font-semibold uppercase tracking-[0.16em] text-slate-600">
+            Matching work to your robot
+          </p>
+        ) : null}
         {subtitle ? (
           <p className="mt-1.5 max-w-xl text-[11px] leading-snug normal-case tracking-normal text-slate-500">
             {subtitle}
@@ -356,7 +363,7 @@ export default function LiveJobTape({
                         row.isNew ? "text-emerald-400" : "text-slate-500"
                       }`}
                     >
-                      {row.isNew ? "NEW" : padCount(row.seq).slice(-3)}
+                      {padCount(row.seq).slice(-3)}
                     </span>
 
                     <span className="flex h-[46px] items-center justify-center self-center">
@@ -394,6 +401,12 @@ export default function LiveJobTape({
                           letterSpacing: "0.08em",
                         }}
                       >
+                        <span
+                          data-job-example="true"
+                          className="mr-1.5 text-amber-300"
+                        >
+                          {JOB_CARD_EXAMPLE_LABEL}
+                        </span>
                         {row.path}
                       </span>
                     </span>

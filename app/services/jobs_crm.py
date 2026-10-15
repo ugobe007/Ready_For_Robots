@@ -79,6 +79,15 @@ def employer_email_from_job(job: dict[str, Any] | None) -> Optional[str]:
     return None
 
 
+def stored_employer_email(row: Any) -> Optional[str]:
+    """Stored employer email, minus operations@<employer>.com mailboxes the old matcher minted."""
+    from app.services.job_card_provenance import public_employer_email
+
+    return public_employer_email(
+        getattr(row, "employer_email", None), getattr(row, "employer_name", None)
+    )
+
+
 def catalog_skus_for_oem(
     *,
     url: str | None = None,
@@ -344,7 +353,7 @@ def kept_job_payload(row: KeptJob) -> dict[str, Any]:
         "robot_name": row.robot_name,
         "robot_url": row.robot_url,
         "robot_submission_id": row.robot_submission_id,
-        "employer_email": row.employer_email,
+        "employer_email": stored_employer_email(row),
         "work_task_model_kind": _work_task_model_kind(row),
         "work_task_model_source": _work_task_model_source(row),
         "acted_at": row.acted_at.isoformat() if row.acted_at else None,
@@ -504,8 +513,8 @@ def apply_to_job(
         ident["work_title"] = kept.work_title
         ident["workplace"] = kept.workplace
     contacts = employer_contacts_from_job(payload if isinstance(payload, dict) else {})
-    if kept and kept.employer_email:
-        hit = normalize_recipient_email(kept.employer_email)
+    if kept and stored_employer_email(kept):
+        hit = normalize_recipient_email(stored_employer_email(kept))
         if hit and not any(c.get("email") == hit for c in contacts):
             contacts.append({"email": hit, "source": "job_card"})
     email = contacts[0]["email"] if contacts else None
@@ -781,7 +790,7 @@ def send_prepared_application(
     row = get_application(db, user, application_id)
     if row.send_status == SEND_SENT:
         return application_with_thread(db, user, application_id)
-    if not row.employer_email:
+    if not stored_employer_email(row):
         raise ValueError(_NO_EMAIL_REASON)
     snapshot = row.offer_snapshot if isinstance(row.offer_snapshot, dict) else {}
     draft = snapshot.get("draft") if isinstance(snapshot.get("draft"), dict) else {}
@@ -801,7 +810,7 @@ def send_prepared_application(
         from app.services.resend_email import ResendEmailError, send_email_via_resend
 
         result = send_email_via_resend(
-            to_email=row.employer_email,
+            to_email=stored_employer_email(row),
             subject=subject,
             body_text=body,
             from_display_name="Ready For Robots Jobs",
@@ -832,7 +841,7 @@ def send_prepared_application(
             body=body,
             subject=subject,
             from_email=result.get("from_email") or os.getenv("RESEND_FROM_EMAIL"),
-            to_email=row.employer_email,
+            to_email=stored_employer_email(row),
             provider_id=result.get("resend_id"),
         )
     )
@@ -911,18 +920,18 @@ def application_payload(row: JobApplication, *, include_messages: bool = False) 
         "poc_skipped": _truthy(row.poc_skipped),
         "monthly_price": row.monthly_price,
         "offer_snapshot": row.offer_snapshot or {},
-        "employer_email": row.employer_email,
+        "employer_email": stored_employer_email(row),
         "send_status": row.send_status,
         "send_error": row.send_error,
         "resend_id": row.resend_id,
         "reply_to": row.reply_to,
         "thread_state": row.thread_state,
         "created_at": row.created_at.isoformat() if row.created_at else None,
-        "can_send": bool(row.employer_email),
-        "can_operator_send": bool(row.employer_email)
+        "can_send": bool(stored_employer_email(row)),
+        "can_operator_send": bool(stored_employer_email(row))
         and (getattr(row, "status", None) or "") == "prepared"
         and (row.send_status or "") == SEND_PREPARED,
-        "no_email_reason": None if row.employer_email else _NO_EMAIL_REASON,
+        "no_email_reason": None if stored_employer_email(row) else _NO_EMAIL_REASON,
         "status": getattr(row, "status", None) or "applied",
         "draft": (row.offer_snapshot or {}).get("draft"),
         "why": (row.offer_snapshot or {}).get("why"),
@@ -1001,14 +1010,14 @@ def reply_on_application(
     text = (body or "").strip()
     if not text:
         raise ValueError("Reply body is required.")
-    if not row.employer_email:
+    if not stored_employer_email(row):
         raise ValueError(_NO_EMAIL_REASON)
     subject = f"Re: Applying {row.robot_name} to {row.work_title} at {row.employer_name}"
     from app.services.resend_email import ResendEmailError, send_email_via_resend
 
     try:
         result = send_email_via_resend(
-            to_email=row.employer_email,
+            to_email=stored_employer_email(row),
             subject=subject,
             body_text=text,
             from_display_name="Ready For Robots Jobs",
@@ -1025,7 +1034,7 @@ def reply_on_application(
             body=text,
             subject=subject,
             from_email=result.get("from_email") or os.getenv("RESEND_FROM_EMAIL"),
-            to_email=row.employer_email,
+            to_email=stored_employer_email(row),
             provider_id=result.get("resend_id"),
         )
     )
@@ -1056,7 +1065,7 @@ def paste_inbound_reply(
     text = (body or "").strip()
     if not text:
         raise ValueError("Pasted reply body is required.")
-    sender = normalize_recipient_email(from_email) or from_email or row.employer_email
+    sender = normalize_recipient_email(from_email) or from_email or stored_employer_email(row)
     capture_inbound_message(
         db,
         row,

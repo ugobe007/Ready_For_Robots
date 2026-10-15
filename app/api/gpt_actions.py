@@ -36,9 +36,17 @@ class GptRobotRecommendIn(BaseModel):
     environment: Optional[str] = Field(default="indoor", description="Operating environment: indoor, warehouse, factory, outdoor, cleanroom")
 
 
+def _summary(jobs: list[dict[str, Any]], what: str) -> str:
+    examples = sum(1 for j in jobs if j.get("is_example", True))
+    text = f"Found {len(jobs)} {what}."
+    if examples:
+        text += f" {examples} of them are examples with no source link, not confirmed buyers."
+    return text
+
+
 @router.post("/match-jobs")
 def gpt_match_jobs(payload: GptJobMatchIn):
-    """Match a robot model or manufacturer URL to real available Robot Jobs."""
+    """Match a robot model or manufacturer URL to Robot Jobs. Jobs without a source link are examples."""
     effective_url = payload.url or f"https://readyforrobots.com/robots/{payload.robot_name or 'UR10e'}"
     res = match_robot_url(effective_url, robot_name=payload.robot_name)
     jobs = res.get("jobs", [])
@@ -51,6 +59,8 @@ def gpt_match_jobs(payload: GptJobMatchIn):
             "industry": j.get("industry"),
             "hourly_wage": j.get("hourly_wage"),
             "task_model_required": j.get("task_model_required"),
+            "source_url": j.get("source_url"),
+            "is_example": bool(j.get("is_example", True)),
             "crm_desk_url": f"https://readyforrobots.com/pipeline?src=chatgpt&url={effective_url}"
         })
     return {
@@ -58,7 +68,7 @@ def gpt_match_jobs(payload: GptJobMatchIn):
         "robot_name": res.get("robot_name", payload.robot_name or "Robot"),
         "matched_job_count": len(jobs),
         "jobs": formatted_jobs,
-        "summary": f"Found {len(jobs)} active job placements qualified for {res.get('robot_name', payload.robot_name or 'this robot')}.",
+        "summary": _summary(jobs, f"jobs that fit {res.get('robot_name', payload.robot_name or 'this robot')}"),
         "activation_url": f"https://readyforrobots.com/pipeline?src=chatgpt&url={effective_url}"
     }
 
@@ -111,7 +121,8 @@ def gpt_search_opportunities(payload: GptOpportunitySearchIn):
             "industry": j.get("industry"),
             "hourly_wage": j.get("hourly_wage"),
             "task_model_required": j.get("task_model_required"),
-            "decision_maker_role": j.get("decision_maker_role") or "VP of Operations / Plant Manager",
+            "source_url": j.get("source_url"),
+            "is_example": bool(j.get("is_example", True)),
             "crm_desk_url": "https://readyforrobots.com/pipeline?src=chatgpt_search"
         })
 
@@ -119,7 +130,7 @@ def gpt_search_opportunities(payload: GptOpportunitySearchIn):
         "status": "success",
         "opportunity_count": len(formatted),
         "opportunities": formatted,
-        "summary": f"Found {len(formatted)} commercial opportunities seeking robot automation for {payload.query or 'physical tasks'}.",
+        "summary": _summary(formatted, f"jobs for {payload.query or 'physical tasks'}"),
         "activation_url": "https://readyforrobots.com/pipeline?src=chatgpt_search"
     }
 

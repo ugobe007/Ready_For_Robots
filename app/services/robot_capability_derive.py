@@ -314,9 +314,18 @@ def derive_capabilities(profile: dict[str, Any]) -> dict[str, DerivedCapability]
             "claims_disinfection", "claims_goods_to_person",
         )
     )
+    # A grounded "no mobile base" (a fixed station) outranks class/domain guesses;
+    # only explicit navigation or a mobility architecture can contradict it.
+    stationary = any(
+        f.get("value") is False or f.get("value") == "false"
+        for f in _values(facts, "has_mobile_base")
+    )
     mobile = bool(
-        mobile_base or nav or mobility_arch or mobile_class or domain_mobile
-        or weeding_identity or clinical_identity
+        mobile_base or nav or mobility_arch
+        or (
+            not stationary
+            and (mobile_class or domain_mobile or weeding_identity or clinical_identity)
+        )
     )
     if mobile:
         derived_from = []

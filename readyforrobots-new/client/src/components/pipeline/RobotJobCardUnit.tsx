@@ -7,8 +7,10 @@
  * [3] Time Frame (Project window / Urgency)
  * [4] Decision Makers (Named owners & contacts)
  * [5] What Type of Robots They Need (Robot family & task models)
- * [6] Job Value — How Much Is The Job Worth? (Monthly & annual contract estimate)
+ * [6] Budget (only when the lead's evidence names one)
  * [7] Workflow — Next Steps (Placement steps & primary CTA)
+ *
+ * Sections [3]–[6] render only from the lead's own data. No defaults.
  */
 import {
   MapPin,
@@ -26,7 +28,6 @@ import {
 } from "lucide-react";
 import { Link } from "wouter";
 import {
-  jobCardPayEstimate,
   qualificationFromVerdict,
   QUALIFICATION_LABEL,
 } from "@/lib/robotJobCard";
@@ -96,16 +97,10 @@ export default function RobotJobCardUnit({
   copiedDraft = false,
   className = "",
 }: Props) {
-  const pay = jobCardPayEstimate();
-
   // [1] Customer & Workplace
   const rawCo = (deal.company || "").trim();
   const customerName =
-    rawCo && rawCo !== "Unnamed Customer"
-      ? rawCo
-      : deal.industry
-        ? `${deal.industry} Automation Facility`
-        : "Enterprise Automation Site";
+    rawCo && rawCo !== "Unnamed Customer" ? rawCo : "Unnamed employer";
   const workplace =
     [deal.location, deal.industry].filter(Boolean).join(" · ") ||
     "Site pending";
@@ -118,16 +113,16 @@ export default function RobotJobCardUnit({
     deal.shareSummary ||
     deal.notes ||
     deal.signal ||
-    "Station inspection, material transfer, and robot deployment match.";
-  const description = cleanAndClampText(rawDescription, 320);
+    "";
+  const description = rawDescription
+    ? cleanAndClampText(rawDescription, 320)
+    : "";
 
   // [3] Time Frame
   const timingLabel =
     deal.projectTiming?.day_min != null && deal.projectTiming?.day_max != null
       ? `${deal.projectTiming.day_min}–${deal.projectTiming.day_max} days`
-      : deal.projectTiming?.label ||
-        deal.crmEvidence?.timing?.label ||
-        "30–90 days (Estimated Q3 Window)";
+      : deal.projectTiming?.label || deal.crmEvidence?.timing?.label || null;
 
   // [4] Decision Makers
   const primaryContact = deal.contact ? (
@@ -148,13 +143,11 @@ export default function RobotJobCardUnit({
   const robotsList =
     deal.robotTypesNeeded && deal.robotTypesNeeded.length > 0
       ? deal.robotTypesNeeded.join(" · ")
-      : deal.crmEvidence?.robot_type?.label ||
-        "Industrial Cobot / High-Payload Palletizer";
+      : deal.crmEvidence?.robot_type?.label || null;
 
-  // [6] Job Value
-  const jobWorthMonthly = pay.monthlyLabel; // e.g. $5,000–$7,500 / month
-  const jobWorthAnnual = pay.annualLabel; // e.g. $60,000–$90,000 / year
-  const publicBudget = deal.crmEvidence?.budget?.top_amount;
+  // [6] Budget
+  const publicBudget = deal.crmEvidence?.budget?.top_amount || null;
+  const decisionOwner = primaryContact || decisionMakerList;
 
   // [7] Qualification
   const qualState = qualificationFromVerdict(deal.verdict, deal.blockers);
@@ -206,74 +199,64 @@ export default function RobotJobCardUnit({
           [2] Robot Job & Description
         </p>
         <p className="text-sm font-bold text-emerald-300">{jobTitle}</p>
-        <p className="text-xs leading-relaxed text-slate-200">{description}</p>
+        {description ? (
+          <p className="text-xs leading-relaxed text-slate-200">
+            {description}
+          </p>
+        ) : null}
       </div>
 
-      {/* 2-COLUMN GRID FOR [3] TIME FRAME & [4] DECISION MAKERS */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {/* [3] TIME FRAME */}
-        <div className="rounded-xl border border-slate-700/80 bg-[#060e20] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1">
-            <Clock className="h-3 w-3 text-emerald-400" />
-            [3] Time Frame
-          </p>
-          <p className="mt-1 text-xs font-semibold text-slate-100">
-            {timingLabel}
-          </p>
-          <p className="mt-0.5 text-[10px] text-slate-400">
-            Active buying window extracted from signals.
-          </p>
-        </div>
+      {timingLabel || decisionOwner || robotsList || publicBudget ? (
+        <div className="grid gap-3 sm:grid-cols-2">
+          {timingLabel ? (
+            <div className="rounded-xl border border-slate-700/80 bg-[#060e20] p-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1">
+                <Clock className="h-3 w-3 text-emerald-400" />
+                [3] Time Frame
+              </p>
+              <p className="mt-1 text-xs font-semibold text-slate-100">
+                {timingLabel}
+              </p>
+            </div>
+          ) : null}
 
-        {/* [4] DECISION MAKERS */}
-        <div className="rounded-xl border border-slate-700/80 bg-[#060e20] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1">
-            <Users className="h-3 w-3 text-emerald-400" />
-            [4] Decision Owner
-          </p>
-          <div className="mt-1 text-xs font-semibold text-slate-100">
-            {primaryContact ||
-              decisionMakerList ||
-              "Plant Operations / Automation Director"}
-          </div>
-          <p className="mt-0.5 text-[10px] text-slate-400">
-            Sign-off authority for robot procurement.
-          </p>
-        </div>
-      </div>
+          {decisionOwner ? (
+            <div className="rounded-xl border border-slate-700/80 bg-[#060e20] p-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1">
+                <Users className="h-3 w-3 text-emerald-400" />
+                [4] Decision Owner
+              </p>
+              <div className="mt-1 text-xs font-semibold text-slate-100">
+                {decisionOwner}
+              </div>
+            </div>
+          ) : null}
 
-      {/* 2-COLUMN GRID FOR [5] ROBOTS NEEDED & [6] JOB VALUE */}
-      <div className="grid gap-3 sm:grid-cols-2">
-        {/* [5] WHAT TYPE OF ROBOTS THEY NEED */}
-        <div className="rounded-xl border border-slate-700/80 bg-[#060e20] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1">
-            <Cpu className="h-3 w-3 text-cyan-400" />
-            [5] Robots Needed
-          </p>
-          <p className="mt-1 text-xs font-semibold text-cyan-300">
-            {robotsList}
-          </p>
-          <p className="mt-0.5 text-[10px] text-slate-400">
-            Hardware spec matched to work requirements.
-          </p>
-        </div>
+          {robotsList ? (
+            <div className="rounded-xl border border-slate-700/80 bg-[#060e20] p-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1">
+                <Cpu className="h-3 w-3 text-cyan-400" />
+                [5] Robots Needed
+              </p>
+              <p className="mt-1 text-xs font-semibold text-cyan-300">
+                {robotsList}
+              </p>
+            </div>
+          ) : null}
 
-        {/* [6] JOB VALUE — HOW MUCH IS THE JOB WORTH? */}
-        <div className="rounded-xl border border-emerald-500/30 bg-[#08182b] p-3">
-          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1">
-            <DollarSign className="h-3 w-3 text-emerald-400" />
-            [6] Job Value (Worth)
-          </p>
-          <div className="mt-1 font-mono text-sm font-extrabold text-emerald-300">
-            {jobWorthMonthly}
-            <span className="block text-[11px] font-normal text-emerald-200/80">
-              {jobWorthAnnual}{" "}
-              {publicBudget ? `· Public budget: ${publicBudget}` : ""}
-            </span>
-          </div>
-          <p className="mt-0.5 text-[10px] text-slate-400">{pay.disclaimer}</p>
+          {publicBudget ? (
+            <div className="rounded-xl border border-emerald-500/30 bg-[#08182b] p-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-400 flex items-center gap-1">
+                <DollarSign className="h-3 w-3 text-emerald-400" />
+                [6] Budget
+              </p>
+              <div className="mt-1 font-mono text-sm font-extrabold text-emerald-300">
+                {publicBudget}
+              </div>
+            </div>
+          ) : null}
         </div>
-      </div>
+      ) : null}
 
       {/* [7] WORKFLOW — NEXT STEPS & PRIMARY CTA */}
       <div className="rounded-xl border border-purple-500/40 bg-gradient-to-r from-[#120a2e] to-[#0a142e] p-4 space-y-3">

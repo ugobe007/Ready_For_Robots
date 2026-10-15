@@ -608,13 +608,18 @@ describe("jobsWorkflow", () => {
     expect(
       defaultCheckedKeysForLineup([{ productName: "Fourier N1", jobs: n1Jobs }])
     ).toEqual(["a", "b", "c"]);
-    expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
-      /example jobs Fourier N1/
-    );
-    expect(jobsListHint({ robotCount: 1, productName: "Fourier N1" })).toMatch(
-      /Rows start checked/i
-    );
-    expect(jobsListHint({ robotCount: 5, productName: "Fourier N1" })).toMatch(
+    expect(
+      jobsListHint({ robotCount: 1, productName: "Fourier N1", jobCount: 11 })
+    ).toMatch(/^11 jobs Fourier N1 can do/);
+    expect(
+      jobsListHint({ robotCount: 1, productName: "Fourier N1", jobCount: 1 })
+    ).toMatch(/^1 job Fourier N1 can do/);
+    expect(
+      jobsListHint({ robotCount: 1, productName: "Fourier N1", jobCount: 3 })
+    ).toMatch(/Rows start checked/i);
+    expect(
+      jobsListHint({ robotCount: 5, productName: "Fourier N1", jobCount: 5 })
+    ).toMatch(
       /one sample job per robot/i
     );
     const workspace = readFileSync(
@@ -1049,7 +1054,7 @@ describe("jobsWorkflow", () => {
     expect(signup).not.toMatch(/The pipeline is where more than 5 live/);
     expect(signup).toMatch(/readJobsHandoffSnapshot/);
     expect(signup).toMatch(/tasteJobs/);
-    expect(signup).toMatch(/jobModelListLine/);
+    expect(signup).not.toMatch(/jobModelListLine/);
     expect(signup).toMatch(/robotJobsIntent\) return/);
     expect(signup).toMatch(/liveProof &&\s*!robotJobsIntent/);
     expect(signup).toMatch(/jobs for\{" "\}/);
@@ -1335,7 +1340,8 @@ describe("jobsWorkflow", () => {
     expect(desk).toMatch(/Work being performed/);
     expect(desk).not.toMatch(/Open questions/);
     expect(desk).toMatch(/Job description/);
-    expect(desk).toMatch(/payEstimate/);
+    expect(desk).not.toMatch(/payEstimate/);
+    expect(desk).toMatch(/card\.sourceUrl \? JOB_CARD_SOURCE_LABEL : JOB_CARD_EXAMPLE_LABEL/);
     expect(desk).toMatch(/Task models/);
     expect(desk).not.toMatch(/setSelectedKeys\(\[\]\)/);
   });
@@ -1835,7 +1841,7 @@ describe("jobsWorkflow", () => {
     expect(hero).toMatch(/CRM_HOW_TO_STEPS/);
     expect(hero).toMatch(/tasteJobs/);
     expect(hero).toMatch(/CRM_UNLOCKED_JOBS/);
-    expect(hero).toMatch(/jobModelListLine/);
+    expect(hero).not.toMatch(/jobModelListLine/);
 
     const intel = readFileSync(join(here, "../pages/Intelligence.tsx"), "utf8");
     expect(intel).toMatch(/ExperimentHeader/);

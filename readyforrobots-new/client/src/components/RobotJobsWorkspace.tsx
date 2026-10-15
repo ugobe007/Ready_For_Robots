@@ -29,7 +29,6 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
 import { Mail, Lock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { getJobLifecycleState } from "@/lib/jobLifecycle";
 import DailyMatchBriefModal from "@/components/DailyMatchBriefModal";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
 import JobsPresentationOffer from "@/components/JobsPresentationOffer";
@@ -61,7 +60,6 @@ import type {
   MatchJob,
 } from "@/lib/robotJobMatch";
 import { classOptionsOrDefault } from "@/lib/robotClassOptions";
-import RobotJobCardUnit from "@/components/pipeline/RobotJobCardUnit";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
 import JobQueryModal from "@/components/jobs/JobQueryModal";
@@ -159,7 +157,14 @@ import {
   shouldIgnoreStaleFindError,
   type FindResearchHandle,
 } from "@/lib/findResearch";
-import { isNamedRobotJob, robotJobCardFromMatch } from "@/lib/robotJobCard";
+import {
+  isNamedRobotJob,
+  JOB_CARD_EXAMPLE_LABEL,
+  JOB_CARD_EXAMPLE_NOTE,
+  JOB_CARD_SOURCE_LABEL,
+  JOB_TAPE_EXAMPLE_SUBTITLE,
+  robotJobCardFromMatch,
+} from "@/lib/robotJobCard";
 
 /* ------------------------------------------------------------------ */
 /* Types + constants                                                   */
@@ -2224,8 +2229,8 @@ export default function RobotJobsWorkspace() {
               <div className="px-6 py-4">
                 <div className="overflow-hidden border border-slate-700">
                   <LiveJobTape
-                    title="Live jobs"
-                    subtitle="Click any classified job opportunity to explore specs, ROI breakdown, and share direct links"
+                    title="Example jobs"
+                    subtitle={JOB_TAPE_EXAMPLE_SUBTITLE}
                     corpus={MARKET_TAPE_JOBS}
                     baseCount={MARKET_TAPE_JOBS.length}
                     running
@@ -3293,50 +3298,6 @@ const TEN_JOB_DEFINITIONS = [
   },
 ];
 
-function mapShowcaseJobToDeal(job: any, index: number) {
-  const company =
-    job.employer || job.company || job.customer || "Enterprise Buyer";
-  const location = job.workplace || job.location || "North America";
-  const industry = job.sector || job.industry || "Robotics & Automation";
-  const title =
-    job.work || job.title || job.headline || "Robot Automation Opportunity";
-  return {
-    id: index + 1000,
-    company,
-    location,
-    industry,
-    score: job.score || 95,
-    signal: title,
-    signalType: job.status || "HOT BUYER",
-    signalColor: "#34d399",
-    pipelineAction: title,
-    robotTypesNeeded:
-      job.targetRobotTypes ||
-      (job.forRobot ? [job.forRobot] : ["Industrial Cobot / AMR"]),
-    projectTiming: {
-      label: "30–90 days (Active Buying Window)",
-      day_min: 30,
-      day_max: 90,
-      source: "buyer_signal",
-    },
-    notes: title,
-    shareSummary: title,
-    crmEvidence: {
-      friction_point: title,
-      workflow_scope: { label: "1 workflow", items: [title] },
-      timing: { label: "Q3 Buying Window" },
-      robot_type: {
-        label: job.forRobot || "Industrial Cobot / High-Payload AMR",
-      },
-      budget: { top_amount: "$60,000–$90,000/yr" },
-      decision_makers: [
-        { name: "Operations Director", title: "Plant Automation Owner" },
-      ],
-    },
-    verdict: "VERIFIED_BUYER",
-  };
-}
-
 function JobsPanel({
   analysis,
   lineup,
@@ -3419,49 +3380,18 @@ function JobsPanel({
   const showPicker = shouldQualify(analysis);
   const showCrmCtas = !showPicker && !qualifying;
   const [showBriefModal, setShowBriefModal] = useState(false);
-  const [jobFilterTab, setJobFilterTab] = useState<
-    "all" | "pending" | "archived"
-  >("all");
 
   const rawBaseJobs = (analysis.jobs || []).map(job => ({
     ...job,
     forRobot: job.forRobot || analysis.productName,
   }));
 
-  const allActiveJobs = rawBaseJobs.filter(
-    j =>
-      !getJobLifecycleState(j).isArchived && !getJobLifecycleState(j).isPending
-  );
-  const allPendingJobs = rawBaseJobs.filter(
-    j => getJobLifecycleState(j).isPending
-  );
-  const allArchivedJobs = rawBaseJobs.filter(
-    j => getJobLifecycleState(j).isArchived
-  );
-
-  // Surface top 3 active jobs by default (pad with non-archived if active pool has < 3)
-  const defaultActiveJobs =
-    allActiveJobs.length >= 3
-      ? allActiveJobs.slice(0, 3)
-      : [
-          ...allActiveJobs,
-          ...rawBaseJobs.filter(
-            j =>
-              !allActiveJobs.includes(j) && !getJobLifecycleState(j).isArchived
-          ),
-        ].slice(0, 3);
-
-  const activeJobsToDisplay =
+  const allActiveJobs = rawBaseJobs;
+  const defaultActiveJobs = allActiveJobs.slice(0, 3);
+  const displayedJobs =
     isPaidUser && showAll
       ? allActiveJobs.slice(0, JOBS_PIPELINE_CAP)
       : defaultActiveJobs;
-
-  const displayedJobs =
-    jobFilterTab === "pending"
-      ? allPendingJobs
-      : jobFilterTab === "archived"
-        ? allArchivedJobs
-        : activeJobsToDisplay;
 
   const hiddenCountForPaid =
     isPaidUser && !showAll && allActiveJobs.length > 3
@@ -3469,22 +3399,6 @@ function JobsPanel({
       : 0;
 
   const visible = isPaidUser && showAll ? rawBaseJobs : defaultActiveJobs;
-
-  const [showcaseIndex, setShowcaseIndex] = useState(0);
-  const [showcasePaused, setShowcasePaused] = useState(false);
-
-  useEffect(() => {
-    if (showcasePaused || rawBaseJobs.length === 0) return;
-    const timer = window.setInterval(() => {
-      setShowcaseIndex(prev => (prev + 1) % rawBaseJobs.length);
-    }, 6000);
-    return () => window.clearInterval(timer);
-  }, [showcasePaused, rawBaseJobs.length]);
-
-  const showcaseJob =
-    rawBaseJobs.length > 0
-      ? rawBaseJobs[showcaseIndex % rawBaseJobs.length]
-      : null;
 
   return (
     <div id="jobs-list" className="p-6 sm:p-8">
@@ -3519,10 +3433,9 @@ function JobsPanel({
           <span>✦</span> Jobs for robots — How to use this feed
         </p>
         <p className="text-xs leading-relaxed text-slate-200">
-          Select your job definition category below or enter your industry to
-          match your robot to active buyer demand. Click any job card to expand
-          full operational requirements, equipment specs, and estimated contract
-          value.
+          Click a job card to see the employer, the work, and why it fits your
+          robot. Cards marked Example come from our sample set: no source yet
+          shows that employer is moving to automate the work.
         </p>
       </div>
       {rawBaseJobs.length > 0 && (
@@ -3530,6 +3443,7 @@ function JobsPanel({
           {jobsListHint({
             robotCount,
             productName: analysis.productName,
+            jobCount: rawBaseJobs.length,
           })}{" "}
           <span className="font-semibold text-emerald-200">
             {JOBS_KEEP_LABEL} is on. Uncheck a row to skip it.
@@ -3587,101 +3501,7 @@ function JobsPanel({
         )
       ) : (
         <>
-          {/* TOP OF FUNNEL SHOWCASE JOB CARD (Auto-rotates dynamically) */}
-          {showcaseJob && (
-            <div
-              className="mt-6 mb-4"
-              onMouseEnter={() => setShowcasePaused(true)}
-              onMouseLeave={() => setShowcasePaused(false)}
-            >
-              <div className="flex items-center justify-between mb-2 px-1">
-                <span className="inline-flex items-center gap-1.5 text-xs font-mono font-extrabold uppercase tracking-wider text-emerald-300">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
-                  Showcase Opportunity ({showcaseIndex + 1} of{" "}
-                  {rawBaseJobs.length})
-                </span>
-                <span className="text-[10px] font-mono text-slate-400">
-                  Auto-rotating live demand · Hover to pause
-                </span>
-              </div>
-              <RobotJobCardUnit
-                deal={mapShowcaseJobToDeal(showcaseJob, showcaseIndex)}
-                savedInCrm={false}
-                hasSession={signedIn}
-              />
-            </div>
-          )}
-
-          {/* Job Opportunity Status & Filter Bar */}
-          <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-b border-slate-700/80 pb-3">
-            <div className="flex flex-wrap items-center gap-1.5 rounded-lg bg-[#060c1d] p-1 border border-slate-700/80">
-              <button
-                type="button"
-                onClick={() => setJobFilterTab("all")}
-                className={`px-3 py-1.5 text-xs font-mono font-semibold rounded-md transition-all ${
-                  jobFilterTab === "all"
-                    ? "bg-emerald-500 text-slate-950 shadow font-bold"
-                    : "text-slate-300 hover:text-white"
-                }`}
-              >
-                Active Jobs (
-                {isPaidUser ? allActiveJobs.length : defaultActiveJobs.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setJobFilterTab("pending")}
-                className={`px-3 py-1.5 text-xs font-mono font-semibold rounded-md transition-all ${
-                  jobFilterTab === "pending"
-                    ? "bg-amber-500 text-slate-950 shadow font-bold"
-                    : "text-slate-300 hover:text-white"
-                }`}
-              >
-                [Pending] Spots Full ({allPendingJobs.length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setJobFilterTab("archived")}
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-mono font-semibold rounded-md transition-all ${
-                  jobFilterTab === "archived"
-                    ? "bg-purple-600 text-white shadow font-bold"
-                    : "text-purple-300 hover:text-white"
-                }`}
-              >
-                <Lock className="h-3 w-3 text-purple-300" />
-                <span>Job Archive (8+ Wks)</span>
-              </button>
-            </div>
-            <span className="text-xs font-mono text-slate-400">
-              Max 3 Applicants / Job · 8 Wk Archive
-            </span>
-          </div>
-
-          {jobFilterTab === "archived" && !isPaidUser ? (
-            <div className="mt-6 rounded-2xl border border-purple-500/40 bg-gradient-to-b from-[#180d36] via-[#100926] to-[#0a0f1d] p-8 text-center shadow-2xl">
-              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-purple-400/40 bg-purple-500/20 text-purple-300 shadow-lg shadow-purple-500/20">
-                <Lock className="h-6 w-6 text-purple-300" />
-              </div>
-              <h3 className="mt-4 font-display text-xl font-bold text-white sm:text-2xl">
-                Job Archive Access is Reserved for Paid Workspaces
-              </h3>
-              <p className="mx-auto mt-2 max-w-lg text-sm leading-relaxed text-slate-300">
-                Job opportunities automatically age after 2 weeks and move to
-                the Archive after 8 weeks (56 days). Upgrade to a Paid Workspace
-                to access archived postings, historical buyer demand, and direct
-                enterprise contact info.
-              </p>
-              <a
-                href="/signup?next=/pipeline&src=jobs_archive_lock"
-                className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-white shadow-xl shadow-purple-600/30 hover:from-purple-500 hover:to-indigo-500 transition-all"
-              >
-                <span>Upgrade Workspace to Access Archive →</span>
-              </a>
-            </div>
-          ) : (
-            <ol className="mt-6 space-y-3">
+          <ol className="mt-6 space-y-3">
               {(isPaidUser ? displayedJobs : displayedJobs.slice(0, 3)).map(
                 (job, i) => (
                   <JobCard
@@ -3704,7 +3524,6 @@ function JobsPanel({
                 )
               )}
             </ol>
-          )}
 
           {!isPaidUser && rawBaseJobs.length > 3 && (
             <div className="relative mt-6 overflow-hidden rounded-2xl border border-purple-500/40 bg-gradient-to-b from-[#110d29] to-[#0a0e1c] p-2 shadow-2xl">
@@ -3729,12 +3548,11 @@ function JobsPanel({
                   <Lock className="h-6 w-6 text-emerald-400" />
                 </div>
                 <h3 className="text-xl font-bold text-white font-display">
-                  Unlock {Math.max(1, rawBaseJobs.length - 3)}+ More Job
-                  Opportunities
+                  {Math.max(1, rawBaseJobs.length - 3)} more job cards
                 </h3>
                 <p className="mt-2 max-w-md text-xs leading-relaxed text-slate-300 sm:text-sm">
-                  Free users can view up to 3 active job opportunities. Upgrade
-                  your workspace to unlock all verified employer job matches.
+                  Free users can view up to 3 job cards. Sign up to see the
+                  rest.
                 </p>
                 <a
                   href="/signup?next=/pipeline&src=jobs_free_cap_blur"
@@ -3927,50 +3745,32 @@ function JobCard({
   onToggle: () => void;
 }) {
   const card = robotJobCardFromMatch(job);
-  const lifecycle = getJobLifecycleState(job);
   if (!card.employer || !card.workplace) return null;
   const place = [card.employer, card.workplace].filter(Boolean).join(" · ");
   return (
     <li
       className={`border bg-[#081126] transition-all ${
-        lifecycle.isPending
-          ? "border-amber-500/40 bg-amber-950/10"
-          : checked || selected
-            ? "border-emerald-400/70"
-            : "border-slate-600"
+        checked || selected ? "border-emerald-400/70" : "border-slate-600"
       }`}
     >
       <div className="flex items-start">
         <label
-          className={`flex shrink-0 flex-col items-center gap-1 px-3 pt-4 ${
-            lifecycle.isPending
-              ? "opacity-50 cursor-not-allowed"
-              : "cursor-pointer"
-          }`}
+          className="flex shrink-0 cursor-pointer flex-col items-center gap-1 px-3 pt-4"
           onClick={e => e.stopPropagation()}
         >
           <input
             type="checkbox"
             checked={checked}
-            disabled={lifecycle.isPending}
-            onChange={lifecycle.isPending ? undefined : onToggle}
+            onChange={onToggle}
             aria-label={`${checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL} ${card.jobTitle} on the CRM desk`}
-            className="h-5 w-5 accent-emerald-400 disabled:opacity-40"
+            className="h-5 w-5 accent-emerald-400"
           />
           <span
             className={`font-mono text-xs font-bold uppercase tracking-[0.08em] ${
-              lifecycle.isPending
-                ? "text-amber-400/70"
-                : checked
-                  ? "text-emerald-300"
-                  : "text-slate-500"
+              checked ? "text-emerald-300" : "text-slate-500"
             }`}
           >
-            {lifecycle.isPending
-              ? "FULL"
-              : checked
-                ? JOBS_KEEP_LABEL
-                : JOBS_SKIP_LABEL}
+            {checked ? JOBS_KEEP_LABEL : JOBS_SKIP_LABEL}
           </span>
         </label>
         <button
@@ -3981,30 +3781,19 @@ function JobCard({
           <span className="flex-1">
             <div className="flex flex-wrap items-center gap-2 mb-1">
               <span className={JOBS_ROBOT_NAME_CLASS}>{card.jobTitle}</span>
-              <span
-                className={`inline-flex items-center gap-1 rounded px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-wider border ${lifecycle.badgeClass}`}
-              >
-                {lifecycle.statusLabel}
-              </span>
+              {card.isExample ? (
+                <span
+                  data-job-example="true"
+                  className="inline-flex items-center rounded border border-amber-400/50 bg-amber-400/10 px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-wider text-amber-300"
+                >
+                  {JOB_CARD_EXAMPLE_LABEL}
+                </span>
+              ) : null}
             </div>
             {place ? <span className={JOBS_PLACE_CLASS}>{place}</span> : null}
             <div className="mt-1 flex flex-wrap items-center gap-2 font-mono text-xs text-slate-400">
               <span>{jobIndexLabel(index)}</span>
-              <span>·</span>
-              <span className="text-slate-300">{lifecycle.subLabel}</span>
             </div>
-            {lifecycle.isPending && (
-              <p className="mt-1.5 text-xs font-medium text-amber-300/90 bg-amber-950/40 border border-amber-500/30 px-2.5 py-1.5 rounded">
-                ⚠️ Applicants under review (3/3 spots filled). No further
-                proposals are currently accepted to avoid spamming the
-                opportunity.
-              </p>
-            )}
-            {card.modelContract?.listLine ? (
-              <span className={JOBS_PLACE_CLASS}>
-                {card.modelContract.listLine}
-              </span>
-            ) : null}
           </span>
           <span className="font-mono text-xs text-slate-500">
             {selected ? "−" : "+"}
@@ -4034,18 +3823,22 @@ function JobCard({
               </div>
             ) : null}
             <div>
-              <dt className={eyebrow}>{card.payEstimate.heading}</dt>
-              <dd className="mt-0.5">
-                <span className="text-emerald-300">
-                  {card.payEstimate.monthlyLabel}
-                </span>
-                {" · "}
-                <span className="text-emerald-300">
-                  {card.payEstimate.annualLabel}
-                </span>
-                <span className="mt-0.5 block text-slate-400">
-                  {card.payEstimate.disclaimer}
-                </span>
+              <dt className={eyebrow}>
+                {card.sourceUrl ? JOB_CARD_SOURCE_LABEL : JOB_CARD_EXAMPLE_LABEL}
+              </dt>
+              <dd className="mt-0.5 text-slate-300">
+                {card.sourceUrl ? (
+                  <a
+                    href={card.sourceUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="underline decoration-slate-600 underline-offset-2"
+                  >
+                    {card.sourceUrl}
+                  </a>
+                ) : (
+                  JOB_CARD_EXAMPLE_NOTE
+                )}
               </dd>
             </div>
             <div>

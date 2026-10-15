@@ -174,6 +174,16 @@ def _indexed_work_kind_product(url: str, product: str | None) -> str | None:
     return None
 
 
+def _named_product_needs_operator_class(
+    profile: dict[str, Any] | None, url: str | None, product: str
+) -> bool:
+    if not isinstance(profile, dict):
+        return False
+    if (profile.get("coverage_level") or "").lower() != "low":
+        return False
+    return _indexed_work_kind_product(url or "", product) is None
+
+
 def compose_robot_job_search(
     url: str | None = None,
     *,
@@ -261,8 +271,16 @@ def compose_robot_job_search(
                     logger.exception("robot_job_search shadow failed")
 
         # Do not stamp the parent FIND tile onto a named SKU (LaserWeeder
-        # must stay weeding, not the agriculture union).
-        if asserted_class and not product_name:
+        # must stay weeding, not the agriculture union). A named product with
+        # too little evidence of its own (Relay) is why the picker opened, so
+        # the operator's class must apply or the click returns nothing.
+        if asserted_class and (
+            not product_name
+            or (
+                grain == "product"
+                and _named_product_needs_operator_class(profile_dict, safe, product_name)
+            )
+        ):
             from app.services.robot_class_qualify import apply_asserted_class
 
             profile_dict = apply_asserted_class(profile_dict, asserted_class)
@@ -351,7 +369,12 @@ def compose_robot_job_search(
         }
 
     t_match = time.perf_counter()
-    match = match_jobs_from_profile(profile_dict, limit=12)
+    from app.services.form_fit import indexed_sku, is_stationary_for_jobs
+
+    stationary = bool(safe) and is_stationary_for_jobs(
+        profile_dict, indexed_sku(safe, product_name)
+    )
+    match = match_jobs_from_profile(profile_dict, limit=12, stationary=stationary)
     match_ms = int((time.perf_counter() - t_match) * 1000)
     jobs = list(match.get("jobs") or [])
     top_jobs = jobs[:TOP_JOBS]

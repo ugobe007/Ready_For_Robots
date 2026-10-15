@@ -600,7 +600,7 @@ function InteractiveRoiCalculator() {
               href="/pipeline"
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-purple-500/30 hover:bg-purple-500 transition-all cursor-pointer"
             >
-              Match This ROI Model to 25 Verified Buyer Leads{" "}
+              Match This ROI Model to 25 Buyer Leads{" "}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>

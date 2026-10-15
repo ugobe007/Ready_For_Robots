@@ -6,6 +6,7 @@
  */
 import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
 import tapeJson from "@/lib/market_tape_jobs.json";
+import { JOB_CARD_EXAMPLE_LABEL } from "@/lib/robotJobCard";
 
 export type PreviewJob = {
   job_key: string;
@@ -16,6 +17,8 @@ export type PreviewJob = {
   timing: string;
   decision_maker: string;
   contact: string;
+  source_url?: string | null;
+  is_example?: boolean;
 };
 
 type TapeRow = {
@@ -41,7 +44,8 @@ export function formatInlineJobLine(job: PreviewJob): string {
     .filter((part, i, all) => i === 0 || part !== all[0])
     .join(". ");
   const facts = [job.timing, job.decision_maker, job.contact].filter(Boolean);
-  return [head, work, ...facts].filter(Boolean).join(" — ");
+  const line = [head, work, ...facts].filter(Boolean).join(" — ");
+  return job.is_example ? `${JOB_CARD_EXAMPLE_LABEL} — ${line}` : line;
 }
 
 export function previewJobsFromTape(limit = 3): PreviewJob[] {
@@ -64,6 +68,8 @@ export function previewJobsFromTape(limit = 3): PreviewJob[] {
       timing: "",
       decision_maker: "",
       contact: "",
+      source_url: null,
+      is_example: true,
     });
     if (out.length >= cap) break;
   }

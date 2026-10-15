@@ -54,6 +54,41 @@ describe("robotJobsPreview", () => {
     expect(workspace).not.toMatch(/UNLOCK FULL FEASIBILITY/i);
   });
 
+  it("labels every bundled tape row Example and keeps robot makers out", () => {
+    const rows = previewJobsFromTape(8);
+    expect(rows.length).toBeGreaterThan(0);
+    for (const job of rows) {
+      expect(job.is_example).toBe(true);
+      expect(job.source_url).toBeNull();
+      expect(formatInlineJobLine(job)).toMatch(/^Example — /);
+    }
+    const tape = readFileSync(join(here, "./market_tape_jobs.json"), "utf8");
+    expect(tape).not.toMatch(/Intuitive Surgical/i);
+  });
+
+  it("home feed and job modal carry the Example label and no invented specs", () => {
+    const modal = readFileSync(
+      join(here, "../components/jobs/LiveJobDetailModal.tsx"),
+      "utf8"
+    );
+    const tape = readFileSync(
+      join(here, "../components/jobs/LiveJobTape.tsx"),
+      "utf8"
+    );
+    const landing = readFileSync(
+      join(here, "../components/JobsLanding.tsx"),
+      "utf8"
+    );
+    expect(modal).toMatch(/JOB_CARD_EXAMPLE_LABEL/);
+    expect(modal).toMatch(/JOB_CARD_EXAMPLE_NOTE/);
+    expect(modal).not.toMatch(
+      /Verified Work Opportunity|payback|RaaS|109\+|turnkey|3-Shift|\bANSI\b|Unlock Full Feasibility/
+    );
+    expect(tape).toMatch(/data-job-example="true"/);
+    expect(tape).not.toMatch(/Live robot work|"NEW"/);
+    expect(landing).not.toMatch(/Verified Physical Work Feed|ROI breakdown/);
+  });
+
   it("maps named employers from the tape corpus without a URL submit", () => {
     const rows = previewJobsFromTape(3);
     expect(rows).toHaveLength(3);
