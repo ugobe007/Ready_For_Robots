@@ -1,7 +1,7 @@
 {
   "name": "Ready For Robots robot taxonomy",
-  "version": "v1.2",
-  "date": "2026-10-14",
+  "version": "v1.3",
+  "date": "2026-10-15",
   "purpose": "Closed vocabulary for classifying robots. Extraction must choose ONLY from these values. Anything that does not fit goes in unclassified_notes and is logged, never invented. Buyer opportunities are indexed with the same industries list so matching is a join, not a semantic guess.",
   "pipeline": [
     "1. company: name + URL",
@@ -70,6 +70,7 @@
     "automotive_dealership": "Car and truck dealerships, including service and parts (fixed-ops) departments",
     "k12_school": "Primary and secondary schools and school districts",
     "transportation_transit": "Transit agencies, rail and bus operators, fleet and mobility operators",
+    "facility_services": "Contract cleaning, food service and facility management companies",
     "residential_consumer": "Homes and individual consumers. Classification only: never a buyer opportunity in RFR"
   },
   "form": {
@@ -126,6 +127,11 @@
       "version": "v1.2",
       "date": "2026-10-14",
       "change": "Added industries bar_nightclub, surgery_center, automotive_dealership, k12_school, transportation_transit, residential_consumer; restaurant no longer includes bars; added function surgical_assistance; added industry_parents. Approved by Bob. Takes effect AFTER the hold-out v2 run, which stays on v1.1. Restaurants include their bars (Bob); bar_nightclub = standalone bars/lounges/nightclubs."
+    },
+    {
+      "version": "v1.3",
+      "date": "2026-10-15",
+      "change": "Added industry facility_services (contract cleaning, food service and facility management companies), in pilot group 8. Approved by Bob."
     }
   ]
 }

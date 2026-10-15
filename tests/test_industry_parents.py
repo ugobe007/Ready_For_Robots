@@ -27,9 +27,10 @@ KEY_FIELDS = {
 }
 
 
-def test_taxonomy_is_v1_2_with_valid_parents():
+def test_taxonomy_is_v1_3_with_valid_parents():
     taxonomy = load_taxonomy()
-    assert taxonomy["version"] == "v1.2"
+    assert taxonomy["version"] == "v1.3"
+    assert "facility_services" in taxonomy_values(taxonomy, "industries")
     known = set(taxonomy_values(taxonomy, "industries"))
     parents = ind.industry_parents(taxonomy)
     assert parents == {"bar_nightclub": "restaurant", "surgery_center": "hospital", "k12_school": "college_university"}
@@ -91,7 +92,8 @@ def test_pilot_groups_use_taxonomy_values_and_spec_order():
     ("bar_nightclub", (6, "Restaurants and bars")),
     ("surgery_center", (4, "Hospitals")),
     ("3pl", (1, "Warehouse, logistics, 3PL")),
-    ("corporate_campus", (8, "Office buildings")),
+    ("corporate_campus", (8, "Office buildings and facility services")),
+    ("facility_services", (8, "Office buildings and facility services")),
     ("automotive_dealership", (9, "Auto dealerships")),
 ])
 def test_pilot_group_membership(industry, group):
