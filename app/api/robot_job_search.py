@@ -16,6 +16,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.services.robot_job_search import compose_robot_job_search
 from app.services.robot_url_safety import UrlSafetyError
+from app.services.taxonomy_live_match import compose_taxonomy_job_search, taxonomy_match_enabled
 from app.services.understanding_shadow import record_shadow_observation
 
 logger = logging.getLogger(__name__)
@@ -63,14 +64,21 @@ def post_robot_job_search(
             logger.exception("robot_submission_hook_failed")
 
     try:
-        result = compose_robot_job_search(
-            body.url,
-            product=body.product,
-            max_sources=body.max_sources,
-            record_shadow=_shadow,
-            asserted_class=body.asserted_class,
-            lookup_grain=body.lookup_grain,
-        )
+        if taxonomy_match_enabled() and submit_url:
+            result = compose_taxonomy_job_search(
+                submit_url,
+                product=body.product,
+                db=db,
+            )
+        else:
+            result = compose_robot_job_search(
+                body.url,
+                product=body.product,
+                max_sources=body.max_sources,
+                record_shadow=_shadow,
+                asserted_class=body.asserted_class,
+                lookup_grain=body.lookup_grain,
+            )
         try:
             from app.services.robot_submission_service import (
                 record_robot_submission,
