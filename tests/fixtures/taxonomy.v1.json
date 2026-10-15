@@ -1,7 +1,7 @@
 {
   "name": "Ready For Robots robot taxonomy",
-  "version": "v1.1",
-  "date": "2026-10-13",
+  "version": "v1.2",
+  "date": "2026-10-14",
   "purpose": "Closed vocabulary for classifying robots. Extraction must choose ONLY from these values. Anything that does not fit goes in unclassified_notes and is logged, never invented. Buyer opportunities are indexed with the same industries list so matching is a join, not a semantic guess.",
   "pipeline": [
     "1. company: name + URL",
@@ -31,14 +31,15 @@
     "construction_task": "Layout, rebar, finishing, installation, or material work on jobsites",
     "agricultural_task": "Weeding, harvest assist, hauling, spraying on farms",
     "customer_interaction": "Greets, guides, advertises, or converses with people",
-    "general_purpose": "Marketed as able to do many tasks without a defined primary one"
+    "general_purpose": "Marketed as able to do many tasks without a defined primary one",
+    "surgical_assistance": "Assists or performs surgical procedures (e.g., surgical robots in operating rooms)"
   },
   "industries": {
     "_definition": "Industry means the industry of the organization that buys and operates the robot. It is not the building type, the project type, or the industry of that organization's customers. A construction robot used on a hospital project is construction. A warehouse robot doing pharma logistics is warehouse_distribution or 3pl. Keys starting with '_' are documentation, not values.",
     "retail_store": "Retail stores, big box, specialty retail",
     "grocery": "Grocery and supermarkets",
     "shopping_mall": "Shopping malls and retail centers",
-    "restaurant": "Full-service and casual restaurants, cafes, bars",
+    "restaurant": "Full-service and casual restaurants, cafes, ghost/delivery kitchens, including the bars inside them",
     "qsr_fast_food": "Quick-service / fast food chains",
     "hotel": "Hotels and resorts",
     "casino": "Casinos and gaming resorts",
@@ -63,7 +64,13 @@
     "government": "Government, municipalities, DOTs, public agencies",
     "defense": "Military and defense",
     "research_lab": "Research labs (academic, corporate, government)",
-    "ships_maritime": "Ships, cruise lines, ports, maritime"
+    "ships_maritime": "Ships, cruise lines, ports, maritime",
+    "bar_nightclub": "Standalone bars, lounges and nightclubs",
+    "surgery_center": "Ambulatory surgery centers and outpatient surgical facilities",
+    "automotive_dealership": "Car and truck dealerships, including service and parts (fixed-ops) departments",
+    "k12_school": "Primary and secondary schools and school districts",
+    "transportation_transit": "Transit agencies, rail and bus operators, fleet and mobility operators",
+    "residential_consumer": "Homes and individual consumers. Classification only: never a buyer opportunity in RFR"
   },
   "form": {
     "humanoid": "Human-shaped body, arms and legs or torso",
@@ -102,5 +109,23 @@
     "form": "one of form, with confidence and evidence",
     "primary_class": "one of primary_class, with confidence and evidence",
     "unclassified_notes": "anything that did not fit the lists; logged for taxonomy review"
-  }
+  },
+  "industry_parents": {
+    "_note": "A child industry also counts as its parent for scoring answer keys and for pilot-industry groups. Keys starting with '_' are documentation.",
+    "bar_nightclub": "restaurant",
+    "surgery_center": "hospital",
+    "k12_school": "college_university"
+  },
+  "changelog": [
+    {
+      "version": "v1.1",
+      "date": "2026-10-14",
+      "change": "29 industries (Bob's list), retail primary class"
+    },
+    {
+      "version": "v1.2",
+      "date": "2026-10-14",
+      "change": "Added industries bar_nightclub, surgery_center, automotive_dealership, k12_school, transportation_transit, residential_consumer; restaurant no longer includes bars; added function surgical_assistance; added industry_parents. Approved by Bob. Takes effect AFTER the hold-out v2 run, which stays on v1.1. Restaurants include their bars (Bob); bar_nightclub = standalone bars/lounges/nightclubs."
+    }
+  ]
 }

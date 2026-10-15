@@ -122,7 +122,10 @@ def test_prompt_carries_definition_version_and_limits(monkeypatch):
     assert "STEP 1 - PAGE TYPE" in prompt and "ONE contiguous passage copied exactly" in prompt
     assert captured["max_tokens"] == 8192
     assert captured["tools"][0]["input_schema"]["properties"]["products"]["maxItems"] == 5
-    assert result["extraction_metadata"]["prompt_version"] == "v4"
+    assert result["extraction_metadata"]["prompt_version"] == "v6"
+    assert "- restaurant: Full-service and casual restaurants, cafes, ghost/delivery kitchens, including the bars inside them" in prompt
+    assert "- bar_nightclub: Standalone bars, lounges and nightclubs" in prompt
+    assert "- _definition:" not in prompt
     assert result["page"]["page_type"] == "manufacturer_product_page"
     assert [i["value"] for i in result["products"][0]["industries"]] == ["airport"]
 

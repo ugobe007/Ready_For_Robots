@@ -1,0 +1,367 @@
+{
+  "name": "RichTech Robotics multi-product OEM set",
+  "version": "oem-richtech-v1.1",
+  "date": "2026-10-14",
+  "taxonomy": "taxonomy.v1.json (v1.2)",
+  "purpose": "Answer key for one robot maker with eight different robots serving different work. Tests that RFR classifies per PRODUCT, not per company, and that matching respects form (stationary vs. mobile).",
+  "classified_by": "Product pages read 2026-10-14; ADAM industries per Bob (restaurants, hotels, bars).",
+  "rules_for_use": [
+    "Same frozen scorer and format as the hold-out sets; this set is ALSO a Phase 2 acceptance test (see spec).",
+    "Run each product URL individually, without the product hint.",
+    "Company-level test: submitting https://richtechrobotics.com (homepage) must discover and classify all eight product pages, one record each.",
+    "Not a hold-out set: Bob reviewed these pages, so any prompt change must still be measured on hold-out v2 or later."
+  ],
+  "matching_expectations": {
+    "stationary_products": [
+      "rt-01",
+      "rt-02"
+    ],
+    "never_match_workflows_for_stationary": [
+      "delivery_transport",
+      "serving_hospitality (table running, bussing, room service)",
+      "cleaning",
+      "security_patrol"
+    ],
+    "same_venue_different_robot": "A restaurant opportunity for bussing/food running matches Matradee Plus (rt-03); a bar/drink-station opportunity matches ADAM or Scorpion. Same buyer, different workflow, different robot.",
+    "same_function_different_buyers": "Titan and Pallet Jack (delivery in warehouses/plants) vs. Matradee Plus (delivery in restaurants): form and industry must separate them."
+  },
+  "products": [
+    {
+      "id": "rt-01",
+      "company": "Richtech Robotics",
+      "target_product": "ADAM",
+      "target_aliases": [
+        "ADAM"
+      ],
+      "url": "https://richtechrobotics.com/solutions/adam",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot",
+        "humanoid"
+      ],
+      "primary_class_ok": [
+        "food_robotics"
+      ],
+      "functions_required": [
+        "food_beverage_prep"
+      ],
+      "functions_ok": [
+        "serving_hospitality",
+        "customer_interaction"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "bar_nightclub",
+        "restaurant",
+        "hotel"
+      ],
+      "industries_must_not": [
+        "hospital",
+        "warehouse_distribution",
+        "manufacturing"
+      ],
+      "industries_ok_extra": [
+        "casino",
+        "stadium_venue",
+        "corporate_campus",
+        "grocery"
+      ],
+      "notes": "Dual-arm drink station: bartender, barista, boba. Bob: restaurants, hotels and bars. Page: bars, cafes, corporate and sporting events (Globe Life Field, NVIDIA HQ). STATIONARY: must never match bussing, room service, food running."
+    },
+    {
+      "id": "rt-02",
+      "company": "Richtech Robotics",
+      "target_product": "Scorpion",
+      "target_aliases": [
+        "Scorpion"
+      ],
+      "url": "https://richtechrobotics.com/solutions/scorpion",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "robotic_arm_cobot"
+      ],
+      "primary_class_ok": [
+        "food_robotics"
+      ],
+      "functions_required": [
+        "food_beverage_prep"
+      ],
+      "functions_ok": [
+        "customer_interaction"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "bar_nightclub",
+        "restaurant"
+      ],
+      "industries_must_not": [
+        "hospital",
+        "warehouse_distribution",
+        "manufacturing"
+      ],
+      "industries_ok_extra": [
+        "hotel",
+        "casino",
+        "stadium_venue"
+      ],
+      "notes": "Compact single-arm bartender (cocktails, wine, coffee); 'compact bars', rentals. Stationary."
+    },
+    {
+      "id": "rt-03",
+      "company": "Richtech Robotics",
+      "target_product": "Matradee Plus",
+      "target_aliases": [
+        "Matradee Plus"
+      ],
+      "url": "https://richtechrobotics.com/solutions/matradee-plus",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "service_robot"
+      ],
+      "functions_required": [
+        "serving_hospitality"
+      ],
+      "functions_ok": [
+        "delivery_transport",
+        "customer_interaction"
+      ],
+      "industries_required": [
+        "restaurant"
+      ],
+      "industries_any": [],
+      "industries_must_not": [
+        "warehouse_distribution",
+        "manufacturing",
+        "construction"
+      ],
+      "industries_ok_extra": [
+        "hotel",
+        "casino",
+        "senior_living",
+        "hospital",
+        "college_university",
+        "stadium_venue"
+      ],
+      "notes": "Mobile 4-tray server: hosting, bussing, serving, greeting. This is the RichTech robot for bussing and food running, not ADAM."
+    },
+    {
+      "id": "rt-04",
+      "company": "Richtech Robotics",
+      "target_product": "Titan",
+      "target_aliases": [
+        "Titan"
+      ],
+      "url": "https://richtechrobotics.com/solutions/titan",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "manufacturing",
+        "automotive_dealership"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hospital"
+      ],
+      "industries_ok_extra": [
+        "3pl",
+        "logistics_parcel"
+      ],
+      "notes": "Heavy-duty parts delivery (330+ lbs): warehouses, factories, automotive dealership service departments (Mercedes-Benz of Plano case study)."
+    },
+    {
+      "id": "rt-05",
+      "company": "Richtech Robotics",
+      "target_product": "Dex",
+      "target_aliases": [
+        "Dex"
+      ],
+      "url": "https://richtechrobotics.com/solutions/dex",
+      "offering_type_ok": [
+        "robot_product"
+      ],
+      "form_ok": [
+        "humanoid"
+      ],
+      "primary_class_ok": [
+        "humanoid",
+        "factory_industrial"
+      ],
+      "functions_required": [
+        "machine_tending_assembly"
+      ],
+      "functions_ok": [
+        "picking_packing_palletizing"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "manufacturing",
+        "warehouse_distribution"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hotel",
+        "hospital"
+      ],
+      "industries_ok_extra": [
+        "3pl",
+        "logistics_parcel"
+      ],
+      "notes": "Industrial humanoid on a stationary or mobile platform; factory, logistics, warehouse. Primary function scored as machine_tending_assembly (the page leads with factory productivity); picking/packing is an accepted secondary."
+    },
+    {
+      "id": "rt-06",
+      "company": "Richtech Robotics",
+      "target_product": "DUST-E MX",
+      "target_aliases": [
+        "DUST-E MX"
+      ],
+      "url": "https://richtechrobotics.com/solutions/dust-e-mx",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "cleaning"
+      ],
+      "functions_required": [
+        "cleaning"
+      ],
+      "functions_ok": [
+        "disinfection"
+      ],
+      "industries_required": [],
+      "industries_any": [],
+      "industries_must_not": [
+        "restaurant"
+      ],
+      "industries_ok_extra": [
+        "airport",
+        "shopping_mall",
+        "warehouse_distribution",
+        "manufacturing",
+        "retail_store",
+        "commercial_building",
+        "office_building",
+        "hotel",
+        "casino",
+        "hospital",
+        "college_university"
+      ],
+      "notes": "Large autonomous scrubber-dryer. PAGE NAMES NO INDUSTRIES: correct output is no or low-confidence industries; the matcher should fall back to the cleaning class's default industries and label 'industry inferred'."
+    },
+    {
+      "id": "rt-07",
+      "company": "Richtech Robotics",
+      "target_product": "Pallet Jack",
+      "target_aliases": [
+        "Pallet Jack"
+      ],
+      "url": "https://richtechrobotics.com/solutions/pallet-jack",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "autonomous_vehicle_equipment",
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "amr_logistics"
+      ],
+      "functions_required": [
+        "delivery_transport"
+      ],
+      "functions_ok": [
+        "picking_packing_palletizing"
+      ],
+      "industries_required": [],
+      "industries_any": [
+        "warehouse_distribution",
+        "manufacturing"
+      ],
+      "industries_must_not": [
+        "restaurant",
+        "hospital",
+        "hotel"
+      ],
+      "industries_ok_extra": [
+        "3pl",
+        "logistics_parcel",
+        "food_manufacturing"
+      ],
+      "notes": "Autonomous pallet mover, 3,300 lb: warehouses, DCs, manufacturing."
+    },
+    {
+      "id": "rt-08",
+      "company": "Richtech Robotics",
+      "target_product": "DUST-E S",
+      "target_aliases": [
+        "DUST-E S"
+      ],
+      "url": "https://richtechrobotics.com/solutions/dust-e-s",
+      "offering_type_ok": [
+        "robot_product",
+        "robotics_as_a_service"
+      ],
+      "form_ok": [
+        "amr_mobile_robot"
+      ],
+      "primary_class_ok": [
+        "cleaning"
+      ],
+      "functions_required": [
+        "cleaning"
+      ],
+      "functions_ok": [],
+      "industries_required": [],
+      "industries_any": [
+        "office_building",
+        "hospital",
+        "hotel",
+        "retail_store",
+        "restaurant",
+        "college_university",
+        "k12_school"
+      ],
+      "industries_must_not": [
+        "warehouse_distribution",
+        "manufacturing"
+      ],
+      "industries_ok_extra": [
+        "commercial_building",
+        "casino",
+        "corporate_campus"
+      ],
+      "notes": "Compact sweep/vacuum/scrub/mop robot; page lists offices, hospitals, hotels, retail, restaurants, schools."
+    }
+  ]
+}

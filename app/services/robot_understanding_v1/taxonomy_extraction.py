@@ -17,7 +17,7 @@ from anthropic import Anthropic
 
 TAXONOMY_PATH = Path(__file__).resolve().parent.parent.parent.parent / "tests/fixtures/taxonomy.v1.json"
 CONFIG_PATH = Path(__file__).resolve().parent / "extraction_config.json"
-PROMPT_VERSION = "v4"
+PROMPT_VERSION = "v6"
 
 SINGLE_VALUE_FIELDS = ("offering_type", "form", "primary_class", "primary_function")
 LIST_FIELDS = ("secondary_functions", "industries")
@@ -44,6 +44,11 @@ def load_extraction_config() -> dict[str, Any]:
 def taxonomy_values(taxonomy: dict[str, Any], section: str) -> list[str]:
     """Closed values for a section; keys starting with '_' are documentation."""
     return [k for k in taxonomy[section] if not k.startswith("_")]
+
+
+def industry_prompt_lines(taxonomy: dict[str, Any]) -> list[str]:
+    industries = taxonomy["industries"]
+    return [f"- {key}: {industries[key]}" for key in taxonomy_values(taxonomy, "industries")]
 
 
 def get_taxonomy_version() -> str:
@@ -495,12 +500,14 @@ def extract_robot_taxonomy(
         "",
         f"offering_type: {', '.join(taxonomy_values(taxonomy, 'offering_type'))}",
         f"functions: {', '.join(taxonomy_values(taxonomy, 'functions'))}",
-        f"industries: {', '.join(taxonomy_values(taxonomy, 'industries'))}",
         f"form: {', '.join(taxonomy_values(taxonomy, 'form'))}",
         f"primary_class: {', '.join(taxonomy_values(taxonomy, 'primary_class'))}",
         "",
         "INDUSTRY DEFINITION:",
         taxonomy["industries"]["_definition"],
+        "",
+        "industries (value: what it covers):",
+        *industry_prompt_lines(taxonomy),
         "",
         "INDUSTRY EVIDENCE REQUIREMENT:",
         "Only output an industry if the page explicitly NAMES:",

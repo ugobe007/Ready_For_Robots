@@ -15,6 +15,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+from app.services.robot_understanding_v1.industries import with_parents
 from app.services.robot_understanding_v1.taxonomy_extraction import extract_robot_taxonomy
 from scripts.benchmark_scoring_v2 import (
     score_robot,
@@ -48,9 +49,14 @@ GAP_RULES = {
 
 
 def load_benchmark() -> dict[str, Any]:
-    """Load the v2 benchmark."""
+    """Load the v2 benchmark. Product entries live under `products`; older sets use `robots`."""
     with open(BENCHMARK_PATH, 'r') as f:
-        return json.load(f)
+        return normalize_benchmark(json.load(f))
+
+
+def normalize_benchmark(benchmark: dict[str, Any]) -> dict[str, Any]:
+    entries = list(benchmark.get('products') or []) + list(benchmark.get('robots') or [])
+    return {**benchmark, 'robots': entries}
 
 
 def load_snapshot(robot_id: str) -> dict[str, Any] | None:
@@ -261,7 +267,7 @@ def score_gap_probe(extracted: dict[str, Any], probe: dict[str, Any]) -> dict[st
         probe.get("industries_must_not", []), probe.get("industries_ok_extra", []),
     )
     fields["industries"] = {"pass": ok, "reason": reason}
-    forbidden = sorted(set(industries) & set(probe.get("industries_must_not", [])))
+    forbidden = sorted(with_parents(industries) & set(probe.get("industries_must_not", [])))
     gap_pass = bool(hits) and not (rule.get("forbid_must_not") and forbidden)
     return {
         "gap_pass": gap_pass,
