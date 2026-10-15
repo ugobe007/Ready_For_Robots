@@ -25,15 +25,19 @@ import {
   LANDING_HEADLINE,
   LANDING_HEADLINE_AFTER,
   LANDING_HEADLINE_BEFORE,
-  LANDING_HEADLINE_END,
   LANDING_HEADLINE_LEAD,
   LANDING_HEADLINE_ROBOT,
   LANDING_HOW_HEADLINE,
   LANDING_HOW_STEPS,
   LANDING_INTRO,
+  LANDING_INPUT_PLACEHOLDER,
+  LANDING_PRODUCT_LINE_HINT,
+  LANDING_PROOF_POINTS,
+  LANDING_SUBMIT_CTA,
+  LANDING_EXAMPLES_HEADING,
+  LANDING_BRIEF_NOTE,
   LANDING_JOBS_DOOR_LINE,
   LANDING_JOBS_LABEL,
-  LANDING_KICKER_JOBS,
   LANDING_LINK_MAP,
   LANDING_PRICING_HREF,
   LANDING_PRIVACY_HREF,
@@ -88,13 +92,10 @@ describe("landing fork", () => {
     expect(LANDING_CANDIDATES_LABEL).toBe("Employer");
     expect(LANDING_JOBS_DOOR_LINE).toBe("Paste a robot URL.");
     expect(LANDING_CANDIDATES_DOOR_LINE).toBe("Name the work.");
-    expect(`${LANDING_HEADLINE_LEAD} ${LANDING_HEADLINE_END}`).toBe(
-      LANDING_HEADLINE
-    );
     expect(
-      `${LANDING_HEADLINE_BEFORE}${LANDING_HEADLINE_ROBOT}${LANDING_HEADLINE_AFTER} ${LANDING_HEADLINE_END}`
+      `${LANDING_HEADLINE_LEAD} ${LANDING_HEADLINE_BEFORE}${LANDING_HEADLINE_ROBOT}${LANDING_HEADLINE_AFTER}`
     ).toBe(LANDING_HEADLINE);
-    expect(LANDING_HEADLINE_ROBOT).toBe("Robots");
+    expect(LANDING_HEADLINE_ROBOT).toBe("robot");
     expect(LANDING_CTA_ROBOT_WORD).toBe("Robots");
     expect(LANDING_HEADLINE).not.toMatch(
       /Jobs for robots\. Robots for jobs|Who is this visit|Robots need jobs/i
@@ -105,9 +106,9 @@ describe("landing fork", () => {
       )
     ).toBe(true);
     expect(splitAccentWord(LANDING_HEADLINE, LANDING_HEADLINE_ROBOT)).toEqual([
-      { text: "Put ", accent: false },
-      { text: "Robots", accent: true },
-      { text: " to Work.", accent: false },
+      { text: "Find the companies ready to hire your ", accent: false },
+      { text: "robot", accent: true },
+      { text: ".", accent: false },
     ]);
     expect(
       splitAccentWord(LOOK_FOR_ROBOT_JOBS_CTA, LANDING_CTA_ROBOT_WORD)
@@ -121,10 +122,9 @@ describe("landing fork", () => {
       { text: "Robots", accent: true },
       { text: " for Jobs", accent: false },
     ]);
-    expect(LANDING_EYEBROW).toBe("Ready For Robots");
-    expect(LANDING_KICKER_JOBS).toBe("Jobs");
+    expect(LANDING_EYEBROW).toBe("Jobs for robots");
     expect(LANDING_SUBHEAD).toBe(
-      "Submit your robot URL to find jobs that match your robot."
+      "Paste your robot's product page. We show which companies are moving to automate that work, and why now."
     );
     expect(LANDING_INTRO).toBe(
       "Submit your robot URL or your robot job. We put robots to work."
@@ -159,11 +159,12 @@ describe("landing fork", () => {
       join(here, "../components/JobsLanding.tsx"),
       "utf8"
     );
-    expect(landing).toMatch(/LOOK_FOR_ROBOT_JOBS_CTA/);
-    expect(landing).toMatch(/LOOK_FOR_ROBOT_CANDIDATES_CTA/);
     expect(landing).toMatch(/LANDING_HEADLINE_ROBOT/);
     expect(landing).toMatch(/rfr-landing-hero-form/);
-    expect(landing).toMatch(/rfr-landing-employer-link/);
+    expect(landing).not.toMatch(/rfr-landing-employer-link/);
+    expect(landing).not.toMatch(/Find robots for your job|Daily Newsletter/);
+    expect(landing).not.toMatch(/QuickSignupModal|Unlock Engineering/);
+    expect(landing).not.toMatch(/turnkey commercial quotes/);
     expect(landing).toMatch(/LiveJobTape/);
     expect(landing).toMatch(/MARKET_TAPE_JOBS/);
     expect(landing).toMatch(/useTapeJobCard/);
@@ -222,7 +223,9 @@ describe("landing fork", () => {
     expect(workspace).not.toMatch(/JobsProcessNav/);
     expect(workspace).not.toMatch(/aria-label="Jobs process"/);
     expect(workspace).not.toMatch(/ready_for_robots_hero/);
-    expect(LANDING_HEADLINE).toBe("Put Robots to Work.");
+    expect(LANDING_HEADLINE).toBe(
+      "Find the companies ready to hire your robot."
+    );
     expect(FIND_JOBS_HOME_HEADLINE).toBe("Jobs for robots.");
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
@@ -242,9 +245,24 @@ describe("landing fork", () => {
     );
     const css = readFileSync(join(here, "../index.css"), "utf8");
     const html = readFileSync(join(here, "../../index.html"), "utf8");
-    expect(LANDING_HEADLINE).toBe("Put Robots to Work.");
-    expect(LANDING_SUBHEAD).toBe(
-      "Submit your robot URL to find jobs that match your robot."
+    expect(LANDING_INPUT_PLACEHOLDER).toBe(
+      "Paste a robot product page, e.g. richtechrobotics.com/solutions/adam"
+    );
+    expect(LANDING_SUBMIT_CTA).toBe("Find buyers →");
+    expect(LANDING_PRODUCT_LINE_HINT).toBe(
+      "Have a whole product line? Paste your homepage and pick a product."
+    );
+    expect(LANDING_PROOF_POINTS.map(p => p.title)).toEqual([
+      "By product, not by company.",
+      "Why now, with sources.",
+      "Right work, right robot.",
+    ]);
+    expect(
+      LANDING_PROOF_POINTS.every(p => !/\d/.test(`${p.title}${p.body}`))
+    ).toBe(true);
+    expect(LANDING_EXAMPLES_HEADING).toBe("What a robot job looks like");
+    expect(LANDING_BRIEF_NOTE).toBe(
+      "These are examples. Paste your robot to see your matches."
     );
     expect(LOOK_FOR_ROBOT_JOBS_CTA).toBe("Jobs for Robots");
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
@@ -252,12 +270,10 @@ describe("landing fork", () => {
     expect(LANDING_DOOR_ICON_SCALE).toBe(3);
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
-    expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
     expect(landing).not.toMatch(/rfr-landing-windowbar/);
     expect(landing).toMatch(/rfr-landing-headline/);
     expect(landing).toMatch(/rfr-landing-subhead/);
     expect(landing).toMatch(/rfr-landing-hero-form/);
-    expect(landing).toMatch(/rfr-landing-employer-link/);
     expect(landing).not.toMatch(/rfr-landing-doors-cue/);
     expect(landing).not.toMatch(/rfr-landing-door-who/);
     expect(landing).toMatch(/rfr-landing-accent/);
@@ -267,9 +283,9 @@ describe("landing fork", () => {
     expect(landing).toMatch(/KARE_FACE/);
     expect(landing).toMatch(/LandingFace scale=\{7\}/);
     expect(landing).toMatch(/ready_for_robots_hero\.jpg/);
-    expect(landing).toMatch(/Find jobs →/);
+    expect(landing).toMatch(/LANDING_SUBMIT_CTA/);
     expect(landing).not.toMatch(/rfr-landing-hero-samples/);
-    expect(landing).toMatch(/rfr-landing-stats-bar/);
+    expect(landing).not.toMatch(/rfr-landing-stats-bar|LANDING_STATS/);
     expect(landing).not.toMatch(/PixelBriefcase|PixelDoc|PixelHand/);
     expect(landing).not.toMatch(/PixelRobot/);
     expect(landing).not.toMatch(
@@ -499,11 +515,19 @@ describe("landing chrome hrefs cannot swap visits", () => {
     expect(LANDING_HOW_STEPS[1].href).toBe(jobsFindHref());
     expect(LANDING_HOW_STEPS[2].href).toBe(LANDING_SIGNUP_HREF);
     expect(LANDING_HOW_STEPS[2].href).not.toBe(jobsFindHref());
+    expect(LANDING_FOOTER_LINKS.map(l => l.label)).toEqual([
+      "About",
+      "Newsletter",
+      "Privacy",
+      "Terms",
+      "Support",
+    ]);
     expect(LANDING_FOOTER_LINKS.map(l => l.href)).toEqual([
-      LANDING_PRICING_HREF,
-      LANDING_FAQ_HREF,
+      "/about",
+      "/newsletter",
       LANDING_PRIVACY_HREF,
-      LANDING_SUPPORT_HREF,
+      "/terms",
+      "/support",
     ]);
     expect(LANDING_FOOTER_LINKS.every(l => l.href && l.href !== "#")).toBe(
       true
@@ -542,7 +566,7 @@ describe("landing chrome hrefs cannot swap visits", () => {
       "utf8"
     );
     expect(landing).toMatch(/jobsFindHref/);
-    expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
+    expect(landing).not.toMatch(/jobsCandidatesHref/);
     expect(landing).toMatch(/LANDING_FOOTER_LINKS/);
     expect(landing).not.toMatch(/href=\{step\.href\}/);
     expect(landing).not.toMatch(/LANDING_SIGNUP_HREF/);
@@ -550,8 +574,8 @@ describe("landing chrome hrefs cannot swap visits", () => {
     expect(landing).not.toMatch(/href=["']#["']/);
     expect(landing).not.toMatch(/setLocation\(jobsFindHref/);
     expect(header).toMatch(/jobsHeaderJobsHref/);
-    expect(header).toMatch(/href=\{crmHref\}/);
-    expect(header).toMatch(/href="\/intelligence"/);
+    expect(header).toMatch(/jobsHeaderCrmHref/);
+    expect(header).toMatch(/"\/how-it-works"/);
     expect(header).toMatch(/jobsFreshHomeHref\(\)/);
     expect(header).not.toMatch(/href=["']#["']/);
     expect(intel).toMatch(/jobsFindHref/);
@@ -561,9 +585,9 @@ describe("landing chrome hrefs cannot swap visits", () => {
     expect(employer).not.toMatch(/setLocation\(jobsFindHref/);
     expect(chrome).toMatch(/jobsFindHref\(\)/);
     expect(chrome).not.toMatch(/jobsFreshHomeHref\(\)/);
-    expect(footer).toMatch(/jobsCrmOpenHref\(false\)/);
+    expect(footer).toMatch(/LANDING_FOOTER_LINKS/);
     expect(pricing).toMatch(/ExperimentHeader/);
-    expect(pricing).toMatch(/jobsCrmOpenHref\(false\)/);
+    expect(pricing).toMatch(/Get early access/);
     expect(pricing).toMatch(/id="faq"/);
     expect(pricing).not.toMatch(/from "@\/components\/Header"/);
     expect(privacy).toMatch(/LegalDocument/);

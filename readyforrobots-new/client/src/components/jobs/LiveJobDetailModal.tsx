@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { X, Share2, Check, Building2, UserPlus, Layers } from "lucide-react";
+import { X, Share2, Check, Building2, Search, Layers } from "lucide-react";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD } from "@/lib/kareIcons";
 import { TAPE_ICONS, type TapeJob } from "@/lib/jobsTapeCorpus";
@@ -12,14 +12,15 @@ type Props = {
   job: TapeJob | null;
   isOpen: boolean;
   onClose: () => void;
-  onUnlockSignup?: () => void;
+  /** Close the example and send the visitor to the robot URL input. */
+  onFindBuyers?: () => void;
 };
 
 export default function LiveJobDetailModal({
   job,
   isOpen,
   onClose,
-  onUnlockSignup,
+  onFindBuyers,
 }: Props) {
   const [copied, setCopied] = useState(false);
 
@@ -167,12 +168,12 @@ export default function LiveJobDetailModal({
             type="button"
             onClick={() => {
               onClose();
-              if (onUnlockSignup) onUnlockSignup();
+              onFindBuyers?.();
             }}
             className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-400 hover:bg-emerald-300 text-slate-950 font-extrabold text-xs tracking-wide uppercase transition-all shadow-lg shadow-emerald-400/20 flex items-center justify-center gap-2 cursor-pointer"
           >
-            <UserPlus className="h-4 w-4" />
-            <span>Sign up free →</span>
+            <Search className="h-4 w-4" />
+            <span>Find buyers for your robot →</span>
           </button>
         </div>
       </div>

@@ -21,9 +21,7 @@ import PageHeroDark from "@/components/layout/PageHeroDark";
 import PixelIcon from "@/components/PixelIcon";
 import { FACE_EMERALD, KARE_FACE } from "@/lib/kareIcons";
 import {
-  CRM_UNLOCKED_JOBS,
   FIND_JOBS_CTA,
-  JOBS_EXAMPLE_CAP,
   JOBS_FOR_YOUR_ROBOT_HEADING,
   JOBS_HEADER_OFFSET_CLASS,
   JOBS_PROCESS_STEPS,
@@ -49,13 +47,13 @@ const ABOUT_STATS = [
 const JOBS_LOOP = [
   {
     icon: Search,
-    title: "FIND",
-    copy: "Paste a robot URL. We read the SKU — not a category guess.",
+    title: "PASTE",
+    copy: "Paste a robot product page. We read the product, not a category guess.",
   },
   {
     icon: Building2,
     title: "JOBS",
-    copy: `Inspect ${JOBS_EXAMPLE_CAP} employment cards: employer, workplace, work.`,
+    copy: "Inspect employment cards: employer, workplace, work.",
   },
   {
     icon: FileText,
@@ -65,7 +63,7 @@ const JOBS_LOOP = [
   {
     icon: Mail,
     title: "CRM",
-    copy: `Keep ${CRM_UNLOCKED_JOBS} opportunities on free. Run the next robot the same way.`,
+    copy: "Save the jobs you want. Run the next robot the same way.",
   },
 ];
 
@@ -175,7 +173,7 @@ export default function Intelligence() {
           eyebrow={
             <span className="inline-flex items-center gap-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 backdrop-blur-md shadow-[0_0_15px_rgba(16,185,129,0.15)]">
               <Sparkles className="h-3.5 w-3.5 text-emerald-400" />
-              ReadyForRobots · Intelligence
+              About Ready For Robots
             </span>
           }
           title={
@@ -187,42 +185,23 @@ export default function Intelligence() {
                 background="transparent"
               />
               <span className="font-display font-bold text-white tracking-tight">
-                <span className="text-emerald-400">Robots Need Jobs.</span> We
-                Find the Work.
+                <span className="text-emerald-400">Robots need jobs.</span> We
+                find the work.
               </span>
             </span>
           }
           description={
             <p className="text-base sm:text-lg leading-relaxed text-slate-300">
-              We discover the physical work your machine is qualified to do —
-              employer, workplace, and exact task — then turn matches directly
-              into actionable CRM opportunities.
+              Ready For Robots helps robot makers and sellers find companies
+              that are moving to automate work their robots can do. We classify
+              robots product by product, track public signs that a company is
+              about to automate (RFPs, pilots, budgets, expansion, automation
+              hiring), and show sellers which company, which work, and why now.
             </p>
           }
           innerClassName="pb-10 pt-4"
         >
           <div className="mt-8 space-y-6">
-            {/* Real Live Stats Bar */}
-            <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-4 backdrop-blur-md shadow-[0_0_20px_rgba(16,185,129,0.1)]">
-              <div className="flex flex-wrap items-center justify-between gap-4">
-                <div className="flex flex-wrap items-center gap-6 text-xs text-slate-300 font-medium">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-emerald-400">
-                      42
-                    </span>
-                    <span className="text-slate-400">Active Open Trials</span>
-                  </div>
-                  <span className="text-slate-600">•</span>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-bold text-amber-400">
-                      25
-                    </span>
-                    <span className="text-slate-400">Daily Action Signals</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
             {/* Workflow Steps 01 -> 02 -> 03 with arrow connectors */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               {ABOUT_STATS.map(([value, label], idx) => (
@@ -335,7 +314,7 @@ export default function Intelligence() {
                     ["Workplace", "The facility where the work happens."],
                     [
                       "Work",
-                      "Observable activity, robot-neutral. We do not invent a use-case to fit a SKU.",
+                      "Observable activity, robot-neutral. We do not invent a use-case to fit a product.",
                     ],
                     [
                       "Robot Job",
@@ -522,8 +501,8 @@ export default function Intelligence() {
                   A weekly look at work robots can take.
                 </h2>
                 <p className="mt-3 text-sm leading-relaxed text-slate-300">
-                  Deployments, open work, and SKUs getting hired — so you run
-                  FIND on the next robot instead of waiting on a sales cycle.
+                  Deployments, open work, and products getting hired, so you can
+                  check the next robot instead of waiting on a sales cycle.
                 </p>
                 {stories.length > 0 && (
                   <div className="mt-6 grid grid-cols-1 gap-3.5 md:grid-cols-3">

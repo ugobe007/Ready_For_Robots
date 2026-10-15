@@ -54,6 +54,8 @@ import Icons from "./pages/Icons";
 import Welcome from "./pages/Welcome";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import PostAuthRedirect from "./components/PostAuthRedirect";
+import { signedIn } from "./components/RequireSignIn";
+import { isJobsHandoffSrc } from "./lib/jobsWorkflow";
 import { ScoutChat } from "./components/ScoutChat";
 import VisitTracker from "./components/VisitTracker";
 
@@ -68,9 +70,26 @@ function JourneyHomeRedirect() {
   return <Redirect to={`/${search}`} />;
 }
 
+const SignedInPipeline = signedIn(Pipeline);
+
+/** Jobs CRM desk keeps its own sign-up wall; bare /pipeline is workspace only. */
 function PipelineRoute() {
-  return <Pipeline />;
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  const src = new URLSearchParams(search).get("src");
+  return isJobsHandoffSrc(src) ? <Pipeline /> : <SignedInPipeline />;
 }
+
+const RobotsPage = signedIn(Robots);
+const HumanoidReportPage = signedIn(HumanoidComparisonReport);
+const BenchmarkPage = signedIn(Benchmark);
+const MarketplacePage = signedIn(Marketplace);
+const SocialPage = signedIn(Social);
+const ComparePage = signedIn(Compare);
+const SignalsPage = signedIn(Signals);
+const SalesConsolePage = signedIn(SalesConsole);
+const SalesWorkflowPage = signedIn(SalesWorkflow);
+const SupplyPipelinePage = signedIn(SupplyPipeline);
+const VendorDesignPage = signedIn(VendorDesignBuilder);
 
 function Router() {
   return (
@@ -90,25 +109,25 @@ function Router() {
       <Route path="/sales/samples" component={SalesSamples} />
       <Route path="/pipeline" component={PipelineRoute} />
       <Route path="/about" component={Intelligence} />
-      <Route path="/compare" component={Compare} />
-      <Route path="/signals" component={Signals} />
+      <Route path="/compare" component={ComparePage} />
+      <Route path="/signals" component={SignalsPage} />
       <Route path="/intelligence" component={Newsletter} />
       <Route path="/newsletter" component={Newsletter} />
       <Route path="/market-insights" component={Newsletter} />
-      <Route path="/robot-ready" component={Robots} />
-      <Route path="/roi-calculator" component={Benchmark} />
-      <Route path="/roi" component={Benchmark} />
+      <Route path="/robot-ready" component={RobotsPage} />
+      <Route path="/roi-calculator" component={BenchmarkPage} />
+      <Route path="/roi" component={BenchmarkPage} />
       <Route path="/how-it-works">
-        <Redirect to="/intelligence" />
+        <Redirect to="/about" />
       </Route>
       <Route path="/preview" component={Preview} />
       <Route path="/privacy" component={Privacy} />
       <Route path="/terms" component={Terms} />
       <Route path="/support" component={Support} />
-      <Route path="/vendor/design" component={VendorDesignBuilder} />
+      <Route path="/vendor/design" component={VendorDesignPage} />
       <Route path="/design/:shareId" component={DesignShare} />
-      <Route path="/benchmark" component={Benchmark} />
-      <Route path="/robots/report" component={HumanoidComparisonReport} />
+      <Route path="/benchmark" component={BenchmarkPage} />
+      <Route path="/robots/report" component={HumanoidReportPage} />
       <Route
         path="/reports/benchmarking/:industry"
         component={IndustryBenchmarkingReport}
@@ -117,16 +136,20 @@ function Router() {
         path="/reports/benchmarking"
         component={IndustryBenchmarkingReport}
       />
-      <Route path="/robots" component={Robots} />
+      <Route path="/robots" component={RobotsPage} />
       <Route path="/find-robots" component={FindRobots} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/billing/success" component={BillingSuccess} />
-      <Route path="/social" component={Social} />
+      <Route path="/social" component={SocialPage} />
       <Route path="/jobs/:slug" component={Jobs} />
       <Route path="/jobs" component={JobsIndexRedirect} />
-      <Route path="/experiment" component={ExperimentRedirect} />
-      <Route path="/icons" component={Icons} />
-      <Route path="/icon-review" component={IconReview} />
+      {import.meta.env.DEV ? (
+        <>
+          <Route path="/experiment" component={ExperimentRedirect} />
+          <Route path="/icons" component={Icons} />
+          <Route path="/icon-review" component={IconReview} />
+        </>
+      ) : null}
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/welcome" component={Welcome} />
@@ -136,10 +159,10 @@ function Router() {
       <Route path="/crm" component={Crm} />
       <Route path="/inbox" component={Inbox} />
       <Route path="/calendar" component={CalendarPage} />
-      <Route path="/sales-console" component={SalesConsole} />
-      <Route path="/sales-workflow" component={SalesWorkflow} />
-      <Route path="/supply-pipeline" component={SupplyPipeline} />
-      <Route path="/marketplace" component={Marketplace} />
+      <Route path="/sales-console" component={SalesConsolePage} />
+      <Route path="/sales-workflow" component={SalesWorkflowPage} />
+      <Route path="/supply-pipeline" component={SupplyPipelinePage} />
+      <Route path="/marketplace" component={MarketplacePage} />
       <Route path="/integrations" component={Integrations} />
       <Route path="/integrations/hubspot" component={HubSpotConnect} />
       <Route path="/admin/prospects">
@@ -165,11 +188,17 @@ function Router() {
       <Route path="/readyforrobots/crm" component={Crm} />
       <Route path="/readyforrobots/inbox" component={Inbox} />
       <Route path="/readyforrobots/calendar" component={CalendarPage} />
-      <Route path="/readyforrobots/sales-console" component={SalesConsole} />
-      <Route path="/readyforrobots/sales-workflow" component={SalesWorkflow} />
+      <Route
+        path="/readyforrobots/sales-console"
+        component={SalesConsolePage}
+      />
+      <Route
+        path="/readyforrobots/sales-workflow"
+        component={SalesWorkflowPage}
+      />
       <Route
         path="/readyforrobots/supply-pipeline"
-        component={SupplyPipeline}
+        component={SupplyPipelinePage}
       />
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />

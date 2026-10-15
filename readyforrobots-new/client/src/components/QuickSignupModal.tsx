@@ -41,8 +41,8 @@ type QuickSignupModalProps = {
 export default function QuickSignupModal({
   isOpen,
   onClose,
-  title = "Unlock Engineering Feasibility & Commercial Proposals",
-  subtitle = "Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer signals, and generate turnkey commercial quotes.",
+  title = "Get early access",
+  subtitle = "Create a free account to save buyers and get notified when new ones appear.",
   source = "modal_prompt",
 }: QuickSignupModalProps) {
   const [email, setEmail] = useState("");

@@ -2,45 +2,36 @@
  * `/` first beat: sparse System 1 fork, then two doors. Not FIND yet.
  * Headline picker A–E is not shipped.
  */
-import { useState, useEffect, type FormEvent } from "react";
-import { Sparkles, UserPlus, ShieldCheck } from "lucide-react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import PixelIcon from "@/components/PixelIcon";
 import SiteIcon from "@/components/SiteIcon";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
 import CustomerQuoteBanner from "@/components/CustomerQuoteBanner";
-import QuickSignupModal from "@/components/QuickSignupModal";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import { JOB_TAPE_EXAMPLE_SUBTITLE } from "@/lib/robotJobCard";
 import { useTapeJobCard } from "@/lib/tapeJobCard";
 import { KARE_FACE } from "@/lib/kareIcons";
 import {
-  LANDING_BRIEF_EYEBROW,
-  LANDING_BRIEF_HEADLINE,
   LANDING_BRIEF_JOB_FIELD,
-  LANDING_BRIEF_JOBS,
   LANDING_BRIEF_NOTE,
   LANDING_COLORS as C,
-  LANDING_CANDIDATES_DOOR_LINE,
   LANDING_CTA_ROBOT_WORD,
   LANDING_DOOR_ICON_FILL,
   LANDING_DOOR_ICON_SCALE,
-  LANDING_DOORS_CUE,
+  LANDING_EXAMPLES_HEADING,
   LANDING_EYEBROW,
-  LANDING_JOBS_DOOR_LINE,
   LANDING_FOOTER_LINKS,
   LANDING_FOOTER_MARK,
   LANDING_HEADLINE_AFTER,
   LANDING_HEADLINE_BEFORE,
-  LANDING_HEADLINE_END,
+  LANDING_HEADLINE_LEAD,
   LANDING_HEADLINE_ROBOT,
-  LANDING_INTRO,
-  LANDING_KICKER_JOBS,
-  LANDING_STATS,
+  LANDING_INPUT_PLACEHOLDER,
+  LANDING_PRODUCT_LINE_HINT,
+  LANDING_PROOF_POINTS,
   LANDING_SUBHEAD,
-  LOOK_FOR_ROBOT_CANDIDATES_CTA,
-  LOOK_FOR_ROBOT_JOBS_CTA,
-  jobsCandidatesHref,
+  LANDING_SUBMIT_CTA,
   jobsFindHref,
   splitAccentWord,
   type LandingAccentPart,
@@ -148,8 +139,9 @@ const SAMPLE_ROBOTS = [
 
 export default function JobsLanding() {
   const [heroUrl, setHeroUrl] = useState("");
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
-  const { selectedTapeJob, handleSelectJob, handleCloseModal } = useTapeJobCard();
+  const heroInputRef = useRef<HTMLInputElement>(null);
+  const { selectedTapeJob, handleSelectJob, handleCloseModal } =
+    useTapeJobCard();
 
   useEffect(() => {
     try {
@@ -174,16 +166,16 @@ export default function JobsLanding() {
     window.location.href = jobsFindHref(trimmed);
   };
 
+  const focusHeroInput = () => {
+    heroInputRef.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "center",
+    });
+    heroInputRef.current?.focus({ preventScroll: true });
+  };
+
   return (
     <div className="rfr-landing">
-      <QuickSignupModal
-        isOpen={isSignupOpen}
-        onClose={() => setIsSignupOpen(false)}
-        title="Unlock Engineering Feasibility & Commercial Proposals"
-        subtitle="Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer demand, and generate turnkey commercial quotes."
-        source="jobs_landing_hero"
-      />
-
       <section className="rfr-landing-hero">
         <div className="rfr-landing-hero-bg" aria-hidden="true">
           <img
@@ -193,18 +185,14 @@ export default function JobsLanding() {
           />
           <div className="rfr-landing-hero-bg-overlay" />
         </div>
-        <p className="rfr-landing-kicker">
-          {LANDING_EYEBROW}
-          {" · "}
-          <span className="rfr-landing-kicker-jobs">{LANDING_KICKER_JOBS}</span>
-        </p>
+        <p className="rfr-landing-kicker">{LANDING_EYEBROW}</p>
         <div className="rfr-landing-hero-row">
           <h1 className="rfr-landing-headline">
+            {LANDING_HEADLINE_LEAD}
+            <br />
             {LANDING_HEADLINE_BEFORE}
             <span className="rfr-landing-accent">{LANDING_HEADLINE_ROBOT}</span>
             {LANDING_HEADLINE_AFTER}
-            <br />
-            {LANDING_HEADLINE_END}
           </h1>
           <div className="rfr-landing-hero-mark" aria-hidden="true">
             <LandingFace scale={7} />
@@ -212,63 +200,54 @@ export default function JobsLanding() {
         </div>
         <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
 
-        <div className="rfr-landing-stats-bar">
-          {LANDING_STATS.map((stat, idx) => (
-            <span key={stat.label} className="rfr-landing-stat-group">
-              {idx > 0 && <div className="rfr-landing-stat-divider" />}
-              <div className="rfr-landing-stat-item">
-                {stat.pulse && <span className="rfr-landing-stat-pulse" />}
-                <span className="rfr-landing-stat-value">{stat.value}</span>
-                <span className="rfr-landing-stat-label">{stat.label}</span>
-              </div>
-            </span>
-          ))}
-        </div>
-
         <form onSubmit={handleHeroSubmit} className="rfr-landing-hero-form">
           <div className="rfr-landing-hero-input-wrap">
             <input
+              ref={heroInputRef}
               type="text"
-              placeholder="Paste a robot product URL (e.g. https://www.dexmate.ai)..."
+              placeholder={LANDING_INPUT_PLACEHOLDER}
               value={heroUrl}
               onChange={e => setHeroUrl(e.target.value)}
               className="rfr-landing-hero-input"
               aria-label="Robot product URL"
             />
             <button type="submit" className="rfr-landing-hero-submit">
-              Find jobs →
+              {LANDING_SUBMIT_CTA}
             </button>
           </div>
+          <p className="mt-2 text-xs text-slate-400">
+            {LANDING_PRODUCT_LINE_HINT}
+          </p>
         </form>
 
-        {/* Named employer quotes about real work */}
+        <ul
+          className="mt-8 grid w-full gap-4 sm:grid-cols-3"
+          aria-label="Why Ready For Robots"
+        >
+          {LANDING_PROOF_POINTS.map(point => (
+            <li
+              key={point.title}
+              className="rounded-xl border border-slate-700/70 bg-[#0b162f]/80 p-4"
+            >
+              <p className="text-sm font-bold text-slate-100">{point.title}</p>
+              <p className="mt-1 text-xs leading-relaxed text-slate-300">
+                {point.body}
+              </p>
+            </li>
+          ))}
+        </ul>
+
         <div
           className="rfr-landing-quotes mt-8 mb-5 w-full pt-1"
           aria-label="Employer quotes"
         >
           <CustomerQuoteBanner />
         </div>
-
-        {/* Action Links pulled to left margin with normalized text-sm font */}
-        <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-start gap-5 my-3">
-          <a
-            href={jobsCandidatesHref()}
-            className="rfr-landing-employer-link inline-flex items-center gap-1 text-sm font-semibold font-mono text-[#d6b15d] hover:text-[#f0cb75] underline underline-offset-4 transition-all"
-          >
-            Employers: Find robots for your job →
-          </a>
-          <a
-            href="/newsletter"
-            className="inline-flex items-center gap-1 text-sm font-semibold font-mono text-emerald-400 hover:text-emerald-300 underline underline-offset-4 transition-all"
-          >
-            <span>📰 Daily Newsletter →</span>
-          </a>
-        </div>
       </section>
 
-      <section className="rfr-landing-brief" aria-label="Live job feed">
+      <section className="rfr-landing-brief" aria-label="Example robot jobs">
         <h2 className="rfr-landing-brief-headline">
-          Jobs for <span className="text-emerald-400">robots.</span>
+          {LANDING_EXAMPLES_HEADING}
         </h2>
         <p className="rfr-landing-brief-note">{LANDING_BRIEF_NOTE}</p>
         <div className="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-[#081126] shadow-2xl">
@@ -288,13 +267,13 @@ export default function JobsLanding() {
         job={selectedTapeJob}
         isOpen={Boolean(selectedTapeJob)}
         onClose={handleCloseModal}
-        onUnlockSignup={() => setIsSignupOpen(true)}
+        onFindBuyers={focusHeroInput}
       />
 
       <footer className="rfr-landing-footer">
         <div className="rfr-landing-footer-row">
           <p className="rfr-landing-footer-mark">{LANDING_FOOTER_MARK}</p>
-          <div className="rfr-landing-footer-links">
+          <nav className="rfr-landing-footer-links" aria-label="Footer">
             {LANDING_FOOTER_LINKS.map(link => (
               <a
                 key={link.label}
@@ -304,7 +283,7 @@ export default function JobsLanding() {
                 {link.label}
               </a>
             ))}
-          </div>
+          </nav>
         </div>
       </footer>
     </div>

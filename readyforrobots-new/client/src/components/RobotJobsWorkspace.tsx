@@ -27,7 +27,7 @@
  */
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useLocation, useSearch } from "wouter";
-import { Mail, Lock } from "lucide-react";
+import { Mail } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import DailyMatchBriefModal from "@/components/DailyMatchBriefModal";
 import JobsKeepStatusBar from "@/components/JobsKeepStatusBar";
@@ -63,7 +63,6 @@ import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import LiveJobTape from "@/components/jobs/LiveJobTape";
 import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
 import JobQueryModal from "@/components/jobs/JobQueryModal";
-import QuickSignupModal from "@/components/QuickSignupModal";
 import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
 import { useTapeJobCard } from "@/lib/tapeJobCard";
 import PixelIcon from "@/components/PixelIcon";
@@ -552,8 +551,8 @@ export default function RobotJobsWorkspace() {
   const { session } = useAuth();
   const [, setLocation] = useLocation();
   const search = useSearch();
-  const { selectedTapeJob, handleSelectJob, handleCloseModal } = useTapeJobCard();
-  const [tapeSignupOpen, setTapeSignupOpen] = useState(false);
+  const { selectedTapeJob, handleSelectJob, handleCloseModal } =
+    useTapeJobCard();
   const [stage, setStage] = useState<Stage>(() => {
     if (typeof window === "undefined") return "find";
     if (isJobsFreshQuery(window.location.search)) {
@@ -605,7 +604,6 @@ export default function RobotJobsWorkspace() {
   const [expandedJob, setExpandedJob] = useState<string | null>(null);
   const [checkedJobKeys, setCheckedJobKeys] = useState<string[]>([]);
   const [keepSavedCount, setKeepSavedCount] = useState(0);
-  const [showAllJobs, setShowAllJobs] = useState(false);
   const [lineupPreview, setLineupPreview] = useState(false);
   const [showJobQueryModal, setShowJobQueryModal] = useState(false);
 
@@ -742,7 +740,6 @@ export default function RobotJobsWorkspace() {
     setExpandedJob(null);
     setCheckedJobKeys([]);
     setKeepSavedCount(0);
-    setShowAllJobs(false);
     setLineupPreview(false);
     viewedRef.current = new Set();
     fired3Plus.current = false;
@@ -775,7 +772,6 @@ export default function RobotJobsWorkspace() {
     setExpandedJob(null);
     setCheckedJobKeys([]);
     setKeepSavedCount(0);
-    setShowAllJobs(false);
     setLineupPreview(false);
     setMatchError(null);
     viewedRef.current = new Set();
@@ -2127,15 +2123,6 @@ export default function RobotJobsWorkspace() {
     }
   }
 
-  function seeAllJobs() {
-    setShowAllJobs(true);
-    trackRobotJobsFunnel("see_all_clicked", {
-      ...funnelBase(),
-      robot_name: active?.productName,
-      job_count: active?.jobCount,
-    });
-  }
-
   function newRobot() {
     resetToFind(false);
   }
@@ -2243,14 +2230,9 @@ export default function RobotJobsWorkspace() {
                 job={selectedTapeJob}
                 isOpen={Boolean(selectedTapeJob)}
                 onClose={handleCloseModal}
-                onUnlockSignup={() => setTapeSignupOpen(true)}
-              />
-              <QuickSignupModal
-                isOpen={tapeSignupOpen}
-                onClose={() => setTapeSignupOpen(false)}
-                title="Unlock Engineering Feasibility & Commercial Proposals"
-                subtitle="Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer demand, and generate turnkey commercial quotes."
-                source="jobs_find_tape"
+                onFindBuyers={() =>
+                  document.getElementById("robot-url")?.focus()
+                }
               />
             </div>
           )}
@@ -2303,7 +2285,6 @@ export default function RobotJobsWorkspace() {
               lineupPreview={lineupPreview}
               expandedJob={expandedJob}
               checkedJobKeys={checkedJobKeys}
-              showAll={showAllJobs}
               onSelectJob={selectJob}
               onToggleJob={toggleCheckedJob}
               onActivate={goToActivate}
@@ -2313,7 +2294,6 @@ export default function RobotJobsWorkspace() {
               accessToken={session?.access_token || null}
               robotUrl={submittedUrlRef.current}
               submissionId={submissionIdRef.current}
-              onSeeAll={seeAllJobs}
               onRunOneRobot={runOneRobot}
               robotCount={lineupPreview ? portfolio.length : 1}
               companyName={companyName || active.companyName}
@@ -3304,7 +3284,6 @@ function JobsPanel({
   lineupPreview,
   expandedJob,
   checkedJobKeys,
-  showAll,
   onSelectJob,
   onToggleJob,
   onActivate,
@@ -3314,7 +3293,6 @@ function JobsPanel({
   accessToken = null,
   robotUrl = "",
   submissionId = null,
-  onSeeAll,
   onRunOneRobot,
   robotCount = 1,
   companyName = "",
@@ -3328,7 +3306,6 @@ function JobsPanel({
   lineupPreview: boolean;
   expandedJob: string | null;
   checkedJobKeys: string[];
-  showAll: boolean;
   onSelectJob: (job: MatchJob) => void;
   onToggleJob: (job: MatchJob) => void;
   onActivate: () => void;
@@ -3338,7 +3315,6 @@ function JobsPanel({
   accessToken?: string | null;
   robotUrl?: string;
   submissionId?: number | null;
-  onSeeAll: () => void;
   onRunOneRobot: () => void;
   robotCount?: number;
   companyName?: string;
@@ -3347,25 +3323,6 @@ function JobsPanel({
   onSelectClass: (classId: string) => void;
   onOpenQueryModal?: () => void;
 }) {
-  const { session } = useAuth();
-  const appMeta = (session?.user?.app_metadata || {}) as Record<
-    string,
-    unknown
-  >;
-  const userMeta = (session?.user?.user_metadata || {}) as Record<
-    string,
-    unknown
-  >;
-  const planTier = String(
-    appMeta.billing_tier || appMeta.plan_tier || userMeta.plan_tier || ""
-  ).toLowerCase();
-  const email = String(session?.user?.email || "").toLowerCase();
-  const isPaidUser =
-    plan === "paid" ||
-    ["pro", "premium", "paid"].includes(planTier) ||
-    email.endsWith("@readyforrobots.com") ||
-    email === "ugobe07@gmail.com";
-
   const sources = lineupPreview && lineup.length > 1 ? lineup : [analysis];
   const heading = jobsHeading({
     productName: analysis.productName,
@@ -3386,19 +3343,7 @@ function JobsPanel({
     forRobot: job.forRobot || analysis.productName,
   }));
 
-  const allActiveJobs = rawBaseJobs;
-  const defaultActiveJobs = allActiveJobs.slice(0, 3);
-  const displayedJobs =
-    isPaidUser && showAll
-      ? allActiveJobs.slice(0, JOBS_PIPELINE_CAP)
-      : defaultActiveJobs;
-
-  const hiddenCountForPaid =
-    isPaidUser && !showAll && allActiveJobs.length > 3
-      ? allActiveJobs.length - 3
-      : 0;
-
-  const visible = isPaidUser && showAll ? rawBaseJobs : defaultActiveJobs;
+  const displayedJobs = rawBaseJobs.slice(0, JOBS_PIPELINE_CAP);
 
   return (
     <div id="jobs-list" className="p-6 sm:p-8">
@@ -3406,9 +3351,7 @@ function JobsPanel({
         <h2 className={`${FIND_JOBS_HEADLINE_CLASS} text-white`}>{heading}</h2>
         <span className="font-mono text-base font-bold text-emerald-300">
           {jobsCountEyebrow({
-            visibleCount: isPaidUser
-              ? rawBaseJobs.length
-              : Math.min(3, rawBaseJobs.length),
+            visibleCount: displayedJobs.length,
             productName: analysis.productName,
             companyName: companyName || analysis.companyName,
             robotCount,
@@ -3502,78 +3445,20 @@ function JobsPanel({
       ) : (
         <>
           <ol className="mt-6 space-y-3">
-              {(isPaidUser ? displayedJobs : displayedJobs.slice(0, 3)).map(
-                (job, i) => (
-                  <JobCard
-                    key={`${job.forRobot}:${job.job_key}`}
-                    index={i + 1}
-                    job={job}
-                    selected={expandedJob === job.job_key}
-                    checked={checkedJobKeys.includes(job.job_key)}
-                    onSelect={() => onSelectJob(job)}
-                    onToggle={() => {
-                      if (
-                        !isPaidUser &&
-                        !defaultActiveJobs.some(j => j.job_key === job.job_key)
-                      ) {
-                        return;
-                      }
-                      onToggleJob(job);
-                    }}
-                  />
-                )
-              )}
-            </ol>
-
-          {!isPaidUser && rawBaseJobs.length > 3 && (
-            <div className="relative mt-6 overflow-hidden rounded-2xl border border-purple-500/40 bg-gradient-to-b from-[#110d29] to-[#0a0e1c] p-2 shadow-2xl">
-              {/* Blurred background cards */}
-              <div className="space-y-3 p-2 filter blur-[6px] opacity-35 select-none pointer-events-none aria-hidden">
-                {rawBaseJobs.slice(3, 7).map((job, i) => (
-                  <JobCard
-                    key={`blurred:${job.forRobot}:${job.job_key}`}
-                    index={i + 4}
-                    job={job}
-                    selected={false}
-                    checked={false}
-                    onSelect={() => {}}
-                    onToggle={() => {}}
-                  />
-                ))}
-              </div>
-
-              {/* Lock & Upgrade Overlay */}
-              <div className="absolute inset-0 z-20 flex flex-col items-center justify-center p-6 text-center bg-slate-950/85 backdrop-blur-md">
-                <div className="rounded-2xl bg-emerald-500/20 p-3.5 border border-emerald-400/40 text-emerald-400 mb-3 shadow-lg shadow-emerald-500/20">
-                  <Lock className="h-6 w-6 text-emerald-400" />
-                </div>
-                <h3 className="text-xl font-bold text-white font-display">
-                  {Math.max(1, rawBaseJobs.length - 3)} more job cards
-                </h3>
-                <p className="mt-2 max-w-md text-xs leading-relaxed text-slate-300 sm:text-sm">
-                  Free users can view up to 3 job cards. Sign up to see the
-                  rest.
-                </p>
-                <a
-                  href="/signup?next=/pipeline&src=jobs_free_cap_blur"
-                  className="mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-400 to-teal-400 px-6 py-3 font-mono text-xs font-bold uppercase tracking-wider text-slate-950 shadow-xl shadow-emerald-400/20 hover:from-emerald-300 hover:to-teal-300 transition-all"
-                >
-                  <span>Sign Up to Unlock All Jobs →</span>
-                </a>
-              </div>
-            </div>
-          )}
+            {displayedJobs.map((job, i) => (
+              <JobCard
+                key={`${job.forRobot}:${job.job_key}`}
+                index={i + 1}
+                job={job}
+                selected={expandedJob === job.job_key}
+                checked={checkedJobKeys.includes(job.job_key)}
+                onSelect={() => onSelectJob(job)}
+                onToggle={() => onToggleJob(job)}
+              />
+            ))}
+          </ol>
         </>
       )}
-      {hiddenCountForPaid > 0 ? (
-        <button
-          type="button"
-          onClick={onSeeAll}
-          className="mt-4 font-mono text-sm font-semibold uppercase tracking-[0.08em] text-emerald-400 hover:text-emerald-300"
-        >
-          See all {Math.min(allActiveJobs.length, JOBS_PIPELINE_CAP)} jobs
-        </button>
-      ) : null}
       {showCrmCtas ? (
         <JobsActivateBar
           onActivate={onActivate}
@@ -3581,7 +3466,7 @@ function JobsPanel({
           className="mt-8 border-t border-slate-600 pt-6"
         />
       ) : null}
-      {visible.length > 0 ? (
+      {displayedJobs.length > 0 ? (
         <JobsPresentationOffer
           signedIn={signedIn}
           plan={plan}
@@ -3824,7 +3709,9 @@ function JobCard({
             ) : null}
             <div>
               <dt className={eyebrow}>
-                {card.sourceUrl ? JOB_CARD_SOURCE_LABEL : JOB_CARD_EXAMPLE_LABEL}
+                {card.sourceUrl
+                  ? JOB_CARD_SOURCE_LABEL
+                  : JOB_CARD_EXAMPLE_LABEL}
               </dt>
               <dd className="mt-0.5 text-slate-300">
                 {card.sourceUrl ? (

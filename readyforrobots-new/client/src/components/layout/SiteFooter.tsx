@@ -5,13 +5,9 @@
  */
 import { useState } from "react";
 import { Link, useLocation, useSearch } from "wouter";
-import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
-import {
-  jobsCrmOpenHref,
-  jobsFreshHomeHref,
-  showJobsSiteChrome,
-} from "@/lib/jobsWorkflow";
+import { jobsFreshHomeHref, showJobsSiteChrome } from "@/lib/jobsWorkflow";
+import { LANDING_FOOTER_LINKS } from "@/lib/jobsLanding";
 
 type Props = {
   newsletterEmail?: string;
@@ -39,23 +35,6 @@ const COMPANY_LINKS = [
   { label: "Support", href: "/support" },
 ];
 
-function jobsProductLinks(signedIn: boolean) {
-  return {
-    Product: [
-      { label: "Jobs", href: jobsFreshHomeHref() },
-      { label: "CRM", href: jobsCrmOpenHref(signedIn) },
-      { label: "Job site sketch", href: "/vendor/design" },
-      { label: "About", href: "/intelligence" },
-      { label: "Start free workspace", href: jobsCrmOpenHref(false) },
-      { label: "Robots", href: "/robots" },
-      { label: "Humanoid Report", href: "/robots/report" },
-      { label: "Newsletter", href: "/newsletter" },
-    ],
-    Support: SUPPORT_LINKS,
-    Company: COMPANY_LINKS,
-  };
-}
-
 const SIGNAL_LINKS = {
   Product: [
     { label: "Pipeline", href: "/pipeline" },
@@ -78,9 +57,7 @@ export default function SiteFooter({
 }: Props) {
   const [pathname] = useLocation();
   const search = useSearch();
-  const { session } = useAuth();
   const jobsChrome = showJobsSiteChrome({ pathname, search });
-  const links = jobsChrome ? jobsProductLinks(Boolean(session)) : SIGNAL_LINKS;
   const homeHref = jobsChrome ? jobsFreshHomeHref() : "/";
 
   const [internalEmail, setInternalEmail] = useState("");
@@ -147,7 +124,7 @@ export default function SiteFooter({
             </Link>
             <p className="text-slate-500 text-sm leading-relaxed mb-5 max-w-xs">
               {jobsChrome
-                ? "Find jobs for your robot. Robots need jobs. We find the work."
+                ? "Robots need jobs. We find the work."
                 : "Robot sales intelligence — discover, develop, and close deals from live market signals."}
             </p>
             {!hideNewsletter && (
@@ -176,7 +153,7 @@ export default function SiteFooter({
                 </form>
                 {statusValue === "success" && (
                   <p className="text-emerald-400 text-xs mt-2 font-medium">
-                    Subscribed! Check your inbox for the daily brief.
+                    Subscribed! Check your inbox for the weekly brief.
                   </p>
                 )}
                 {statusValue === "error" && (
@@ -185,31 +162,51 @@ export default function SiteFooter({
                   </p>
                 )}
                 <p className="text-slate-600 text-xs mt-2">
-                  Weekly Robot Intelligence Brief. Free.
+                  {jobsChrome
+                    ? "The weekly robot jobs brief. Free."
+                    : "Weekly Robot Intelligence Brief. Free."}
                 </p>
               </>
             )}
           </div>
 
-          {Object.entries(links).map(([group, items]) => (
-            <div key={group}>
-              <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
-                {group}
-              </p>
-              <ul className="space-y-2.5">
-                {items.map(item => (
-                  <li key={item.label}>
-                    <Link
-                      href={item.href}
-                      className="text-slate-500 text-sm hover:text-white transition-colors"
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {jobsChrome ? (
+            <nav
+              aria-label="Footer"
+              className="col-span-2 md:col-span-3 flex flex-wrap content-start gap-x-6 gap-y-3"
+            >
+              {LANDING_FOOTER_LINKS.map(item => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="text-slate-400 text-sm hover:text-white transition-colors"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
+          {(jobsChrome ? [] : Object.entries(SIGNAL_LINKS)).map(
+            ([group, items]) => (
+              <div key={group}>
+                <p className="text-slate-400 text-xs font-semibold uppercase tracking-widest mb-4">
+                  {group}
+                </p>
+                <ul className="space-y-2.5">
+                  {items.map(item => (
+                    <li key={item.label}>
+                      <Link
+                        href={item.href}
+                        className="text-slate-500 text-sm hover:text-white transition-colors"
+                      >
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )
+          )}
         </div>
 
         <div className="border-t border-white/5 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4">
@@ -218,44 +215,46 @@ export default function SiteFooter({
               ? "© 2026 ReadyForRobots · Jobs for your robot."
               : "© 2026 ReadyForRobots · Signal for robotics sales."}
           </p>
-          <div className="flex flex-wrap gap-6 justify-center">
-            <Link
-              href="/privacy"
-              className="text-slate-500 text-xs hover:text-white transition-colors"
-            >
-              Privacy
-            </Link>
-            <Link
-              href="/terms"
-              className="text-slate-500 text-xs hover:text-white transition-colors"
-            >
-              Terms
-            </Link>
-            <Link
-              href="/support"
-              className="text-slate-500 text-xs hover:text-white transition-colors"
-            >
-              Support
-            </Link>
-            <Link
-              href="/login"
-              className="text-slate-500 text-xs hover:text-white transition-colors"
-            >
-              Sign in
-            </Link>
-            <Link
-              href="/signup"
-              className="text-slate-500 text-xs hover:text-white transition-colors"
-            >
-              Sign up
-            </Link>
-            <a
-              href="mailto:support@readyforrobots.com"
-              className="text-slate-500 text-xs hover:text-white transition-colors"
-            >
-              support@readyforrobots.com
-            </a>
-          </div>
+          {jobsChrome ? null : (
+            <div className="flex flex-wrap gap-6 justify-center">
+              <Link
+                href="/privacy"
+                className="text-slate-500 text-xs hover:text-white transition-colors"
+              >
+                Privacy
+              </Link>
+              <Link
+                href="/terms"
+                className="text-slate-500 text-xs hover:text-white transition-colors"
+              >
+                Terms
+              </Link>
+              <Link
+                href="/support"
+                className="text-slate-500 text-xs hover:text-white transition-colors"
+              >
+                Support
+              </Link>
+              <Link
+                href="/login"
+                className="text-slate-500 text-xs hover:text-white transition-colors"
+              >
+                Sign in
+              </Link>
+              <Link
+                href="/signup"
+                className="text-slate-500 text-xs hover:text-white transition-colors"
+              >
+                Sign up
+              </Link>
+              <a
+                href="mailto:support@readyforrobots.com"
+                className="text-slate-500 text-xs hover:text-white transition-colors"
+              >
+                support@readyforrobots.com
+              </a>
+            </div>
+          )}
         </div>
       </div>
     </footer>

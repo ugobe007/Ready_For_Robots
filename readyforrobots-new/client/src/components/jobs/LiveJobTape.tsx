@@ -283,7 +283,7 @@ export default function LiveJobTape({
             <span>
               {revealing
                 ? jobsFoundLabel(foundCount)
-                : `${padCount(foundCount)} ${JOB_CARD_EXAMPLE_LABEL}s`}
+                : `${JOB_CARD_EXAMPLE_LABEL}s`}
             </span>
           </p>
         </div>

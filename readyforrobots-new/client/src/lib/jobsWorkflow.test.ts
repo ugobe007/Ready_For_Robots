@@ -505,10 +505,10 @@ describe("jobsWorkflow", () => {
     expect(chrome).toMatch(/jobsCrmOpenHref\(signedIn, submissionId\)/);
     expect(chrome).not.toMatch(/<span key=\{step\.id\}/);
     expect(chrome).not.toMatch(/href="#"/);
-    expect(header).toMatch(/href="\/\?visit=jobs"/);
+    expect(header).toMatch(/label: "Find buyers"/);
     expect(header).toMatch(/jobsHeaderJobsHref/);
-    expect(header).toMatch(/href="\/intelligence"/);
-    expect(header).toMatch(/href=\{crmHref\}/);
+    expect(header).toMatch(/href: "\/how-it-works"/);
+    expect(header).toMatch(/href=\{link\.href\}/);
     expect(header).not.toMatch(/href="#"/);
     expect(header).not.toMatch(/<Link /);
   });
@@ -619,9 +619,7 @@ describe("jobsWorkflow", () => {
     ).toMatch(/Rows start checked/i);
     expect(
       jobsListHint({ robotCount: 5, productName: "Fourier N1", jobCount: 5 })
-    ).toMatch(
-      /one sample job per robot/i
-    );
+    ).toMatch(/one sample job per robot/i);
     const workspace = readFileSync(
       join(here, "../components/RobotJobsWorkspace.tsx"),
       "utf8"
@@ -695,12 +693,14 @@ describe("jobsWorkflow", () => {
       join(here, "../components/ExperimentHeader.tsx"),
       "utf8"
     );
-    expect(header).toMatch(/showSignalPipelineNav/);
     expect(header).toMatch(
       /jobsHeaderCrmHref\(location, jobsSrc, Boolean\(session\)\)/
     );
-    expect(header).toMatch(/showPipeline/);
     expect(header).toMatch(/useSearch/);
+    expect(header).not.toMatch(/href(=|: )"\/pipeline/);
+    expect(header).not.toMatch(
+      /Lead Pipeline|Robot Ready|Intelligence & HEIR|RaaS ROI|Explore/
+    );
   });
 
   it("Jobs footer and Signal FAB follow header chrome (no Pipeline / SIGNAL)", () => {
@@ -757,21 +757,10 @@ describe("jobsWorkflow", () => {
       "utf8"
     );
     expect(footer).toMatch(/showJobsSiteChrome/);
-    expect(footer).toMatch(/function jobsProductLinks/);
     expect(footer).toMatch(/const SIGNAL_LINKS/);
-    expect(footer).toMatch(
-      /jobsChrome \? jobsProductLinks\(Boolean\(session\)\) : SIGNAL_LINKS/
-    );
+    expect(footer).toMatch(/LANDING_FOOTER_LINKS\.map/);
     expect(footer).toMatch(/jobsChrome \? "JOBS" : "SIGNAL"/);
-    const jobsLinks = footer.slice(
-      footer.indexOf("function jobsProductLinks"),
-      footer.indexOf("const SIGNAL_LINKS")
-    );
-    expect(jobsLinks).toMatch(/jobsFreshHomeHref/);
-    expect(jobsLinks).toMatch(/jobsCrmOpenHref/);
-    expect(jobsLinks).not.toMatch(/\/pipeline/);
-    expect(jobsLinks).not.toMatch(/Signals/);
-    expect(jobsLinks).not.toMatch(/rounded-lg/);
+    expect(footer).not.toMatch(/function jobsProductLinks/);
     expect(footer).not.toMatch(/\/#case-studies/);
 
     const compare = readFileSync(join(here, "../pages/Compare.tsx"), "utf8");
@@ -1110,7 +1099,8 @@ describe("jobsWorkflow", () => {
     expect(header).toMatch(
       /location.startsWith\("\/pipeline"\) && isJobsHandoffSrc/
     );
-    expect(header).toMatch(/session \|\| !showPipeline/);
+    expect(header).toMatch(/label: "Saved buyers", href: savedHref/);
+    expect(header).toMatch(/\.\.\.\(session\n?\s*\?/);
   });
 
   it("dumps checked jobs into CRM and opens the desk behind the signup wall", () => {
@@ -1201,7 +1191,7 @@ describe("jobsWorkflow", () => {
       join(here, "../components/ExperimentHeader.tsx"),
       "utf8"
     );
-    expect(headerNav).toMatch(/href="\/intelligence"/);
+    expect(headerNav).toMatch(/href: "\/how-it-works"/);
     expect(headerNav).not.toMatch(/max-sm:hidden/);
   });
 
@@ -1341,7 +1331,9 @@ describe("jobsWorkflow", () => {
     expect(desk).not.toMatch(/Open questions/);
     expect(desk).toMatch(/Job description/);
     expect(desk).not.toMatch(/payEstimate/);
-    expect(desk).toMatch(/card\.sourceUrl \? JOB_CARD_SOURCE_LABEL : JOB_CARD_EXAMPLE_LABEL/);
+    expect(desk).toMatch(
+      /card\.sourceUrl \? JOB_CARD_SOURCE_LABEL : JOB_CARD_EXAMPLE_LABEL/
+    );
     expect(desk).toMatch(/Task models/);
     expect(desk).not.toMatch(/setSelectedKeys\(\[\]\)/);
   });
@@ -1795,10 +1787,9 @@ describe("jobsWorkflow", () => {
       join(here, "../components/ExperimentHeader.tsx"),
       "utf8"
     );
-    expect(header).toMatch(/href=\{crmHref\}/);
+    expect(header).toMatch(/href: savedHref/);
     expect(header).toMatch(/useIsAdmin/);
-    expect(header).toMatch(/href="\/admin"/);
-    expect(header).toMatch(/showPipeline \? \(/);
+    expect(header).toMatch(/href: "\/admin"/);
     expect(header).toMatch(/h-14/);
     expect(header).toMatch(/sm:text-base/);
     expect(header).toMatch(/rfr-led/);

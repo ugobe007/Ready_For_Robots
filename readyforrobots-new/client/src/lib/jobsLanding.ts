@@ -19,16 +19,34 @@ export const LANDING_DOOR_ICON_FILL = "#8B5CF6";
 export const LANDING_JOBS_DOOR_LINE = "Paste a robot URL.";
 export const LANDING_CANDIDATES_DOOR_LINE = "Name the work.";
 
-export const LANDING_EYEBROW = "Ready For Robots";
-export const LANDING_KICKER_JOBS = "Jobs";
-export const LANDING_HEADLINE = "Put Robots to Work.";
-export const LANDING_HEADLINE_BEFORE = "Put ";
-export const LANDING_HEADLINE_ROBOT = "Robots";
-export const LANDING_HEADLINE_AFTER = "";
-export const LANDING_HEADLINE_LEAD = `${LANDING_HEADLINE_BEFORE}${LANDING_HEADLINE_ROBOT}${LANDING_HEADLINE_AFTER}`;
-export const LANDING_HEADLINE_END = "to Work.";
+export const LANDING_EYEBROW = "Jobs for robots";
+export const LANDING_HEADLINE = "Find the companies ready to hire your robot.";
+export const LANDING_HEADLINE_LEAD = "Find the companies";
+export const LANDING_HEADLINE_BEFORE = "ready to hire your ";
+export const LANDING_HEADLINE_ROBOT = "robot";
+export const LANDING_HEADLINE_AFTER = ".";
 export const LANDING_SUBHEAD =
-  "Submit your robot URL to find jobs that match your robot.";
+  "Paste your robot's product page. We show which companies are moving to automate that work, and why now.";
+export const LANDING_INPUT_PLACEHOLDER =
+  "Paste a robot product page, e.g. richtechrobotics.com/solutions/adam";
+export const LANDING_SUBMIT_CTA = "Find buyers →";
+export const LANDING_PRODUCT_LINE_HINT =
+  "Have a whole product line? Paste your homepage and pick a product.";
+/** No numbers here: copy rule 3 allows only database-backed figures. */
+export const LANDING_PROOF_POINTS = [
+  {
+    title: "By product, not by company.",
+    body: "Each robot you make does different work for different buyers. We match them one at a time.",
+  },
+  {
+    title: "Why now, with sources.",
+    body: "Every buyer comes with the evidence: RFPs, pilots, expansion plans, automation hiring.",
+  },
+  {
+    title: "Right work, right robot.",
+    body: "A drink station matches bars and cafés, not bussing. A pallet mover matches warehouses, not dining rooms.",
+  },
+] as const;
 export const LANDING_INTRO =
   "Submit your robot URL or your robot job. We put robots to work.";
 export const LANDING_CTA_ROBOT_WORD = "Robots";
@@ -66,15 +84,12 @@ export const LANDING_HOW_STEPS = [
   },
 ] as const;
 
-export const LANDING_STATS = [
-  { value: "25", label: "Free Preview Leads", pulse: false },
-] as const;
-
 export const LANDING_BRIEF_EYEBROW = "Jobs brief · This week";
 export const LANDING_BRIEF_HEADLINE = "Jobs for robots.";
 export const LANDING_BRIEF_JOB_FIELD = "Jobs";
 export const LANDING_BRIEF_NOTE =
-  "Cards with a source link to it. Cards without one are marked Example.";
+  "These are examples. Paste your robot to see your matches.";
+export const LANDING_EXAMPLES_HEADING = "What a robot job looks like";
 
 export type LandingBriefJob = {
   id: string;
@@ -174,18 +189,16 @@ export const LANDING_PRICING_HREF = "/pricing";
 export const LANDING_FAQ_HREF = "/pricing#faq";
 export const LANDING_PRIVACY_HREF = "/privacy";
 export const LANDING_SUPPORT_HREF = "mailto:support@readyforrobots.com";
-export const LANDING_ABOUT_HREF = "/intelligence";
+export const LANDING_ABOUT_HREF = "/about";
 export const LANDING_BRIEF_JOB_CTA = LOOK_FOR_ROBOT_JOBS_CTA;
-export const LANDING_FOOTER_MARK =
-  "© 2026 ReadyForRobots · Jobs for your robot";
+export const LANDING_FOOTER_MARK = "© 2026 ReadyForRobots · Jobs for robots";
+/** Public footer (website copy v1 §2). */
 export const LANDING_FOOTER_LINKS = [
-  { label: "Pricing", href: LANDING_PRICING_HREF },
-  { label: "FAQ", href: LANDING_FAQ_HREF },
+  { label: "About", href: LANDING_ABOUT_HREF },
+  { label: "Newsletter", href: "/newsletter" },
   { label: "Privacy", href: LANDING_PRIVACY_HREF },
-  {
-    label: "support@readyforrobots.com",
-    href: LANDING_SUPPORT_HREF,
-  },
+  { label: "Terms", href: "/terms" },
+  { label: "Support", href: "/support" },
 ] as const;
 
 /** Label → dest. Tests lock Jobs vs candidates vs CRM vs About so they cannot swap. */
