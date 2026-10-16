@@ -26,17 +26,17 @@ Cencora,cencora.com,warehouse_distribution,Conshohocken,PA,,picking_packing_pall
 Uline,uline.com,warehouse_distribution,Pleasant Prairie,WI,,cleaning|disinfection|picking_packing_palletizing,,"Owns and runs its shipping-supply warehouses. Indeed site: Gurnee, IL."
 ODP Business Solutions,odpbusiness.com,warehouse_distribution,Boca Raton,FL,,picking_packing_palletizing,,"Office-products distribution. Indeed site: Carol Stream, IL DC."
 Cardinal Health,cardinalhealth.com,warehouse_distribution,Dublin,OH,,picking_packing_palletizing|cleaning|disinfection,,"Medical-products distribution. Indeed site: Orange City, IA."
-Chewy,chewy.com,warehouse_distribution,Plantation,FL,,picking_packing_palletizing,,"Operates its own fulfillment centers. Indeed site: Reno, NV."
-CVS Health,cvshealth.com,warehouse_distribution,Woonsocket,RI,,picking_packing_palletizing,,Retailer running its own distribution centers. Woonsocket is headquarters.
+Chewy,chewy.com,warehouse_distribution,Plantation,FL,,picking_packing_palletizing,picking_packing_palletizing:unnamed,"Operates its own fulfillment centers. Indeed site: Reno, NV. Committed picking at four automated fulfillment centers: Archbald PA, Reno NV, Kansas City MO, and Nashville TN. The vendor is not named. Reno is the Indeed site."
+CVS Health,cvshealth.com,warehouse_distribution,Woonsocket,RI,,picking_packing_palletizing,picking_packing_palletizing:AutoStore; Tompkins Robotics; Bastian Solutions,"Retailer running its own distribution centers. Woonsocket is headquarters. Committed picking at the Hainesport, NJ distribution center only. Other CVS distribution centers are not marked committed."
 Medline Industries,medline.com,warehouse_distribution,Northfield,IL,,picking_packing_palletizing,,"Medical-supply distribution. Indeed site: Montgomery, NY."
 Performance Foodservice,pfgc.com,warehouse_distribution,Richmond,VA,,picking_packing_palletizing,,"Foodservice distribution houses. Indeed site: Victoria, TX."
 Triple-S Steel,,warehouse_distribution,Knoxville,TN,,picking_packing_palletizing,,Steel service center that warehouses and ships metal.
 Core-Mark,core-mark.com,warehouse_distribution,Westlake,TX,,picking_packing_palletizing,,"Convenience-store distribution. Owned by Performance Food Group. Indeed site: Sacramento, CA."
-DHL,dhl.com,logistics_parcel,Lockbourne,OH,,picking_packing_palletizing,,"Parcel hub at Lockbourne. City is that site, not the global headquarters."
+DHL,dhl.com,logistics_parcel,Lockbourne,OH,,picking_packing_palletizing,picking_packing_palletizing:Locus Robotics; Boston Dynamics,"Parcel hub at Lockbourne. City is that site, not the global headquarters. Committed picking and truck unloading at North American sites: Locus Robotics (2,000+ LocusBots) and Boston Dynamics Stretch. One workflow, so both vendors are in one entry."
 ID Logistics,id-logistics.com,3pl,Joliet,IL,,picking_packing_palletizing,,Third-party warehouse operator. City is the Joliet site.
 Quality Custom Distribution,,warehouse_distribution,Kent,WA,,picking_packing_palletizing,,Restaurant distribution center they operate in Kent.
 Caesars Entertainment,caesars.com,casino,Las Vegas,NV,,serving_hospitality|cleaning|disinfection|food_beverage_prep,,Operates casino resorts.
-MGM Resorts,mgmresorts.com,casino,Las Vegas,NV,,serving_hospitality|cleaning|disinfection|food_beverage_prep|customer_interaction,,Casino-resort operator. The name rule had marked this hotel because of Resorts.
+MGM Resorts,mgmresorts.com,casino,Las Vegas,NV,,serving_hospitality|cleaning|disinfection|food_beverage_prep|customer_interaction,delivery_transport:Relay Robotics,"Casino-resort operator. The name rule had marked this hotel because of Resorts. Room delivery committed at Vdara only (Relay Robotics, formerly Savioke; Fetch and Jett). Other MGM properties stay open for delivery."
 Traditions Hospitality Group,,hotel,Ardmore,OK,,food_beverage_prep|serving_hospitality|cleaning|customer_interaction,,Hotel management company. City is the Indeed site.
 Station Casinos,stationcasinos.com,casino,Las Vegas,NV,,serving_hospitality|food_beverage_prep|cleaning,,Operates its own Las Vegas casinos.
 Four Seasons,fourseasons.com,hotel,Toronto,ON,,serving_hospitality|food_beverage_prep,,"Operates the hotels. Indeed site: Beverly Hills, CA."
@@ -69,7 +69,7 @@ Beth Israel Lahey Health,bilh.org,hospital,Cambridge,MA,,delivery_transport|clea
 Corewell Health,corewellhealth.org,hospital,Grand Rapids,MI,,cleaning|disinfection,,Hospital system.
 Mon Health,monhealth.com,hospital,Morgantown,WV,,cleaning,,"Hospital system. Indeed site: Kingwood, WV."
 Trinity Health Mid-Atlantic,,hospital,Newtown Square,PA,,delivery_transport|cleaning|food_beverage_prep,,"Hospital system. Indeed site: Wilmington, DE."
-UnityPoint Health,unitypoint.org,hospital,West Des Moines,IA,,cleaning,,Hospital system.
+UnityPoint Health,unitypoint.org,hospital,West Des Moines,IA,,cleaning,disinfection:Xenex,Hospital system. UV disinfection committed at Finley Hospital in Dubuque only (Xenex LightStrike). Other UnityPoint hospitals stay open.
 Yale New Haven Health,ynhhs.org,hospital,New Haven,CT,,cleaning|delivery_transport|disinfection,,Hospital system.
 Cleveland Clinic,clevelandclinic.org,hospital,Cleveland,OH,,delivery_transport|food_beverage_prep,,"Hospital system. Indeed site: Akron, OH, a hospital they operate."
 DCH Health System,dchsystem.com,hospital,Tuscaloosa,AL,,cleaning|delivery_transport,,Hospital system in Tuscaloosa.
@@ -98,7 +98,7 @@ Xanitos Inc,xanitos.com,facility_services,Longview,TX,,cleaning,,"Hospital envir
 American Dining Creations,,facility_services,Appleton,WI,,food_beverage_prep|cleaning,,"Contract food-service company, not a restaurant brand."
 ABM Industries,abm.com,facility_services,New York,NY,,cleaning|disinfection|delivery_transport|picking_packing_palletizing,,Contract facility services. The company record had said commercial building.
 Crothall Healthcare,crothall.com,facility_services,Wayne,PA,,cleaning|disinfection|delivery_transport,,"Hospital environmental services, a Compass Group company. Indeed site: Spring, TX."
-Sodexo,sodexo.com,facility_services,Gaithersburg,MD,,food_beverage_prep|cleaning|disinfection|serving_hospitality,,"Contract food and facilities. Indeed site: Lake Saint Louis, MO."
-Aramark,aramark.com,facility_services,Philadelphia,PA,,cleaning|food_beverage_prep|disinfection|delivery_transport|serving_hospitality|customer_interaction,,"Contract food and facilities. Indeed site: Cullowhee, NC."
+Sodexo,sodexo.com,facility_services,Gaithersburg,MD,,food_beverage_prep|cleaning|disinfection|serving_hospitality,delivery_transport:Robot.com,"Contract food and facilities. Indeed site: Lake Saint Louis, MO. Campus sidewalk delivery committed under a 7-year Robot.com (Kiwibot R-kiwi) deal for Sodexo-run North American campuses. Other workflows stay open."
+Aramark,aramark.com,facility_services,Philadelphia,PA,,cleaning|food_beverage_prep|disinfection|delivery_transport|serving_hospitality|customer_interaction,delivery_transport:Starship Technologies,"Contract food and facilities. Indeed site: Cullowhee, NC. Campus delivery committed with Starship at ASU Tempe and other campuses on that program, not at every Aramark account."
 Compass Group,compass-group.com,facility_services,Charlotte,NC,,cleaning|disinfection,,"Contract food and facilities parent. Indeed site: Wichita, KS. Crothall is one of its companies."
 Morrison Healthcare,morrisonhealthcare.com,facility_services,Atlanta,GA,,food_beverage_prep,,"Hospital food-service contractor, a Compass brand. It was grouped as a hospital. Indeed site: Hardeeville, SC."
