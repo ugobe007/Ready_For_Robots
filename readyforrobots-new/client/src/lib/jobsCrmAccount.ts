@@ -851,10 +851,13 @@ export type JobsCrmActivityEvent = {
 };
 
 export async function fetchJobsCrmActivity(
-  token: string
+  token: string,
+  kind?: string
 ): Promise<JobsCrmActivityEvent[]> {
   const data = await jobsCrmFetch<{ events: JobsCrmActivityEvent[] }>(
-    "/api/jobs-crm/activity",
+    kind
+      ? `/api/jobs-crm/activity?kind=${encodeURIComponent(kind)}`
+      : "/api/jobs-crm/activity",
     token
   );
   return data.events || [];

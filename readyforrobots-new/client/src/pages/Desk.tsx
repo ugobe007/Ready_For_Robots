@@ -192,30 +192,30 @@ export default function Desk() {
       try {
         const [jobs, events] = await Promise.all([
           fetchKeptJobs(token),
-          fetchJobsCrmActivity(token),
+          fetchJobsCrmActivity(token, "desk_stage"),
         ]);
         if (cancelled) return;
         if (!jobs.length) {
           setCards(SAMPLE_CARDS);
           setSample(true);
-          return;
-        }
-        const stageByKey = new Map<string, StageId>();
-        for (const event of events) {
-          if (event.kind !== "desk_stage" || !event.jobKey) continue;
-          if (stageByKey.has(event.jobKey)) continue;
-          if (isStage(event.label)) stageByKey.set(event.jobKey, event.label);
-        }
-        setCards(
-          jobs.map((row) =>
-            cardFromJob(
-              row,
-              stageByKey.get(row.job_key) ||
-                stageFromApplication(row.application?.status)
+        } else {
+          const stageByKey = new Map<string, StageId>();
+          for (const event of events) {
+            if (event.kind !== "desk_stage" || !event.jobKey) continue;
+            if (stageByKey.has(event.jobKey)) continue;
+            if (isStage(event.label)) stageByKey.set(event.jobKey, event.label);
+          }
+          setCards(
+            jobs.map((row) =>
+              cardFromJob(
+                row,
+                stageByKey.get(row.job_key) ||
+                  stageFromApplication(row.application?.status)
+              )
             )
-          )
-        );
-        setSample(false);
+          );
+          setSample(false);
+        }
       } catch {
         if (!cancelled) {
           setCards(SAMPLE_CARDS);
@@ -227,28 +227,30 @@ export default function Desk() {
           `${getApiBase()}/api/crm/robots`,
           liveFetchInit({ headers: authHeader(token) })
         );
-        if (!res.ok || cancelled) return;
-        const data = (await res.json()) as {
-          robots?: {
-            robot?: {
-              product_name?: string | null;
-              company_name?: string | null;
-              submitted_url?: string | null;
-            } | null;
-          }[];
-        };
         if (cancelled) return;
-        setRobots(
-          (data.robots || [])
-            .map((group) => ({
-              name:
-                group.robot?.product_name ||
-                group.robot?.company_name ||
-                "",
-              url: group.robot?.submitted_url,
-            }))
-            .filter((robot) => robot.name)
-        );
+        if (res.ok) {
+          const data = (await res.json()) as {
+            robots?: {
+              robot?: {
+                product_name?: string | null;
+                company_name?: string | null;
+                submitted_url?: string | null;
+              } | null;
+            }[];
+          };
+          if (cancelled) return;
+          setRobots(
+            (data.robots || [])
+              .map((group) => ({
+                name:
+                  group.robot?.product_name ||
+                  group.robot?.company_name ||
+                  "",
+                url: group.robot?.submitted_url,
+              }))
+              .filter((robot) => robot.name)
+          );
+        }
       } catch {
         if (!cancelled) setRobots([]);
       }
@@ -304,6 +306,11 @@ export default function Desk() {
         company: card.company,
       });
     } catch (err) {
+      setCards((current) =>
+        current.map((row) =>
+          row.id === id ? { ...row, stage: card.stage } : row
+        )
+      );
       setMoveError(
         err instanceof Error ? err.message : "Could not save that move."
       );
