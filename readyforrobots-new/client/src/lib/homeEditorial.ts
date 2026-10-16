@@ -231,7 +231,7 @@ export const HOME_EXPLORE = [
   { kind: "INDEX", title: "Robot index", body: "Humanoids and service robots compared on published specs.", cta: "Browse robots →", href: "/robots" },
   { kind: "WEEKLY", title: "The robot jobs brief", body: "Which companies are moving to automate, and which robots fit. One email a week.", cta: "Subscribe →", href: "/newsletter" },
   { kind: "TOOL", title: "RaaS ROI calculator", body: "Compare buying, leasing and robots-as-a-service for a workflow.", cta: "Run the numbers →", href: "/roi-calculator" },
-  { kind: "REPORTS", title: "Industry reports", body: "Where automation is moving in each of our nine industries.", cta: "Read reports →", href: "/robots/report" },
+  { kind: "REPORTS", title: "Industry reports", body: "Where automation is moving in each of our nine industries.", cta: "Read reports →", href: "/reports/benchmarking" },
 ];
 
 export const CASE_ROTATE_MS = 6000;

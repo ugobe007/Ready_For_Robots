@@ -9,7 +9,7 @@
 import { useEffect, useState } from "react";
 import { useSearch } from "wouter";
 import ExperimentHeader from "@/components/ExperimentHeader";
-import RobotJobsWorkspace from "@/components/RobotJobsWorkspace";
+import EditorialResults from "@/components/EditorialResults";
 import JobsLanding from "@/components/JobsLanding";
 import EmployerMatchWorkspace from "@/components/EmployerMatchWorkspace";
 import { landingVisitFromSearch, type LandingVisit } from "@/lib/jobsLanding";
@@ -32,16 +32,15 @@ export default function Jobs() {
   if (visit === "landing") {
     return <JobsLanding />;
   }
-  return (
-    <div className="jobs-page min-h-screen bg-[#081126] text-slate-100">
-      <ExperimentHeader />
-      <main className="mx-auto w-full max-w-[1200px] px-3 pb-16 pt-16 sm:px-4">
-        {visit === "candidates" ? (
+  if (visit === "candidates") {
+    return (
+      <div className="jobs-page min-h-screen bg-[#081126] text-slate-100">
+        <ExperimentHeader />
+        <main className="mx-auto w-full max-w-[1200px] px-3 pb-16 pt-16 sm:px-4">
           <EmployerMatchWorkspace />
-        ) : (
-          <RobotJobsWorkspace />
-        )}
-      </main>
-    </div>
-  );
+        </main>
+      </div>
+    );
+  }
+  return <EditorialResults />;
 }

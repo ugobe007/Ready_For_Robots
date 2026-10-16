@@ -191,7 +191,7 @@ describe("landing fork", () => {
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
     expect(jobsPage).toMatch(/JobsLanding/);
     expect(jobsPage).toMatch(/EmployerMatchWorkspace/);
-    expect(jobsPage).toMatch(/RobotJobsWorkspace/);
+    expect(jobsPage).toMatch(/EditorialResults/);
     expect(jobsPage).toMatch(/landingVisitFromSearch/);
     expect(jobsPage).not.toMatch(/forcedLanding/);
   });
@@ -206,7 +206,7 @@ describe("landing fork", () => {
       "utf8"
     );
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
-    expect(jobsPage).toMatch(/RobotJobsWorkspace/);
+    expect(jobsPage).toMatch(/EditorialResults/);
     expect(jobsPage).toMatch(/JobsLanding/);
     expect(workspace).toMatch(/FIND_JOBS_HOME_HEADLINE/);
     expect(workspace).toMatch(/FIND_JOBS_HOME_SUBHEAD/);
