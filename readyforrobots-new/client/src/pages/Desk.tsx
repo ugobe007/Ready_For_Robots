@@ -3,6 +3,7 @@ import { useSearch } from "wouter";
 import { ExampleBadge, SiteFooter, SiteHeader } from "@/components/editorial";
 import { useAuth } from "@/contexts/AuthContext";
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
+import { loginHref } from "@/lib/authNext";
 import {
   fetchJobsCrmActivity,
   fetchKeptJobs,
@@ -192,7 +193,7 @@ export default function Desk() {
       try {
         const [jobs, events] = await Promise.all([
           fetchKeptJobs(token),
-          fetchJobsCrmActivity(token, "desk_stage"),
+          fetchJobsCrmActivity(token, "desk_stage").catch(() => []),
         ]);
         if (cancelled) return;
         if (!jobs.length) {
@@ -322,7 +323,7 @@ export default function Desk() {
   async function connectHubspot() {
     const token = session?.access_token;
     if (!token) {
-      window.location.href = "/login?next=/desk?settings=hubspot";
+      window.location.href = loginHref("/desk?settings=hubspot");
       return;
     }
     const res = await fetch(
