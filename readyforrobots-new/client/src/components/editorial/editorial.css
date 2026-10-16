@@ -79,6 +79,11 @@
   color: var(--rfr-ink);
 }
 
+.rfr-nav a.rfr-nav-current {
+  color: var(--rfr-accent);
+  border-bottom: 2px solid var(--rfr-accent);
+}
+
 .rfr-editorial a.rfr-header-cta {
   display: inline-block;
   background: var(--rfr-ink);
@@ -1112,5 +1117,257 @@
 
   .rfr-picker-head {
     display: none;
+  }
+}
+
+.rfr-pricing-hero,
+.rfr-pricing-offer,
+.rfr-pricing-lower {
+  max-width: 1296px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.rfr-pricing-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 48px;
+}
+
+.rfr-pricing-hero h1 {
+  margin: 0;
+  font-family: Archivo, sans-serif;
+  font-size: clamp(52px, 7vw, 104px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.9;
+}
+
+.rfr-pricing-hero p {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.5;
+  color: var(--rfr-body-2);
+  max-width: 680px;
+}
+
+.rfr-pricing-offer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  margin-top: 40px;
+  padding-top: 0;
+  border-top: 2px solid var(--rfr-ink);
+}
+
+.rfr-pricing-plan,
+.rfr-pricing-offer form {
+  flex: 1 1 400px;
+  min-width: 0;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 32px 0;
+}
+
+.rfr-pricing-plan {
+  flex-basis: 520px;
+  gap: 18px;
+  padding-right: 40px;
+  border-right: 1px solid var(--rfr-rule);
+}
+
+.rfr-pricing-offer form {
+  padding-left: 40px;
+}
+
+.rfr-pricing-kicker {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--rfr-accent);
+}
+
+.rfr-pricing-price {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.rfr-pricing-price span:first-child {
+  font-family: Archivo, sans-serif;
+  font-weight: 900;
+  font-size: 88px;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.rfr-pricing-price span:last-child {
+  font-size: 18px;
+  color: var(--rfr-body-2);
+}
+
+.rfr-pricing-plan ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rfr-pricing-plan li {
+  display: flex;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rfr-rule);
+  font-size: 17px;
+}
+
+.rfr-pricing-plan li span:first-child {
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--rfr-accent);
+}
+
+.rfr-pricing-plan li span:last-child {
+  min-width: 0;
+}
+
+.rfr-pricing-form-title {
+  font-family: Archivo, sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+}
+
+.rfr-pricing-offer label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rfr-muted);
+}
+
+.rfr-pricing-offer input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  height: 52px;
+  padding: 0 14px;
+  border: 2px solid var(--rfr-ink);
+  background: var(--rfr-surface);
+  font-size: 16px;
+}
+
+.rfr-pricing-offer input::placeholder {
+  color: var(--rfr-faint);
+}
+
+.rfr-pricing-offer input[type="url"] {
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.rfr-pricing-offer button {
+  height: 56px;
+  margin-top: 6px;
+  border: 0;
+  background: var(--rfr-accent);
+  color: var(--rfr-surface);
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.rfr-pricing-offer button:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.rfr-pricing-note {
+  margin: 0;
+  font-size: 14px;
+  color: var(--rfr-muted);
+}
+
+.rfr-pricing-error {
+  margin: 0;
+  font-size: 14px;
+  color: var(--rfr-late);
+}
+
+.rfr-pricing-lower {
+  display: flex;
+  gap: 40px;
+  flex-wrap: wrap;
+  padding-top: 64px;
+  padding-bottom: 8px;
+}
+
+.rfr-pricing-lower > div {
+  flex: 1 1 360px;
+  min-width: 0;
+}
+
+.rfr-pricing-lower > div:first-child {
+  flex-basis: 520px;
+}
+
+.rfr-pricing-lower h2 {
+  margin: 0;
+  font-family: Archivo, sans-serif;
+  font-size: 34px;
+  font-weight: 900;
+  border-bottom: 2px solid var(--rfr-ink);
+  padding-bottom: 10px;
+}
+
+.rfr-pricing-lower details {
+  border-bottom: 1px solid var(--rfr-rule);
+  padding: 16px 0;
+}
+
+.rfr-pricing-lower summary {
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  cursor: pointer;
+}
+
+.rfr-pricing-lower details p,
+.rfr-pricing-lower > div > p {
+  margin: 16px 0 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--rfr-body-2);
+}
+
+.rfr-pricing-talk {
+  display: inline-block;
+  margin-top: 16px;
+  border: 2px solid var(--rfr-ink);
+  padding: 12px 18px;
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+}
+
+.rfr-pricing .rfr-footer {
+  margin-top: 72px;
+}
+
+@media (max-width: 800px) {
+  .rfr-pricing-plan {
+    border-right: 0;
+    padding-right: 0;
+    border-bottom: 1px solid var(--rfr-rule);
+  }
+
+  .rfr-pricing-offer form {
+    padding-left: 0;
+  }
+
+  .rfr-pricing-price span:first-child {
+    font-size: 64px;
   }
 }
