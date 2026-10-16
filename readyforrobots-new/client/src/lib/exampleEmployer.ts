@@ -44,6 +44,6 @@ export function exampleEmployerLabel(...parts: Array<string | null | undefined>)
 export function exampleTapeIndustry(industry: string, title = "", path = ""): string {
   const parts = industry.split("·").map(part => part.trim()).filter(Boolean);
   const place = parts.slice(1).join(" · ");
-  const label = exampleEmployerLabel(industry, title, path);
+  const label = exampleEmployerLabel(parts[0], title, path);
   return place ? `${label} · ${place}` : label;
 }

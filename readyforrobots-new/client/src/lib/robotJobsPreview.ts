@@ -59,8 +59,8 @@ export function previewJobsFromTape(limit = 3): PreviewJob[] {
     const title = String(raw.title || "").trim();
     const industry = String(raw.industry || "").trim();
     if (!key || !title || !industry) continue;
-    const place = industry.split("·").slice(1).map(part => part.trim());
-    const employer = exampleEmployerLabel(industry, title, raw.path);
+    const [company, ...place] = industry.split("·").map(part => part.trim());
+    const employer = exampleEmployerLabel(company, title, raw.path);
     if (!employer) continue;
     out.push({
       job_key: key,
