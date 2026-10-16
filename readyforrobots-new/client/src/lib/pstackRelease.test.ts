@@ -138,7 +138,7 @@ describe("pstack release — #173 self-abort FIND", () => {
       true
     );
     const jobsPage = readFileSync(join(here, "../pages/Jobs.tsx"), "utf8");
-    expect(jobsPage).toMatch(/RobotJobsWorkspace/);
+    expect(jobsPage).toMatch(/EditorialResults/);
     expect(jobsPage).toMatch(/JobsLanding/);
     expect(jobsPage).toMatch(/visit === "landing"/);
     expect(jobsPage).not.toMatch(/forcedLanding/);

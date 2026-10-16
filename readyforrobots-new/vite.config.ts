@@ -15,6 +15,7 @@ import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 const PROJECT_ROOT = import.meta.dirname;
 const CLIENT_ROOT = path.resolve(PROJECT_ROOT, "client");
 const APP_DATA_ROOT = path.resolve(PROJECT_ROOT, "..", "app", "data");
+const TAXONOMY_JSON = path.resolve(PROJECT_ROOT, "..", "tests", "fixtures", "taxonomy.v1.json");
 const LOG_DIR = path.join(PROJECT_ROOT, ".manus-logs");
 const MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024; // 1MB per log file
 const TRIM_TARGET_BYTES = Math.floor(MAX_LOG_SIZE_BYTES * 0.6); // Trim to 60% to avoid constant re-trimming
@@ -362,7 +363,7 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
       // Custom allow replaces defaults in Vite 7 — must include client root + repo app/data.
-      allow: [PROJECT_ROOT, CLIENT_ROOT, APP_DATA_ROOT],
+      allow: [PROJECT_ROOT, CLIENT_ROOT, APP_DATA_ROOT, TAXONOMY_JSON],
     },
   },
 });
