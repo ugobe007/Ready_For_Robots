@@ -419,7 +419,9 @@ def merge_market_variants(products: list[dict[str, Any]], url: str) -> dict[str,
     """One robot sold into several industries is one product, not several robots."""
     from app.services.robot_understanding_v1.taxonomy_extraction import _assign_product_class
 
-    clean = [product for product in products if classification_is_usable(product)]
+    clean = [product for product in products if classification_is_clean(product)] or [
+        product for product in products if classification_is_usable(product)
+    ]
     if len(clean) <= 1:
         return clean[0] if clean else None
     forms = {fact_value(product.get("form")) for product in clean}
@@ -683,7 +685,11 @@ def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
     from sqlalchemy import desc, select
 
     from app.services.buyer_opportunity.tables import rfr_robot_products
-    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+    from app.services.robot_understanding_v1.taxonomy_extraction import (
+        PROMPT_VERSION,
+        _assign_product_class,
+        get_taxonomy_version,
+    )
 
     rows = db.execute(
         select(rfr_robot_products)
@@ -694,6 +700,8 @@ def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
     ).mappings()
     for row in rows:
         product = product_from_saved_row(row)
+        if product.get("needs_review") and not classification_is_clean(product) and facts_ready_for_class(product):
+            product = _assign_product_class(product)
         if classification_is_usable(product):
             return product
     return None
