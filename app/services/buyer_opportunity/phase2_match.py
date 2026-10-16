@@ -567,6 +567,21 @@ def unrecognized_payload(
     }
 
 
+def _indexed_robot_count(url: str) -> int:
+    """How many robots the vendor index lists for this domain.
+
+    A missing row is zero. That is the whole decision for a homepage that
+    linked no product page: two or more robots fall through to the catalog
+    picker; zero or one keeps classifying the page (Relay).
+    """
+    from app.services.vendor_robot_lookup import index_robot_names, lookup_vendor_by_url
+
+    vendor = lookup_vendor_by_url(url)
+    if not isinstance(vendor, dict):
+        return 0
+    return len(index_robot_names(vendor))
+
+
 def catalog_payload(url: str, products: list[dict[str, str]], *, company_name: str | None = None) -> dict[str, Any]:
     return {
         "state": "select_product",
@@ -732,6 +747,12 @@ def try_phase2_search(
         vendor = lookup_vendor_by_url(url)
         company = (vendor or {}).get("vendor_name")
         return catalog_payload(url, discovered, company_name=company)
+    if not slug and _indexed_robot_count(url) >= 2:
+        # The page linked no product URL. A maker with several robots in the
+        # vendor index must not collapse to one classified product. None lets
+        # the old flow open the catalog picker. Zero or one indexed robot
+        # (Relay, or a domain we have not indexed) keeps today's classification.
+        return None
 
     if not text:
         return unrecognized_payload(url, display_name=hint) if slug else None

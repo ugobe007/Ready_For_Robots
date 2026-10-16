@@ -394,12 +394,125 @@ def test_single_product_homepage_classifies_without_a_class_prompt(monkeypatch):
             "extraction_metadata": {"prompt_version": "v6"},
         }
 
+    from app.services.vendor_robot_lookup import index_robot_names, lookup_vendor_by_url
+
+    # The vendor index lists one robot for this domain, so the homepage classifies.
+    assert index_robot_names(lookup_vendor_by_url("https://relayrobotics.com")) == ["Relay"]
     out = try_phase2_search("https://relayrobotics.com", fetch=lambda url: page, extract=extract)
     assert out is not None
     assert out["needs_class_choice"] is False
+    assert out["needs_product_choice"] is False
     assert out["robot_name"] == "Relay"
     assert "clinical_delivery" in _families(out["jobs"])
     assert "resident_services" in _families(out["jobs"])
+
+
+def _catalog_homepage(links: list[str]):
+    return SimpleNamespace(text="Maker homepage with no product page linked.", links=links)
+
+
+def _extract_one(product):
+    def extract(url, text, hint):
+        return {
+            "page": {"produces_records": True},
+            "products": [product],
+            "extraction_metadata": {"prompt_version": "v6"},
+        }
+
+    return extract
+
+
+def test_richtech_homepage_without_product_links_opens_the_picker(monkeypatch):
+    """No /solutions/{product} links, and the index lists many robots. Not Titan."""
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    page = _catalog_homepage(
+        [
+            "https://richtechrobotics.com/solutions",
+            "https://richtechrobotics.com/solutions?category=delivery",
+        ]
+    )
+    missed = try_phase2_search(
+        "https://richtechrobotics.com/",
+        fetch=lambda url: page,
+        extract=_extract_one(TITAN),
+    )
+    assert missed is None
+
+    monkeypatch.setattr(
+        "app.services.robot_understanding_v1.fetch.fetch_page",
+        lambda url, **kwargs: page,
+    )
+    monkeypatch.setattr(
+        "app.services.robot_understanding_v1.taxonomy_extraction.extract_robot_taxonomy",
+        _extract_one(TITAN),
+    )
+    from app.services.robot_job_search import compose_robot_job_search
+
+    out = compose_robot_job_search("https://richtechrobotics.com/")
+    assert out["state"] == "select_product"
+    assert out["needs_product_choice"] is True
+    assert out["robot_name"] != "Titan"
+    names = {row["name"] for row in out["products"]}
+    assert "ADAM" in names
+    assert "Titan" in names
+    assert len(names) > 1
+
+
+def test_keenon_homepage_without_product_links_opens_the_picker(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    page = _catalog_homepage(["https://www.keenon.com/solutions"])
+    missed = try_phase2_search(
+        "https://www.keenon.com/",
+        fetch=lambda url: page,
+        extract=_extract_one(TITAN),
+    )
+    assert missed is None
+
+    monkeypatch.setattr(
+        "app.services.robot_understanding_v1.fetch.fetch_page",
+        lambda url, **kwargs: page,
+    )
+    from app.services.robot_job_search import compose_robot_job_search
+
+    out = compose_robot_job_search("https://www.keenon.com/")
+    assert out["state"] == "select_product"
+    assert out["needs_product_choice"] is True
+    assert len(out["products"]) > 1
+
+
+def test_adam_product_url_still_classifies(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    page = SimpleNamespace(text="ADAM prepares drinks at the bar.", links=[])
+    out = try_phase2_search(
+        "https://richtechrobotics.com/solutions/adam",
+        fetch=lambda url: page,
+        extract=_extract_one(ADAM),
+    )
+    assert out is not None
+    assert out["robot_name"] == "ADAM"
+    assert out["needs_product_choice"] is False
+    assert out["state"] != "select_product"
+
+
+def test_unindexed_homepage_still_classifies_one_robot(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    solo = _product(
+        "Acme Arm",
+        form="robotic_arm_cobot",
+        function="machine_tending",
+        industries=["manufacturing"],
+        primary_class="robotic_arm_cobot",
+        company="Acme",
+    )
+    page = _catalog_homepage([])
+    out = try_phase2_search(
+        "https://unknown-oem.example/",
+        fetch=lambda url: page,
+        extract=_extract_one(solo),
+    )
+    assert out is not None
+    assert out["robot_name"] == "Acme Arm"
+    assert out["needs_product_choice"] is False
 
 
 def test_flag_off_leaves_the_old_flow(monkeypatch):

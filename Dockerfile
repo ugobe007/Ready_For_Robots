@@ -17,6 +17,9 @@ RUN pnpm install --frozen-lockfile
 COPY readyforrobots-new/ ./
 # Vite @ontology alias resolves to ../app/data/ relative to readyforrobots-new/
 COPY app/data/industry_sector_ontology.json /app/data/industry_sector_ontology.json
+# client/src/lib/taxonomyLabels.ts imports ../../../../tests/fixtures/taxonomy.v1.json.
+# From /rfr/client/src/lib that path is /tests/fixtures/taxonomy.v1.json.
+COPY tests/fixtures/taxonomy.v1.json /tests/fixtures/taxonomy.v1.json
 RUN pnpm run build
 # Vite client output: /rfr/dist/public/
 
