@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pick a product</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF0EC}
+a{color:#111418;text-decoration:none}a:hover{color:#C2410C}
+</style>
+</helmet>
+<div style="background: #EEF0EC; color: #111418; font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh">
+
+<header style="border-bottom: 2px solid #111418">
+<div style="max-width: 1296px; margin: 0 auto; padding: 0 24px; min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+<a href="Home.dc.html" style="font-family: Archivo, sans-serif; font-weight: 900; font-size: 22px">READY<span style="color: #C2410C">FOR</span>ROBOTS</a>
+<nav aria-label="Main" style="display: flex; gap: 26px; align-items: center; flex-wrap: wrap; font-size: 15px; font-weight: 500; padding: 10px 0">
+<a href="Home.dc.html" style="color: #C2410C; border-bottom: 2px solid #C2410C">Find buyers</a><a href="Home.dc.html">How it works</a><a href="Home.dc.html">Explore</a><a href="Pricing.dc.html">Pricing</a><a href="Saved.dc.html">Sign in</a>
+<a href="Pricing.dc.html" style="color: #FFFFFF; background: #111418; padding: 11px 18px; font-weight: 600">Get early access</a>
+</nav>
+</div>
+</header>
+
+<section style="max-width: 1296px; margin: 0 auto; padding: 36px 24px 0; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.12em; color: #4A4F57; border-bottom: 1px solid #C9CCC6; padding-bottom: 12px">
+<span>RICHTECHROBOTICS.COM</span><a href="Home.dc.html" style="color: #4A4F57">TRY ANOTHER URL ↺</a>
+</div>
+<h1 style="margin: 0; font-family: Archivo, sans-serif; font-size: clamp(44px, 6vw, 84px); font-weight: 900; letter-spacing: -0.035em; line-height: 0.92; max-width: 1100px">We found 8 robots. Pick the one to sell.</h1>
+<p style="margin: 0; font-size: 19px; line-height: 1.5; color: #30353C; max-width: 720px">Each robot does different work for different buyers, so we match them one at a time. Here's how we classified each product page.</p>
+</section>
+
+<section style="max-width: 1296px; margin: 0 auto; padding: 28px 24px 0">
+<div style="display: grid; grid-template-columns: 44px minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.6fr) 150px; column-gap: 16px; padding: 10px 0; border-top: 2px solid #111418; border-bottom: 1px solid #C9CCC6; font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4A4F57">
+<span>PICK</span><span>PRODUCT</span><span>FORM</span><span>WORK</span><span>LIKELY BUYERS</span><span></span>
+</div>
+<sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+<div style="display: grid; grid-template-columns: 44px minmax(0, 1.1fr) minmax(0, 1fr) minmax(0, 1.1fr) minmax(0, 1.6fr) 150px; column-gap: 16px; padding: 16px 0; border-bottom: 1px solid #C9CCC6; align-items: center; background: {{r.bg}}">
+<input type="checkbox" id="{{r.id}}" checked="{{r.on}}" onChange="{{r.toggle}}" aria-label="Pick {{r.name}}" style="width: 22px; height: 22px; accent-color: #C2410C">
+<label for="{{r.id}}" style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 20px; cursor: pointer">{{r.name}}</label>
+<span style="font-size: 15px">{{r.form}}</span>
+<span style="font-size: 15px">{{r.work}}</span>
+<span style="font-size: 15px; color: #30353C">{{r.buyers}}</span>
+<a href="Results.dc.html" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #C2410C; text-align: right">FIND BUYERS →</a>
+</div>
+</sc-for>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; padding: 24px 0">
+<span style="font-size: 15px; color: #4A4F57">Classified from each product page. Wrong? Open a product and tell us.</span>
+<a href="Results.dc.html" style="background: #C2410C; color: #FFFFFF; padding: 14px 22px; font-family: Archivo, sans-serif; font-weight: 800; font-size: 17px">{{cta}}</a>
+</div>
+</section>
+
+<footer style="border-top: 2px solid #111418; margin-top: 48px">
+<div style="max-width: 1296px; margin: 0 auto; padding: 24px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 14px; color: #4A4F57">
+<span style="font-family: Archivo, sans-serif; font-weight: 900; color: #111418">READY<span style="color: #C2410C">FOR</span>ROBOTS</span>
+<nav aria-label="Footer" style="display: flex; gap: 20px; flex-wrap: wrap"><a href="#about">About</a><a href="#newsletter">Newsletter</a><a href="#privacy">Privacy</a><a href="#terms">Terms</a><a href="#support">Support</a></nav>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { on: { adam: true } }; }
+  renderVals() {
+    const P = [
+      { id: 'adam', name: 'ADAM', form: 'Stationary, two arms', work: 'Drink-making', buyers: 'Restaurants and bars, hotels, casinos' },
+      { id: 'scorpion', name: 'Scorpion', form: 'Stationary, one arm', work: 'Drink-making', buyers: 'Bars, restaurants, venues' },
+      { id: 'matradee', name: 'Matradee Plus', form: 'Mobile', work: 'Serving and bussing', buyers: 'Restaurants, hotels, senior living' },
+      { id: 'titan', name: 'Titan', form: 'Mobile', work: 'Material delivery', buyers: 'Warehouses, factories, auto dealers' },
+      { id: 'pallet', name: 'Pallet Jack', form: 'Mobile, forks', work: 'Pallet transport', buyers: 'Warehouses, DCs, factories' },
+      { id: 'mx', name: 'DUST-E MX', form: 'Mobile', work: 'Floor cleaning', buyers: 'Large facilities (inferred)' },
+      { id: 's', name: 'DUST-E S', form: 'Mobile', work: 'Floor cleaning', buyers: 'Offices, hospitals, hotels, retail, schools' },
+      { id: 'dex', name: 'Dex', form: 'Humanoid', work: 'Machine tending, picking', buyers: 'Factories, warehouses' }
+    ];
+    const on = this.state.on;
+    const rows = P.map((p) => ({ ...p, on: !!on[p.id], bg: on[p.id] ? '#FFFFFF' : 'transparent', toggle: () => this.setState({ on: { ...this.state.on, [p.id]: !this.state.on[p.id] } }) }));
+    const n = P.filter((p) => on[p.id]).length;
+    return { rows, cta: n === 0 ? 'Pick at least one robot' : n === 1 ? 'Find buyers for 1 robot →' : 'Find buyers for ' + n + ' robots →' };
+  }
+}
+</script>
+</body>
+</html>
