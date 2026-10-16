@@ -56,17 +56,26 @@ describe("site icon catalog", () => {
     expect(app).toMatch(/path="\/icon-review"/);
   });
 
-  it("landing doors and MATCH tiles import SiteIcon", () => {
+  it("editorial home uses the header mark; MATCH tiles still import SiteIcon", () => {
     const landing = readFileSync(
       join(here, "../components/JobsLanding.tsx"),
+      "utf8"
+    );
+    const header = readFileSync(
+      join(here, "../components/editorial/SiteHeader.tsx"),
       "utf8"
     );
     const match = readFileSync(
       join(here, "../components/EmployerMatchWorkspace.tsx"),
       "utf8"
     );
-    expect(landing).toMatch(/background="transparent"/);
-    expect(landing).toMatch(/KARE_FACE/);
+    expect(landing).toMatch(/<SiteHeader/);
+    expect(landing).not.toMatch(/KARE_FACE/);
+    expect(landing).not.toMatch(/background="transparent"/);
+    expect(header).toMatch(/className="rfr-wordmark"/);
+    expect(header).toMatch(
+      /READY<span className="rfr-wordmark-for">FOR<\/span>ROBOTS/
+    );
     expect(match).toMatch(/iconForWorkClass/);
     expect(match).toMatch(/WorkClassIcon/);
     const workspace = readFileSync(
