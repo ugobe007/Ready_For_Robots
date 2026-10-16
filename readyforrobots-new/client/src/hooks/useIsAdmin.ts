@@ -49,7 +49,7 @@ export function useAdminAccess(): AdminAccess {
       return;
     }
     let cancelled = false;
-    setAccess("loading");
+    setAccess(prev => (prev === "admin" ? prev : "loading"));
     void fetch(
       `${getApiBase()}/api/user/me`,
       liveFetchInit({ headers: authHeader(token) })
