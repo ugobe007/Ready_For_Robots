@@ -19,3 +19,20 @@ robotics program manager for hospital operations,explicit,robotics_hiring,delive
 operational excellence across the enterprise,generic,none,,,Not a signal: no physical workflow
 digital transformation to improve efficiency,generic,none,,,Not a signal: software/IT language
 efficiency in our finance and HR processes,generic,none,,,Not a signal: not physical work the taxonomy covers
+we plan to automate labor in our kitchens,explicit,pilot_or_budget,food_beverage_prep,restaurant|qsr_fast_food,Bob 2026-10-15. Names the work (kitchens) so it attaches to a workflow
+we want to automate labor,explicit,pilot_or_budget,,,Bob 2026-10-15. No workflow named: company-wide at half weight; never a card by itself
+automate workflows across our distribution centers,explicit,pilot_or_budget,picking_packing_palletizing|delivery_transport,warehouse_distribution|3pl,Bob 2026-10-15. Workflow implied by distribution centers
+we are looking to use robots for room cleaning,explicit,pilot_or_budget,cleaning,hotel|casino,Bob 2026-10-15
+we will use robots,explicit,pilot_or_budget,,,Bob 2026-10-15. No workflow: company-wide only
+robot PoC for patient meal delivery,explicit,pilot_or_budget,delivery_transport,hospital|senior_living,Bob 2026-10-15. PoC sets the workflow to piloting
+completed a robot proof of concept,explicit,pilot_or_budget,,,Bob 2026-10-15. PoC with no workflow named: company-wide
+streamline operations through automation at our plants,explicit,modernization_plan,machine_tending_assembly|picking_packing_palletizing,manufacturing|food_manufacturing,Bob 2026-10-15. Counts because it names plants
+streamline operations through automation,generic,none,,,Bob 2026-10-15. No physical work named: not a signal
+physical AI deployment planned for our warehouses next year,explicit,pilot_or_budget,picking_packing_palletizing|delivery_transport,warehouse_distribution|3pl,Bob 2026-10-15. Planned: a buying signal
+we completed our physical AI deployment across all warehouses,explicit,deployment,picking_packing_palletizing|delivery_transport,warehouse_distribution|3pl,Bob 2026-10-15. Already live: workflow becomes committed and is NOT an opportunity; other workflows can be
+physical AI implementation in our hotel housekeeping,explicit,pilot_or_budget,cleaning,hotel|casino,Bob 2026-10-15. Treat as planned unless the text says it is live
+our physical AI implementation in housekeeping is now live at all properties,explicit,deployment,cleaning,hotel|casino,Bob 2026-10-15. Live: cleaning is committed; room service delivery and other workflows stay open
+reduce labor turnover among housekeeping staff,implicit,labor_pressure,cleaning,hotel|casino,Bob 2026-10-15. Tier E: supports a card; never creates one alone
+reduce labor turnover,generic,none,,,Bob 2026-10-15. No physical role named: not a signal
+replace manual processes in palletizing,implicit,modernization_plan,picking_packing_palletizing,manufacturing|food_manufacturing|warehouse_distribution,Bob 2026-10-15. Names a physical process
+replace manual processes,generic,none,,,Bob 2026-10-15. Could be paperwork or software: not a signal without a physical process
