@@ -1398,7 +1398,7 @@
   cursor: default;
 }
 
-.rfr-explore-form-error {
+.rfr-explore-week form p.rfr-explore-form-error {
   color: #fecaca;
 }
 
