@@ -702,11 +702,13 @@ def try_phase2_search(
                 pass
         else:
             if saved is not None:
-                # Reuse the saved classification. Do not set classified_product:
-                # the API inserts a row whenever that key is present.
-                return classified_match_payload(
+                # Reuse the saved classification. The API inserts a row whenever
+                # classified_product is present, so drop the key the matcher sets.
+                payload = classified_match_payload(
                     saved, url=url, company_name=fact_value(saved.get("company"))
                 )
+                payload.pop("classified_product", None)
+                return payload
 
     try:
         page = fetch(url)

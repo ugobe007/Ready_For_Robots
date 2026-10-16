@@ -633,12 +633,30 @@ def test_product_url_reuses_the_saved_row_for_the_same_product(monkeypatch):
     db = _products_db()
     first: list[str] = []
     second: list[str] = []
+    from sqlalchemy import func, select
+
+    from app.services.buyer_opportunity.phase2_match import persist_classified_product
+    from app.services.buyer_opportunity.tables import rfr_robot_products
+
     _search_and_save(db, url, "DUST-E S", DUST, first)
-    out = _search_and_save(db, url, "DUST-E S", DUST, second)
+    saved_rows = db.execute(select(func.count()).select_from(rfr_robot_products)).scalar_one()
+    page = SimpleNamespace(text="DUST-E S product page", links=[])
+    out = try_phase2_search(
+        url,
+        "DUST-E S",
+        fetch=lambda page_url: page,
+        extract=lambda *args, **kwargs: second.append(url),
+        db=db,
+    )
+    reused = out.pop("classified_product", None) if isinstance(out, dict) else None
+    if reused:
+        persist_classified_product(db, reused)
+    again = db.execute(select(func.count()).select_from(rfr_robot_products)).scalar_one()
     assert first == [url]
     assert second == []
     assert out["robot_name"] == "DUST-E S"
-    assert "classified_product" not in out
+    assert reused is None
+    assert again == saved_rows
 
 
 def test_saved_row_at_old_prompt_version_is_not_reused(monkeypatch):
