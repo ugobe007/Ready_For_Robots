@@ -1,3 +1,5 @@
+import { useLocation } from "wouter";
+
 type NavLink = { label: string; href: string };
 
 type SiteHeaderProps = {
@@ -10,7 +12,7 @@ type SiteHeaderProps = {
 const PUBLIC_LINKS = [
   { label: "Find buyers", href: "/" },
   { label: "How it works", href: "/#how" },
-  { label: "Explore", href: "/#explore" },
+  { label: "Explore", href: "/explore" },
   { label: "Pricing", href: "/pricing" },
   { label: "Sign in", href: "/login" },
 ];
@@ -28,7 +30,8 @@ export function SiteHeader({
   ctaHref = "/pricing",
 }: SiteHeaderProps) {
   const links = signedIn ? SIGNED_IN_LINKS : linkOverride ?? PUBLIC_LINKS;
-  const path = typeof window !== "undefined" ? window.location.pathname : "";
+  const [location] = useLocation();
+  const path = location.split("?")[0] || "/";
   return (
     <header className="rfr-header">
       <div className="rfr-header-inner">

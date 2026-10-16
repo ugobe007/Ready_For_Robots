@@ -42,6 +42,7 @@ import OemHold from "./pages/OemHold";
 import ProposalOemReview from "./pages/ProposalOemReview";
 import SocialRoute from "./pages/SocialRoute";
 import Jobs from "./pages/Jobs";
+import Explore from "./pages/Explore";
 import ExperimentRedirect from "./pages/ExperimentRedirect";
 import Preview from "./pages/Preview";
 import Privacy from "./pages/Privacy";
@@ -96,6 +97,7 @@ function Router() {
     <Switch>
       {/* Product front door = Find jobs for your robot */}
       <Route path="/" component={Jobs} />
+      <Route path="/explore" component={Explore} />
       <Route
         path="/robots/analysis/:analysisId"
         component={RobotAnalysisReview}
