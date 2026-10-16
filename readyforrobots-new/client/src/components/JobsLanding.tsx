@@ -1,312 +1,287 @@
 /**
- * `/` first beat: sparse System 1 fork, then two doors. Not FIND yet.
- * Headline picker A–E is not shipped.
+ * `/` home. Search still opens FIND at `/?visit=jobs&url=`.
+ * Example case files and the RichTech lineup are design copy, badged Example.
  */
-import { useState, useEffect, type FormEvent } from "react";
-import { Sparkles, UserPlus, ShieldCheck } from "lucide-react";
-import PixelIcon from "@/components/PixelIcon";
-import SiteIcon from "@/components/SiteIcon";
-import LiveJobTape from "@/components/jobs/LiveJobTape";
-import LiveJobDetailModal from "@/components/jobs/LiveJobDetailModal";
-import CustomerQuoteBanner from "@/components/CustomerQuoteBanner";
-import QuickSignupModal from "@/components/QuickSignupModal";
-import { MARKET_TAPE_JOBS } from "@/lib/jobsTapeCorpus";
-import { JOB_TAPE_EXAMPLE_SUBTITLE } from "@/lib/robotJobCard";
-import { useTapeJobCard } from "@/lib/tapeJobCard";
-import { KARE_FACE } from "@/lib/kareIcons";
+import { useEffect, useState } from "react";
 import {
-  LANDING_BRIEF_EYEBROW,
-  LANDING_BRIEF_HEADLINE,
-  LANDING_BRIEF_JOB_FIELD,
-  LANDING_BRIEF_JOBS,
-  LANDING_BRIEF_NOTE,
-  LANDING_COLORS as C,
-  LANDING_CANDIDATES_DOOR_LINE,
-  LANDING_CTA_ROBOT_WORD,
-  LANDING_DOOR_ICON_FILL,
-  LANDING_DOOR_ICON_SCALE,
-  LANDING_DOORS_CUE,
-  LANDING_EYEBROW,
-  LANDING_JOBS_DOOR_LINE,
-  LANDING_FOOTER_LINKS,
-  LANDING_FOOTER_MARK,
-  LANDING_HEADLINE_AFTER,
-  LANDING_HEADLINE_BEFORE,
-  LANDING_HEADLINE_END,
-  LANDING_HEADLINE_ROBOT,
-  LANDING_INTRO,
-  LANDING_KICKER_JOBS,
-  LANDING_STATS,
-  LANDING_SUBHEAD,
-  LOOK_FOR_ROBOT_CANDIDATES_CTA,
-  LOOK_FOR_ROBOT_JOBS_CTA,
-  jobsCandidatesHref,
-  jobsFindHref,
-  splitAccentWord,
-  type LandingAccentPart,
-  type LandingBriefJob,
-} from "@/lib/jobsLanding";
+  ExampleBadge,
+  Eyebrow,
+  SiteFooter,
+  SiteHeader,
+  TierLetter,
+  UrlInput,
+} from "@/components/editorial";
+import { jobsFindHref } from "@/lib/jobsLanding";
+import {
+  CASE_ROTATE_MS,
+  HOME_CASES,
+  HOME_EXPLORE,
+  HOME_INDUSTRIES,
+  HOME_PRODUCTS,
+  HOME_STEPS,
+  HOME_TIERS,
+  ReasonRow,
+} from "@/lib/homeEditorial";
 
-function LandingFace({ scale }: { scale: number }) {
-  return (
-    <PixelIcon
-      map={KARE_FACE}
-      scale={scale}
-      fill={C.emerald}
-      background="transparent"
-    />
-  );
-}
-
-function LandingDoor({
-  href,
-  option,
-  icon,
-  title,
-  line,
-}: {
-  href: string;
-  option: "jobs" | "candidates";
-  icon: "truck" | "handshake";
-  title: string;
-  line: string;
-}) {
-  return (
-    <a
-      href={href}
-      data-landing-option={option}
-      className={`rfr-landing-door rfr-landing-door--${option}`}
-    >
-      <span className="rfr-landing-door-mark" aria-hidden="true">
-        <SiteIcon
-          id={icon}
-          scale={LANDING_DOOR_ICON_SCALE}
-          fill={LANDING_DOOR_ICON_FILL}
-          background="transparent"
-        />
-      </span>
-      <span className="rfr-landing-door-copy-stack">
-        <span className="rfr-landing-door-title">
-          <span className="rfr-landing-door-copy">
-            <AccentLabel
-              parts={splitAccentWord(title, LANDING_CTA_ROBOT_WORD)}
-            />
-          </span>
-        </span>
-        <span className="rfr-landing-door-line">{line}</span>
-      </span>
-    </a>
-  );
-}
-
-function AccentLabel({ parts }: { parts: LandingAccentPart[] }) {
-  return (
-    <span>
-      {parts.map((part, index) =>
-        part.accent ? (
-          <span key={`${part.text}-${index}`} className="rfr-landing-accent">
-            {part.text}
-          </span>
-        ) : (
-          <span key={`${part.text}-${index}`}>{part.text}</span>
-        )
-      )}
-    </span>
-  );
-}
-
-function BriefJobCard({ job }: { job: LandingBriefJob }) {
-  const isConditional = job.status === "CONDITIONAL";
-
-  return (
-    <article className="rfr-landing-brief-job">
-      <div className="rfr-landing-brief-row">
-        <span className="rfr-landing-brief-id">{job.id}</span>
-        <h3 className="rfr-landing-brief-employer">{job.employer}</h3>
-        <span className="rfr-landing-brief-sector">
-          {job.workplace || job.sector}
-        </span>
-        {!isConditional && (
-          <span
-            className={`rfr-landing-brief-status rfr-landing-brief-status--${job.status.toLowerCase()}`}
-          >
-            {job.status}
-          </span>
-        )}
-      </div>
-      <p className="rfr-landing-brief-field-label">{LANDING_BRIEF_JOB_FIELD}</p>
-      <p className="rfr-landing-brief-jobs">{job.work}</p>
-    </article>
-  );
-}
-
-const SAMPLE_ROBOTS = [
-  { label: "Humanoid", url: "https://www.dexmate.ai" },
-  { label: "Logistics robot", url: "https://www.locusrobotics.com" },
-  { label: "Agriculture robot", url: "https://greenfieldrobotics.com" },
+const HOME_NAV = [
+  { label: "Find buyers", href: "#find" },
+  { label: "How it works", href: "#how" },
+  { label: "Explore", href: "#explore" },
+  { label: "Pricing", href: "#early" },
+  { label: "Sign in", href: "/login" },
 ];
 
+function openSearch(url: string) {
+  const trimmed = url.trim();
+  if (!trimmed) return;
+  window.location.href = jobsFindHref(trimmed);
+}
+
 export default function JobsLanding() {
-  const [heroUrl, setHeroUrl] = useState("");
-  const [isSignupOpen, setIsSignupOpen] = useState(false);
-  const { selectedTapeJob, handleSelectJob, handleCloseModal } = useTapeJobCard();
+  const [url, setUrl] = useState("");
+  const [caseIndex, setCaseIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const [productId, setProductId] = useState(HOME_PRODUCTS[0].id);
+  const example = HOME_CASES[caseIndex];
+  const product = HOME_PRODUCTS.find((item) => item.id === productId) ?? HOME_PRODUCTS[0];
 
   useEffect(() => {
-    try {
-      const visit = new URLSearchParams(window.location.search).get("visit");
-      if (visit === "jobs" || visit === "jobslanding") {
-        const tapeEl = document.querySelector(".rfr-landing-brief");
-        if (tapeEl) {
-          setTimeout(() => {
-            tapeEl.scrollIntoView({ behavior: "smooth", block: "start" });
-          }, 200);
-        }
-      }
-    } catch {
-      // Ignore URL parsing errors
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setPaused(true);
     }
   }, []);
 
-  const handleHeroSubmit = (e: FormEvent) => {
-    e.preventDefault();
-    const trimmed = heroUrl.trim();
-    if (!trimmed) return;
-    window.location.href = jobsFindHref(trimmed);
-  };
+  useEffect(() => {
+    if (paused) return;
+    const timer = window.setInterval(() => {
+      setCaseIndex((current) => (current + 1) % HOME_CASES.length);
+    }, CASE_ROTATE_MS);
+    return () => window.clearInterval(timer);
+  }, [paused]);
 
   return (
-    <div className="rfr-landing">
-      <QuickSignupModal
-        isOpen={isSignupOpen}
-        onClose={() => setIsSignupOpen(false)}
-        title="Unlock Engineering Feasibility & Commercial Proposals"
-        subtitle="Create your free ReadyForRobots workspace in 10 seconds to save matches, view buyer demand, and generate turnkey commercial quotes."
-        source="jobs_landing_hero"
-      />
-
-      <section className="rfr-landing-hero">
-        <div className="rfr-landing-hero-bg" aria-hidden="true">
-          <img
-            src="/ready_for_robots_hero.jpg"
-            alt=""
-            className="rfr-landing-hero-bg-img"
-          />
-          <div className="rfr-landing-hero-bg-overlay" />
-        </div>
-        <p className="rfr-landing-kicker">
-          {LANDING_EYEBROW}
-          {" · "}
-          <span className="rfr-landing-kicker-jobs">{LANDING_KICKER_JOBS}</span>
-        </p>
-        <div className="rfr-landing-hero-row">
-          <h1 className="rfr-landing-headline">
-            {LANDING_HEADLINE_BEFORE}
-            <span className="rfr-landing-accent">{LANDING_HEADLINE_ROBOT}</span>
-            {LANDING_HEADLINE_AFTER}
-            <br />
-            {LANDING_HEADLINE_END}
-          </h1>
-          <div className="rfr-landing-hero-mark" aria-hidden="true">
-            <LandingFace scale={7} />
+    <div className="rfr-editorial rfr-home">
+      <SiteHeader links={HOME_NAV} ctaHref="#early" />
+      <section id="find" className="rfr-home-wrap rfr-home-hero">
+        <Eyebrow label="Jobs for robots" aside="The buyer index for robot sellers" />
+        <h1>Find the companies ready to hire your robot.</h1>
+        <div className="rfr-home-lead">
+          <p>
+            Paste your robot&apos;s product page. We find the companies moving to automate that work, and show you why now, with sources.
+          </p>
+          <div className="rfr-home-search">
+            <UrlInput
+              id="home-url"
+              value={url}
+              onChange={setUrl}
+              onSubmit={openSearch}
+              placeholder="richtechrobotics.com/solutions/adam"
+            />
+            <span className="rfr-home-hint">
+              Whole product line? Paste your homepage and pick a product.
+            </span>
           </div>
         </div>
-        <p className="rfr-landing-subhead">{LANDING_SUBHEAD}</p>
-
-        <div className="rfr-landing-stats-bar">
-          {LANDING_STATS.map((stat, idx) => (
-            <span key={stat.label} className="rfr-landing-stat-group">
-              {idx > 0 && <div className="rfr-landing-stat-divider" />}
-              <div className="rfr-landing-stat-item">
-                {stat.pulse && <span className="rfr-landing-stat-pulse" />}
-                <span className="rfr-landing-stat-value">{stat.value}</span>
-                <span className="rfr-landing-stat-label">{stat.label}</span>
-              </div>
-            </span>
-          ))}
-        </div>
-
-        <form onSubmit={handleHeroSubmit} className="rfr-landing-hero-form">
-          <div className="rfr-landing-hero-input-wrap">
-            <input
-              type="text"
-              placeholder="Paste a robot product URL (e.g. https://www.dexmate.ai)..."
-              value={heroUrl}
-              onChange={e => setHeroUrl(e.target.value)}
-              className="rfr-landing-hero-input"
-              aria-label="Robot product URL"
-            />
-            <button type="submit" className="rfr-landing-hero-submit">
-              Find jobs →
+        <div>
+          <div className="rfr-case-bar">
+            <div className="rfr-case-tabs" role="group" aria-label="Example robots">
+              <span className="rfr-case-label">EXAMPLE CASE FILES</span>
+              {HOME_CASES.map((item, index) => (
+                <button
+                  key={item.name}
+                  type="button"
+                  className="rfr-case-tab"
+                  aria-pressed={index === caseIndex}
+                  onClick={() => {
+                    setCaseIndex(index);
+                    setPaused(true);
+                  }}
+                >
+                  {item.name}
+                </button>
+              ))}
+            </div>
+            <button
+              type="button"
+              className="rfr-pause"
+              aria-pressed={paused}
+              aria-label={paused ? "Resume rotating examples" : "Pause rotating examples"}
+              onClick={() => setPaused((current) => !current)}
+            >
+              {paused ? "PLAY" : "PAUSE"}
             </button>
           </div>
-        </form>
-
-        {/* Named employer quotes about real work */}
-        <div
-          className="rfr-landing-quotes mt-8 mb-5 w-full pt-1"
-          aria-label="Employer quotes"
-        >
-          <CustomerQuoteBanner />
-        </div>
-
-        {/* Action Links pulled to left margin with normalized text-sm font */}
-        <div className="rfr-landing-hero-actions flex flex-wrap items-center justify-start gap-5 my-3">
-          <a
-            href={jobsCandidatesHref()}
-            className="rfr-landing-employer-link inline-flex items-center gap-1 text-sm font-semibold font-mono text-[#d6b15d] hover:text-[#f0cb75] underline underline-offset-4 transition-all"
-          >
-            Employers: Find robots for your job →
-          </a>
-          <a
-            href="/newsletter"
-            className="inline-flex items-center gap-1 text-sm font-semibold font-mono text-emerald-400 hover:text-emerald-300 underline underline-offset-4 transition-all"
-          >
-            <span>📰 Daily Newsletter →</span>
-          </a>
-        </div>
-      </section>
-
-      <section className="rfr-landing-brief" aria-label="Live job feed">
-        <h2 className="rfr-landing-brief-headline">
-          Jobs for <span className="text-emerald-400">robots.</span>
-        </h2>
-        <p className="rfr-landing-brief-note">{LANDING_BRIEF_NOTE}</p>
-        <div className="mt-4 overflow-hidden rounded-xl border border-slate-800 bg-[#081126] shadow-2xl">
-          <LiveJobTape
-            title="Example jobs"
-            subtitle={JOB_TAPE_EXAMPLE_SUBTITLE}
-            corpus={MARKET_TAPE_JOBS}
-            baseCount={MARKET_TAPE_JOBS.length}
-            running={true}
-            onSelect={handleSelectJob}
-            selectedKey={selectedTapeJob?.key ?? null}
-          />
-        </div>
-      </section>
-
-      <LiveJobDetailModal
-        job={selectedTapeJob}
-        isOpen={Boolean(selectedTapeJob)}
-        onClose={handleCloseModal}
-        onUnlockSignup={() => setIsSignupOpen(true)}
-      />
-
-      <footer className="rfr-landing-footer">
-        <div className="rfr-landing-footer-row">
-          <p className="rfr-landing-footer-mark">{LANDING_FOOTER_MARK}</p>
-          <div className="rfr-landing-footer-links">
-            {LANDING_FOOTER_LINKS.map(link => (
-              <a
-                key={link.label}
-                href={link.href}
-                className="rfr-landing-footer-link"
-              >
-                {link.label}
-              </a>
-            ))}
+          <div className="rfr-case">
+            <div className="rfr-case-robot">
+              <div className="rfr-case-index">01 · THE ROBOT</div>
+              <div>
+                <span className="rfr-case-name">{example.name}</span>
+                <span className="rfr-case-maker"> · {example.maker}</span>
+              </div>
+              <dl className="rfr-facts">
+                <dt>FORM</dt>
+                <dd>{example.form}</dd>
+                <dt>MAIN WORK</dt>
+                <dd>{example.work}</dd>
+                <dt>BUYERS</dt>
+                <dd>{example.buyers}</dd>
+                <dt>NEVER</dt>
+                <dd className="rfr-muted">{example.never}</dd>
+              </dl>
+            </div>
+            <div className="rfr-case-buyer">
+              <div className="rfr-buyer-head">
+                <span className="rfr-case-index">02 · A BUYER, AND WHY NOW</span>
+                <ExampleBadge />
+              </div>
+              <div className="rfr-buyer-title">
+                <strong>{example.buyer}</strong>
+                <span className="rfr-muted">{example.buyerMeta}</span>
+              </div>
+              {example.reasons.map((reason) => (
+                <ReasonRow
+                  key={reason.title}
+                  mark="letter"
+                  tier={reason.tier}
+                  label={reason.tier}
+                  title={reason.title}
+                  source={reason.source}
+                />
+              ))}
+            </div>
           </div>
         </div>
-      </footer>
+      </section>
+
+      <section className="rfr-home-wrap" aria-labelledby="whynow">
+        <div className="rfr-home-section-head">
+          <h2 id="whynow">Every buyer comes with evidence.</h2>
+          <p>
+            Strongest evidence first, and every piece links to its source. Companies that already use robots for that work are skipped.
+          </p>
+        </div>
+        <div className="rfr-tiers">
+          {HOME_TIERS.map((tier) => (
+            <article key={tier.tier} className="rfr-tier-card">
+              <TierLetter tier={tier.tier} />
+              <h3>{tier.name}</h3>
+              <p>{tier.desc}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="rfr-home-wrap" aria-labelledby="lineup">
+        <div className="rfr-home-section-head">
+          <div>
+            <div className="rfr-home-kicker">BY PRODUCT, NOT BY COMPANY</div>
+            <h2 id="lineup">One maker. Eight robots. Eight kinds of buyers.</h2>
+          </div>
+          <p>
+            Example classifications of Richtech Robotics&apos; lineup. Pick one to see where it fits.
+          </p>
+        </div>
+        <div className="rfr-lineup">
+          <div className="rfr-lineup-list">
+            {HOME_PRODUCTS.map((item, index) => (
+              <button
+                key={item.id}
+                type="button"
+                className="rfr-lineup-item"
+                aria-pressed={item.id === product.id}
+                onClick={() => setProductId(item.id)}
+              >
+                <span>{String(index + 1).padStart(2, "0")}</span>
+                <strong>{item.name}</strong>
+                <span>{item.short}</span>
+              </button>
+            ))}
+          </div>
+          <div className="rfr-product-detail">
+            <div className="rfr-buyer-head">
+              <h3>{product.name}</h3>
+              <ExampleBadge />
+            </div>
+            <p>{product.what}</p>
+            <dl className="rfr-facts rfr-product-facts">
+              <dt>FORM</dt>
+              <dd>{product.form}</dd>
+              <dt>WORK</dt>
+              <dd>{product.work}</dd>
+              <dt>MATCHES BUYERS IN</dt>
+              <dd>
+                <strong>{product.buyers}</strong>
+              </dd>
+              <dt>NEVER MATCHED TO</dt>
+              <dd className="rfr-muted">{product.never}</dd>
+            </dl>
+            <a className="rfr-find-product" href={jobsFindHref(product.url)}>
+              Find buyers for {product.name} →
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section id="how" className="rfr-home-wrap" aria-labelledby="howh">
+        <h2 id="howh" className="rfr-home-section-head">
+          From your robot to the buyers who need it
+        </h2>
+        <div className="rfr-steps">
+          {HOME_STEPS.map((step) => (
+            <article key={step.n} className="rfr-step">
+              <span className="rfr-step-num">{step.n}</span>
+              <h3>{step.title}</h3>
+              <p>{step.body}</p>
+            </article>
+          ))}
+        </div>
+        <p className="rfr-job-note">
+          A robot job is work a robot can perform at a company that is moving to automate it.
+        </p>
+      </section>
+
+      <section className="rfr-home-wrap" aria-labelledby="indh">
+        <div className="rfr-home-section-head">
+          <h2 id="indh">Nine industries, in rollout order</h2>
+          <p>Live buyer signals arrive one industry at a time, starting with warehouses and logistics.</p>
+        </div>
+        <div className="rfr-industries">
+          {HOME_INDUSTRIES.map((name, index) => (
+            <div key={name} className="rfr-industry">
+              <span>{String(index + 1).padStart(2, "0")}</span>
+              <strong>{name}</strong>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section id="explore" className="rfr-home-wrap" aria-labelledby="exph">
+        <div className="rfr-home-section-head">
+          <h2 id="exph">Go deeper on the robot market</h2>
+          <p>Research and tools for robot sellers. Free to use.</p>
+        </div>
+        <div className="rfr-explore">
+          {HOME_EXPLORE.map((item) => (
+            <a key={item.kind} className="rfr-explore-card" href={item.href}>
+              <em>{item.kind}</em>
+              <strong>{item.title}</strong>
+              <p>{item.body}</p>
+              <span>{item.cta}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+
+      <section id="early" className="rfr-home-wrap rfr-early">
+        <div className="rfr-early-band">
+          <p>
+            <em>EARLY ACCESS</em>
+            <strong>Free while we roll out live buyers.</strong>
+          </p>
+          <a href="/pricing">Get early access →</a>
+        </div>
+      </section>
+      <SiteFooter />
     </div>
   );
 }
