@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Early access pricing</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF0EC}
+a{color:#111418;text-decoration:none}a:hover{color:#C2410C}
+input::placeholder{color:#6B7078}
+</style>
+</helmet>
+<div style="background: #EEF0EC; color: #111418; font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh">
+
+<header style="border-bottom: 2px solid #111418">
+<div style="max-width: 1296px; margin: 0 auto; padding: 0 24px; min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+<a href="Home.dc.html" style="font-family: Archivo, sans-serif; font-weight: 900; font-size: 22px">READY<span style="color: #C2410C">FOR</span>ROBOTS</a>
+<nav aria-label="Main" style="display: flex; gap: 26px; align-items: center; flex-wrap: wrap; font-size: 15px; font-weight: 500; padding: 10px 0">
+<a href="Home.dc.html">Find buyers</a><a href="Home.dc.html">How it works</a><a href="Home.dc.html">Explore</a><a href="Pricing.dc.html" style="color: #C2410C; border-bottom: 2px solid #C2410C">Pricing</a><a href="Saved.dc.html">Sign in</a>
+<a href="Pricing.dc.html" style="color: #FFFFFF; background: #111418; padding: 11px 18px; font-weight: 600">Get early access</a>
+</nav>
+</div>
+</header>
+
+<section style="max-width: 1296px; margin: 0 auto; padding: 48px 24px 0; display: flex; flex-direction: column; gap: 18px">
+<div style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.12em; color: #4A4F57; border-bottom: 1px solid #C9CCC6; padding-bottom: 12px">PRICING</div>
+<h1 style="margin: 0; font-family: Archivo, sans-serif; font-size: clamp(52px, 7vw, 104px); font-weight: 900; letter-spacing: -0.04em; line-height: 0.9">Early access.<br>Free while we build.</h1>
+<p style="margin: 0; font-size: 20px; line-height: 1.5; color: #30353C; max-width: 680px">Live buyer signals are rolling out one industry at a time. Use everything free until then, and lock in founding pricing before launch.</p>
+</section>
+
+<section style="max-width: 1296px; margin: 0 auto; padding: 40px 24px 0; display: flex; gap: 0; flex-wrap: wrap; border-top: 2px solid #111418; margin-top: 40px">
+<div style="flex: 1 1 520px; min-width: 0; padding: 32px 40px 32px 0; display: flex; flex-direction: column; gap: 18px; border-right: 1px solid #C9CCC6">
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.12em; color: #C2410C">FOUNDING CUSTOMER</span>
+<div style="display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap"><span style="font-family: Archivo, sans-serif; font-weight: 900; font-size: 88px; line-height: 0.9; letter-spacing: -0.03em">$0</span><span style="font-size: 18px; color: #30353C">during early access</span></div>
+<span style="font-size: 17px">Then [FOUNDING PRICE] per month, locked for founding customers.</span>
+<ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+<sc-for list="{{features}}" as="f" hint-placeholder-count="5">
+<li style="display: flex; gap: 12px; padding: 12px 0; border-bottom: 1px solid #C9CCC6; font-size: 17px"><span style="font-family: 'IBM Plex Mono', monospace; color: #C2410C">+</span>{{f}}</li>
+</sc-for>
+</ul>
+</div>
+<form style="flex: 1 1 400px; min-width: 0; padding: 32px 0 32px 40px; display: flex; flex-direction: column; gap: 14px">
+<span style="font-family: Archivo, sans-serif; font-weight: 900; font-size: 32px">Get early access</span>
+<label for="em" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4A4F57">WORK EMAIL</label>
+<input id="em" type="email" placeholder="you@company.com" style="height: 52px; padding: 0 14px; border: 2px solid #111418; background: #FFFFFF; font-size: 16px; font-family: 'IBM Plex Sans', sans-serif">
+<label for="co" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4A4F57">COMPANY</label>
+<input id="co" type="text" placeholder="Your robot company" style="height: 52px; padding: 0 14px; border: 2px solid #111418; background: #FFFFFF; font-size: 16px; font-family: 'IBM Plex Sans', sans-serif">
+<label for="ro" style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4A4F57">A ROBOT YOU SELL (PRODUCT PAGE)</label>
+<input id="ro" type="url" placeholder="richtechrobotics.com/solutions/adam" style="height: 52px; padding: 0 14px; border: 2px solid #111418; background: #FFFFFF; font-size: 16px; font-family: 'IBM Plex Mono', monospace">
+<button type="button" style="height: 56px; margin-top: 6px; border: 0; background: #C2410C; color: #FFFFFF; font-family: Archivo, sans-serif; font-weight: 800; font-size: 18px; cursor: pointer">Get early access →</button>
+<span style="font-size: 14px; color: #4A4F57">No card needed. We'll email you when live buyers reach your industries.</span>
+</form>
+</section>
+
+<section style="max-width: 1296px; margin: 0 auto; padding: 64px 24px 0; display: flex; gap: 40px; flex-wrap: wrap">
+<div style="flex: 1 1 520px; min-width: 0">
+<h2 style="margin: 0; font-family: Archivo, sans-serif; font-size: 34px; font-weight: 900; border-bottom: 2px solid #111418; padding-bottom: 10px">Questions</h2>
+<sc-for list="{{faq}}" as="q" hint-placeholder-count="3">
+<details style="border-bottom: 1px solid #C9CCC6; padding: 16px 0">
+<summary style="font-family: Archivo, sans-serif; font-weight: 800; font-size: 19px; cursor: pointer">{{q.q}}</summary>
+<p style="margin: 10px 0 0; font-size: 16px; line-height: 1.55; color: #30353C">{{q.a}}</p>
+</details>
+</sc-for>
+</div>
+<div style="flex: 1 1 360px; min-width: 0">
+<h2 style="margin: 0; font-family: Archivo, sans-serif; font-size: 34px; font-weight: 900; border-bottom: 2px solid #111418; padding-bottom: 10px">Need a hand?</h2>
+<p style="margin: 16px 0 0; font-size: 16px; line-height: 1.55; color: #30353C">Setup, integration planning and installation through vetted local partners. Scoped separately from the software.</p>
+<a href="#support" style="display: inline-block; margin-top: 16px; border: 2px solid #111418; padding: 12px 18px; font-family: Archivo, sans-serif; font-weight: 800">Talk to us →</a>
+</div>
+</section>
+
+<footer style="border-top: 2px solid #111418; margin-top: 72px">
+<div style="max-width: 1296px; margin: 0 auto; padding: 24px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 14px; color: #4A4F57">
+<span style="font-family: Archivo, sans-serif; font-weight: 900; color: #111418">READY<span style="color: #C2410C">FOR</span>ROBOTS</span>
+<nav aria-label="Footer" style="display: flex; gap: 20px; flex-wrap: wrap"><a href="#about">About</a><a href="#newsletter">Newsletter</a><a href="#privacy">Privacy</a><a href="#terms">Terms</a><a href="#support">Support</a></nav>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1500}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {
+      features: [
+        'Buyer matches for every robot you sell',
+        'Why now for each buyer, with sources',
+        'Every workflow at each buyer, including what’s already automated',
+        'Save buyers and get alerts on new signals',
+        'Your whole product line, matched one product at a time'
+      ],
+      faq: [
+        { q: 'Where do buyer signals come from?', a: 'Public procurement notices, company filings and announcements, news, and automation hiring at buyer companies. Every signal links to its source.' },
+        { q: 'Do you sell contact lists?', a: 'No. We show which companies are moving to automate, which work, and why now. Contacts come later, opt-in.' },
+        { q: 'What does early access cost?', a: 'Nothing. Founding customers lock in their price before launch.' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>
