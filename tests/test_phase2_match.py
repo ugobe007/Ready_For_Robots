@@ -157,6 +157,93 @@ def test_pharma_warehouse_evidence_is_not_a_hospital():
     assert not industries & {"hospital", "healthcare", "airport", "hotel"}
 
 
+LOCUS_ORIGIN_URL = "https://locusrobotics.com/platform/locus-origin"
+
+
+def _locus_page_products(*, origin_offering: str | None):
+    origin = _product(
+        "Locus Origin",
+        form="amr_mobile_robot",
+        function="picking_packing_palletizing",
+        industries=["3pl", "warehouse_distribution", "logistics_parcel"],
+        primary_class="amr_logistics",
+        company="Locus Robotics",
+    )
+    origin["offering_type"] = _fact(origin_offering) if origin_offering else None
+    vector = _product(
+        "Locus Vector",
+        form="amr_mobile_robot",
+        function="picking_packing_palletizing",
+        industries=["3pl", "warehouse_distribution"],
+        primary_class="amr_logistics",
+        company="Locus Robotics",
+    )
+    array = _product(
+        "Locus Array",
+        form="fixed_gantry_system",
+        function="picking_packing_palletizing",
+        industries=["3pl", "warehouse_distribution"],
+        primary_class="amr_logistics",
+        company="Locus Robotics",
+    )
+    return origin, vector, array
+
+
+def _search_locus_page(monkeypatch, products):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    page = SimpleNamespace(text="Locus Origin warehouse picking", links=[])
+
+    def extract(url, text, hint):
+        return {
+            "page": {"page_type": "manufacturer_product_page", "produces_records": True},
+            "products": products,
+            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.3"},
+        }
+
+    return try_phase2_search(
+        LOCUS_ORIGIN_URL,
+        "Locus Origin",
+        fetch=lambda url: page,
+        extract=extract,
+    )
+
+
+def _not_a_sibling(payload) -> None:
+    names = " ".join(
+        [
+            str(payload.get("robot_name") or ""),
+            *(str(job.get("for_robot") or "") for job in payload.get("jobs") or []),
+        ]
+    ).lower()
+    assert "vector" not in names
+    assert "array" not in names
+
+
+def test_locus_origin_page_missing_offering_type_is_not_unrecognized(monkeypatch):
+    """The live Origin page was emptied when the matching record had no offering type.
+
+    Clean siblings on the same page (Locus Vector, Locus Array) must not become the result.
+    """
+    origin, vector, array = _locus_page_products(origin_offering=None)
+    out = _search_locus_page(monkeypatch, [origin, vector, array])
+    assert out["zero_reason"] != "unrecognized_product"
+    assert out["robot_name"] == "Locus Origin"
+    assert out["company_name"] == "Locus Robotics"
+    assert out["job_count"] >= 1
+    assert "beverage" not in _families(out["jobs"])
+    _not_a_sibling(out)
+
+
+def test_locus_origin_non_robot_offering_stays_unrecognized(monkeypatch):
+    origin, vector, array = _locus_page_products(origin_offering="software")
+    out = _search_locus_page(monkeypatch, [origin, vector, array])
+    assert out["zero_reason"] == "unrecognized_product"
+    assert out["robot_name"] == "Locus Origin"
+    assert out["robot_name"] != "LOCUS ORIGIN"
+    assert out["job_count"] == 0
+    _not_a_sibling(out)
+
+
 def test_locus_origin_stays_in_warehouse_and_logistics():
     payload = classified_match_payload(
         LOCUS, url="https://www.locusrobotics.com/products/origin"
