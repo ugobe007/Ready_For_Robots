@@ -88,7 +88,7 @@ function hostLabel(url: string): string {
 
 function mainWork(payload: BuyerPayload): string {
   const cap = payload.capabilities?.find((item) => (item.key || item.label || "").trim());
-  return taxonomyLabel(cap?.key || cap?.label);
+  return taxonomyLabel(cap?.key) || (cap?.label || "").trim();
 }
 
 function TierMark({ tier }: { tier: string }) {

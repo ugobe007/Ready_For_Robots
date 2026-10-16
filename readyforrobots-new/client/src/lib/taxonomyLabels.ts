@@ -94,7 +94,7 @@ export type LabeledSearch = {
 export function labeledSearchText(payload: LabeledSearch): string {
   const lines: string[] = [];
   const cap = (payload.capabilities || []).find((item) => (item.key || item.label || "").trim());
-  const work = taxonomyLabel(cap?.key || cap?.label);
+  const work = taxonomyLabel(cap?.key) || (cap?.label || "").trim();
   if (work) lines.push(work);
   for (const job of payload.jobs || []) {
     const industry = taxonomyLabel(job.industry);
