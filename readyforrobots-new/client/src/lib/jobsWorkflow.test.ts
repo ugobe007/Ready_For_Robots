@@ -2092,8 +2092,8 @@ describe("jobsWorkflow", () => {
     expect(workspace).toMatch(/lookupKnownOem/);
     expect(workspace).toMatch(/fetchOemListing/);
     expect(workspace).toMatch(/OEM_LISTING_TIMEOUT_MS/);
-    expect(workspace).toMatch(/FIND_IDENTITY_TIMEOUT_MS/);
-    expect(workspace).toMatch(/timeoutMs: FIND_IDENTITY_TIMEOUT_MS/);
+    expect(workspace).toMatch(/CLASSIFY_PAGE_TIMEOUT_MS/);
+    expect(workspace).toMatch(/timeoutMs: CLASSIFY_PAGE_TIMEOUT_MS/);
     expect(workspace).toMatch(/findResearchFailureMessage/);
     const findResearch = readFileSync(join(here, "./findResearch.ts"), "utf8");
     expect(findResearch).toMatch(/Lookup took too long/);

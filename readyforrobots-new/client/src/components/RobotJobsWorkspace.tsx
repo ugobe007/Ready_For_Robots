@@ -137,7 +137,6 @@ import {
   OEM_LISTING_TIMEOUT_MS,
   ROBOT_PROFILE_TIMEOUT_MS,
   ROBOT_JOB_SEARCH_TIMEOUT_MS,
-  FIND_IDENTITY_TIMEOUT_MS,
 } from "@/lib/jobsWorkflow";
 
 /** Prompt v6 classification is slower than a catalog lookup. The cap is a ceiling, not a delay. */
@@ -493,6 +492,7 @@ function searchNamesSubmittedProduct(
   res: RobotJobSearchResult
 ): string | null {
   if (res.state === "select_product" || res.needs_product_choice) return null;
+  if (catalogProductForSubmittedUrl(url, []).kind === "choose") return null;
   const returned =
     res.robot_name ||
     res.profile?.selected_product?.name ||
@@ -1195,7 +1195,7 @@ export default function RobotJobsWorkspace() {
         url: submitUrl,
         lookupGrain: "product",
         signal: ac.signal,
-        timeoutMs: FIND_IDENTITY_TIMEOUT_MS,
+        timeoutMs: CLASSIFY_PAGE_TIMEOUT_MS,
       });
       if (!live()) return;
       submissionIdRef.current =
@@ -1248,8 +1248,9 @@ export default function RobotJobsWorkspace() {
         return;
       }
       if (
-        decision.kind === "choose" &&
-        (res.needs_product_choice || lineup.length > 1)
+        (decision.kind === "choose" &&
+          (res.needs_product_choice || lineup.length > 1)) ||
+        res.state === "select_product"
       ) {
         setProducts(lineup);
         setSelected([]);

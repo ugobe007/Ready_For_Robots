@@ -54,9 +54,14 @@ COPY ontology ./ontology/
 COPY docs/calibration ./docs/calibration/
 COPY alembic.ini .
 COPY ["Robot Automation Signal Ontology.md", "./"]
+COPY tests/fixtures/taxonomy.v1.json ./tests/fixtures/taxonomy.v1.json
 
 # Copy built SPA static files
 COPY --from=frontend /rfr/dist/public ./static/
+
+# The classifier reads tests/fixtures/taxonomy.v1.json. Fail the image
+# here if that file, or the extraction config, did not make it into the build.
+RUN python -c "from app.services.robot_understanding_v1.taxonomy_extraction import load_taxonomy, load_extraction_config; load_taxonomy(); load_extraction_config()"
 
 EXPOSE 8080
 

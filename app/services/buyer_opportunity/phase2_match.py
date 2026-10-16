@@ -599,6 +599,13 @@ def try_phase2_search(
     text = (getattr(page, "text", None) or "").strip()
     slug = product_slug(url)
     discovered = discover_product_pages(url, links) if not slug else []
+    hint = (product_name or "").strip()
+    if discovered and hint:
+        chosen = next((row for row in discovered if row["name"].casefold() == hint.casefold()), None) or next(
+            (row for row in discovered if url_names_product(row["url"], hint)), None
+        )
+        if chosen:
+            return try_phase2_search(chosen["url"], hint, fetch=fetch, extract=extract)
     if not slug and discovered:
         # Homepage or catalog: one row per linked product, not the first robot's jobs.
         from app.services.vendor_robot_lookup import lookup_vendor_by_url
