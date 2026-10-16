@@ -651,6 +651,26 @@ def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
     return None
 
 
+def saved_product_for_request(db: Any, url: str, product_name: str | None) -> dict[str, Any] | None:
+    """Reuse a saved row only when this URL is that product.
+
+    A homepage has no product slug, so it always goes through discovery.
+    When the caller passed a product hint, the saved name has to match it.
+    """
+    if not product_slug(url):
+        return None
+    saved = saved_clean_product(db, url)
+    if saved is None:
+        return None
+    saved_name = fact_value(saved.get("product_name")) or str(saved.get("product_name") or "")
+    if not url_names_product(url, saved_name):
+        return None
+    hint = (product_name or "").strip()
+    if hint and not url_names_product(f"https://example.test/{hint}", saved_name):
+        return None
+    return saved
+
+
 def try_phase2_search(
     url: str,
     product_name: str | None = None,
@@ -673,7 +693,7 @@ def try_phase2_search(
 
     if db is not None:
         try:
-            saved = saved_clean_product(db, url)
+            saved = saved_product_for_request(db, url, product_name)
         except Exception:
             saved = None
             try:
