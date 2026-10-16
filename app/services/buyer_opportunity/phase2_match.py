@@ -209,6 +209,13 @@ def facts_ready_for_class(product: dict[str, Any] | None) -> bool:
     return bool(fact_values(product.get("industries")))
 
 
+def classification_is_usable(product: dict[str, Any] | None) -> bool:
+    """Clean, or held for review by rule 21 with every other match fact present."""
+    if classification_is_clean(product):
+        return True
+    return bool(product.get("needs_review")) and facts_ready_for_class(product)
+
+
 def _tokens(value: str) -> list[str]:
     return [part for part in re.split(r"[^a-z0-9]+", (value or "").lower()) if part]
 
@@ -410,7 +417,9 @@ def _shared_product_name(products: list[dict[str, Any]], url: str) -> str:
 
 def merge_market_variants(products: list[dict[str, Any]], url: str) -> dict[str, Any] | None:
     """One robot sold into several industries is one product, not several robots."""
-    clean = [product for product in products if classification_is_clean(product)]
+    from app.services.robot_understanding_v1.taxonomy_extraction import _assign_product_class
+
+    clean = [product for product in products if classification_is_usable(product)]
     if len(clean) <= 1:
         return clean[0] if clean else None
     forms = {fact_value(product.get("form")) for product in clean}
@@ -428,7 +437,8 @@ def merge_market_variants(products: list[dict[str, Any]], url: str) -> dict[str,
     merged = dict(clean[0])
     merged["industries"] = industries
     merged["product_name"] = _shared_product_name(clean, url)
-    return merged
+    merged["primary_class"] = None
+    return _assign_product_class(merged)
 
 
 def pick_product_record(
@@ -684,7 +694,7 @@ def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
     ).mappings()
     for row in rows:
         product = product_from_saved_row(row)
-        if classification_is_clean(product):
+        if classification_is_usable(product):
             return product
     return None
 
@@ -720,6 +730,22 @@ def saved_product_for_request(db: Any, url: str, product_name: str | None) -> di
     return saved
 
 
+def needs_review_payload(product: dict[str, Any], url: str) -> dict[str, Any]:
+    """Match payload for a rule-21 product. No class is shown until someone confirms one."""
+    payload = classified_match_payload(product, url=url, company_name=fact_value(product.get("company")))
+    payload["robot_class"] = None
+    payload["needs_review"] = True
+    payload["needs_class_choice"] = False
+    for row in payload.get("products") or []:
+        if isinstance(row, dict):
+            row["display_class"] = None
+            row["robot_class"] = None
+    selected = (payload.get("profile") or {}).get("selected_product")
+    if isinstance(selected, dict):
+        selected["display_class"] = None
+    return payload
+
+
 def try_phase2_search(
     url: str,
     product_name: str | None = None,
@@ -753,9 +779,12 @@ def try_phase2_search(
             if saved is not None:
                 # Reuse the saved classification. The API inserts a row whenever
                 # classified_product is present, so drop the key the matcher sets.
-                payload = classified_match_payload(
-                    saved, url=url, company_name=fact_value(saved.get("company"))
-                )
+                if saved.get("needs_review") and not classification_is_clean(saved):
+                    payload = needs_review_payload(saved, url)
+                else:
+                    payload = classified_match_payload(
+                        saved, url=url, company_name=fact_value(saved.get("company"))
+                    )
                 payload.pop("classified_product", None)
                 return payload
 
@@ -802,18 +831,7 @@ def try_phase2_search(
         return unrecognized_payload(url, display_name=hint) if slug else None
     product = pick_product_record(extraction, url, product_name)
     if product is not None and product.get("needs_review") and facts_ready_for_class(product):
-        company = fact_value(product.get("company"))
-        payload = classified_match_payload(product, url=url, company_name=company)
-        payload["robot_class"] = None
-        payload["needs_review"] = True
-        payload["needs_class_choice"] = False
-        for row in payload.get("products") or []:
-            if isinstance(row, dict):
-                row["display_class"] = None
-                row["robot_class"] = None
-        selected = (payload.get("profile") or {}).get("selected_product")
-        if isinstance(selected, dict):
-            selected["display_class"] = None
+        payload = needs_review_payload(product, url)
         payload["classified_product"] = {
             "product": product,
             "metadata": (extraction or {}).get("extraction_metadata") or {},
