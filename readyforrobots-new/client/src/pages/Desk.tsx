@@ -308,7 +308,9 @@ export default function Desk() {
     } catch (err) {
       setCards((current) =>
         current.map((row) =>
-          row.id === id ? { ...row, stage: card.stage } : row
+          row.id === id && row.stage === stage
+            ? { ...row, stage: card.stage }
+            : row
         )
       );
       setMoveError(
