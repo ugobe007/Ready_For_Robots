@@ -841,6 +841,25 @@ export async function pasteInboundReply(
   );
 }
 
+export type JobsCrmActivityEvent = {
+  id: string;
+  at?: string | null;
+  kind: string;
+  label: string;
+  jobKey?: string | null;
+  company?: string | null;
+};
+
+export async function fetchJobsCrmActivity(
+  token: string
+): Promise<JobsCrmActivityEvent[]> {
+  const data = await jobsCrmFetch<{ events: JobsCrmActivityEvent[] }>(
+    "/api/jobs-crm/activity",
+    token
+  );
+  return data.events || [];
+}
+
 export async function postJobsCrmActivity(
   token: string,
   event: { kind: string; label: string; jobKey?: string; company?: string }

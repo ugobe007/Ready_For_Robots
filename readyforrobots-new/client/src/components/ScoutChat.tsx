@@ -83,6 +83,8 @@ export function ScoutChat({ children }: { children: React.ReactNode }) {
     onPipeline ||
     location === "/crm" ||
     location.startsWith("/crm?") ||
+    location === "/desk" ||
+    location.startsWith("/desk?") ||
     location === "/experiment" ||
     location.startsWith("/experiment?");
 
