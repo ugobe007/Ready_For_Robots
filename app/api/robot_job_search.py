@@ -70,6 +70,7 @@ def post_robot_job_search(
             record_shadow=_shadow,
             asserted_class=body.asserted_class,
             lookup_grain=body.lookup_grain,
+            db=db,
         )
         classified = result.pop("classified_product", None) if isinstance(result, dict) else None
         if classified:

@@ -192,6 +192,7 @@ def compose_robot_job_search(
     record_shadow=None,
     asserted_class: str | None = None,
     lookup_grain: str | None = None,
+    db: Any | None = None,
 ) -> dict[str, Any]:
     """Build (or reuse) a Robot Profile and match jobs. Never streams partial jobs.
 
@@ -233,7 +234,7 @@ def compose_robot_job_search(
         )
 
         if buyer_opportunities_enabled():
-            phased = try_phase2_search(safe, product_name)
+            phased = try_phase2_search(safe, product_name, db=db)
             if phased is not None:
                 total_ms = int((time.perf_counter() - t0) * 1000)
                 phased["timings"] = _timings(total_ms=total_ms)

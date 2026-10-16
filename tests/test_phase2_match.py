@@ -423,7 +423,7 @@ def test_compose_returns_phase2_when_the_flag_is_on(monkeypatch):
     sentinel = {"state": "matches", "jobs": [], "robot_name": "DUST-E S"}
     monkeypatch.setattr(
         "app.services.buyer_opportunity.phase2_match.try_phase2_search",
-        lambda url, product_name=None: sentinel,
+        lambda url, product_name=None, **_kwargs: sentinel,
     )
     from app.services.robot_job_search import compose_robot_job_search
 
@@ -436,3 +436,274 @@ def test_jobs_for_classification_drops_mobile_work_for_a_fixed_arm():
     jobs = jobs_for_classification(ADAM)
     assert jobs
     assert {job["tape_family"] for job in jobs} == {"beverage"}
+
+
+# The five robots from the live check. Each search calls the classifier once
+# until a clean row exists for that URL at the current prompt and taxonomy versions.
+FIVE_ROBOTS = (
+    ("https://richtechrobotics.com/solutions/dust-e-s", "DUST-E S", DUST),
+    ("https://www.richtechrobotics.com/adam", "ADAM", ADAM),
+    ("https://www.richtechrobotics.com/titan", "Titan", TITAN),
+    ("https://relayrobotics.com", "Relay", RELAY),
+    ("https://locusrobotics.com/platform/locus-origin", "Locus Origin", LOCUS),
+)
+
+
+def _products_db():
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import Session
+    from sqlalchemy.pool import StaticPool
+
+    from app.services.buyer_opportunity.tables import rfr_robot_products
+
+    engine = create_engine(
+        "sqlite://",
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
+    rfr_robot_products.metadata.create_all(engine, tables=[rfr_robot_products])
+    return Session(engine)
+
+
+def _search_and_save(db, url, name, product, calls):
+    from app.services.buyer_opportunity.phase2_match import persist_classified_product
+    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+
+    page = SimpleNamespace(text=f"{name} product page", links=[])
+
+    def extract(page_url, text, hint):
+        calls.append(page_url)
+        return {
+            "page": {"page_type": "manufacturer_product_page", "produces_records": True},
+            "products": [product],
+            "extraction_metadata": {
+                "prompt_version": PROMPT_VERSION,
+                "taxonomy_version": get_taxonomy_version(),
+            },
+        }
+
+    out = try_phase2_search(url, name, fetch=lambda page_url: page, extract=extract, db=db)
+    assert out is not None
+    classified = out.pop("classified_product", None)
+    if classified:
+        persist_classified_product(db, classified)
+    return out
+
+
+def test_five_robots_reuse_saved_classifications(monkeypatch):
+    """First pass classifies each URL. The second pass reads rfr_robot_products and does not call the model."""
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    db = _products_db()
+    first: list[str] = []
+    second: list[str] = []
+    for url, name, product in FIVE_ROBOTS:
+        out = _search_and_save(db, url, name, product, first)
+        assert out["robot_name"] == name
+        assert "classified_product" not in out
+    for url, name, product in FIVE_ROBOTS:
+        out = _search_and_save(db, url, name, product, second)
+        assert out["robot_name"] == name
+        assert out["zero_reason"] != "unrecognized_product"
+        assert "classified_product" not in out
+    assert len(first) == 5
+    # A homepage has no product slug, so Relay is classified again. The other four are reused.
+    assert second == ["https://relayrobotics.com"]
+
+
+def test_unclean_or_stale_row_still_calls_the_classifier(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    from app.services.buyer_opportunity.phase2_match import persist_classified_product
+    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+
+    db = _products_db()
+    software = dict(DUST)
+    software["offering_type"] = _fact("software")
+    url = "https://richtechrobotics.com/solutions/dust-e-s"
+    current = {"prompt_version": PROMPT_VERSION, "taxonomy_version": get_taxonomy_version()}
+    persist_classified_product(
+        db,
+        {"product": software, "metadata": current, "source_url": url},
+    )
+    calls: list[str] = []
+    out = _search_and_save(db, url, "DUST-E S", DUST, calls)
+    assert calls == [url]
+    assert out["robot_name"] == "DUST-E S"
+
+    stale = _products_db()
+    persist_classified_product(
+        stale,
+        {
+            "product": DUST,
+            "metadata": {"prompt_version": "v0", "taxonomy_version": get_taxonomy_version()},
+            "source_url": url,
+        },
+    )
+    stale_calls: list[str] = []
+    out = _search_and_save(stale, url, "DUST-E S", DUST, stale_calls)
+    assert stale_calls == [url]
+    assert out["robot_name"] == "DUST-E S"
+
+
+def test_homepage_with_a_saved_row_still_returns_the_picker(monkeypatch):
+    """A homepage has no product slug, so a saved row is not the result."""
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    from app.services.buyer_opportunity.phase2_match import persist_classified_product
+    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+
+    home = "https://richtechrobotics.com/"
+    db = _products_db()
+    persist_classified_product(
+        db,
+        {
+            "product": ADAM,
+            "metadata": {"prompt_version": PROMPT_VERSION, "taxonomy_version": get_taxonomy_version()},
+            "source_url": home,
+        },
+    )
+    page = SimpleNamespace(
+        text="catalog",
+        links=[
+            "https://richtechrobotics.com/solutions/adam",
+            "https://richtechrobotics.com/solutions/scorpion",
+        ],
+    )
+    calls: list[str] = []
+    out = try_phase2_search(
+        home,
+        fetch=lambda url: page,
+        extract=lambda *args, **kwargs: calls.append("extract") or pytest.fail("saved homepage row must not be classified"),
+        db=db,
+    )
+    assert calls == []
+    assert out["state"] == "select_product"
+    assert out["needs_product_choice"] is True
+    assert out["jobs"] == []
+    assert out["robot_name"] != "ADAM"
+
+
+def test_homepage_hint_does_not_reuse_a_different_saved_product(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    from app.services.buyer_opportunity.phase2_match import persist_classified_product
+    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+
+    home = "https://richtechrobotics.com/"
+    scorpion_url = "https://richtechrobotics.com/solutions/scorpion"
+    scorpion = _product(
+        "Scorpion",
+        form="robotic_arm_cobot",
+        function="food_beverage_prep",
+        industries=["restaurant", "bar_nightclub"],
+        primary_class="food_robotics",
+    )
+    db = _products_db()
+    persist_classified_product(
+        db,
+        {
+            "product": ADAM,
+            "metadata": {"prompt_version": PROMPT_VERSION, "taxonomy_version": get_taxonomy_version()},
+            "source_url": home,
+        },
+    )
+    page = SimpleNamespace(
+        text="catalog",
+        links=[
+            "https://richtechrobotics.com/solutions/adam",
+            scorpion_url,
+        ],
+    )
+    calls: list[str] = []
+
+    def extract(url, text, hint):
+        calls.append(url)
+        return {
+            "page": {"produces_records": True},
+            "products": [scorpion],
+            "extraction_metadata": {"prompt_version": PROMPT_VERSION, "taxonomy_version": get_taxonomy_version()},
+        }
+
+    out = try_phase2_search(home, "Scorpion", fetch=lambda url: page, extract=extract, db=db)
+    assert out["robot_name"] == "Scorpion"
+    assert out["robot_name"] != "ADAM"
+    assert calls == [scorpion_url]
+
+
+def test_product_url_reuses_the_saved_row_for_the_same_product(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    url = "https://richtechrobotics.com/solutions/dust-e-s"
+    db = _products_db()
+    first: list[str] = []
+    second: list[str] = []
+    from sqlalchemy import func, select
+
+    from app.services.buyer_opportunity.phase2_match import persist_classified_product
+    from app.services.buyer_opportunity.tables import rfr_robot_products
+
+    _search_and_save(db, url, "DUST-E S", DUST, first)
+    saved_rows = db.execute(select(func.count()).select_from(rfr_robot_products)).scalar_one()
+    page = SimpleNamespace(text="DUST-E S product page", links=[])
+    out = try_phase2_search(
+        url,
+        "DUST-E S",
+        fetch=lambda page_url: page,
+        extract=lambda *args, **kwargs: second.append(url),
+        db=db,
+    )
+    reused = out.pop("classified_product", None) if isinstance(out, dict) else None
+    if reused:
+        persist_classified_product(db, reused)
+    again = db.execute(select(func.count()).select_from(rfr_robot_products)).scalar_one()
+    assert first == [url]
+    assert second == []
+    assert out["robot_name"] == "DUST-E S"
+    assert reused is None
+    assert again == saved_rows
+
+
+def test_saved_row_at_old_prompt_version_is_not_reused(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    from app.services.buyer_opportunity.phase2_match import persist_classified_product
+    from app.services.robot_understanding_v1.taxonomy_extraction import get_taxonomy_version
+
+    url = "https://locusrobotics.com/platform/locus-origin"
+    db = _products_db()
+    persist_classified_product(
+        db,
+        {
+            "product": LOCUS,
+            "metadata": {"prompt_version": "v0", "taxonomy_version": get_taxonomy_version()},
+            "source_url": url,
+        },
+    )
+    calls: list[str] = []
+    out = _search_and_save(db, url, "Locus Origin", LOCUS, calls)
+    assert calls == [url]
+    assert out["robot_name"] == "Locus Origin"
+
+
+def test_saved_lookup_error_falls_through_to_the_classifier(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+
+    class Broken:
+        def execute(self, *args, **kwargs):
+            raise RuntimeError("lookup failed")
+
+        def rollback(self):
+            self.rolled_back = True
+
+    db = Broken()
+    calls: list[str] = []
+    url = "https://www.richtechrobotics.com/adam"
+    page = SimpleNamespace(text="ADAM espresso", links=[])
+
+    def extract(page_url, text, hint):
+        calls.append(page_url)
+        return {
+            "page": {"produces_records": True},
+            "products": [ADAM],
+            "extraction_metadata": {"prompt_version": "v6"},
+        }
+
+    out = try_phase2_search(url, "ADAM", fetch=lambda page_url: page, extract=extract, db=db)
+    assert calls == [url]
+    assert out["robot_name"] == "ADAM"
+    assert db.rolled_back is True
