@@ -1,6 +1,10 @@
+type NavLink = { label: string; href: string };
+
 type SiteHeaderProps = {
   signedIn?: boolean;
   initials?: string;
+  links?: NavLink[];
+  ctaHref?: string;
 };
 
 const PUBLIC_LINKS = [
@@ -17,8 +21,13 @@ const SIGNED_IN_LINKS = [
   { label: "Explore", href: "/explore" },
 ];
 
-export function SiteHeader({ signedIn = false, initials = "RR" }: SiteHeaderProps) {
-  const links = signedIn ? SIGNED_IN_LINKS : PUBLIC_LINKS;
+export function SiteHeader({
+  signedIn = false,
+  initials = "RR",
+  links: linkOverride,
+  ctaHref = "/pricing",
+}: SiteHeaderProps) {
+  const links = signedIn ? SIGNED_IN_LINKS : linkOverride ?? PUBLIC_LINKS;
   return (
     <header className="rfr-header">
       <div className="rfr-header-inner">
@@ -36,7 +45,7 @@ export function SiteHeader({ signedIn = false, initials = "RR" }: SiteHeaderProp
               {initials}
             </span>
           ) : (
-            <a className="rfr-header-cta" href="/pricing">
+            <a className="rfr-header-cta" href={ctaHref}>
               Get early access
             </a>
           )}

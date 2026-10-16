@@ -1,9 +1,9 @@
 const FOOTER_LINKS = [
-  { label: "About", href: "#about" },
-  { label: "Newsletter", href: "#newsletter" },
-  { label: "Privacy", href: "#privacy" },
-  { label: "Terms", href: "#terms" },
-  { label: "Support", href: "#support" },
+  { label: "About", href: "/about" },
+  { label: "Newsletter", href: "/newsletter" },
+  { label: "Privacy", href: "/privacy" },
+  { label: "Terms", href: "/terms" },
+  { label: "Support", href: "/support" },
 ];
 
 export function SiteFooter() {

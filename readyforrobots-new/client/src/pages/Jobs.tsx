@@ -30,12 +30,7 @@ export default function Jobs() {
   const fromSearch = landingVisitFromSearch(search);
   const visit: LandingVisit = heroHome ? "landing" : fromSearch;
   if (visit === "landing") {
-    return (
-      <div className="jobs-page min-h-screen bg-[#0A0F1E] text-slate-100">
-        <ExperimentHeader />
-        <JobsLanding />
-      </div>
-    );
+    return <JobsLanding />;
   }
   return (
     <div className="jobs-page min-h-screen bg-[#081126] text-slate-100">

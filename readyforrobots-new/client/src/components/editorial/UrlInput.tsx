@@ -5,6 +5,8 @@ type UrlInputProps = {
   onChange: (value: string) => void;
   onSubmit?: (value: string) => void;
   label?: string;
+  placeholder?: string;
+  id?: string;
 };
 
 export function UrlInput({
@@ -12,6 +14,8 @@ export function UrlInput({
   onChange,
   onSubmit,
   label = "Robot product page",
+  placeholder = "https://",
+  id = "robot-product-page",
 }: UrlInputProps) {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -20,14 +24,16 @@ export function UrlInput({
 
   return (
     <form onSubmit={handleSubmit}>
-      <label>
+      <label htmlFor={id}>
         <span className="rfr-url-label">{label}</span>
         <span className="rfr-url-row">
           <input
-            type="url"
+            id={id}
+            type="text"
+            inputMode="url"
             name="robot-url"
             value={value}
-            placeholder="https://"
+            placeholder={placeholder}
             onChange={(event) => onChange(event.target.value)}
           />
           <button type="submit">Find buyers →</button>

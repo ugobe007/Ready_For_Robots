@@ -159,20 +159,18 @@ describe("landing fork", () => {
       join(here, "../components/JobsLanding.tsx"),
       "utf8"
     );
-    expect(landing).toMatch(/LOOK_FOR_ROBOT_JOBS_CTA/);
-    expect(landing).toMatch(/LOOK_FOR_ROBOT_CANDIDATES_CTA/);
-    expect(landing).toMatch(/LANDING_HEADLINE_ROBOT/);
-    expect(landing).toMatch(/rfr-landing-hero-form/);
-    expect(landing).toMatch(/rfr-landing-employer-link/);
-    expect(landing).toMatch(/LiveJobTape/);
-    expect(landing).toMatch(/MARKET_TAPE_JOBS/);
-    expect(landing).toMatch(/useTapeJobCard/);
+    expect(landing).toMatch(/jobsFindHref/);
+    expect(landing).toMatch(/Find the companies ready to hire your robot/);
+    expect(landing).toMatch(/ExampleBadge/);
+    expect(landing).toMatch(/CASE_ROTATE_MS/);
+    expect(landing).not.toMatch(/FOUNDING PRICE/);
+    expect(landing).not.toMatch(/LiveJobTape/);
     expect(landing).not.toMatch(/\?visit=jobs&job=/);
     const tapeCard = readFileSync(join(here, "./tapeJobCard.ts"), "utf8");
     expect(tapeCard).toMatch(/\/api\/robot-job-card\//);
     expect(landing).not.toMatch(/LANDING_HOW_STEPS|LANDING_VOCAB/);
     expect(landing).not.toMatch(
-      /Look for buyers|SIGNAL|Apollo|Who is this visit/i
+      /Look for buyers|\bSIGNAL\b|Apollo|Who is this visit/i
     );
     expect(landing).not.toMatch(/Market Intelligence|Automation Imperative/i);
     expect(landing).not.toMatch(/Headline options|headlineOptions|id:\"A\"/);
@@ -228,7 +226,7 @@ describe("landing fork", () => {
     expect(LOOK_FOR_ROBOT_CANDIDATES_CTA).toBe("Robots for Jobs");
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
-    expect(landing).toMatch(/rfr-landing-headline/);
+    expect(landing).toMatch(/jobsFindHref/);
   });
 
   it("keeps unused landing CSS tokens off the FIND home path", () => {
@@ -252,24 +250,12 @@ describe("landing fork", () => {
     expect(LANDING_DOOR_ICON_SCALE).toBe(3);
     expect(jobsFindHref()).toBe("/?visit=jobs");
     expect(jobsCandidatesHref()).toBe("/?visit=candidates");
-    expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
+    expect(landing).toMatch(/jobsFindHref\(trimmed\)/);
+    expect(landing).toMatch(/Find buyers for/);
     expect(landing).not.toMatch(/rfr-landing-windowbar/);
-    expect(landing).toMatch(/rfr-landing-headline/);
-    expect(landing).toMatch(/rfr-landing-subhead/);
-    expect(landing).toMatch(/rfr-landing-hero-form/);
-    expect(landing).toMatch(/rfr-landing-employer-link/);
-    expect(landing).not.toMatch(/rfr-landing-doors-cue/);
-    expect(landing).not.toMatch(/rfr-landing-door-who/);
-    expect(landing).toMatch(/rfr-landing-accent/);
-    expect(landing.indexOf("rfr-landing-headline")).toBeLessThan(
-      landing.indexOf("rfr-landing-hero-mark")
-    );
-    expect(landing).toMatch(/KARE_FACE/);
-    expect(landing).toMatch(/LandingFace scale=\{7\}/);
-    expect(landing).toMatch(/ready_for_robots_hero\.jpg/);
-    expect(landing).toMatch(/Find jobs →/);
-    expect(landing).not.toMatch(/rfr-landing-hero-samples/);
-    expect(landing).toMatch(/rfr-landing-stats-bar/);
+    expect(landing).not.toMatch(/ready_for_robots_hero\.jpg/);
+    expect(landing).not.toMatch(/KARE_FACE/);
+    expect(landing).not.toMatch(/FOUNDING PRICE/);
     expect(landing).not.toMatch(/PixelBriefcase|PixelDoc|PixelHand/);
     expect(landing).not.toMatch(/PixelRobot/);
     expect(landing).not.toMatch(
@@ -300,8 +286,8 @@ describe("landing fork", () => {
     expect(LANDING_COLORS.emerald).toBe("#10B981");
     expect(LANDING_COLORS.mint).toBe("#2EE6A8");
     expect(LANDING_COLORS.violet).toBe("#8B5CF6");
-    expect(landing).toMatch(/fill=\{C\.emerald\}/);
-    expect(landing).toMatch(/background="transparent"/);
+    expect(landing).not.toMatch(/fill=\{C\.emerald\}/);
+    expect(landing).not.toMatch(/KARE_FACE/);
     expect(landing).not.toMatch(/part\.accent \? C\.mint/);
     expect(landing).not.toMatch(/landingHeadlineParts/);
     expect(css).toMatch(/--landing-cream:\s*#f3e8ff/);
@@ -542,8 +528,7 @@ describe("landing chrome hrefs cannot swap visits", () => {
       "utf8"
     );
     expect(landing).toMatch(/jobsFindHref/);
-    expect(landing).toMatch(/href=\{jobsCandidatesHref\(\)\}/);
-    expect(landing).toMatch(/LANDING_FOOTER_LINKS/);
+    expect(landing).toMatch(/window\.location\.href = jobsFindHref/);
     expect(landing).not.toMatch(/href=\{step\.href\}/);
     expect(landing).not.toMatch(/LANDING_SIGNUP_HREF/);
     expect(landing).not.toMatch(/LANDING_BRIEFING_HREF/);
@@ -608,8 +593,8 @@ describe("landing chrome hrefs cannot swap visits", () => {
       join(here, "../components/JobsLanding.tsx"),
       "utf8"
     );
-    expect(landing).toMatch(/CustomerQuoteBanner/);
-    expect(landing).toMatch(/aria-label="Employer quotes"/);
+    expect(landing).not.toMatch(/CustomerQuoteBanner/);
+    expect(landing).toMatch(/ExampleBadge/);
     expect(FIND_JOBS_CTA).toBe("Find jobs →");
   });
 });
