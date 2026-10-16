@@ -197,7 +197,7 @@ def _search_locus_page(monkeypatch, products):
         return {
             "page": {"page_type": "manufacturer_product_page", "produces_records": True},
             "products": products,
-            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.3"},
+            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.4"},
         }
 
     return try_phase2_search(
@@ -334,7 +334,7 @@ def test_phase2_classifies_the_submitted_page_and_skips_siblings(monkeypatch):
         return {
             "page": {"produces_records": True},
             "products": [ADAM, DUST],
-            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.3"},
+            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.4"},
         }
 
     out = try_phase2_search(

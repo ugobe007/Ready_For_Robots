@@ -1,7 +1,7 @@
 {
   "name": "Ready For Robots robot taxonomy",
-  "version": "v1.3",
-  "date": "2026-10-15",
+  "version": "v1.4",
+  "date": "2026-10-16",
   "purpose": "Closed vocabulary for classifying robots. Extraction must choose ONLY from these values. Anything that does not fit goes in unclassified_notes and is logged, never invented. Buyer opportunities are indexed with the same industries list so matching is a join, not a semantic guess.",
   "pipeline": [
     "1. company: name + URL",
@@ -87,6 +87,7 @@
     "drone": "Aerial robot"
   },
   "primary_class": {
+    "_definition": "Choose the primary class by who the robot is built for, in this order:\n1. healthcare — built for and sold mainly to clinical settings (hospitals,\n   surgery centers, senior care), whatever the task: hospital delivery and\n   fetch robots (e.g. Moxi), UV disinfection robots marketed to hospitals,\n   pharmacy robots.\n2. service_robot — guest-facing work in restaurants, hotels and venues:\n   serving food or drinks to tables, bussing, greeting, guiding.\n3. delivery — the main job is carrying items from place to place (room\n   delivery, building-to-building, sidewalk or last-mile) and the robot is\n   not built mainly for clinical settings or table service.\nIf a page sells one product into several industries, judge by the setting the\npage leads with; if none leads, use the class for the work.",
     "agriculture": "Farm robots",
     "amr_logistics": "Warehouse, fulfillment, and material-handling robots",
     "cleaning": "Cleaning robots",
@@ -132,6 +133,11 @@
       "version": "v1.3",
       "date": "2026-10-15",
       "change": "Added industry facility_services (contract cleaning, food service and facility management companies), in pilot group 8. Approved by Bob."
+    },
+    {
+      "version": "v1.4",
+      "date": "2026-10-16",
+      "change": "Added primary_class._definition: choose the class by who the robot is built for, healthcare then service_robot then delivery. Approved by Bob. The taxonomy version bump invalidates saved classifications."
     }
   ]
 }

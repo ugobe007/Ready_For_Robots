@@ -27,9 +27,11 @@ KEY_FIELDS = {
 }
 
 
-def test_taxonomy_is_v1_3_with_valid_parents():
+def test_taxonomy_is_v1_4_with_valid_parents():
     taxonomy = load_taxonomy()
-    assert taxonomy["version"] == "v1.3"
+    assert taxonomy["version"] == "v1.4"
+    assert taxonomy["primary_class"]["_definition"].startswith("Choose the primary class by who the robot is built for")
+    assert "_definition" not in taxonomy_values(taxonomy, "primary_class")
     assert "facility_services" in taxonomy_values(taxonomy, "industries")
     known = set(taxonomy_values(taxonomy, "industries"))
     parents = ind.industry_parents(taxonomy)

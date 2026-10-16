@@ -11,6 +11,8 @@ An industry is the industry of the organization that **buys and operates** the r
 
 Source of truth: `industries._definition` in `tests/fixtures/taxonomy.v1.json`. The extractor puts that text into the prompt verbatim. Keys starting with `_` are documentation and never become enum values.
 
+`primary_class._definition` (taxonomy v1.4, approved by Bob) is copied the same way, under PRIMARY CLASS DEFINITION. Prompt stays `v6`. The taxonomy version in the cache key is what invalidates saved rows.
+
 ### 1a. Industry descriptions in the prompt (prompt `v6`)
 
 The prompt lists every industry as `- value: description`, with the description copied verbatim from the taxonomy, instead of the bare value names. Descriptions carry boundaries the names alone don't, e.g. `restaurant` includes the bars inside restaurants, while `bar_nightclub` is only for standalone bars, lounges and nightclubs (Bob, spec v1.6 §1). This is a rule change, so it is measured on the next fresh test set, not on hold-out v1 or v2.
