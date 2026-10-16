@@ -860,6 +860,14 @@
   margin: 0;
 }
 
+.rfr-result-review {
+  margin: 18px 0 0;
+  font-family: "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #9a3412;
+}
+
 .rfr-result-early {
   display: flex;
   gap: 14px;

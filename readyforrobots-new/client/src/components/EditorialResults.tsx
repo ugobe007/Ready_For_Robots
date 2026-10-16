@@ -55,6 +55,8 @@ type BuyerPayload = {
   products?: BuyerProduct[];
   needs_product_choice?: boolean;
   needs_class_choice?: boolean;
+  needs_review?: boolean;
+  robot_class?: string | null;
   class_options?: ClassOption[];
   zero_reason?: string | null;
   source_url?: string | null;
@@ -95,7 +97,18 @@ function TierMark({ tier }: { tier: string }) {
   return <span className="rfr-result-tier">{tier}</span>;
 }
 
-function BuyerRows({ payload }: { payload: BuyerPayload }) {
+export function NeedsReviewNotice({
+  needsReview,
+  robotClass,
+}: {
+  needsReview?: boolean;
+  robotClass?: string | null;
+}) {
+  if (!needsReview || String(robotClass || "").trim()) return null;
+  return <p className="rfr-result-review">Needs review. No class assigned.</p>;
+}
+
+export function BuyerRows({ payload }: { payload: BuyerPayload }) {
   const jobs = payload.jobs || [];
   const industries = useMemo(() => {
     const seen = new Map<string, string>();
@@ -144,6 +157,7 @@ function BuyerRows({ payload }: { payload: BuyerPayload }) {
             </dl>
           )}
         </div>
+        <NeedsReviewNotice needsReview={payload.needs_review} robotClass={payload.robot_class} />
         {anyExample ? (
           <div className="rfr-result-early">
             <span>EARLY ACCESS</span>
