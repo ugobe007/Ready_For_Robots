@@ -17,7 +17,7 @@ const PUBLIC_LINKS = [
 
 const SIGNED_IN_LINKS = [
   { label: "Find buyers", href: "/" },
-  { label: "My desk", href: "/readyforrobots/crm" },
+  { label: "My desk", href: "/desk" },
   { label: "Explore", href: "/explore" },
 ];
 

@@ -455,12 +455,25 @@ def record_activity(
     return row
 
 
-def list_activity(db: Session, user: dict, job_key: str | None = None) -> list[dict[str, Any]]:
+def list_activity(
+    db: Session, user: dict, job_key: str | None = None, kind: str | None = None
+) -> list[dict[str, Any]]:
     uid = _uid(user)
     q = db.query(JobsCrmActivity).filter(JobsCrmActivity.user_id == uid)
     if job_key:
         q = q.filter((JobsCrmActivity.job_key == job_key) | (JobsCrmActivity.job_key.is_(None)))
-    rows = q.order_by(JobsCrmActivity.created_at.desc()).limit(40).all()
+    q = q.order_by(JobsCrmActivity.created_at.desc())
+    if kind:
+        # Latest event per job, uncapped, so desk stages never fall out of a window.
+        seen: set[str | None] = set()
+        rows = []
+        for row in q.filter(JobsCrmActivity.kind == kind).all():
+            if row.job_key in seen:
+                continue
+            seen.add(row.job_key)
+            rows.append(row)
+    else:
+        rows = q.limit(40).all()
     return [
         {
             "id": str(row.id),

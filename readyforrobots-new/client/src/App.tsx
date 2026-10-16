@@ -8,7 +8,7 @@ import Results from "./pages/Results";
 import RobotAnalysisReview from "./pages/RobotAnalysisReview";
 import RobotDetailReview from "./pages/RobotDetailReview";
 import SalesSamples from "./pages/SalesSamples";
-import Pipeline from "./pages/Pipeline";
+import Desk from "./pages/Desk";
 import Compare from "./pages/Compare";
 import Signals from "./pages/Signals";
 import Intelligence from "./pages/Intelligence";
@@ -27,7 +27,6 @@ import SalesConsole from "./pages/SalesConsole";
 import SalesWorkflow from "./pages/SalesWorkflow";
 import SupplyPipeline from "./pages/SupplyPipeline";
 import Marketplace from "./pages/Marketplace";
-import Integrations from "./pages/Integrations";
 import HubSpotConnect from "./pages/HubSpotConnect";
 import Benchmark from "./pages/Benchmark";
 import Robots from "./pages/Robots";
@@ -69,8 +68,12 @@ function JourneyHomeRedirect() {
   return <Redirect to={`/${search}`} />;
 }
 
-function PipelineRoute() {
-  return <Pipeline />;
+function DeskRedirect() {
+  return <Redirect to="/desk" />;
+}
+
+function HubSpotSettingsRedirect() {
+  return <Redirect to="/desk?settings=hubspot" />;
 }
 
 function Router() {
@@ -89,7 +92,8 @@ function Router() {
       <Route path="/journey/activate" component={JourneyHomeRedirect} />
       <Route path="/results" component={Results} />
       <Route path="/sales/samples" component={SalesSamples} />
-      <Route path="/pipeline" component={PipelineRoute} />
+      <Route path="/desk" component={Desk} />
+      <Route path="/pipeline" component={DeskRedirect} />
       <Route path="/about" component={Intelligence} />
       <Route path="/compare" component={Compare} />
       <Route path="/signals" component={Signals} />
@@ -134,15 +138,15 @@ function Router() {
       <Route path="/auth/callback" component={AuthCallback} />
       <Route path="/profile" component={Profile} />
       <Route path="/my-robots" component={MyRobots} />
-      <Route path="/crm" component={Crm} />
+      <Route path="/crm" component={DeskRedirect} />
       <Route path="/inbox" component={Inbox} />
       <Route path="/calendar" component={CalendarPage} />
       <Route path="/sales-console" component={SalesConsole} />
       <Route path="/sales-workflow" component={SalesWorkflow} />
       <Route path="/supply-pipeline" component={SupplyPipeline} />
       <Route path="/marketplace" component={Marketplace} />
-      <Route path="/integrations" component={Integrations} />
       <Route path="/integrations/hubspot" component={HubSpotConnect} />
+      <Route path="/integrations" component={HubSpotSettingsRedirect} />
       <Route path="/admin/prospects">
         <Redirect to="/pipeline" />
       </Route>

@@ -712,10 +712,11 @@ def get_employer_document_file(
 @router.get("/activity")
 def get_activity(
     job_key: Optional[str] = Query(default=None, max_length=160),
+    kind: Optional[str] = Query(default=None, max_length=64),
     user: dict = Depends(_require_user),
     db: Session = Depends(get_db),
 ):
-    return {"events": list_activity(db, user, job_key)}
+    return {"events": list_activity(db, user, job_key, kind)}
 
 
 @router.post("/activity")
