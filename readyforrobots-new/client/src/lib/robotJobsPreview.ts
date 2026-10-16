@@ -5,6 +5,7 @@
  * so the board is readable without submitting a robot URL.
  */
 import { getPublicReadApiBase, liveFetchInit } from "@/lib/apiBase";
+import { exampleEmployerLabel } from "@/lib/exampleEmployer";
 import tapeJson from "@/lib/market_tape_jobs.json";
 import { JOB_CARD_EXAMPLE_LABEL } from "@/lib/robotJobCard";
 
@@ -25,6 +26,7 @@ type TapeRow = {
   key?: string;
   title?: string;
   industry?: string;
+  path?: string;
 };
 
 function isJsonContentType(value: string | null): boolean {
@@ -57,7 +59,8 @@ export function previewJobsFromTape(limit = 3): PreviewJob[] {
     const title = String(raw.title || "").trim();
     const industry = String(raw.industry || "").trim();
     if (!key || !title || !industry) continue;
-    const [employer, ...place] = industry.split("·").map(part => part.trim());
+    const place = industry.split("·").slice(1).map(part => part.trim());
+    const employer = exampleEmployerLabel(industry, title, raw.path);
     if (!employer) continue;
     out.push({
       job_key: key,

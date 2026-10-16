@@ -24,6 +24,7 @@ from app.services.daily_jobs_report import (
     select_daily_report_rows,
 )
 from app.services.job_card_provenance import (
+    example_employer_label,
     is_example_job,
     is_robot_maker_employer,
     job_source_url,
@@ -54,9 +55,16 @@ def _public_job(row: Any, rank: int) -> dict[str, Any]:
         if contact == CONTACT_HUNTER_MISS:
             contact = CONTACT_EMPTY
     
+    employer = str(data.get("employer") or "").strip()
+    if is_example_job(data):
+        employer = example_employer_label(
+            data.get("industry"),
+            employer,
+            data.get("job_type") or data.get("title"),
+        )
     return {
         "job_key": data.get("job_key") or "",
-        "employer": data.get("employer") or "",
+        "employer": employer,
         "workplace": data.get("locality") or "",
         "work": data.get("job_type") or data.get("title") or "",
         "description": data.get("description") or "",
@@ -80,6 +88,12 @@ def corpus_preview_jobs(limit: int) -> list[dict[str, Any]]:
         if not isinstance(raw, dict):
             continue
         employer = str(raw.get("company_name") or "").strip()
+        shown_employer = example_employer_label(
+            raw.get("industry"),
+            employer,
+            raw.get("title"),
+            raw.get("path"),
+        )
         locality = str(raw.get("locality") or "").strip()
         title = str(raw.get("title") or "").strip()
         key = str(raw.get("job_key") or "").strip()
@@ -94,7 +108,7 @@ def corpus_preview_jobs(limit: int) -> list[dict[str, Any]]:
         out.append(
             {
                 "job_key": key,
-                "employer": employer,
+                "employer": shown_employer,
                 "workplace": locality,
                 "work": title,
                 "description": "",
@@ -116,8 +130,11 @@ def get_robot_jobs_preview(
     db: Session = Depends(get_db),
 ) -> dict[str, Any]:
     rows = select_daily_report_rows(db, limit=50)
-    jobs = [_public_job(row, rank) for rank, row in enumerate(rows, start=1)]
-    jobs = [j for j in jobs if not is_robot_maker_employer({"company_name": j["employer"]})][:limit]
+    rows = [
+        row for row in rows
+        if not is_robot_maker_employer({"company_name": getattr(row, "company_name", "")})
+    ]
+    jobs = [_public_job(row, rank) for rank, row in enumerate(rows, start=1)][:limit]
     source = "live"
     if not jobs:
         jobs = corpus_preview_jobs(limit)

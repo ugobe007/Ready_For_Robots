@@ -106,6 +106,31 @@ def test_crm_never_reads_or_sends_to_minted_mailbox():
     assert contacts == []
 
 
+def test_example_cards_name_the_kind_of_organization():
+    from app.services.job_card_provenance import public_employer_name
+
+    assert public_employer_name({
+        "company_name": "Harris Health — LBJ Hospital",
+        "industry": "hospital",
+        "title": "Scrub hospital corridors",
+    }) == "Hospital system"
+    assert public_employer_name({
+        "company_name": "Mall of America",
+        "industry": "mall",
+        "title": "Scrub mall common areas",
+    }) == "Regional mall operator"
+    assert public_employer_name({
+        "company_name": "CBRE",
+        "industry": "Facilities",
+        "title": "Clean office-building restrooms",
+    }) == "Facilities services company"
+    assert public_employer_name({
+        "company_name": "Harris Health — LBJ Hospital",
+        "industry": "hospital",
+        "source_url": "https://example.com/buyer",
+    }) == "Harris Health — LBJ Hospital"
+
+
 def test_home_preview_fallback_rows_are_examples():
     rows = corpus_preview_jobs(8)
     assert rows

@@ -24,7 +24,12 @@ from pathlib import Path
 from typing import Any, Optional
 
 from app.services import robot_ontology
-from app.services.job_card_provenance import buyer_rows, job_source_url, public_employer_email
+from app.services.job_card_provenance import (
+    buyer_rows,
+    example_employer_label,
+    job_source_url,
+    public_employer_email,
+)
 from app.services.robot_capability_derive import (
     DerivedCapability,
     derive_capabilities,
@@ -273,7 +278,11 @@ class JobMatchCard:
             "title": self.title,
             "industry": self.industry,
             "path": self.path,
-            "company_name": self.company_name,
+            "company_name": (
+                self.company_name
+                if self.source_url
+                else example_employer_label(self.industry, self.company_name, self.title, self.path)
+            ),
             "locality": self.locality,
             "tape_family": self.tape_family,
             "verdict": self.verdict,

@@ -66,7 +66,8 @@ def test_preview_keeps_named_employers_drops_boards(db_session):
     jobs = [_public_job(row, i) for i, row in enumerate(rows, start=1)]
     assert len(jobs) == 1
     job = jobs[0]
-    assert job["employer"] == "Rochester Regional Health"
+    assert job["employer"] == "Hospital system"
+    assert "Rochester Regional Health" not in job["employer"]
     assert job["workplace"] == "Rochester, NY"
     assert "Pharmacy" in job["description"] or "delivery" in job["work"].lower()
     assert "operations@" not in (job["contact"] or "").lower()

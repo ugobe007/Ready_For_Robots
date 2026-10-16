@@ -105,8 +105,9 @@ def test_adam_is_drink_work_only():
     industries = _industries(payload["jobs"])
     assert "airport" not in industries
     assert "hospital" not in industries
-    assert any(job["company_name"] == "Starbucks" for job in payload["jobs"])
-    assert any(job["company_name"] == "Hyatt Hotels" for job in payload["jobs"])
+    assert any(job["company_name"] == "Cafe operator" for job in payload["jobs"])
+    assert any(job["company_name"] == "Hotel operator" for job in payload["jobs"])
+    assert all(job["company_name"] not in {"Starbucks", "Hyatt Hotels"} for job in payload["jobs"])
 
 
 def test_dust_e_s_is_cleaning_not_adam():
