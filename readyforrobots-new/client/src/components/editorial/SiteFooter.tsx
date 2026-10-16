@@ -11,7 +11,7 @@ export function SiteFooter() {
     <footer className="rfr-footer">
       <div className="rfr-footer-inner">
         <a className="rfr-wordmark" href="/" aria-label="Ready For Robots">
-          READY<span className="rfr-wordmark-for">FOR</span>ROBOTS
+          <span>READY<span className="rfr-wordmark-for">FOR</span>ROBOTS</span>
         </a>
         <nav aria-label="Footer">
           {FOOTER_LINKS.map((link) => (

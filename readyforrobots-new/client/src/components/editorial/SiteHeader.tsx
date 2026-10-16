@@ -34,7 +34,7 @@ export function SiteHeader({
       <div className="rfr-header-inner">
         <a className="rfr-wordmark" href="/" aria-label="Ready For Robots">
           <img src="/branding/rfr-icon-light.svg" alt="" width="22" height="22" />
-          READY<span className="rfr-wordmark-for">FOR</span>ROBOTS
+          <span>READY<span className="rfr-wordmark-for">FOR</span>ROBOTS</span>
         </a>
         <nav className="rfr-nav" aria-label="Site">
           {links.map((link) => (
