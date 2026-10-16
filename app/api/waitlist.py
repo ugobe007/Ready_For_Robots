@@ -26,6 +26,7 @@ class FoundingCustomerIn(BaseModel):
     email: str = Field(..., min_length=3, max_length=320)
     company: str = Field(..., min_length=1, max_length=240)
     name: Optional[str] = Field(None, max_length=200)
+    robot_page: Optional[str] = Field(None, max_length=500)
 
 
 @router.post("")
@@ -69,7 +70,16 @@ def create_waitlist_signup(body: WaitlistSignupIn, db: Session = Depends(get_db)
     }
 
 
-def _notify_founding_customer(*, email: str, company: str, name: Optional[str]) -> bool:
+def _founding_use_case(robot_page: Optional[str]) -> str:
+    page = (robot_page or "").strip()
+    if page:
+        return f"Founding customer. Robot page: {page}"[:2000]
+    return "Founding customer"
+
+
+def _notify_founding_customer(
+    *, email: str, company: str, name: Optional[str], robot_page: Optional[str] = None
+) -> bool:
     admin_email = get_phelan_review_email()
     if not admin_email:
         return False
@@ -81,8 +91,9 @@ def _notify_founding_customer(*, email: str, company: str, name: Optional[str]) 
 Email: {email}
 Company: {company}
 Name: {name or "(not provided)"}
+Robot page: {robot_page or "(not provided)"}
 
-Follow up to discuss Premium workspace and founding terms.
+Follow up on founding early access.
 """
     try:
         send_email_via_resend(
@@ -113,7 +124,7 @@ def create_founding_customer(body: FoundingCustomerIn, db: Session = Depends(get
         db.add(row)
     row.name = body.name or row.name or None
     row.company = company or row.company or None
-    row.use_case = row.use_case or "Founding customer — Premium workspace"
+    row.use_case = _founding_use_case(body.robot_page)
     row.source = "founding_customer"
     try:
         db.commit()
@@ -124,12 +135,14 @@ def create_founding_customer(body: FoundingCustomerIn, db: Session = Depends(get
             raise HTTPException(status_code=409, detail="Signup conflict, please retry")
         row.name = body.name or row.name or None
         row.company = company or row.company or None
-        row.use_case = row.use_case or "Founding customer — Premium workspace"
+        row.use_case = _founding_use_case(body.robot_page)
         row.source = "founding_customer"
         db.commit()
     db.refresh(row)
 
-    notified = _notify_founding_customer(email=email, company=company, name=body.name)
+    notified = _notify_founding_customer(
+        email=email, company=company, name=body.name, robot_page=body.robot_page
+    )
     return {
         "ok": True,
         "notified": notified,

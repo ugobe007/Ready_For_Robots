@@ -28,6 +28,7 @@ export function SiteHeader({
   ctaHref = "/pricing",
 }: SiteHeaderProps) {
   const links = signedIn ? SIGNED_IN_LINKS : linkOverride ?? PUBLIC_LINKS;
+  const path = typeof window !== "undefined" ? window.location.pathname : "";
   return (
     <header className="rfr-header">
       <div className="rfr-header-inner">
@@ -36,7 +37,12 @@ export function SiteHeader({
         </a>
         <nav className="rfr-nav" aria-label="Site">
           {links.map((link) => (
-            <a key={link.label} href={link.href}>
+            <a
+              key={link.label}
+              href={link.href}
+              aria-current={link.href === path ? "page" : undefined}
+              className={link.href === path ? "rfr-nav-current" : undefined}
+            >
               {link.label}
             </a>
           ))}
