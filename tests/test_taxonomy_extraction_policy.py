@@ -118,8 +118,7 @@ def test_prompt_carries_definition_version_and_limits(monkeypatch):
     result = te.extract_robot_taxonomy("https://acme.example", PAGE)
 
     prompt = captured["messages"][0]["content"]
-    assert "PRIMARY CLASS DEFINITION:" in prompt
-    assert te.load_taxonomy()["primary_class"]["_definition"] in prompt
+    assert "PRIMARY CLASS DEFINITION:" not in prompt
     assert "INDUSTRY DEFINITION:" in prompt
     assert "organization that buys and operates the robot" in prompt
     assert "STEP 1 - PAGE TYPE" in prompt and "ONE contiguous passage copied exactly" in prompt

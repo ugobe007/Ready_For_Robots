@@ -11,7 +11,7 @@ An industry is the industry of the organization that **buys and operates** the r
 
 Source of truth: `industries._definition` in `tests/fixtures/taxonomy.v1.json`. The extractor puts that text into the prompt verbatim. Keys starting with `_` are documentation and never become enum values.
 
-`primary_class._definition` (taxonomy v1.4, approved by Bob) is copied the same way, under PRIMARY CLASS DEFINITION. Prompt stays `v6`. The taxonomy version in the cache key is what invalidates saved rows.
+Primary class is not chosen by the model. After the facts are checked, `assign_class` in `class_rules.py` sets it from `docs/robot_class_rules.md`. The model's guess is kept as `model_class_suggestion`. Rule 21 leaves the class empty and sets `needs_review`.
 
 ### 1a. Industry descriptions in the prompt (prompt `v6`)
 

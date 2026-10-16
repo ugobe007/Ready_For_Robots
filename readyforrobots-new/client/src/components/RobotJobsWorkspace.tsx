@@ -196,6 +196,7 @@ type RobotAnalysis = {
   previewImageUrl?: string | null;
   lookupGrain?: "robot_type" | "product";
   robotClass?: string | null;
+  needsReview?: boolean;
 };
 
 type ZeroReason =
@@ -422,9 +423,11 @@ function searchToAnalysis(res: RobotJobSearchResult): RobotAnalysis {
     classOptions: res.class_options || [],
     previewImageUrl: res.preview_image_url ?? null,
     lookupGrain: "product",
-    robotClass:
-      configurationClassForLookup(res.robot_class) ||
-      configurationClassForLookup(profile?.selected_product?.display_class),
+    needsReview: Boolean(res.needs_review),
+    robotClass: res.needs_review
+      ? null
+      : configurationClassForLookup(res.robot_class) ||
+        configurationClassForLookup(profile?.selected_product?.display_class),
   };
 }
 
@@ -3600,6 +3603,11 @@ function JobsPanel({
           shows that employer is moving to automate the work.
         </p>
       </div>
+      {analysis.needsReview ? (
+        <p className="mt-3 font-mono text-[11px] font-bold uppercase tracking-[0.16em] text-amber-300">
+          Needs review. No class assigned.
+        </p>
+      ) : null}
       {rawBaseJobs.length > 0 && (
         <p className="mt-2 text-base leading-relaxed text-slate-300">
           {jobsListHint({

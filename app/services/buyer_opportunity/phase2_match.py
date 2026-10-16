@@ -195,6 +195,20 @@ def classification_is_clean(product: dict[str, Any] | None) -> bool:
     return bool(fact_values(product.get("industries")))
 
 
+def facts_ready_for_class(product: dict[str, Any] | None) -> bool:
+    """Form, function, and industries are present. Class may still be missing."""
+    if not isinstance(product, dict):
+        return False
+    offering = fact_value(product.get("offering_type"))
+    if offering is not None and offering not in _ROBOT_OFFERINGS:
+        return False
+    if not fact_value(product.get("form")):
+        return False
+    if not fact_value(product.get("primary_function")):
+        return False
+    return bool(fact_values(product.get("industries")))
+
+
 def _tokens(value: str) -> list[str]:
     return [part for part in re.split(r"[^a-z0-9]+", (value or "").lower()) if part]
 
@@ -528,6 +542,7 @@ def classified_match_payload(
         "products": [_public_product(product)],
         "needs_product_choice": False,
         "needs_class_choice": False,
+        "needs_review": bool(product.get("needs_review")),
         "class_options": [],
         "matcher": "buyer_opportunities_v1",
         "zero_reason": None if jobs else "corpus_gap",
@@ -644,6 +659,9 @@ def product_from_saved_row(row: Any) -> dict[str, Any]:
                 plain = []
         industries = [{"value": value} for value in plain if value]
     product["industries"] = industries
+    for key in ("model_class_suggestion", "class_rule_id", "class_rule_reason", "needs_review"):
+        if key in evidence:
+            product[key] = evidence[key]
     return product
 
 
@@ -783,6 +801,25 @@ def try_phase2_search(
             return catalog_payload(url, linked)
         return unrecognized_payload(url, display_name=hint) if slug else None
     product = pick_product_record(extraction, url, product_name)
+    if product is not None and product.get("needs_review") and facts_ready_for_class(product):
+        company = fact_value(product.get("company"))
+        payload = classified_match_payload(product, url=url, company_name=company)
+        payload["robot_class"] = None
+        payload["needs_review"] = True
+        payload["needs_class_choice"] = False
+        for row in payload.get("products") or []:
+            if isinstance(row, dict):
+                row["display_class"] = None
+                row["robot_class"] = None
+        selected = (payload.get("profile") or {}).get("selected_product")
+        if isinstance(selected, dict):
+            selected["display_class"] = None
+        payload["classified_product"] = {
+            "product": product,
+            "metadata": (extraction or {}).get("extraction_metadata") or {},
+            "source_url": url,
+        }
+        return payload
     if product is None or not classification_is_clean(product):
         # A named product page stays empty. A homepage that did not classify
         # falls through to the old flow. A clean sibling on the same page is
@@ -809,7 +846,17 @@ def persist_classified_product(db: Any, record: dict[str, Any]) -> None:
     meta = record.get("metadata") or {}
     evidence = {
         field: product.get(field)
-        for field in ("offering_type", "form", "primary_class", "primary_function", "industries")
+        for field in (
+            "offering_type",
+            "form",
+            "primary_class",
+            "primary_function",
+            "industries",
+            "model_class_suggestion",
+            "class_rule_id",
+            "class_rule_reason",
+            "needs_review",
+        )
     }
     db.execute(
         insert(rfr_robot_products).values(

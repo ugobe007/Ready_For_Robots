@@ -197,7 +197,7 @@ def _search_locus_page(monkeypatch, products):
         return {
             "page": {"page_type": "manufacturer_product_page", "produces_records": True},
             "products": products,
-            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.4"},
+            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.3"},
         }
 
     return try_phase2_search(
@@ -217,6 +217,43 @@ def _not_a_sibling(payload) -> None:
     ).lower()
     assert "vector" not in names
     assert "array" not in names
+
+
+def test_rule_21_search_shows_no_class_and_needs_review(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    product = _product(
+        "Survey Bot",
+        form="amr_mobile_robot",
+        function="general_purpose",
+        industries=["hotel"],
+        primary_class="service_robot",
+    )
+    product["primary_class"] = None
+    product["needs_review"] = True
+    product["class_rule_id"] = "21"
+    product["model_class_suggestion"] = "service_robot"
+    page = SimpleNamespace(text="Survey Bot hotel", links=[])
+
+    def extract(url, text, hint):
+        return {
+            "page": {"page_type": "manufacturer_product_page", "produces_records": True},
+            "products": [product],
+            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.3"},
+        }
+
+    out = try_phase2_search(
+        "https://example.test/survey-bot",
+        fetch=lambda url: page,
+        extract=extract,
+    )
+    assert out["robot_class"] is None
+    assert out["needs_review"] is True
+    assert out["needs_class_choice"] is False
+    assert out["products"][0]["display_class"] is None
+    assert out["products"][0]["robot_class"] is None
+    assert "model_class_suggestion" not in out["products"][0]
+    assert out["profile"]["selected_product"]["display_class"] is None
+    assert out["classified_product"]["product"]["model_class_suggestion"] == "service_robot"
 
 
 def test_locus_origin_page_missing_offering_type_is_not_unrecognized(monkeypatch):
@@ -334,7 +371,7 @@ def test_phase2_classifies_the_submitted_page_and_skips_siblings(monkeypatch):
         return {
             "page": {"produces_records": True},
             "products": [ADAM, DUST],
-            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.4"},
+            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.3"},
         }
 
     out = try_phase2_search(

@@ -20,6 +20,7 @@ export type RobotJobSearchResult = Omit<RobotJobMatchResult, "products"> & {
     display_class?: string | null;
     robot_class?: string | null;
   }>;
+  needs_review?: boolean;
 };
 
 export async function fetchRobotJobSearch(opts: {
