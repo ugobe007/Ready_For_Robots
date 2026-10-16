@@ -29,7 +29,8 @@ export function UrlInput({
         <span className="rfr-url-row">
           <input
             id={id}
-            type="url"
+            type="text"
+            inputMode="url"
             name="robot-url"
             value={value}
             placeholder={placeholder}
