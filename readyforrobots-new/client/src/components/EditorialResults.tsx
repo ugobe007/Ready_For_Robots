@@ -13,6 +13,7 @@ import {
 import { buyerSearchView } from "@/lib/buyerSearch";
 import { jobsFindHref } from "@/lib/jobsLanding";
 import { fetchRobotJobSearch } from "@/lib/robotJobSearch";
+import { taxonomyLabel } from "@/lib/taxonomyLabels";
 
 const SEARCH_TIMEOUT_MS = 45_000;
 
@@ -47,7 +48,7 @@ type BuyerPayload = {
   state?: string;
   robot_name?: string;
   company_name?: string | null;
-  capabilities?: { label?: string }[];
+  capabilities?: { key?: string; label?: string }[];
   jobs?: BuyerJob[];
   products?: BuyerProduct[];
   needs_product_choice?: boolean;
@@ -70,8 +71,8 @@ function hostLabel(url: string): string {
 }
 
 function mainWork(payload: BuyerPayload): string {
-  const label = payload.capabilities?.find((item) => item.label?.trim())?.label?.trim();
-  return label || "";
+  const cap = payload.capabilities?.find((item) => (item.key || item.label || "").trim());
+  return taxonomyLabel(cap?.key || cap?.label);
 }
 
 function TierMark({ tier }: { tier: string }) {
@@ -81,12 +82,13 @@ function TierMark({ tier }: { tier: string }) {
 function BuyerRows({ payload }: { payload: BuyerPayload }) {
   const jobs = payload.jobs || [];
   const industries = useMemo(() => {
-    const seen = new Set<string>();
+    const seen = new Map<string, string>();
     for (const job of jobs) {
-      const industry = (job.industry || "").trim();
-      if (industry) seen.add(industry);
+      const raw = (job.industry || "").trim();
+      const label = taxonomyLabel(raw);
+      if (raw && label) seen.set(raw, label);
     }
-    return [...seen];
+    return [...seen.entries()];
   }, [jobs]);
   const [industry, setIndustry] = useState("all");
   const shown = jobs.filter(
@@ -143,14 +145,14 @@ function BuyerRows({ payload }: { payload: BuyerPayload }) {
               <button type="button" aria-pressed={industry === "all"} onClick={() => setIndustry("all")}>
                 All matching
               </button>
-              {industries.map((item) => (
+              {industries.map(([raw, label]) => (
                 <button
-                  key={item}
+                  key={raw}
                   type="button"
-                  aria-pressed={industry === item}
-                  onClick={() => setIndustry(item)}
+                  aria-pressed={industry === raw}
+                  onClick={() => setIndustry(raw)}
                 >
-                  {item}
+                  {label}
                 </button>
               ))}
             </div>
@@ -168,7 +170,7 @@ function BuyerRows({ payload }: { payload: BuyerPayload }) {
             shown.map((job, index) => {
               const tier = (job.top_tier || "").trim();
               const reasons = (job.reasons || []).filter((reason) => reason.title?.trim()).slice(0, 3);
-              const place = [job.locality, job.industry].filter(Boolean).join(" · ");
+              const place = [job.locality, taxonomyLabel(job.industry)].filter(Boolean).join(" · ");
               return (
                 <article key={job.job_key || `${job.title}-${index}`} className="rfr-result-row">
                   {tier ? <TierMark tier={tier} /> : null}
@@ -208,7 +210,7 @@ function BuyerRows({ payload }: { payload: BuyerPayload }) {
             <span>HOW WE MATCHED {(payload.robot_name || "").toUpperCase()}</span>
             {work ? <p>Main work on this page: {work}.</p> : null}
             {industries.length > 0 ? (
-              <p>Buyers in this list are in {industries.join(", ")}.</p>
+              <p>Buyers in this list are in {industries.map(([, label]) => label).join(", ")}.</p>
             ) : null}
           </aside>
         ) : null}
@@ -225,8 +227,8 @@ function Picker({
   onSearch: (source: string, picks: BuyerPick[]) => void;
 }) {
   const products = (payload.products || []).filter((item) => item.name);
-  const showClass = products.some((item) => (item.form || item.display_class || "").trim());
-  const showAbout = products.some((item) => (item.description || "").trim());
+  const showClass = products.some((item) => taxonomyLabel(item.form || item.display_class));
+  const showAbout = products.some((item) => taxonomyLabel(item.description));
   const submitted = payload.source_url || "";
   const picks = products.map((product) => ({
     name: product.name || "",
@@ -278,8 +280,8 @@ function Picker({
                 onChange={() => toggle(name)}
               />
               <label htmlFor={id}>{name}</label>
-              {showClass ? <span>{product.form || product.display_class || ""}</span> : null}
-              {showAbout ? <span>{product.description || ""}</span> : null}
+              {showClass ? <span>{taxonomyLabel(product.form || product.display_class)}</span> : null}
+              {showAbout ? <span>{taxonomyLabel(product.description)}</span> : null}
               <a href={href}>FIND BUYERS →</a>
             </div>
           );
