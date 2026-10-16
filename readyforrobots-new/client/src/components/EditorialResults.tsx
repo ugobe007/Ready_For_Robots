@@ -333,7 +333,7 @@ function ClassChoice({ payload, href }: { payload: BuyerPayload; href: (classId:
       <ul>
         {classOptionsOrDefault(payload.class_options).map((option) => (
           <li key={option.id}>
-            <a href={href(option.id)}>{option.label}</a>
+            <a href={href(option.id)}>{taxonomyLabel(option.id) || option.label}</a>
           </li>
         ))}
       </ul>
