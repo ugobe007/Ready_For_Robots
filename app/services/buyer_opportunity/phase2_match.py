@@ -171,11 +171,19 @@ def fact_values(facts: Iterable[Any] | None) -> list[str]:
     return out
 
 
+_ROBOT_OFFERINGS = frozenset({"robot_product", "robotics_as_a_service"})
+
+
 def classification_is_clean(product: dict[str, Any] | None) -> bool:
-    """A page classifies cleanly when the match fields are present and supported."""
+    """A page classifies cleanly when the match fields are present and supported.
+
+    offering_type may be missing. A value that is present and is not a robot
+    offering still fails.
+    """
     if not isinstance(product, dict):
         return False
-    if fact_value(product.get("offering_type")) not in {"robot_product", "robotics_as_a_service"}:
+    offering = fact_value(product.get("offering_type"))
+    if offering is not None and offering not in _ROBOT_OFFERINGS:
         return False
     if not fact_value(product.get("form")):
         return False
@@ -528,8 +536,15 @@ def classified_match_payload(
     }
 
 
-def unrecognized_payload(url: str, *, company_name: str | None = None) -> dict[str, Any]:
-    label = product_name_from_slug(product_slug(url)) or "This robot"
+def unrecognized_payload(
+    url: str,
+    *,
+    company_name: str | None = None,
+    display_name: str | None = None,
+) -> dict[str, Any]:
+    # The catalog row's name, when the caller has one. The URL slug is all caps
+    # ("LOCUS ORIGIN") and was showing beside the catalog name.
+    label = (display_name or "").strip() or product_name_from_slug(product_slug(url)) or "This robot"
     return {
         "state": "thin_corpus",
         "robot_name": label,
@@ -616,22 +631,23 @@ def try_phase2_search(
         return catalog_payload(url, discovered, company_name=company)
 
     if not text:
-        return unrecognized_payload(url) if slug else None
+        return unrecognized_payload(url, display_name=hint) if slug else None
     try:
         extraction = extract(url, text, product_name)
     except Exception:
-        return unrecognized_payload(url)
+        return unrecognized_payload(url, display_name=hint)
     page_record = (extraction or {}).get("page") or {}
     if page_record and page_record.get("produces_records") is False:
         linked = discover_product_pages(url, links)
         if linked:
             return catalog_payload(url, linked)
-        return unrecognized_payload(url) if slug else None
+        return unrecognized_payload(url, display_name=hint) if slug else None
     product = pick_product_record(extraction, url, product_name)
     if product is None or not classification_is_clean(product):
         # A named product page stays empty. A homepage that did not classify
-        # falls through to the old flow.
-        return unrecognized_payload(url) if slug else None
+        # falls through to the old flow. A clean sibling on the same page is
+        # not a substitute.
+        return unrecognized_payload(url, display_name=hint) if slug else None
     company = fact_value(product.get("company"))
     payload = classified_match_payload(product, url=url, company_name=company)
     payload["classified_product"] = {

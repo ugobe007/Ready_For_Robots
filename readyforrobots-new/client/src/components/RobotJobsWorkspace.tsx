@@ -407,7 +407,10 @@ function searchToAnalysis(res: RobotJobSearchResult): RobotAnalysis {
       res.company_name ||
       "Your robot",
     companyName:
-      profile?.company?.name || res.company_name || res.robot_name || "",
+      profile?.company?.name ||
+      res.company_name ||
+      (res.zero_reason === "unrecognized_product" ? "" : res.robot_name) ||
+      "",
     tier: (profile?.profile_confidence as "A" | "B" | "C") || "C",
     profile,
     matched: true,
@@ -2744,6 +2747,10 @@ function PortfolioRail({
 /* Left rail — CONTEXT (identity + nav + new robot)                    */
 /* ================================================================== */
 
+function sameRobotLabel(company: string, product: string): boolean {
+  return company.trim().toLowerCase() === product.trim().toLowerCase();
+}
+
 function ContextRail({
   company,
   identityVerified,
@@ -2773,7 +2780,7 @@ function ContextRail({
     <div>
       <p className={eyebrow}>Your robot</p>
       <h2 className={FIND_JOBS_HEADLINE_CLASS}>{product}</h2>
-      {company && company !== product ? (
+      {company && !sameRobotLabel(company, product) ? (
         <p className="mt-0.5 text-sm text-slate-400">{company}</p>
       ) : null}
       {!identityVerified ? (
@@ -3212,7 +3219,7 @@ function ReviewPanel({
       <div className="mt-1 flex flex-wrap items-baseline gap-x-3">
         <h2 className={FIND_JOBS_HEADLINE_CLASS}>{analysis.productName}</h2>
         {companyIdentity(analysis).label &&
-        companyIdentity(analysis).label !== analysis.productName ? (
+        !sameRobotLabel(companyIdentity(analysis).label, analysis.productName) ? (
           <span className="text-lg text-slate-400">
             {companyIdentity(analysis).label}
           </span>
