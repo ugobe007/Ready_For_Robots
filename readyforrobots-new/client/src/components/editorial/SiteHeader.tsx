@@ -9,8 +9,8 @@ type SiteHeaderProps = {
 
 const PUBLIC_LINKS = [
   { label: "Find buyers", href: "/" },
-  { label: "How it works", href: "/how-it-works" },
-  { label: "Explore", href: "/explore" },
+  { label: "How it works", href: "/#how" },
+  { label: "Explore", href: "/#explore" },
   { label: "Pricing", href: "/pricing" },
   { label: "Sign in", href: "/login" },
 ];
