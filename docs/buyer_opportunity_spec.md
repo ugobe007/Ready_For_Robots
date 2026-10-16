@@ -21,6 +21,8 @@ This document is the source of truth for what the agent builds next. If code, ol
 
 In code and files: entries describing specific items are **products** (e.g., the RichTech set uses `products`); the benchmark runner reads `products` and still accepts the older `robots` key.
 
+**Addendum:** [Robot profile lifecycle](robot_profile_lifecycle.md). It extends this spec. Where they disagree, this document wins until Bob approves a change.
+
 ## 1. What we are building
 
 Ready For Robots finds companies that are ready to buy or pilot robots, and tells robot sellers **which company, which workflow, and why now**.
