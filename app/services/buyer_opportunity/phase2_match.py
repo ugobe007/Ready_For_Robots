@@ -7,6 +7,7 @@ and industries overlap the job, then passed through the form-fit rule.
 """
 from __future__ import annotations
 
+import json
 import os
 import re
 from typing import Any, Callable, Iterable
@@ -588,12 +589,75 @@ def catalog_payload(url: str, products: list[dict[str, str]], *, company_name: s
     }
 
 
+def _fact_or_plain(raw: Any, plain: Any) -> Any:
+    if fact_value(raw):
+        return raw
+    text = str(plain).strip() if plain not in (None, "") else ""
+    if text:
+        return {"value": text}
+    return raw
+
+
+def product_from_saved_row(row: Any) -> dict[str, Any]:
+    """Rebuild the classifier product dict from one rfr_robot_products row."""
+    evidence = row["evidence"] if "evidence" in row.keys() else None
+    if isinstance(evidence, str):
+        try:
+            evidence = json.loads(evidence)
+        except json.JSONDecodeError:
+            evidence = {}
+    if not isinstance(evidence, dict):
+        evidence = {}
+    product: dict[str, Any] = {"product_name": {"value": row["product_name"]}}
+    company = row["company_name"]
+    if company:
+        product["company"] = {"value": company}
+    for field in ("offering_type", "form", "primary_class", "primary_function"):
+        product[field] = _fact_or_plain(evidence.get(field), row[field])
+    industries = evidence.get("industries")
+    if not fact_values(industries if isinstance(industries, list) else None):
+        plain = row["industries"] or []
+        if isinstance(plain, str):
+            try:
+                plain = json.loads(plain)
+            except json.JSONDecodeError:
+                plain = []
+        industries = [{"value": value} for value in plain if value]
+    product["industries"] = industries
+    return product
+
+
+def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
+    """Newest clean row for this URL at the current prompt and taxonomy versions.
+
+    A row for another version, or a row that does not classify cleanly, is not a hit.
+    """
+    from sqlalchemy import desc, select
+
+    from app.services.buyer_opportunity.tables import rfr_robot_products
+    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+
+    rows = db.execute(
+        select(rfr_robot_products)
+        .where(rfr_robot_products.c.source_url == (url or "")[:2048])
+        .where(rfr_robot_products.c.prompt_version == str(PROMPT_VERSION)[:16])
+        .where(rfr_robot_products.c.taxonomy_version == str(get_taxonomy_version())[:16])
+        .order_by(desc(rfr_robot_products.c.id))
+    ).mappings()
+    for row in rows:
+        product = product_from_saved_row(row)
+        if classification_is_clean(product):
+            return product
+    return None
+
+
 def try_phase2_search(
     url: str,
     product_name: str | None = None,
     *,
     fetch: Callable[..., Any] | None = None,
     extract: Callable[..., Any] | None = None,
+    db: Any | None = None,
 ) -> dict[str, Any] | None:
     """Classify one submitted page. None lets the old flow run (flag off or fetch miss)."""
     if not buyer_opportunities_enabled():
@@ -606,6 +670,23 @@ def try_phase2_search(
         from app.services.robot_understanding_v1.taxonomy_extraction import extract_robot_taxonomy
 
         extract = extract_robot_taxonomy
+
+    if db is not None:
+        try:
+            saved = saved_clean_product(db, url)
+        except Exception:
+            saved = None
+            try:
+                db.rollback()
+            except Exception:
+                pass
+        else:
+            if saved is not None:
+                # Reuse the saved classification. Do not set classified_product:
+                # the API inserts a row whenever that key is present.
+                return classified_match_payload(
+                    saved, url=url, company_name=fact_value(saved.get("company"))
+                )
 
     try:
         page = fetch(url)
@@ -621,7 +702,7 @@ def try_phase2_search(
             (row for row in discovered if url_names_product(row["url"], hint)), None
         )
         if chosen:
-            return try_phase2_search(chosen["url"], hint, fetch=fetch, extract=extract)
+            return try_phase2_search(chosen["url"], hint, fetch=fetch, extract=extract, db=db)
     if not slug and discovered:
         # Homepage or catalog: one row per linked product, not the first robot's jobs.
         from app.services.vendor_robot_lookup import lookup_vendor_by_url
