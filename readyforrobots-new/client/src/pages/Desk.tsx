@@ -328,7 +328,7 @@ export default function Desk() {
 
   return (
     <div className="rfr-editorial rfr-desk">
-      <SiteHeader signedIn={Boolean(session)} initials={initials} />
+      <SiteHeader signedIn initials={initials} />
       <section className="rfr-desk-head">
         <div className="rfr-eyebrow">
           <span>My desk</span>

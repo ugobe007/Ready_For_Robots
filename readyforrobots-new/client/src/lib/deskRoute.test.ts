@@ -15,6 +15,7 @@ describe("editorial desk routes", () => {
       /path="\/integrations" component=\{HubSpotSettingsRedirect\}/
     );
     const desk = readFileSync(join(here, "../pages/Desk.tsx"), "utf8");
+    expect(desk).toMatch(/<SiteHeader signedIn /);
     expect(desk).toMatch(/Sample data/);
     expect(desk).toMatch(/fetchKeptJobs/);
     expect(desk).toMatch(/desk_stage/);
