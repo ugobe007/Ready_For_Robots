@@ -11,6 +11,7 @@ describe("buyer search screens", () => {
     expect(buyerSearchView({ state: "matches", jobs: [] })).toBe("results");
     expect(buyerSearchView({ state: "thin_corpus", zero_reason: "corpus_gap" })).toBe("results");
     expect(buyerSearchView({ state: "select_product", needs_product_choice: true })).toBe("picker");
+    expect(buyerSearchView({ state: "qualify_robot", needs_class_choice: true })).toBe("class");
     expect(buyerSearchView({ state: "thin_corpus", zero_reason: "unrecognized_product" })).toBe(
       "unrecognized"
     );
