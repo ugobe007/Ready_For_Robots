@@ -12,6 +12,8 @@ import {
 } from "@/components/editorial";
 import { buyerSearchView } from "@/lib/buyerSearch";
 import { jobsFindHref } from "@/lib/jobsLanding";
+import { classOptionsOrDefault } from "@/lib/robotClassOptions";
+import type { ClassOption } from "@/lib/robotJobMatch";
 import { fetchRobotJobSearch } from "@/lib/robotJobSearch";
 import { taxonomyLabel } from "@/lib/taxonomyLabels";
 
@@ -52,14 +54,28 @@ type BuyerPayload = {
   jobs?: BuyerJob[];
   products?: BuyerProduct[];
   needs_product_choice?: boolean;
+  needs_class_choice?: boolean;
+  class_options?: ClassOption[];
   zero_reason?: string | null;
   source_url?: string | null;
+};
+type StackEntry = {
+  key: string;
+  source: string;
+  pick: BuyerPick;
+  result?: BuyerPayload;
+  error?: string;
 };
 
 function pickHref(source: string, pick: BuyerPick): string {
   if (pick.url) return jobsFindHref(pick.url);
   if (!source || !pick.name) return jobsFindHref();
   return `${jobsFindHref(source)}&product=${encodeURIComponent(pick.name)}`;
+}
+
+function classHref(source: string, product: string, classId: string): string {
+  const base = product ? pickHref(source, { name: product, url: "" }) : jobsFindHref(source);
+  return `${base}&class=${encodeURIComponent(classId)}`;
 }
 
 function hostLabel(url: string): string {
@@ -308,6 +324,23 @@ function Picker({
   );
 }
 
+function ClassChoice({ payload, href }: { payload: BuyerPayload; href: (classId: string) => string }) {
+  const name = payload.robot_name || "this robot";
+  return (
+    <section className="rfr-home-wrap rfr-unrecognized">
+      <h1>What kind of robot is {name}?</h1>
+      <p>Pick its class and we will match buyers for that work.</p>
+      <ul>
+        {classOptionsOrDefault(payload.class_options).map((option) => (
+          <li key={option.id}>
+            <a href={href(option.id)}>{option.label}</a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
 function Unrecognized() {
   return (
     <section className="rfr-home-wrap rfr-unrecognized">
@@ -334,12 +367,13 @@ export default function EditorialResults() {
     return {
       url: (params.get("url") || "").trim(),
       product: (params.get("product") || "").trim(),
+      robotClass: (params.get("class") || "").trim(),
     };
   }, []);
   const initialUrl = initial.url;
   const [url, setUrl] = useState("");
   const [payload, setPayload] = useState<BuyerPayload | null>(null);
-  const [stack, setStack] = useState<BuyerPayload[] | null>(null);
+  const [stack, setStack] = useState<StackEntry[] | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(Boolean(initialUrl));
 
@@ -351,6 +385,7 @@ export default function EditorialResults() {
     fetchRobotJobSearch({
       url: initialUrl,
       product: initial.product || undefined,
+      assertedClass: initial.robotClass || undefined,
       lookupGrain: "product",
       signal: controller.signal,
       timeoutMs: SEARCH_TIMEOUT_MS,
@@ -365,7 +400,7 @@ export default function EditorialResults() {
         setLoading(false);
       });
     return () => controller.abort();
-  }, [initialUrl, initial.product]);
+  }, [initialUrl, initial.product, initial.robotClass]);
 
   function openSearch(next: string) {
     const trimmed = next.trim();
@@ -381,20 +416,31 @@ export default function EditorialResults() {
     setLoading(true);
     setError("");
     setStack(null);
-    Promise.all(
+    Promise.allSettled(
       picks.map((item) =>
         fetchRobotJobSearch({
           url: item.url || source,
           product: item.url ? undefined : item.name,
           lookupGrain: "product",
           timeoutMs: SEARCH_TIMEOUT_MS,
-        }).then((result) => result as BuyerPayload)
+        })
       )
     )
-      .then((found) => setStack(found))
-      .catch((err: unknown) => {
-        setError(err instanceof Error ? err.message : "Could not load buyers.");
-      })
+      .then((settled) =>
+        setStack(
+          settled.map((outcome, index) => ({
+            key: `${picks[index].url}|${picks[index].name}`,
+            source,
+            pick: picks[index],
+            ...(outcome.status === "fulfilled"
+              ? { result: outcome.value as BuyerPayload }
+              : {
+                  error:
+                    outcome.reason instanceof Error ? outcome.reason.message : "Could not load buyers.",
+                }),
+          }))
+        )
+      )
       .finally(() => setLoading(false));
   }
 
@@ -410,12 +456,25 @@ export default function EditorialResults() {
       </section>
     );
   } else if (stack) {
-    body = stack.map((item, index) => {
-      const view = buyerSearchView(item);
+    body = stack.map((entry) => {
+      const item = entry.result;
+      const view = item ? buyerSearchView(item) : null;
+      const product = entry.pick.url ? "" : entry.pick.name;
       return (
-        <div key={item.source_url || index}>
-          {view === "picker" ? (
+        <div key={entry.key}>
+          {!item ? (
+            <section className="rfr-home-wrap rfr-unrecognized">
+              <h1>Could not load buyers for {entry.pick.name}.</h1>
+              <p>{entry.error}</p>
+              <a href={pickHref(entry.source, entry.pick)}>Try again</a>
+            </section>
+          ) : view === "picker" ? (
             <Picker payload={item} onSearch={searchMany} />
+          ) : view === "class" ? (
+            <ClassChoice
+              payload={item}
+              href={(id) => classHref(entry.pick.url || entry.source, product, id)}
+            />
           ) : view === "unrecognized" ? (
             <Unrecognized />
           ) : (
@@ -433,6 +492,10 @@ export default function EditorialResults() {
     );
   } else if (buyerSearchView(payload) === "picker") {
     body = <Picker payload={payload} onSearch={searchMany} />;
+  } else if (buyerSearchView(payload) === "class") {
+    body = (
+      <ClassChoice payload={payload} href={(id) => classHref(initialUrl, initial.product, id)} />
+    );
   } else if (buyerSearchView(payload) === "unrecognized") {
     body = <Unrecognized />;
   } else {
