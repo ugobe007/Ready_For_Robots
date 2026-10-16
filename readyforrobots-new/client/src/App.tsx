@@ -172,7 +172,9 @@ function Router() {
         path="/readyforrobots/supply-pipeline"
         component={SupplyPipeline}
       />
-      <Route path="/dev/components" component={DevComponents} />
+      {import.meta.env.DEV ? (
+        <Route path="/dev/components" component={DevComponents} />
+      ) : null}
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>

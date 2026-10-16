@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import {
   ExampleBadge,
   Eyebrow,
@@ -10,9 +10,6 @@ import {
   TierLetter,
   UrlInput,
 } from "@/components/editorial";
-
-const FONT_HREF =
-  "https://fonts.googleapis.com/css2?family=Archivo:wght@800;900&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600&display=swap";
 
 const sheet: CSSProperties = {
   maxWidth: 1296,
@@ -42,17 +39,6 @@ function Caption({ children }: { children: string }) {
 
 export default function DevComponents() {
   const [url, setUrl] = useState("https://www.richtechrobotics.com/adam");
-
-  useEffect(() => {
-    const id = "rfr-editorial-fonts";
-    if (!document.getElementById(id)) {
-      const link = document.createElement("link");
-      link.id = id;
-      link.rel = "stylesheet";
-      link.href = FONT_HREF;
-      document.head.appendChild(link);
-    }
-  }, []);
 
   return (
     <div className="rfr-editorial" style={{ minHeight: "100vh" }}>
