@@ -33,3 +33,39 @@ export function useIsAdmin(): boolean {
 
   return isAdmin;
 }
+
+export type AdminAccess = "loading" | "admin" | "signin" | "denied";
+
+/** Resolves after auth and `/api/user/me`, so a route can wait before rendering. */
+export function useAdminAccess(): AdminAccess {
+  const { session, loading } = useAuth();
+  const [access, setAccess] = useState<AdminAccess>("loading");
+
+  useEffect(() => {
+    if (loading) return;
+    const token = session?.access_token;
+    if (!token) {
+      setAccess("signin");
+      return;
+    }
+    let cancelled = false;
+    setAccess("loading");
+    void fetch(
+      `${getApiBase()}/api/user/me`,
+      liveFetchInit({ headers: authHeader(token) })
+    )
+      .then(res => (res.ok ? res.json() : null))
+      .then((data: { is_admin?: boolean } | null) => {
+        if (!cancelled) setAccess(data?.is_admin ? "admin" : "denied");
+      })
+      .catch(() => {
+        if (!cancelled) setAccess("denied");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [loading, session?.access_token]);
+
+  if (loading) return "loading";
+  return access;
+}

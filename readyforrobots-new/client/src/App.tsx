@@ -13,6 +13,7 @@ import Compare from "./pages/Compare";
 import Signals from "./pages/Signals";
 import Intelligence from "./pages/Intelligence";
 import Newsletter from "./pages/Newsletter";
+import About from "./pages/About";
 import BillingSuccess from "./pages/BillingSuccess";
 import Pricing from "./pages/Pricing";
 import Login from "./pages/Login";
@@ -40,7 +41,7 @@ import EmployerDecision from "./pages/EmployerDecision";
 import DevComponents from "./pages/DevComponents";
 import OemHold from "./pages/OemHold";
 import ProposalOemReview from "./pages/ProposalOemReview";
-import Social from "./pages/Social";
+import SocialRoute from "./pages/SocialRoute";
 import Jobs from "./pages/Jobs";
 import ExperimentRedirect from "./pages/ExperimentRedirect";
 import Preview from "./pages/Preview";
@@ -76,6 +77,17 @@ function HubSpotSettingsRedirect() {
   return <Redirect to="/desk?settings=hubspot" />;
 }
 
+function devOnly(Page: () => JSX.Element) {
+  return function DevOnlyPage() {
+    if (!import.meta.env.DEV) return <NotFound />;
+    return <Page />;
+  };
+}
+
+const DevExperiment = devOnly(ExperimentRedirect);
+const DevIcons = devOnly(Icons);
+const DevIconReview = devOnly(IconReview);
+
 function Router() {
   return (
     <Switch>
@@ -94,10 +106,10 @@ function Router() {
       <Route path="/sales/samples" component={SalesSamples} />
       <Route path="/desk" component={Desk} />
       <Route path="/pipeline" component={DeskRedirect} />
-      <Route path="/about" component={Intelligence} />
+      <Route path="/about" component={About} />
       <Route path="/compare" component={Compare} />
       <Route path="/signals" component={Signals} />
-      <Route path="/intelligence" component={Newsletter} />
+      <Route path="/intelligence" component={Intelligence} />
       <Route path="/newsletter" component={Newsletter} />
       <Route path="/market-insights" component={Newsletter} />
       <Route path="/robot-ready" component={Robots} />
@@ -126,12 +138,12 @@ function Router() {
       <Route path="/find-robots" component={FindRobots} />
       <Route path="/pricing" component={Pricing} />
       <Route path="/billing/success" component={BillingSuccess} />
-      <Route path="/social" component={Social} />
+      <Route path="/social" component={SocialRoute} />
       <Route path="/jobs/:slug" component={Jobs} />
       <Route path="/jobs" component={JobsIndexRedirect} />
-      <Route path="/experiment" component={ExperimentRedirect} />
-      <Route path="/icons" component={Icons} />
-      <Route path="/icon-review" component={IconReview} />
+      <Route path="/experiment" component={DevExperiment} />
+      <Route path="/icons" component={DevIcons} />
+      <Route path="/icon-review" component={DevIconReview} />
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
       <Route path="/welcome" component={Welcome} />
