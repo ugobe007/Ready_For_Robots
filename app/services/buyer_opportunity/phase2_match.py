@@ -67,6 +67,9 @@ _FUNCTION_FAMILIES: dict[str, frozenset[str]] = {
     "delivery_transport": frozenset({"transport", "cart", "pallet_move", "pallet"}),
     "inspection": frozenset({"inspect", "shelf_scan"}),
     "security_patrol": frozenset({"inspect"}),
+    "construction_task": frozenset({"construction"}),
+    "agricultural_task": frozenset({"agriculture"}),
+    "machine_tending_assembly": frozenset({"machine_tending"}),
 }
 
 _HEALTHCARE_DELIVERY = frozenset({"clinical_delivery", "resident_services"})
@@ -124,6 +127,7 @@ _THEME_TOKENS = frozenset(
 
 # First match wins. Phrases are the bundled corpus's free-text industry field.
 _CORPUS_INDUSTRY_RULES: tuple[tuple[re.Pattern[str], frozenset[str]], ...] = (
+    (re.compile(r"surgery\s+center", re.I), frozenset({"surgery_center"})),
     (re.compile(r"senior|assisted living|skilled nursing|memory care", re.I), frozenset({"senior_living"})),
     (re.compile(r"hospital|clinic", re.I), frozenset({"hospital"})),
     (re.compile(r"healthcare", re.I), frozenset({"hospital"})),
@@ -138,7 +142,10 @@ _CORPUS_INDUSTRY_RULES: tuple[tuple[re.Pattern[str], frozenset[str]], ...] = (
     (re.compile(r"retail", re.I), frozenset({"retail_store"})),
     (re.compile(r"warehouse|\bdc\b|fulfillment|distribution", re.I), frozenset({"warehouse_distribution"})),
     (re.compile(r"\b3pl\b", re.I), frozenset({"3pl"})),
+    (re.compile(r"\bfactory\b", re.I), frozenset({"manufacturing"})),
     (re.compile(r"manufactur|machine shop|\bplant\b|\bcpg\b|industrial", re.I), frozenset({"manufacturing"})),
+    (re.compile(r"\bconstruction\b", re.I), frozenset({"construction"})),
+    (re.compile(r"\bagriculture\b", re.I), frozenset({"agriculture"})),
     (re.compile(r"dealership", re.I), frozenset({"automotive_dealership"})),
     (re.compile(r"auto parts", re.I), frozenset({"warehouse_distribution"})),
     (re.compile(r"office", re.I), frozenset({"office_building"})),

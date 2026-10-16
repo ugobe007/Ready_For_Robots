@@ -434,7 +434,7 @@
       "actions": [],
       "text": "load parts into cnc machine shop staging \u2192 spindle",
       "source": "tape",
-      "tape_family": "gripper",
+      "tape_family": "machine_tending",
       "pure_amr_tote": false,
       "unknowns": []
     },
@@ -486,7 +486,7 @@
       "actions": [],
       "text": "unload finished parts machine shop spindle \u2192 bin",
       "source": "tape",
-      "tape_family": "gripper",
+      "tape_family": "machine_tending",
       "pure_amr_tote": false,
       "unknowns": []
     },
@@ -908,7 +908,7 @@
     {
       "job_key": "manip_siemens_energy_charlotte_nc",
       "title": "Load and unload parts on CNC / process machines (material handling assist)",
-      "industry": "Charlotte, NC",
+      "industry": "Manufacturing",
       "path": "MACHINE \u2192 TENDING",
       "company_name": "Siemens Energy",
       "locality": "Charlotte, NC",
@@ -921,7 +921,7 @@
       ],
       "text": "load and unload parts on cnc / process machines (material handling assist) cnc/process operator: loads/unloads parts from machines using material handling devices. machine_tending {\"object\": \"part\", \"placement_target\": \"fixture\", \"machine\": \"cnc\", \"grasp\": \"unknown\", \"weight\": \"up_to_50lb\"}",
       "source": "manipulation_ledger",
-      "tape_family": "gripper",
+      "tape_family": "machine_tending",
       "pure_amr_tote": false,
       "unknowns": [
         "Part geometry",
@@ -933,7 +933,7 @@
     {
       "job_key": "manip_fulcrum_tualatin_or",
       "title": "Load raw material and unload finished parts on CNC laser",
-      "industry": "Tualatin, OR",
+      "industry": "Manufacturing",
       "path": "MACHINE \u2192 TENDING",
       "company_name": "Fulcrum Technologies",
       "locality": "Tualatin, OR",
@@ -946,7 +946,7 @@
       ],
       "text": "load raw material and unload finished parts on cnc laser laser cutting operator explicitly loads/unloads raw and finished parts. machine_tending {\"object\": \"sheet_metal\", \"placement_target\": \"machine\", \"machine\": \"cnc_laser\"}",
       "source": "manipulation_ledger",
-      "tape_family": "gripper",
+      "tape_family": "machine_tending",
       "pure_amr_tote": false,
       "unknowns": [
         "Sheet size",
@@ -957,7 +957,7 @@
     {
       "job_key": "manip_ims_riverside_ca",
       "title": "Load and unload finished parts from laser/plasma cutting machines",
-      "industry": "Riverside, CA",
+      "industry": "Manufacturing",
       "path": "MACHINE \u2192 TENDING",
       "company_name": "Industrial Metal Supply",
       "locality": "Riverside, CA",
@@ -970,7 +970,7 @@
       ],
       "text": "load and unload finished parts from laser/plasma cutting machines laser operator: load and unload finished parts from machine within training window. machine_tending {\"object\": \"part\", \"placement_target\": \"machine\", \"machine\": \"laser_plasma\"}",
       "source": "manipulation_ledger",
-      "tape_family": "gripper",
+      "tape_family": "machine_tending",
       "pure_amr_tote": false,
       "unknowns": [
         "Part mix",
@@ -981,7 +981,7 @@
     {
       "job_key": "manip_transtech_charlotte_nc",
       "title": "Move workpieces to/from CNC and manual machining cells",
-      "industry": "Charlotte, NC",
+      "industry": "Manufacturing",
       "path": "MACHINE \u2192 TENDING",
       "company_name": "TransTech Group",
       "locality": "Charlotte, NC",
@@ -994,7 +994,7 @@
       ],
       "text": "move workpieces to/from cnc and manual machining cells cnc quickmill operator \u2014 machine operation plus forklift/crane material handling for production. machine_tending {\"object\": \"part\", \"placement_target\": \"fixture\", \"machine\": \"cnc\"}",
       "source": "manipulation_ledger",
-      "tape_family": "gripper",
+      "tape_family": "machine_tending",
       "pure_amr_tote": false,
       "unknowns": [
         "Repetitive tend vs skilled fab mix"
@@ -1003,7 +1003,7 @@
     {
       "job_key": "manip_groninger_charlotte_nc",
       "title": "Tend CNC mills/lathes \u2014 workpiece load/unload around cycle",
-      "industry": "Charlotte, NC",
+      "industry": "Manufacturing",
       "path": "MACHINE \u2192 TENDING",
       "company_name": "groninger",
       "locality": "Charlotte, NC",
@@ -1016,7 +1016,7 @@
       ],
       "text": "tend cnc mills/lathes \u2014 workpiece load/unload around cycle cnc machinist operates production cnc equipment; robot portion is repetitive load/unload (setup remains human). machine_tending {\"object\": \"part\", \"machine\": \"cnc_mill_lathe\", \"placement_target\": \"fixture\"}",
       "source": "manipulation_ledger",
-      "tape_family": "gripper",
+      "tape_family": "machine_tending",
       "pure_amr_tote": false,
       "unknowns": [
         "How much of role is tend vs program"
@@ -2304,7 +2304,7 @@
       "actions": [],
       "text": "factory assembly line workpiece load unload on the plant floor machine tend",
       "source": "tier_seed",
-      "tape_family": "factory",
+      "tape_family": "machine_tending",
       "unknowns": [
         "Fixture geometry",
         "Cycle time"
@@ -2321,7 +2321,7 @@
       "actions": [],
       "text": "factory CNC cell machine tending workpiece fixture load unload on the plant floor",
       "source": "tier_seed",
-      "tape_family": "factory",
+      "tape_family": "machine_tending",
       "unknowns": [
         "Part family",
         "Chuck change"
@@ -2338,7 +2338,7 @@
       "actions": [],
       "text": "factory mill lathe machine tending production cell workpiece fixture",
       "source": "tier_seed",
-      "tape_family": "factory",
+      "tape_family": "machine_tending",
       "unknowns": [
         "Tooling mix"
       ]

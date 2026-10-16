@@ -8,6 +8,7 @@ import pytest
 from app.services.buyer_opportunity.phase2_match import (
     buyer_opportunities_enabled,
     classified_match_payload,
+    corpus_industry_to_taxonomy,
     discover_product_pages,
     jobs_for_classification,
     try_phase2_search,
@@ -820,3 +821,55 @@ def test_saved_lookup_error_falls_through_to_the_classifier(monkeypatch):
     assert calls == [url]
     assert out["robot_name"] == "ADAM"
     assert db.rolled_back is True
+
+
+def test_industry_strings_for_unmapped_work():
+    assert corpus_industry_to_taxonomy("Construction") == frozenset({"construction"})
+    assert corpus_industry_to_taxonomy("Agriculture") == frozenset({"agriculture"})
+    assert corpus_industry_to_taxonomy("Factory") == frozenset({"manufacturing"})
+    assert corpus_industry_to_taxonomy("Surgery center") == frozenset({"surgery_center"})
+    assert corpus_industry_to_taxonomy("Manufacturing") == frozenset({"manufacturing"})
+
+
+def test_construction_agriculture_and_machine_tending_join():
+    construction = jobs_for_classification(
+        _product(
+            "Exosystem",
+            form="autonomous_vehicle_equipment",
+            function="construction_task",
+            industries=["construction"],
+            primary_class="construction",
+            company="Built Robotics",
+        ),
+        limit=20,
+    )
+    assert _families(construction) == {"construction"}
+    assert len(construction) == 6
+
+    agriculture = jobs_for_classification(
+        _product(
+            "BOT#25",
+            form="amr_mobile_robot",
+            function="agricultural_task",
+            industries=["agriculture"],
+            primary_class="agriculture",
+            company="Greenfield Robotics",
+        ),
+        limit=20,
+    )
+    assert _families(agriculture) == {"agriculture"}
+    assert len(agriculture) == 9
+
+    tending = jobs_for_classification(
+        _product(
+            "Cell tender",
+            form="robotic_arm_cobot",
+            function="machine_tending_assembly",
+            industries=["manufacturing"],
+            primary_class="factory_industrial",
+        ),
+        limit=20,
+    )
+    assert _families(tending) == {"machine_tending"}
+    assert len(tending) == 10
+    assert all(job["industry"] != "Charlotte, NC" for job in tending)
