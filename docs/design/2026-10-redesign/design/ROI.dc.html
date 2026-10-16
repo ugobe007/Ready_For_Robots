@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>RaaS ROI calculator</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@500;600&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#EEF0EC}
+a{color:#111418;text-decoration:none}a:hover{color:#C2410C}
+input::placeholder{color:#6B7078}
+button{font-family:inherit}
+</style>
+</helmet>
+<div style="background: #EEF0EC; color: #111418; font-family: 'IBM Plex Sans', sans-serif; min-height: 100vh">
+<header style="border-bottom: 2px solid #111418">
+<div style="max-width: 1296px; margin: 0 auto; padding: 0 24px; min-height: 76px; display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap">
+<a href="Home.dc.html" style="display: flex; align-items: center; gap: 10px; font-family: Archivo, sans-serif; font-weight: 900; font-size: 22px"><svg width="28" height="28" viewBox="0 0 15 15" shape-rendering="crispEdges" aria-hidden="true"><rect width="15" height="15" fill="#111418"/><rect x="1" y="1" width="13" height="13" fill="#EEF0EC"/><g fill="#C2410C"><rect x="3" y="6" width="1" height="2"/><rect x="4" y="5" width="2" height="3"/><rect x="5" y="9" width="1" height="1"/><rect x="6" y="10" width="3" height="1"/><rect x="9" y="6" width="1" height="2"/><rect x="9" y="9" width="1" height="1"/><rect x="10" y="5" width="2" height="3"/></g></svg><span>READY<span style="color: #C2410C">FOR</span>ROBOTS</span></a>
+<nav aria-label="Main" style="display: flex; gap: 26px; align-items: center; flex-wrap: wrap; font-size: 15px; font-weight: 500; padding: 10px 0">
+<a href="Home.dc.html">Find buyers</a><a href="Home.dc.html">How it works</a><a href="Explore.dc.html" style="color: #C2410C; border-bottom: 2px solid #C2410C">Explore</a><a href="Pricing.dc.html">Pricing</a><a href="Saved.dc.html">Sign in</a>
+<a href="Pricing.dc.html" style="color: #FFFFFF; background: #111418; padding: 11px 18px; font-weight: 600">Get early access</a>
+</nav>
+</div>
+</header>
+<nav aria-label="Explore" style="border-bottom: 1px solid #C9CCC6">
+<div style="max-width: 1296px; margin: 0 auto; padding: 0 24px; display: flex; gap: 4px; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.08em">
+<a href="Explore.dc.html" style="padding: 12px 12px; color: #4A4F57">OVERVIEW</a><a href="RobotIndex.dc.html" style="padding: 12px 12px; color: #4A4F57">ROBOT INDEX</a><a href="Brief.dc.html" style="padding: 12px 12px; color: #4A4F57">THE ROBOT JOBS BRIEF</a><a href="ROI.dc.html" style="padding: 12px 12px; border-bottom: 3px solid #C2410C; color: #111418; font-weight: 600">RAAS ROI CALCULATOR</a><a href="Reports.dc.html" style="padding: 12px 12px; color: #4A4F57">INDUSTRY REPORTS</a>
+</div>
+</nav>
+
+<section style="max-width: 1296px; margin: 0 auto; padding: 48px 24px 0; display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-family: 'IBM Plex Mono', monospace; font-size: 13px; letter-spacing: 0.12em; color: #4A4F57; border-bottom: 1px solid #C9CCC6; padding-bottom: 12px"><span>RAAS ROI CALCULATOR</span><span>BUY · LEASE · ROBOTS-AS-A-SERVICE</span></div>
+<h1 style="margin: 0; font-family: Archivo, sans-serif; font-size: clamp(48px, 7vw, 96px); font-weight: 900; letter-spacing: -0.04em; line-height: 0.92">Will the robot pay for itself?</h1>
+<p style="margin: 0; font-size: 20px; line-height: 1.5; color: #30353C; max-width: 760px">The numbers a buyer's finance team will ask for: payback, first-year return and three-year savings. We flag inputs they're likely to push back on.</p>
+</section>
+
+<section style="max-width: 1296px; margin: 0 auto; padding: 36px 24px 0; display: flex; gap: 48px; flex-wrap: wrap; align-items: flex-start">
+<div style="flex: 1 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 0; border-top: 2px solid #111418">
+<div style="display: flex; gap: 0; padding: 16px 0; border-bottom: 1px solid #C9CCC6; align-items: center; gap: 12px; flex-wrap: wrap">
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4A4F57; width: 180px">HOW THEY PAY</span>
+<sc-for list="{{modes}}" as="m" hint-placeholder-count="2">
+<button type="button" onClick="{{m.pick}}" aria-pressed="{{m.pressed}}" style="height: 38px; padding: 0 16px; border: 1px solid #111418; background: {{m.bg}}; color: {{m.fg}}; font-size: 14px; cursor: pointer">{{m.label}}</button>
+</sc-for>
+</div>
+<sc-for list="{{fields}}" as="f" hint-placeholder-count="6">
+<div style="display: flex; padding: 14px 0; border-bottom: 1px solid #C9CCC6; align-items: center; gap: 12px; flex-wrap: wrap">
+<div style="width: 180px; display: flex; flex-direction: column"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #4A4F57">{{f.label}}</span><span style="font-size: 12px; color: #6B7078">{{f.hint}}</span></div>
+<div style="display: flex; align-items: stretch; border: 2px solid #111418; background: #FFFFFF">
+<button type="button" onClick="{{f.dec}}" aria-label="Decrease {{f.label}}" style="width: 40px; border: 0; border-right: 1px solid #C9CCC6; background: transparent; font-size: 18px; cursor: pointer">−</button>
+<span style="min-width: 150px; padding: 10px 14px; font-family: 'IBM Plex Mono', monospace; font-size: 16px; text-align: right">{{f.shown}}</span>
+<button type="button" onClick="{{f.inc}}" aria-label="Increase {{f.label}}" style="width: 40px; border: 0; border-left: 1px solid #C9CCC6; background: transparent; font-size: 18px; cursor: pointer">+</button>
+</div>
+</div>
+</sc-for>
+<p style="margin: 14px 0 0; font-size: 13px; color: #4A4F57">Example inputs. In the real tool every field is typed, and an industry picker fills typical wages and hours.</p>
+</div>
+
+<div style="flex: 1 1 420px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<div style="background: #111418; color: #FFFFFF; padding: 28px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 12px; letter-spacing: 0.12em; color: #FDBA74">PAYBACK</span>
+<span style="font-family: Archivo, sans-serif; font-weight: 900; font-size: 80px; line-height: 0.95; letter-spacing: -0.03em">{{out.payback}}</span>
+<span style="font-size: 15px; color: #C9CCC6">{{out.paybackNote}}</span>
+</div>
+<div style="display: grid; grid-template-columns: 1fr 1fr; border-top: 2px solid #111418">
+<sc-for list="{{out.stats}}" as="s" hint-placeholder-count="4">
+<div style="padding: 16px 12px 16px 0; border-bottom: 1px solid #C9CCC6; display: flex; flex-direction: column; gap: 4px"><span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #4A4F57">{{s.label}}</span><span style="font-family: Archivo, sans-serif; font-weight: 900; font-size: 28px">{{s.v}}</span></div>
+</sc-for>
+</div>
+<div style="border-left: 4px solid #C2410C; background: #FFFFFF; padding: 14px 16px; display: {{out.warnDisplay}}; flex-direction: column; gap: 4px">
+<span style="font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #C2410C">A BUYER WILL QUESTION THIS</span><span style="font-size: 15px">{{out.warn}}</span>
+</div>
+<div style="display: flex; gap: 10px; flex-wrap: wrap">
+<a href="#share" style="padding: 12px 16px; border: 2px solid #111418; font-family: Archivo, sans-serif; font-weight: 800">Share with a buyer</a>
+<a href="#pdf" style="padding: 12px 16px; border: 2px solid #111418; font-family: Archivo, sans-serif; font-weight: 800">Download PDF</a>
+</div>
+</div>
+</section>
+<footer style="border-top: 2px solid #111418; margin-top: 72px">
+<div style="max-width: 1296px; margin: 0 auto; padding: 24px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 14px; color: #4A4F57">
+<span style="font-family: Archivo, sans-serif; font-weight: 900; color: #111418">READY<span style="color: #C2410C">FOR</span>ROBOTS</span>
+<nav aria-label="Footer" style="display: flex; gap: 20px; flex-wrap: wrap"><a href="#about">About</a><a href="Brief.dc.html">Newsletter</a><a href="#privacy">Privacy</a><a href="#terms">Terms</a><a href="#support">Support</a></nav>
+</div>
+</footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { mode: 'buy', price: 60000, count: 2, fee: 1500, deploy: 10000, fte: 2, fteCost: 52000, pct: 70 }; }
+  renderVals() {
+    const s = this.state;
+    const money = (n) => (n < 0 ? '−$' : '$') + Math.abs(Math.round(n)).toLocaleString('en-US');
+    const step = (k, d, min, max) => () => this.setState({ [k]: Math.max(min, Math.min(max, s[k] + d)) });
+    const F = [
+      s.mode === 'buy'
+        ? { label: 'ROBOT PRICE', hint: 'per unit', shown: money(s.price), dec: step('price', -5000, 5000, 500000), inc: step('price', 5000, 5000, 500000) }
+        : { label: 'MONTHLY FEE', hint: 'per robot, RaaS', shown: money(s.fee), dec: step('fee', -250, 250, 20000), inc: step('fee', 250, 250, 20000) },
+      { label: 'ROBOTS', hint: '', shown: String(s.count), dec: step('count', -1, 1, 500), inc: step('count', 1, 1, 500) },
+      { label: 'SETUP COST', hint: 'install, mapping, training', shown: money(s.deploy), dec: step('deploy', -2500, 0, 500000), inc: step('deploy', 2500, 0, 500000) },
+      { label: 'STAFF ON THIS WORK', hint: 'full-time equivalents', shown: String(s.fte), dec: step('fte', -0.5, 0, 200), inc: step('fte', 0.5, 0, 200) },
+      { label: 'COST PER STAFF', hint: 'fully loaded, yearly', shown: money(s.fteCost), dec: step('fteCost', -2000, 20000, 200000), inc: step('fteCost', 2000, 20000, 200000) },
+      { label: 'WORK THE ROBOT DOES', hint: 'share of that work', shown: s.pct + '%', dec: step('pct', -5, 5, 100), inc: step('pct', 5, 5, 100) }
+    ];
+    const modes = [['buy', 'Buy'], ['raas', 'Robots-as-a-service']].map(([k, l]) => ({ label: l, pressed: k === s.mode ? 'true' : 'false', bg: k === s.mode ? '#111418' : '#FFFFFF', fg: k === s.mode ? '#FFFFFF' : '#111418', pick: () => this.setState({ mode: k }) }));
+    const upfront = s.mode === 'buy' ? s.price * s.count + s.deploy : s.deploy;
+    const yearlyRobot = s.mode === 'buy' ? s.price * s.count * 0.1 : s.fee * 12 * s.count;
+    const saved = s.fte * s.fteCost * (s.pct / 100);
+    const net = saved - yearlyRobot;
+    const months = net > 0 ? upfront / (net / 12) : null;
+    const out = {
+      payback: months == null ? 'Never' : months < 1 ? '< 1 mo' : (Math.round(months * 10) / 10) + ' mo',
+      paybackNote: months == null ? 'The robot costs more each year than the work it takes on.' : 'Time until savings cover the upfront cost.',
+      stats: [
+        { label: 'UPFRONT', v: money(upfront) },
+        { label: 'NET SAVINGS / YEAR', v: money(net) },
+        { label: 'YEAR-ONE RETURN', v: upfront > 0 ? Math.round(((net - upfront) / upfront) * 100) + '%' : '—' },
+        { label: '3-YEAR NET', v: money(net * 3 - upfront) }
+      ],
+      warnDisplay: (s.pct > 85 || (months != null && months < 6)) ? 'flex' : 'none',
+      warn: s.pct > 85 ? 'Over 85% of the work handled by robots is rare in a first deployment. Most pilots start at 40–70%.' : 'Payback under six months is uncommon; buyers will ask how staff time is redeployed.'
+    };
+    return { modes, fields: F, out };
+  }
+}
+</script>
+</body>
+</html>
