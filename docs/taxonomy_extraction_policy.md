@@ -11,6 +11,8 @@ An industry is the industry of the organization that **buys and operates** the r
 
 Source of truth: `industries._definition` in `tests/fixtures/taxonomy.v1.json`. The extractor puts that text into the prompt verbatim. Keys starting with `_` are documentation and never become enum values.
 
+Primary class is not chosen by the model. After the facts are checked, `assign_class` in `class_rules.py` sets it from `docs/robot_class_rules.md`. The model's guess is kept as `model_class_suggestion`. Rule 21 leaves the class empty and sets `needs_review`.
+
 ### 1a. Industry descriptions in the prompt (prompt `v6`)
 
 The prompt lists every industry as `- value: description`, with the description copied verbatim from the taxonomy, instead of the bare value names. Descriptions carry boundaries the names alone don't, e.g. `restaurant` includes the bars inside restaurants, while `bar_nightclub` is only for standalone bars, lounges and nightclubs (Bob, spec v1.6 §1). This is a rule change, so it is measured on the next fresh test set, not on hold-out v1 or v2.
@@ -67,6 +69,7 @@ All in `app/services/robot_understanding_v1/extraction_config.json`:
 | `exclude_unsupported_facts` | `true` | Remove unsupported facts from the record (set `false` to keep them with capped confidence) |
 | `unsupported_confidence_cap` | `0.3` | Confidence recorded for logged unsupported facts |
 | `max_malformed_output_retries` | `1` | Extra calls allowed when the response has no tool call or its products cannot be parsed. Never retried on content. Tokens from every attempt are counted. |
+| `temperature` | `0` | Sampling for the taxonomy extraction call. Sent as the Messages `temperature` field. The installed SDK dropped the typed keyword, so the call passes it through `extra_body`. Not a prompt rule, so prompt stays `v6`. |
 | `max_output_tokens` | `8192` | Rule 5 |
 | `max_records_per_page` | `5` | Rule 5 |
 | `page_types` | 4 types with definitions | Rule 4; the definitions go into the prompt verbatim |

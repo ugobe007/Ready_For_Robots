@@ -195,6 +195,27 @@ def classification_is_clean(product: dict[str, Any] | None) -> bool:
     return bool(fact_values(product.get("industries")))
 
 
+def facts_ready_for_class(product: dict[str, Any] | None) -> bool:
+    """Form, function, and industries are present. Class may still be missing."""
+    if not isinstance(product, dict):
+        return False
+    offering = fact_value(product.get("offering_type"))
+    if offering is not None and offering not in _ROBOT_OFFERINGS:
+        return False
+    if not fact_value(product.get("form")):
+        return False
+    if not fact_value(product.get("primary_function")):
+        return False
+    return bool(fact_values(product.get("industries")))
+
+
+def classification_is_usable(product: dict[str, Any] | None) -> bool:
+    """Clean, or held for review by rule 21 with every other match fact present."""
+    if classification_is_clean(product):
+        return True
+    return bool(product.get("needs_review")) and facts_ready_for_class(product)
+
+
 def _tokens(value: str) -> list[str]:
     return [part for part in re.split(r"[^a-z0-9]+", (value or "").lower()) if part]
 
@@ -396,7 +417,11 @@ def _shared_product_name(products: list[dict[str, Any]], url: str) -> str:
 
 def merge_market_variants(products: list[dict[str, Any]], url: str) -> dict[str, Any] | None:
     """One robot sold into several industries is one product, not several robots."""
-    clean = [product for product in products if classification_is_clean(product)]
+    from app.services.robot_understanding_v1.taxonomy_extraction import _assign_product_class
+
+    clean = [product for product in products if classification_is_clean(product)] or [
+        product for product in products if classification_is_usable(product)
+    ]
     if len(clean) <= 1:
         return clean[0] if clean else None
     forms = {fact_value(product.get("form")) for product in clean}
@@ -414,7 +439,8 @@ def merge_market_variants(products: list[dict[str, Any]], url: str) -> dict[str,
     merged = dict(clean[0])
     merged["industries"] = industries
     merged["product_name"] = _shared_product_name(clean, url)
-    return merged
+    merged["primary_class"] = None
+    return _assign_product_class(merged)
 
 
 def pick_product_record(
@@ -528,6 +554,7 @@ def classified_match_payload(
         "products": [_public_product(product)],
         "needs_product_choice": False,
         "needs_class_choice": False,
+        "needs_review": bool(product.get("needs_review")),
         "class_options": [],
         "matcher": "buyer_opportunities_v1",
         "zero_reason": None if jobs else "corpus_gap",
@@ -567,6 +594,16 @@ def unrecognized_payload(
     }
 
 
+def _indexed_robot_names(url: str) -> list[str]:
+    """Robot names the vendor index lists for this domain. A missing row is empty."""
+    from app.services.vendor_robot_lookup import index_robot_names, lookup_vendor_by_url
+
+    vendor = lookup_vendor_by_url(url)
+    if not isinstance(vendor, dict):
+        return []
+    return index_robot_names(vendor)
+
+
 def _indexed_robot_count(url: str) -> int:
     """How many robots the vendor index lists for this domain.
 
@@ -574,12 +611,7 @@ def _indexed_robot_count(url: str) -> int:
     linked no product page: two or more robots fall through to the catalog
     picker; zero or one keeps classifying the page (Relay).
     """
-    from app.services.vendor_robot_lookup import index_robot_names, lookup_vendor_by_url
-
-    vendor = lookup_vendor_by_url(url)
-    if not isinstance(vendor, dict):
-        return 0
-    return len(index_robot_names(vendor))
+    return len(_indexed_robot_names(url))
 
 
 def catalog_payload(url: str, products: list[dict[str, str]], *, company_name: str | None = None) -> dict[str, Any]:
@@ -639,6 +671,9 @@ def product_from_saved_row(row: Any) -> dict[str, Any]:
                 plain = []
         industries = [{"value": value} for value in plain if value]
     product["industries"] = industries
+    for key in ("model_class_suggestion", "class_rule_id", "class_rule_reason", "needs_review"):
+        if key in evidence:
+            product[key] = evidence[key]
     return product
 
 
@@ -650,7 +685,11 @@ def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
     from sqlalchemy import desc, select
 
     from app.services.buyer_opportunity.tables import rfr_robot_products
-    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+    from app.services.robot_understanding_v1.taxonomy_extraction import (
+        PROMPT_VERSION,
+        _assign_product_class,
+        get_taxonomy_version,
+    )
 
     rows = db.execute(
         select(rfr_robot_products)
@@ -661,29 +700,58 @@ def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
     ).mappings()
     for row in rows:
         product = product_from_saved_row(row)
-        if classification_is_clean(product):
+        if product.get("needs_review") and not classification_is_clean(product) and facts_ready_for_class(product):
+            product = _assign_product_class(product)
+        if classification_is_usable(product):
             return product
     return None
 
 
-def saved_product_for_request(db: Any, url: str, product_name: str | None) -> dict[str, Any] | None:
-    """Reuse a saved row only when this URL is that product.
+def _name_matches_saved(label: str, saved_name: str) -> bool:
+    """Same name-match rule as a product URL: url_names_product on the label."""
+    return url_names_product(f"https://example.test/{label}", saved_name)
 
-    A homepage has no product slug, so it always goes through discovery.
+
+def saved_product_for_request(db: Any, url: str, product_name: str | None) -> dict[str, Any] | None:
+    """Reuse a saved row only when this request names that product.
+
+    A product URL matches when its slug names the saved product.
+    A homepage matches only when the vendor index lists exactly one robot
+    and that robot's name matches the saved product by the same rule.
+    Any other homepage still goes through discovery.
     When the caller passed a product hint, the saved name has to match it.
     """
-    if not product_slug(url):
-        return None
     saved = saved_clean_product(db, url)
     if saved is None:
         return None
     saved_name = fact_value(saved.get("product_name")) or str(saved.get("product_name") or "")
-    if not url_names_product(url, saved_name):
-        return None
     hint = (product_name or "").strip()
-    if hint and not url_names_product(f"https://example.test/{hint}", saved_name):
+    if hint and not _name_matches_saved(hint, saved_name):
+        return None
+    if product_slug(url):
+        if not url_names_product(url, saved_name):
+            return None
+        return saved
+    names = _indexed_robot_names(url)
+    if len(names) != 1 or not _name_matches_saved(names[0], saved_name):
         return None
     return saved
+
+
+def needs_review_payload(product: dict[str, Any], url: str) -> dict[str, Any]:
+    """Match payload for a rule-21 product. No class is shown until someone confirms one."""
+    payload = classified_match_payload(product, url=url, company_name=fact_value(product.get("company")))
+    payload["robot_class"] = None
+    payload["needs_review"] = True
+    payload["needs_class_choice"] = False
+    for row in payload.get("products") or []:
+        if isinstance(row, dict):
+            row["display_class"] = None
+            row["robot_class"] = None
+    selected = (payload.get("profile") or {}).get("selected_product")
+    if isinstance(selected, dict):
+        selected["display_class"] = None
+    return payload
 
 
 def try_phase2_search(
@@ -719,9 +787,12 @@ def try_phase2_search(
             if saved is not None:
                 # Reuse the saved classification. The API inserts a row whenever
                 # classified_product is present, so drop the key the matcher sets.
-                payload = classified_match_payload(
-                    saved, url=url, company_name=fact_value(saved.get("company"))
-                )
+                if saved.get("needs_review") and not classification_is_clean(saved):
+                    payload = needs_review_payload(saved, url)
+                else:
+                    payload = classified_match_payload(
+                        saved, url=url, company_name=fact_value(saved.get("company"))
+                    )
                 payload.pop("classified_product", None)
                 return payload
 
@@ -767,6 +838,14 @@ def try_phase2_search(
             return catalog_payload(url, linked)
         return unrecognized_payload(url, display_name=hint) if slug else None
     product = pick_product_record(extraction, url, product_name)
+    if product is not None and product.get("needs_review") and facts_ready_for_class(product):
+        payload = needs_review_payload(product, url)
+        payload["classified_product"] = {
+            "product": product,
+            "metadata": (extraction or {}).get("extraction_metadata") or {},
+            "source_url": url,
+        }
+        return payload
     if product is None or not classification_is_clean(product):
         # A named product page stays empty. A homepage that did not classify
         # falls through to the old flow. A clean sibling on the same page is
@@ -793,7 +872,17 @@ def persist_classified_product(db: Any, record: dict[str, Any]) -> None:
     meta = record.get("metadata") or {}
     evidence = {
         field: product.get(field)
-        for field in ("offering_type", "form", "primary_class", "primary_function", "industries")
+        for field in (
+            "offering_type",
+            "form",
+            "primary_class",
+            "primary_function",
+            "industries",
+            "model_class_suggestion",
+            "class_rule_id",
+            "class_rule_reason",
+            "needs_review",
+        )
     }
     db.execute(
         insert(rfr_robot_products).values(

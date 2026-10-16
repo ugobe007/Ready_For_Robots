@@ -283,6 +283,44 @@ def validate_evidence(evidence: str, page_text: str) -> bool:
     return True
 
 
+def _fact_text(fact: Any) -> str | None:
+    if isinstance(fact, dict):
+        value = fact.get("value")
+        text = str(value).strip() if value not in (None, "") else ""
+        return text or None
+    if isinstance(fact, str) and fact.strip():
+        return fact.strip()
+    return None
+
+
+def _assign_product_class(product: dict[str, Any]) -> dict[str, Any]:
+    """Replace the model's class with the rule-table class. The guess is kept aside."""
+    from app.services.robot_understanding_v1.class_rules import assign_class
+
+    prior = product.get("model_class_suggestion")
+    suggestion = prior.strip() if isinstance(prior, str) and prior.strip() else _fact_text(product.get("primary_class"))
+    industries = [value for item in (product.get("industries") or []) if (value := _fact_text(item))]
+    assigned, rule_id, reason = assign_class(
+        _fact_text(product.get("primary_function")),
+        industries,
+        _fact_text(product.get("form")),
+    )
+    product["model_class_suggestion"] = suggestion
+    product["class_rule_id"] = rule_id
+    product["class_rule_reason"] = reason
+    product["needs_review"] = assigned is None
+    if assigned is None:
+        product["primary_class"] = None
+    else:
+        product["primary_class"] = {
+            "value": assigned,
+            "rule_id": rule_id,
+            "reason": reason,
+            "assigned_by": "class_rules",
+        }
+    return product
+
+
 def apply_evidence_policy(
     product: dict[str, Any],
     page_text: str,
@@ -534,6 +572,9 @@ def extract_robot_taxonomy(
     request = dict(
         model="claude-sonnet-4-6",
         max_tokens=config["max_output_tokens"],
+        # SDK 1.x dropped the typed temperature keyword. claude-sonnet-4-6 still
+        # accepts the field, so it goes out in the body from the config value.
+        extra_body={"temperature": config["temperature"]},
         system=[
             {
                 "type": "text",
@@ -556,7 +597,10 @@ def extract_robot_taxonomy(
     page = page_record(tool_result.get("page_type"), page_text, config)
     raw_products = tool_result["products"] if page["produces_records"] else []
     kept = cap_records(raw_products, product_name_hint, cap)
-    validated_products = [apply_evidence_policy(product, page_text, config) for product in kept]
+    for product in kept:
+        if isinstance(product, dict):
+            product["model_class_suggestion"] = _fact_text(product.get("primary_class"))
+    validated_products = [_assign_product_class(apply_evidence_policy(product, page_text, config)) for product in kept]
 
     return {
         "page": page,

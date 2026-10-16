@@ -30,6 +30,7 @@ KEY_FIELDS = {
 def test_taxonomy_is_v1_3_with_valid_parents():
     taxonomy = load_taxonomy()
     assert taxonomy["version"] == "v1.3"
+    assert "_definition" not in taxonomy["primary_class"]
     assert "facility_services" in taxonomy_values(taxonomy, "industries")
     known = set(taxonomy_values(taxonomy, "industries"))
     parents = ind.industry_parents(taxonomy)

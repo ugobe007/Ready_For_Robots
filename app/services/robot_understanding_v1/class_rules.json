@@ -1,0 +1,35 @@
+{
+  "version": "0.1",
+  "groups": {
+    "clinical": ["hospital", "surgery_center", "senior_living"],
+    "logistics": ["warehouse_distribution", "3pl", "logistics_parcel"],
+    "production": ["manufacturing", "food_manufacturing"],
+    "guest": ["restaurant", "qsr_fast_food", "bar_nightclub", "hotel", "casino", "stadium_venue", "airport", "retail_store", "grocery", "shopping_mall"],
+    "store": ["retail_store", "grocery", "shopping_mall"]
+  },
+  "rules": [
+    {"id": "1", "class": "humanoid", "reason": "Humanoid form", "match": {"form": "humanoid"}},
+    {"id": "2", "class": "healthcare", "reason": "Surgical work", "match": {"function": "surgical_assistance"}},
+    {"id": "3", "class": "healthcare", "reason": "Sold only to clinical settings", "match": {"industries": "nonempty_subset", "group": "clinical"}},
+    {"id": "4", "class": "food_robotics", "reason": "Prepares food or drinks", "match": {"function": "food_beverage_prep"}},
+    {"id": "5", "class": "service_robot", "reason": "Table service or bussing", "match": {"function": "serving_hospitality"}},
+    {"id": "6", "class": "retail", "reason": "Guest-facing work in stores", "match": {"function": "customer_interaction", "industries": "nonempty_subset", "group": "store"}},
+    {"id": "7", "class": "service_robot", "reason": "Greets, guides or talks with people", "match": {"function": "customer_interaction"}},
+    {"id": "8", "class": "cleaning", "reason": "Cleaning or disinfection", "match": {"function_in": ["cleaning", "disinfection"]}},
+    {"id": "9", "class": "security", "reason": "Patrol and surveillance", "match": {"function": "security_patrol"}},
+    {"id": "10", "class": "retail", "reason": "Shelf scanning in stores", "match": {"function": "inspection", "industries": "nonempty_subset", "group": "store"}},
+    {"id": "11", "class": "inspection", "reason": "Inspection and monitoring", "match": {"function": "inspection"}},
+    {"id": "12", "class": "construction", "reason": "Jobsite work", "match": {"function": "construction_task"}},
+    {"id": "13", "class": "agriculture", "reason": "Farm work", "match": {"function": "agricultural_task"}},
+    {"id": "14", "class": "factory_industrial", "reason": "Machine tending or assembly", "match": {"function": "machine_tending_assembly"}},
+    {"id": "15", "class": "factory_industrial", "reason": "Picking or palletizing in plants", "match": {"function": "picking_packing_palletizing", "intersects": ["production"], "intersects_none": ["logistics"]}},
+    {"id": "16", "class": "amr_logistics", "reason": "Picking, packing or palletizing", "match": {"function": "picking_packing_palletizing"}},
+    {"id": "17", "class": "amr_logistics", "reason": "Moves materials in warehouses or plants", "match": {"function": "delivery_transport", "intersects_any": ["logistics", "production"], "intersects_none": ["guest", "clinical"]}},
+    {"id": "18a", "class": "construction", "reason": "Hauls material on jobsites", "match": {"function": "delivery_transport", "industries": "nonempty_subset", "values": ["construction", "energy_utilities"]}},
+    {"id": "18b", "class": "agriculture", "reason": "Hauls on farms", "match": {"function": "delivery_transport", "industries": "nonempty_subset", "values": ["agriculture"]}},
+    {"id": "18", "class": "delivery", "reason": "Carries items from place to place", "match": {"function": "delivery_transport"}},
+    {"id": "19", "class": "factory_industrial", "reason": "General-purpose, sold to plants", "match": {"function": "general_purpose", "intersects": ["production"]}},
+    {"id": "20", "class": "amr_logistics", "reason": "General-purpose, sold to warehouses", "match": {"function": "general_purpose", "intersects": ["logistics"]}},
+    {"id": "21", "class": null, "reason": "Facts don't fit a rule", "match": "else"}
+  ]
+}

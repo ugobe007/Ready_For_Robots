@@ -219,6 +219,43 @@ def _not_a_sibling(payload) -> None:
     assert "array" not in names
 
 
+def test_rule_21_search_shows_no_class_and_needs_review(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    product = _product(
+        "Survey Bot",
+        form="amr_mobile_robot",
+        function="general_purpose",
+        industries=["hotel"],
+        primary_class="service_robot",
+    )
+    product["primary_class"] = None
+    product["needs_review"] = True
+    product["class_rule_id"] = "21"
+    product["model_class_suggestion"] = "service_robot"
+    page = SimpleNamespace(text="Survey Bot hotel", links=[])
+
+    def extract(url, text, hint):
+        return {
+            "page": {"page_type": "manufacturer_product_page", "produces_records": True},
+            "products": [product],
+            "extraction_metadata": {"prompt_version": "v6", "taxonomy_version": "v1.3"},
+        }
+
+    out = try_phase2_search(
+        "https://example.test/survey-bot",
+        fetch=lambda url: page,
+        extract=extract,
+    )
+    assert out["robot_class"] is None
+    assert out["needs_review"] is True
+    assert out["needs_class_choice"] is False
+    assert out["products"][0]["display_class"] is None
+    assert out["products"][0]["robot_class"] is None
+    assert "model_class_suggestion" not in out["products"][0]
+    assert out["profile"]["selected_product"]["display_class"] is None
+    assert out["classified_product"]["product"]["model_class_suggestion"] == "service_robot"
+
+
 def test_locus_origin_page_missing_offering_type_is_not_unrecognized(monkeypatch):
     """The live Origin page was emptied when the matching record had no offering type.
 
@@ -619,8 +656,9 @@ def test_five_robots_reuse_saved_classifications(monkeypatch):
         assert out["zero_reason"] != "unrecognized_product"
         assert "classified_product" not in out
     assert len(first) == 5
-    # A homepage has no product slug, so Relay is classified again. The other four are reused.
-    assert second == ["https://relayrobotics.com"]
+    # Relay's homepage lists one indexed robot, and the saved name matches it,
+    # so the second pass reuses that row too.
+    assert second == []
 
 
 def test_unclean_or_stale_row_still_calls_the_classifier(monkeypatch):
@@ -657,8 +695,87 @@ def test_unclean_or_stale_row_still_calls_the_classifier(monkeypatch):
     assert out["robot_name"] == "DUST-E S"
 
 
+def test_single_robot_homepage_reuses_a_saved_row_with_the_same_name(monkeypatch):
+    """Diligent and Relay homepages list one indexed robot. A clean row whose name matches is reused."""
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    from app.services.buyer_opportunity.phase2_match import persist_classified_product
+    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+    from app.services.vendor_robot_lookup import index_robot_names, lookup_vendor_by_url
+
+    assert index_robot_names(lookup_vendor_by_url("https://www.diligentrobots.com/")) == ["Moxi"]
+    assert index_robot_names(lookup_vendor_by_url("https://relayrobotics.com")) == ["Relay"]
+    moxi = _product(
+        "Moxi",
+        form="amr_mobile_robot",
+        function="delivery_transport",
+        industries=["hospital"],
+        primary_class="healthcare",
+        company="Diligent Robotics",
+    )
+    db = _products_db()
+    home = "https://www.diligentrobots.com/"
+    persist_classified_product(
+        db,
+        {
+            "product": moxi,
+            "metadata": {"prompt_version": PROMPT_VERSION, "taxonomy_version": get_taxonomy_version()},
+            "source_url": home,
+        },
+    )
+    calls: list[str] = []
+    out = try_phase2_search(
+        home,
+        fetch=lambda url: pytest.fail("saved single-robot homepage must not be fetched"),
+        extract=lambda *args, **kwargs: calls.append("extract") or pytest.fail("extract"),
+        db=db,
+    )
+    assert calls == []
+    assert out["robot_name"] == "Moxi"
+    assert out["robot_class"] == "healthcare"
+    assert "classified_product" not in out
+
+
+def test_single_robot_homepage_does_not_reuse_a_different_name(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    from app.services.buyer_opportunity.phase2_match import persist_classified_product
+    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+
+    home = "https://www.diligentrobots.com/"
+    other = _product(
+        "Parcelcopter",
+        form="amr_mobile_robot",
+        function="delivery_transport",
+        industries=["logistics_parcel"],
+        primary_class="delivery",
+        company="Diligent Robotics",
+    )
+    db = _products_db()
+    persist_classified_product(
+        db,
+        {
+            "product": other,
+            "metadata": {"prompt_version": PROMPT_VERSION, "taxonomy_version": get_taxonomy_version()},
+            "source_url": home,
+        },
+    )
+    page = SimpleNamespace(text="Moxi is a hospital robot.", links=[])
+    calls: list[str] = []
+
+    def extract(url, text, hint):
+        calls.append(url)
+        return {
+            "page": {"produces_records": True},
+            "products": [RELAY],
+            "extraction_metadata": {"prompt_version": PROMPT_VERSION, "taxonomy_version": get_taxonomy_version()},
+        }
+
+    out = try_phase2_search(home, fetch=lambda url: page, extract=extract, db=db)
+    assert calls == [home]
+    assert out["robot_name"] == "Relay"
+
+
 def test_homepage_with_a_saved_row_still_returns_the_picker(monkeypatch):
-    """A homepage has no product slug, so a saved row is not the result."""
+    """A homepage whose vendor index lists more than one robot still returns the picker."""
     monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
     from app.services.buyer_opportunity.phase2_match import persist_classified_product
     from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
