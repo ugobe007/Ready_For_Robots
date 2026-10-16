@@ -38,6 +38,7 @@ import Admin from "./pages/Admin";
 import SpecialProjectsAdmin from "./pages/SpecialProjectsAdmin";
 import ProjectPortal from "./pages/ProjectPortal";
 import EmployerDecision from "./pages/EmployerDecision";
+import DevComponents from "./pages/DevComponents";
 import OemHold from "./pages/OemHold";
 import ProposalOemReview from "./pages/ProposalOemReview";
 import Social from "./pages/Social";
@@ -171,6 +172,9 @@ function Router() {
         path="/readyforrobots/supply-pipeline"
         component={SupplyPipeline}
       />
+      {import.meta.env.DEV ? (
+        <Route path="/dev/components" component={DevComponents} />
+      ) : null}
       <Route path="/404" component={NotFound} />
       <Route component={NotFound} />
     </Switch>
