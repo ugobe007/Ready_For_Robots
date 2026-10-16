@@ -567,6 +567,16 @@ def unrecognized_payload(
     }
 
 
+def _indexed_robot_names(url: str) -> list[str]:
+    """Robot names the vendor index lists for this domain. A missing row is empty."""
+    from app.services.vendor_robot_lookup import index_robot_names, lookup_vendor_by_url
+
+    vendor = lookup_vendor_by_url(url)
+    if not isinstance(vendor, dict):
+        return []
+    return index_robot_names(vendor)
+
+
 def _indexed_robot_count(url: str) -> int:
     """How many robots the vendor index lists for this domain.
 
@@ -574,12 +584,7 @@ def _indexed_robot_count(url: str) -> int:
     linked no product page: two or more robots fall through to the catalog
     picker; zero or one keeps classifying the page (Relay).
     """
-    from app.services.vendor_robot_lookup import index_robot_names, lookup_vendor_by_url
-
-    vendor = lookup_vendor_by_url(url)
-    if not isinstance(vendor, dict):
-        return 0
-    return len(index_robot_names(vendor))
+    return len(_indexed_robot_names(url))
 
 
 def catalog_payload(url: str, products: list[dict[str, str]], *, company_name: str | None = None) -> dict[str, Any]:
@@ -666,22 +671,33 @@ def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
     return None
 
 
-def saved_product_for_request(db: Any, url: str, product_name: str | None) -> dict[str, Any] | None:
-    """Reuse a saved row only when this URL is that product.
+def _name_matches_saved(label: str, saved_name: str) -> bool:
+    """Same name-match rule as a product URL: url_names_product on the label."""
+    return url_names_product(f"https://example.test/{label}", saved_name)
 
-    A homepage has no product slug, so it always goes through discovery.
+
+def saved_product_for_request(db: Any, url: str, product_name: str | None) -> dict[str, Any] | None:
+    """Reuse a saved row only when this request names that product.
+
+    A product URL matches when its slug names the saved product.
+    A homepage matches only when the vendor index lists exactly one robot
+    and that robot's name matches the saved product by the same rule.
+    Any other homepage still goes through discovery.
     When the caller passed a product hint, the saved name has to match it.
     """
-    if not product_slug(url):
-        return None
     saved = saved_clean_product(db, url)
     if saved is None:
         return None
     saved_name = fact_value(saved.get("product_name")) or str(saved.get("product_name") or "")
-    if not url_names_product(url, saved_name):
-        return None
     hint = (product_name or "").strip()
-    if hint and not url_names_product(f"https://example.test/{hint}", saved_name):
+    if hint and not _name_matches_saved(hint, saved_name):
+        return None
+    if product_slug(url):
+        if not url_names_product(url, saved_name):
+            return None
+        return saved
+    names = _indexed_robot_names(url)
+    if len(names) != 1 or not _name_matches_saved(names[0], saved_name):
         return None
     return saved
 

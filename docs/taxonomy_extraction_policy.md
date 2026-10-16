@@ -67,6 +67,7 @@ All in `app/services/robot_understanding_v1/extraction_config.json`:
 | `exclude_unsupported_facts` | `true` | Remove unsupported facts from the record (set `false` to keep them with capped confidence) |
 | `unsupported_confidence_cap` | `0.3` | Confidence recorded for logged unsupported facts |
 | `max_malformed_output_retries` | `1` | Extra calls allowed when the response has no tool call or its products cannot be parsed. Never retried on content. Tokens from every attempt are counted. |
+| `temperature` | `0` | Sampling for the taxonomy extraction call. Sent as the Messages `temperature` field. The installed SDK dropped the typed keyword, so the call passes it through `extra_body`. Not a prompt rule, so prompt stays `v6`. |
 | `max_output_tokens` | `8192` | Rule 5 |
 | `max_records_per_page` | `5` | Rule 5 |
 | `page_types` | 4 types with definitions | Rule 4; the definitions go into the prompt verbatim |

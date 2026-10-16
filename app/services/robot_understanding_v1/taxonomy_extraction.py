@@ -534,6 +534,9 @@ def extract_robot_taxonomy(
     request = dict(
         model="claude-sonnet-4-6",
         max_tokens=config["max_output_tokens"],
+        # SDK 1.x dropped the typed temperature keyword. claude-sonnet-4-6 still
+        # accepts the field, so it goes out in the body from the config value.
+        extra_body={"temperature": config["temperature"]},
         system=[
             {
                 "type": "text",

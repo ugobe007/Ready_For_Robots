@@ -60,6 +60,7 @@ def test_shipped_config_excludes_unsupported_facts():
     assert cfg["exclude_unsupported_facts"] is True
     assert cfg["evidence_check"] == "normalized_pieces_in_order"
     assert cfg["max_output_tokens"] == 8192 and cfg["max_records_per_page"] == 5
+    assert cfg["temperature"] == 0
 
 
 def test_definition_key_is_not_an_enum_value():
@@ -121,6 +122,7 @@ def test_prompt_carries_definition_version_and_limits(monkeypatch):
     assert "organization that buys and operates the robot" in prompt
     assert "STEP 1 - PAGE TYPE" in prompt and "ONE contiguous passage copied exactly" in prompt
     assert captured["max_tokens"] == 8192
+    assert captured["extra_body"]["temperature"] == 0
     assert captured["tools"][0]["input_schema"]["properties"]["products"]["maxItems"] == 5
     assert result["extraction_metadata"]["prompt_version"] == "v6"
     assert "- restaurant: Full-service and casual restaurants, cafes, ghost/delivery kitchens, including the bars inside them" in prompt
