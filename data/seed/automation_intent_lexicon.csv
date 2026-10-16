@@ -36,3 +36,19 @@ reduce labor turnover among housekeeping staff,implicit,labor_pressure,cleaning,
 reduce labor turnover,generic,none,,,Bob 2026-10-15. No physical role named: not a signal
 replace manual processes in palletizing,implicit,modernization_plan,picking_packing_palletizing,manufacturing|food_manufacturing|warehouse_distribution,Bob 2026-10-15. Names a physical process
 replace manual processes,generic,none,,,Bob 2026-10-15. Could be paperwork or software: not a signal without a physical process
+we plan to automate our production line,explicit,pilot_or_budget,machine_tending_assembly|picking_packing_palletizing,manufacturing|food_manufacturing,Bob 2026-10-16 factory group
+piloting cobots on the assembly line,explicit,pilot_or_budget,machine_tending_assembly,manufacturing,Bob 2026-10-16
+investing in end-of-line automation and palletizing,explicit,pilot_or_budget,picking_packing_palletizing,manufacturing|food_manufacturing,Bob 2026-10-16
+moving toward lights-out manufacturing,explicit,pilot_or_budget,machine_tending_assembly,manufacturing,Bob 2026-10-16
+adding automated quality inspection to our lines,explicit,pilot_or_budget,inspection,manufacturing|food_manufacturing,Bob 2026-10-16
+automating material flow between production lines,explicit,pilot_or_budget,delivery_transport,manufacturing|food_manufacturing,Bob 2026-10-16. Intralogistics inside the plant
+industry 4.0 program at our plants,implicit,modernization_plan,machine_tending_assembly|inspection,manufacturing|food_manufacturing,Bob 2026-10-16. Counts because it names plants
+industry 4.0,generic,none,,,Bob 2026-10-16. Alone it can mean software or sensors: not a signal
+building a smart factory,implicit,modernization_plan,machine_tending_assembly|inspection,manufacturing,Bob 2026-10-16
+modernizing our manufacturing operations,implicit,modernization_plan,machine_tending_assembly|picking_packing_palletizing,manufacturing|food_manufacturing,Bob 2026-10-16
+increase throughput on our packaging lines,implicit,modernization_plan,picking_packing_palletizing,food_manufacturing|manufacturing,Bob 2026-10-16
+opening a new manufacturing plant,implicit,expansion,,manufacturing,Bob 2026-10-16. Tier D; workflows unknown until stated
+reshoring production to a new US facility,implicit,expansion,,manufacturing,Bob 2026-10-16. Tier D
+we are a factory,generic,none,,,"Bob 2026-10-16. Describes the industry, not a move to automate: sets industry only"
+hard to staff machine operators on second shift,implicit,labor_pressure,machine_tending_assembly,manufacturing,Bob 2026-10-16. Tier E; never a card alone
+we deployed robotic palletizers at all plants,explicit,deployment,picking_packing_palletizing,manufacturing|food_manufacturing,Bob 2026-10-16. Live: palletizing committed; other factory workflows stay open

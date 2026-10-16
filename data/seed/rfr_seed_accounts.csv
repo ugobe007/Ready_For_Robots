@@ -1,2 +1,104 @@
 company_name,website,industries,hq_city,hq_state,priority,workflows_of_interest,known_deployments,notes
 EXAMPLE Resort & Casino (delete this row),example.com,casino|hotel,Las Vegas,NV,A,cleaning|delivery_transport|food_beverage_prep,cleaning:VendorName,"Industries and workflows use taxonomy values, separated by |. known_deployments = workflow:vendor, separated by |."
+Simplot,simplot.com,food_manufacturing,Boise,ID,,picking_packing_palletizing,,"Food plant: frozen potato and vegetable processing. Indeed site: Pasco, WA."
+Abbott Laboratories,abbott.com,food_manufacturing,Abbott Park,IL,,picking_packing_palletizing,,"Altavista, VA is an Abbott Nutrition plant (liquid nutrition, including Similac and Ensure)."
+Conagra Brands,conagrabrands.com,food_manufacturing,Chicago,IL,,picking_packing_palletizing,,"Packaged-food plants. Indeed site: Council Bluffs, IA."
+Nestlé Health Science,nestlehealthscience.com,food_manufacturing,Hoboken,NJ,,picking_packing_palletizing,,"Nutritional-product plants. Indeed site: San Antonio, TX."
+Charter Next Generation,cnginc.com,manufacturing,Superior,WI,,machine_tending_assembly|picking_packing_palletizing,,Specialty plastic-film plant in Superior.
+Altium Packaging LP,altiumpkg.com,manufacturing,Anaheim,CA,,picking_packing_palletizing,,Rigid plastic containers. City is the Anaheim plant.
+Precision Castparts Corp.,precast.com,manufacturing,Portland,OR,,picking_packing_palletizing|cleaning|disinfection|machine_tending_assembly,,"Aerospace and industrial metal parts. Indeed site: Carson City, NV."
+48forty Solutions,48forty.com,manufacturing,Atlanta,GA,,picking_packing_palletizing,,Wood pallet manufacturing and pooling.
+Parker Hannifin Corporation,parker.com,manufacturing,Cleveland,OH,,picking_packing_palletizing,,"Motion-control equipment. Indeed site: Washington, MO."
+WinCup,wincup.com,manufacturing,Stone Mountain,GA,,picking_packing_palletizing,,"Foam and plastic cups, not the food or drink."
+Bridgestone Americas,bridgestoneamericas.com,manufacturing,Nashville,TN,,picking_packing_palletizing|machine_tending_assembly,,"Tire plant. Indeed site: Dyersburg, TN."
+Collins Aerospace,collinsaerospace.com,manufacturing,Charlotte,NC,,picking_packing_palletizing|cleaning|disinfection,,"Aerospace components. Indeed site: Lenexa, KS."
+Crown Holdings,crowncork.com,manufacturing,Tampa,FL,,machine_tending_assembly|picking_packing_palletizing,,"Metal cans. Indeed site was listed as Bend, TX."
+KIK Consumer Products,kikcorp.com,manufacturing,Auburndale,FL,,picking_packing_palletizing,,Household and pool chemicals. City is the Auburndale plant.
+Logoplaste,logoplaste.com,manufacturing,Stanwood,MI,,picking_packing_palletizing,,Plastic bottles. City is the Stanwood plant.
+Mach10 Solutions,mach10solutionsco.com,manufacturing,Kalispell,MT,,picking_packing_palletizing|machine_tending_assembly,,"Precision metal fabrication. Indeed site: Northumberland, PA."
+Ontic,ontic.com,manufacturing,Creedmoor,NC,,picking_packing_palletizing,,Licensed aerospace parts. City is the Creedmoor plant.
+Pratt & Whitney,prattwhitney.com,manufacturing,East Hartford,CT,,machine_tending_assembly,,"Jet-engine parts. Indeed site: Asheville, NC."
+USG Corporation,usg.com,manufacturing,Chicago,IL,,picking_packing_palletizing,,"Gypsum wallboard. Indeed site: Danville, PA."
+Wastequip Manufacturing Company LLC,wastequip.com,manufacturing,Charlotte,NC,,picking_packing_palletizing,,"Waste containers. Indeed site: Eagleville, TN."
+AdvanSix,advansix.com,manufacturing,Parsippany,NJ,,picking_packing_palletizing,,Nylon and chemical intermediates. Indeed site: Virginia.
+Amcor,amcor.com,manufacturing,Fairfield,CA,,machine_tending_assembly|picking_packing_palletizing,,Packaging plant in Fairfield. Company headquarters are in Zurich.
+Cencora,cencora.com,warehouse_distribution,Conshohocken,PA,,picking_packing_palletizing,,"Drug wholesaler distribution centers. Indeed site: Mansfield, MA."
+Uline,uline.com,warehouse_distribution,Pleasant Prairie,WI,,cleaning|disinfection|picking_packing_palletizing,,"Owns and runs its shipping-supply warehouses. Indeed site: Gurnee, IL."
+ODP Business Solutions,odpbusiness.com,warehouse_distribution,Boca Raton,FL,,picking_packing_palletizing,,"Office-products distribution. Indeed site: Carol Stream, IL DC."
+Cardinal Health,cardinalhealth.com,warehouse_distribution,Dublin,OH,,picking_packing_palletizing|cleaning|disinfection,,"Medical-products distribution. Indeed site: Orange City, IA."
+Chewy,chewy.com,warehouse_distribution,Plantation,FL,,picking_packing_palletizing,,"Operates its own fulfillment centers. Indeed site: Reno, NV."
+CVS Health,cvshealth.com,warehouse_distribution,Woonsocket,RI,,picking_packing_palletizing,,Retailer running its own distribution centers. Woonsocket is headquarters.
+Medline Industries,medline.com,warehouse_distribution,Northfield,IL,,picking_packing_palletizing,,"Medical-supply distribution. Indeed site: Montgomery, NY."
+Performance Foodservice,pfgc.com,warehouse_distribution,Richmond,VA,,picking_packing_palletizing,,"Foodservice distribution houses. Indeed site: Victoria, TX."
+Triple-S Steel,,warehouse_distribution,Knoxville,TN,,picking_packing_palletizing,,Steel service center that warehouses and ships metal.
+Core-Mark,core-mark.com,warehouse_distribution,Westlake,TX,,picking_packing_palletizing,,"Convenience-store distribution. Owned by Performance Food Group. Indeed site: Sacramento, CA."
+DHL,dhl.com,logistics_parcel,Lockbourne,OH,,picking_packing_palletizing,,"Parcel hub at Lockbourne. City is that site, not the global headquarters."
+ID Logistics,id-logistics.com,3pl,Joliet,IL,,picking_packing_palletizing,,Third-party warehouse operator. City is the Joliet site.
+Quality Custom Distribution,,warehouse_distribution,Kent,WA,,picking_packing_palletizing,,Restaurant distribution center they operate in Kent.
+Caesars Entertainment,caesars.com,casino,Las Vegas,NV,,serving_hospitality|cleaning|disinfection|food_beverage_prep,,Operates casino resorts.
+MGM Resorts,mgmresorts.com,casino,Las Vegas,NV,,serving_hospitality|cleaning|disinfection|food_beverage_prep|customer_interaction,,Casino-resort operator. The name rule had marked this hotel because of Resorts.
+Traditions Hospitality Group,,hotel,Ardmore,OK,,food_beverage_prep|serving_hospitality|cleaning|customer_interaction,,Hotel management company. City is the Indeed site.
+Station Casinos,stationcasinos.com,casino,Las Vegas,NV,,serving_hospitality|food_beverage_prep|cleaning,,Operates its own Las Vegas casinos.
+Four Seasons,fourseasons.com,hotel,Toronto,ON,,serving_hospitality|food_beverage_prep,,"Operates the hotels. Indeed site: Beverly Hills, CA."
+Kimpton Hotels & Restaurants,kimptonhotels.com,hotel,San Francisco,CA,,serving_hospitality|cleaning|customer_interaction|food_beverage_prep,,IHG hotel brand that operates this hotel. City is the Pacific Heights listing.
+Omni Hotels & Resorts,omnihotels.com,hotel,Dallas,TX,,serving_hospitality|cleaning|food_beverage_prep|customer_interaction,,Owns and operates its hotels.
+Aimbridge Hospitality,aimbridgehospitality.com,hotel,Plano,TX,,serving_hospitality|food_beverage_prep|customer_interaction|cleaning,,Third-party hotel operator. They run the hotels.
+Snoqualmie Casino & Hotel,snocasino.com,casino,Snoqualmie,WA,,food_beverage_prep|serving_hospitality,,Tribal casino. The name rule had marked this hotel because the name contains Hotel.
+MCR Hotels,mcrhotels.com,hotel,New York,NY,,serving_hospitality|food_beverage_prep|customer_interaction,,"Hotel owner-operator. Indeed site: Houston, TX."
+Emerald Queen Casino,emeraldqueen.com,casino,Fife,WA,,serving_hospitality|cleaning|food_beverage_prep|disinfection,,"Puyallup Tribe casino, operated by the tribe."
+Desert Diamond Casinos & Entertainment,,casino,Sahuarita,AZ,,food_beverage_prep|serving_hospitality|cleaning,,"Tohono O'odham casinos, operated by the nation."
+Golden Nugget,goldennugget.com,casino,Houston,TX,,serving_hospitality|cleaning|food_beverage_prep|disinfection,,"Fertitta casino. Indeed site: Atlantic City, NJ."
+Hard Rock Hotel & Casino Bristol,,casino,Bristol,VA,,food_beverage_prep|serving_hospitality|cleaning|disinfection,,Casino they operate in Bristol. The name rule had marked this hotel.
+Sage Hospitality,sagehospitality.com,hotel,Denver,CO,,serving_hospitality|cleaning|customer_interaction,,"Hotel management company. Indeed site: Austin, TX."
+Graton Resort & Casino,gratonresortcasino.com,casino,Rohnert Park,CA,,food_beverage_prep|serving_hospitality,,Federated Indians of Graton Rancheria casino. The name rule had marked this hotel.
+Morongo Casino Resort & Spa,morongo.com,casino,Cabazon,CA,,food_beverage_prep|serving_hospitality,,Morongo Band casino. The name rule had marked this hotel.
+Oaklawn Racing Casino Resort,oaklawn.com,casino,Hot Springs,AR,,serving_hospitality|cleaning|disinfection|food_beverage_prep,,Racetrack casino they operate. The name rule had marked this hotel.
+Columbia Hospitality Inc,columbiahospitality.com,hotel,Seattle,WA,,serving_hospitality|cleaning,,"Hotel management company. Indeed site: Snoqualmie, WA."
+Fantasy Springs Resort Casino,fantasyspringsresort.com,casino,Indio,CA,,serving_hospitality|food_beverage_prep|customer_interaction,,Cabazon Band casino. The name rule had marked this hotel.
+Hard Rock Casino Rockford,,casino,Rockford,IL,,food_beverage_prep|serving_hospitality|cleaning|disinfection,,Casino operated in Rockford. Company record already said casino.
+Banner Health,bannerhealth.com,hospital,Phoenix,AZ,,cleaning|disinfection|delivery_transport,,Hospital system. Phoenix is headquarters.
+Advocate Aurora Health,advocatehealth.com,hospital,Charlotte,NC,,cleaning|delivery_transport|disinfection|food_beverage_prep,,"Hospital system (Advocate Aurora). Indeed site: Downers Grove, IL."
+Piedmont Healthcare Inc.,piedmont.org,hospital,Atlanta,GA,,cleaning|delivery_transport|disinfection,,Hospital system. Company record said Hospitality; the system is a hospital operator.
+Intermountain Healthcare,intermountainhealth.org,hospital,Salt Lake City,UT,,cleaning|delivery_transport|disinfection,,Hospital system. Indeed site was a Provo hybrid listing.
+Mount Sinai Medical Center - Florida,msmc.com,hospital,Miami Beach,FL,,cleaning|disinfection|delivery_transport|food_beverage_prep,,"Miami Beach hospital system, separate from Mount Sinai in New York."
+Ochsner Health System,ochsner.org,hospital,New Orleans,LA,,cleaning|disinfection|delivery_transport|food_beverage_prep,,"Hospital system. Indeed site: Morgan City, LA, a hospital they operate."
+Hackensack Meridian Health,hackensackmeridianhealth.org,hospital,Edison,NJ,,delivery_transport|food_beverage_prep|cleaning|disinfection,,"Hospital system. Indeed site: Neptune City, NJ."
+Northwestern Memorial Healthcare,nm.org,hospital,Chicago,IL,,cleaning|delivery_transport,,"Hospital system. Indeed site: Geneva, IL, a hospital they operate."
+Atrium Health,atriumhealth.org,hospital,Charlotte,NC,,delivery_transport|cleaning|disinfection,,Hospital system.
+Beth Israel Lahey Health,bilh.org,hospital,Cambridge,MA,,delivery_transport|cleaning|food_beverage_prep,,"Hospital system. Indeed site: Burlington, MA."
+Corewell Health,corewellhealth.org,hospital,Grand Rapids,MI,,cleaning|disinfection,,Hospital system.
+Mon Health,monhealth.com,hospital,Morgantown,WV,,cleaning,,"Hospital system. Indeed site: Kingwood, WV."
+Trinity Health Mid-Atlantic,,hospital,Newtown Square,PA,,delivery_transport|cleaning|food_beverage_prep,,"Hospital system. Indeed site: Wilmington, DE."
+UnityPoint Health,unitypoint.org,hospital,West Des Moines,IA,,cleaning,,Hospital system.
+Yale New Haven Health,ynhhs.org,hospital,New Haven,CT,,cleaning|delivery_transport|disinfection,,Hospital system.
+Cleveland Clinic,clevelandclinic.org,hospital,Cleveland,OH,,delivery_transport|food_beverage_prep,,"Hospital system. Indeed site: Akron, OH, a hospital they operate."
+DCH Health System,dchsystem.com,hospital,Tuscaloosa,AL,,cleaning|delivery_transport,,Hospital system in Tuscaloosa.
+Emory Healthcare,emoryhealthcare.org,hospital,Atlanta,GA,,delivery_transport,,Hospital system.
+Indiana University Health,iuhealth.org,hospital,Indianapolis,IN,,delivery_transport|cleaning|disinfection,,"Hospital system. Indeed site: Lafayette, IN."
+Liberty Point Behavioral Healthcare,,hospital,Staunton,VA,,cleaning|disinfection|food_beverage_prep,,Inpatient behavioral-health facility they operate in Staunton.
+Lowell General Hospital,lowellgeneral.org,hospital,Lowell,MA,,food_beverage_prep|cleaning|disinfection,,Community hospital they operate.
+Mercy Health,mercy.com,hospital,Cincinnati,OH,,cleaning|disinfection|delivery_transport,,"Bon Secours Mercy Health. Indeed site: Paducah, KY."
+Schulte Companies,,hotel,Ann Arbor,MI,,customer_interaction|cleaning,,Hotel management company. Indeed site: Ann Arbor.
+Cherokee Nation Entertainment,cherokeecasino.com,casino,Catoosa,OK,,cleaning|disinfection|serving_hospitality|food_beverage_prep,,Tribal casinos operated by the Cherokee Nation. The name rule had left this as a restaurant.
+Colwen Management Inc,colwenhotels.com,hotel,Boston,MA,,serving_hospitality|cleaning|food_beverage_prep,,Hotel management company.
+Seneca Gaming Corporation,senecagaming.com,casino,Salamanca,NY,,food_beverage_prep|cleaning|serving_hospitality|disinfection,,Seneca Nation casinos. The name rule had left this as a restaurant.
+Muscogee Nation Gaming Enterprises,,casino,Tulsa,OK,,serving_hospitality|cleaning|disinfection|food_beverage_prep,,Muscogee Nation casinos. The name rule had left this as a restaurant.
+OTG Management,otgexp.com,restaurant,New York,NY,,serving_hospitality|food_beverage_prep,,Operates the airport restaurants. Indeed site: Houston IAH.
+Sonesta,sonesta.com,hotel,Newton,MA,,serving_hospitality|customer_interaction|cleaning,,"Hotel owner-operator. Indeed site: Lihue, HI. The name rule had left this as a restaurant."
+Belterra Park Gaming,,casino,Cincinnati,OH,,serving_hospitality|food_beverage_prep,,Racino operated in Cincinnati. The name rule had left this as a restaurant.
+Choctaw Nation,choctawnation.com,casino,Pocola,OK,,cleaning|disinfection|food_beverage_prep,,Tribal casinos. The name rule had left this as a restaurant.
+Leech Lake Gaming,,casino,Walker,MN,,cleaning|food_beverage_prep|disinfection|serving_hospitality,,Leech Lake Band casinos. The name rule had left this as a restaurant.
+Uchi Restaurants,,restaurant,Austin,TX,,food_beverage_prep|serving_hospitality,,"Restaurant group that operates its own restaurants. Indeed site: Addison, TX."
+Brinker International,brinker.com,restaurant,Dallas,TX,,food_beverage_prep|serving_hospitality|cleaning|disinfection,,"Operates Chili's. Indeed site: Salisbury, MD."
+Darden Restaurants,darden.com,restaurant,Orlando,FL,,food_beverage_prep|serving_hospitality,,"Operates LongHorn Steakhouse. Indeed site: White House, TN."
+Red Lobster Seafood Co.,redlobster.com,restaurant,Orlando,FL,,food_beverage_prep|serving_hospitality,,"Operates Red Lobster. Indeed site: Tullahoma, TN."
+Fairmont,fairmont.com,hotel,New Orleans,LA,,serving_hospitality,,Accor hotel they operate in New Orleans. The name rule had left this as a restaurant.
+Hudson by Avolta,avoltaworld.com,retail_store,Kenner,LA,,serving_hospitality|food_beverage_prep,,Avolta airport retail they operate. City is the Kenner airport site.
+Xanitos Inc,xanitos.com,facility_services,Longview,TX,,cleaning,,"Hospital environmental-services contractor, not a restaurant."
+American Dining Creations,,facility_services,Appleton,WI,,food_beverage_prep|cleaning,,"Contract food-service company, not a restaurant brand."
+ABM Industries,abm.com,facility_services,New York,NY,,cleaning|disinfection|delivery_transport|picking_packing_palletizing,,Contract facility services. The company record had said commercial building.
+Crothall Healthcare,crothall.com,facility_services,Wayne,PA,,cleaning|disinfection|delivery_transport,,"Hospital environmental services, a Compass Group company. Indeed site: Spring, TX."
+Sodexo,sodexo.com,facility_services,Gaithersburg,MD,,food_beverage_prep|cleaning|disinfection|serving_hospitality,,"Contract food and facilities. Indeed site: Lake Saint Louis, MO."
+Aramark,aramark.com,facility_services,Philadelphia,PA,,cleaning|food_beverage_prep|disinfection|delivery_transport|serving_hospitality|customer_interaction,,"Contract food and facilities. Indeed site: Cullowhee, NC."
+Compass Group,compass-group.com,facility_services,Charlotte,NC,,cleaning|disinfection,,"Contract food and facilities parent. Indeed site: Wichita, KS. Crothall is one of its companies."
+Morrison Healthcare,morrisonhealthcare.com,facility_services,Atlanta,GA,,food_beverage_prep,,"Hospital food-service contractor, a Compass brand. It was grouped as a hospital. Indeed site: Hardeeville, SC."
