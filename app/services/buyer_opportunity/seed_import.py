@@ -23,6 +23,11 @@ from app.services.robot_understanding_v1.taxonomy_extraction import load_taxonom
 from app.services.vendor_robot_lookup import lookup_vendor_by_url
 
 SEED_SOURCE = "bob_seed"
+# Buyers whose site also hosts something the vendor index treats as a robot
+# product. The maker check must not flip these. DHL's Parcelcopter is a drone
+# project, not a robot product line.
+BUYER_ALLOWLIST_DOMAINS = frozenset({"dhl.com"})
+BUYER_ALLOWLIST_NAMES = frozenset({"dhl"})
 SEED_COLUMNS = (
     "company_name", "website", "industries", "hq_city", "hq_state", "priority",
     "workflows_of_interest", "known_deployments", "notes",
@@ -185,10 +190,17 @@ def _find_buyer(conn: Connection, row: SeedRow):
     ).mappings().first()
 
 
+def buyer_is_robot_maker(row: SeedRow) -> bool:
+    """False for an explicit buyer, even when the vendor index hits the domain."""
+    if row.domain in BUYER_ALLOWLIST_DOMAINS or row.name_normalized in BUYER_ALLOWLIST_NAMES:
+        return False
+    return bool(row.domain and lookup_vendor_by_url(row.domain))
+
+
 def _upsert_buyer(conn: Connection, row: SeedRow, result: ImportResult) -> int:
     company_id, link = _company_id(conn, row)
     result.company_links[link] += 1
-    is_robot_maker = bool(row.domain and lookup_vendor_by_url(row.domain))
+    is_robot_maker = buyer_is_robot_maker(row)
     if is_robot_maker:
         result.robot_makers.append(row.name)
     values = {
