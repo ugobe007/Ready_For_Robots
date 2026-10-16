@@ -1,0 +1,47 @@
+type SiteHeaderProps = {
+  signedIn?: boolean;
+  initials?: string;
+};
+
+const PUBLIC_LINKS = [
+  { label: "Find buyers", href: "/" },
+  { label: "How it works", href: "/how-it-works" },
+  { label: "Explore", href: "/explore" },
+  { label: "Pricing", href: "/pricing" },
+  { label: "Sign in", href: "/login" },
+];
+
+const SIGNED_IN_LINKS = [
+  { label: "Find buyers", href: "/" },
+  { label: "My desk", href: "/readyforrobots/crm" },
+  { label: "Explore", href: "/explore" },
+];
+
+export function SiteHeader({ signedIn = false, initials = "RR" }: SiteHeaderProps) {
+  const links = signedIn ? SIGNED_IN_LINKS : PUBLIC_LINKS;
+  return (
+    <header className="rfr-header">
+      <div className="rfr-header-inner">
+        <a className="rfr-wordmark" href="/" aria-label="Ready For Robots">
+          READY<span className="rfr-wordmark-for">FOR</span>ROBOTS
+        </a>
+        <nav className="rfr-nav" aria-label="Site">
+          {links.map((link) => (
+            <a key={link.label} href={link.href}>
+              {link.label}
+            </a>
+          ))}
+          {signedIn ? (
+            <span className="rfr-avatar" aria-label="Account">
+              {initials}
+            </span>
+          ) : (
+            <a className="rfr-header-cta" href="/pricing">
+              Get early access
+            </a>
+          )}
+        </nav>
+      </div>
+    </header>
+  );
+}
