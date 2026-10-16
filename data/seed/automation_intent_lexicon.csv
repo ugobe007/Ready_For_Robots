@@ -49,6 +49,6 @@ modernizing our manufacturing operations,implicit,modernization_plan,machine_ten
 increase throughput on our packaging lines,implicit,modernization_plan,picking_packing_palletizing,food_manufacturing|manufacturing,Bob 2026-10-16
 opening a new manufacturing plant,implicit,expansion,,manufacturing,Bob 2026-10-16. Tier D; workflows unknown until stated
 reshoring production to a new US facility,implicit,expansion,,manufacturing,Bob 2026-10-16. Tier D
-we are a factory,generic,none,,,Bob 2026-10-16. Describes the industry, not a move to automate: sets industry only
+we are a factory,generic,none,,,"Bob 2026-10-16. Describes the industry, not a move to automate: sets industry only"
 hard to staff machine operators on second shift,implicit,labor_pressure,machine_tending_assembly,manufacturing,Bob 2026-10-16. Tier E; never a card alone
 we deployed robotic palletizers at all plants,explicit,deployment,picking_packing_palletizing,manufacturing|food_manufacturing,Bob 2026-10-16. Live: palletizing committed; other factory workflows stay open
