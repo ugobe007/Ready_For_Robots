@@ -1,6 +1,6 @@
 # RFR Spec Addendum: Robot Profile Lifecycle
 
-**Owner:** Bob Christopher · **Status:** draft for Bob's approval · **Version:** 0.2 (2026-10-15: robot job wording; two classifications meet at the workflow)
+**Owner:** Bob Christopher · **Status:** draft for Bob's approval · **Version:** 0.3 (2026-10-16: class from rule table; §12 known challenges. 0.2: robot job wording)
 **Location in repo:** `docs/robot_profile_lifecycle.md`
 **Parent:** `docs/buyer_opportunity_spec.md` (v1.6). This addendum extends it; where they disagree, the parent spec wins until Bob approves a change. Schema changes below are **proposals**: none may be built without Bob's explicit approval and a confirmed backup.
 
@@ -51,7 +51,7 @@ URL ──► 1 Discover ──► 2 Identify ──► 3 Classify ──► 4 P
 
 ## 3. Classify (stage 3)
 
-Unchanged from the parent spec: taxonomy values only, each with a quote from the page, unsupported facts dropped.
+The model extracts **facts only**: primary and secondary functions, industries, form, offering type, each a taxonomy value with a quote from the page; unsupported facts are dropped. **The class is not chosen by the model.** It is assigned from those facts by the rule table in `docs/robot_class_rules.md` (deterministic, with a rule id and a plain reason). A new product's class is *unconfirmed* until a person confirms it once; facts that fit no rule leave the class empty and flag the product for review (§12.1).
 
 **Gap: AI and foundation-model capabilities.** Today's taxonomy has no field for what a robot's intelligence can do. Sellers and buyers care (e.g. "learns new tasks from demonstration", "voice conversation with guests"). **Proposal for Bob** (taxonomy change, needs approval):
 
@@ -150,3 +150,64 @@ Event types: `search_submitted`, `robot_picked`, `results_shown`, `buyer_opened`
 3. Re-check interval (14 days default, 7 for saved robots) and daily re-classify cap.
 4. Whether to store email bodies with consent, or never (§8).
 5. Dismiss reasons list (§8).
+
+---
+
+## 12. Known challenges
+
+Six problems that will keep coming back. Each says what breaks, how the design handles it, what is still missing, and when it matters.
+
+### 12.1 Undocumented category (a robot the taxonomy doesn't cover)
+
+- **Breaks:** a new kind of robot (exoskeleton, robotic kiosk, lawn-plus-security hybrid) has no fitting function, form or class; the model is tempted to force the nearest value.
+- **Handled by:** the class rule table's last rule (no class, `needs_review`) and `unclassified_notes` for facts that don't fit. Nothing is guessed.
+- **Missing:** a review queue (product, page, unfitted facts, confirm or propose a value) and a **gap count**: how many products share each gap. When a gap recurs (default: 3 or more products), propose a taxonomy value for Bob's approval; adding it bumps the taxonomy version and re-classifies.
+- **When:** now (light): queue and counts first, UI later.
+
+### 12.2 New type of job (buyer work the taxonomy doesn't cover)
+
+- **Breaks:** the same problem on the buyer side. Already seen: laundry, dishwashing and pharmacy work have no taxonomy function, so thousands of postings couldn't attach to a workflow.
+- **Handled by:** signals whose work can't be placed are stored company-wide with an `unmapped_work` note (parent spec §5: no workflow means half weight, never a card by itself) and counted like 12.1.
+- **Rule:** a robot and a buyer match only when both sides carry the **same workflow value**. No fuzzy matching across unmapped work; that is deliberate.
+- **When:** now (light), shares the gap counter with 12.1.
+
+### 12.3 Time sensitivity
+
+- **Breaks:** "why now" decays. RFPs have deadlines, budgets follow fiscal years, a pilot announcement is hot for months, not years. A seller who learns of an RFP a week before it closes gets little value.
+- **Handled by:** signal life per tier (RFP until `expires_at`; pilot, budget, expansion 365 days; hiring 120; labor pressure 60), score decay, "response due" on cards (parent spec §5–§6), and robot page re-checks (§5 here).
+- **Missing:** same-day **alerts** on new tier A/B signals for saved robots and buyers; **daily** SAM.gov ingestion; RFP due date shown on every card and in the brief; a freshness indicator ("signal 3 days old").
+- **When:** **now**. This is the product's core promise.
+
+### 12.4 Foundation models: which robot intelligence fits the job
+
+- **Breaks:** robots differ in how much they can adapt (onboard vision-language-action models such as π0, GR00T or Gemini Robotics versus fixed programs). Marketing claims are loud and hard to verify.
+- **Principle:** structured, repeatable work (same cases, fixed routes) needs reliability more than adaptability; variable work (mixed-item picking, unfamiliar kitchens, frequently changing tasks) is where adaptable robots earn their cost.
+- **Design:** (a) robot side: the proposed `ai_capabilities` field (§3), each value with a quote and labeled **claimed** until verified by a deployment or demo; (b) buyer side: a **variability** score per workflow (low / medium / high), from the signal text and industry defaults. Matching ranks adaptable robots higher for high-variability work and reliable purpose-built robots higher for low-variability work. **Never a hard filter.**
+- **Missing:** Bob's `ai_capabilities` value list; the variability defaults per workflow × industry.
+- **When:** later, after real buyers and signals are flowing.
+
+### 12.5 Deployment history of the robot
+
+- **Breaks:** buyers want proof ("who in my industry runs this, at what scale?"); sellers want to know where competitors already won.
+- **Handled by (mostly free):** every `deployment` signal on a buyer ("CVS uses AutoStore at Hainesport") is also a deployment record for the **robot**. Link the signal's vendor and product to a robot profile, and each robot gets a sourced history: sites, industries, pilot or scaled, dates.
+- **Uses:** robot profile ("deployed at 12 hospitals"); proof points on buyer cards; competitive view for sellers (competitor installs = committed workflows at that site; other sites stay open, per the site-level rule used in the seed import).
+- **Missing:** vendor/product linking on signals, which needs the robot profile table (§4, awaiting approval).
+- **When:** next, right after profiles.
+
+### 12.6 Warranty and serviceability
+
+- **Breaks:** a robot with no service coverage near the buyer is a poor match however well it fits the work. Uptime terms, parts and who fixes it at 2 a.m. often decide deals, especially robots-as-a-service.
+- **Source:** rarely on product pages, so not scraped. The **seller states it** in their profile at sign-up: service regions, uptime/response terms, warranty length, service partners.
+- **Design:** matching notes and down-ranks (never hides) buyers outside a robot's service regions: "no service partner within 200 miles". Service partners also feed the "vetted local partners" offer on the pricing page, a possible partner directory.
+- **Missing:** seller profile fields (part of seller sign-up); a partner list.
+- **When:** with seller sign-up.
+
+### 12.7 Priority
+
+| Challenge | When | Depends on |
+|---|---|---|
+| 12.3 Time sensitivity | Now | SAM.gov daily feed, alerts |
+| 12.1, 12.2 Unknown categories and jobs | Now (light) | review queue, gap counter |
+| 12.5 Deployment history | Next | robot profile table (Bob's approval) |
+| 12.6 Service and warranty | With seller sign-up | seller profile fields |
+| 12.4 Foundation models | Later | `ai_capabilities` values, workflow variability defaults |
