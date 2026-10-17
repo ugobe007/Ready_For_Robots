@@ -7,8 +7,10 @@ POST /api/admin/leads/refresh-pipeline-cache
 POST /api/admin/leads/secondary-pass
 """
 from fastapi import APIRouter, BackgroundTasks, Depends, Query
+from sqlalchemy.orm import Session
 
 from app.admin_auth import require_admin_jwt_or_key
+from app.database import get_db
 
 router = APIRouter(dependencies=[Depends(require_admin_jwt_or_key)])
 
@@ -56,8 +58,23 @@ def enrich_pipeline_leads_with_agent(
 
 
 @router.post("/leads/refresh-pipeline-cache")
-def refresh_pipeline_public_caches():
-    """Rebuild homepage, summary, rotated lead lists, and /api/leads/pipeline feed."""
+def refresh_pipeline_public_caches(db: Session = Depends(get_db)):
+    """Queue a pipeline-cache rebuild on the worker. The web process does not run it."""
+    from app.runtime_role import is_web_process
+    from app.services.public_surface_cache import request_worker_pipeline_refresh
+
+    if is_web_process():
+        queued = request_worker_pipeline_refresh(db)
+        return {
+            "status": "queued",
+            "runner": "worker",
+            "requested_at": queued.get("requested_at"),
+            "message": (
+                "Queued for the worker machine. The web process does not rebuild the cache "
+                "and /health keeps serving."
+            ),
+        }
+
     import threading
 
     from app.api.scraper_control import _run_pipeline_surface_refresh_sync
@@ -69,10 +86,8 @@ def refresh_pipeline_public_caches():
     ).start()
     return {
         "status": "started",
-        "message": (
-            "Refreshing homepage, summary, rotated lead lists, and /pipeline feed in background. "
-            "Heavy work runs off the request thread — allow 15–20 minutes, then check built_at."
-        ),
+        "runner": "worker",
+        "message": "Refreshing pipeline caches on this worker process.",
     }
 
 

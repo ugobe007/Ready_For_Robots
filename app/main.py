@@ -336,6 +336,9 @@ def _run_worker_startup() -> None:
     _start_scheduled_newsletter_publish()
     _start_scheduled_market_graph_loop()
     _sync_buyer_sequence_steps()
+    from app.services.public_surface_cache import start_pipeline_refresh_request_loop
+
+    start_pipeline_refresh_request_loop()
 
     if os.getenv("DISABLE_STARTUP_CACHE_WARM", "").strip().lower() in ("1", "true", "yes"):
         logger.info("Worker startup cache warm disabled (DISABLE_STARTUP_CACHE_WARM)")
