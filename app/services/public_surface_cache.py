@@ -52,6 +52,7 @@ from app.services.content_surfaces import (
 KEY_HUMANOID_REPORT = KEY_HUMANOID_BENCHMARK_REPORT  # backwards compatible alias
 # Deploy asks the worker to rebuild. The web process only writes this row.
 PIPELINE_REFRESH_REQUEST_KEY = "pipeline:refresh_request"
+PIPELINE_REFRESH_HANDLED_KEY = "pipeline:refresh_handled"
 
 _refresh_lock = threading.Lock()
 _refresh_in_progress = False
@@ -498,7 +499,30 @@ def consume_pipeline_refresh_request(handled_at: str) -> str:
     started = schedule_public_cache_refresh(pipeline_only=True, reason="worker_request")
     if not started:
         return handled_at
+    _write_pipeline_refresh_handled(requested_at)
     return requested_at
+
+
+def _read_pipeline_refresh_handled() -> str:
+    payload = read_public_cache(PIPELINE_REFRESH_HANDLED_KEY, stale_ok=True)
+    if not isinstance(payload, dict):
+        return ""
+    return str(payload.get("handled_at") or "")
+
+
+def _write_pipeline_refresh_handled(handled_at: str) -> None:
+    """Persist the started request so a worker restart does not replay it."""
+    from app.database import SessionLocal
+
+    try:
+        db = SessionLocal()
+    except Exception as exc:
+        logger.warning("Pipeline refresh handled marker skipped: %s", exc)
+        return
+    try:
+        write_public_cache(db, PIPELINE_REFRESH_HANDLED_KEY, {"handled_at": handled_at})
+    finally:
+        db.close()
 
 
 def start_pipeline_refresh_request_loop() -> None:
@@ -511,7 +535,11 @@ def start_pipeline_refresh_request_loop() -> None:
     _request_loop_started = True
 
     def _loop() -> None:
-        handled = ""
+        try:
+            handled = _read_pipeline_refresh_handled()
+        except Exception as exc:
+            logger.warning("Pipeline refresh handled marker read failed: %s", exc)
+            handled = ""
         while True:
             time.sleep(15)
             try:
