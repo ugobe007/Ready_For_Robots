@@ -32,7 +32,7 @@ function parsePulseJson(data: unknown): PulseNums | null {
   const deployments = Number(d.active_deployments);
   const leadsOk = Number.isFinite(leads) && leads >= 0;
   const deploymentsOk = Number.isFinite(deployments) && deployments >= 0;
-  if (!leadsOk && !deploymentsOk) return null;
+  if (!(leadsOk && leads > 0) && !(deploymentsOk && deployments > 0)) return null;
   return {
     leads: leadsOk ? leads : 0,
     deployments: deploymentsOk ? deployments : 0,
@@ -45,7 +45,7 @@ function parseHomepageSummary(data: unknown): PulseNums | null {
   const summary = (data as { summary?: Record<string, unknown> }).summary;
   if (!summary || typeof summary !== "object") return null;
   const hot = Number(summary.hot);
-  if (!Number.isFinite(hot) || hot < 0) return null;
+  if (!Number.isFinite(hot) || hot <= 0) return null;
   return { deployments: 0, leads: hot, live: true };
 }
 
