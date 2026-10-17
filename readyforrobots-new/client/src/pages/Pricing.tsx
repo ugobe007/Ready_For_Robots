@@ -12,7 +12,6 @@ import {
 import { DISCLOSURE } from "@/lib/disclosure";
 import { usePageMeta } from "@/lib/pageMeta";
 
-
 const SELLER_PLANS = [
   {
     name: "Free",
@@ -64,10 +63,17 @@ function CheckoutButton({
   label: string;
   checkoutTiers: string[] | null;
 }) {
-  const { session } = useAuth();
+  const { session, loading } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
+  if (loading) {
+    return (
+      <button type="button" className="rfr-pricing-go" disabled>
+        {label} →
+      </button>
+    );
+  }
   if (!session) {
     return (
       <a className="rfr-pricing-go" href="/signup?next=%2Fpricing">
@@ -141,7 +147,10 @@ export default function Pricing() {
       </section>
 
       <div className="rfr-pricing-audiences">
-        <section className="rfr-pricing-audience" aria-labelledby="seller-plans">
+        <section
+          className="rfr-pricing-audience"
+          aria-labelledby="seller-plans"
+        >
           <h2 id="seller-plans">Robot sellers</h2>
           <p>Find companies moving to automate work your robot can do.</p>
           <div className="rfr-pricing-grid">
@@ -251,8 +260,8 @@ export default function Pricing() {
             <summary>Where do buyer signals come from?</summary>
             <p>
               Public procurement notices, company filings and announcements,
-              news, and automation hiring at buyer companies. Every signal
-              links to its source.
+              news, and automation hiring at buyer companies. Every signal links
+              to its source.
             </p>
           </details>
           <details>
@@ -265,8 +274,8 @@ export default function Pricing() {
           <details>
             <summary>Does posting a job require a paid plan?</summary>
             <p>
-              No. Posting a robot job is free. The RFP plan is for publishing
-              an RFP and seeing qualified sellers.
+              No. Posting a robot job is free. The RFP plan is for publishing an
+              RFP and seeing qualified sellers.
             </p>
           </details>
         </div>
