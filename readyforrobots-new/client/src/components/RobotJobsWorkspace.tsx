@@ -3999,10 +3999,12 @@ function JobCard({
               <dt className={eyebrow}>Employer</dt>
               <dd className="mt-0.5">{card.employer}</dd>
             </div>
-            <div>
-              <dt className={eyebrow}>Workplace</dt>
-              <dd className="mt-0.5">{card.workplace}</dd>
-            </div>
+            {card.workplace ? (
+              <div>
+                <dt className={eyebrow}>Workplace</dt>
+                <dd className="mt-0.5">{card.workplace}</dd>
+              </div>
+            ) : null}
             <div>
               <dt className={eyebrow}>Work being performed</dt>
               <dd className="mt-0.5">{card.work}</dd>

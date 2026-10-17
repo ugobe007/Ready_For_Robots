@@ -505,7 +505,9 @@ export function robotJobCardFromMatch(job: {
     sourceUrl: jobSourceUrl(job),
     readinessLabel: emptyToNull(job.readiness_label),
     whyNow: emptyToNull(job.why_now),
-    matchingRobot: emptyToNull(job.for_robot) || emptyToNull(job.forRobot),
+    matchingRobot: emptyToNull(job.readiness_label)
+      ? emptyToNull(job.for_robot) || emptyToNull(job.forRobot)
+      : null,
   };
 }
 

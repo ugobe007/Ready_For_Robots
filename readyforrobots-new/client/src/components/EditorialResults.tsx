@@ -237,7 +237,9 @@ export function BuyerRows({ payload }: { payload: BuyerPayload }) {
                         Source
                       </a>
                     ) : null}
-                    {job.for_robot ? <span className="rfr-muted">Matching robot · {job.for_robot}</span> : null}
+                    {job.readiness_label && job.for_robot ? (
+                      <span className="rfr-muted">Matching robot · {job.for_robot}</span>
+                    ) : null}
                   </div>
                   {reasons.length > 0 ? (
                     <div className="rfr-result-reasons">
