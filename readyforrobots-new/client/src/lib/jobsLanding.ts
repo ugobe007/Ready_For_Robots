@@ -301,6 +301,17 @@ export function jobsFindHref(url?: string): string {
   return url ? `${base}&url=${encodeURIComponent(url)}` : base;
 }
 
+/** Bare `/?visit=jobs` (no url, product, or class) shows the robot jobs board. */
+export function isFindBoardSearch(search: string | null | undefined): boolean {
+  if (landingVisitFromSearch(search) !== LANDING_VISIT_JOBS) return false;
+  const params = new URLSearchParams((search || "").replace(/^\?/, ""));
+  return !["url", "product", "class"].some((key) => (params.get(key) || "").trim());
+}
+
+export function isFindBoardHash(hash: string | null | undefined): boolean {
+  return (hash || "").replace(/^#/, "") === "find";
+}
+
 export function jobsCandidatesHref(): string {
   return `/?${LANDING_VISIT_QUERY}=${LANDING_VISIT_CANDIDATES}`;
 }

@@ -15,6 +15,7 @@ import Newsletter from "./pages/Newsletter";
 import About from "./pages/About";
 import BillingSuccess from "./pages/BillingSuccess";
 import Pricing from "./pages/Pricing";
+import RobotJobs from "./pages/RobotJobs";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AuthCallback from "./pages/AuthCallback";
@@ -58,10 +59,11 @@ import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
 import VisitTracker from "./components/VisitTracker";
 
-/** /jobs → / (preserve query). Personalized /jobs/:slug stays. */
-function JobsIndexRedirect() {
+/** Legacy /jobs?src=… campaign links meant FIND; bare /jobs is the robot jobs board. */
+function JobsIndexRoute() {
   const search = typeof window !== "undefined" ? window.location.search : "";
-  return <Redirect to={`/${search}`} />;
+  if (search) return <Redirect to={`/${search}`} />;
+  return <RobotJobs />;
 }
 
 function JourneyHomeRedirect() {
@@ -145,7 +147,7 @@ function Router() {
       <Route path="/billing/success" component={BillingSuccess} />
       <Route path="/social" component={SocialRoute} />
       <Route path="/jobs/:slug" component={Jobs} />
-      <Route path="/jobs" component={JobsIndexRedirect} />
+      <Route path="/jobs" component={JobsIndexRoute} />
       <Route path="/experiment" component={DevExperiment} />
       <Route path="/icons" component={DevIcons} />
       <Route path="/icon-review" component={DevIconReview} />

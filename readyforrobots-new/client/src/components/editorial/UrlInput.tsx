@@ -7,6 +7,7 @@ type UrlInputProps = {
   label?: string;
   placeholder?: string;
   id?: string;
+  submitLabel?: string;
 };
 
 export function UrlInput({
@@ -16,6 +17,7 @@ export function UrlInput({
   label = "Robot product page",
   placeholder = "https://",
   id = "robot-product-page",
+  submitLabel = "Find buyers →",
 }: UrlInputProps) {
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -36,7 +38,7 @@ export function UrlInput({
             placeholder={placeholder}
             onChange={(event) => onChange(event.target.value)}
           />
-          <button type="submit">Find buyers →</button>
+          <button type="submit">{submitLabel}</button>
         </span>
       </label>
     </form>

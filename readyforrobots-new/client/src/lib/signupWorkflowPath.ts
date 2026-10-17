@@ -47,11 +47,10 @@ export function isJobsProductReturnPath(nextRaw: string): boolean {
   return path === "/" || path === "/jobs" || path.startsWith("/jobs/");
 }
 
-/** Normalize legacy /jobs index → /. */
+/** Legacy /jobs?src=… campaign links meant FIND; bare /jobs is the robot jobs board. */
 export function normalizeJobsReturnPath(nextRaw: string): string {
   const raw = (nextRaw || "").trim();
   if (!raw) return "/";
-  if (raw === "/jobs") return "/";
   if (raw.startsWith("/jobs?")) return `/${raw.slice("/jobs".length)}`;
   return raw;
 }

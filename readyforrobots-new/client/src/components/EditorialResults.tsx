@@ -16,12 +16,13 @@ import { classOptionsOrDefault } from "@/lib/robotClassOptions";
 import type { ClassOption } from "@/lib/robotJobMatch";
 import { fetchRobotJobSearch } from "@/lib/robotJobSearch";
 import { taxonomyLabel } from "@/lib/taxonomyLabels";
+import { RobotJobsBoard } from "@/pages/RobotJobs";
 
 const SEARCH_TIMEOUT_MS = 45_000;
 
 const RESULTS_NAV = [
-  { label: "Find buyers", href: "/" },
-  { label: "How it works", href: "/#how" },
+  { label: "Find buyers", href: "/jobs" },
+  { label: "Robot jobs", href: "/jobs" },
   { label: "Explore", href: "/#explore" },
   { label: "Pricing", href: "/pricing" },
   { label: "Sign in", href: "/login" },
@@ -146,7 +147,7 @@ export function BuyerRows({ payload }: { payload: BuyerPayload }) {
       <section className="rfr-home-wrap rfr-result-hero">
         <div className="rfr-result-kicker">
           <span>BUYERS FOR</span>
-          <a href="/">CHANGE ROBOT ↺</a>
+          <a href="/jobs">CHANGE ROBOT ↺</a>
         </div>
         <div className="rfr-result-title">
           <h1>{name}</h1>
@@ -307,7 +308,7 @@ function Picker({
     <section className="rfr-home-wrap rfr-picker">
       <div className="rfr-result-kicker">
         <span>{submitted ? hostLabel(submitted).toUpperCase() : "PRODUCT PAGES"}</span>
-        <a href="/">TRY ANOTHER URL ↺</a>
+        <a href="/jobs">TRY ANOTHER URL ↺</a>
       </div>
       <h1>
         We found {products.length} {products.length === 1 ? "robot" : "robots"}. Pick the one to sell.
@@ -385,7 +386,7 @@ function Unrecognized() {
     <section className="rfr-home-wrap rfr-unrecognized">
       <h1>We could not tell which robot this page is selling.</h1>
       <p>There are no buyers to show, and we did not substitute another robot.</p>
-      <a href="/">Try a product page</a>
+      <a href="/jobs">Try a product page</a>
     </section>
   );
 }
@@ -487,13 +488,7 @@ export default function EditorialResults() {
   if (loading) {
     body = <p className="rfr-home-wrap rfr-result-status">Reading the product page.</p>;
   } else if (error) {
-    body = (
-      <section className="rfr-home-wrap rfr-unrecognized">
-        <h1>Could not load buyers.</h1>
-        <p>{error}</p>
-        <a href="/">Try a product page</a>
-      </section>
-    );
+    return <RobotJobsBoard findError={error} findUrl={initialUrl} />;
   } else if (stack) {
     body = stack.map((entry) => {
       const item = entry.result;
