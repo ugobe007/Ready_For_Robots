@@ -1,19 +1,18 @@
 /**
- * Hero market pulse — action = deployments; evidence = buyers + leads.
+ * Hero market pulse — deployments and hot windows.
+ * Pipeline buyer counts stay in the API and are not shown here.
  */
 import { useEffect, useState } from "react";
 import { fetchWithTimeoutRetry, getPublicReadApiBase } from "@/lib/apiBase";
 
 type PulseNums = {
   deployments: number;
-  buyers: number;
   leads: number;
   live: boolean;
 };
 
 const FALLBACK: PulseNums = {
   deployments: 10,
-  buyers: 1979,
   leads: 279,
   live: false,
 };
@@ -29,15 +28,14 @@ function fmt(n: number): string {
 function parsePulseJson(data: unknown): PulseNums | null {
   if (!data || typeof data !== "object") return null;
   const d = data as Record<string, unknown>;
-  const buyers = Number(d.buyer_opportunities);
   const leads = Number(d.hot_windows);
   const deployments = Number(d.active_deployments);
-  if (!Number.isFinite(buyers) || buyers <= 0) return null;
+  const leadsOk = Number.isFinite(leads) && leads >= 0;
+  const deploymentsOk = Number.isFinite(deployments) && deployments >= 0;
+  if (!(leadsOk && leads > 0) && !(deploymentsOk && deployments > 0)) return null;
   return {
-    buyers,
-    leads: Number.isFinite(leads) && leads >= 0 ? leads : 0,
-    deployments:
-      Number.isFinite(deployments) && deployments >= 0 ? deployments : 0,
+    leads: leadsOk ? leads : 0,
+    deployments: deploymentsOk ? deployments : 0,
     live: true,
   };
 }
@@ -46,11 +44,9 @@ function parseHomepageSummary(data: unknown): PulseNums | null {
   if (!data || typeof data !== "object") return null;
   const summary = (data as { summary?: Record<string, unknown> }).summary;
   if (!summary || typeof summary !== "object") return null;
-  const hot = Number(summary.hot) || 0;
-  const warm = Number(summary.warm) || 0;
-  const buyers = hot + warm;
-  if (buyers <= 0) return null;
-  return { deployments: 0, buyers, leads: hot, live: true };
+  const hot = Number(summary.hot);
+  if (!Number.isFinite(hot) || hot <= 0) return null;
+  return { deployments: 0, leads: hot, live: true };
 }
 
 export default function HomeMarketPulse() {
@@ -130,13 +126,6 @@ export default function HomeMarketPulse() {
         {fmt(pulse.deployments)}
       </span>
       <span className="text-slate-500">deployments</span>
-      <span className="text-slate-600" aria-hidden>
-        ·
-      </span>
-      <span className="font-medium tabular-nums text-[#3ecf8e]">
-        {fmt(pulse.buyers)}
-      </span>
-      <span className="text-slate-500">buyers</span>
       <span className="text-slate-600" aria-hidden>
         ·
       </span>
