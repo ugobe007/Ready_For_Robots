@@ -61,7 +61,7 @@ export default function JobsLanding() {
 
   return (
     <div className="rfr-editorial rfr-home">
-      <SiteHeader links={HOME_NAV} ctaHref="#early" />
+      <SiteHeader links={HOME_NAV} />
       <section id="find" className="rfr-home-wrap rfr-home-hero">
         <Eyebrow label="Jobs for robots" aside="The buyer index for robot sellers" />
         <h1>Find the companies ready to hire your robot.</h1>

@@ -23,7 +23,7 @@ router = APIRouter()
 
 
 class CheckoutBody(BaseModel):
-    tier: str = Field(..., description="pro or premium")
+    tier: str = Field(..., description="founding, seller_pro, or legacy pro / premium")
 
 
 @router.get("/config")

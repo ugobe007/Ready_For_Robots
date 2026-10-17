@@ -1859,6 +1859,18 @@
   color: var(--rfr-surface);
 }
 
+button.rfr-pricing-go {
+  border: 0;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+button.rfr-pricing-go:disabled {
+  background: var(--rfr-rule);
+  color: var(--rfr-muted);
+  cursor: not-allowed;
+}
+
 .rfr-pricing-pending {
   margin: auto 0 0;
   font-size: 14px;
@@ -2389,6 +2401,32 @@
 
 .rfr-account-fine a {
   text-decoration: underline;
+}
+
+.rfr-account-legal {
+  font-size: 12px;
+}
+
+.rfr-account label.rfr-account-optin {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--rfr-body-2);
+  cursor: pointer;
+}
+
+.rfr-account .rfr-account-optin input {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  appearance: auto;
+  margin-top: 2px;
+  accent-color: var(--rfr-ink);
 }
 
 .rfr-account-gets,

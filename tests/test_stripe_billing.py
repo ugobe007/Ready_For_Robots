@@ -101,6 +101,53 @@ def test_billing_config_enabled_with_price(monkeypatch):
     assert payload["pro_available"] is True
 
 
+def _seller_env(monkeypatch, key: str) -> None:
+    monkeypatch.setenv("STRIPE_SECRET_KEY", key)
+    monkeypatch.setenv("STRIPE_PRICE_PRO", "price_legacy_pro")
+    monkeypatch.setenv("STRIPE_PRICE_FOUNDING_SELLER", "price_founding")
+    monkeypatch.setenv("STRIPE_PRICE_SELLER_PRO", "price_seller_pro")
+    monkeypatch.delenv("STRIPE_SELLER_PLANS_LIVE", raising=False)
+
+
+def test_seller_plans_map_prices_without_touching_legacy_pro(monkeypatch):
+    _seller_env(monkeypatch, "sk_test_x")
+    assert tier_for_price_id("price_founding") == "founding"
+    assert tier_for_price_id("price_seller_pro") == "seller_pro"
+    assert tier_for_price_id("price_legacy_pro") == "pro"
+
+
+def test_seller_plans_open_on_test_key(monkeypatch):
+    _seller_env(monkeypatch, "sk_test_x")
+    payload = billing_config_payload()
+    assert payload["founding_available"] is True
+    assert payload["seller_pro_available"] is True
+    assert {"pro", "founding", "seller_pro"} <= set(payload["checkout_tiers"])
+    assert payload["display_prices"]["founding"] == 49
+    assert payload["display_prices"]["seller_pro"] == 199
+
+
+def test_seller_plans_closed_on_live_key_until_approved(monkeypatch):
+    from app.services.stripe_billing import create_checkout_session
+
+    _seller_env(monkeypatch, "sk_live_x")
+    payload = billing_config_payload()
+    assert payload["founding_available"] is False
+    assert payload["checkout_tiers"] == ["pro"]
+    with pytest.raises(RuntimeError, match="test mode only"):
+        create_checkout_session(user_id="u1", email="u1@example.com", tier="founding")
+
+    monkeypatch.setenv("STRIPE_SELLER_PLANS_LIVE", "1")
+    assert set(billing_config_payload()["checkout_tiers"]) == {"pro", "founding", "seller_pro"}
+
+
+def test_seller_tiers_are_paid_plans():
+    from app.services.plan_entitlements import BILLING_TIER_LABELS, PAID_PIPELINE_SLUGS
+
+    assert {"founding", "seller_pro"} <= PAID_PIPELINE_SLUGS
+    assert BILLING_TIER_LABELS["founding"] == "Founding seller"
+    assert BILLING_TIER_LABELS["seller_pro"] == "Pro"
+
+
 def test_site_url_sanitizes_mangled_secret(monkeypatch):
     from app.services.stripe_billing import _site_url
 

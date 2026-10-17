@@ -4,7 +4,7 @@ Plan entitlements for public pipeline surfaces and workspace saves.
 Tiers:
   anonymous — no auth
   free      — signed in, default
-  paid      — ADMIN_EMAILS, PAID_PLAN_EMAILS, or billing_tier / JWT plan in pro|premium|paid
+  paid      — ADMIN_EMAILS, PAID_PLAN_EMAILS, or billing_tier / JWT plan in pro|premium|founding|seller_pro|paid
 """
 from __future__ import annotations
 
@@ -18,12 +18,14 @@ PLAN_FREE = "free"
 PLAN_PAID = "paid"
 
 # Pro/Premium unlock full pipeline + research. Legacy "starter" maps to free until purchased as Pro.
-PAID_PIPELINE_SLUGS = frozenset({"pro", "premium", "paid"})
+PAID_PIPELINE_SLUGS = frozenset({"pro", "premium", "founding", "seller_pro", "paid"})
 BILLING_TIER_LABELS = {
     "free": "Free workspace",
     "starter": "Free workspace",
     "pro": "Pro",
     "premium": "Premium",
+    "founding": "Founding seller",
+    "seller_pro": "Pro",
     "paid": "Pro",
 }
 

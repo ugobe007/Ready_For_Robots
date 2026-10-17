@@ -12,6 +12,7 @@ import {
   peekPendingNext,
   readNextParam,
 } from "@/lib/authNext";
+import { applyPendingMarketingOptIn } from "@/lib/marketingOptIn";
 
 type AuthCtx = { session: Session | null; loading: boolean };
 
@@ -59,6 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const next = data?.session ?? null;
       setSession(next);
       setLoading(false);
+      applyPendingMarketingOptIn(next);
       maybeResumeIntentAfterSignIn(next);
     });
     const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
@@ -68,6 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setLoading(false);
       if (event === "SIGNED_IN") {
+        applyPendingMarketingOptIn(s);
         maybeResumeIntentAfterSignIn(s);
       }
     });

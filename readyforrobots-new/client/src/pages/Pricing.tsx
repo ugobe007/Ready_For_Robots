@@ -1,11 +1,17 @@
 /**
- * Pricing — two audiences. Prices are shown. Checkout is not connected.
+ * Pricing — two audiences. Founding seller and Pro check out through Stripe.
  */
+import { useEffect, useState } from "react";
 import { SiteFooter, SiteHeader } from "@/components/editorial";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  fetchBillingConfig,
+  startCheckout,
+  type CheckoutTier,
+} from "@/lib/billing";
+import { DISCLOSURE } from "@/lib/disclosure";
 import { usePageMeta } from "@/lib/pageMeta";
 
-// Wording pending Bob's approval; nothing renders while empty.
-const DISCLOSURE = "";
 
 const SELLER_PLANS = [
   {
@@ -31,7 +37,8 @@ const SELLER_PLANS = [
       "The desk",
     ],
     href: "",
-    cta: "",
+    cta: "Become a founding seller",
+    tier: "founding",
     lock: "This price stays while you are subscribed.",
   },
   {
@@ -42,12 +49,78 @@ const SELLER_PLANS = [
     note: "",
     lines: ["More robots and users", "Deployment help"],
     href: "",
-    cta: "",
+    cta: "Choose Pro",
+    tier: "seller_pro",
     disclosure: true,
   },
 ] as const;
 
+function CheckoutButton({
+  tier,
+  label,
+  checkoutTiers,
+}: {
+  tier: CheckoutTier;
+  label: string;
+  checkoutTiers: string[] | null;
+}) {
+  const { session } = useAuth();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  if (!session) {
+    return (
+      <a className="rfr-pricing-go" href="/signup?next=%2Fpricing">
+        {label} →
+      </a>
+    );
+  }
+  const open = checkoutTiers?.includes(tier) ?? false;
+  return (
+    <>
+      <button
+        type="button"
+        className="rfr-pricing-go"
+        disabled={!open || busy}
+        onClick={async () => {
+          setBusy(true);
+          setError("");
+          try {
+            window.location.href = await startCheckout(
+              session.access_token,
+              tier
+            );
+          } catch (err) {
+            setError(err instanceof Error ? err.message : "Checkout failed.");
+            setBusy(false);
+          }
+        }}
+      >
+        {busy ? "Opening checkout…" : `${label} →`}
+      </button>
+      {checkoutTiers && !open ? (
+        <p className="rfr-pricing-pending">Checkout opens after testing.</p>
+      ) : null}
+      {error ? (
+        <p className="rfr-pricing-pending" role="alert">
+          {error}
+        </p>
+      ) : null}
+    </>
+  );
+}
+
 export default function Pricing() {
+  const [checkoutTiers, setCheckoutTiers] = useState<string[] | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetchBillingConfig()
+      .then(config => live && setCheckoutTiers(config.checkout_tiers ?? []))
+      .catch(() => live && setCheckoutTiers([]));
+    return () => {
+      live = false;
+    };
+  }, []);
   usePageMeta({
     title: "Pricing — Ready For Robots",
     description:
@@ -100,15 +173,19 @@ export default function Pricing() {
                     </li>
                   ))}
                 </ul>
-                {DISCLOSURE && "disclosure" in plan && plan.disclosure ? (
+                {"disclosure" in plan && plan.disclosure ? (
                   <p className="rfr-pricing-disclosure">{DISCLOSURE}</p>
                 ) : null}
-                {plan.href ? (
+                {"tier" in plan ? (
+                  <CheckoutButton
+                    tier={plan.tier}
+                    label={plan.cta}
+                    checkoutTiers={checkoutTiers}
+                  />
+                ) : (
                   <a className="rfr-pricing-go" href={plan.href}>
                     {plan.cta} →
                   </a>
-                ) : (
-                  <p className="rfr-pricing-pending">Checkout is not open.</p>
                 )}
               </article>
             ))}
@@ -199,9 +276,7 @@ export default function Pricing() {
             Setup, integration planning and installation through vetted local
             partners. Scoped separately from the software.
           </p>
-          {DISCLOSURE ? (
-            <p className="rfr-pricing-disclosure">{DISCLOSURE}</p>
-          ) : null}
+          <p className="rfr-pricing-disclosure">{DISCLOSURE}</p>
           <a className="rfr-pricing-talk" href="/support">
             Talk to us →
           </a>
