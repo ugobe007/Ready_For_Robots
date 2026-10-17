@@ -1087,6 +1087,7 @@ export function showJobsSiteChrome(opts: {
   if (isJobsChromePath(path)) return true;
   if (
     path === "/about" ||
+    path === "/explore" ||
     path === "/intelligence" ||
     path === "/compare" ||
     path === "/vendor/design" ||
