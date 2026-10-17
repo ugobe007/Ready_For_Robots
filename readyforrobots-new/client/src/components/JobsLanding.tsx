@@ -275,10 +275,10 @@ export default function JobsLanding() {
       <section id="early" className="rfr-home-wrap rfr-early">
         <div className="rfr-early-band">
           <p>
-            <em>EARLY ACCESS</em>
-            <strong>Free while we roll out live buyers.</strong>
+            <em>PRICING</em>
+            <strong>Buyers for your robots, ranked and kept up to date.</strong>
           </p>
-          <a href="/pricing">Get early access →</a>
+          <a href="/pricing">See pricing →</a>
         </div>
       </section>
       <SiteFooter />

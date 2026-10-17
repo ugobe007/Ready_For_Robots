@@ -1,152 +1,170 @@
-import { FormEvent, useState } from "react";
+/**
+ * Pricing — two audiences. Prices are shown. Checkout is not connected.
+ */
 import { SiteFooter, SiteHeader } from "@/components/editorial";
-import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { usePageMeta } from "@/lib/pageMeta";
 
-const FEATURES = [
-  "Buyer matches for every robot you sell",
-  "Why now for each buyer, with sources",
-  "Every workflow at each buyer, including what’s already automated",
-  "Save buyers and get alerts on new signals",
-  "Your whole product line, matched one product at a time",
-];
+const DISCLOSURE = "[Bob to word, re AlphaRobotics]";
+
+const SELLER_PLANS = [
+  {
+    name: "Free",
+    price: "$0",
+    period: "",
+    marked: false,
+    note: "",
+    lines: ["1 robot", "Top 3 opportunities, with reasons"],
+    href: "/?visit=jobs",
+    cta: "Find buyers",
+  },
+  {
+    name: "Founding seller",
+    price: "$49",
+    period: "/month",
+    marked: true,
+    note: "Buyers for your robots, ranked and kept up to date.",
+    lines: [
+      "Up to 5 robots",
+      "Full ranked list",
+      "Live RFP alerts",
+      "The desk",
+    ],
+    href: "",
+    cta: "",
+    lock: "This price stays while you are subscribed.",
+  },
+  {
+    name: "Pro",
+    price: "$199",
+    period: "/month",
+    marked: false,
+    note: "",
+    lines: ["More robots and users", "Deployment help"],
+    href: "",
+    cta: "",
+    disclosure: true,
+  },
+] as const;
 
 export default function Pricing() {
-  const [email, setEmail] = useState("");
-  const [company, setCompany] = useState("");
-  const [robotPage, setRobotPage] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState("");
-  const [done, setDone] = useState(false);
-
   usePageMeta({
-    title: "Early access pricing — Ready For Robots",
+    title: "Pricing — Ready For Robots",
     description:
-      "Live buyer signals are rolling out one industry at a time. Use everything free until then.",
+      "Sellers get buyers for their robots. Employers post a robot job free, and can publish an RFP when they need qualified sellers.",
     path: "/pricing",
   });
-
-  async function submit(event: FormEvent) {
-    event.preventDefault();
-    setBusy(true);
-    setError("");
-    setDone(false);
-    try {
-      const res = await fetch(
-        `${getApiBase()}/api/waitlist/founding-customer`,
-        liveFetchInit({
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: email.trim(),
-            company: company.trim(),
-            robot_page: robotPage.trim() || undefined,
-          }),
-        })
-      );
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) {
-        const detail = data.detail;
-        throw new Error(
-          typeof detail === "string" ? detail : "Could not submit request"
-        );
-      }
-      setDone(true);
-      setEmail("");
-      setCompany("");
-      setRobotPage("");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not submit request");
-    } finally {
-      setBusy(false);
-    }
-  }
 
   return (
     <div className="rfr-editorial rfr-pricing">
       <SiteHeader />
       <section className="rfr-pricing-hero">
         <div className="rfr-eyebrow">Pricing</div>
-        <h1>
-          Early access.
-          <br />
-          Free while we build.
-        </h1>
+        <h1>Sellers and employers.</h1>
         <p>
-          Live buyer signals are rolling out one industry at a time. Use
-          everything free until then, and lock in founding pricing before
-          launch.
+          Robot sellers see which companies are ready to buy. Robot employers
+          post the work. Posting a job does not require a paid plan.
         </p>
       </section>
 
-      <section className="rfr-pricing-offer">
-        <div className="rfr-pricing-plan">
-          <span className="rfr-pricing-kicker">Founding customer</span>
-          <div className="rfr-pricing-price">
-            <span>$0</span>
-            <span>during early access</span>
-          </div>
-          <ul>
-            {FEATURES.map((line) => (
-              <li key={line}>
-                <span aria-hidden="true">+</span>
-                <span>{line}</span>
-              </li>
+      <div className="rfr-pricing-audiences">
+        <section className="rfr-pricing-audience" aria-labelledby="seller-plans">
+          <h2 id="seller-plans">Robot sellers</h2>
+          <p>Find companies moving to automate work your robot can do.</p>
+          <div className="rfr-pricing-grid">
+            {SELLER_PLANS.map(plan => (
+              <article
+                key={plan.name}
+                className={
+                  plan.marked
+                    ? "rfr-pricing-card is-founding"
+                    : "rfr-pricing-card"
+                }
+              >
+                <span className="rfr-pricing-kicker">{plan.name}</span>
+                <div className="rfr-pricing-price">
+                  <span>{plan.price}</span>
+                  {plan.period ? <span>{plan.period}</span> : null}
+                </div>
+                {"lock" in plan && plan.lock ? (
+                  <p className="rfr-pricing-lock">{plan.lock}</p>
+                ) : null}
+                {plan.note ? (
+                  <p className="rfr-pricing-plan-note">{plan.note}</p>
+                ) : null}
+                <ul>
+                  {plan.lines.map(line => (
+                    <li key={line}>
+                      <span aria-hidden="true">+</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+                {"disclosure" in plan && plan.disclosure ? (
+                  <p className="rfr-pricing-disclosure">{DISCLOSURE}</p>
+                ) : null}
+                {plan.href ? (
+                  <a className="rfr-pricing-go" href={plan.href}>
+                    {plan.cta} →
+                  </a>
+                ) : (
+                  <p className="rfr-pricing-pending">Checkout is not open.</p>
+                )}
+              </article>
             ))}
-          </ul>
-        </div>
-        <form onSubmit={submit}>
-          <span className="rfr-pricing-form-title">Get early access</span>
-          <label htmlFor="work-email">Work email</label>
-          <input
-            id="work-email"
-            type="email"
-            required
-            autoComplete="email"
-            placeholder="you@company.com"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-          />
-          <label htmlFor="company">Company</label>
-          <input
-            id="company"
-            type="text"
-            required
-            autoComplete="organization"
-            placeholder="Your robot company"
-            value={company}
-            onChange={(event) => setCompany(event.target.value)}
-          />
-          <label htmlFor="robot-page">A robot you sell (product page)</label>
-          <input
-            id="robot-page"
-            type="text"
-            inputMode="url"
-            placeholder="richtechrobotics.com/solutions/adam"
-            value={robotPage}
-            onChange={(event) => setRobotPage(event.target.value)}
-          />
-          <button type="submit" disabled={busy}>
-            {busy ? "Sending…" : "Get early access →"}
-          </button>
-          {done ? (
-            <p className="rfr-pricing-note" role="status">
-              You’re on the list. We’ll email you when live buyers reach your
-              industries.
-            </p>
-          ) : (
-            <p className="rfr-pricing-note">
-              No card needed. We’ll email you when live buyers reach your
-              industries.
-            </p>
-          )}
-          {error ? (
-            <p className="rfr-pricing-error" role="alert">
-              {error}
-            </p>
-          ) : null}
-        </form>
-      </section>
+          </div>
+        </section>
+
+        <section
+          className="rfr-pricing-audience"
+          aria-labelledby="employer-plans"
+        >
+          <h2 id="employer-plans">Robot employers</h2>
+          <p>Posting a robot job is free. It never requires a paid plan.</p>
+          <div className="rfr-pricing-grid is-two">
+            <article className="rfr-pricing-card">
+              <span className="rfr-pricing-kicker">Free</span>
+              <div className="rfr-pricing-price">
+                <span>$0</span>
+              </div>
+              <ul>
+                <li>
+                  <span aria-hidden="true">+</span>
+                  <span>Post a robot job</span>
+                </li>
+              </ul>
+              <a className="rfr-pricing-go" href="/?visit=candidates">
+                Post a robot job →
+              </a>
+            </article>
+            <article className="rfr-pricing-card">
+              <span className="rfr-pricing-kicker">RFP</span>
+              <div className="rfr-pricing-price">
+                <span>$149</span>
+                <span>/month</span>
+              </div>
+              <ul>
+                <li>
+                  <span aria-hidden="true">+</span>
+                  <span>Publish an RFP</span>
+                </li>
+                <li>
+                  <span aria-hidden="true">+</span>
+                  <span>
+                    Qualified sellers, with evidence
+                    <ul className="rfr-pricing-evidence">
+                      <li>Match score</li>
+                      <li>Deployments in this workflow</li>
+                      <li>Runtime and setting fit</li>
+                      <li>Service coverage</li>
+                    </ul>
+                  </span>
+                </li>
+              </ul>
+              <p className="rfr-pricing-pending">Checkout is not open.</p>
+            </article>
+          </div>
+        </section>
+      </div>
 
       <section className="rfr-pricing-lower" id="faq">
         <div>
@@ -167,8 +185,11 @@ export default function Pricing() {
             </p>
           </details>
           <details>
-            <summary>What does early access cost?</summary>
-            <p>Nothing. Founding customers lock in their price before launch.</p>
+            <summary>Does posting a job require a paid plan?</summary>
+            <p>
+              No. Posting a robot job is free. The RFP plan is for publishing
+              an RFP and seeing qualified sellers.
+            </p>
           </details>
         </div>
         <div>
@@ -177,6 +198,7 @@ export default function Pricing() {
             Setup, integration planning and installation through vetted local
             partners. Scoped separately from the software.
           </p>
+          <p className="rfr-pricing-disclosure">{DISCLOSURE}</p>
           <a className="rfr-pricing-talk" href="/support">
             Talk to us →
           </a>

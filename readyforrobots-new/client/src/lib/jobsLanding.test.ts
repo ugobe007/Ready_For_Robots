@@ -548,8 +548,11 @@ describe("landing chrome hrefs cannot swap visits", () => {
     expect(chrome).not.toMatch(/jobsFreshHomeHref\(\)/);
     expect(footer).toMatch(/jobsCrmOpenHref\(false\)/);
     expect(pricing).toMatch(/SiteHeader/);
-    expect(pricing).toMatch(/\/api\/waitlist\/founding-customer/);
+    expect(pricing).toMatch(/Founding seller/);
+    expect(pricing).toMatch(/Post a robot job/);
     expect(pricing).toMatch(/id="faq"/);
+    expect(pricing).not.toMatch(/\/api\/waitlist\/founding-customer/);
+    expect(pricing).not.toMatch(/startCheckout/);
     expect(pricing).not.toMatch(/Basic/);
     expect(pricing).not.toMatch(/Premium/);
     expect(pricing).not.toMatch(/from "@\/components\/Header"/);
