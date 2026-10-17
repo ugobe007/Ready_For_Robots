@@ -11,6 +11,7 @@ import json
 import logging
 import os
 import re
+from functools import lru_cache
 from typing import Any, Callable, Iterable
 from urllib.parse import urljoin, urlparse
 
@@ -273,10 +274,19 @@ def url_names_product(url: str | None, product_name: str | None) -> bool:
     return bool(distinctive and _contiguous(slug, product))
 
 
+@lru_cache(maxsize=1)
+def _taxonomy_industries() -> frozenset[str]:
+    from app.services.robot_understanding_v1.taxonomy_extraction import load_taxonomy, taxonomy_values
+
+    return frozenset(taxonomy_values(load_taxonomy(), "industries"))
+
+
 def corpus_industry_to_taxonomy(industry: str | None) -> frozenset[str]:
     text = (industry or "").strip()
     if not text:
         return frozenset()
+    if text in _taxonomy_industries():
+        return frozenset({text})
     for pattern, values in _CORPUS_INDUSTRY_RULES:
         if pattern.search(text):
             return values

@@ -79,7 +79,7 @@ _WORK_RULES: tuple[tuple[re.Pattern[str], str, str, str], ...] = (
     (
         re.compile(r"\bweed(?:ing)?\b|\bharvest(?:ing)?\b", re.I),
         "agricultural_task",
-        "agricultural",
+        "agriculture",
         "Farm work",
     ),
 )
