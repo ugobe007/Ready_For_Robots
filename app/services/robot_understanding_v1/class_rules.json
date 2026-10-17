@@ -3,6 +3,7 @@
   "groups": {
     "clinical": ["hospital", "surgery_center", "senior_living"],
     "logistics": ["warehouse_distribution", "3pl", "logistics_parcel"],
+    "dealership": ["automotive_dealership"],
     "production": ["manufacturing", "food_manufacturing"],
     "guest": ["restaurant", "qsr_fast_food", "bar_nightclub", "hotel", "casino", "stadium_venue", "airport", "retail_store", "grocery", "shopping_mall"],
     "store": ["retail_store", "grocery", "shopping_mall"]
@@ -24,7 +25,7 @@
     {"id": "14", "class": "factory_industrial", "reason": "Machine tending or assembly", "match": {"function": "machine_tending_assembly"}},
     {"id": "15", "class": "factory_industrial", "reason": "Picking or palletizing in plants", "match": {"function": "picking_packing_palletizing", "intersects": ["production"], "intersects_none": ["logistics"]}},
     {"id": "16", "class": "amr_logistics", "reason": "Picking, packing or palletizing", "match": {"function": "picking_packing_palletizing"}},
-    {"id": "17", "class": "amr_logistics", "reason": "Moves materials in warehouses or plants", "match": {"function": "delivery_transport", "intersects_any": ["logistics", "production"], "intersects_none": ["guest", "clinical"]}},
+    {"id": "17", "class": "amr_logistics", "reason": "Moves materials in warehouses, plants, or dealerships", "match": {"function": "delivery_transport", "intersects_any": ["logistics", "production", "dealership"], "intersects_none": ["guest", "clinical"]}},
     {"id": "18a", "class": "construction", "reason": "Hauls material on jobsites", "match": {"function": "delivery_transport", "industries": "nonempty_subset", "values": ["construction", "energy_utilities"]}},
     {"id": "18b", "class": "agriculture", "reason": "Hauls on farms", "match": {"function": "delivery_transport", "industries": "nonempty_subset", "values": ["agriculture"]}},
     {"id": "18", "class": "delivery", "reason": "Carries items from place to place", "match": {"function": "delivery_transport"}},
