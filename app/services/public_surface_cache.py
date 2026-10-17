@@ -425,9 +425,12 @@ def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_ne
     finally:
         db.close()
         try:
-            lock_db.rollback()
-        finally:
-            lock_db.close()
+            try:
+                lock_db.rollback()
+            finally:
+                lock_db.close()
+        except Exception as exc:
+            logger.warning("Pipeline rebuild lock release failed: %s", exc)
         with _refresh_lock:
             _refresh_in_progress = False
 
