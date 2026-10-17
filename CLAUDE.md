@@ -41,6 +41,7 @@ Read **AGENTS.md** for the full harness constitution. This file is loaded on eve
 0. **Value first:** prove a buyer-opportunity card (company, workflow, readiness signals, matching robots) **before** signup or upgrade asks. See `docs/value_first_principle.md`.
 0a. **Competitive frame:** users compare us to Explee/Apollo. Win on **buyer readiness per workflow ↔ classified robots**, not company count. See `docs/competitive_positioning.md`.
 0b. **Hermes retired:** do not spawn Hermes. Do not follow `docs/hermes_intelligence_bridge.md` as production. Matcher + harness stay. Cursor pstack is the release authority (How / Act / Critic in `pstack/` + `scripts/pstack_release.py`). Not a customer chatbot. See `docs/hermes_retired.md` and `docs/pstack_jobs.md`.
+0c. **Candy:** every PR that adds or changes a user-facing feature also shows a free, no-sign-up taste of it on its page, plus what paid or signed-in adds. Real data or clearly labeled EXAMPLE; never fake counts or buyers. Each PR description gets a "Candy" line: what a signed-out visitor now sees. Page map: `docs/value_first_principle.md` (Candy rule).
 1. **North star order:** names/events → scores → rank → robot specs. Fix junk before ranking tweaks.
 2. **Market thesis:** read `docs/market_thesis.md`; update backlog after research missions. Demand-side (buyer) intelligence only.
 3. **One mission per cycle.** Write or follow `missions/YYYY-MM-DD-<slug>/brief.md`.
