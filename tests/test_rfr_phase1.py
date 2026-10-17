@@ -242,6 +242,29 @@ def test_normalize_domain(raw, expected):
     assert si.normalize_domain(raw) == expected
 
 
+def test_dhl_buyer_allowlist_beats_vendor_lookup(monkeypatch):
+    monkeypatch.setattr(si, "lookup_vendor_by_url", lambda _domain: {"name": "Parcelcopter"})
+    dhl = si.SeedRow(
+        line=2, name="DHL", domain="dhl.com", name_normalized="dhl",
+        hq_city=None, hq_state=None, priority=None,
+        industries=[], workflows=[], deployments={},
+    )
+    named_only = si.SeedRow(
+        line=3, name="DHL", domain="parcel.example", name_normalized="dhl",
+        hq_city=None, hq_state=None, priority=None,
+        industries=[], workflows=[], deployments={},
+    )
+    maker = si.SeedRow(
+        line=4, name="Richtech Robotics", domain="richtechrobotics.com",
+        name_normalized="richtech robotics",
+        hq_city=None, hq_state=None, priority=None,
+        industries=[], workflows=[], deployments={},
+    )
+    assert si.buyer_is_robot_maker(dhl) is False
+    assert si.buyer_is_robot_maker(named_only) is False
+    assert si.buyer_is_robot_maker(maker) is True
+
+
 def test_script_dry_run_writes_nothing(engine, tmp_path, capsys):
     path = _write_seed(tmp_path, SEED[1])
     code = rfr_import_seed.main(["--database-url", str(engine.url), "--csv", str(path)])
