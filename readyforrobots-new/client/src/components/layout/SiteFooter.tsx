@@ -30,7 +30,7 @@ const SUPPORT_LINKS = [
 ];
 
 const COMPANY_LINKS = [
-  { label: "About", href: "/intelligence" },
+  { label: "About", href: "/about" },
   { label: "Compare", href: "/compare" },
   { label: "Find Robots", href: "/find-robots" },
   { label: "Job site sketch", href: "/vendor/design" },
@@ -45,7 +45,7 @@ function jobsProductLinks(signedIn: boolean) {
       { label: "Jobs", href: jobsFreshHomeHref() },
       { label: "CRM", href: jobsCrmOpenHref(signedIn) },
       { label: "Job site sketch", href: "/vendor/design" },
-      { label: "About", href: "/intelligence" },
+      { label: "About", href: "/about" },
       { label: "Start free workspace", href: jobsCrmOpenHref(false) },
       { label: "Robots", href: "/robots" },
       { label: "Humanoid Report", href: "/robots/report" },
