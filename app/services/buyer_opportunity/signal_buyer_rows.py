@@ -1,12 +1,11 @@
-"""Buyer rows from Budget confirmed signals.
+"""Headline audit of Budget confirmed signals.
 
-Behind ``RFR_FIND_SIGNAL_ROWS`` (default off). A row exists only when the
-signal names the work: a closed taxonomy function and a closed taxonomy
-industry, both taken from the signal text. A signal that names neither, or
-that names a function but no industry, does not become a row.
+``partition_budget_companies`` reads the stored signal text. That text is a
+headline. FIND does not open a row from it. Source quotes do, in
+``source_facts.py``, and only when ``RFR_FIND_SIGNAL_ROWS`` is on.
 
 This does not write the database. Expiry is null: the signals table has no
-expiry column, and the text does not state one.
+expiry column, and a headline does not state one.
 """
 from __future__ import annotations
 
