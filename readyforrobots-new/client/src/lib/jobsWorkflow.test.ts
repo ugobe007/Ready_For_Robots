@@ -1052,19 +1052,15 @@ describe("jobsWorkflow", () => {
     expect(crm).toMatch(/<JobsProcessChrome/);
     expect(crm).toMatch(/CRM_SIGNUP_NEXT_CTA/);
     const signup = readFileSync(join(here, "../pages/Signup.tsx"), "utf8");
-    expect(signup).toMatch(/Keep the jobs you picked/);
+    expect(signup).toMatch(/SAVE THESE BUYERS/);
+    expect(signup).toMatch(/we found for your robot/);
     expect(signup).not.toMatch(/The pipeline is where more than 5 live/);
+    expect(signup).not.toMatch(/\/api\/leads\/summary/);
+    expect(signup).not.toMatch(/\/api\/leads\/pipeline/);
     expect(signup).toMatch(/readJobsHandoffSnapshot/);
     expect(signup).toMatch(/tasteJobs/);
     expect(signup).not.toMatch(/jobModelListLine/);
-    expect(signup).toMatch(/robotJobsIntent\) return/);
-    expect(signup).toMatch(/liveProof &&\s*!robotJobsIntent/);
-    expect(signup).toMatch(/jobs for\{" "\}/);
-    expect(signup).toMatch(/on your desk, with the jobs you kept/);
-    expect(signup).toMatch(/!resultsIntent &&\s*!robotJobsIntent/);
-    expect(signup).toMatch(
-      /!hubspotIntent &&\s*!pipelineIntent &&\s*!resultsIntent &&\s*!robotJobsIntent/
-    );
+    expect(signup).not.toMatch(/Keep the jobs you picked/);
     expect(signup).not.toMatch(/Keep jobs for your robot/);
     expect(pipeline).toMatch(/arrivedFromPlace/);
     expect(pipeline).toMatch(/isPlaceSrc/);

@@ -1986,3 +1986,459 @@
   font-family: Archivo, sans-serif;
   font-weight: 800;
 }
+
+.rfr-account {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.rfr-account main {
+  flex: 1;
+}
+
+.rfr-account-split,
+.rfr-account-stack {
+  max-width: 1296px;
+  margin: 0 auto;
+  padding: 56px 24px 0;
+}
+
+.rfr-account-split {
+  display: flex;
+  gap: 64px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.rfr-account-copy {
+  flex: 1 1 520px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+
+.rfr-account-kicker {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--rfr-muted);
+  border-bottom: 1px solid var(--rfr-rule);
+  padding-bottom: 12px;
+}
+
+.rfr-account h1 {
+  margin: 0;
+  font-family: Archivo, sans-serif;
+  font-size: clamp(40px, 5.2vw, 68px);
+  font-weight: 900;
+  letter-spacing: -0.035em;
+  line-height: 0.95;
+}
+
+.rfr-account-lede {
+  margin: 0;
+  font-size: 19px;
+  line-height: 1.5;
+  color: var(--rfr-body-2);
+  max-width: 560px;
+}
+
+.rfr-account-card {
+  flex: 0 1 440px;
+  min-width: min(100%, 300px);
+  border: 2px solid var(--rfr-ink);
+  background: var(--rfr-surface);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-sizing: border-box;
+}
+
+.rfr-account-tabs {
+  display: flex;
+  border-bottom: 2px solid var(--rfr-ink);
+}
+
+.rfr-account-tabs a,
+.rfr-account-tabs span {
+  flex: 1;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+  font-size: 15px;
+}
+
+.rfr-account-tabs .is-on {
+  background: var(--rfr-ink);
+  color: var(--rfr-surface);
+}
+
+.rfr-account-tabs .is-off {
+  background: var(--rfr-surface);
+  color: var(--rfr-ink);
+}
+
+.rfr-account form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.rfr-account label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rfr-account-label {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--rfr-muted);
+}
+
+.rfr-account input,
+.rfr-account textarea,
+.rfr-account select {
+  height: 48px;
+  border: 2px solid var(--rfr-ink);
+  background: var(--rfr-surface);
+  padding: 0 14px;
+  font-size: 16px;
+  color: var(--rfr-ink);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.rfr-account textarea {
+  height: auto;
+  padding: 12px 14px;
+}
+
+.rfr-account input.is-error {
+  border-color: var(--rfr-accent);
+}
+
+.rfr-account-error {
+  border-left: 4px solid var(--rfr-accent);
+  background: #fff4ec;
+  padding: 12px 14px;
+  font-size: 14px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.rfr-account a.rfr-account-submit,
+.rfr-account a.rfr-account-secondary {
+  color: var(--rfr-surface);
+  text-decoration: none;
+}
+
+.rfr-account a.rfr-account-secondary {
+  color: var(--rfr-ink);
+}
+
+.rfr-account-submit,
+.rfr-account-secondary {
+  height: 52px;
+  border: 0;
+  background: var(--rfr-ink);
+  color: var(--rfr-surface);
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+  font-size: 17px;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.rfr-account-secondary {
+  height: 48px;
+  border: 2px solid var(--rfr-ink);
+  background: transparent;
+  color: var(--rfr-ink);
+  font-size: 15px;
+}
+
+.rfr-account-submit:disabled,
+.rfr-account-secondary:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.rfr-account-fine {
+  margin: 0;
+  font-size: 13px;
+  color: var(--rfr-muted);
+  line-height: 1.5;
+}
+
+.rfr-account-fine a {
+  text-decoration: underline;
+}
+
+.rfr-account-gets,
+.rfr-account-saving {
+  display: flex;
+  flex-direction: column;
+  border-top: 2px solid var(--rfr-ink);
+}
+
+.rfr-account-get,
+.rfr-account-buyer {
+  display: grid;
+  gap: 4px 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rfr-rule);
+}
+
+.rfr-account-get {
+  grid-template-columns: 44px 1fr;
+}
+
+.rfr-account-get b,
+.rfr-account-buyer strong {
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+}
+
+.rfr-account-get span,
+.rfr-account-buyer em {
+  font-size: 15px;
+  color: var(--rfr-body-2);
+  line-height: 1.45;
+  font-style: normal;
+}
+
+.rfr-account-num {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  color: var(--rfr-accent);
+  grid-row: span 2;
+}
+
+.rfr-account-buyer {
+  grid-template-columns: 1fr auto;
+}
+
+.rfr-account-tag {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  align-self: start;
+}
+
+.rfr-account-tag.is-strong {
+  background: var(--rfr-ink);
+  color: var(--rfr-surface);
+}
+
+.rfr-account-tag.is-soft {
+  background: var(--rfr-example-bg);
+  color: var(--rfr-example-fg);
+}
+
+.rfr-account-why {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: var(--rfr-muted);
+  text-align: right;
+}
+
+.rfr-account-saving-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--rfr-rule);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--rfr-muted);
+}
+
+.rfr-account-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  border-top: 2px solid var(--rfr-ink);
+}
+
+.rfr-account-steps a {
+  padding: 28px 28px 28px 0;
+  border-bottom: 1px solid var(--rfr-rule);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rfr-account-steps a + a {
+  padding-left: 28px;
+  border-left: 1px solid var(--rfr-rule);
+}
+
+.rfr-account-steps strong {
+  font-family: Archivo, sans-serif;
+  font-weight: 900;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+
+.rfr-account-note {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  flex-wrap: wrap;
+  border-left: 4px solid var(--rfr-accent);
+  background: var(--rfr-surface);
+  padding: 16px 18px;
+  max-width: 760px;
+}
+
+.rfr-account-note b {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--rfr-accent);
+}
+
+.rfr-account-bar {
+  width: 320px;
+  max-width: 100%;
+  height: 6px;
+  background: var(--rfr-rule);
+}
+
+.rfr-account-bar span {
+  display: block;
+  width: 55%;
+  height: 6px;
+  background: var(--rfr-accent);
+}
+
+.rfr-account-plan {
+  flex: 0 1 380px;
+  min-width: min(100%, 280px);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rfr-account-plan-card {
+  background: var(--rfr-ink);
+  color: var(--rfr-surface);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rfr-account-plan-card span {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #fdba74;
+}
+
+.rfr-account-plan-card strong {
+  font-family: Archivo, sans-serif;
+  font-weight: 900;
+  font-size: 40px;
+  line-height: 1;
+}
+
+.rfr-account-plan-card em {
+  font-size: 14px;
+  font-style: normal;
+  color: var(--rfr-rule);
+}
+
+.rfr-account-rows {
+  display: flex;
+  flex-direction: column;
+  border-top: 2px solid var(--rfr-ink);
+}
+
+.rfr-account-row {
+  display: grid;
+  grid-template-columns: 180px 1fr auto;
+  gap: 12px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rfr-rule);
+  align-items: center;
+}
+
+.rfr-account-row span {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--rfr-muted);
+}
+
+.rfr-account-row a,
+.rfr-account-row button.linkish {
+  font-size: 14px;
+  color: var(--rfr-muted);
+  text-decoration: underline;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.rfr-account-callback {
+  max-width: 1296px;
+  margin: 0 auto;
+  padding: 96px 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.rfr-account .rfr-footer {
+  margin-top: 72px;
+}
+
+@media (max-width: 720px) {
+  .rfr-account-split {
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .rfr-account-split,
+  .rfr-account-stack,
+  .rfr-account-callback {
+    padding: 32px 16px 0;
+  }
+
+  .rfr-account-card,
+  .rfr-account-plan {
+    width: 100%;
+  }
+
+  .rfr-account-card {
+    padding: 20px;
+  }
+
+  .rfr-account-steps a + a {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .rfr-account-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+}

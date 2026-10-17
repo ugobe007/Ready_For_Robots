@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import ExperimentHeader from "@/components/ExperimentHeader";
+import { SiteFooter, SiteHeader } from "@/components/editorial";
 import { supabase } from "@/lib/supabase";
 import {
   clearSupabaseOAuthParams,
@@ -109,18 +109,34 @@ export default function AuthCallback() {
     };
   }, [setLocation]);
 
+  const waiting = message === "Completing sign-in…";
+
   return (
-    <div className="min-h-screen bg-[#081126] text-slate-100">
-      <ExperimentHeader />
-      <main className="mx-auto max-w-md px-6 pt-32 text-center">
-        <p className="text-base text-slate-300">{message}</p>
-        <Link
-          href="/login"
-          className="mt-6 inline-block text-base font-semibold text-emerald-400"
-        >
-          Back to sign in
-        </Link>
+    <div className="rfr-editorial rfr-account">
+      <SiteHeader />
+      <main>
+        <section className="rfr-account-callback">
+          <div className="rfr-account-kicker">
+            {waiting ? "SIGNING YOU IN" : "SIGN-IN LINK EXPIRED"}
+          </div>
+          <h1>{waiting ? "One moment." : "That link didn't work."}</h1>
+          <p className="rfr-account-lede">
+            {waiting
+              ? "Checking your sign-in, then taking you back to where you were."
+              : message}
+          </p>
+          {waiting ? (
+            <div className="rfr-account-bar" aria-hidden="true">
+              <span />
+            </div>
+          ) : (
+            <Link href="/login" className="rfr-account-submit" style={{ width: "auto", padding: "0 18px" }}>
+              Back to sign in
+            </Link>
+          )}
+        </section>
       </main>
+      <SiteFooter />
     </div>
   );
 }

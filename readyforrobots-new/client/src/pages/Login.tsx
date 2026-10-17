@@ -4,8 +4,7 @@
 import { useEffect, useState } from "react";
 import { Github } from "lucide-react";
 import { Link, useLocation } from "wouter";
-import ExperimentHeader from "@/components/ExperimentHeader";
-import SiteFooter from "@/components/layout/SiteFooter";
+import { SiteFooter, SiteHeader } from "@/components/editorial";
 import {
   AUTH_UNAVAILABLE_MSG,
   supabase,
@@ -28,8 +27,6 @@ import {
   navigateAfterAuth,
 } from "@/lib/authNext";
 import { markJobsWorkspaceRestoreIfHome } from "@/lib/jobsWorkflow";
-import PixelIcon from "@/components/PixelIcon";
-import { KARE_FACE } from "@/lib/kareIcons";
 
 function GoogleGlyph() {
   return (
@@ -223,150 +220,134 @@ export default function Login() {
 
   const loginSearch =
     typeof window !== "undefined" ? window.location.search : "";
+  const signupHref = `/signup${loginSearch}`;
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#081126] text-slate-100">
-      <ExperimentHeader />
-      <main className="flex-1 flex items-center justify-center px-4 pt-24 pb-16">
-        <div className="w-full max-w-md">
-          <div className="mb-8 flex items-center justify-center gap-5 text-left">
-            <div className="min-w-0">
-              <p className="section-eyebrow mb-2">Sign in</p>
-              <h1 className="font-display text-3xl font-bold tracking-tight text-slate-100">
-                Welcome back
-              </h1>
-              <p className="mt-2 text-base text-slate-300">
-                Sign in to save jobs, run Pipeline, and work CRM. Admin emails
-                open{" "}
-                <Link
-                  href="/admin"
-                  className="text-emerald-400 underline-offset-2 hover:underline"
-                >
-                  /admin
-                </Link>{" "}
-                after sign-in.
-              </p>
-            </div>
-            <div className="shrink-0" aria-hidden="true">
-              <PixelIcon
-                map={KARE_FACE}
-                scale={5}
-                fill="#3ecf8e"
-                background="transparent"
-              />
+    <div className="rfr-editorial rfr-account">
+      <SiteHeader />
+      <main>
+        <section className="rfr-account-split">
+          <div className="rfr-account-copy">
+            <div className="rfr-account-kicker">SIGN IN</div>
+            <h1>Sign in to your desk.</h1>
+            <p className="rfr-account-lede">
+              Your saved buyers, alerts and robots are where you left them.
+            </p>
+            <div className="rfr-account-gets">
+              <div className="rfr-account-get">
+                <span className="rfr-account-num">01</span>
+                <b>Every buyer for your robot, ranked</b>
+                <span>
+                  Company, the workflow, why now, and the source. Budget confirmed first.
+                </span>
+              </div>
+              <div className="rfr-account-get">
+                <span className="rfr-account-num">02</span>
+                <b>Alerts when a new buyer appears</b>
+                <span>
+                  A new RFP or robotics hire that fits one of your robots lands in your inbox the day we find it.
+                </span>
+              </div>
+              <div className="rfr-account-get">
+                <span className="rfr-account-num">03</span>
+                <b>A desk to work the list</b>
+                <span>
+                  Save buyers, move them from new to contacted to won, and keep notes in one place.
+                </span>
+              </div>
             </div>
           </div>
-
-          {status === "sent" ? (
-            <div className=" border border-emerald-400/35 bg-emerald-950/30 px-6 py-8 text-center">
-              <h2 className="text-base font-semibold text-slate-100 mb-2">
-                Check your email
-              </h2>
-              <p className="text-sm text-slate-300">
-                We sent a magic link to{" "}
-                <span className="font-semibold text-emerald-300">{email}</span>.
-              </p>
-              <button
-                type="button"
-                onClick={() => setStatus("idle")}
-                className="mt-5 text-xs text-slate-400 hover:text-slate-200"
-              >
-                Back to sign-in options
-              </button>
+          <div className="rfr-account-card">
+            <div className="rfr-account-tabs">
+              <Link href={signupHref} className="is-off">
+                Create account
+              </Link>
+              <span className="is-on">Sign in</span>
             </div>
-          ) : (
-            <div className=" border border-slate-700/70 bg-[#0b162f]/85 px-6 py-8 shadow-[0_20px_45px_-25px_rgba(0,0,0,0.8)]">
-              {!supabase ? (
-                <p
-                  className="mb-5 text-xs text-red-200 border border-red-400/40 bg-red-900/30 px-3 py-2"
-                  role="alert"
-                >
-                  {AUTH_UNAVAILABLE_MSG}
+            {status === "sent" ? (
+              <>
+                <h2>Check your email</h2>
+                <p className="rfr-account-lede">
+                  We sent a sign-in link to <b>{email}</b>.
                 </p>
-              ) : null}
-              <div className="flex flex-col gap-2 mb-5">
                 <button
                   type="button"
-                  onClick={() => void oauth("google")}
-                  disabled={!supabase}
-                  className="w-full flex items-center justify-center gap-2 border border-slate-600  px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
+                  className="rfr-account-fine"
+                  onClick={() => setStatus("idle")}
                 >
-                  <GoogleGlyph />
-                  Continue with Google - one tap
+                  Back to sign-in options
                 </button>
-                <button
-                  type="button"
-                  onClick={() => void oauth("azure")}
-                  disabled={!supabase}
-                  className="w-full flex items-center justify-center gap-2 border border-slate-600  px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
-                >
-                  <MicrosoftGlyph />
-                  Continue with Microsoft 365 - one tap
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void oauth("github")}
-                  disabled={!supabase}
-                  className="w-full flex items-center justify-center gap-2 border border-slate-600  px-4 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-800/70 disabled:opacity-40"
-                >
-                  <Github className="h-4 w-4" aria-hidden="true" />
-                  Continue with GitHub - one tap
-                </button>
-              </div>
-              <div className="flex items-center gap-3 mb-5">
-                <span className="flex-1 h-px bg-slate-700" />
-                <span className="text-[10px] text-slate-500 uppercase tracking-widest">
-                  or
-                </span>
-                <span className="flex-1 h-px bg-slate-700" />
-              </div>
-              <form onSubmit={e => void magicLink(e)} className="space-y-3">
-                <input
-                  type="email"
-                  required
-                  autoComplete="email"
-                  inputMode="email"
-                  spellCheck={false}
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@company.com"
-                  disabled={status === "sending"}
-                  className="w-full  border border-slate-600 bg-[#0a1327] px-3 py-2.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-400"
-                />
-                {status === "error" && (
-                  <p className="text-xs text-red-200 border border-red-400/40 bg-red-900/30 px-3 py-2 whitespace-pre-wrap">
+              </>
+            ) : (
+              <>
+                {!supabase ? (
+                  <p className="rfr-account-error" role="alert">
+                    {AUTH_UNAVAILABLE_MSG}
+                  </p>
+                ) : null}
+                {status === "error" && errMsg ? (
+                  <p className="rfr-account-error" role="alert">
                     {errMsg}
                   </p>
-                )}
+                ) : null}
+                <form onSubmit={e => void magicLink(e)}>
+                  <label>
+                    <span className="rfr-account-label">WORK EMAIL</span>
+                    <input
+                      type="email"
+                      required
+                      autoComplete="email"
+                      inputMode="email"
+                      spellCheck={false}
+                      value={email}
+                      onChange={e => setEmail(e.target.value)}
+                      placeholder="you@company.com"
+                      disabled={status === "sending"}
+                      className={status === "error" ? "is-error" : undefined}
+                    />
+                  </label>
+                  <button
+                    type="submit"
+                    className="rfr-account-submit"
+                    disabled={status === "sending" || !email.trim() || !supabase}
+                  >
+                    {status === "sending" ? "Sending…" : "Sign in"}
+                  </button>
+                </form>
+                <p className="rfr-account-fine">
+                  New here? <Link href={signupHref}>Create an account</Link>. It takes under a minute.
+                </p>
                 <button
-                  type="submit"
-                  disabled={status === "sending" || !email.trim() || !supabase}
-                  className="w-full  px-4 py-2.5 text-sm font-semibold text-[#06261f] bg-emerald-400 hover:bg-emerald-300 disabled:opacity-40"
+                  type="button"
+                  className="rfr-account-secondary"
+                  onClick={() => void oauth("google")}
+                  disabled={!supabase}
                 >
-                  {status === "sending" ? "Sending…" : "Send magic link"}
+                  <GoogleGlyph />
+                  Continue with Google
                 </button>
-              </form>
-            </div>
-          )}
-
-          <div className="mt-6 text-center space-y-3">
-            <p className="text-xs text-slate-400">
-              New to ReadyForRobots?{" "}
-              <Link
-                href={`/signup${loginSearch}`}
-                className="font-semibold text-emerald-300 hover:text-emerald-200"
-              >
-                Start free workspace
-              </Link>
-            </p>
-            <Link
-              href="/"
-              className="block text-xs text-slate-500 hover:text-slate-300"
-            >
-              ← Back home
-            </Link>
+                <button
+                  type="button"
+                  className="rfr-account-secondary"
+                  onClick={() => void oauth("azure")}
+                  disabled={!supabase}
+                >
+                  <MicrosoftGlyph />
+                  Continue with Microsoft 365
+                </button>
+                <button
+                  type="button"
+                  className="rfr-account-secondary"
+                  onClick={() => void oauth("github")}
+                  disabled={!supabase}
+                >
+                  <Github className="h-4 w-4" aria-hidden="true" />
+                  Continue with GitHub
+                </button>
+              </>
+            )}
           </div>
-        </div>
+        </section>
       </main>
       <SiteFooter />
     </div>
