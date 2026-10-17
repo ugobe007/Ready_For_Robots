@@ -2144,6 +2144,62 @@
   color: var(--rfr-ink);
 }
 
+.rfr-account-panel-title {
+  margin: 0;
+  font-family: Archivo, sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  letter-spacing: -0.03em;
+}
+
+.rfr-account-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--rfr-muted);
+}
+
+.rfr-account-or::before,
+.rfr-account-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--rfr-rule);
+}
+
+.rfr-account-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.rfr-account-actions .rfr-account-secondary {
+  width: auto;
+  padding: 0 18px;
+}
+
+.rfr-account-textbtn {
+  background: none;
+  border: 0;
+  padding: 12px 8px;
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+  font-size: 16px;
+  text-decoration: underline;
+  cursor: pointer;
+  color: var(--rfr-ink);
+}
+
+.rfr-account-switch {
+  border-top: 1px solid var(--rfr-rule);
+  padding-top: 14px;
+}
+
 .rfr-account-submit,
 .rfr-account-secondary {
   height: 52px;

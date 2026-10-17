@@ -2,7 +2,6 @@
  * Sign up — account creation entry point using Supabase auth (dark workflow theme).
  */
 import { useEffect, useMemo, useState } from "react";
-import { Github } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { SiteFooter, SiteHeader } from "@/components/editorial";
 import {
@@ -47,109 +46,6 @@ import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
 
-type InboxLink = { label: string; url: string };
-
-function GoogleGlyph() {
-  return (
-    <span
-      className="inline-flex h-5 w-5 items-center justify-center  bg-white"
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 24 24" className="h-4 w-4" focusable="false">
-        <path
-          fill="#EA4335"
-          d="M12 10.2v3.9h5.5c-.2 1.2-1.4 3.5-5.5 3.5-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 6.8 2 2.6 6.2 2.6 11.4S6.8 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"
-        />
-        <path
-          fill="#34A853"
-          d="M3.7 7.3l3.2 2.3c.9-1.8 2.8-3 5.1-3 1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 8.1 2 4.8 4.2 3.2 7.3Z"
-        />
-        <path
-          fill="#4285F4"
-          d="M12 20.8c2.5 0 4.7-.8 6.3-2.3l-2.9-2.4c-.8.6-1.8 1-3.4 1-4.1 0-5.3-2.8-5.5-3.5l-3.3 2.5c1.6 3.1 4.9 4.7 8.8 4.7Z"
-        />
-        <path
-          fill="#FBBC05"
-          d="M3.2 16.1l3.3-2.5c-.1-.4-.2-.9-.2-1.4s.1-1 .2-1.4L3.2 8.3c-.4 1-.6 2-.6 3.1s.2 2.1.6 3.1Z"
-        />
-      </svg>
-    </span>
-  );
-}
-
-/**
- * Map an email address to its webmail inbox(es) so a user on the "check your
- * email" screen can open their inbox in one tap instead of hunting for it (a
- * common magic-link completion leak).
- *
- * Consumer domains map to a single provider. Our ICP (robot OEMs/integrators)
- * signs up with a *custom work-email domain* whose provider we can't detect
- * client-side without an MX lookup — so we surface the two hosts that cover the
- * overwhelming majority of business mailboxes: Google Workspace and Microsoft
- * 365. The Google link is domain-scoped so it routes straight to a Workspace
- * inbox when one exists. Returns [] only when there is no parseable domain.
- */
-function emailInboxLinks(email: string): InboxLink[] {
-  const domain = email.split("@")[1]?.toLowerCase().trim();
-  if (!domain) return [];
-  const consumer: Record<string, InboxLink> = {
-    "gmail.com": {
-      label: "Open Gmail",
-      url: "https://mail.google.com/mail/u/0/",
-    },
-    "googlemail.com": {
-      label: "Open Gmail",
-      url: "https://mail.google.com/mail/u/0/",
-    },
-    "outlook.com": {
-      label: "Open Outlook",
-      url: "https://outlook.live.com/mail/0/",
-    },
-    "hotmail.com": {
-      label: "Open Outlook",
-      url: "https://outlook.live.com/mail/0/",
-    },
-    "live.com": {
-      label: "Open Outlook",
-      url: "https://outlook.live.com/mail/0/",
-    },
-    "msn.com": {
-      label: "Open Outlook",
-      url: "https://outlook.live.com/mail/0/",
-    },
-    "yahoo.com": { label: "Open Yahoo Mail", url: "https://mail.yahoo.com/" },
-    "icloud.com": {
-      label: "Open iCloud Mail",
-      url: "https://www.icloud.com/mail/",
-    },
-    "me.com": {
-      label: "Open iCloud Mail",
-      url: "https://www.icloud.com/mail/",
-    },
-    "proton.me": {
-      label: "Open Proton Mail",
-      url: "https://mail.proton.me/u/0/",
-    },
-    "protonmail.com": {
-      label: "Open Proton Mail",
-      url: "https://mail.proton.me/u/0/",
-    },
-  };
-  const hit = consumer[domain];
-  if (hit) return [hit];
-  // Custom work-email domain (the ICP): offer both dominant business hosts.
-  return [
-    {
-      label: "Open Gmail / Workspace",
-      url: `https://mail.google.com/a/${domain}`,
-    },
-    {
-      label: "Open Outlook / Microsoft 365",
-      url: "https://outlook.office.com/mail/",
-    },
-  ];
-}
-
 function readWorkflowSessionContext(): WorkflowPrefill {
   if (typeof window === "undefined") return {};
   try {
@@ -185,7 +81,7 @@ export default function Signup() {
   const [resendCooldown, setResendCooldown] = useState(0);
   const [resendNote, setResendNote] = useState("");
   const [oauthPending, setOauthPending] = useState<
-    null | "google" | "github" | "azure"
+    null | "google" | "github"
   >(null);
   const [workspaceProfile, setWorkspaceProfile] =
     useState<RobotWorkspaceProfile>(() => {
@@ -390,7 +286,7 @@ export default function Signup() {
     return () => sub.subscription.unsubscribe();
   }, [setLocation]);
 
-  async function oauth(provider: "google" | "github" | "azure") {
+  async function oauth(provider: "google" | "github") {
     if (!supabase) {
       setStatus("error");
       setErrMsg(AUTH_UNAVAILABLE_MSG);
@@ -435,11 +331,7 @@ export default function Signup() {
     if (error) {
       setOauthPending(null);
       setStatus("error");
-      setErrMsg(
-        provider === "azure" && /provider is not enabled/i.test(error.message)
-          ? "This OAuth provider is not enabled yet in Supabase Auth. Use Google or GitHub, or enable the provider in Supabase."
-          : error.message
-      );
+      setErrMsg(error.message);
     }
   }
 
@@ -563,6 +455,52 @@ export default function Signup() {
     },
   ];
 
+  if (status === "sent") {
+    return (
+      <div className="rfr-editorial rfr-account">
+        <SiteHeader />
+        <main>
+          <section className="rfr-account-callback">
+            <div className="rfr-account-kicker">CHECK YOUR INBOX</div>
+            <h1>We sent you a sign-in link.</h1>
+            <p className="rfr-account-lede">
+              It went to <strong>{email}</strong>. Open it on this device to sign in. The link works for one hour.
+            </p>
+            <div className="rfr-account-actions">
+              <button
+                type="button"
+                className="rfr-account-secondary"
+                onClick={() => void resendMagicLink()}
+                disabled={resendCooldown > 0}
+              >
+                {resendCooldown > 0
+                  ? `Resend the link in ${resendCooldown}s`
+                  : "Resend the link"}
+              </button>
+              <button
+                type="button"
+                className="rfr-account-textbtn"
+                onClick={() => {
+                  setStatus("idle");
+                  setResendCooldown(0);
+                  setResendNote("");
+                }}
+              >
+                Use a different email
+              </button>
+            </div>
+            {resendNote ? <p className="rfr-account-fine">{resendNote}</p> : null}
+            <p className="rfr-account-fine">
+              Nothing after a few minutes? Check spam, or continue with Google or GitHub instead.
+              {fromFind ? " Open the link and you go straight back to your results." : ""}
+            </p>
+          </section>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
   return (
     <div className="rfr-editorial rfr-account">
       <SiteHeader />
@@ -628,180 +566,97 @@ export default function Signup() {
           </div>
 
           <div className="rfr-account-card">
-            <div className="rfr-account-tabs">
-              <span className="is-on">Create account</span>
-              <Link href={loginHref} className="is-off">
-                Sign in
-              </Link>
-            </div>
-            {status === "sent" ? (
-              <>
-                <h2>Check your email</h2>
-                <p className="rfr-account-lede">
-                  We sent a sign-in link to <b>{email}</b>.
-                  {fromFind
-                    ? " Open it and you go straight back to your results."
-                    : " Open it and we'll take you to the next step."}
-                </p>
-                {emailInboxLinks(email).map(inbox => (
-                  <a
-                    key={inbox.url}
-                    className="rfr-account-secondary"
-                    href={inbox.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {inbox.label}
-                  </a>
-                ))}
-                <button
-                  type="button"
-                  className="rfr-account-fine"
-                  onClick={() => void resendMagicLink()}
-                  disabled={resendCooldown > 0}
-                >
-                  {resendCooldown > 0
-                    ? `Resend link in ${resendCooldown}s`
-                    : "Resend link"}
-                </button>
-                {resendNote ? <p className="rfr-account-fine">{resendNote}</p> : null}
-                <button
-                  type="button"
-                  className="rfr-account-secondary"
-                  onClick={() => void oauth("google")}
-                  disabled={!supabase || oauthPending !== null}
-                >
-                  <GoogleGlyph />
-                  {oauthPending === "google"
-                    ? "Redirecting to Google..."
-                    : "Continue with Google"}
-                </button>
-                <button
-                  type="button"
-                  className="rfr-account-fine"
-                  onClick={() => {
-                    setStatus("idle");
-                    setResendCooldown(0);
-                    setResendNote("");
-                  }}
-                >
-                  Use a different email
-                </button>
-              </>
-            ) : (
-              <>
-                {matchedUnlockIntent && (
-                  <RobotWorkspaceProfileFields
-                    value={workspaceProfile}
-                    onChange={setWorkspaceProfile}
-                    submittedHostname={
-                      (workflowPrefill.company_url || "")
-                        .replace(/^https?:\/\//, "")
-                        .replace(/^www\./, "")
-                        .split("/")[0] || undefined
-                    }
-                    tone="light"
-                    idPrefix="signup-matched"
-                  />
-                )}
-                {!supabase ? (
-                  <p className="rfr-account-error" role="alert">
-                    {AUTH_UNAVAILABLE_MSG}
-                  </p>
-                ) : null}
-                {status === "error" && errMsg ? (
-                  <p className="rfr-account-error" role="alert">
-                    {errMsg}
-                  </p>
-                ) : null}
-                <form onSubmit={e => void magicLink(e)}>
-                  <label>
-                    <span className="rfr-account-label">YOUR NAME</span>
-                    <input
-                      type="text"
-                      autoComplete="name"
-                      placeholder="Alex Rivera"
-                      value={fullName}
-                      onChange={e => setFullName(e.target.value)}
-                      required={hubspotIntent}
-                    />
-                  </label>
-                  {!matchedUnlockIntent && (
-                    <label>
-                      <span className="rfr-account-label">COMPANY</span>
-                      <input
-                        type="text"
-                        autoComplete="organization"
-                        placeholder="Robot maker, dealer or integrator"
-                        value={workspaceProfile.company_name}
-                        onChange={e =>
-                          setWorkspaceProfile(prev => ({
-                            ...prev,
-                            company_name: e.target.value,
-                          }))
-                        }
-                      />
-                    </label>
-                  )}
-                  <label>
-                    <span className="rfr-account-label">WORK EMAIL</span>
-                    <input
-                      type="email"
-                      required
-                      autoComplete="email"
-                      inputMode="email"
-                      spellCheck={false}
-                      placeholder="you@company.com"
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      disabled={status === "sending"}
-                      className={status === "error" ? "is-error" : undefined}
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    className="rfr-account-submit"
-                    disabled={status === "sending" || !email.trim() || !supabase}
-                  >
-                    {status === "sending"
-                      ? "Sending..."
-                      : fromFind
-                        ? "Save buyers and create account"
-                        : hubspotIntent
-                          ? "Sign up and connect HubSpot"
-                          : "Create account"}
-                  </button>
-                </form>
-                <p className="rfr-account-fine">
-                  {fromFind
-                    ? "Free during early access. We use your email for sign-in and buyer alerts only. You go straight back to your results."
-                    : "Free during early access. We use your email for sign-in and buyer alerts only."}{" "}
-                  Already have an account? <Link href={loginHref}>Sign in</Link>
-                </p>
-                <button
-                  type="button"
-                  className="rfr-account-secondary"
-                  onClick={() => void oauth("google")}
-                  disabled={!supabase || oauthPending !== null}
-                >
-                  <GoogleGlyph />
-                  {oauthPending === "google"
-                    ? "Redirecting to Google..."
-                    : "Continue with Google"}
-                </button>
-                <button
-                  type="button"
-                  className="rfr-account-secondary"
-                  onClick={() => void oauth("github")}
-                  disabled={!supabase || oauthPending !== null}
-                >
-                  <Github className="h-4 w-4" aria-hidden="true" />
-                  {oauthPending === "github"
-                    ? "Redirecting to GitHub..."
-                    : "Continue with GitHub"}
-                </button>
-              </>
+            <h2 className="rfr-account-panel-title">Create your account</h2>
+            {matchedUnlockIntent && (
+              <RobotWorkspaceProfileFields
+                value={workspaceProfile}
+                onChange={setWorkspaceProfile}
+                submittedHostname={
+                  (workflowPrefill.company_url || "")
+                    .replace(/^https?:\/\//, "")
+                    .replace(/^www\./, "")
+                    .split("/")[0] || undefined
+                }
+                tone="light"
+                idPrefix="signup-matched"
+              />
             )}
+            {!supabase ? (
+              <p className="rfr-account-error" role="alert">
+                {AUTH_UNAVAILABLE_MSG}
+              </p>
+            ) : null}
+            {status === "error" && errMsg ? (
+              <p className="rfr-account-error" role="alert">
+                {errMsg}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              className="rfr-account-submit"
+              onClick={() => void oauth("google")}
+              disabled={!supabase || oauthPending !== null}
+            >
+              {oauthPending === "google" ? "Redirecting to Google..." : "Continue with Google"}
+            </button>
+            <button
+              type="button"
+              className="rfr-account-submit"
+              onClick={() => void oauth("github")}
+              disabled={!supabase || oauthPending !== null}
+            >
+              {oauthPending === "github" ? "Redirecting to GitHub..." : "Continue with GitHub"}
+            </button>
+            <p className="rfr-account-or">OR USE YOUR EMAIL</p>
+            <form onSubmit={e => void magicLink(e)}>
+              {hubspotIntent && (
+                <label>
+                  <span className="rfr-account-label">YOUR NAME</span>
+                  <input
+                    type="text"
+                    autoComplete="name"
+                    placeholder="Alex Rivera"
+                    value={fullName}
+                    onChange={e => setFullName(e.target.value)}
+                    required
+                  />
+                </label>
+              )}
+              <label>
+                <span className="rfr-account-label">WORK EMAIL</span>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  inputMode="email"
+                  spellCheck={false}
+                  placeholder="you@company.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  disabled={status === "sending"}
+                  className={status === "error" ? "is-error" : undefined}
+                />
+              </label>
+              <button
+                type="submit"
+                className="rfr-account-secondary"
+                disabled={status === "sending" || !email.trim() || !supabase}
+              >
+                {status === "sending"
+                  ? "Sending..."
+                  : hubspotIntent
+                    ? "Email me a link and connect HubSpot"
+                    : "Email me a sign-in link"}
+              </button>
+            </form>
+            <p className="rfr-account-fine">
+              {fromFind
+                ? "Free during early access. We use your email for sign-in and buyer alerts only. You go straight back to your results."
+                : "Free during early access. We use your email for sign-in and buyer alerts only."}
+            </p>
+            <p className="rfr-account-fine rfr-account-switch">
+              Already have an account? <Link href={loginHref}>Sign in</Link>
+            </p>
           </div>
         </section>
       </main>
