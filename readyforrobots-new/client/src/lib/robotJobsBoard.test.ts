@@ -83,7 +83,7 @@ describe("robot jobs board", () => {
     expect(isFindBoardHash("#find")).toBe(true);
     expect(isFindBoardHash("#how")).toBe(false);
     const jobs = read("../pages/Jobs.tsx");
-    expect(jobs).toMatch(/isFindBoardHash\(hash\)\) return <Redirect to="\/jobs" \/>/);
+    expect(jobs).toMatch(/isFindBoardHash\(hash\)\) return <Redirect to="\/jobs" replace \/>/);
     expect(jobs).toMatch(/isFindBoardSearch\(search\)\) \{\s*return <RobotJobs \/>/);
     expect(jobs).toMatch(/return <EditorialResults \/>/);
   });

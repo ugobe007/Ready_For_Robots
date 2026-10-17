@@ -378,7 +378,7 @@ def phase_how() -> dict[str, Any]:
         and 'visit === "landing"' in jobs_page
         and "heroHome" in jobs_page
         and "isFindBoardSearch(search)" in jobs_page
-        and 'isFindBoardHash(hash)) return <Redirect to="/jobs" />' in jobs_page
+        and 'isFindBoardHash(hash)) return <Redirect to="/jobs" replace />' in jobs_page
         and "<RobotJobsBoard findError={error}" in find_results
         and not re.search(r'["\']\/experiment["\']', jobs_page)
     )
