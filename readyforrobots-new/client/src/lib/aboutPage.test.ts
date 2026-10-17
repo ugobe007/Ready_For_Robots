@@ -17,7 +17,7 @@ describe("about page", () => {
     );
   });
 
-  it("keeps Intelligence on its own route and social and dev pages off production", () => {
+  it("sends /intelligence to the newsletter and keeps social and dev pages off production", () => {
     const app = readFileSync(join(here, "../App.tsx"), "utf8");
     const header = readFileSync(
       join(here, "../components/editorial/SiteHeader.tsx"),
@@ -27,11 +27,24 @@ describe("about page", () => {
       join(here, "../components/Header.tsx"),
       "utf8"
     );
+    const footer = readFileSync(
+      join(here, "../components/layout/SiteFooter.tsx"),
+      "utf8"
+    );
+    const editorialFooter = readFileSync(
+      join(here, "../components/editorial/SiteFooter.tsx"),
+      "utf8"
+    );
     expect(app).toMatch(/path="\/about" component=\{About\}/);
     expect(app).toMatch(/path="\/desk" component=\{Desk\}/);
     expect(app).toMatch(/path="\/pipeline" component=\{DeskRedirect\}/);
-    expect(app).toMatch(/path="\/intelligence" component=\{Intelligence\}/);
+    expect(app).toMatch(/function IntelligenceRedirect\(\) \{\s*return <Redirect to="\/newsletter" \/>;\s*\}/);
+    expect(app).toMatch(/path="\/intelligence" component=\{IntelligenceRedirect\}/);
     expect(app).toMatch(/path="\/newsletter" component=\{Newsletter\}/);
+    expect(app).not.toMatch(/component=\{Intelligence\}/);
+    expect(footer).toMatch(/href: "\/intelligence"/);
+    expect(editorialFooter).toMatch(/href: "\/newsletter"/);
+    expect(publicHeader).toMatch(/href: "\/intelligence"/);
     expect(app).toMatch(/path="\/social" component=\{SocialRoute\}/);
     expect(app).toMatch(/import\.meta\.env\.DEV/);
     expect(header).toMatch(/\/branding\/rfr-icon-light\.svg/);

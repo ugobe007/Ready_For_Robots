@@ -11,7 +11,6 @@ import SalesSamples from "./pages/SalesSamples";
 import Desk from "./pages/Desk";
 import Compare from "./pages/Compare";
 import Signals from "./pages/Signals";
-import Intelligence from "./pages/Intelligence";
 import Newsletter from "./pages/Newsletter";
 import About from "./pages/About";
 import BillingSuccess from "./pages/BillingSuccess";
@@ -73,6 +72,10 @@ function DeskRedirect() {
   return <Redirect to="/desk" />;
 }
 
+function IntelligenceRedirect() {
+  return <Redirect to="/newsletter" />;
+}
+
 function HubSpotSettingsRedirect() {
   return <Redirect to="/desk?settings=hubspot" />;
 }
@@ -109,7 +112,7 @@ function Router() {
       <Route path="/about" component={About} />
       <Route path="/compare" component={Compare} />
       <Route path="/signals" component={Signals} />
-      <Route path="/intelligence" component={Intelligence} />
+      <Route path="/intelligence" component={IntelligenceRedirect} />
       <Route path="/newsletter" component={Newsletter} />
       <Route path="/market-insights" component={Newsletter} />
       <Route path="/robot-ready" component={Robots} />
