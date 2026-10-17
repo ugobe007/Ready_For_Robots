@@ -923,7 +923,7 @@ def try_phase2_search(
 
 
 def persist_classified_product(db: Any, record: dict[str, Any]) -> None:
-    """Insert one rfr_robot_products row. A matching saved row is reused instead.
+    """Insert one rfr_robot_products row. A matching usable saved row is reused instead.
 
     The match is normalized source URL, product name, prompt version, and
     taxonomy version. Failures are the caller's to log.
@@ -931,7 +931,11 @@ def persist_classified_product(db: Any, record: dict[str, Any]) -> None:
     from sqlalchemy import insert
 
     from app.services.buyer_opportunity.tables import rfr_robot_products
-    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+    from app.services.robot_understanding_v1.taxonomy_extraction import (
+        PROMPT_VERSION,
+        _assign_product_class,
+        get_taxonomy_version,
+    )
 
     product = record.get("product") or {}
     meta = record.get("metadata") or {}
@@ -949,8 +953,14 @@ def persist_classified_product(db: Any, record: dict[str, Any]) -> None:
         prompt_version=prompt_version,
         taxonomy_version=taxonomy_version,
     ):
-        if _product_name_key(row["product_name"]) == name_key:
+        if _product_name_key(row["product_name"]) != name_key:
+            continue
+        saved = product_from_saved_row(row)
+        if saved.get("needs_review") and not classification_is_clean(saved) and facts_ready_for_class(saved):
+            saved = _assign_product_class(saved)
+        if classification_is_usable(saved):
             return
+        break
     evidence = {
         field: product.get(field)
         for field in (
