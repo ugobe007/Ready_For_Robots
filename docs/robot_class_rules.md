@@ -26,6 +26,7 @@ The model may still return its own class guess, stored as `model_class_suggestio
 |---|---|
 | **clinical** | hospital, surgery_center, senior_living |
 | **logistics** | warehouse_distribution, 3pl, logistics_parcel |
+| **dealership** | automotive_dealership |
 | **production** | manufacturing, food_manufacturing |
 | **guest-facing** | restaurant, qsr_fast_food, bar_nightclub, hotel, casino, stadium_venue, airport, retail_store, grocery, shopping_mall |
 | **store** | retail_store, grocery, shopping_mall |
@@ -52,7 +53,7 @@ Checked in order; the **first rule that matches wins**. F = primary function, I 
 | 14 | F = machine_tending_assembly | **factory_industrial** | "Machine tending or assembly" |
 | 15 | F = picking_packing_palletizing and I touches *production* and not *logistics* | **factory_industrial** | "Picking or palletizing in plants" |
 | 16 | F = picking_packing_palletizing | **amr_logistics** | "Picking, packing or palletizing" |
-| 17 | F = delivery_transport and I touches *logistics* or *production* and no industry is *guest-facing* or *clinical* | **amr_logistics** | "Moves materials in warehouses or plants" |
+| 17 | F = delivery_transport and I touches *logistics*, *production*, or *dealership*, and no industry is *guest-facing* or *clinical* | **amr_logistics** | "Moves materials in warehouses, plants, or dealerships" |
 | 18a | F = delivery_transport and every industry is construction or energy_utilities | **construction** | "Hauls material on jobsites" |
 | 18b | F = delivery_transport and every industry is agriculture | **agriculture** | "Hauls on farms" |
 | 18 | F = delivery_transport | **delivery** | "Carries items from place to place" |
@@ -63,6 +64,7 @@ Checked in order; the **first rule that matches wins**. F = primary function, I 
 Notes:
 
 - Rule 3 runs before the work rules on purpose: a robot built only for hospitals is a healthcare robot whatever its task (Moxi, hospital UV towers, hospital delivery variants). A robot sold to hospitals **and** hotels falls through to its work (Relay's hotel page: delivery).
+- `automotive_dealership` is not in the logistics group. Rule 17 is the only rule that counts it, and only when the primary function is `delivery_transport` (a dealership robot that carries parts to technicians). A picker or a general-purpose robot sold to dealerships does not take this path. A dealership robot that is also sold into a guest-facing or clinical industry does not take it either. Bob decided this on 2026-10-16.
 - Rule 4 runs before rule 5: a robot that **makes** drinks is food robotics even when it also serves them (ADAM, Scorpion). A robot that only **carries** finished food is service (BellaBot, Matradee).
 - Secondary functions never change the class. They still count for matching.
 - No rule looks at wording, brand names or vendor names.
@@ -79,6 +81,7 @@ Notes:
 | Scorpion | food_beverage_prep · bar, restaurant | 4 | food_robotics |
 | BellaBot (Pudu) | serving_hospitality · restaurant | 5 | service_robot |
 | Titan | delivery_transport · warehouse, manufacturing, automotive_dealership | 17 | amr_logistics |
+| Titan, dealership page | delivery_transport · automotive_dealership | 17 | amr_logistics |
 | Geek+ | picking_packing_palletizing · warehouse | 16 | amr_logistics |
 | DUST-E S | cleaning · office, hospital, hotel, retail | 8 | cleaning |
 | Digit (Agility) | humanoid form | 1 | humanoid |

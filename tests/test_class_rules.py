@@ -60,3 +60,42 @@ def test_same_facts_always_assign_the_same_class():
     assert seen
     assert assign_class(None, [], None) == (None, "21", "Facts don't fit a rule")
     assert assign_class("delivery_transport", ["hospital"], "mobile_manipulator")[0] == "healthcare"
+
+
+def test_dealership_delivery_is_logistics_rule_17():
+    klass, rule_id, reason = assign_class(
+        "delivery_transport",
+        ["automotive_dealership"],
+        "amr_mobile_robot",
+    )
+    assert klass == "amr_logistics"
+    assert rule_id == "17"
+    assert "dealership" in reason
+
+
+def test_dealership_does_not_change_other_functions():
+    klass, rule_id, _reason = assign_class(
+        "picking_packing_palletizing",
+        ["automotive_dealership"],
+        "amr_mobile_robot",
+    )
+    assert rule_id == "16"
+    assert klass == "amr_logistics"
+
+    klass, rule_id, _reason = assign_class(
+        "general_purpose",
+        ["automotive_dealership"],
+        "amr_mobile_robot",
+    )
+    assert rule_id == "21"
+    assert klass is None
+
+
+def test_dealership_plus_hotel_stays_delivery():
+    klass, rule_id, _reason = assign_class(
+        "delivery_transport",
+        ["automotive_dealership", "hotel"],
+        "amr_mobile_robot",
+    )
+    assert rule_id == "18"
+    assert klass == "delivery"
