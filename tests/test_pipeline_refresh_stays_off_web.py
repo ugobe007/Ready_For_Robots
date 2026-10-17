@@ -60,11 +60,11 @@ def test_a_second_worker_does_not_start_another_rebuild(monkeypatch):
     calls = []
     monkeypatch.setattr(
         "app.services.public_surface_cache.read_public_cache",
-        lambda key, **kwargs: {"requested_at": "t1"},
+        lambda key, **kwargs: {"requested_at": "t1", "claimed_at": "c1"},
     )
     monkeypatch.setattr(
         "app.services.public_surface_cache.claim_pipeline_refresh_request",
-        lambda requested_at: False,
+        lambda requested_at: calls.append("claim") or False,
     )
     monkeypatch.setattr(
         "app.services.public_surface_cache.schedule_public_cache_refresh",

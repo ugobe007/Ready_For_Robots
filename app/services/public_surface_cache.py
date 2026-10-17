@@ -515,6 +515,33 @@ def claim_pipeline_refresh_request(requested_at: str) -> bool:
         db.close()
 
 
+def release_pipeline_refresh_claim(requested_at: str) -> None:
+    """Clear this worker's claim when the rebuild did not start, so it is retried."""
+    from sqlalchemy import text
+
+    from app.database import SessionLocal
+
+    db = SessionLocal()
+    try:
+        db.execute(
+            text(
+                """
+                UPDATE pipeline_cache_store
+                SET data = data - 'claimed_at'
+                WHERE cache_key = :key
+                  AND data->>'requested_at' = :requested_at
+                """
+            ),
+            {"key": PIPELINE_REFRESH_REQUEST_KEY, "requested_at": requested_at},
+        )
+        db.commit()
+    except Exception as exc:
+        logger.warning("Pipeline refresh claim release failed: %s", exc)
+        db.rollback()
+    finally:
+        db.close()
+
+
 def consume_pipeline_refresh_request(handled_at: str) -> str:
     """Start one worker rebuild when a newer request is waiting.
 
@@ -530,10 +557,13 @@ def consume_pipeline_refresh_request(handled_at: str) -> str:
     requested_at = str(payload.get("requested_at") or "")
     if not requested_at or requested_at == handled_at:
         return handled_at
-    if not claim_pipeline_refresh_request(requested_at):
+    if payload.get("claimed_at"):
         return requested_at
+    if not claim_pipeline_refresh_request(requested_at):
+        return handled_at
     started = schedule_public_cache_refresh(pipeline_only=True, reason="worker_request")
     if not started:
+        release_pipeline_refresh_claim(requested_at)
         return handled_at
     _write_pipeline_refresh_handled(requested_at)
     return requested_at
