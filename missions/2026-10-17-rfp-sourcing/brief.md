@@ -7,7 +7,7 @@
 
 ## Goal
 
-FIND opens a buyer row only from an RFP or a pilot. Today the index holds **27** companies with an RFP-shaped signal (same cut as `docs/find_from_signals.md`: latest score at least 40, inside the 1,174). The target is **100 companies with an open robot-relevant RFP**.
+A Budget confirmed card is an RFP or a funded pilot. This mission is only the RFP half of that label. Today the index holds **27** companies with an RFP-shaped signal (same cut as `docs/find_from_signals.md`: latest score at least 40, inside the 1,177). The target is **100 companies with an open robot-relevant RFP**. Robotics hires are a separate card, Building a robot team, and are not part of this 100.
 
 This brief lists where those solicitations are public, which ones we can read legally, and what each source is likely to add. No ingest code in this mission.
 
