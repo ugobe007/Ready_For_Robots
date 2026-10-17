@@ -56,7 +56,8 @@ describe("robot jobs board", () => {
 
   it("routes /jobs to the board and swaps How it works for Robot jobs in the nav", () => {
     const app = read("../App.tsx");
-    expect(app).toMatch(/<Route path="\/jobs" component=\{RobotJobs\} \/>/);
+    expect(app).toMatch(/<Route path="\/jobs" component=\{JobsIndexRoute\} \/>/);
+    expect(app).toMatch(/if \(search\) return <Redirect to=\{`\/\$\{search\}`\} \/>;\s*return <RobotJobs \/>;/);
     expect(app).toMatch(/<Route path="\/jobs\/:slug" component=\{Jobs\} \/>/);
     for (const rel of [
       "../components/editorial/SiteHeader.tsx",
