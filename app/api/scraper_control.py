@@ -285,6 +285,7 @@ def _run_pipeline_surface_refresh_sync() -> Dict[str, Any]:
 async def cron_refresh_pipeline_surfaces(
     token: str = Query("", description="Secret token (SCRAPER_CRON_TOKEN)"),
     x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    db: Session = Depends(get_db),
 ) -> Dict[str, Any]:
     """
     Rebuild pipeline/sales-lead caches with rotation (default cadence: 30 minutes).
@@ -303,6 +304,18 @@ async def cron_refresh_pipeline_surfaces(
     if not ok_cron and not ok_admin:
         raise HTTPException(status_code=403, detail="Invalid token or X-Admin-Key")
 
+    from app.runtime_role import is_web_process
+    from app.services.public_surface_cache import request_worker_pipeline_refresh
+
+    if is_web_process():
+        queued = request_worker_pipeline_refresh(db)
+        return {
+            "status": "queued",
+            "runner": "worker",
+            "requested_at": queued.get("requested_at"),
+            "message": "Queued for the worker machine. The web process does not rebuild the cache.",
+        }
+
     threading.Thread(
         target=_run_pipeline_surface_refresh_sync,
         daemon=True,
@@ -310,6 +323,7 @@ async def cron_refresh_pipeline_surfaces(
     ).start()
     return {
         "status": "started",
+        "runner": "worker",
         "message": "Refreshing homepage, summary, rotated lead lists, and /pipeline feed.",
     }
 

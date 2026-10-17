@@ -108,7 +108,7 @@ def _post_remote_refresh(url: str, header_args: list[str]) -> tuple[int, str]:
 def _pipeline_cache_status(api_base: str) -> dict:
     import httpx
 
-    url = f"{api_base.rstrip('/')}/api/leads/pipeline"
+    url = f"{api_base.rstrip('/')}/api/leads/pipeline?durable=1"
     with httpx.Client(timeout=30, follow_redirects=True) as client:
         resp = client.get(url, headers={"Accept": "application/json"})
         resp.raise_for_status()

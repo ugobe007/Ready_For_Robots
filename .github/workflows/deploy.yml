@@ -200,5 +200,30 @@ jobs:
             echo "::warning::Post-deploy cache refresh skipped — set ADMIN_KEY or SCRAPER_CRON_TOKEN in GitHub secrets."
             exit 0
           fi
-          python3 scripts/refresh_pipeline_cache.py --remote --wait --wait-timeout 900 --api-base "$API_BASE" \
-            || echo "::warning::Pipeline cache refresh failed — prod scheduler may rebuild within ~5 min."
+          # The POST only queues a row. The worker rebuilds. /health is the web
+          # process and must stay 200 for the whole rebuild (#335).
+          health_log=$(mktemp)
+          (
+            while true; do
+              code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 8 "$API_BASE/health" || echo 000)
+              echo "$(date -u +%H:%M:%S) $code" | tee -a "$health_log"
+              sleep 5
+            done
+          ) &
+          watcher=$!
+          set +e
+          python3 scripts/refresh_pipeline_cache.py --remote --wait --wait-timeout 900 --api-base "$API_BASE"
+          refresh_status=$?
+          set -e
+          kill "$watcher" 2>/dev/null || true
+          wait "$watcher" 2>/dev/null || true
+          bad=$(grep -Ev ' 200$' "$health_log" || true)
+          if [ -n "$bad" ]; then
+            echo "::error::/health was not 200 during the pipeline cache refresh"
+            echo "$bad"
+            exit 1
+          fi
+          echo "Health stayed 200 during the refresh ($(wc -l < "$health_log") checks)."
+          if [ "$refresh_status" -ne 0 ]; then
+            echo "::warning::Pipeline cache refresh failed — worker loop may rebuild within ~30 min."
+          fi

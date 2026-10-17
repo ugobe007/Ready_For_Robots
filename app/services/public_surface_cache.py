@@ -50,11 +50,14 @@ from app.services.content_surfaces import (
 )
 
 KEY_HUMANOID_REPORT = KEY_HUMANOID_BENCHMARK_REPORT  # backwards compatible alias
+# Deploy asks the worker to rebuild. The web process only writes this row.
+PIPELINE_REFRESH_REQUEST_KEY = "pipeline:refresh_request"
 
 _refresh_lock = threading.Lock()
 _refresh_in_progress = False
 _last_refresh_monotonic: float = 0.0
 _loop_started = False
+_request_loop_started = False
 
 
 def read_public_cache(cache_key: str, *, stale_ok: bool = True) -> Optional[Any]:
@@ -437,19 +440,22 @@ def schedule_public_cache_refresh(
     pipeline_only: bool = False,
     include_newsletter: bool = True,
     reason: str = "",
-) -> None:
-    """Single-flight background cache rebuild — never blocks HTTP."""
+) -> bool:
+    """Single-flight background cache rebuild — never blocks HTTP.
+
+    Returns True when a rebuild thread was started. The web process never starts one.
+    """
     from app.runtime_role import is_web_process
 
     if is_web_process():
         logger.debug("Cache refresh skipped on web process (%s)", reason or "scheduled")
-        return
+        return False
 
     global _refresh_in_progress
 
     with _refresh_lock:
         if _refresh_in_progress and not force:
-            return
+            return False
         _refresh_in_progress = True
 
     label = reason or ("force" if force else "scheduled")
@@ -463,6 +469,58 @@ def schedule_public_cache_refresh(
         daemon=True,
         name=f"public-cache-refresh-{label[:24]}",
     ).start()
+    return True
+
+
+def request_worker_pipeline_refresh(db: Session) -> dict[str, Any]:
+    """Ask the worker to rebuild pipeline caches. Does not run the rebuild."""
+    requested_at = datetime.now(timezone.utc).isoformat()
+    write_public_cache(
+        db,
+        PIPELINE_REFRESH_REQUEST_KEY,
+        {"requested_at": requested_at},
+    )
+    return {"requested_at": requested_at}
+
+
+def consume_pipeline_refresh_request(handled_at: str) -> str:
+    """Start one worker rebuild when a newer request is waiting.
+
+    Returns the timestamp now being handled. An in-flight rebuild leaves the
+    request pending so the next check runs it after this one finishes.
+    """
+    payload = read_public_cache(PIPELINE_REFRESH_REQUEST_KEY, stale_ok=True)
+    if not isinstance(payload, dict):
+        return handled_at
+    requested_at = str(payload.get("requested_at") or "")
+    if not requested_at or requested_at == handled_at:
+        return handled_at
+    started = schedule_public_cache_refresh(pipeline_only=True, reason="worker_request")
+    if not started:
+        return handled_at
+    return requested_at
+
+
+def start_pipeline_refresh_request_loop() -> None:
+    """Worker-only poll for deploy refresh requests. Never runs on the web process."""
+    from app.runtime_role import is_worker_process
+
+    global _request_loop_started
+    if not is_worker_process() or _request_loop_started:
+        return
+    _request_loop_started = True
+
+    def _loop() -> None:
+        handled = ""
+        while True:
+            time.sleep(15)
+            try:
+                handled = consume_pipeline_refresh_request(handled)
+            except Exception as exc:
+                logger.warning("Pipeline refresh request check failed: %s", exc)
+
+    threading.Thread(target=_loop, daemon=True, name="pipeline-refresh-request").start()
+    logger.info("Worker pipeline refresh request loop started")
 
 
 def maybe_schedule_public_cache_refresh(*, force: bool = False) -> None:

@@ -3928,6 +3928,10 @@ def leads_pipeline_feed(
     response: Response,
     user: Optional[dict] = Depends(optional_user),
     db: Session = Depends(get_db),
+    durable: bool = Query(
+        False,
+        description="Skip the in-process copy and read the durable cache row",
+    ),
 ):
     """
     Single batched read for /pipeline UI — summary + rotated top leads.
@@ -3961,7 +3965,7 @@ def leads_pipeline_feed(
         repaired = _repair_pipeline_lead_compat_fields(deepcopy(payload), db)
         return apply_pipeline_entitlements(repaired, plan)
 
-    mem = _PIPELINE_FEED_MEM.get("v1")
+    mem = None if durable else _PIPELINE_FEED_MEM.get("v1")
     if mem is not None:
         if time.monotonic() - float(mem.get("ts") or 0.0) >= PUBLIC_CACHE_REVALIDATE_SEC:
             _PIPELINE_FEED_MEM.pop("v1", None)
