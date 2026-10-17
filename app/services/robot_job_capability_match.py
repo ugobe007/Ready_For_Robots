@@ -268,7 +268,7 @@ def score_job(profile: CapabilityProfile, job: dict[str, Any]) -> tuple[float, l
         # Factory robots should match factory/manufacturing jobs
         elif "factory_task" in robot_domain_caps:
             is_factory_job = (
-                tape_family in ("pallet", "gripper", "factory")
+                tape_family in ("pallet", "gripper", "machine_tending", "factory")
                 or any(kw in industry for kw in ("manufactur", "factory", "plant"))
             )
             if not is_factory_job:

@@ -126,7 +126,7 @@ def test_corpus_boards_are_materially_differentiated():
     vega_f, digit_f, origin_f, neo_f = map(families, (vega, digit, origin, neo))
     vega_keys, digit_keys, origin_keys, neo_keys = map(keys, (vega, digit, origin, neo))
 
-    assert vega_f <= {"pallet", "gripper"}
+    assert vega_f <= {"pallet", "gripper", "machine_tending"}
     assert "manip_novolex_kinston_nc" in vega_keys
     assert "scrub" not in vega_f
     assert "transport" not in vega_f
@@ -142,7 +142,7 @@ def test_corpus_boards_are_materially_differentiated():
     # Digit top of board is distinctive work, not an AMR tote list.
     # Tote/cart jobs remain possible (see utilization ranking test) but sit
     # below manipulation/mobile-manipulation in the default window.
-    assert digit_f <= {"gripper", "pallet"}
+    assert digit_f <= {"gripper", "pallet", "machine_tending"}
     assert "scrub" not in digit_f
 
     assert vega_keys != origin_keys
@@ -172,7 +172,7 @@ def test_ranking_prefers_distinctive_capability_utilization():
         i for i, family in enumerate(families) if family in {"transport", "cart"}
     )
     assert first_tote > 0
-    assert all(family in {"gripper", "pallet"} for family in families[:first_tote])
+    assert all(family in {"gripper", "pallet", "machine_tending"} for family in families[:first_tote])
     assert "cnc_load" in keys
     assert "cnc_unload" in keys
     assert "hospital_med_carts" in keys
@@ -211,7 +211,7 @@ def test_hospitality_delivery_robot_matches_transport_work():
     # prep, scrubbing, or inspection.
     assert families <= {"transport", "cart", "serve", "clinical_delivery", "resident_services"}
     assert families & {"transport", "cart"}
-    assert families.isdisjoint({"pallet", "gripper", "scrub", "inspect", "food_prep", "beverage", "restroom"})
+    assert families.isdisjoint({"pallet", "gripper", "machine_tending", "scrub", "inspect", "food_prep", "beverage", "restroom"})
     for job in result["jobs"]:
         assert job["verdict"] == VERDICT_POSSIBLE
         assert job["why"]
@@ -243,7 +243,7 @@ def test_hospitality_ontology_serve_food_beverage_restroom():
     # A delivery/transport robot serves all delivery families (incl. hospital
     # clinical + eldercare resident delivery), never manipulation/cleaning work.
     assert servi_fams <= {"serve", "transport", "cart", "clinical_delivery", "resident_services"}
-    assert servi_fams.isdisjoint({"food_prep", "beverage", "restroom", "scrub", "pallet", "gripper", "inspect"})
+    assert servi_fams.isdisjoint({"food_prep", "beverage", "restroom", "scrub", "pallet", "gripper", "machine_tending", "inspect"})
 
     # Food-prep robot (Miso Flippy): food_prep only — never industrial manipulation.
     flippy_caps = derive_capabilities(_profile("flippy"))

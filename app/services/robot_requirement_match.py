@@ -795,7 +795,7 @@ def is_cutting_laser_or_cnc_cell_job(
     tape = str(row.get("tape_family") or job_spec.get("physics") or "").lower()
     if _CUTTING_LASER_JOB.search(blob) or _CNC_CELL_JOB.search(blob):
         return True
-    if tape == "gripper" and (
+    if tape in {"gripper", "machine_tending"} and (
         "machine_tending" in [str(a).lower() for a in (row.get("actions") or [])]
         or "MACHINE" in str(row.get("path") or "")
     ):
@@ -1182,7 +1182,7 @@ def requirements_for_corpus_job(row: dict[str, Any]) -> list[dict[str, Any]]:
     actions = [str(a).lower() for a in (row.get("actions") or [])]
     if tape == "pallet" or "palletizing" in actions:
         return list(_PALLETIZE_REQS)
-    if tape == "gripper":
+    if tape in {"gripper", "machine_tending"}:
         return list(_GRIPPER_REQS)
     if tape == "scrub":
         return list(_SCRUB_REQS)
