@@ -566,6 +566,7 @@ def classified_match_payload(
         "matcher": "buyer_opportunities_v1",
         "zero_reason": None if jobs else "corpus_gap",
         "robot_class": fact_value(product.get("primary_class")),
+        "class_rule_id": product.get("class_rule_id"),
         "source_url": url,
         "classified_product": product,
     }
@@ -744,7 +745,8 @@ def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
     )
     for row in rows:
         product = product_from_saved_row(row)
-        if product.get("needs_review") and not classification_is_clean(product) and facts_ready_for_class(product):
+        # Class comes from the rule table at read time. The stored class stays as it was.
+        if facts_ready_for_class(product):
             product = _assign_product_class(product)
         if classification_is_usable(product):
             return product

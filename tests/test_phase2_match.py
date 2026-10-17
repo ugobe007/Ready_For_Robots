@@ -733,7 +733,50 @@ def test_single_robot_homepage_reuses_a_saved_row_with_the_same_name(monkeypatch
     assert calls == []
     assert out["robot_name"] == "Moxi"
     assert out["robot_class"] == "healthcare"
+    assert out["class_rule_id"] == "3"
     assert "classified_product" not in out
+
+
+def test_reused_row_takes_the_rule_class_without_writing(monkeypatch):
+    """A stored delivery class is not what reuse returns when the facts are clinical."""
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    from sqlalchemy import insert, select
+
+    from app.services.buyer_opportunity.tables import rfr_robot_products
+    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+
+    home = "https://www.diligentrobots.com/"
+    db = _products_db()
+    version = {"prompt_version": PROMPT_VERSION, "taxonomy_version": get_taxonomy_version()}
+    db.execute(
+        insert(rfr_robot_products).values(
+            source_url=home,
+            product_name="Moxi",
+            company_name="Diligent Robotics",
+            primary_class="delivery",
+            primary_function="delivery_transport",
+            form="mobile_manipulator",
+            industries=["hospital"],
+            evidence={
+                "form": {"value": "mobile_manipulator"},
+                "primary_class": {"value": "delivery"},
+                "primary_function": {"value": "delivery_transport"},
+                "industries": [{"value": "hospital"}],
+            },
+            **version,
+        )
+    )
+    db.commit()
+    out = try_phase2_search(
+        home,
+        fetch=lambda url: pytest.fail("saved Diligent homepage must not be fetched"),
+        extract=lambda *args, **kwargs: pytest.fail("saved Diligent homepage must not be extracted"),
+        db=db,
+    )
+    assert out["robot_class"] == "healthcare"
+    assert out["class_rule_id"] == "3"
+    stored = db.execute(select(rfr_robot_products.c.primary_class)).scalar_one()
+    assert stored == "delivery"
 
 
 def test_single_robot_homepage_does_not_reuse_a_different_name(monkeypatch):
