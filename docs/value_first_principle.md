@@ -2,7 +2,7 @@
 
 **Users do not buy unless they see value.** Every agent mission and product change must prove outcomes before asking for signup, save, or upgrade.
 
-**Last updated:** 2026-08-22
+**Last updated:** 2026-10-17
 
 ---
 
@@ -12,6 +12,33 @@
 
 Never lead with account creation or pricing when the user has not seen a Robot Job Card.
 The signup wall belongs **after** Job Cards, **in front of** the CRM desk. See [jobs_crm.md](jobs_crm.md).
+
+---
+
+## Candy rule (standing)
+
+Every PR that adds or changes a user-facing feature must also:
+
+1. Show a **free, no-sign-up taste** of that feature on the page where it lives.
+2. Show **what the paid or signed-in version adds**, next to the taste.
+
+Candy is **real data, or clearly labeled EXAMPLE**. Never fake counts, never invent buyers.
+
+Every PR description gets a **Candy** line: what a signed-out visitor now sees. Docs-only or backend-only PRs write `Candy: none (no user-facing change)`.
+
+### Candy per page
+
+| Page | Free taste (no sign-up) | What brings them back (paid or signed in) |
+|---|---|---|
+| Home / FIND | Paste a robot URL and see it classified, plus its top 3 buyers with reasons, in seconds | The full ranked list, and alerts for that robot |
+| Robot jobs | Top 5 scored jobs, one with its evidence open | All jobs, filters saved |
+| Robot index | Search every classified robot; each shows 1 buyer for it | All buyers per robot |
+| Robot Jobs Brief (newsletter) | One real open RFP with its deadline every week, by email | The full weekly list |
+| ROI calculator | The full calculator | Branded PDF to send a buyer (needs sign-in) |
+| Industry reports | One industry free | All industries |
+| Explore | Live counts of real things: "RFPs open now", "robots classified" | — |
+| My desk (signed out) | Sample board, labeled | Their own pipeline |
+| Employer side | Post a robot job and instantly see how many indexed robots fit it, with 3 matches | Full matched sellers with evidence ($149) |
 
 ---
 
