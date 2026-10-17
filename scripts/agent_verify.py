@@ -43,6 +43,7 @@ FIND_JOBS_WORKFLOW = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "j
 FIND_RESEARCH = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "findResearch.ts"
 FIND_WORKSPACE = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "RobotJobsWorkspace.tsx"
 JOBS_PAGE = ROOT / "readyforrobots-new" / "client" / "src" / "pages" / "Jobs.tsx"
+FIND_RESULTS = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "EditorialResults.tsx"
 EMPLOYER_MATCH_PY = ROOT / "app" / "services" / "employer_robot_match.py"
 EMPLOYER_MATCH_UI = (
     ROOT
@@ -381,7 +382,7 @@ def drive_jobs_crm(*, origin: str | None = None) -> dict[str, Any]:
 
 
 def drive_find_stay(*, origin: str | None = None, api: str | None = None) -> dict[str, Any]:
-    """FIND timeout / 500 / abort must remain on /?visit=jobs. Skip-green is a fail."""
+    """FIND timeout / 500 / abort must remain on /?visit=jobs (the board, with retry). Skip-green is a fail."""
     site = (origin or SITE).rstrip("/")
     fly = (api or FLY_API).rstrip("/")
     workspace = FIND_WORKSPACE.read_text(encoding="utf-8") if FIND_WORKSPACE.is_file() else ""
@@ -392,6 +393,7 @@ def drive_find_stay(*, origin: str | None = None, api: str | None = None) -> dic
         submit = workspace[start:end]
     jobs_page = JOBS_PAGE.read_text(encoding="utf-8") if JOBS_PAGE.is_file() else ""
     research = FIND_RESEARCH.read_text(encoding="utf-8") if FIND_RESEARCH.is_file() else ""
+    find_results = FIND_RESULTS.read_text(encoding="utf-8") if FIND_RESULTS.is_file() else ""
     src_ok = (
         "ensureFindStayVisit" in submit
         and "goJobsFreshHome" not in submit
@@ -402,6 +404,7 @@ def drive_find_stay(*, origin: str | None = None, api: str | None = None) -> dic
         and "EditorialResults" in jobs_page
         and "JobsLanding" in jobs_page
         and 'visit === "landing"' in jobs_page
+        and "<RobotJobsBoard findError={error}" in find_results
         and "FIND_IDENTITY_TIMEOUT_MS = 8_000" in (
             FIND_JOBS_WORKFLOW.read_text(encoding="utf-8") if FIND_JOBS_WORKFLOW.is_file() else ""
         )

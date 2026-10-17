@@ -1,11 +1,13 @@
 /**
- * /jobs — browse scored robot jobs (company × workflow) without choosing a
- * robot. Example rows only, badged EXAMPLE DATA, until the scored
- * opportunities ship and Bob reviews the top 20.
+ * /jobs, bare /?visit=jobs, and /#find — browse scored robot jobs
+ * (company × workflow), or paste a robot URL to rank them. Example rows only,
+ * badged EXAMPLE DATA, until the scored opportunities ship and Bob reviews
+ * the top 20. A failed FIND lookup lands here with the error and a retry.
  */
 import { useMemo, useState } from "react";
-import { SiteFooter, SiteHeader } from "@/components/editorial";
+import { SiteFooter, SiteHeader, UrlInput } from "@/components/editorial";
 import { useAuth } from "@/contexts/AuthContext";
+import { jobsFindHref } from "@/lib/jobsLanding";
 import { usePageMeta } from "@/lib/pageMeta";
 import {
   EXAMPLE_JOBS,
@@ -147,7 +149,18 @@ function JobCard({
 }
 
 export default function RobotJobs() {
+  return <RobotJobsBoard />;
+}
+
+export function RobotJobsBoard({
+  findError = "",
+  findUrl = "",
+}: {
+  findError?: string;
+  findUrl?: string;
+}) {
   const { session } = useAuth();
+  const [robotUrl, setRobotUrl] = useState(findUrl);
   const [group, setGroup] = useState<JobIndustryGroup | "all">("all");
   const [timing, setTiming] = useState<JobTiming | "all">("all");
   const [openId, setOpenId] = useState("j1");
@@ -185,10 +198,26 @@ export default function RobotJobs() {
               factors. Have a robot? Paste its page and we rank these for your
               robot.
             </p>
+            {findError ? (
+              <div className="rfr-jobs-find-error" role="alert">
+                <strong>Could not load buyers.</strong>
+                <span>{findError}</span>
+                {findUrl ? <a href={jobsFindHref(findUrl)}>Try again</a> : null}
+              </div>
+            ) : null}
+            <div className="rfr-jobs-rank">
+              <UrlInput
+                id="rank-robot-url"
+                value={robotUrl}
+                onChange={setRobotUrl}
+                submitLabel="Rank for my robot →"
+                onSubmit={(value) => {
+                  const trimmed = value.trim();
+                  if (trimmed) window.location.href = jobsFindHref(trimmed);
+                }}
+              />
+            </div>
             <div className="rfr-jobs-hero-ctas">
-              <a className="rfr-jobs-primary" href="/?visit=jobs">
-                Rank for my robot
-              </a>
               <a className="rfr-jobs-outline" href="/?visit=candidates">
                 Post a robot job · free
               </a>

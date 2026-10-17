@@ -24,7 +24,7 @@ import {
 } from "@/lib/homeEditorial";
 
 const HOME_NAV = [
-  { label: "Find buyers", href: "#find" },
+  { label: "Find buyers", href: "/jobs" },
   { label: "Robot jobs", href: "/jobs" },
   { label: "Explore", href: "#explore" },
   { label: "Pricing", href: "#early" },

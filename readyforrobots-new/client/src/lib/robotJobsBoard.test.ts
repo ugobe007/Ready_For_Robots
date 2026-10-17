@@ -9,6 +9,7 @@ import {
   jobScore,
   rankJobs,
 } from "./robotJobsBoard";
+import { isFindBoardHash, isFindBoardSearch } from "./jobsLanding";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const read = (rel: string) => readFileSync(join(here, rel), "utf8");
@@ -49,7 +50,8 @@ describe("robot jobs board", () => {
     expect(page).toMatch(/EXAMPLE DATA/);
     expect(page).toMatch(/JOBS SHOWN · EXAMPLE/);
     expect(page).toMatch(/Companies above are examples\./);
-    expect(page).toMatch(/href="\/\?visit=jobs"/);
+    expect(page).toMatch(/submitLabel="Rank for my robot →"/);
+    expect(page).toMatch(/jobsFindHref\(trimmed\)/);
     expect(page).toMatch(/href="\/\?visit=candidates"/);
     expect(page).not.toMatch(/fetch\(/);
   });
@@ -69,5 +71,38 @@ describe("robot jobs board", () => {
       expect(src).not.toMatch(/label: "How it works"/);
     }
     expect(read("../components/JobsLanding.tsx")).toMatch(/id="how"/);
+  });
+
+  it("opens the board on bare /?visit=jobs and /#find; a URL still runs FIND", () => {
+    expect(isFindBoardSearch("?visit=jobs")).toBe(true);
+    expect(isFindBoardSearch("?visit=jobs&url=")).toBe(true);
+    expect(isFindBoardSearch("?visit=jobs&url=https%3A%2F%2Fexample.com")).toBe(false);
+    expect(isFindBoardSearch("?visit=jobs&product=ADAM")).toBe(false);
+    expect(isFindBoardSearch("?visit=candidates")).toBe(false);
+    expect(isFindBoardSearch("")).toBe(false);
+    expect(isFindBoardHash("#find")).toBe(true);
+    expect(isFindBoardHash("#how")).toBe(false);
+    const jobs = read("../pages/Jobs.tsx");
+    expect(jobs).toMatch(/isFindBoardHash\(hash\)\) return <Redirect to="\/jobs" \/>/);
+    expect(jobs).toMatch(/isFindBoardSearch\(search\)\) \{\s*return <RobotJobs \/>/);
+    expect(jobs).toMatch(/return <EditorialResults \/>/);
+  });
+
+  it("keeps FIND failures on the board with a retry and points Find buyers at /jobs", () => {
+    const results = read("../components/EditorialResults.tsx");
+    expect(results).toMatch(/return <RobotJobsBoard findError=\{error\} findUrl=\{initialUrl\} \/>/);
+    expect(results).not.toMatch(/<a href="\/">/);
+    const page = read("../pages/RobotJobs.tsx");
+    expect(page).toMatch(/Could not load buyers\./);
+    expect(page).toMatch(/jobsFindHref\(findUrl\)\}>Try again/);
+    for (const rel of [
+      "../components/editorial/SiteHeader.tsx",
+      "../components/JobsLanding.tsx",
+      "../components/EditorialResults.tsx",
+    ]) {
+      const src = read(rel);
+      expect(src).toMatch(/label: "Find buyers", href: "\/jobs"/);
+      expect(src).not.toMatch(/label: "Find buyers", href: "(\/|#find)"/);
+    }
   });
 });

@@ -12,7 +12,9 @@ This file names **chrome** — nav, process bar, panels, surfaced results — an
 
 | Surface | Route | What the user is doing |
 |---------|-------|------------------------|
-| Jobs FIND (home) | `/` and `/?visit=jobs` | Live named-employer job board is visible without a URL submit (`GET /api/robot-jobs/preview`, three inline lines). URL / class FIND is optional next. `/jobs` redirects here. |
+| Robot jobs board (FIND) | `/jobs`, bare `/?visit=jobs`, `/#find` → `/jobs` | Example scored jobs (EXAMPLE DATA) plus a robot URL box; **Rank for my robot →** opens `/?visit=jobs&url=…`. FIND errors render here with **Try again**. |
+| Home hero | `/` | Hero URL form; submit opens `/?visit=jobs&url=…`. |
+| FIND results | `/?visit=jobs&url=…` | Buyers for the submitted robot (`POST /api/robot-job-search`). |
 | Employer MATCH | `/?visit=candidates` | Employer step 1: work tiles + description. Named catalog robots, then post-job draft. |
 | Employer MATCH | `/?visit=candidates` | Employer step 1: work tiles + description. Named catalog robots, then post-job draft. |
 | About | `/intelligence` | Jobs loop explainer; Find jobs → `/?visit=jobs` |

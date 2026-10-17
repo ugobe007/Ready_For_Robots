@@ -38,6 +38,7 @@ HANDOFF = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "jobsHandoffS
 PSTACK_SITE = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "pstackSite.ts"
 PSTACK_RELEASE_TS = ROOT / "readyforrobots-new" / "client" / "src" / "lib" / "pstackRelease.ts"
 JOBS_PAGE = ROOT / "readyforrobots-new" / "client" / "src" / "pages" / "Jobs.tsx"
+FIND_RESULTS = ROOT / "readyforrobots-new" / "client" / "src" / "components" / "EditorialResults.tsx"
 PROTOCOL_PY = ROOT / "app" / "services" / "pstack_protocol.py"
 MATCHER = ROOT / "app" / "services" / "robot_job_capability_match.py"
 SEARCH_API = ROOT / "app" / "api" / "robot_job_search.py"
@@ -370,18 +371,23 @@ def phase_how() -> dict[str, Any]:
     )
 
     jobs_page = _read(JOBS_PAGE) if JOBS_PAGE.is_file() else ""
+    find_results = _read(FIND_RESULTS) if FIND_RESULTS.is_file() else ""
     find_is_home = (
         "EditorialResults" in jobs_page
         and "JobsLanding" in jobs_page
         and 'visit === "landing"' in jobs_page
         and "heroHome" in jobs_page
+        and "isFindBoardSearch(search)" in jobs_page
+        and 'isFindBoardHash(hash)) return <Redirect to="/jobs" />' in jobs_page
+        and "<RobotJobsBoard findError={error}" in find_results
         and not re.search(r'["\']\/experiment["\']', jobs_page)
     )
     checks.append(
         _check(
             "find_route",
             find_is_home,
-            "Home hero is /; FIND stays EditorialResults on /?visit=jobs",
+            "Home hero is /; bare /?visit=jobs and /#find open the robot jobs board; "
+            "/?visit=jobs&url= runs EditorialResults; FIND errors stay on the board",
         )
     )
 

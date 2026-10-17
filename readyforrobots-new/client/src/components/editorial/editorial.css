@@ -2566,6 +2566,35 @@
   flex-wrap: wrap;
 }
 
+.rfr-jobs-hero-side:has(.rfr-jobs-rank) {
+  max-width: 460px;
+  width: 100%;
+}
+
+.rfr-jobs-rank form {
+  margin: 0;
+}
+
+.rfr-jobs-find-error {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 14px;
+  border: 1px solid var(--rfr-accent);
+  font-size: 15px;
+  line-height: 1.4;
+}
+
+.rfr-jobs-find-error span {
+  color: var(--rfr-body-2);
+  overflow-wrap: anywhere;
+}
+
+.rfr-editorial .rfr-jobs-find-error a {
+  color: var(--rfr-accent);
+  font-weight: 700;
+}
+
 .rfr-jobs-primary,
 .rfr-jobs-outline {
   padding: 12px 16px;
