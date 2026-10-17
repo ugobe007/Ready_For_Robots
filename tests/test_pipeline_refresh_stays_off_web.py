@@ -38,6 +38,10 @@ def test_worker_runs_a_newer_request_once(monkeypatch):
         "app.services.public_surface_cache.read_public_cache",
         lambda key, **kwargs: {"requested_at": "t1"},
     )
+    monkeypatch.setattr(
+        "app.services.public_surface_cache.claim_pipeline_refresh_request",
+        lambda requested_at: True,
+    )
 
     def _start(**kwargs):
         calls.append(kwargs)
@@ -52,7 +56,29 @@ def test_worker_runs_a_newer_request_once(monkeypatch):
     assert calls == [{"pipeline_only": True, "reason": "worker_request"}]
 
 
+def test_a_second_worker_does_not_start_another_rebuild(monkeypatch):
+    calls = []
+    monkeypatch.setattr(
+        "app.services.public_surface_cache.read_public_cache",
+        lambda key, **kwargs: {"requested_at": "t1"},
+    )
+    monkeypatch.setattr(
+        "app.services.public_surface_cache.claim_pipeline_refresh_request",
+        lambda requested_at: False,
+    )
+    monkeypatch.setattr(
+        "app.services.public_surface_cache.schedule_public_cache_refresh",
+        lambda **kwargs: calls.append(kwargs) or True,
+    )
+    assert consume_pipeline_refresh_request("") == "t1"
+    assert calls == []
+
+
 def test_in_flight_rebuild_leaves_the_request_pending(monkeypatch):
+    monkeypatch.setattr(
+        "app.services.public_surface_cache._refresh_in_progress",
+        True,
+    )
     monkeypatch.setattr(
         "app.services.public_surface_cache.read_public_cache",
         lambda key, **kwargs: {"requested_at": "t2"},

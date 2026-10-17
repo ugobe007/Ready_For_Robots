@@ -484,18 +484,54 @@ def request_worker_pipeline_refresh(db: Session) -> dict[str, Any]:
     return {"requested_at": requested_at}
 
 
+def claim_pipeline_refresh_request(requested_at: str) -> bool:
+    """One worker claims the request. The others do not start a second rebuild."""
+    from sqlalchemy import text
+
+    from app.database import SessionLocal
+
+    db = SessionLocal()
+    try:
+        claimed = db.execute(
+            text(
+                """
+                UPDATE pipeline_cache_store
+                SET data = jsonb_set(data, '{claimed_at}', to_jsonb(now()::text), true)
+                WHERE cache_key = :key
+                  AND data->>'requested_at' = :requested_at
+                  AND COALESCE(data->>'claimed_at', '') = ''
+                RETURNING cache_key
+                """
+            ),
+            {"key": PIPELINE_REFRESH_REQUEST_KEY, "requested_at": requested_at},
+        ).first()
+        db.commit()
+        return claimed is not None
+    except Exception as exc:
+        logger.warning("Pipeline refresh claim failed: %s", exc)
+        db.rollback()
+        return False
+    finally:
+        db.close()
+
+
 def consume_pipeline_refresh_request(handled_at: str) -> str:
     """Start one worker rebuild when a newer request is waiting.
 
     Returns the timestamp now being handled. An in-flight rebuild leaves the
     request pending so the next check runs it after this one finishes.
+    A second worker sees the claim and does not start another rebuild.
     """
+    if _refresh_in_progress:
+        return handled_at
     payload = read_public_cache(PIPELINE_REFRESH_REQUEST_KEY, stale_ok=True)
     if not isinstance(payload, dict):
         return handled_at
     requested_at = str(payload.get("requested_at") or "")
     if not requested_at or requested_at == handled_at:
         return handled_at
+    if not claim_pipeline_refresh_request(requested_at):
+        return requested_at
     started = schedule_public_cache_refresh(pipeline_only=True, reason="worker_request")
     if not started:
         return handled_at
