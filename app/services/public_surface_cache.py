@@ -374,14 +374,18 @@ def hydrate_public_surface_caches() -> None:
 _PIPELINE_REBUILD_LOCK = 440355
 
 
-def _try_pipeline_rebuild_lock(db) -> bool:
-    """One rebuild across worker machines. SQLite tests do not lock."""
-    bind = db.get_bind()
+def _try_pipeline_rebuild_lock(lock_db) -> bool:
+    """One rebuild across worker machines. SQLite tests do not lock.
+
+    Transaction-scoped so the transaction pooler cannot orphan it: the lock lives
+    until ``lock_db`` rolls back, and ``lock_db`` must not be used for writes.
+    """
+    bind = lock_db.get_bind()
     if getattr(bind.dialect, "name", "") != "postgresql":
         return True
     from sqlalchemy import text
 
-    return bool(db.execute(text(f"SELECT pg_try_advisory_lock({_PIPELINE_REBUILD_LOCK})")).scalar())
+    return bool(lock_db.execute(text(f"SELECT pg_try_advisory_xact_lock({_PIPELINE_REBUILD_LOCK})")).scalar())
 
 
 def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_newsletter: bool = True) -> bool | None:
@@ -389,9 +393,10 @@ def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_ne
 
     from app.database import SessionLocal
 
+    lock_db = SessionLocal()
     db = SessionLocal()
     try:
-        if not _try_pipeline_rebuild_lock(db):
+        if not _try_pipeline_rebuild_lock(lock_db):
             logger.info("Pipeline rebuild already running on another worker; skipping")
             return None
         if pipeline_only:
@@ -419,6 +424,10 @@ def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_ne
         return False
     finally:
         db.close()
+        try:
+            lock_db.rollback()
+        finally:
+            lock_db.close()
         with _refresh_lock:
             _refresh_in_progress = False
 
@@ -619,7 +628,10 @@ def _claim_belongs_to_a_live_rebuild() -> bool:
         logger.warning("Pipeline rebuild lock check failed: %s", exc)
         return True
     finally:
-        db.close()
+        try:
+            db.rollback()
+        finally:
+            db.close()
 
 
 def _write_pipeline_refresh_handled(handled_at: str) -> None:
