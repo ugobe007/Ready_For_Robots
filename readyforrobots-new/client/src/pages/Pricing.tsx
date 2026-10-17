@@ -4,7 +4,8 @@
 import { SiteFooter, SiteHeader } from "@/components/editorial";
 import { usePageMeta } from "@/lib/pageMeta";
 
-const DISCLOSURE = "[Bob to word, re AlphaRobotics]";
+// Wording pending Bob's approval; nothing renders while empty.
+const DISCLOSURE = "";
 
 const SELLER_PLANS = [
   {
@@ -99,7 +100,7 @@ export default function Pricing() {
                     </li>
                   ))}
                 </ul>
-                {"disclosure" in plan && plan.disclosure ? (
+                {DISCLOSURE && "disclosure" in plan && plan.disclosure ? (
                   <p className="rfr-pricing-disclosure">{DISCLOSURE}</p>
                 ) : null}
                 {plan.href ? (
@@ -198,7 +199,9 @@ export default function Pricing() {
             Setup, integration planning and installation through vetted local
             partners. Scoped separately from the software.
           </p>
-          <p className="rfr-pricing-disclosure">{DISCLOSURE}</p>
+          {DISCLOSURE ? (
+            <p className="rfr-pricing-disclosure">{DISCLOSURE}</p>
+          ) : null}
           <a className="rfr-pricing-talk" href="/support">
             Talk to us →
           </a>

@@ -1827,9 +1827,10 @@
   color: var(--rfr-accent);
 }
 
-.rfr-pricing-evidence {
+.rfr-pricing-card .rfr-pricing-evidence {
   margin: 8px 0 0;
   padding-left: 18px;
+  list-style: disc;
   color: var(--rfr-body-2);
 }
 
