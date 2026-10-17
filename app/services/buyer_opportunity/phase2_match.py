@@ -566,6 +566,7 @@ def classified_match_payload(
         "matcher": "buyer_opportunities_v1",
         "zero_reason": None if jobs else "corpus_gap",
         "robot_class": fact_value(product.get("primary_class")),
+        "class_rule_id": product.get("class_rule_id"),
         "source_url": url,
         "classified_product": product,
     }
@@ -684,30 +685,68 @@ def product_from_saved_row(row: Any) -> dict[str, Any]:
     return product
 
 
-def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
-    """Newest clean row for this URL at the current prompt and taxonomy versions.
+def _product_name_key(name: str | None) -> str:
+    return re.sub(r"\s+", " ", (name or "").strip()).casefold()
 
-    A row for another version, or a row that does not classify cleanly, is not a hit.
-    """
+
+def _rows_for_url(
+    db: Any,
+    url: str,
+    *,
+    prompt_version: str | None,
+    taxonomy_version: str | None,
+) -> list[Any]:
+    """Rows for this canonical URL, newest id first. Older copies of a name are omitted."""
     from sqlalchemy import desc, select
 
     from app.services.buyer_opportunity.tables import rfr_robot_products
+    from app.services.robot_url_safety import canonical_robot_url, robot_url_host
+
+    wanted = canonical_robot_url(url)
+    host = robot_url_host(url)
+    if not wanted or not host:
+        return []
+    stmt = select(rfr_robot_products).order_by(desc(rfr_robot_products.c.id))
+    if prompt_version is not None:
+        stmt = stmt.where(rfr_robot_products.c.prompt_version == str(prompt_version)[:16])
+    if taxonomy_version is not None:
+        stmt = stmt.where(rfr_robot_products.c.taxonomy_version == str(taxonomy_version)[:16])
+    stmt = stmt.where(rfr_robot_products.c.source_url.ilike(f"%{host}%"))
+    latest: list[Any] = []
+    seen: set[str] = set()
+    for row in db.execute(stmt).mappings():
+        if canonical_robot_url(row["source_url"]) != wanted:
+            continue
+        key = _product_name_key(row["product_name"])
+        if key in seen:
+            continue
+        seen.add(key)
+        latest.append(row)
+    return latest
+
+
+def saved_clean_product(db: Any, url: str) -> dict[str, Any] | None:
+    """Latest usable row per product at the current prompt and taxonomy versions.
+
+    A row for another version is not a hit. An older copy of the same URL and
+    product is not a hit when a newer row exists.
+    """
     from app.services.robot_understanding_v1.taxonomy_extraction import (
         PROMPT_VERSION,
         _assign_product_class,
         get_taxonomy_version,
     )
 
-    rows = db.execute(
-        select(rfr_robot_products)
-        .where(rfr_robot_products.c.source_url == (url or "")[:2048])
-        .where(rfr_robot_products.c.prompt_version == str(PROMPT_VERSION)[:16])
-        .where(rfr_robot_products.c.taxonomy_version == str(get_taxonomy_version())[:16])
-        .order_by(desc(rfr_robot_products.c.id))
-    ).mappings()
+    rows = _rows_for_url(
+        db,
+        url,
+        prompt_version=str(PROMPT_VERSION),
+        taxonomy_version=str(get_taxonomy_version()),
+    )
     for row in rows:
         product = product_from_saved_row(row)
-        if product.get("needs_review") and not classification_is_clean(product) and facts_ready_for_class(product):
+        # Class comes from the rule table at read time. The stored class stays as it was.
+        if facts_ready_for_class(product):
             product = _assign_product_class(product)
         if classification_is_usable(product):
             return product
@@ -719,13 +758,28 @@ def _name_matches_saved(label: str, saved_name: str) -> bool:
     return url_names_product(f"https://example.test/{label}", saved_name)
 
 
+def _hint_matches_saved(hint: str, saved_name: str) -> bool:
+    if _product_name_key(hint) == _product_name_key(saved_name):
+        return True
+    return _name_matches_saved(hint, saved_name)
+
+
+def _homepage_has_one_saved_name(db: Any, url: str, saved_name: str) -> bool:
+    """True when every stored row for this homepage is this product, any version."""
+    names = {
+        _product_name_key(row["product_name"])
+        for row in _rows_for_url(db, url, prompt_version=None, taxonomy_version=None)
+    }
+    return names == {_product_name_key(saved_name)}
+
+
 def saved_product_for_request(db: Any, url: str, product_name: str | None) -> dict[str, Any] | None:
     """Reuse a saved row only when this request names that product.
 
     A product URL matches when its slug names the saved product.
-    A homepage matches only when the vendor index lists exactly one robot
-    and that robot's name matches the saved product by the same rule.
-    Any other homepage still goes through discovery.
+    A homepage matches when the vendor index lists exactly one robot and that
+    name matches, or when the index lists none and every saved row for the
+    homepage is the same product (Greenfield).
     When the caller passed a product hint, the saved name has to match it.
     """
     saved = saved_clean_product(db, url)
@@ -733,16 +787,18 @@ def saved_product_for_request(db: Any, url: str, product_name: str | None) -> di
         return None
     saved_name = fact_value(saved.get("product_name")) or str(saved.get("product_name") or "")
     hint = (product_name or "").strip()
-    if hint and not _name_matches_saved(hint, saved_name):
+    if hint and not _hint_matches_saved(hint, saved_name):
         return None
     if product_slug(url):
         if not url_names_product(url, saved_name):
             return None
         return saved
     names = _indexed_robot_names(url)
-    if len(names) != 1 or not _name_matches_saved(names[0], saved_name):
-        return None
-    return saved
+    if len(names) == 1 and _name_matches_saved(names[0], saved_name):
+        return saved
+    if len(names) == 0 and _homepage_has_one_saved_name(db, url, saved_name):
+        return saved
+    return None
 
 
 def needs_review_payload(product: dict[str, Any], url: str) -> dict[str, Any]:
@@ -869,14 +925,44 @@ def try_phase2_search(
 
 
 def persist_classified_product(db: Any, record: dict[str, Any]) -> None:
-    """Insert one rfr_robot_products row. Failures are the caller's to log."""
+    """Insert one rfr_robot_products row. A matching usable saved row is reused instead.
+
+    The match is normalized source URL, product name, prompt version, and
+    taxonomy version. Failures are the caller's to log.
+    """
     from sqlalchemy import insert
 
     from app.services.buyer_opportunity.tables import rfr_robot_products
-    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+    from app.services.robot_understanding_v1.taxonomy_extraction import (
+        PROMPT_VERSION,
+        _assign_product_class,
+        get_taxonomy_version,
+    )
 
     product = record.get("product") or {}
     meta = record.get("metadata") or {}
+    source_url = (record.get("source_url") or "")[:2048]
+    product_name = (
+        fact_value(product.get("product_name"))
+        or product_name_from_slug(product_slug(source_url))
+    )[:255]
+    prompt_version = str(meta.get("prompt_version") or PROMPT_VERSION)[:16]
+    taxonomy_version = str(meta.get("taxonomy_version") or get_taxonomy_version())[:16]
+    name_key = _product_name_key(product_name)
+    for row in _rows_for_url(
+        db,
+        source_url,
+        prompt_version=prompt_version,
+        taxonomy_version=taxonomy_version,
+    ):
+        if _product_name_key(row["product_name"]) != name_key:
+            continue
+        saved = product_from_saved_row(row)
+        if saved.get("needs_review") and not classification_is_clean(saved) and facts_ready_for_class(saved):
+            saved = _assign_product_class(saved)
+        if classification_is_usable(saved):
+            return
+        break
     evidence = {
         field: product.get(field)
         for field in (
@@ -893,9 +979,9 @@ def persist_classified_product(db: Any, record: dict[str, Any]) -> None:
     }
     db.execute(
         insert(rfr_robot_products).values(
-            source_url=(record.get("source_url") or "")[:2048],
+            source_url=source_url,
             company_name=(fact_value(product.get("company")) or "")[:255] or None,
-            product_name=(fact_value(product.get("product_name")) or product_name_from_slug(product_slug(record.get("source_url"))))[:255],
+            product_name=product_name,
             page_type=((record.get("page_type") or "")[:64] or None),
             offering_type=(fact_value(product.get("offering_type")) or "")[:64] or None,
             form=(fact_value(product.get("form")) or "")[:64] or None,
@@ -905,8 +991,8 @@ def persist_classified_product(db: Any, record: dict[str, Any]) -> None:
             industries=fact_values(product.get("industries")),
             evidence=evidence,
             unsupported_facts=list(product.get("unsupported_facts") or []),
-            prompt_version=str(meta.get("prompt_version") or PROMPT_VERSION)[:16],
-            taxonomy_version=str(meta.get("taxonomy_version") or get_taxonomy_version())[:16],
+            prompt_version=prompt_version,
+            taxonomy_version=taxonomy_version,
         )
     )
     db.commit()

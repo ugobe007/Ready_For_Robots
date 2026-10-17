@@ -733,7 +733,50 @@ def test_single_robot_homepage_reuses_a_saved_row_with_the_same_name(monkeypatch
     assert calls == []
     assert out["robot_name"] == "Moxi"
     assert out["robot_class"] == "healthcare"
+    assert out["class_rule_id"] == "3"
     assert "classified_product" not in out
+
+
+def test_reused_row_takes_the_rule_class_without_writing(monkeypatch):
+    """A stored delivery class is not what reuse returns when the facts are clinical."""
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    from sqlalchemy import insert, select
+
+    from app.services.buyer_opportunity.tables import rfr_robot_products
+    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+
+    home = "https://www.diligentrobots.com/"
+    db = _products_db()
+    version = {"prompt_version": PROMPT_VERSION, "taxonomy_version": get_taxonomy_version()}
+    db.execute(
+        insert(rfr_robot_products).values(
+            source_url=home,
+            product_name="Moxi",
+            company_name="Diligent Robotics",
+            primary_class="delivery",
+            primary_function="delivery_transport",
+            form="mobile_manipulator",
+            industries=["hospital"],
+            evidence={
+                "form": {"value": "mobile_manipulator"},
+                "primary_class": {"value": "delivery"},
+                "primary_function": {"value": "delivery_transport"},
+                "industries": [{"value": "hospital"}],
+            },
+            **version,
+        )
+    )
+    db.commit()
+    out = try_phase2_search(
+        home,
+        fetch=lambda url: pytest.fail("saved Diligent homepage must not be fetched"),
+        extract=lambda *args, **kwargs: pytest.fail("saved Diligent homepage must not be extracted"),
+        db=db,
+    )
+    assert out["robot_class"] == "healthcare"
+    assert out["class_rule_id"] == "3"
+    stored = db.execute(select(rfr_robot_products.c.primary_class)).scalar_one()
+    assert stored == "delivery"
 
 
 def test_single_robot_homepage_does_not_reuse_a_different_name(monkeypatch):
@@ -990,3 +1033,76 @@ def test_construction_agriculture_and_machine_tending_join():
     assert _families(tending) == {"machine_tending"}
     assert len(tending) == 10
     assert all(job["industry"] != "Charlotte, NC" for job in tending)
+
+
+def test_five_repeat_homepage_searches_add_at_most_one_row(monkeypatch):
+    """An unindexed homepage (Greenfield) reuses the saved product. Five searches insert once."""
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    from sqlalchemy import func, select
+
+    from app.services.buyer_opportunity.tables import rfr_robot_products
+    from app.services.vendor_robot_lookup import index_robot_names, lookup_vendor_by_url
+
+    forms = [
+        "https://www.greenfieldincorporated.com/",
+        "https://greenfieldincorporated.com",
+        "https://greenfieldincorporated.com/",
+        "https://www.greenfieldincorporated.com",
+        "https://www.greenfieldincorporated.com/",
+    ]
+    vendor = lookup_vendor_by_url(forms[0])
+    assert vendor is None or index_robot_names(vendor) == []
+    bot = _product(
+        "BOT#25",
+        form="amr_mobile_robot",
+        function="agricultural_task",
+        industries=["agriculture"],
+        primary_class="agriculture",
+        company="Greenfield Robotics",
+    )
+    db = _products_db()
+    calls: list[str] = []
+    for url in forms:
+        _search_and_save(db, url, "BOT#25", bot, calls)
+    saved = db.execute(select(func.count()).select_from(rfr_robot_products)).scalar_one()
+    assert calls == [forms[0]]
+    assert saved == 1
+
+
+def test_match_uses_the_latest_row_for_a_url_and_product(monkeypatch):
+    monkeypatch.setenv("RFR_BUYER_OPPORTUNITIES_V1", "1")
+    from sqlalchemy import insert
+
+    from app.services.buyer_opportunity.tables import rfr_robot_products
+    from app.services.robot_understanding_v1.taxonomy_extraction import PROMPT_VERSION, get_taxonomy_version
+
+    home = "https://www.greenfieldincorporated.com/"
+    db = _products_db()
+    version = {"prompt_version": PROMPT_VERSION, "taxonomy_version": get_taxonomy_version()}
+    for primary_class in ("delivery", "agriculture"):
+        db.execute(
+            insert(rfr_robot_products).values(
+                source_url=home,
+                product_name="BOT#25",
+                primary_class=primary_class,
+                primary_function="agricultural_task",
+                form="amr_mobile_robot",
+                industries=["agriculture"],
+                evidence={
+                    "form": {"value": "amr_mobile_robot"},
+                    "primary_class": {"value": primary_class},
+                    "primary_function": {"value": "agricultural_task"},
+                    "industries": [{"value": "agriculture"}],
+                },
+                **version,
+            )
+        )
+    db.commit()
+    out = try_phase2_search(
+        home,
+        fetch=lambda url: pytest.fail("latest saved homepage must not be fetched"),
+        extract=lambda *args, **kwargs: pytest.fail("latest saved homepage must not be extracted"),
+        db=db,
+    )
+    assert out["robot_class"] == "agriculture"
+    assert out["robot_name"] == "BOT#25"
