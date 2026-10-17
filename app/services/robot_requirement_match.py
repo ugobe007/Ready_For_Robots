@@ -61,7 +61,7 @@ DISTINCTIVE_CAPABILITIES = robot_ontology.distinctive_capabilities()
 # Requirement id → robot primitives exercised when MATCHED or LIKELY.
 REQUIREMENT_EXERCISES = {
     "manipulate_physical_case": frozenset({"manipulate"}),
-    "manipulate_part": frozenset({"manipulate"}),
+    "manipulate_part": frozenset({"manipulate", "factory_task"}),
     "acquire_case_from_conveyor": frozenset({"manipulate", "load_unload"}),
     "place_case_into_pallet": frozenset({"manipulate", "load_unload"}),
     "relocate_totes_or_carts": frozenset({"tote_transport", "transport"}),
@@ -616,6 +616,9 @@ def _eval_requirement(
     if rid == "manipulate_part":
         if manip.present:
             return RequirementResult(rid, label, necessity, MATCHED, manip.evidence or manip.label)
+        factory = _cap(caps, "factory_task")
+        if factory.present:
+            return RequirementResult(rid, label, necessity, MATCHED, factory.evidence or factory.label)
         return RequirementResult(
             rid, label, necessity, UNMET,
             "no grounded manipulation capability supports part handling",
@@ -653,7 +656,12 @@ def _why_lines(
     if needed & {"manipulate_physical_case", "manipulate_part", "acquire_case_from_conveyor", "place_case_into_pallet"}:
         dual = _cap(caps, "dual_arm")
         manip = _cap(caps, "manipulate")
-        add(dual.label if dual.present else manip.label)
+        if dual.present:
+            add(dual.label)
+        elif manip.present or not _cap(caps, "factory_task").present:
+            add(manip.label)
+        else:
+            add(_cap(caps, "factory_task").label)
         if _cap(caps, "mobile").present:
             add(_cap(caps, "mobile").label)
     if needed & {"relocate_totes_or_carts"}:

@@ -3977,6 +3977,21 @@ def leads_pipeline_feed(
         _PIPELINE_FEED_MEM.pop("v1", None)
 
     cached = read_public_cache(KEY_PIPELINE_FEED, stale_ok=True)
+    if durable:
+        # The refresh wait must see the stored row, not a stitch stamped with now.
+        if isinstance(cached, dict) and cached.get("built_at"):
+            payload = dict(cached)
+            if pipeline_feed_is_stale(payload) or not (payload.get("leads") or []):
+                payload["cache_pending"] = True
+            return _finish(payload)
+        empty = _empty_summary_payload()
+        return _finish({
+            "summary": empty,
+            "leads": [],
+            "cache_pending": True,
+            "rotation_slot": _current_rotation_slot(),
+            "rotation_period_sec": PIPELINE_LEADS_ROTATION_SEC,
+        })
     if cached and isinstance(cached, dict) and (cached.get("leads") or []):
         if not pipeline_feed_is_stale(cached):
             hydrate_pipeline_feed_cache(cached)
