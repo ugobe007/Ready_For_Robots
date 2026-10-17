@@ -2498,3 +2498,489 @@
     gap: 4px;
   }
 }
+
+.rfr-jobs-hero,
+.rfr-jobs-filters,
+.rfr-jobs-list {
+  box-sizing: border-box;
+  max-width: 1296px;
+  margin: 0 auto;
+  padding-left: 24px;
+  padding-right: 24px;
+}
+
+.rfr-jobs-hero {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 48px;
+}
+
+.rfr-jobs-eyebrow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--rfr-rule);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  letter-spacing: 0.12em;
+  color: var(--rfr-muted);
+}
+
+.rfr-jobs-hero-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.rfr-jobs-hero h1 {
+  margin: 0;
+  font-family: Archivo, sans-serif;
+  font-size: clamp(48px, 7vw, 96px);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  line-height: 0.92;
+}
+
+.rfr-jobs-hero-side {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 380px;
+}
+
+.rfr-jobs-hero-side p {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.5;
+  color: var(--rfr-body-2);
+}
+
+.rfr-jobs-hero-ctas {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rfr-jobs-primary,
+.rfr-jobs-outline {
+  padding: 12px 16px;
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.rfr-editorial a.rfr-jobs-primary {
+  background: var(--rfr-ink);
+  color: var(--rfr-surface);
+}
+
+.rfr-editorial a.rfr-jobs-outline {
+  border: 2px solid var(--rfr-ink);
+  color: var(--rfr-ink);
+}
+
+.rfr-jobs-filters {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 32px;
+  padding-bottom: 18px;
+  border-bottom: 2px solid var(--rfr-ink);
+}
+
+.rfr-jobs-filter,
+.rfr-jobs-filter-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.rfr-jobs-filter-row .rfr-jobs-filter {
+  flex: 1 1 auto;
+}
+
+.rfr-jobs-filter-label {
+  width: 92px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--rfr-muted);
+}
+
+.rfr-jobs-filter button {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--rfr-ink);
+  background: transparent;
+  color: var(--rfr-ink);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+}
+
+.rfr-jobs-filter button.is-on {
+  background: var(--rfr-ink);
+  color: var(--rfr-surface);
+}
+
+.rfr-jobs-sort {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--rfr-muted);
+}
+
+.rfr-jobs-example {
+  padding: 2px 7px;
+  background: var(--rfr-example-bg);
+  color: var(--rfr-example-fg);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.rfr-jobs-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.rfr-jobs-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px 0;
+  border-bottom: 1px solid var(--rfr-rule);
+}
+
+.rfr-jobs-card.is-locked {
+  opacity: 0.45;
+  filter: blur(3px);
+  pointer-events: none;
+  user-select: none;
+}
+
+.rfr-jobs-card-grid {
+  display: grid;
+  grid-template-columns: 76px minmax(0, 1fr) 260px;
+  gap: 20px;
+  align-items: start;
+}
+
+.rfr-jobs-score {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.rfr-jobs-score strong {
+  font-family: Archivo, sans-serif;
+  font-weight: 900;
+  font-size: 44px;
+  line-height: 0.9;
+  letter-spacing: -0.03em;
+}
+
+.rfr-jobs-score span {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  color: var(--rfr-muted);
+}
+
+.rfr-jobs-main {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.rfr-jobs-head {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.rfr-jobs-head h2 {
+  margin: 0;
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+  font-size: 22px;
+}
+
+.rfr-jobs-tag {
+  padding: 3px 8px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+
+.rfr-jobs-tag.is-budget {
+  background: var(--rfr-ink);
+  color: var(--rfr-surface);
+}
+
+.rfr-jobs-tag.is-team {
+  background: var(--rfr-example-bg);
+  color: var(--rfr-example-fg);
+}
+
+.rfr-jobs-tag.is-watch {
+  background: #dcdfd9;
+  color: var(--rfr-body-2);
+}
+
+.rfr-jobs-line,
+.rfr-jobs-why {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+
+.rfr-jobs-line {
+  font-size: 17px;
+}
+
+.rfr-jobs-why {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--rfr-body-2);
+}
+
+.rfr-jobs-why span {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: var(--rfr-accent);
+}
+
+.rfr-jobs-factors {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rfr-jobs-factor {
+  display: grid;
+  grid-template-columns: 74px 1fr 30px;
+  gap: 8px;
+  align-items: center;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  color: var(--rfr-muted);
+}
+
+.rfr-jobs-bar {
+  position: relative;
+  display: block;
+  height: 8px;
+  background: #dcdfd9;
+}
+
+.rfr-jobs-bar span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  display: block;
+  background: var(--rfr-ink);
+}
+
+.rfr-jobs-bar span.is-est {
+  background: #d6a777;
+}
+
+.rfr-jobs-est {
+  color: var(--rfr-example-fg);
+}
+
+.rfr-jobs-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-left: 96px;
+}
+
+.rfr-jobs-toggle {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--rfr-ink);
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.rfr-jobs-robots {
+  font-size: 14px;
+  color: var(--rfr-muted);
+}
+
+.rfr-jobs-spacer {
+  flex: 1;
+}
+
+.rfr-jobs-save {
+  padding: 8px 14px;
+  border: 2px solid var(--rfr-ink);
+  background: transparent;
+  color: var(--rfr-ink);
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+  font-size: 14px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.rfr-editorial a.rfr-jobs-save {
+  color: var(--rfr-ink);
+}
+
+.rfr-jobs-save:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.rfr-jobs-evidence {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 0 96px;
+  padding: 16px 18px;
+  border-left: 4px solid var(--rfr-ink);
+  background: var(--rfr-surface);
+}
+
+.rfr-jobs-evidence div {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 12px;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.rfr-jobs-evidence dt {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  color: var(--rfr-muted);
+}
+
+.rfr-jobs-evidence dd {
+  margin: 0;
+}
+
+.rfr-jobs-empty {
+  margin: 0;
+  padding: 32px 0;
+  color: var(--rfr-muted);
+}
+
+.rfr-jobs-gate {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-top: 24px;
+  padding: 28px;
+  background: var(--rfr-ink);
+  color: var(--rfr-surface);
+}
+
+.rfr-jobs-gate > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 640px;
+}
+
+.rfr-jobs-gate span {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 12px;
+  letter-spacing: 0.12em;
+  color: #fdba74;
+}
+
+.rfr-jobs-gate strong {
+  font-family: Archivo, sans-serif;
+  font-weight: 900;
+  font-size: 30px;
+  letter-spacing: -0.02em;
+}
+
+.rfr-jobs-gate p {
+  margin: 0;
+  font-size: 15px;
+  color: var(--rfr-rule);
+}
+
+.rfr-editorial .rfr-jobs-gate a {
+  padding: 14px 20px;
+  background: var(--rfr-accent);
+  color: var(--rfr-surface);
+  font-family: Archivo, sans-serif;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.rfr-jobs-note {
+  margin: 18px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--rfr-muted);
+}
+
+.rfr-jobs-note span {
+  color: var(--rfr-example-fg);
+}
+
+.rfr-jobs .rfr-footer {
+  margin-top: 72px;
+}
+
+@media (max-width: 720px) {
+  .rfr-jobs-hero,
+  .rfr-jobs-filters,
+  .rfr-jobs-list {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .rfr-jobs-card-grid {
+    grid-template-columns: 56px minmax(0, 1fr);
+    gap: 14px;
+  }
+
+  .rfr-jobs-factors {
+    grid-column: 2;
+  }
+
+  .rfr-jobs-score strong {
+    font-size: 34px;
+  }
+
+  .rfr-jobs-actions {
+    padding-left: 70px;
+    gap: 10px;
+  }
+
+  .rfr-jobs-evidence {
+    margin-left: 0;
+  }
+
+  .rfr-jobs-evidence div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .rfr-jobs-filter-label {
+    width: 100%;
+  }
+
+  .rfr-jobs-gate strong {
+    font-size: 24px;
+  }
+}

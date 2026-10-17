@@ -21,7 +21,7 @@ const SEARCH_TIMEOUT_MS = 45_000;
 
 const RESULTS_NAV = [
   { label: "Find buyers", href: "/" },
-  { label: "How it works", href: "/#how" },
+  { label: "Robot jobs", href: "/jobs" },
   { label: "Explore", href: "/#explore" },
   { label: "Pricing", href: "/pricing" },
   { label: "Sign in", href: "/login" },

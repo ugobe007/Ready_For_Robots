@@ -15,6 +15,7 @@ import Newsletter from "./pages/Newsletter";
 import About from "./pages/About";
 import BillingSuccess from "./pages/BillingSuccess";
 import Pricing from "./pages/Pricing";
+import RobotJobs from "./pages/RobotJobs";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import AuthCallback from "./pages/AuthCallback";
@@ -57,12 +58,6 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
 import VisitTracker from "./components/VisitTracker";
-
-/** /jobs → / (preserve query). Personalized /jobs/:slug stays. */
-function JobsIndexRedirect() {
-  const search = typeof window !== "undefined" ? window.location.search : "";
-  return <Redirect to={`/${search}`} />;
-}
 
 function JourneyHomeRedirect() {
   const search = typeof window !== "undefined" ? window.location.search : "";
@@ -145,7 +140,7 @@ function Router() {
       <Route path="/billing/success" component={BillingSuccess} />
       <Route path="/social" component={SocialRoute} />
       <Route path="/jobs/:slug" component={Jobs} />
-      <Route path="/jobs" component={JobsIndexRedirect} />
+      <Route path="/jobs" component={RobotJobs} />
       <Route path="/experiment" component={DevExperiment} />
       <Route path="/icons" component={DevIcons} />
       <Route path="/icon-review" component={DevIconReview} />
