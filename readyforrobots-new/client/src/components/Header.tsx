@@ -124,12 +124,6 @@ const moreNavLinks = [
     desc: "Daily Robot Intelligence Brief",
   },
   {
-    label: "Studio",
-    href: "/social",
-    icon: ClipboardList,
-    desc: "Content Studio — social posts",
-  },
-  {
     label: "Marketplace",
     href: "/marketplace",
     icon: BriefcaseBusiness,

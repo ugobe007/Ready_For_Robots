@@ -87,7 +87,7 @@ export const ADMIN_WORKSPACE_SECTIONS: AdminNavSection[] = [
     links: [
       { label: "Supply Pipeline", href: "/supply-pipeline" },
       { label: "Marketplace", href: "/marketplace" },
-      { label: "Studio", href: "/social" },
+      { label: "Studio", href: "/social", adminOnly: true },
       { label: "Integrations", href: "/integrations" },
     ],
   },
