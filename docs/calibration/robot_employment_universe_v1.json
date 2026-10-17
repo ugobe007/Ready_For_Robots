@@ -4350,7 +4350,7 @@
           "name": "UR3e",
           "robot_class": "cobot",
           "work_families": [
-            "gripper"
+            "machine_tending"
           ],
           "name_source": "vendor_index",
           "capabilities_epistemic": "unknown",
@@ -4362,7 +4362,7 @@
           "name": "UR5e",
           "robot_class": "cobot",
           "work_families": [
-            "gripper"
+            "machine_tending"
           ],
           "name_source": "vendor_index",
           "capabilities_epistemic": "unknown",
@@ -4374,7 +4374,7 @@
           "name": "UR10e",
           "robot_class": "cobot",
           "work_families": [
-            "gripper"
+            "machine_tending"
           ],
           "name_source": "vendor_index",
           "capabilities_epistemic": "unknown",
