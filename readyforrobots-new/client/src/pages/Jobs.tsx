@@ -44,7 +44,7 @@ export default function Jobs() {
   const fromSearch = landingVisitFromSearch(search);
   const visit: LandingVisit = heroHome ? "landing" : fromSearch;
   if (visit === "landing") {
-    if (isFindBoardHash(hash)) return <Redirect to="/jobs" />;
+    if (isFindBoardHash(hash)) return <Redirect to="/jobs" replace />;
     return <JobsLanding />;
   }
   if (visit === "candidates") {

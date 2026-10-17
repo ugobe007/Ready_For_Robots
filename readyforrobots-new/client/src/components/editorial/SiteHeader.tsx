@@ -33,6 +33,7 @@ export function SiteHeader({
   const links = signedIn ? SIGNED_IN_LINKS : linkOverride ?? PUBLIC_LINKS;
   const [location] = useLocation();
   const path = location.split("?")[0] || "/";
+  const currentLabel = [...links].reverse().find((link) => link.href === path)?.label;
   return (
     <header className="rfr-header">
       <div className="rfr-header-inner">
@@ -45,8 +46,8 @@ export function SiteHeader({
             <a
               key={link.label}
               href={link.href}
-              aria-current={link.href === path ? "page" : undefined}
-              className={link.href === path ? "rfr-nav-current" : undefined}
+              aria-current={link.label === currentLabel ? "page" : undefined}
+              className={link.label === currentLabel ? "rfr-nav-current" : undefined}
             >
               {link.label}
             </a>
