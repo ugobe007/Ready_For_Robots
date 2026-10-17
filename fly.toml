@@ -153,10 +153,10 @@ primary_region = "iad"   # change to your preferred region (lax, ams, sin, etc.)
 
 [[vm]]
   processes = ["worker"]
-  # 2GB: the daily newsletter/content full rebuild peaks ~450MB RSS on top of the
-  # running app (~600MB). At 1GB the OOM-killer killed every rebuild, freezing the
-  # newsletter for weeks. 2GB gives the rebuild headroom to complete and persist.
-  memory = "2048mb"
+  # 4GB: a pipeline rebuild on the 2GB worker reached 1.86GB RSS and the OOM
+  # killer stopped it (2026-10-17T02:46Z, machine 80ee6ddc606d68) before the
+  # durable pipeline row was written. The web machine stays at 1GB.
+  memory = "4096mb"
   cpu_kind = "shared"
   cpus = 2
 

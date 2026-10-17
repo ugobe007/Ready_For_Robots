@@ -371,13 +371,29 @@ def hydrate_public_surface_caches() -> None:
         _last_refresh_monotonic = time.monotonic()
 
 
-def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_newsletter: bool = True) -> None:
+_PIPELINE_REBUILD_LOCK = 440355
+
+
+def _try_pipeline_rebuild_lock(db) -> bool:
+    """One rebuild across worker machines. SQLite tests do not lock."""
+    bind = db.get_bind()
+    if getattr(bind.dialect, "name", "") != "postgresql":
+        return True
+    from sqlalchemy import text
+
+    return bool(db.execute(text(f"SELECT pg_try_advisory_lock({_PIPELINE_REBUILD_LOCK})")).scalar())
+
+
+def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_newsletter: bool = True) -> bool | None:
     global _refresh_in_progress, _last_refresh_monotonic
 
     from app.database import SessionLocal
 
     db = SessionLocal()
     try:
+        if not _try_pipeline_rebuild_lock(db):
+            logger.info("Pipeline rebuild already running on another worker; skipping")
+            return None
         if pipeline_only:
             refresh_pipeline_surface_caches(db, include_humanoid_report=False)
         elif force:
@@ -397,8 +413,10 @@ def _run_refresh(*, force: bool = False, pipeline_only: bool = False, include_ne
                 logger.warning("Intelligence surface refresh skipped: %s", exc)
         hydrate_public_surface_caches()
         _last_refresh_monotonic = time.monotonic()
+        return True
     except Exception as exc:
         logger.warning("Public surface background refresh failed: %s", exc)
+        return False
     finally:
         db.close()
         with _refresh_lock:
@@ -441,6 +459,7 @@ def schedule_public_cache_refresh(
     pipeline_only: bool = False,
     include_newsletter: bool = True,
     reason: str = "",
+    requested_at: str = "",
 ) -> bool:
     """Single-flight background cache rebuild — never blocks HTTP.
 
@@ -463,7 +482,13 @@ def schedule_public_cache_refresh(
 
     def _job() -> None:
         logger.info("Public surface cache refresh started (%s)", label)
-        _run_refresh(force=force, pipeline_only=pipeline_only, include_newsletter=include_newsletter)
+        ok = _run_refresh(force=force, pipeline_only=pipeline_only, include_newsletter=include_newsletter)
+        if not requested_at or ok is None:
+            return
+        if ok:
+            _write_pipeline_refresh_handled(requested_at)
+        else:
+            release_pipeline_refresh_claim(requested_at)
 
     threading.Thread(
         target=_job,
@@ -558,14 +583,19 @@ def consume_pipeline_refresh_request(handled_at: str) -> str:
     if not requested_at or requested_at == handled_at:
         return handled_at
     if payload.get("claimed_at"):
-        return requested_at
+        if _claim_belongs_to_a_live_rebuild():
+            return requested_at
+        release_pipeline_refresh_claim(requested_at)
     if not claim_pipeline_refresh_request(requested_at):
         return handled_at
-    started = schedule_public_cache_refresh(pipeline_only=True, reason="worker_request")
+    started = schedule_public_cache_refresh(
+        pipeline_only=True,
+        reason="worker_request",
+        requested_at=requested_at,
+    )
     if not started:
         release_pipeline_refresh_claim(requested_at)
         return handled_at
-    _write_pipeline_refresh_handled(requested_at)
     return requested_at
 
 
@@ -576,8 +606,24 @@ def _read_pipeline_refresh_handled() -> str:
     return str(payload.get("handled_at") or "")
 
 
+def _claim_belongs_to_a_live_rebuild() -> bool:
+    """True when some worker holds the rebuild lock. A leftover claim is not live."""
+    from app.database import SessionLocal
+
+    db = SessionLocal()
+    try:
+        if not _try_pipeline_rebuild_lock(db):
+            return True
+        return False
+    except Exception as exc:
+        logger.warning("Pipeline rebuild lock check failed: %s", exc)
+        return True
+    finally:
+        db.close()
+
+
 def _write_pipeline_refresh_handled(handled_at: str) -> None:
-    """Persist the started request so a worker restart does not replay it."""
+    """Persist a finished request so a worker restart does not replay it."""
     from app.database import SessionLocal
 
     try:

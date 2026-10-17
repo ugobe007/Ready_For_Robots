@@ -591,7 +591,9 @@ if _mcp_asgi is not None:
 
 
 @app.get("/health")
-def health():
+async def health():
+    # Async so a pipeline rebuild that fills the DB thread pool cannot
+    # stop this from answering. A sync health check waits on that pool.
     return {"status": "ok"}
 
 
