@@ -48,7 +48,7 @@ export default function Welcome() {
             </Link>
             <Link href="/?visit=jobs">
               <span className="rfr-account-num">02</span>
-              <strong>Find buyers for your robot →</strong>
+              <strong>Add another robot →</strong>
               <span>
                 Paste a product page. Each robot gets its own buyers and its own alerts.
               </span>

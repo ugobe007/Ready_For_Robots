@@ -2,7 +2,6 @@
  * Sign in — Supabase magic link + OAuth (dark workflow theme).
  */
 import { useEffect, useState } from "react";
-import { Github } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { SiteFooter, SiteHeader } from "@/components/editorial";
 import {
@@ -28,50 +27,6 @@ import {
 } from "@/lib/authNext";
 import { markJobsWorkspaceRestoreIfHome } from "@/lib/jobsWorkflow";
 
-function GoogleGlyph() {
-  return (
-    <span
-      className="inline-flex h-5 w-5 items-center justify-center  bg-white"
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 24 24" className="h-4 w-4" focusable="false">
-        <path
-          fill="#EA4335"
-          d="M12 10.2v3.9h5.5c-.2 1.2-1.4 3.5-5.5 3.5-3.3 0-6-2.7-6-6s2.7-6 6-6c1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 6.8 2 2.6 6.2 2.6 11.4S6.8 20.8 12 20.8c6.9 0 9.1-4.8 9.1-7.3 0-.5-.1-.9-.1-1.3H12Z"
-        />
-        <path
-          fill="#34A853"
-          d="M3.7 7.3l3.2 2.3c.9-1.8 2.8-3 5.1-3 1.9 0 3.1.8 3.9 1.5l2.7-2.6C16.9 2.9 14.6 2 12 2 8.1 2 4.8 4.2 3.2 7.3Z"
-        />
-        <path
-          fill="#4285F4"
-          d="M12 20.8c2.5 0 4.7-.8 6.3-2.3l-2.9-2.4c-.8.6-1.8 1-3.4 1-4.1 0-5.3-2.8-5.5-3.5l-3.3 2.5c1.6 3.1 4.9 4.7 8.8 4.7Z"
-        />
-        <path
-          fill="#FBBC05"
-          d="M3.2 16.1l3.3-2.5c-.1-.4-.2-.9-.2-1.4s.1-1 .2-1.4L3.2 8.3c-.4 1-.6 2-.6 3.1s.2 2.1.6 3.1Z"
-        />
-      </svg>
-    </span>
-  );
-}
-
-function MicrosoftGlyph() {
-  return (
-    <span
-      className="inline-flex h-5 w-5 items-center justify-center"
-      aria-hidden="true"
-    >
-      <svg viewBox="0 0 24 24" className="h-4 w-4" focusable="false">
-        <rect x="2" y="2" width="9" height="9" fill="#f35325" />
-        <rect x="13" y="2" width="9" height="9" fill="#81bc06" />
-        <rect x="2" y="13" width="9" height="9" fill="#05a6f0" />
-        <rect x="13" y="13" width="9" height="9" fill="#ffba08" />
-      </svg>
-    </span>
-  );
-}
-
 export default function Login() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
@@ -79,7 +34,9 @@ export default function Login() {
     "idle"
   );
   const [errMsg, setErrMsg] = useState("");
+  const [linkFailed, setLinkFailed] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const [resendBusy, setResendBusy] = useState(false);
 
   const redirectTarget = () => postAuthRedirectTarget("/");
 
@@ -116,6 +73,7 @@ export default function Login() {
         navigateAfterAuth(dest);
         return;
       }
+      setLinkFailed(true);
       setStatus("error");
       setErrMsg(decodeURIComponent(authError.replace(/\+/g, " ")));
       params.delete("auth_error");
@@ -156,7 +114,7 @@ export default function Login() {
     return () => sub.subscription.unsubscribe();
   }, [setLocation]);
 
-  async function oauth(provider: "google" | "github" | "azure") {
+  async function oauth(provider: "google" | "github") {
     if (!supabase) {
       setStatus("error");
       setErrMsg(AUTH_UNAVAILABLE_MSG);
@@ -170,11 +128,7 @@ export default function Login() {
     });
     if (error) {
       setStatus("error");
-      setErrMsg(
-        provider === "azure" && /provider is not enabled/i.test(error.message)
-          ? "Microsoft sign-in is not enabled yet in Supabase Auth (Azure provider). Use Google or a magic link, or enable Azure in the Supabase dashboard."
-          : error.message
-      );
+      setErrMsg(error.message);
     }
   }
 
@@ -218,9 +172,102 @@ export default function Login() {
     }
   }
 
+  async function resendMagicLink() {
+    if (!supabase || cooldown > 0 || resendBusy) return;
+    const normalized = normalizeAuthEmail(email);
+    if (!normalized) return;
+    setResendBusy(true);
+    const { error } = await supabase.auth.signInWithOtp({
+      email: normalized,
+      options: {
+        emailRedirectTo: supabaseOAuthRedirect(redirectTarget()),
+        shouldCreateUser: false,
+      },
+    });
+    setResendBusy(false);
+    if (error) {
+      setLinkFailed(true);
+      setStatus("error");
+      setErrMsg(otpNoAccountMessage(error.message));
+      return;
+    }
+    setCooldown(60);
+  }
+
   const loginSearch =
     typeof window !== "undefined" ? window.location.search : "";
   const signupHref = `/signup${loginSearch}`;
+
+  if (status === "sent") {
+    return (
+      <div className="rfr-editorial rfr-account">
+        <SiteHeader />
+        <main>
+          <section className="rfr-account-callback">
+            <div className="rfr-account-kicker">CHECK YOUR INBOX</div>
+            <h1>We sent you a sign-in link.</h1>
+            <p className="rfr-account-lede">
+              It went to <strong>{email}</strong>. Open it on this device to sign in. The link works for one hour.
+            </p>
+            <div className="rfr-account-actions">
+              <button
+                type="button"
+                className="rfr-account-secondary"
+                onClick={() => void resendMagicLink()}
+                disabled={cooldown > 0 || resendBusy}
+              >
+                {cooldown > 0 ? `Resend the link in ${cooldown}s` : "Resend the link"}
+              </button>
+              <button
+                type="button"
+                className="rfr-account-textbtn"
+                onClick={() => {
+                  setStatus("idle");
+                  setErrMsg("");
+                }}
+              >
+                Use a different email
+              </button>
+            </div>
+            <p className="rfr-account-fine">
+              Nothing after a few minutes? Check spam, or continue with Google or GitHub instead.
+            </p>
+          </section>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
+
+  if (linkFailed) {
+    return (
+      <div className="rfr-editorial rfr-account">
+        <SiteHeader />
+        <main>
+          <section className="rfr-account-callback">
+            <div className="rfr-account-kicker">SIGN-IN DIDN'T FINISH</div>
+            <h1>That didn't work.</h1>
+            <p className="rfr-account-lede">
+              The email link expired or was already used, or the Google/GitHub sign-in was cancelled. Try again and we'll take you to the same page.
+            </p>
+            <button
+              type="button"
+              className="rfr-account-submit"
+              style={{ width: "auto", padding: "0 18px" }}
+              onClick={() => {
+                setLinkFailed(false);
+                setStatus("idle");
+                setErrMsg("");
+              }}
+            >
+              Back to sign in
+            </button>
+          </section>
+        </main>
+        <SiteFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="rfr-editorial rfr-account">
@@ -258,94 +305,62 @@ export default function Login() {
             </div>
           </div>
           <div className="rfr-account-card">
-            <div className="rfr-account-tabs">
-              <Link href={signupHref} className="is-off">
-                Create account
-              </Link>
-              <span className="is-on">Sign in</span>
-            </div>
-            {status === "sent" ? (
-              <>
-                <h2>Check your email</h2>
-                <p className="rfr-account-lede">
-                  We sent a sign-in link to <b>{email}</b>.
-                </p>
-                <button
-                  type="button"
-                  className="rfr-account-fine"
-                  onClick={() => setStatus("idle")}
-                >
-                  Back to sign-in options
-                </button>
-              </>
-            ) : (
-              <>
-                {!supabase ? (
-                  <p className="rfr-account-error" role="alert">
-                    {AUTH_UNAVAILABLE_MSG}
-                  </p>
-                ) : null}
-                {status === "error" && errMsg ? (
-                  <p className="rfr-account-error" role="alert">
-                    {errMsg}
-                  </p>
-                ) : null}
-                <form onSubmit={e => void magicLink(e)}>
-                  <label>
-                    <span className="rfr-account-label">WORK EMAIL</span>
-                    <input
-                      type="email"
-                      required
-                      autoComplete="email"
-                      inputMode="email"
-                      spellCheck={false}
-                      value={email}
-                      onChange={e => setEmail(e.target.value)}
-                      placeholder="you@company.com"
-                      disabled={status === "sending"}
-                      className={status === "error" ? "is-error" : undefined}
-                    />
-                  </label>
-                  <button
-                    type="submit"
-                    className="rfr-account-submit"
-                    disabled={status === "sending" || !email.trim() || !supabase}
-                  >
-                    {status === "sending" ? "Sending…" : "Sign in"}
-                  </button>
-                </form>
-                <p className="rfr-account-fine">
-                  New here? <Link href={signupHref}>Create an account</Link>. It takes under a minute.
-                </p>
-                <button
-                  type="button"
-                  className="rfr-account-secondary"
-                  onClick={() => void oauth("google")}
-                  disabled={!supabase}
-                >
-                  <GoogleGlyph />
-                  Continue with Google
-                </button>
-                <button
-                  type="button"
-                  className="rfr-account-secondary"
-                  onClick={() => void oauth("azure")}
-                  disabled={!supabase}
-                >
-                  <MicrosoftGlyph />
-                  Continue with Microsoft 365
-                </button>
-                <button
-                  type="button"
-                  className="rfr-account-secondary"
-                  onClick={() => void oauth("github")}
-                  disabled={!supabase}
-                >
-                  <Github className="h-4 w-4" aria-hidden="true" />
-                  Continue with GitHub
-                </button>
-              </>
-            )}
+            <h2 className="rfr-account-panel-title">Sign in</h2>
+            {!supabase ? (
+              <p className="rfr-account-error" role="alert">
+                {AUTH_UNAVAILABLE_MSG}
+              </p>
+            ) : null}
+            {status === "error" && errMsg ? (
+              <p className="rfr-account-error" role="alert">
+                {errMsg}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              className="rfr-account-submit"
+              onClick={() => void oauth("google")}
+              disabled={!supabase}
+            >
+              Continue with Google
+            </button>
+            <button
+              type="button"
+              className="rfr-account-submit"
+              onClick={() => void oauth("github")}
+              disabled={!supabase}
+            >
+              Continue with GitHub
+            </button>
+            <p className="rfr-account-or">OR USE YOUR EMAIL</p>
+            <form onSubmit={e => void magicLink(e)}>
+              <label>
+                <span className="rfr-account-label">WORK EMAIL</span>
+                <input
+                  type="email"
+                  required
+                  autoComplete="email"
+                  inputMode="email"
+                  spellCheck={false}
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="you@company.com"
+                  disabled={status === "sending"}
+                  className={status === "error" ? "is-error" : undefined}
+                />
+              </label>
+              <button
+                type="submit"
+                className="rfr-account-secondary"
+                disabled={status === "sending" || !email.trim() || !supabase}
+              >
+                {status === "sending" ? "Sending…" : "Email me a sign-in link"}
+              </button>
+            </form>
+            <p className="rfr-account-fine">Google, GitHub, or a link sent to your email.</p>
+            <p className="rfr-account-fine rfr-account-switch">
+              New here? <Link href={signupHref}>Create an account</Link>
+            </p>
           </div>
         </section>
       </main>

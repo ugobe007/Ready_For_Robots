@@ -267,6 +267,16 @@ export default function Profile() {
     .slice(0, 2)
     .map(part => part[0]?.toUpperCase() || "")
     .join("") || "RR";
+  const provider =
+    session.user.identities?.[0]?.provider ||
+    (session.user.app_metadata?.provider as string | undefined) ||
+    "email";
+  const signInMethod =
+    provider === "google"
+      ? "Google"
+      : provider === "github"
+        ? "GitHub"
+        : "Email link";
 
   return (
     <div className="rfr-editorial rfr-account">
@@ -286,6 +296,11 @@ export default function Profile() {
               <div className="rfr-account-row">
                 <span>EMAIL</span>
                 <b>{accountEmail}</b>
+                <span />
+              </div>
+              <div className="rfr-account-row">
+                <span>SIGN-IN</span>
+                <b>{signInMethod}</b>
                 <span />
               </div>
             </div>
