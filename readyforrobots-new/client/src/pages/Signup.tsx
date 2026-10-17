@@ -591,6 +591,19 @@ export default function Signup() {
                 {errMsg}
               </p>
             ) : null}
+            {hubspotIntent && (
+              <label>
+                <span className="rfr-account-label">YOUR NAME</span>
+                <input
+                  type="text"
+                  autoComplete="name"
+                  placeholder="Alex Rivera"
+                  value={fullName}
+                  onChange={e => setFullName(e.target.value)}
+                  required
+                />
+              </label>
+            )}
             <button
               type="button"
               className="rfr-account-submit"
@@ -609,19 +622,6 @@ export default function Signup() {
             </button>
             <p className="rfr-account-or">OR USE YOUR EMAIL</p>
             <form onSubmit={e => void magicLink(e)}>
-              {hubspotIntent && (
-                <label>
-                  <span className="rfr-account-label">YOUR NAME</span>
-                  <input
-                    type="text"
-                    autoComplete="name"
-                    placeholder="Alex Rivera"
-                    value={fullName}
-                    onChange={e => setFullName(e.target.value)}
-                    required
-                  />
-                </label>
-              )}
               <label>
                 <span className="rfr-account-label">WORK EMAIL</span>
                 <input

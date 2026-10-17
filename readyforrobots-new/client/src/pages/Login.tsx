@@ -186,7 +186,6 @@ export default function Login() {
     });
     setResendBusy(false);
     if (error) {
-      setLinkFailed(true);
       setStatus("error");
       setErrMsg(otpNoAccountMessage(error.message));
       return;
