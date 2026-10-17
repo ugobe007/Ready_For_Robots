@@ -147,6 +147,9 @@ export type RobotJobCardView = {
   modelContract: TaskModelCardContract | null;
   isExample: boolean;
   sourceUrl: string | null;
+  readinessLabel: string | null;
+  whyNow: string | null;
+  matchingRobot: string | null;
 };
 
 /** Shown on every card that has no source link (all bundled seed/demo rows). */
@@ -458,6 +461,10 @@ export function robotJobCardFromMatch(job: {
   required_task_models?: MatchTaskModelIn[] | null;
   source_url?: string | null;
   is_example?: boolean | null;
+  readiness_label?: string | null;
+  why_now?: string | null;
+  for_robot?: string | null;
+  forRobot?: string | null;
 }): RobotJobCardView {
   const taskModels = normalizeTaskModels(job.required_task_models);
   const modelLinks = cardModelLinks(
@@ -496,6 +503,9 @@ export function robotJobCardFromMatch(job: {
     modelContract: taskModels.find(m => m.cardContract)?.cardContract || null,
     isExample: isExampleJob(job),
     sourceUrl: jobSourceUrl(job),
+    readinessLabel: emptyToNull(job.readiness_label),
+    whyNow: emptyToNull(job.why_now),
+    matchingRobot: emptyToNull(job.for_robot) || emptyToNull(job.forRobot),
   };
 }
 
@@ -547,6 +557,25 @@ export function isNamedRobotJob(job: {
   if (PLACEHOLDER_JOB_NAMES.has(company.toLowerCase())) return false;
   if (PLACEHOLDER_JOB_NAMES.has(place.toLowerCase())) return false;
   return true;
+}
+
+/** A sourced signal card names the company and the work. It does not invent a workplace. */
+export function isShownRobotJob(job: {
+  company_name?: string | null;
+  locality?: string | null;
+  title?: string | null;
+  source_url?: string | null;
+  is_example?: boolean | null;
+  readiness_label?: string | null;
+}): boolean {
+  if (isNamedRobotJob(job)) return true;
+  if (job.is_example === true) return false;
+  const company = (job.company_name || "").trim();
+  const work = (job.title || "").trim();
+  const label = (job.readiness_label || "").trim();
+  if (!company || !work || !label) return false;
+  if (PLACEHOLDER_JOB_NAMES.has(company.toLowerCase())) return false;
+  return jobSourceUrl(job) !== null;
 }
 
 function emptyToNull(value?: string | null): string | null {

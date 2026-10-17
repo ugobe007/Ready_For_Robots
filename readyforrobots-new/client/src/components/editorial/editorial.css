@@ -160,6 +160,17 @@
   padding: 3px 7px;
 }
 
+.rfr-budget {
+  display: inline-block;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #0d3b2e;
+  background: #d7f0e4;
+  padding: 3px 7px;
+}
+
 .rfr-tier-letter {
   font-family: Archivo, sans-serif;
   font-weight: 900;

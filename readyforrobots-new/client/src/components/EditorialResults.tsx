@@ -37,6 +37,10 @@ type BuyerJob = {
   is_example?: boolean;
   top_tier?: string | null;
   reasons?: BuyerReason[] | null;
+  readiness_label?: string | null;
+  why_now?: string | null;
+  source_url?: string | null;
+  for_robot?: string | null;
 };
 type BuyerProduct = {
   name?: string;
@@ -88,6 +92,11 @@ function hostLabel(url: string): string {
   }
 }
 
+function jobSource(job: BuyerJob): string | null {
+  const url = (job.source_url || "").trim();
+  return /^https?:\/\//i.test(url) ? url : null;
+}
+
 function mainWork(payload: BuyerPayload): string {
   const cap = payload.capabilities?.find((item) => (item.key || item.label || "").trim());
   return taxonomyLabel(cap?.key) || (cap?.label || "").trim();
@@ -120,9 +129,10 @@ export function BuyerRows({ payload }: { payload: BuyerPayload }) {
     return [...seen.entries()];
   }, [jobs]);
   const [industry, setIndustry] = useState("all");
-  const shown = jobs.filter(
-    (job) => industry === "all" || (job.industry || "").trim() === industry
-  );
+  const shown = jobs
+    .filter((job) => industry === "all" || (job.industry || "").trim() === industry)
+    .slice()
+    .sort((a, b) => Number(Boolean(a.is_example)) - Number(Boolean(b.is_example)));
   const anyExample = shown.some((job) => job.is_example);
   const allExample = shown.length > 0 && shown.every((job) => job.is_example);
   const anyTier = shown.some((job) => (job.top_tier || "").trim());
@@ -207,7 +217,13 @@ export function BuyerRows({ payload }: { payload: BuyerPayload }) {
                   <div>
                     <div className="rfr-result-buyer">
                       <strong>{job.company_name || "Buyer"}</strong>
-                      {job.is_example ? <ExampleBadge /> : null}
+                      {job.is_example ? (
+                        <ExampleBadge />
+                      ) : job.readiness_label ? (
+                        <span className="rfr-budget" data-job-readiness="true">
+                          {job.readiness_label}
+                        </span>
+                      ) : null}
                     </div>
                     {place ? <span className="rfr-muted">{place}</span> : null}
                     {job.title ? (
@@ -215,6 +231,13 @@ export function BuyerRows({ payload }: { payload: BuyerPayload }) {
                         <strong>{job.title}</strong>
                       </span>
                     ) : null}
+                    {job.why_now ? <span>{job.why_now}</span> : null}
+                    {jobSource(job) ? (
+                      <a href={jobSource(job) || undefined} target="_blank" rel="noreferrer">
+                        Source
+                      </a>
+                    ) : null}
+                    {job.for_robot ? <span className="rfr-muted">Matching robot · {job.for_robot}</span> : null}
                   </div>
                   {reasons.length > 0 ? (
                     <div className="rfr-result-reasons">
