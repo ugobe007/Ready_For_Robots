@@ -1,4 +1,5 @@
 import { useLocation } from "wouter";
+import { jobsFindHref } from "@/lib/jobsLanding";
 
 type NavLink = { label: string; href: string };
 
@@ -27,7 +28,7 @@ export function SiteHeader({
   signedIn = false,
   initials = "RR",
   links: linkOverride,
-  ctaHref = "/pricing",
+  ctaHref = jobsFindHref(),
 }: SiteHeaderProps) {
   const links = signedIn ? SIGNED_IN_LINKS : linkOverride ?? PUBLIC_LINKS;
   const [location] = useLocation();
@@ -56,7 +57,7 @@ export function SiteHeader({
             </span>
           ) : (
             <a className="rfr-header-cta" href={ctaHref}>
-              Get early access
+              Start free
             </a>
           )}
         </nav>

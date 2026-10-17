@@ -393,7 +393,7 @@ function Unrecognized() {
 function Shell({ children }: { children: ReactNode }) {
   return (
     <div className="rfr-editorial rfr-home">
-      <SiteHeader links={RESULTS_NAV} ctaHref="/pricing" />
+      <SiteHeader links={RESULTS_NAV} />
       {children}
       <SiteFooter />
     </div>

@@ -308,8 +308,14 @@ export default function Profile() {
           <div className="rfr-account-plan">
             <div className="rfr-account-plan-card">
               <span>PLAN</span>
-              <strong>Early access</strong>
-              <em>Free while we're in early access.</em>
+              <strong>
+                {me?.entitlements?.plan === "paid"
+                  ? me.entitlements.display_name || "Paid"
+                  : "Free"}
+              </strong>
+              {me?.entitlements?.plan === "paid" ? null : (
+                <em>Free to start. Upgrade anytime.</em>
+              )}
             </div>
             <Link
               className="rfr-account-secondary"

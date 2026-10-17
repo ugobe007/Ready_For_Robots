@@ -98,26 +98,20 @@ Text in **[brackets]** is a decision for Bob. Everything else is final copy unle
 
 ## 6. Pricing (`/pricing`)
 
-Replace the three tiers until live buyer signals ship (spec Phase 5).
+Two audiences on one page. Checkout is not connected. See `docs/pricing_billing_proposal.md`.
 
-**Headline:** Early access
-**Subhead:** Ready For Robots is in early access. Use it free while we roll out live buyer signals by industry.
+**Robot sellers**
+- Free: 1 robot, top 3 opportunities with reasons.
+- Founding seller, $49/month, locked while subscribed: up to 5 robots, full ranked list, live RFP alerts, the desk. Copy: "Buyers for your robots, ranked and kept up to date."
+- Pro, $199/month: more robots and users, plus deployment help. Disclosure line is still Bob's to word.
 
-**One card: Founding customer**
-- Free during early access
-- Buyer matches for every robot you sell
-- Save buyers and get notified when new ones appear
-- Founding customers lock in **[founding price, e.g. $X/month]** when live signals launch
-- Button: **Get early access**
+**Robot employers**
+- Free: post a robot job. Posting never requires a paid plan.
+- RFP, $149/month: publish an RFP and get qualified sellers with evidence (match score, deployments in this workflow, runtime and setting fit, service coverage).
 
-**Optional services** (keep as is, shorter): Help with setup, integration planning, and installation through vetted local partners. Scoped separately.
+**Optional services:** Help with setup, integration planning, and installation through vetted local partners. Same disclosure wherever deployment help is offered.
 
-**Remove:** Basic / Pro / Premium tiers, "Activated Buyer Leads," "Managed Outreach & Meeting Agent," "Vault Contact Protection," HubSpot/Hunter auto-sync, the Reevo comparison and field names in the FAQ.
-
-**FAQ (keep 3):**
-- *Where do buyer signals come from?* Public procurement notices, company filings and announcements, news, and automation hiring at buyer companies. Every signal links to its source.
-- *Do you sell contact lists?* No. We show which companies are moving to automate and why. Contact data comes later, opt-in.
-- *What does early access cost?* Nothing. Founding customers lock in their price before launch.
+**Remove:** the old early-access homepage line, the Basic / old Pro / Premium lead tiers, and any checkout button until the new prices exist.
 
 ---
 

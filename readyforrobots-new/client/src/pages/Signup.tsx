@@ -42,6 +42,8 @@ import {
 } from "@/lib/signupWorkflowPath";
 import { isJobsHandoffSrc, CRM_UNLOCKED_JOBS } from "@/lib/jobsWorkflow";
 import { readJobsHandoffSnapshot } from "@/lib/jobsHandoffSnapshot";
+import { storeMarketingOptIn } from "@/lib/marketingOptIn";
+import { DISCLOSURE } from "@/lib/disclosure";
 
 const SIGNUP_NAME_KEY = "rfr_signup_full_name";
 const WORKFLOW_CONTEXT_KEY = "rfr_workflow_context";
@@ -74,6 +76,7 @@ export default function Signup() {
   const [, setLocation] = useLocation();
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
+  const [marketingOptIn, setMarketingOptIn] = useState(false);
   const [status, setStatus] = useState<"idle" | "sending" | "sent" | "error">(
     "idle"
   );
@@ -324,6 +327,7 @@ export default function Signup() {
     setStatus("idle");
     setOauthPending(provider);
     storePendingNext(intendedPostAuthPath);
+    storeMarketingOptIn(marketingOptIn);
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
       options: { redirectTo: supabaseOAuthRedirect(intendedPostAuthPath) },
@@ -363,7 +367,10 @@ export default function Signup() {
     const redirectTo = supabaseOAuthRedirect(intendedPostAuthPath);
     const { error } = await supabase.auth.signInWithOtp({
       email: normalized,
-      options: { emailRedirectTo: redirectTo },
+      options: {
+        emailRedirectTo: redirectTo,
+        data: { marketing_opt_in: marketingOptIn },
+      },
     });
     if (error) {
       setStatus("error");
@@ -649,11 +656,32 @@ export default function Signup() {
                     : "Email me a sign-in link"}
               </button>
             </form>
+            <label className="rfr-account-optin">
+              <input
+                type="checkbox"
+                checked={marketingOptIn}
+                onChange={e => setMarketingOptIn(e.target.checked)}
+              />
+              <span>
+                I would like to receive ReadyForRobots news, robot
+                opportunities, and promotional emails. I can unsubscribe at
+                any time.
+              </span>
+            </label>
             <p className="rfr-account-fine">
               {fromFind
-                ? "Free during early access. We use your email for sign-in and buyer alerts only. You go straight back to your results."
-                : "Free during early access. We use your email for sign-in and buyer alerts only."}
+                ? "Free to start. Upgrade anytime. You go straight back to your results."
+                : "Free to start. Upgrade anytime."}
             </p>
+            <p className="rfr-account-fine rfr-account-legal">
+              By signing up, you agree to the ReadyForRobots{" "}
+              <Link href="/terms">Terms of Service</Link> and acknowledge our{" "}
+              <Link href="/privacy">Privacy Policy</Link>. We use the
+              information you provide to manage your account, understand your
+              automation needs, and deliver relevant services and account
+              communications.
+            </p>
+            <p className="rfr-account-fine rfr-account-legal">{DISCLOSURE}</p>
             <p className="rfr-account-fine rfr-account-switch">
               Already have an account? <Link href={loginHref}>Sign in</Link>
             </p>

@@ -1,10 +1,14 @@
 import { getApiBase, liveFetchInit } from "@/lib/apiBase";
 import { authHeader } from "@/lib/supabase";
 
+export type CheckoutTier = "pro" | "premium" | "founding" | "seller_pro";
+
 export type BillingConfig = {
   enabled?: boolean;
   pro_available?: boolean;
   premium_available?: boolean;
+  founding_available?: boolean;
+  seller_pro_available?: boolean;
   checkout_tiers?: string[];
 };
 
@@ -19,7 +23,7 @@ export async function fetchBillingConfig(): Promise<BillingConfig> {
 
 export async function startCheckout(
   accessToken: string,
-  tier: "pro" | "premium"
+  tier: CheckoutTier
 ): Promise<string> {
   const res = await fetch(
     `${getApiBase()}/api/billing/checkout`,

@@ -10,7 +10,22 @@ from sqlalchemy import text
 
 logger = logging.getLogger(__name__)
 
-VALID_TIERS = frozenset({"pro", "premium"})
+VALID_TIERS = frozenset({"pro", "premium", "founding", "seller_pro"})
+# Founding seller ($49) and Pro ($199). Legacy pro/premium stay valid for existing subscribers.
+SELLER_TIERS = frozenset({"founding", "seller_pro"})
+DISPLAY_PRICES = {"pro": 49, "premium": 129, "founding": 49, "seller_pro": 199}
+_PRICE_ENV = {
+    "pro": ("STRIPE_PRICE_PRO", "STRIPE_PRICE_ID_PRO"),
+    "premium": ("STRIPE_PRICE_PREMIUM", "STRIPE_PRICE_ID_PREMIUM"),
+    "founding": ("STRIPE_PRICE_FOUNDING_SELLER",),
+    "seller_pro": ("STRIPE_PRICE_SELLER_PRO",),
+}
+_PRODUCT_ENV = {
+    "pro": "STRIPE_PRODUCT_PRO",
+    "premium": "STRIPE_PRODUCT_PREMIUM",
+    "founding": "STRIPE_PRODUCT_FOUNDING_SELLER",
+    "seller_pro": "STRIPE_PRODUCT_SELLER_PRO",
+}
 _price_cache: dict[str, str] = {}
 
 
@@ -115,21 +130,23 @@ def _api_base() -> str:
 
 
 def _price_env_for_tier(tier: str) -> Optional[str]:
-    slug = (tier or "").strip().lower()
-    if slug == "pro":
-        return (os.getenv("STRIPE_PRICE_PRO") or os.getenv("STRIPE_PRICE_ID_PRO") or "").strip() or None
-    if slug == "premium":
-        return (os.getenv("STRIPE_PRICE_PREMIUM") or os.getenv("STRIPE_PRICE_ID_PREMIUM") or "").strip() or None
+    for name in _PRICE_ENV.get((tier or "").strip().lower(), ()):
+        value = (os.getenv(name) or "").strip()
+        if value:
+            return value
     return None
 
 
 def _product_env_for_tier(tier: str) -> Optional[str]:
-    slug = (tier or "").strip().lower()
-    if slug == "pro":
-        return (os.getenv("STRIPE_PRODUCT_PRO") or "").strip() or None
-    if slug == "premium":
-        return (os.getenv("STRIPE_PRODUCT_PREMIUM") or "").strip() or None
-    return None
+    name = _PRODUCT_ENV.get((tier or "").strip().lower())
+    return ((os.getenv(name) or "").strip() or None) if name else None
+
+
+def seller_plans_checkout_open() -> bool:
+    """Founding and Pro checkout runs on a test key, or on live once Bob sets STRIPE_SELLER_PLANS_LIVE=1."""
+    if stripe_key_mode() == "test":
+        return True
+    return (os.getenv("STRIPE_SELLER_PLANS_LIVE") or "").strip() == "1"
 
 
 def _default_price_for_product(product_id: str) -> Optional[str]:
@@ -175,28 +192,31 @@ def tier_for_price_id(price_id: str) -> Optional[str]:
     pid = (price_id or "").strip()
     if not pid:
         return None
-    for tier in ("pro", "premium"):
-        resolved = price_id_for_tier(tier)
-        if resolved == pid:
+    for tier in sorted(VALID_TIERS):
+        if _price_env_for_tier(tier) == pid:
             return tier
-    mapping = {
-        (_price_env_for_tier("pro") or ""): "pro",
-        (_price_env_for_tier("premium") or ""): "premium",
-    }
-    return mapping.get(pid)
+    for tier in sorted(VALID_TIERS):
+        if price_id_for_tier(tier) == pid:
+            return tier
+    return None
 
 
 def billing_config_payload() -> dict[str, Any]:
-    pro_price = price_id_for_tier("pro")
-    premium_price = price_id_for_tier("premium")
-    enabled = stripe_enabled() and bool(pro_price or premium_price)
+    prices = {tier: price_id_for_tier(tier) for tier in ("pro", "premium", "founding", "seller_pro")}
+    seller_open = seller_plans_checkout_open()
+    checkout_tiers = [
+        tier for tier, pid in prices.items() if pid and (tier not in SELLER_TIERS or seller_open)
+    ]
+    enabled = stripe_enabled() and bool(checkout_tiers)
     _warn_if_test_key_on_production()
     return {
         "enabled": enabled,
-        "pro_available": bool(pro_price),
-        "premium_available": bool(premium_price),
-        "display_prices": {"pro": 49, "premium": 129},
-        "checkout_tiers": [t for t, pid in (("pro", pro_price), ("premium", premium_price)) if pid],
+        "pro_available": bool(prices["pro"]),
+        "premium_available": bool(prices["premium"]),
+        "founding_available": bool(prices["founding"]) and seller_open,
+        "seller_pro_available": bool(prices["seller_pro"]) and seller_open,
+        "display_prices": dict(DISPLAY_PRICES),
+        "checkout_tiers": checkout_tiers if stripe_enabled() else [],
         # Ops guardrail: 'test' here on the live domain means no real revenue can be collected.
         "mode": stripe_key_mode(),
         "test_mode_on_production": is_test_key_on_production(),
@@ -283,6 +303,8 @@ def create_checkout_session(
     slug = (tier or "").strip().lower()
     if slug not in VALID_TIERS:
         raise ValueError(f"Unsupported tier: {tier}")
+    if slug in SELLER_TIERS and not seller_plans_checkout_open():
+        raise RuntimeError(f"Checkout for '{slug}' is test mode only until approved for live")
     price_id = price_id_for_tier(slug)
     if not price_id:
         raise RuntimeError(f"Stripe price not configured for tier '{slug}'")
