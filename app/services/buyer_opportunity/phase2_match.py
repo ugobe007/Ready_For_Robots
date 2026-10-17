@@ -512,9 +512,9 @@ def jobs_for_classification(
 ) -> list[dict[str, Any]]:
     """Corpus rows that share an industry with the robot and fit its form.
 
-    When ``RFR_FIND_SIGNAL_ROWS`` is on, Budget confirmed signal rows use the
-    same join and rank above example rows. Pass ``signal_rows`` to supply them
-    without reading the database.
+    When ``RFR_FIND_SIGNAL_ROWS`` is on, stored source-quote rows use the
+    same join and rank above example rows. A headline does not open a row.
+    Pass ``signal_rows`` to supply them without reading the stored file.
     """
     from app.services.buyer_opportunity.signal_buyer_rows import signal_rows_enabled
 
@@ -522,10 +522,10 @@ def jobs_for_classification(
     if signal_rows is not None:
         real = _join_rows(product, signal_rows)
     elif signal_rows_enabled():
-        from app.services.buyer_opportunity.signal_buyer_rows import load_budget_confirmed_partition
+        from app.services.buyer_opportunity.source_facts import load_source_quote_rows
 
         try:
-            real = _join_rows(product, load_budget_confirmed_partition()["rows"])
+            real = _join_rows(product, load_source_quote_rows())
         except Exception:
             logger.exception("Budget confirmed rows were not loaded")
             real = []
@@ -559,6 +559,8 @@ def jobs_for_classification(
             card["workflow"] = job.get("workflow")
             card["signal_date"] = job.get("signal_date")
             card["signal_expiry"] = job.get("signal_expiry")
+            if job.get("quotes"):
+                card["quotes"] = job.get("quotes")
         jobs_out.append(card)
     return jobs_out
 

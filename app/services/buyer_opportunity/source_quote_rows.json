@@ -1,0 +1,81 @@
+{
+  "rows": [
+    {
+      "job_key": "source-286-picking_packing_palletizing",
+      "title": "Grocery pickup",
+      "industry": "grocery",
+      "path": "Grocery pickup",
+      "company_name": "Walmart",
+      "locality": null,
+      "tape_family": "pick_pack",
+      "source": "signal",
+      "source_url": "https://www.retaildive.com/news/walmart-to-pilot-alphabot-robotics-for-grocery-pickup/529401/",
+      "readiness_label": "Budget confirmed",
+      "why_now": "Walmart is piloting the use of storage and retrieval robotics, dubbed Alphabot, to increase the speed of online grocery order pickup, according to blog post .",
+      "workflow": "picking_packing_palletizing",
+      "signal_date": "2026-10-15T00:01:46.009100",
+      "signal_expiry": null,
+      "quotes": {
+        "work": "Walmart is piloting the use of storage and retrieval robotics, dubbed Alphabot, to increase the speed of online grocery order pickup, according to blog post .",
+        "industry": "Walmart is piloting the use of storage and retrieval robotics, dubbed Alphabot, to increase the speed of online grocery order pickup, according to blog post .",
+        "site": "The technology, which was developed in collaboration between Walmart and startup Alert Innovation, is being installed in a 20,000 square foot extension of a Salem, New Hampshire supercenter, which will also be a dedicated pickup point for groceries.",
+        "deadline": "Walmart said it will be operational by the end of this year, while regular grocery pickup will begin at the store on Oct.",
+        "budget": null,
+        "contact": null
+      },
+      "unknowns": []
+    },
+    {
+      "job_key": "source-942-delivery_transport",
+      "title": "Food delivery",
+      "industry": "restaurant",
+      "path": "Food delivery",
+      "company_name": "Chipotle",
+      "locality": null,
+      "tape_family": "transport",
+      "source": "signal",
+      "source_url": "https://www.restaurantdive.com/news/chipotle-rollout-equipment-bots-kitchen-display-operational-efficiency/818974/",
+      "readiness_label": "Budget confirmed",
+      "why_now": "The company is also piloting Zipline drone delivery, which has shown \u201cencouraging early results,\u201d Boatwright said.",
+      "workflow": "delivery_transport",
+      "signal_date": "2026-10-13T23:17:42.130029",
+      "signal_expiry": null,
+      "quotes": {
+        "work": "The company is also piloting Zipline drone delivery, which has shown \u201cencouraging early results,\u201d Boatwright said.",
+        "industry": "The company first piloted this channel at a restaurant in Rowlett, Texas last summer.",
+        "site": "The company first piloted this channel at a restaurant in Rowlett, Texas last summer.",
+        "deadline": null,
+        "budget": null,
+        "contact": null
+      },
+      "unknowns": []
+    },
+    {
+      "job_key": "source-1271-delivery_transport",
+      "title": "Food delivery",
+      "industry": "restaurant",
+      "path": "Food delivery",
+      "company_name": "Wonder Grubhub",
+      "locality": null,
+      "tape_family": "transport",
+      "source": "signal",
+      "source_url": "https://njbiz.com/wonder-grubhub-nj-drone-food-delivery/",
+      "readiness_label": "Budget confirmed",
+      "why_now": "PROVIDED BY GRUBHUB The basics: Wonder, Grubhub will pilot NJ\u2019s first drone food delivery in Green Brook starting March 18 Drone delivery available for orders within 2.5-mile radius, with average arrival in about 4 minutes",
+      "workflow": "delivery_transport",
+      "signal_date": "2026-04-09T23:52:39.818692",
+      "signal_expiry": null,
+      "quotes": {
+        "work": "PROVIDED BY GRUBHUB The basics: Wonder, Grubhub will pilot NJ\u2019s first drone food delivery in Green Brook starting March 18 Drone delivery available for orders within 2.5-mile radius, with average arrival in about 4 minutes",
+        "industry": "After 3-month pilot, companies will evaluate expanding drone delivery to other local restaurant partners Upscale food hall chain Wonder is set to become the first eatery in New Jersey to offer customers the option of having orders",
+        "site": "BY GRUBHUB The basics: Wonder, Grubhub will pilot NJ\u2019s first drone food delivery in Green Brook starting March 18 Drone delivery available for orders within 2.5-mile radius, with average arrival in about 4 minutes Program powered by",
+        "deadline": "The basics: Wonder, Grubhub will pilot NJ\u2019s first drone food delivery in Green Brook starting March 18 Drone delivery available for orders within 2.5-mile radius, with average arrival in about 4 minutes Program powered by FAA Part",
+        "budget": null,
+        "contact": null
+      },
+      "unknowns": []
+    }
+  ],
+  "read_on": "2026-10-17",
+  "of_companies": 39
+}
