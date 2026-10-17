@@ -39,6 +39,12 @@ export type MatchJob = {
   source?: string;
   source_url?: string | null;
   is_example?: boolean;
+  readiness_label?: string | null;
+  why_now?: string | null;
+  workflow?: string | null;
+  signal_date?: string | null;
+  signal_expiry?: string | null;
+  for_robot?: string | null;
   verdict?: "POSSIBLE_MATCH" | "NOT_A_MATCH" | "INSUFFICIENT";
   why?: string[];
   still_unknown?: string[];

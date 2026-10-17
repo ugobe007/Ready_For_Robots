@@ -8,6 +8,7 @@ import {
   robcoPackHonesty,
   robotJobCardFromMatch,
   isNamedRobotJob,
+  isShownRobotJob,
   JOB_CARD_MODEL_LINK_CAP,
   JOB_CARD_OPEN_QUESTION_CAP,
   cardModelLinks,
@@ -98,6 +99,29 @@ describe("robotJobCard", () => {
         locality: "Seattle, WA",
       })
     ).toBe(true);
+  });
+
+  it("shows a sourced Budget confirmed card without inventing a workplace", () => {
+    const job = {
+      title: "Grocery pickup",
+      company_name: "Walmart",
+      locality: null,
+      source_url: "https://example.org/walmart-alphabot",
+      is_example: false,
+      readiness_label: "Budget confirmed",
+      why_now: "Walmart to pilot Alphabot robotics for grocery pickup.",
+      for_robot: "Aisle picker",
+    };
+    expect(isNamedRobotJob(job)).toBe(false);
+    expect(isShownRobotJob(job)).toBe(true);
+    const card = robotJobCardFromMatch(job);
+    expect(card.employer).toBe("Walmart");
+    expect(card.workplace).toBeNull();
+    expect(card.isExample).toBe(false);
+    expect(card.readinessLabel).toBe("Budget confirmed");
+    expect(card.whyNow).toMatch(/Alphabot/);
+    expect(card.matchingRobot).toBe("Aisle picker");
+    expect(card.sourceUrl).toBe("https://example.org/walmart-alphabot");
   });
 
   it("does not score a matcher hit as Qualified without user or employer feedback", () => {

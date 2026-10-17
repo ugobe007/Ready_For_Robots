@@ -8,10 +8,13 @@ and industries overlap the job, then passed through the form-fit rule.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import re
 from typing import Any, Callable, Iterable
 from urllib.parse import urljoin, urlparse
+
+logger = logging.getLogger(__name__)
 
 from app.services.form_fit import jobs_fit_form
 from app.services.job_card_provenance import (
@@ -486,42 +489,77 @@ def _corpus_rows() -> list[dict[str, Any]]:
     return list(buyer_rows(merge_live_jobs(load_match_corpus())))
 
 
-def jobs_for_classification(product: dict[str, Any], *, limit: int = 12) -> list[dict[str, Any]]:
-    """Corpus rows that share an industry with the robot and fit its form."""
+def _join_rows(
+    product: dict[str, Any],
+    candidates: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
     families = families_for_product(product)
     industries = industries_for_match(product)
     stationary = form_is_stationary(product)
-    rows = [
+    return [
         job
-        for job in jobs_fit_form(_corpus_rows(), stationary=stationary)
+        for job in jobs_fit_form(candidates, stationary=stationary)
         if (job.get("tape_family") or "") in families
         and industries_join(industries, job.get("industry"))
     ]
+
+
+def jobs_for_classification(
+    product: dict[str, Any],
+    *,
+    limit: int = 12,
+    signal_rows: list[dict[str, Any]] | None = None,
+) -> list[dict[str, Any]]:
+    """Corpus rows that share an industry with the robot and fit its form.
+
+    When ``RFR_FIND_SIGNAL_ROWS`` is on, Budget confirmed signal rows use the
+    same join and rank above example rows. Pass ``signal_rows`` to supply them
+    without reading the database.
+    """
+    from app.services.buyer_opportunity.signal_buyer_rows import signal_rows_enabled
+
+    real: list[dict[str, Any]] = []
+    if signal_rows is not None:
+        real = _join_rows(product, signal_rows)
+    elif signal_rows_enabled():
+        from app.services.buyer_opportunity.signal_buyer_rows import load_budget_confirmed_partition
+
+        try:
+            real = _join_rows(product, load_budget_confirmed_partition()["rows"])
+        except Exception:
+            logger.exception("Budget confirmed rows were not loaded")
+            real = []
+    examples = _join_rows(product, _corpus_rows())
     robot_name = fact_value(product.get("product_name")) or str(product.get("product_name") or "")
     jobs_out = []
-    for job in rows[:limit]:
-        jobs_out.append(
-            {
-                "job_key": job.get("job_key"),
-                "title": job.get("title"),
-                "industry": job.get("industry"),
-                "path": job.get("path"),
-                "company_name": public_employer_name(job),
-                "locality": job.get("locality"),
-                "tape_family": job.get("tape_family"),
-                "score": None,
-                "unknowns": list(job.get("unknowns") or []),
-                "source": job.get("source"),
-                "employer_email": public_employer_email(
-                    job.get("employer_email"), job.get("company_name")
-                ),
-                "contact_url": job.get("contact_url"),
-                "apply_url": job.get("apply_url"),
-                "source_url": job_source_url(job),
-                "is_example": is_example_job(job),
-                "for_robot": robot_name,
-            }
-        )
+    for job in (real + examples)[:limit]:
+        card = {
+            "job_key": job.get("job_key"),
+            "title": job.get("title"),
+            "industry": job.get("industry"),
+            "path": job.get("path"),
+            "company_name": public_employer_name(job),
+            "locality": job.get("locality"),
+            "tape_family": job.get("tape_family"),
+            "score": None,
+            "unknowns": list(job.get("unknowns") or []),
+            "source": job.get("source"),
+            "employer_email": public_employer_email(
+                job.get("employer_email"), job.get("company_name")
+            ),
+            "contact_url": job.get("contact_url"),
+            "apply_url": job.get("apply_url"),
+            "source_url": job_source_url(job),
+            "is_example": is_example_job(job),
+            "for_robot": robot_name,
+        }
+        if job.get("readiness_label"):
+            card["readiness_label"] = job.get("readiness_label")
+            card["why_now"] = job.get("why_now")
+            card["workflow"] = job.get("workflow")
+            card["signal_date"] = job.get("signal_date")
+            card["signal_expiry"] = job.get("signal_expiry")
+        jobs_out.append(card)
     return jobs_out
 
 

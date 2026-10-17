@@ -1,0 +1,509 @@
+[
+  {
+    "id": 10629,
+    "name": "ABM and LaGuardia Gateway",
+    "industry": "Airports & Aviation",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "ABM and LaGuardia Gateway Partners Launch Autonomous Robotics Pilot at Terminal B, Setting a New Standard for Airport Guest Experience. <a href=\"https://news.google.com/rss/articles/CBMirgJBVV95cUxNME9yZTkzZWg3bE05RnlwWE9CXzhhTUdDVW5ZaC10aFRmcHRJZ3BwdDl5c1FLYVRPNnNHVWhTM3lGUEFkbjVJVHg3alhSY2k2ZHgzRFlPSWlPY0VCeXh4RGMteGIyd3ktUmNkQklqVlFxTlBlcU5DZU91NEFhUDZJa2FnQ2FxSVJYVERaX3hzbnNMWXlCRzhKVk9VX0NJMG",
+        "source_url": "https://news.google.com/rss/articles/CBMirgJBVV95cUxNME9yZTkzZWg3bE05RnlwWE9CXzhhTUdDVW5ZaC10aFRmcHRJZ3BwdDl5c1FLYVRPNnNHVWhTM3lGUEFkbjVJVHg3alhSY2k2ZHgzRFlPSWlPY0VCeXh4RGMteGIyd3ktUmNkQklqVlFxTlBlcU5DZU91NEFhUDZJa2FnQ2FxSVJYVERaX3hzbnNMWXlCRzhKVk9VX0NJMGlQZ29Wbm9Vb29RbjQ0QmZSUExnVmxubjlnVGNuc2otYWN2MUk1YVZHd21CaUd4UlA2QWpFdTJFVUFsazlPNlQ0ZE5XWXhsZjVqLURxWnU3SjlFcGNqbG1KM0NNbi0zbklYM0FnSzQ5U2E3NXVXR3VSUkNTdVYyTTFIYzFOZnhKb0RHSzkxdkdzQWpQMm1JZw?oc=5",
+        "created_at": "2026-10-06T19:56:31.579212"
+      }
+    ]
+  },
+  {
+    "id": 7690,
+    "name": "Adventure",
+    "industry": "Airports & Aviation",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "Adventure Pilot Expands Into Dispatch Training. <a href=\"https://news.google.com/rss/articles/CBMilAFBVV95cUxPbTRYeUlXV0xicGZOTzlwd0FOcUpwcXg0QlEtejRxa2lRT1dkejBOcFZEdnNnNU1SQzhOdndqb213VW5LQUVqRm5VdDROcHZ3MU9GRy1GTFlqZDJNcVZsTjAtUDdNLW5WR2pkeWw2S091TG54R2VCbTNfZHBQcjNhOF9va2FQdkJtZXQwNFM1dG5NblBM?oc=5\" target=\"_blank\">Adventure Pilot Expands Into Dispatch Training</a>&nbsp;&nbsp;<font color=\"#6f6",
+        "source_url": "https://news.google.com/rss/articles/CBMilAFBVV95cUxPbTRYeUlXV0xicGZOTzlwd0FOcUpwcXg0QlEtejRxa2lRT1dkejBOcFZEdnNnNU1SQzhOdndqb213VW5LQUVqRm5VdDROcHZ3MU9GRy1GTFlqZDJNcVZsTjAtUDdNLW5WR2pkeWw2S091TG54R2VCbTNfZHBQcjNhOF9va2FQdkJtZXQwNFM1dG5NblBM?oc=5",
+        "created_at": "2026-05-01T08:25:47.840325"
+      }
+    ]
+  },
+  {
+    "id": 11178,
+    "name": "Agtech startup",
+    "industry": "Food Processing & Manufacturing",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "Agtech startup expands smart farming platform after pilot deployment. <a href=\"https://news.google.com/rss/articles/CBMiowFBVV95cUxNSjMwV0wzd0RjQVkySjJvdlJyVkRMaVJjUDVBcjR6b1Y4TE5tNWZrWDF1dXpUSXRXZFh3enlucm5jdl9KTWNvay1ZZ2FfVzA0ZFFreGtpZDQ0MjdGOTVfTnh2T3pXWF8zUy1ITjU4c3U0a0x1aFRaVkpRQzV2VXRBaG42NTBQWUl1VDVtYTBGSHh5LXEwaW42dGNMSG5kQlpmQjk4?oc=5\" target=\"_blank\">Agtech startup expands smart farming ",
+        "source_url": "https://news.google.com/rss/articles/CBMiowFBVV95cUxNSjMwV0wzd0RjQVkySjJvdlJyVkRMaVJjUDVBcjR6b1Y4TE5tNWZrWDF1dXpUSXRXZFh3enlucm5jdl9KTWNvay1ZZ2FfVzA0ZFFreGtpZDQ0MjdGOTVfTnh2T3pXWF8zUy1ITjU4c3U0a0x1aFRaVkpRQzV2VXRBaG42NTBQWUl1VDVtYTBGSHh5LXEwaW42dGNMSG5kQlpmQjk4?oc=5",
+        "created_at": "2026-08-17T19:21:46.213950"
+      }
+    ]
+  },
+  {
+    "id": 8490,
+    "name": "AI throwing wrench",
+    "industry": "Unknown",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "AI throwing wrench into arbitrage machine for forwarding labor",
+        "source_url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxQRnpVa2dodjU5V01XNjFJcmJZdEFlRkprdHlwVkotcm9KTks2b1FTaXNaZ1RpY3lOU3IxWm5ZV3hLelk5RlhmNV9hcWJIbHRZZmp4cFpRcERQQlJBZnZsV09CYVlMMmNhWFRmTS1XcGJka0lnUUYxMVJndmRrVXF6ZS16V1NLUW9LQmRGUVl1enE5RFpDbllsRWNxQVlWTWc?oc=5",
+        "created_at": "2026-06-20T13:06:36.007664"
+      }
+    ]
+  },
+  {
+    "id": 7898,
+    "name": "Axiant",
+    "industry": "Hospitality",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Axiant Launches with Innovative Process-First Methodology to Address Automation Failures. <a href=\"https://news.google.com/rss/articles/CBMi4AFBVV95cUxOTzA0V0hmZ0ZvdDlGX3NOYzlmTG85ZzFRVEZ4VTN5U2JSemRKY2d0ZHJ6VjNaTWd1MUVWQTR3V3RvLTFfakxZdFk1cjJrUDNQRDl4U2V5Z3g2Tk5Sa1dyNzRYQ3VXR21zNFo1dXdIT3daSTFaOVVmSTVGTmVKSEJPRnA2bVdqcmZlRTVEU2lxclVvdVBvTG5zV09DVUZsdGFicW9wYldPY2IzdmRrQ3ZTcllIUGNXZm1tZXRqRFI4VFRC",
+        "source_url": "https://news.google.com/rss/articles/CBMi4AFBVV95cUxOTzA0V0hmZ0ZvdDlGX3NOYzlmTG85ZzFRVEZ4VTN5U2JSemRKY2d0ZHJ6VjNaTWd1MUVWQTR3V3RvLTFfakxZdFk1cjJrUDNQRDl4U2V5Z3g2Tk5Sa1dyNzRYQ3VXR21zNFo1dXdIT3daSTFaOVVmSTVGTmVKSEJPRnA2bVdqcmZlRTVEU2lxclVvdVBvTG5zV09DVUZsdGFicW9wYldPY2IzdmRrQ3ZTcllIUGNXZm1tZXRqRFI4VFRCS2kwa2Q5Q2RWdWNYSW53QkNLMUN6cElka2ZVeE1lTw?oc=5",
+        "created_at": "2026-05-05T15:50:03.608852"
+      }
+    ]
+  },
+  {
+    "id": 830,
+    "name": "Boston Scientific",
+    "industry": "Healthcare",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Boston Scientific Says It Won't Meet Guidance After Cyberattack. <a href=\"https://news.google.com/rss/articles/CBMiqgFBVV95cUxQM2xzaGJMcG43a1p6OXVpMEQ2UV8zZW1KWC1YajVDU2NRUVowQzVzU1pHOVFpeUJpT1lVbFp3bktMZ2pyVGx3ZnRScVp6RFhsTmc0UzRoS1k0YW9TSzFPTWlma2QtWWE1d3Z5VU9MVFQ3V1lKVjVCUVhtOWNpdFN0Ql9FdzJSVVNnZGE5dUxvRkQwMUJpWV9fZWtLWWN4REZLS0VjdFQtVXRfQQ?oc=5\" target=\"_blank\">Boston Scientific Says It Won't ",
+        "source_url": "https://news.google.com/rss/articles/CBMiqgFBVV95cUxQM2xzaGJMcG43a1p6OXVpMEQ2UV8zZW1KWC1YajVDU2NRUVowQzVzU1pHOVFpeUJpT1lVbFp3bktMZ2pyVGx3ZnRScVp6RFhsTmc0UzRoS1k0YW9TSzFPTWlma2QtWWE1d3Z5VU9MVFQ3V1lKVjVCUVhtOWNpdFN0Ql9FdzJSVVNnZGE5dUxvRkQwMUJpWV9fZWtLWWN4REZLS0VjdFQtVXRfQQ?oc=5",
+        "created_at": "2026-10-15T20:57:55.424926"
+      }
+    ]
+  },
+  {
+    "id": 1503,
+    "name": "Bus Route",
+    "industry": "Unknown",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "Bus Route from Wheeling to Moundsville Becomes Permanent After Trial Run Success",
+        "source_url": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxNVTZNYVpBdWJpNllYYW5YU1lSenY1QUN1amQwUXpUUXJ4U1A0bXhUX2R5WFM1a21lWlUzWkxjYWpwTExBVGZCcjlpNEF2akltRVlmenFON01OMFZhem9HbXhoQnB1SF91OWgtOUtlTld4aVdiUU80SVZ6OGZTZWlXZ3ZnMTB1aEw5SWRIMTg3WTluT0pQVGlGX0czNG5JbjNGaGpPTHd3X1hOWUFtdmI5blBaYlBwYTZHUGdtSVhfSnE4WUZWNkVXWmlNelV0OVB5RWVSQ0hVT0s?oc=5",
+        "created_at": "2026-03-15T17:54:16.292756"
+      }
+    ]
+  },
+  {
+    "id": 6589,
+    "name": "Caracol",
+    "industry": "Automotive & Manufacturing",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Caracol partners with UK\u2019s CNC Robotics at MACH 2026. <a href=\"https://news.google.com/rss/articles/CBMigwFBVV95cUxOSlV2Umgxd0lvQ3lSYld5VDVZNURuc2ZmYnBZcFpoQ1c5OXdST1Nsa1NxUWlWWFFFMl9xcnQxY09ST3BGam9kWlpiOUlMeG5EUHl2TU5mYjdXYkxYajczbzE5WVFBSUd2cnluUU5YZzlEMW1yRFhLc2xHWFRfQjFkVE5zTQ?oc=5\" target=\"_blank\">Caracol partners with UK\u2019s CNC Robotics at MACH 2026</a>&nbsp;&nbsp;<font color=\"#6f6f6f\">Metal",
+        "source_url": "https://news.google.com/rss/articles/CBMigwFBVV95cUxOSlV2Umgxd0lvQ3lSYld5VDVZNURuc2ZmYnBZcFpoQ1c5OXdST1Nsa1NxUWlWWFFFMl9xcnQxY09ST3BGam9kWlpiOUlMeG5EUHl2TU5mYjdXYkxYajczbzE5WVFBSUd2cnluUU5YZzlEMW1yRFhLc2xHWFRfQjFkVE5zTQ?oc=5",
+        "created_at": "2026-04-17T15:53:20.593922"
+      }
+    ]
+  },
+  {
+    "id": 4178,
+    "name": "CharterSync",
+    "industry": "Logistics",
+    "signals": [
+      {
+        "type": "strategic_hire",
+        "text": "CharterSync deploys AI tool to automate freight forwarder RFQ processing. <a href=\"https://news.google.com/rss/articles/CBMivgFBVV95cUxPbDg3R0hrb0dqUGZxLWFIcU1aSzJNV2kyMC1Jc3MtOUFhRjJWZHE0TzZOakF6YS1YbXBqSl9JVmdUdDJ5V1czejkwS2ExX1FKcHd5VUpRS2VBRmpKTEJyVC1veEFPRDloZ25kMkE3VnFnUG5ucTVpSEQ4Q0FURk5KQmQ5SVFQZER3MDFYQmxLNERqNDNJRVRrOWMzYmRJbTdmN2tiaVQtN3ZCS0JNb3hKUE1uQXNqSFNxd0Rod09R?oc=5\" target=\"_blan",
+        "source_url": "https://news.google.com/rss/articles/CBMivgFBVV95cUxPbDg3R0hrb0dqUGZxLWFIcU1aSzJNV2kyMC1Jc3MtOUFhRjJWZHE0TzZOakF6YS1YbXBqSl9JVmdUdDJ5V1czejkwS2ExX1FKcHd5VUpRS2VBRmpKTEJyVC1veEFPRDloZ25kMkE3VnFnUG5ucTVpSEQ4Q0FURk5KQmQ5SVFQZER3MDFYQmxLNERqNDNJRVRrOWMzYmRJbTdmN2tiaVQtN3ZCS0JNb3hKUE1uQXNqSFNxd0Rod09R?oc=5",
+        "created_at": "2026-06-21T22:16:26.309302"
+      }
+    ]
+  },
+  {
+    "id": 942,
+    "name": "Chipotle",
+    "industry": "Food Service",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "Chipotle expands drone pilot, accelerates equipment package deployment. <a href=\"https://news.google.com/rss/articles/CBMitAFBVV95cUxPakJ0TEx2dmRDaXB4NHd5bzFJTnN4M0JrZ2Y4Tzhoa3E5UGdPU25abnV4bDVHSktfUTRkNnlpMkd3QzFFR1FRb0lmUHlGakprRnM2bWRVT2pBYXYxNkh6MG1HZVQ1X3FyODF6SkxqTFJ2ZVZDdExBejZLYlNnc2V2SzFRcm1NWDB1OTJsRzliNUwxVDBiNUo3ek1taWFMRnpPbFZfc0YyZldnOUpFdjQzMUhwdVo?oc=5\" target=\"_blank\">Chipotle exp",
+        "source_url": "https://news.google.com/rss/articles/CBMitAFBVV95cUxPakJ0TEx2dmRDaXB4NHd5bzFJTnN4M0JrZ2Y4Tzhoa3E5UGdPU25abnV4bDVHSktfUTRkNnlpMkd3QzFFR1FRb0lmUHlGakprRnM2bWRVT2pBYXYxNkh6MG1HZVQ1X3FyODF6SkxqTFJ2ZVZDdExBejZLYlNnc2V2SzFRcm1NWDB1OTJsRzliNUwxVDBiNUo3ek1taWFMRnpPbFZfc0YyZldnOUpFdjQzMUhwdVo?oc=5",
+        "created_at": "2026-10-13T23:17:42.130029"
+      }
+    ]
+  },
+  {
+    "id": 5738,
+    "name": "Cleveland Police OT costs",
+    "industry": "Unknown",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Cleveland Police OT costs reach $27M as staffing remains below benchmarks",
+        "source_url": "https://news.google.com/rss/articles/CBMitgFBVV95cUxNWndyUjdROUZzRFpQNUUtd2cxcU1WdEFiaDFqREVPbkNULXUxN2xMZmpySTc0dm5JdHJXa1ZPS3RFNXo4MXZQTEt5QWRYSHltWkR3RmdYTG40d2RobmJHcWkwTG1mbUhJS3JCbThwdk8tVW1hUGNLTy02ajdiMC11eGhfZU5zR0ZwZkhPSU5tclNIY1VzRVlDSk9zYlM0Z2hkUU5CdHA5RDVBYVlnYS1GTmdNeEJnZw?oc=5",
+        "created_at": "2026-04-15T15:50:44.114442"
+      }
+    ]
+  },
+  {
+    "id": 6836,
+    "name": "Conduent",
+    "industry": "Healthcare",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Conduent Reports Second Quarter 2025 Financial Results. <a href=\"https://news.google.com/rss/articles/CBMilgFBVV95cUxQQUVxZWVJOW93SmhyUFBjc0otRUJPc3FibkJWS0VrYm9nQ2xjZnctcks4RmZxRXMxREU4bWU4QUMzZlZSb29leENZdUstRE1hc04xdWlMNEtMeGI5UTZfUDNFQk1YRFI2S3FsRHM4QjZ2UlV4cGJhRWo2WUd1d0ZFVEdZU1g1UHN6RExqeTQxbnp6MFhOZEE?oc=5\" target=\"_blank\">Conduent Reports Second Quarter 2025 Financial Results</a>&nbsp;&nbs",
+        "source_url": "https://news.google.com/rss/articles/CBMilgFBVV95cUxQQUVxZWVJOW93SmhyUFBjc0otRUJPc3FibkJWS0VrYm9nQ2xjZnctcks4RmZxRXMxREU4bWU4QUMzZlZSb29leENZdUstRE1hc04xdWlMNEtMeGI5UTZfUDNFQk1YRFI2S3FsRHM4QjZ2UlV4cGJhRWo2WUd1d0ZFVEdZU1g1UHN6RExqeTQxbnp6MFhOZEE?oc=5",
+        "created_at": "2026-06-12T03:13:30.229512"
+      }
+    ]
+  },
+  {
+    "id": 8167,
+    "name": "Connectivity",
+    "industry": "Hospitality",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "HPE chosen to deliver intelligent connectivity and autonomous IT operations at the 2027 Ryder Cup - Ryder Cup | Official Site. <a href=\"https://news.google.com/rss/articles/CBMizgFBVV95cUxNdm56OGQ3Zm1JX3h3NTBWZE96eG1JOHlEWHNmbE9EUE1rVEU3QWRmZHRQUElSR25Cd0ZwQ09PN05mRlVncHBSOE9kQmZ1SFdNTW9fXy11aG1ubm45OW9UTkltb01GeDlGUzlzYmNZLTFwTmFtdFoxVzJlSjdQLUExLVVZUnlaOGs2NkxGU3Z1LTZaQ3RkakFNMFdzZTVRQnd2VkFGeWR",
+        "source_url": "https://news.google.com/rss/articles/CBMizgFBVV95cUxNdm56OGQ3Zm1JX3h3NTBWZE96eG1JOHlEWHNmbE9EUE1rVEU3QWRmZHRQUElSR25Cd0ZwQ09PN05mRlVncHBSOE9kQmZ1SFdNTW9fXy11aG1ubm45OW9UTkltb01GeDlGUzlzYmNZLTFwTmFtdFoxVzJlSjdQLUExLVVZUnlaOGs2NkxGU3Z1LTZaQ3RkakFNMFdzZTVRQnd2VkFGeWRxY0R6bGV4Tjd1OGpUd2JKbGZfbXRfQUQyM2ZZUUkzSExRSVhKOTdQdw?oc=5",
+        "created_at": "2026-10-15T20:52:35.165090"
+      }
+    ]
+  },
+  {
+    "id": 990,
+    "name": "Corning",
+    "industry": "Datacenters",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Owens Corning Glass Reinforcements commissions its first circular glass fiber production line. <a href=\"https://news.google.com/rss/articles/CBMi0gFBVV95cUxPOFRzZGQ1Mjc0RU8ycnZqOU9RZG1uZW8yUEVyQjhlSHppaEJnd3FvQlFxc2tEMDEtMVVDRVdtcVgzbUpEZWZzUXBjUUtPb1dyUDlkZW5HZUVzMjNKbEdjTDlVcGpWdm9ZaVpNaHRlU1p3Q052bG5ZQ1RoZzl4ZXFaeHVydjg1cWxxSUlRS19aZWJyblN5bHZHM2xwTTFKWXBsNWhQQkItdENEd3ZKcEs5RFp4dWJhWlFVLU8xRUl",
+        "source_url": "https://news.google.com/rss/articles/CBMi0gFBVV95cUxPOFRzZGQ1Mjc0RU8ycnZqOU9RZG1uZW8yUEVyQjhlSHppaEJnd3FvQlFxc2tEMDEtMVVDRVdtcVgzbUpEZWZzUXBjUUtPb1dyUDlkZW5HZUVzMjNKbEdjTDlVcGpWdm9ZaVpNaHRlU1p3Q052bG5ZQ1RoZzl4ZXFaeHVydjg1cWxxSUlRS19aZWJyblN5bHZHM2xwTTFKWXBsNWhQQkItdENEd3ZKcEs5RFp4dWJhWlFVLU8xRUlmeV9ScGliV0xNUldWOGxfcHdGV2c?oc=5",
+        "created_at": "2026-05-05T15:51:27.339553"
+      }
+    ]
+  },
+  {
+    "id": 10359,
+    "name": "Cottage Health",
+    "industry": "Healthcare",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "Cottage Health Expands Partnership with hellocare.ai Following Successful Pilot to Deploy AI Assisted Virtual Care and Patient Safety Platform Enterprise Wide. <a href=\"https://news.google.com/rss/articles/CBMiuAJBVV95cUxPeHhMRVRBelFGN2t4dXFDbHRVMFhjb1FiaW5aTFktS0ppb1dTTEE5amlJby1BUzl0cF9ibkhyMkVrdkhDQ3FzSjF4Qy14eThxTnduSnYtakJZZ3JrQUxLU3hFT0M3OENlajVyNkZadGpfckh3cG8zTnlBS0k5aFBSakoxWk96RDlleDNCZ0",
+        "source_url": "https://news.google.com/rss/articles/CBMiuAJBVV95cUxPeHhMRVRBelFGN2t4dXFDbHRVMFhjb1FiaW5aTFktS0ppb1dTTEE5amlJby1BUzl0cF9ibkhyMkVrdkhDQ3FzSjF4Qy14eThxTnduSnYtakJZZ3JrQUxLU3hFT0M3OENlajVyNkZadGpfckh3cG8zTnlBS0k5aFBSakoxWk96RDlleDNCZ0w4ZktMOXRYaUEtRzVJbGI4RVJSeE1ETGY0WVpaMDRtR1lsVlZIQ3lULVVNT1RyZ2FDTEx2VzhQc0c1TXhXMlRUc0JXT3BCRnU3cTU0N1B3WWFjMzR1S0cwVDNjenBzWVB1dkhRSXV4aDdfTHMwRDFfYzlvalBUU3dMZV8tTlg4YzB6Wk1ReFY2Zm96NlVXRVBoc1ZLaXJlSVU4MzhCQXNwLWpMQ3BNYlBCbVU?oc=5",
+        "created_at": "2026-10-06T13:08:09.035075"
+      }
+    ]
+  },
+  {
+    "id": 6935,
+    "name": "Delta",
+    "industry": "Datacenters",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Delta Pilots Detail Why Scheduling Talks Broke Down as Cancellations Rise. <a href=\"https://news.google.com/rss/articles/CBMijgFBVV95cUxPQktJdm5VU3hia1lBRU9NekNKVXR3TXNkdjBNUlVZTlB2QkZOOXB0Ump3cmlBcWZ5UEo0RVJnWW9KNHVmMVBNTTgwNlpYcnRFQnU2U2MyM25sTzc1SWw3bmR1X0gtWlY3ZDI5WGVXVm9RY3o2T041ZmRTMlgxZEZRNnk0VWk2dlFJa3ZLRFFn?oc=5\" target=\"_blank\">Delta Pilots Detail Why Scheduling Talks Broke Down as Cance",
+        "source_url": "https://news.google.com/rss/articles/CBMijgFBVV95cUxPQktJdm5VU3hia1lBRU9NekNKVXR3TXNkdjBNUlVZTlB2QkZOOXB0Ump3cmlBcWZ5UEo0RVJnWW9KNHVmMVBNTTgwNlpYcnRFQnU2U2MyM25sTzc1SWw3bmR1X0gtWlY3ZDI5WGVXVm9RY3o2T041ZmRTMlgxZEZRNnk0VWk2dlFJa3ZLRFFn?oc=5",
+        "created_at": "2026-10-04T01:08:37.660649"
+      }
+    ]
+  },
+  {
+    "id": 5429,
+    "name": "Disneyland Paris",
+    "industry": "Theme Parks & Entertainment",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Disneyland Paris to Close 24 Year Old Theme Park Next Month. <a href=\"https://news.google.com/rss/articles/CBMioAFBVV95cUxOUlAycVdscTczUTI4dnNPVFlzby1LYjFOZG9oRjd0QXg5SlNnSThsWXBnSEd4UV84cXZRQUpBbmR4VkVISmktVmp4Nl91c2t4dVBqSVJDSDhKbXRiSjI3WGU0QXJ5WnVEdmwzRFpCS0wwX1FRZEtMLUdwYnVLX1hXVl8yakU0QWNiTkJFeUFfRkwxcUZYYkpaUlZibGcxdXlv?oc=5\" target=\"_blank\">Disneyland Paris to Close 24 Year Old Theme Park N",
+        "source_url": "https://news.google.com/rss/articles/CBMioAFBVV95cUxOUlAycVdscTczUTI4dnNPVFlzby1LYjFOZG9oRjd0QXg5SlNnSThsWXBnSEd4UV84cXZRQUpBbmR4VkVISmktVmp4Nl91c2t4dVBqSVJDSDhKbXRiSjI3WGU0QXJ5WnVEdmwzRFpCS0wwX1FRZEtMLUdwYnVLX1hXVl8yakU0QWNiTkJFeUFfRkwxcUZYYkpaUlZibGcxdXlv?oc=5",
+        "created_at": "2026-06-14T18:35:46.881443"
+      }
+    ]
+  },
+  {
+    "id": 4986,
+    "name": "Distalmotion",
+    "industry": "Medical Technology",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Distalmotion secures funding from J&J to support Dexter rollout in ASCs. <a href=\"https://news.google.com/rss/articles/CBMifEFVX3lxTFA3Y0hpR3FqRVhEUjlPcDVrQWsyalk2eDZMRFQ4aENIU0VsQUxCRGxkU3pqdmg5MTVaZVYtSDF1ZnpPbkl6UDFad3EzVzlJaGtlOGRNWEtNcnlMV2VaNWpCd3J5UHRZN3ZSMmdESW0wWVNoMFZiZE9aNXhVVGo?oc=5\" target=\"_blank\">Distalmotion secures funding from J&J to support Dexter rollout in ASCs</a>&nbsp;&nbsp;",
+        "source_url": "https://news.google.com/rss/articles/CBMifEFVX3lxTFA3Y0hpR3FqRVhEUjlPcDVrQWsyalk2eDZMRFQ4aENIU0VsQUxCRGxkU3pqdmg5MTVaZVYtSDF1ZnpPbkl6UDFad3EzVzlJaGtlOGRNWEtNcnlMV2VaNWpCd3J5UHRZN3ZSMmdESW0wWVNoMFZiZE9aNXhVVGo?oc=5",
+        "created_at": "2026-04-25T13:52:54.917134"
+      }
+    ]
+  },
+  {
+    "id": 9576,
+    "name": "Europe Artificial Intelligence",
+    "industry": "Unknown",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Europe Artificial Intelligence in Energy Market Size, Share & Trends, 2034",
+        "source_url": "https://news.google.com/rss/articles/CBMingFBVV95cUxPRmhrUlFOa0ZQSU54c211a1lIdnZsTFYyeWNERFpiM25iOWVGanl3bVVIQkFqTWNjR1dnLVJ2NW5ULTFNR1FoNDRTVHE5N1Fnb0l6VWVVRWJNNG11d2NXdXZIUXlOWWhWbEJpMFpTSzFSLXV1cVdkdGNuVnp1RG1LNXJIN1ZFTm5vdHZtMHdld3JnNTZiQ1V6eEhSdUJPUQ?oc=5",
+        "created_at": "2026-06-15T15:30:40.906649"
+      }
+    ]
+  },
+  {
+    "id": 9382,
+    "name": "Grab 35% off a Shark robot vacuum",
+    "industry": "Unknown",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Grab 35% off a Shark robot vacuum and get ready to put your feet up",
+        "source_url": "https://news.google.com/rss/articles/CBMipgFBVV95cUxNSFdQRXNaRFppOHFNLUcwcHFzTGlkME5jeUJQSkFhZWJnYU40SDg0WTdEcDZIbFNPMS0tcGxzeXI1c1NWMkpGMUFMbDVnNV9nN05sSFpNWm5wZDFNejdiNzV1VzZlMURnNEtqUlFyWXliY1hxbDJmaDl3WXRNUjVHOU9Md3E5YndpYTM0bFhWNV96aWozRGk2QUNpVzdjY0xVQ2tEVXNB?oc=5",
+        "created_at": "2026-06-14T03:28:37.555025"
+      }
+    ]
+  },
+  {
+    "id": 19154,
+    "name": "Iron Mountain",
+    "industry": "Logistics",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Iron Mountain stock after-hours at EUR 98.27: minus 0.05 percent versus prior close. <a href=\"https://news.google.com/rss/articles/CBMiyAFBVV95cUxOQXpYVF9qWUdINjNLQ0E4RHUtdVBvRFpJajZ4Zk52YmRyZ0Y5aFdscm1mNEgtc1g3dWxINllBMWdJcjJsOThWTzNzM2hINjBLTGFFY0FoV0JNTGRVMi1iREZ4bEZ2V1I1VkEyVUVaR29hd2FUYzh4eXUzU0lqb1NkdTd1dnJZVUFSbVNQeTU0MENyQWo2dkUyeVlCbFB0Z0pHbGlreVBOdnFOc3lreG1yTXYySW5pZEhVeHhEQl92QUVCSlFlY",
+        "source_url": "https://news.google.com/rss/articles/CBMiyAFBVV95cUxOQXpYVF9qWUdINjNLQ0E4RHUtdVBvRFpJajZ4Zk52YmRyZ0Y5aFdscm1mNEgtc1g3dWxINllBMWdJcjJsOThWTzNzM2hINjBLTGFFY0FoV0JNTGRVMi1iREZ4bEZ2V1I1VkEyVUVaR29hd2FUYzh4eXUzU0lqb1NkdTd1dnJZVUFSbVNQeTU0MENyQWo2dkUyeVlCbFB0Z0pHbGlreVBOdnFOc3lreG1yTXYySW5pZEhVeHhEQl92QUVCSlFlYzhyLQ?oc=5",
+        "created_at": "2026-10-01T00:25:21.106053"
+      }
+    ]
+  },
+  {
+    "id": 7111,
+    "name": "McDonald's",
+    "industry": "Food Service",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "McDonald's testing new AI ordering technology at some drive-thrus - ABC News - Breaking News, Latest News and Videos. <a href=\"https://news.google.com/rss/articles/CBMipwFBVV95cUxPUUVULWJBUWRlZUFzSmJiZExmbm4xZHRNVXBtS0ctUWRmYlh0aG9pazFzMVBEd051Vk9kLVdKVHBKOVR6ZmVsdDkzbUFra1pZbXBEOHlxODF5Tml4TTZPLW54bWRLSTZ6WmZEdlcxU3hnM1QzNWhSN3o2X1JTajhvaEtoQmVReGpLVTQya1VGLW9kbktPQkpQNTUxTndYd0Vqa2VnSVJkONIBrAFB",
+        "source_url": "https://news.google.com/rss/articles/CBMipwFBVV95cUxPUUVULWJBUWRlZUFzSmJiZExmbm4xZHRNVXBtS0ctUWRmYlh0aG9pazFzMVBEd051Vk9kLVdKVHBKOVR6ZmVsdDkzbUFra1pZbXBEOHlxODF5Tml4TTZPLW54bWRLSTZ6WmZEdlcxU3hnM1QzNWhSN3o2X1JTajhvaEtoQmVReGpLVTQya1VGLW9kbktPQkpQNTUxTndYd0Vqa2VnSVJkONIBrAFBVV95cUxNdEpzcHUtdm93Tkl0QzRHSmVhQ1pJOW9iZW1PZFpKcFV3Umx2eDJUb2l1eG95QjNnbmkwMlpzV051RExTVEVNaXpnRW9OU29jWGk1M1VjSC1XRFpWZnBaOHY1bkhReUpGelVqSmViUnZIWHdtNmx1SkViZXZvQkozTGo4RnRHS2xMbHZ0THdqVHYwOURXb3dETFJ2aEQ4WXlfcmdhamU1azBfalVy?oc=5",
+        "created_at": "2026-10-14T08:26:21.110202"
+      }
+    ]
+  },
+  {
+    "id": 1100,
+    "name": "Mercado Libre",
+    "industry": "Logistics",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Carrefour has partnered with Mercado Libre in Argentina: Fruits, vegetables. <a href=\"https://news.google.com/rss/articles/CBMiywFBVV95cUxNTHRaLXdYamNhWW9UNW1rZ1phSVl5Nk5vejBjUFU0aUVGNk5OWHROc1IzQ2F5eS1SM0ZOX3h2d0JSVWlUMk5zcENiTF9JU013dURjNjVLbUt1UGR6SS1xNUpLbmtHX2M2WWJjckl2bWFUTVBBeVEwMzlJSVBtUzhfX21pUGtNaU45LWFmTnRpMkZySkJETHVJMWVBNXpqS092OG1vQ0dJclVhUkY2OGZqNG9DUVY2UU5LRXhKX1Zub1hFUmphdzB3NVl1T",
+        "source_url": "https://news.google.com/rss/articles/CBMiywFBVV95cUxNTHRaLXdYamNhWW9UNW1rZ1phSVl5Nk5vejBjUFU0aUVGNk5OWHROc1IzQ2F5eS1SM0ZOX3h2d0JSVWlUMk5zcENiTF9JU013dURjNjVLbUt1UGR6SS1xNUpLbmtHX2M2WWJjckl2bWFUTVBBeVEwMzlJSVBtUzhfX21pUGtNaU45LWFmTnRpMkZySkJETHVJMWVBNXpqS092OG1vQ0dJclVhUkY2OGZqNG9DUVY2UU5LRXhKX1Zub1hFUmphdzB3NVl1TQ?oc=5",
+        "created_at": "2026-05-08T04:40:11.778497"
+      }
+    ]
+  },
+  {
+    "id": 6738,
+    "name": "Metro Atlanta",
+    "industry": "Unknown",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Metro Atlanta's next autonomous vehicle project has broken ground",
+        "source_url": "https://news.google.com/rss/articles/CBMinAFBVV95cUxOUTFZRFpfdVRxem1fXzBPWDlnTElsOEpYWTg2dHVtOHNQWGNvNjRKVjZURmRqQkEyUnZIZU0wTnczSmE3VEhmeVFUcnlUS0ZoUkpMZ0YyTkNlQkhWQUtGQ3FvWWhYRkJpVjVYZW5pT0VMMmRtRFhYNk1DY2ptX3VmbFUxZnh1UzJkUXlJMFF1WUhFcl9YbzZPWkVSREI?oc=5",
+        "created_at": "2026-04-19T02:27:36.027064"
+      }
+    ]
+  },
+  {
+    "id": 5834,
+    "name": "Micropolis",
+    "industry": "Unknown",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "Micropolis Completes Successful Pilot Program with Saudi. Micropolis Com",
+        "source_url": "https://news.google.com/rss/articles/CBMi0wJBVV95cUxPeEJrTFNzUWVFU1NDU1ZQakhsYWwybmZvemVTbmNZOHppN0xBT1ZyLTVKVnhIeVhOYmZ3dkRKYUI4ZlFWQ2FLVlpfeVA5ck5ib2ZYN0xoT3psbGRydWswVmlXdGZSQ3IxUnIwckhzbHBCTnctSDk3WDU0MG9MYVNnNFJqVFVBYUpFZ0hQRFI1dFRuZnNQQ3NPLXZrSkdEbklWc2NNTk1XWDZxNUxwRUVmQU0wTk91ckFVeVk3aXF1WlRKSksxVy1aXzd0OEFjd1ItMjRva0FMLXZkdzI1Y3hwUV9IMi1VRHRvbDNsSTZjQVljMXUtc2FTc2xuZkxEdmgxTldOd19TWFJlSWVCWDY3eWNLMHhrcUZtQzd2OW13aGJsX1htdnZpSmpLMEFvV2VWYVlEX0duNDhLTTBMT0xrc1I2YlJ6eEN4WTNkRHc4eWxmUFE?oc=5",
+        "created_at": "2026-04-24T10:04:49.080849"
+      }
+    ]
+  },
+  {
+    "id": 10408,
+    "name": "NATIONAL UNIVERSITY HOSPITAL",
+    "industry": "Healthcare",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "NATIONAL UNIVERSITY HOSPITAL TO EXPAND WEARABLE TECHNOLOGY FOR PATIENT MONITORING FOLLOWING SUCCESSFUL PILOT. <a href=\"https://news.google.com/rss/articles/CBMikgJBVV95cUxQd0tyYVhSVjdpRlVlak1FcFRsZGZkdHJDNlFBVFdJcnUwbHpITmZ2WjYzalBHM2lpMkwyb2NMR3JUZFI5QmdnM0JsalRyX18wMHJlcTh2cXFRdHB2TmpjVDJrQ1EySlF3LUhrbzZMOUJmM2hCeVQ2Z00xc2g3TTdRS3VqWlBRY0tkVXRxRFlLOFRLZzJrd3M3TEx3WmdzdEdrVWxhNnpXUzRyVHVRZnppWV9i",
+        "source_url": "https://news.google.com/rss/articles/CBMikgJBVV95cUxQd0tyYVhSVjdpRlVlak1FcFRsZGZkdHJDNlFBVFdJcnUwbHpITmZ2WjYzalBHM2lpMkwyb2NMR3JUZFI5QmdnM0JsalRyX18wMHJlcTh2cXFRdHB2TmpjVDJrQ1EySlF3LUhrbzZMOUJmM2hCeVQ2Z00xc2g3TTdRS3VqWlBRY0tkVXRxRFlLOFRLZzJrd3M3TEx3WmdzdEdrVWxhNnpXUzRyVHVRZnppWV9ibFpvU3FVUFFJUk9POURMN1dRRFR2TFhaUXRvUEZiNG5QYXJESkVkOW9FWVl6c2lPWU85aDdlREI5eUxBajhzc0pwUkk3dExsVHA4dVNCckhZODlYNzBvWjlzQ01qSXJn0gGSAkFVX3lxTFB3S3JhWFJWN2lGVWVqTUVwVGxkZmR0ckM2UUFUV0lydTBsekhOZnZaNjNqUEczaWkyTDJvY0xHclRkUjlCZ2czQmxqVHJfXzAwcmVxOHZxcVF0cHZOamNUMmtDUTJKUXctSGtvNkw5QmYzaEJ5VDZnTTFzaDdNN1FLdWpaUFFjS2RVdHFEWUs4VEtnMmt3czdMTHdaZ3N0R2tVbGE2eldTNHJUdVFmemlZX2JsWm9TcVVQUUlST085REw3V1FEVHZMWFpRdG9QRmI0blBhckRKRWQ5b0VZWXpzaU9ZTzloN2VEQjl5TEFqOHNzSnBSSTd0TGxUcDh1U0JySFk4OVg3MG9aOXNDTWpJcmc?oc=5",
+        "created_at": "2026-07-16T20:53:33.094219"
+      }
+    ]
+  },
+  {
+    "id": 9561,
+    "name": "Neuralink",
+    "industry": "Medical Technology",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Neuralink Readies Robots to Place Its Brain Implants at Scale - TechEBlog -. <a href=\"https://news.google.com/rss/articles/CBMidEFVX3lxTE5PN0FQZ0JSOEo1OW51MDNadXN3S25yelFkWG1GQXkwcEtkc3Q5VW53MUo5OTJTczhSaWMySzZ3SGF4MkhkQVdqLWV2aGkzM19rWDRKVE1tanBDWEtFRFQtX0drVHNiazhTYlFsbE5BQ3E4QW9Z?oc=5\" target=\"_blank\">Neuralink Readies Robots to Place Its Brain Implants at Scale</a>&nbsp;&nbsp;<font color=\"#6f6",
+        "source_url": "https://news.google.com/rss/articles/CBMidEFVX3lxTE5PN0FQZ0JSOEo1OW51MDNadXN3S25yelFkWG1GQXkwcEtkc3Q5VW53MUo5OTJTczhSaWMySzZ3SGF4MkhkQVdqLWV2aGkzM19rWDRKVE1tanBDWEtFRFQtX0drVHNiazhTYlFsbE5BQ3E4QW9Z?oc=5",
+        "created_at": "2026-06-12T14:46:12.818569"
+      }
+    ]
+  },
+  {
+    "id": 5737,
+    "name": "Newark Approves New",
+    "industry": "Logistics",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Newark Approves New Automated Cold Storage Facility on Wilson Avenue. <a href=\"https://news.google.com/rss/articles/CBMiYkFVX3lxTE12MjIzWklvc0FfMGJwcnpjaU9kV2tEYlhYdGFyYWJSSzBuTmhaT1N6RkdZd1ZxN2Vjd1hkemVxMVRXcldWYWV5MlItMEZqMVIzZzFzNENSb2VIeF9sV2RFQkhR?oc=5\" target=\"_blank\">Newark Approves New Automated Cold Storage Facility on Wilson Avenue</a>&nbsp;&nbsp;<font color=\"#6f6f6f\">Jersey Digs</font>",
+        "source_url": "https://news.google.com/rss/articles/CBMiYkFVX3lxTE12MjIzWklvc0FfMGJwcnpjaU9kV2tEYlhYdGFyYWJSSzBuTmhaT1N6RkdZd1ZxN2Vjd1hkemVxMVRXcldWYWV5MlItMEZqMVIzZzFzNENSb2VIeF9sV2RFQkhR?oc=5",
+        "created_at": "2026-04-15T15:50:35.525158"
+      }
+    ]
+  },
+  {
+    "id": 7313,
+    "name": "Primech Holdings",
+    "industry": "Real Estate & Facilities",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Primech Holdings Accelerates U.S. Expansion for Primech AI\u2019s Hytron, Selected for SelectUSA Tech Amid Growing Institutional Deployment Pipeline. <a href=\"",
+        "source_url": "https://news.google.com/rss/articles/CBMiuAJBVV95cUxOclNUcTFQaGk3cnd4NlluaFJkM2V2THVxTkVxTzNSWWs0WC01N3p0d09GTlVWM2dreVJTamh0YVlwdERaRmJKdllmcEpfc3pxd2VOYk9VSjlkRXptTHNJTTY5ZTF0S3hGa2tmZk5LQ24wWjQ3ZmJ4aUE4LVJhOGQzS2FlTGNKai00NDVHUi1RcFVGWTB6VXN6cnVjeHl3emFTVTRYaDFWb2Fic2NhUDBUOE93Y3lUaU5pMkVPaldyWHQ1WGdhYUE3LVdiZDBqaVpKVkt4UE5Ucy1fWTlxTDFxZ1k5azhGd3RQazFZVndTTWQ2M0RBZGJmbGw2c2RMUUFFSDFVTzNadkdNcnJCZkdsSEFPNW1LM3RYTVhSY3V0UG1TM09kdUxzY2JXV0hHNzhIZm9GWEl1ZEPSAb4CQVVfeXFMTzJlLU9Md250UGZtajdpa1FSWXcxOE4wOVVFN0Vuc1g3NTh6eC13OUQ5TXNqWDJHSWZEM1M3OHJwb2Vjdmp0WUJSaUVEcnFHNU55TTMwazBkckd6UktUOHNyN3JsdkdMak1nMUEzYjFoQzY3NUlrVElCamMyOWlmQXBNbHpUWkh1YjhkRzVaMHJVVUpsaTlhSkZfX2dBVDVFWHIwZUZIUmd0bEdPeFc2dkJ2UzhLSXp4Ul9YS080WklKTm5tSG9KSUxPQTRQZ0wyaDVqOXIxVko2RGhDMW43YmpsVldjQldfTmlEZjZ3czNlOXNJU19wbGRVSnVhZFo5MGRyMEcxa3FvMm9MeXpSTkRraUc2WUI1TWpiZWhPRVpwSVI0TGphbmo1MUpkckVJLUpJd05WcWxDek9aSk9B?oc=5",
+        "created_at": "2026-04-24T10:06:33.852112"
+      }
+    ]
+  },
+  {
+    "id": 5618,
+    "name": "Snak King",
+    "industry": "CPG & Consumer Goods",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Charlotte-based Falfurrias invests in California\u2019s Snak King. <a href=\"https://news.google.com/rss/articles/CBMiiwFBVV95cUxQRFlsWWFOU1dhTWF1eGVnLUhvSXNNa2dlUVhGSl9FYy1NZ0FlbWVLZDdUelEweFBUNDROQ1IxMDBJdFBOQ2xpMWxNaHNGUGZURWNqZUVSVThYZXJpRFpSZFotUDhlOXV4eWtkUkdvVGROeUw2NkFtNGxHQ1ctaGxuT1NNZGJzaE5PSjNN?oc=5\" target=\"_blank\">Charlotte-based Falfurrias invests in California\u2019s Snak King</a>&nbsp;&nbsp;<",
+        "source_url": "https://news.google.com/rss/articles/CBMiiwFBVV95cUxQRFlsWWFOU1dhTWF1eGVnLUhvSXNNa2dlUVhGSl9FYy1NZ0FlbWVLZDdUelEweFBUNDROQ1IxMDBJdFBOQ2xpMWxNaHNGUGZURWNqZUVSVThYZXJpRFpSZFotUDhlOXV4eWtkUkdvVGROeUw2NkFtNGxHQ1ctaGxuT1NNZGJzaE5PSjNN?oc=5",
+        "created_at": "2026-06-15T16:55:56.222099"
+      }
+    ]
+  },
+  {
+    "id": 6319,
+    "name": "Swire Coca-Cola",
+    "industry": "CPG & Consumer Goods",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Swire Coca-Cola to Build Bottling Facility in Colorado. <a href=\"https://news.google.com/rss/articles/CBMiqAFBVV95cUxOS3Rxa1QtUHRPa0dwenNJQXZmYWZ5LUhLc2lPUDdIRFpjN3Ewb1psb3czSUtwWS1ubXpQVndQbW5UQUNrbHFjUW02ZDVtalRyeGJHSUN6emFjS1phb1RhUklQalNCOVFoTEdkcFdrLUgtRkdxY24zRllIalhyM0p1ZV9kNzNfcnJncEdUOU9lOXFVZ0M0dDV6aU5TZ1V3WFYtV1d5bUM2dWU?oc=5\" target=\"_blank\">Swire Coca-Cola to Build Bottling Facility i",
+        "source_url": "https://news.google.com/rss/articles/CBMiqAFBVV95cUxOS3Rxa1QtUHRPa0dwenNJQXZmYWZ5LUhLc2lPUDdIRFpjN3Ewb1psb3czSUtwWS1ubXpQVndQbW5UQUNrbHFjUW02ZDVtalRyeGJHSUN6emFjS1phb1RhUklQalNCOVFoTEdkcFdrLUgtRkdxY24zRllIalhyM0p1ZV9kNzNfcnJncEdUOU9lOXFVZ0M0dDV6aU5TZ1V3WFYtV1d5bUM2dWU?oc=5",
+        "created_at": "2026-06-14T09:25:23.832134"
+      }
+    ]
+  },
+  {
+    "id": 4790,
+    "name": "Sydney Airport",
+    "industry": "Logistics",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "Sydney Airport makes Uber PIN rideshare pickup permanent after successful trial for passengers - International Airport Review. <a href=\"https://news.google.com/rss/articles/CBMi5wFBVV95cUxQVThPMmk2enJsVWZWQXczMThIc1F1dzNXSm1jR2NLY0tUcC1SMUwyNmFKVWNPZndPZ2NTYTdRZktTTHpqN0x1NnNvanlGcUhHQ1ctNi1yWFdVU0s5cTZNSUlMZDdiWnctempMcWhBZ0dlN19JbnprNDVyTk1WdmNPS2hqcU1WUGdzeGJfZ0ZCTEptUng1aHNVVGZCT0czV25FZ0lkYXh",
+        "source_url": "https://news.google.com/rss/articles/CBMi5wFBVV95cUxQVThPMmk2enJsVWZWQXczMThIc1F1dzNXSm1jR2NLY0tUcC1SMUwyNmFKVWNPZndPZ2NTYTdRZktTTHpqN0x1NnNvanlGcUhHQ1ctNi1yWFdVU0s5cTZNSUlMZDdiWnctempMcWhBZ0dlN19JbnprNDVyTk1WdmNPS2hqcU1WUGdzeGJfZ0ZCTEptUng1aHNVVGZCT0czV25FZ0lkYXhpR041c2ZVYjF4c1lndzZYTXRyX1hEUUQzWFdxWEhGOEg2WE1ob3QxclJXSklvN21fSEdlMzhJemZ5a0tOcmRYME0?oc=5",
+        "created_at": "2026-04-05T03:06:27.528704"
+      }
+    ]
+  },
+  {
+    "id": 5267,
+    "name": "Tech Buzz",
+    "industry": "Hospitality",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Meta, Microsoft Cut 20,000 Jobs as AI Reshapes Big Tech. <a href=\"https://news.google.com/rss/articles/CBMikAFBVV95cUxNZGg4QnBDXzQ0eU5wc2E2amdtbUs5NkhrSGRfQWJaLW0wZmxtV21kZEIwNVBkMzNJYTBSdVpCWVJwOExtaEFvbWNmbWQ3Sjdad1Z3bV9malFkb0R4Y3U2VzlGM3lUdEs1SFRBOUFubnRGZHFiQVVORF93UXc2UVdoNmtYejh6MnA3NVk2V1BPVWk?oc=5\" target=\"_blank\">Meta, Microsoft Cut 20,000 Jobs as AI Reshapes Big Tech</a>&nbsp;&nbsp;<fon",
+        "source_url": "https://news.google.com/rss/articles/CBMikAFBVV95cUxNZGg4QnBDXzQ0eU5wc2E2amdtbUs5NkhrSGRfQWJaLW0wZmxtV21kZEIwNVBkMzNJYTBSdVpCWVJwOExtaEFvbWNmbWQ3Sjdad1Z3bV9malFkb0R4Y3U2VzlGM3lUdEs1SFRBOUFubnRGZHFiQVVORF93UXc2UVdoNmtYejh6MnA3NVk2V1BPVWk?oc=5",
+        "created_at": "2026-06-14T08:33:37.914190"
+      }
+    ]
+  },
+  {
+    "id": 5957,
+    "name": "TekniPlex Consumer Products",
+    "industry": "Defense",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "TekniPlex Consumer Products Hires Aur\u00e9lie Emond. <a href=\"https://news.google.com/rss/articles/CBMiXkFVX3lxTFBMZVplZ2Z4aUc1aGRhRUQ2SXFfaGRSS3BVMnBVVzIxQnZoT1VkUmFZbUhMUFRXRFI1dVNMT1RvTGxuc3NEakJtNlpMLTZZcEdMZ0tnYUU5ZFhqT0xOWnfSAWhBVV95cUxNWHpJdUtjWjlfYUN2SF80QlVtdU53U3Y4RG5aeEhFcl9yNXcyLW91c0tQZHREWEVTZUtQUGZxNG43RnBkaHZzTk94QnVEMk5vQ3d1MmNudHJiZ2lkSlVsWWpBVWVKTHBaSg?oc=5\" target=\"_blank\">TekniPle",
+        "source_url": "https://news.google.com/rss/articles/CBMiXkFVX3lxTFBMZVplZ2Z4aUc1aGRhRUQ2SXFfaGRSS3BVMnBVVzIxQnZoT1VkUmFZbUhMUFRXRFI1dVNMT1RvTGxuc3NEakJtNlpMLTZZcEdMZ0tnYUU5ZFhqT0xOWnfSAWhBVV95cUxNWHpJdUtjWjlfYUN2SF80QlVtdU53U3Y4RG5aeEhFcl9yNXcyLW91c0tQZHREWEVTZUtQUGZxNG43RnBkaHZzTk94QnVEMk5vQ3d1MmNudHJiZ2lkSlVsWWpBVWVKTHBaSg?oc=5",
+        "created_at": "2026-06-22T21:18:41.471651"
+      }
+    ]
+  },
+  {
+    "id": 2752,
+    "name": "US Cold Storage",
+    "industry": "Logistics",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "US Cold Storage in Tulare plans $76 mil expansion after food package deal - Visalia Times-Delta. <a href=\"https://news.google.com/rss/articles/CBMi2AFBVV95cUxNUE1OcjB3MnBoQXFlYVRVcm1jUTZwT0RNZGdVQVlTeTMzdnNyX290OEcwZXZwOXhiMWZod3lXVE5GcFd0RjFqUEFrOFZSUUY5ZHg5TTZYQTVrQ0s5YnEzTVF4QUhJbHVqeVJyR0hhS1daSmFYd2oyNVM2elBrVjhzSkJ3dmlvU2lVUEh4RVY3MklDVS1Ydm1CSHpDV0ZndDZrREEteG8xdFhmZ0c0N1JCRnJITDNYaWRQdVk0b",
+        "source_url": "https://news.google.com/rss/articles/CBMi2AFBVV95cUxNUE1OcjB3MnBoQXFlYVRVcm1jUTZwT0RNZGdVQVlTeTMzdnNyX290OEcwZXZwOXhiMWZod3lXVE5GcFd0RjFqUEFrOFZSUUY5ZHg5TTZYQTVrQ0s5YnEzTVF4QUhJbHVqeVJyR0hhS1daSmFYd2oyNVM2elBrVjhzSkJ3dmlvU2lVUEh4RVY3MklDVS1Ydm1CSHpDV0ZndDZrREEteG8xdFhmZ0c0N1JCRnJITDNYaWRQdVk0bUo4Y1RyUjB3c0hCM2V4b081QlpRU0RTejRYTXU?oc=5",
+        "created_at": "2026-03-17T22:14:51.750030"
+      }
+    ]
+  },
+  {
+    "id": 286,
+    "name": "Walmart",
+    "industry": "Retail",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "Walmart to pilot Alphabot robotics for grocery pickup. <a href=\"https://news.google.com/rss/articles/CBMimAFBVV95cUxOYUR0QzM5QWwtckhIQW91UmhWNzhzZTNLX09MdkszSTZLc1JwNjlHNV9DX3RWamFGbndPaXU5TmRreTJBYTUyRnROY2ppN0VURGxpSTktR3dwbDVobkdoQVNILVRQRTE0VU44OE1jd2FBbHBKVFpRRkV3MDJOWDZFdWQxQXB1cUVHbEpVSFdfUUtLR1V1ekdOXw?oc=5\" target=\"_blank\">Walmart to pilot Alphabot robotics for grocery pickup</a>&nbsp;&nb",
+        "source_url": "https://news.google.com/rss/articles/CBMimAFBVV95cUxOYUR0QzM5QWwtckhIQW91UmhWNzhzZTNLX09MdkszSTZLc1JwNjlHNV9DX3RWamFGbndPaXU5TmRreTJBYTUyRnROY2ppN0VURGxpSTktR3dwbDVobkdoQVNILVRQRTE0VU44OE1jd2FBbHBKVFpRRkV3MDJOWDZFdWQxQXB1cUVHbEpVSFdfUUtLR1V1ekdOXw?oc=5",
+        "created_at": "2026-10-15T00:01:46.009100"
+      }
+    ]
+  },
+  {
+    "id": 968,
+    "name": "Wayne General Hospital",
+    "industry": "Healthcare",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Wayne General Hospital chosen for RCDH program - WDAM-TV. <a href=\"https://news.google.com/rss/articles/CBMigAFBVV95cUxOSlQ5THBMdk9YdGx0bTVha3dZX2htRzYwcWVyVW9pRXlsYlg4Qzd3YUF6MWV4eXJlZGpkSU16cFpoZENscGxhNTNyX0NoLW9Ba05kYldHQTU0YXZHREZOdlVxRVE3WHJUYmdaLVE2UlhlX1hhUTJzTTJnWG80V3ZCZtIBlAFBVV95cUxNTmh4c2RUNTFLMURaRVJjTk5oakU2dkdHeXpHS1VFeWNvdjZWczAxNGxrSE1ma2VxaVh2cXVDYXowWWdQa3Y5SEYzYkVabFVRcm1TRlQz",
+        "source_url": "https://news.google.com/rss/articles/CBMigAFBVV95cUxOSlQ5THBMdk9YdGx0bTVha3dZX2htRzYwcWVyVW9pRXlsYlg4Qzd3YUF6MWV4eXJlZGpkSU16cFpoZENscGxhNTNyX0NoLW9Ba05kYldHQTU0YXZHREZOdlVxRVE3WHJUYmdaLVE2UlhlX1hhUTJzTTJnWG80V3ZCZtIBlAFBVV95cUxNTmh4c2RUNTFLMURaRVJjTk5oakU2dkdHeXpHS1VFeWNvdjZWczAxNGxrSE1ma2VxaVh2cXVDYXowWWdQa3Y5SEYzYkVabFVRcm1TRlQzSHVPbThNU1owazFuYVlSLVhIMWF6UHRPemxQU0p3cW9SYjJYTTM5eDRyU0p4YU5XYml5MTBVWDA0dXo0N3Mt?oc=5",
+        "created_at": "2026-05-07T22:34:18.970036"
+      }
+    ]
+  },
+  {
+    "id": 1271,
+    "name": "Wonder Grubhub",
+    "industry": "Logistics",
+    "signals": [
+      {
+        "type": "pilot_success",
+        "text": "Wonder, Grubhub test NJ\u2019s first drone food delivery pilot (updated). <a href=\"https://news.google.com/rss/articles/CBMiZ0FVX3lxTE9lUllWbjNCUDJmY0JuUm1BUzlQZDhreFNTbEpYS25YMHVVNjQyakI1S0tCUnQyNlpTbnFlOUN0VFE3ZDRHXzNVbWR2OXBUYzNDb1BQaGVKdm13UWpkOHZCcEF4YTZlSTg?oc=5\" target=\"_blank\">Wonder, Grubhub test NJ\u2019s first drone food delivery pilot (updated)</a>&nbsp;&nbsp;<font color=\"#6f6f6f\">NJBIZ</font>",
+        "source_url": "https://news.google.com/rss/articles/CBMiZ0FVX3lxTE9lUllWbjNCUDJmY0JuUm1BUzlQZDhreFNTbEpYS25YMHVVNjQyakI1S0tCUnQyNlpTbnFlOUN0VFE3ZDRHXzNVbWR2OXBUYzNDb1BQaGVKdm13UWpkOHZCcEF4YTZlSTg?oc=5",
+        "created_at": "2026-04-09T23:52:39.818692"
+      }
+    ]
+  },
+  {
+    "id": 5843,
+    "name": "Zebra",
+    "industry": "Automotive & Manufacturing",
+    "signals": [
+      {
+        "type": "vendor_selection",
+        "text": "Zebra Opens Supplies Manufacturing Plant in Mexico - Ink World magazine -. <a href=\"https://news.google.com/rss/articles/CBMinwFBVV95cUxQR2dBeEZGa3I3ekVHWGZlZDI0SzRuWkVjbkE0ZnZPVUYzeW55aS0wekJxN3Y1ZE9zWEdVZkFZYnJZVVZLWEdaYW4xcDNBZkdxYkpKSVd3RFprX3R0TnEzVWNva0o1N0tEb0ZRSFM0b0lNNWxXNXZCODIwZDlQbWRoMDBienNHb2thSS12bFYwZ3M3SEhvS0RpWVpjWlp0TVU?oc=5\" target=\"_blank\">Zebra Opens Supplies Manufacturing Pl",
+        "source_url": "https://news.google.com/rss/articles/CBMinwFBVV95cUxQR2dBeEZGa3I3ekVHWGZlZDI0SzRuWkVjbkE0ZnZPVUYzeW55aS0wekJxN3Y1ZE9zWEdVZkFZYnJZVVZLWEdaYW4xcDNBZkdxYkpKSVd3RFprX3R0TnEzVWNva0o1N0tEb0ZRSFM0b0lNNWxXNXZCODIwZDlQbWRoMDBienNHb2thSS12bFYwZ3M3SEhvS0RpWVpjWlp0TVU?oc=5",
+        "created_at": "2026-04-15T21:38:12.444291"
+      }
+    ]
+  }
+]

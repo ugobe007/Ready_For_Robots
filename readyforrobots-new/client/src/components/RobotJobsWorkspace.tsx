@@ -164,7 +164,7 @@ import {
   type FindResearchHandle,
 } from "@/lib/findResearch";
 import {
-  isNamedRobotJob,
+  isShownRobotJob,
   JOB_CARD_EXAMPLE_LABEL,
   JOB_CARD_EXAMPLE_NOTE,
   JOB_CARD_SOURCE_LABEL,
@@ -416,8 +416,8 @@ function searchToAnalysis(res: RobotJobSearchResult): RobotAnalysis {
     profile,
     matched: true,
     capabilities: res.capabilities || [],
-    jobs: (res.jobs || []).filter(isNamedRobotJob),
-    jobCount: (res.jobs || []).filter(isNamedRobotJob).length,
+    jobs: (res.jobs || []).filter(isShownRobotJob),
+    jobCount: (res.jobs || []).filter(isShownRobotJob).length,
     zeroReason: res.zero_reason ?? null,
     needsClassChoice: Boolean(res.needs_class_choice),
     classOptions: res.class_options || [],
@@ -506,7 +506,7 @@ function searchNamesSubmittedProduct(
   if (!returned) return null;
   const decision = catalogProductForSubmittedUrl(url, [{ name: returned }]);
   if (decision.kind !== "named") return null;
-  if (!(res.jobs || []).some(isNamedRobotJob)) return null;
+  if (!(res.jobs || []).some(isShownRobotJob)) return null;
   return decision.product.name;
 }
 
@@ -3928,7 +3928,8 @@ function JobCard({
   onToggle: () => void;
 }) {
   const card = robotJobCardFromMatch(job);
-  if (!card.employer || !card.workplace) return null;
+  if (!card.employer) return null;
+  if (!card.workplace && !card.readinessLabel) return null;
   const place = [card.employer, card.workplace].filter(Boolean).join(" · ");
   return (
     <li
@@ -3971,6 +3972,13 @@ function JobCard({
                 >
                   {JOB_CARD_EXAMPLE_LABEL}
                 </span>
+              ) : card.readinessLabel ? (
+                <span
+                  data-job-readiness="true"
+                  className="inline-flex items-center rounded border border-emerald-400/50 bg-emerald-400/10 px-2 py-0.5 font-mono text-xs font-bold uppercase tracking-wider text-emerald-300"
+                >
+                  {card.readinessLabel}
+                </span>
               ) : null}
             </div>
             {place ? <span className={JOBS_PLACE_CLASS}>{place}</span> : null}
@@ -3991,14 +3999,28 @@ function JobCard({
               <dt className={eyebrow}>Employer</dt>
               <dd className="mt-0.5">{card.employer}</dd>
             </div>
-            <div>
-              <dt className={eyebrow}>Workplace</dt>
-              <dd className="mt-0.5">{card.workplace}</dd>
-            </div>
+            {card.workplace ? (
+              <div>
+                <dt className={eyebrow}>Workplace</dt>
+                <dd className="mt-0.5">{card.workplace}</dd>
+              </div>
+            ) : null}
             <div>
               <dt className={eyebrow}>Work being performed</dt>
               <dd className="mt-0.5">{card.work}</dd>
             </div>
+            {card.whyNow ? (
+              <div>
+                <dt className={eyebrow}>Why now</dt>
+                <dd className="mt-0.5 text-slate-300">{card.whyNow}</dd>
+              </div>
+            ) : null}
+            {card.matchingRobot ? (
+              <div>
+                <dt className={eyebrow}>Matching robot</dt>
+                <dd className="mt-0.5">{card.matchingRobot}</dd>
+              </div>
+            ) : null}
             {card.description ? (
               <div>
                 <dt className={eyebrow}>Job description</dt>
