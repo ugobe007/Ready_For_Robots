@@ -59,6 +59,13 @@ import PostAuthRedirect from "./components/PostAuthRedirect";
 import { ScoutChat } from "./components/ScoutChat";
 import VisitTracker from "./components/VisitTracker";
 
+/** Legacy /jobs?src=… campaign links meant FIND; bare /jobs is the robot jobs board. */
+function JobsIndexRoute() {
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  if (search) return <Redirect to={`/${search}`} />;
+  return <RobotJobs />;
+}
+
 function JourneyHomeRedirect() {
   const search = typeof window !== "undefined" ? window.location.search : "";
   return <Redirect to={`/${search}`} />;
@@ -140,7 +147,7 @@ function Router() {
       <Route path="/billing/success" component={BillingSuccess} />
       <Route path="/social" component={SocialRoute} />
       <Route path="/jobs/:slug" component={Jobs} />
-      <Route path="/jobs" component={RobotJobs} />
+      <Route path="/jobs" component={JobsIndexRoute} />
       <Route path="/experiment" component={DevExperiment} />
       <Route path="/icons" component={DevIcons} />
       <Route path="/icon-review" component={DevIconReview} />
