@@ -117,13 +117,13 @@ export default function AuthCallback() {
       <main>
         <section className="rfr-account-callback">
           <div className="rfr-account-kicker">
-            {waiting ? "SIGNING YOU IN" : "SIGN-IN LINK EXPIRED"}
+            {waiting ? "SIGNING YOU IN" : "SIGN-IN DIDN'T FINISH"}
           </div>
-          <h1>{waiting ? "One moment." : "That link didn't work."}</h1>
+          <h1>{waiting ? "One moment." : "That didn't work."}</h1>
           <p className="rfr-account-lede">
             {waiting
               ? "Checking your sign-in, then taking you back to where you were."
-              : message}
+              : "The email link expired or was already used, or the Google/GitHub sign-in was cancelled. Try again and we'll take you to the same page."}
           </p>
           {waiting ? (
             <div className="rfr-account-bar" aria-hidden="true">
