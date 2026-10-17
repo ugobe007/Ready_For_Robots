@@ -5,7 +5,7 @@
   "note": "Machine-readable companion to ROBOT_WORKFLOW_ONTOLOGY.md. Each work family requires a SPECIFIC capability so category leakage cannot occur. Loaded by app/services/robot_ontology.py; kept in sync with app/services/robot_requirement_match.py (tests/test_robot_ontology.py).",
   "families": {
     "pallet":    {"required_any": ["manipulate"],                    "label": "case palletizing"},
-    "gripper":   {"required_any": ["manipulate"],                    "label": "machine tending / part handling"},
+    "machine_tending": {"required_any": ["manipulate", "factory_task"], "label": "machine tending — CNC load/unload and plant assembly-line work"},
     "transport": {"required_any": ["tote_transport", "transport"],  "label": "point-to-point transport"},
     "cart":      {"required_any": ["tote_transport", "transport"],  "label": "cart delivery"},
     "scrub":     {"required_any": ["hard_floor_scrub"],             "label": "hard-floor scrubbing"},
@@ -28,7 +28,6 @@
     "mining": {"required_any": ["mining_task"],                    "label": "mining — haulage/drilling"},
     "warehouse": {"required_any": ["warehouse_task"],              "label": "warehouse — fulfillment / DC tote and pick work"},
     "logistics": {"required_any": ["logistics_task"],              "label": "logistics — 3PL / cross-dock / sortation"},
-    "factory": {"required_any": ["factory_task"],                  "label": "factory — plant machine-tend / assembly-line work"},
     "hospitality": {"required_any": ["hospitality_task"],          "label": "hospitality — hotel guest delivery / housekeeping"},
     "clinical_delivery": {"required_any": ["healthcare_task"],     "label": "hospital clinical delivery (meds, specimens, supplies)"},
     "resident_services": {"required_any": ["healthcare_task"],     "label": "eldercare resident services (meals, linens, amenities)"},
