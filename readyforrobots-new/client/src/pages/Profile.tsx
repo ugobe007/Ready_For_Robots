@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
-import Header from "@/components/Header";
 import AdminNav from "@/components/AdminNav";
-import SiteFooter from "@/components/layout/SiteFooter";
+import { SiteFooter, SiteHeader } from "@/components/editorial";
 import AutonomyDial from "@/components/AutonomyDial";
 import HubSpotConnectPanel, {
   type HubSpotIntegrationStatus,
@@ -217,132 +216,107 @@ export default function Profile() {
 
   if (!supabase) {
     return (
-      <div className="min-h-screen pt-24 px-4 text-center text-gray-500 bg-slate-50">
-        <Header />
-        <p>Supabase is not configured in this build.</p>
+      <div className="rfr-editorial rfr-account">
+        <SiteHeader />
+        <main className="rfr-account-callback">
+          <h1>Account</h1>
+          <p className="rfr-account-lede">Supabase is not configured in this build.</p>
+        </main>
+        <SiteFooter />
       </div>
     );
   }
 
   if (loading) {
     return (
-      <div className="min-h-screen pt-24 text-center text-gray-500 bg-slate-50">
-        <Header />
-        Loading…
+      <div className="rfr-editorial rfr-account">
+        <SiteHeader />
+        <main className="rfr-account-callback">
+          <div className="rfr-account-kicker">YOUR ACCOUNT</div>
+          <h1>One moment.</h1>
+          <p className="rfr-account-lede">Loading your account.</p>
+        </main>
+        <SiteFooter />
       </div>
     );
   }
 
   if (!session) {
     return (
-      <div className="min-h-screen pt-24 px-4 text-center bg-slate-50">
-        <Header />
-        <p className="text-gray-600 mb-4">Sign in to view your workspace.</p>
-        <Link href="/login" className="text-emerald-700 underline text-sm">
-          Go to login
-        </Link>
+      <div className="rfr-editorial rfr-account">
+        <SiteHeader />
+        <main className="rfr-account-callback">
+          <div className="rfr-account-kicker">YOUR ACCOUNT</div>
+          <h1>Sign in to see your account.</h1>
+          <Link href="/login?next=/profile" className="rfr-account-submit" style={{ width: "auto", padding: "0 18px" }}>
+            Sign in
+          </Link>
+        </main>
+        <SiteFooter />
       </div>
     );
   }
 
+  const accountEmail = me?.email || session.user.email || "";
+  const accountName =
+    (me?.display_name || "").trim() ||
+    accountEmail.split("@")[0] ||
+    "Your account";
+  const initials = accountName
+    .split(/\s+/)
+    .slice(0, 2)
+    .map(part => part[0]?.toUpperCase() || "")
+    .join("") || "RR";
+
   return (
-    <div className="admin-workspace min-h-screen flex flex-col bg-slate-50">
-      <Header />
-      <main className="flex-1 pt-28 pb-12 px-4 max-w-lg mx-auto w-full">
-        <AdminNav />
-        <h1 className="text-xl font-bold text-gray-900 mb-1">Your workspace</h1>
-        <p className="text-xs text-gray-500 mb-6">
-          Same data as before — powered by SIGNAL + FastAPI.
-        </p>
-        {err && (
-          <p className="text-sm text-red-700 mb-4 border border-red-200 bg-red-50 rounded p-2">
-            {err}
-          </p>
-        )}
-        <div className="rounded-xl border border-gray-200 p-4 space-y-2 mb-6">
-          <p className="text-[10px] uppercase tracking-widest text-gray-400">
-            Signed in as
-          </p>
-          <p className="text-sm text-gray-900 font-medium">
-            {me?.display_name || me?.email || session.user.email}
-          </p>
-          <p className="text-xs text-gray-500">{session.user.email}</p>
-        </div>
-        {me?.entitlements && (
-          <div
-            className="rounded-xl border border-emerald-400/20 p-4 mb-6 space-y-3"
-            style={{ background: "rgba(5,150,105,0.06)" }}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-emerald-700/70">
-                  Workspace plan
-                </p>
-                <p className="text-sm font-semibold text-gray-900 mt-0.5">
-                  {me.entitlements.display_name || "Free workspace"}
-                </p>
-              </div>
-              {me.entitlements.plan !== "paid" && (
-                <Link
-                  href={me.entitlements.upgrade_url || "/pricing"}
-                  className="shrink-0 rounded-lg px-3 py-1.5 text-[10px] font-bold text-gray-900"
-                  style={{ background: "#059669" }}
-                >
-                  Upgrade
-                </Link>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-[11px]">
-              <div className="rounded-lg border border-gray-100 px-2.5 py-2">
-                <p className="text-gray-400 uppercase text-[9px] tracking-wider">
-                  Saved leads
-                </p>
-                <p className="font-mono font-bold text-emerald-700 mt-0.5">
-                  {me.entitlements.saved_count ?? counts.saved}
-                  {me.entitlements.saved_limit != null
-                    ? ` / ${me.entitlements.saved_limit}`
-                    : ""}
-                </p>
-              </div>
-              <div className="rounded-lg border border-gray-100 px-2.5 py-2">
-                <p className="text-gray-400 uppercase text-[9px] tracking-wider">
-                  Pipeline
-                </p>
-                <p className="font-mono font-bold text-emerald-700 mt-0.5">
-                  {me.entitlements.pipeline_limit ?? 10} leads
-                </p>
-              </div>
-            </div>
-            {!me.entitlements.features?.research_updates && (
-              <p className="text-[10px] leading-relaxed text-gray-500">
-                SIGNAL research feed unlocks on Pro.{" "}
-                <Link
-                  href="/pricing?reason=research"
-                  className="text-emerald-600 hover:text-emerald-700"
-                >
-                  See pricing
-                </Link>
+    <div className="rfr-editorial rfr-account">
+      <SiteHeader signedIn initials={initials} />
+      <main>
+        <section className="rfr-account-split">
+          <div className="rfr-account-copy">
+            <div className="rfr-account-kicker">YOUR ACCOUNT</div>
+            <h1>{accountName}</h1>
+            <AdminNav />
+            {err && (
+              <p className="rfr-account-error" role="alert">
+                {err}
               </p>
             )}
-          </div>
-        )}
-        <div className="grid grid-cols-3 gap-2 mb-8">
-          {[
-            { n: counts.saved, l: "Saved" },
-            { n: counts.reports, l: "Reports" },
-            { n: counts.lists, l: "Lists" },
-          ].map(x => (
-            <div
-              key={x.l}
-              className="rounded-lg border border-gray-200 p-3 text-center"
-            >
-              <p className="text-lg font-mono font-bold text-emerald-600">
-                {x.n}
-              </p>
-              <p className="text-[10px] text-gray-400 uppercase">{x.l}</p>
+            <div className="rfr-account-rows">
+              <div className="rfr-account-row">
+                <span>EMAIL</span>
+                <b>{accountEmail}</b>
+                <span />
+              </div>
             </div>
-          ))}
-        </div>
+          </div>
+          <div className="rfr-account-plan">
+            <div className="rfr-account-plan-card">
+              <span>PLAN</span>
+              <strong>Early access</strong>
+              <em>Free while we're in early access.</em>
+            </div>
+            <Link
+              className="rfr-account-secondary"
+              href={me?.entitlements?.upgrade_url || "/pricing"}
+            >
+              Manage plan and billing
+            </Link>
+            <button
+              type="button"
+              className="rfr-account-secondary"
+              onClick={() => {
+                clearPendingNext();
+                void supabase?.auth.signOut().then(() => {
+                  window.location.href = "/";
+                });
+              }}
+            >
+              Sign out
+            </button>
+          </div>
+        </section>
+        <section className="rfr-account-stack">
         <div className="rounded-xl border border-gray-200 mb-6 overflow-hidden">
           <AutonomyDial
             mode={settings.scout_automation_level}
@@ -550,25 +524,10 @@ export default function Profile() {
             </Link>
           </p>
         </div>
-        <p className="text-xs text-gray-400 mb-4">
-          CRM outreach is on{" "}
-          <Link href="/crm" className="text-emerald-700 underline">
-            /crm
-          </Link>
-          .
+        <p className="rfr-account-fine">
+          CRM outreach is on <Link href="/crm">/crm</Link>.
         </p>
-        <button
-          type="button"
-          onClick={() => {
-            clearPendingNext();
-            void supabase?.auth.signOut().then(() => {
-              window.location.href = "/";
-            });
-          }}
-          className="text-xs text-red-400/90 border border-red-500/30 rounded px-3 py-2 hover:bg-red-500/10"
-        >
-          Sign out
-        </button>
+        </section>
       </main>
       <SiteFooter />
     </div>
